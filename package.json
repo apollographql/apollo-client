@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.10.5",
+  "version": "3.10.8",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -114,7 +114,7 @@
     "@graphql-tools/merge": "9.0.3",
     "@graphql-tools/schema": "10.0.3",
     "@graphql-tools/utils": "10.2.0",
-    "@microsoft/api-extractor": "7.43.2",
+    "@microsoft/api-extractor": "7.47.0",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@size-limit/esbuild-why": "11.1.2",
     "@size-limit/preset-small-lib": "11.1.2",
@@ -141,6 +141,7 @@
     "@typescript-eslint/types": "7.9.0",
     "@typescript-eslint/utils": "7.9.0",
     "acorn": "8.11.3",
+    "ajv": "8.16.0",
     "blob-polyfill": "7.0.20220408",
     "bytes": "3.1.2",
     "cross-fetch": "4.0.0",
@@ -185,7 +186,7 @@
     "ts-morph": "22.0.0",
     "ts-node": "10.9.2",
     "typedoc": "0.25.0",
-    "typescript": "5.4.5",
+    "typescript": "5.5.2",
     "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "4.0.0",
     "whatwg-fetch": "3.6.20"
@@ -198,6 +199,7 @@
     "**/*.md",
     "**/*.cjs",
     "**/*.cjs.map",
+    "**/*.d.cts",
     "**/*.js",
     "**/*.js.map",
     "**/*.d.ts",

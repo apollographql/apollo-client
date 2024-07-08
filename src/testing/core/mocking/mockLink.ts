@@ -16,6 +16,8 @@ import {
   cloneDeep,
   stringifyForDisplay,
   print,
+  getOperationDefinition,
+  getDefaultValues,
   removeDirectivesFromDocument,
   checkDocument,
 } from "../../../utilities/index.js";
@@ -233,17 +235,21 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
   }
 
   private normalizeVariableMatching(mockedResponse: MockedResponse) {
-    const variables = mockedResponse.request.variables;
-    if (mockedResponse.variableMatcher && variables) {
+    const request = mockedResponse.request;
+    if (mockedResponse.variableMatcher && request.variables) {
       throw new Error(
         "Mocked response should contain either variableMatcher or request.variables"
       );
     }
 
     if (!mockedResponse.variableMatcher) {
+      request.variables = {
+        ...getDefaultValues(getOperationDefinition(request.query)),
+        ...request.variables,
+      };
       mockedResponse.variableMatcher = (vars) => {
         const requestVariables = vars || {};
-        const mockedResponseVariables = variables || {};
+        const mockedResponseVariables = request.variables || {};
         return equal(requestVariables, mockedResponseVariables);
       };
     }

@@ -1,5 +1,29 @@
 # @apollo/client
 
+## 3.10.8
+
+### Patch Changes
+
+- [#11911](https://github.com/apollographql/apollo-client/pull/11911) [`1f0460a`](https://github.com/apollographql/apollo-client/commit/1f0460a60fc613e8d6f218a74ded69e81e960791) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `undefined` to be returned from a `cache.modify` modifier function when a generic type argument is used.
+
+## 3.10.7
+
+### Patch Changes
+
+- [#11901](https://github.com/apollographql/apollo-client/pull/11901) [`10a8c0a`](https://github.com/apollographql/apollo-client/commit/10a8c0a8f6f3e13ec3c67bf53cc11a948b60e6d9) Thanks [@phryneas](https://github.com/phryneas)! - update `canUseLayoutEffect` check to also allow for layout effects in React Native
+
+- [#11861](https://github.com/apollographql/apollo-client/pull/11861) [`1aed0e8`](https://github.com/apollographql/apollo-client/commit/1aed0e82fcc432380a56d4a446f414ce8b1a7a90) Thanks [@henryqdineen](https://github.com/henryqdineen)! - Defend against non-serializable params in `invariantWrappers`
+
+- [#11905](https://github.com/apollographql/apollo-client/pull/11905) [`29755da`](https://github.com/apollographql/apollo-client/commit/29755da8797dc94613a23fe050ddd6ef9ffab607) Thanks [@phryneas](https://github.com/phryneas)! - Add `.d.cts` files for cjs bundles
+
+- [#11906](https://github.com/apollographql/apollo-client/pull/11906) [`d104759`](https://github.com/apollographql/apollo-client/commit/d104759cfb4be31e2ffbe166531a9b11861ade99) Thanks [@phryneas](https://github.com/phryneas)! - chore: update TypeScript to 5.5
+
+## 3.10.6
+
+### Patch Changes
+
+- [#11900](https://github.com/apollographql/apollo-client/pull/11900) [`f745558`](https://github.com/apollographql/apollo-client/commit/f74555826995009a6bb9d824506cecb3508e3365) Thanks [@phryneas](https://github.com/phryneas)! - `useMutation`: use `useIsomorphicLayoutEffect` instead of `useLayoutEffect`
+
 ## 3.10.5
 
 ### Patch Changes

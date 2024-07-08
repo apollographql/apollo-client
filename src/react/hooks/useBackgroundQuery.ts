@@ -17,7 +17,11 @@ import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import type {
+  FetchMoreFunction,
+  RefetchFunction,
+  SubscribeToMoreFunction,
+} from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
@@ -26,7 +30,11 @@ export type UseBackgroundQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = {
+  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
 };
 
@@ -281,6 +289,10 @@ function _useBackgroundQuery<
 
   return [
     didFetchResult.current ? wrappedQueryRef : void 0,
-    { fetchMore, refetch },
+    {
+      fetchMore,
+      refetch,
+      subscribeToMore: queryRef.observable.subscribeToMore,
+    },
   ];
 }

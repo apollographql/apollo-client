@@ -137,7 +137,13 @@ export interface ApolloClientOptions<TCacheShape> {
    */
   version?: string;
   documentTransform?: DocumentTransform;
-  devtools: DevtoolsOptions;
+
+  /**
+   * Configuration used by the [Apollo Client Devtools extension](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) for this client.
+   *
+   * @since 3.11.0
+   */
+  devtools?: DevtoolsOptions;
 }
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was

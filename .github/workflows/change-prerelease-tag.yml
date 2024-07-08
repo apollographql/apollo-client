@@ -28,8 +28,6 @@ jobs:
         with:
           app-id: 819772
           private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
-          repositories: ${{ github.repository }}
-          owner: ${{ github.repository_owner }}
 
       # Check out the repository, using the Github Actions Bot app's token so
       # that we can push later.
@@ -55,13 +53,17 @@ jobs:
           npm i
 
       - name: Update prerelease tag in .changeset/pre.json
-        uses: restackio/update-json-file-action@v2.1
+        uses: restackio/update-json-file-action@2.1
         with:
           file: .changeset/pre.json
           fields: '{"tag": "${{github.event.inputs.tag}}"}'
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Prepare for ${{ github.event.inputs.tag }} release
-          # Commit these changes to the branch workflow is running against
-          branch: ${{ github.event.inputs.branch }}
+      - name: Commit and push changes
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+        run: |
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add -A
+          git commit -m "Prepare for "$TAG" release"
+          git push

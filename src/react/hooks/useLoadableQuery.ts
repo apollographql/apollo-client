@@ -8,12 +8,13 @@ import type {
 } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
+  assertWrappedQueryRef,
   getSuspenseCache,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "../internal/index.js";
-import type { CacheKey, QueryReference } from "../internal/index.js";
+import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
 import { __use, useRenderGuard } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
@@ -42,8 +43,8 @@ export type UseLoadableQueryResult<
   TVariables extends OperationVariables = OperationVariables,
 > = [
   loadQuery: LoadQueryFunction<TVariables>,
-  queryRef: QueryReference<TData, TVariables> | null,
-  {
+  queryRef: QueryRef<TData, TVariables> | null,
+  handlers: {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
     fetchMore: FetchMoreFunction<TData, TVariables>;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
@@ -168,10 +169,12 @@ export function useLoadableQuery<
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
   const { queryKey = [] } = options;
 
-  const [queryRef, setQueryRef] = React.useState<QueryReference<
+  const [queryRef, setQueryRef] = React.useState<QueryRef<
     TData,
     TVariables
   > | null>(null);
+
+  assertWrappedQueryRef(queryRef);
 
   const internalQueryRef = queryRef && unwrapQueryRef(queryRef);
 
@@ -242,12 +245,19 @@ export function useLoadableQuery<
 
       setQueryRef(wrapQueryRef(queryRef));
     },
-    [query, queryKey, suspenseCache, watchQueryOptions, calledDuringRender]
+    [
+      query,
+      queryKey,
+      suspenseCache,
+      watchQueryOptions,
+      calledDuringRender,
+      client,
+    ]
   );
 
   const reset: ResetFunction = React.useCallback(() => {
     setQueryRef(null);
-  }, [queryRef]);
+  }, []);
 
   return [loadQuery, queryRef, { fetchMore, refetch, reset }];
 }

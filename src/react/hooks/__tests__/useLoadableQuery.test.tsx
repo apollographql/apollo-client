@@ -42,7 +42,7 @@ import { useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
-import { QueryReference } from "../../../react";
+import { QueryRef } from "../../../react";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
@@ -54,6 +54,8 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+
+const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {
   jest.useRealTimers();
@@ -183,7 +185,7 @@ function createDefaultProfiledComponents<
     return <p>Loading</p>;
   }
 
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<TData> }) {
     useTrackRenders();
     profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
@@ -1507,7 +1509,7 @@ it("works with startTransition to change variables", async () => {
     queryRef,
     onChange,
   }: {
-    queryRef: QueryReference<Data>;
+    queryRef: QueryRef<Data>;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -3143,7 +3145,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     refetch,
   }: {
     refetch: RefetchFunction<Data, OperationVariables>;
-    queryRef: QueryReference<Data>;
+    queryRef: QueryRef<Data>;
     onChange: (id: string) => void;
   }) {
     const { data } = useReadQuery(queryRef);
@@ -3559,7 +3561,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     fetchMore,
   }: {
     fetchMore: FetchMoreFunction<Data, OperationVariables>;
-    queryRef: QueryReference<Data>;
+    queryRef: QueryRef<Data>;
   }) {
     const { data } = useReadQuery(queryRef);
     const [isPending, startTransition] = React.useTransition();
@@ -4594,6 +4596,8 @@ it('does not suspend deferred queries with partial data in the cache and using a
 });
 
 it("throws when calling loadQuery on first render", async () => {
+  // We don't provide this functionality with React 19 anymore since it requires internals access
+  if (IS_REACT_19) return;
   using _consoleSpy = spyOnConsole("error");
   const { query, mocks } = useSimpleQueryCase();
 
@@ -4613,6 +4617,8 @@ it("throws when calling loadQuery on first render", async () => {
 });
 
 it("throws when calling loadQuery on subsequent render", async () => {
+  // We don't provide this functionality with React 19 anymore since it requires internals access
+  if (React.version.startsWith("19")) return;
   using _consoleSpy = spyOnConsole("error");
   const { query, mocks } = useSimpleQueryCase();
 

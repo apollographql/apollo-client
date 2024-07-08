@@ -1,14 +1,15 @@
 ---
-title: Compiling queries with Babel
+title: Compiling queries with Transpilers
 ---
 
 If you prefer co-locating your GraphQL queries in your Javascript files, you typically use the [graphql-tag](https://github.com/apollographql/graphql-tag) library to write them. That requires to process the query strings into a GraphQL AST, which will add to the startup time of your application, especially if you have many queries.
 
-To avoid this runtime overhead, you can precompile your queries created with `graphql-tag` using [Babel](http://babeljs.io/). Here are two ways you can do this:
+To avoid this runtime overhead, you can precompile your queries created with `graphql-tag` using transpilers like [Babel](http://babeljs.io/) and [SWC](https://swc.rs). Here are possible ways you can do this:
 
 1. Using [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag)
-2. Using [graphql-tag.macro](#using-graphql-tagmacro)
-1. Using [ts-transform-graphql-tag](#using-ts-transform-graphql-tag) for TypeScript
+2. Using [graphql-tag-swc-plugin](#using-graphql-tag-swc-plugin)
+3. Using [graphql-tag.macro](#using-graphql-tagmacro)
+4. Using [ts-transform-graphql-tag](#using-ts-transform-graphql-tag) for TypeScript
 
 If you prefer to keep your GraphQL code in separate files (`.graphql` or `.gql`) you can use [babel-plugin-import-graphql](https://github.com/detrohutt/babel-plugin-import-graphql). This plugin still uses `graphql-tag` under the hood, but transparently. You simply `import` your operations/fragments as if each were an export from your GraphQL file. This carries the same precompilation benefits as the above approaches.
 
@@ -37,6 +38,41 @@ Then add the plugin in your `.babelrc` configuration file:
 ```
 
 And that's it! All the usages of `import gql from 'graphql-tag'` will be removed, and the calls to `gql` will be replaced by the compiled version.
+
+## Using graphql-tag-swc-plugin
+
+This plugin is the same as [babel-plugin-graphql-tag](#using-babel-plugin-graphql-tag) but for [swc](https://swc.rs/), a fast rust based babel alternative.
+
+Install the plugin in your dev dependencies:
+
+```
+# with npm
+npm install --save-dev graphql-tag-swc-plugin
+
+# or with yarn
+yarn add --dev graphql-tag-swc-plugin
+```
+
+Then add the plugin in your `.swcrc` configuration file:
+
+```
+{
+  jsc: {
+    experimental: {
+      plugins: [
+        ["graphql-tag-swc-plugin",
+          {
+            importSources: ["@apollo/client", "graphql-tag"],
+            gqlTagIdentifiers: ["gql"]
+          },
+        ],
+      ],
+    },
+  },
+}
+```
+
+For more information on configuration and features, please checkout the [`graphql-tag-swc-plugin`](https://github.com/rishabh3112/graphql-tag-swc-plugin) documentation.
 
 ## Using graphql-tag.macro
 

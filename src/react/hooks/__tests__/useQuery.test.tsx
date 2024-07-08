@@ -11,6 +11,7 @@ import {
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import { ApolloProvider } from "../../context";
@@ -36,9 +37,9 @@ import {
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
+import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 
 const IS_REACT_17 = React.version.startsWith("17");
-const IS_REACT_19 = React.version.startsWith("19");
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -1536,33 +1537,7 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
-        /*
-This is due to a timing change in React 19
-
-In React 18, you observe this pattern:
-
-  1.  render
-  2.  useState initializer
-  3.  component continues to render with first state
-  4.  strictMode: render again
-  5.  strictMode: call useState initializer again
-  6.  component continues to render with second state
-
-now, in React 19 it looks like this:
-
-  1.  render
-  2.  useState initializer
-  3.  strictMode: call useState initializer again
-  4.  component continues to render with one of these two states
-  5.  strictMode: render again
-  6.  component continues to render with the same state as during the first render
-
-Since useQuery breaks the rules of React and mutably creates an ObservableQuery on the state during render if none is present, React 18 did create two, while React 19 only creates one.
-
-This is pure coincidence though, and the useQuery rewrite that doesn't break the rules of hooks as much and creates the ObservableQuery as part of the state initializer will end up with behaviour closer to the old React 18 behaviour again.
-
-*/
-        expect(obsQueries.size).toBe(IS_REACT_19 ? 1 : 2);
+        expect(obsQueries.size).toBe(2);
 
         const activeSet = new Set<typeof result.current.observable>();
         const inactiveSet = new Set<typeof result.current.observable>();
@@ -7097,6 +7072,131 @@ This is pure coincidence though, and the useQuery rewrite that doesn't break the
       await reobservePromise;
 
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
+    });
+
+    it("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const link = new MockLink([
+        {
+          request: { query, variables: { id: 1 } },
+          result: { data: { hello: "from link" } },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: 2 } },
+          result: { data: { hello: "from link2" } },
+          delay: 10,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link,
+      });
+
+      const mocks = mockFetchQuery(client["queryManager"]);
+
+      const expectQueryTriggered = (
+        nth: number,
+        fetchPolicy: WatchQueryFetchPolicy
+      ) => {
+        expect(mocks.fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
+        expect(mocks.fetchQueryByPolicy).toHaveBeenNthCalledWith(
+          nth,
+          expect.anything(),
+          expect.objectContaining({ fetchPolicy }),
+          expect.any(Number)
+        );
+      };
+      let nextFetchPolicy: WatchQueryOptions<
+        OperationVariables,
+        any
+      >["nextFetchPolicy"] = (_, context) => {
+        if (context.reason === "variables-changed") {
+          return "cache-and-network";
+        } else if (context.reason === "after-fetch") {
+          return "cache-only";
+        }
+        throw new Error("should never happen");
+      };
+      nextFetchPolicy = jest.fn(nextFetchPolicy);
+
+      const { result, rerender } = renderHook<
+        QueryResult,
+        {
+          variables: { id: number };
+        }
+      >(
+        ({ variables }) =>
+          useQuery(query, {
+            fetchPolicy: "network-only",
+            variables,
+            notifyOnNetworkStatusChange: true,
+            nextFetchPolicy,
+          }),
+        {
+          initialProps: {
+            variables: { id: 1 },
+          },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+      // first network request triggers with initial fetchPolicy
+      expectQueryTriggered(1, "network-only");
+
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      });
+
+      expect(nextFetchPolicy).toHaveBeenCalledTimes(1);
+      expect(nextFetchPolicy).toHaveBeenNthCalledWith(
+        1,
+        "network-only",
+        expect.objectContaining({
+          reason: "after-fetch",
+        })
+      );
+      // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
+      // cache-only
+      expect(result.current.observable.options.fetchPolicy).toBe("cache-only");
+
+      rerender({
+        variables: { id: 2 },
+      });
+
+      expect(nextFetchPolicy).toHaveBeenNthCalledWith(
+        2,
+        // has been reset to the initial `fetchPolicy` of "network-only" because
+        // we changed variables, then `nextFetchPolicy` is called
+        "network-only",
+        expect.objectContaining({
+          reason: "variables-changed",
+        })
+      );
+      // the return value of `nextFetchPolicy(..., {reason: "variables-changed"})`
+      expectQueryTriggered(2, "cache-and-network");
+
+      await waitFor(() => {
+        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      });
+
+      expect(nextFetchPolicy).toHaveBeenCalledTimes(3);
+      expect(nextFetchPolicy).toHaveBeenNthCalledWith(
+        3,
+        "cache-and-network",
+        expect.objectContaining({
+          reason: "after-fetch",
+        })
+      );
+      // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
+      // cache-only
+      expect(result.current.observable.options.fetchPolicy).toBe("cache-only");
     });
   });
 

@@ -148,6 +148,14 @@ export function useSubscription<
     )
   );
 
+  const recreate = () =>
+    createSubscription(client, subscription, variables, fetchPolicy, context);
+
+  const recreateRef = React.useRef(recreate);
+  useIsomorphicLayoutEffect(() => {
+    recreateRef.current = recreate;
+  });
+
   if (skip) {
     if (observable) {
       setObservable((observable = null));
@@ -162,15 +170,7 @@ export function useSubscription<
         !!shouldResubscribe(options!)
       : shouldResubscribe) !== false)
   ) {
-    setObservable(
-      (observable = createSubscription(
-        client,
-        subscription,
-        variables,
-        fetchPolicy,
-        context
-      ))
-    );
+    setObservable((observable = recreate()));
   }
 
   const optionsRef = React.useRef(options);
@@ -202,7 +202,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  return useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
+  const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -281,6 +281,19 @@ export function useSubscription<
         observable.__.result
       : fallbackResult
   );
+  return React.useMemo(
+    () => ({
+      ...ret,
+      restart() {
+        invariant(
+          !optionsRef.current.skip,
+          "A subscription that is skipped cannot be restarted."
+        );
+        setObservable(recreateRef.current());
+      },
+    }),
+    [ret]
+  );
 }
 
 function createSubscription<
@@ -314,12 +327,14 @@ function createSubscription<
     new Observable<FetchResult<TData>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
-      observable ||= client.subscribe({
-        query,
-        variables,
-        fetchPolicy,
-        context,
-      });
+      if (!observable) {
+        observable = client.subscribe({
+          query,
+          variables,
+          fetchPolicy,
+          context,
+        });
+      }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();
     }),

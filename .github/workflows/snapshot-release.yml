@@ -30,22 +30,56 @@ jobs:
       startsWith(github.event.comment.body, '/release:pr')
 
     steps:
-      - uses: alessbell/pull-request-comment-branch@v1.1
+      - uses: alessbell/pull-request-comment-branch@v2.1.0
         id: comment-branch
 
-      - name: Checkout head ref
+      - name: Get sha
+        id: parse-sha
+        continue-on-error: true
+        run: |
+          if [ "${{ steps.comment-branch.outputs.head_owner }}" == "apollographql" ]; then
+            echo "sha=${{ steps.comment-branch.outputs.head_sha }}" >> "${GITHUB_OUTPUT}"
+          else
+            sha_from_comment="$(echo $COMMENT_BODY | tr -s ' ' | cut -d ' ' -f2)"
+
+            if [ $sha_from_comment == "/release:pr" ]; then
+              exit 1
+            else
+              echo "sha=$sha_from_comment" >> "${GITHUB_OUTPUT}"
+            fi
+          fi
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+
+      - name: Comment sha reminder
+        if: steps.parse-sha.outcome == 'failure'
+        uses: peter-evans/create-or-update-comment@v4.0.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Did you forget to add the sha? Please use `/release:pr <sha>`
+
+      - name: Fail job
+        if: steps.parse-sha.outcome == 'failure'
+        run: |
+          exit 1
+
+      - name: Checkout ref
         uses: actions/checkout@v4
         with:
           ## specify the owner + repository in order to checkout the fork
           ## for community PRs
           repository: ${{ steps.comment-branch.outputs.head_owner }}/${{ steps.comment-branch.outputs.head_repo }}
-          ref: ${{ steps.comment-branch.outputs.head_ref }}
+          ref: ${{ steps.parse-sha.outputs.sha }}
           fetch-depth: 0
 
       - name: Detect new changesets
         id: added-files
         run: |
-          echo "changesets=$(git diff --name-only --diff-filter=A ${{ steps.comment-branch.outputs.base_sha }} ${{ steps.comment-branch.outputs.head_sha }} .changeset/*.md)" >> "$GITHUB_OUTPUT"
+          delimiter="$(openssl rand -hex 8)"
+          echo "changesets<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo "$(git diff --name-only --diff-filter=A ${{ steps.comment-branch.outputs.base_sha }} ${{ steps.parse-sha.outputs.sha }} .changeset/*.md)" >> "${GITHUB_OUTPUT}"
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
       - name: Append NPM token to .npmrc
         run: |
@@ -110,4 +144,8 @@ jobs:
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
-            A new release has been made for this PR. You can install it with `npm i @apollo/client@${{ steps.get-version.outputs.version }}`.
+            A new release has been made for this PR. You can install it with:
+
+            ```
+            npm i @apollo/client@${{ steps.get-version.outputs.version }}
+            ```

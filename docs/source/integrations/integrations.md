@@ -12,7 +12,7 @@ Apollo Client, unlike some other tools in the React ecosystem, requires _no_ com
 
 ## Vue
 
-A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau ([@Akryum](https://github.com/Akryum)). See the Github [repository](https://github.com/Akryum/vue-apollo) for more details.
+A [Vue.js](https://vuejs.org/) integration is maintained by Guillaume Chau ([@Akryum](https://github.com/Akryum)). See the Github [repository](https://github.com/vuejs/apollo) for more details.
 
 ## Svelte
 

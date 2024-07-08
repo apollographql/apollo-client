@@ -163,6 +163,8 @@ export class ObservableQuery<
     this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
     this.isTornDown = false;
 
+    this.subscribeToMore = this.subscribeToMore.bind(this);
+
     const {
       watchQuery: { fetchPolicy: defaultFetchPolicy = "cache-first" } = {},
     } = queryManager.defaultOptions;
@@ -781,7 +783,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options: { pollInterval },
     } = this;
 
-    if (!pollInterval) {
+    if (!pollInterval || !this.hasObservers()) {
       if (pollingInfo) {
         clearTimeout(pollingInfo.timeout);
         delete this.pollingInfo;

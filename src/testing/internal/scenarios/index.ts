@@ -80,8 +80,8 @@ export interface PaginatedCaseVariables {
 export function setupPaginatedCase() {
   const query: TypedDocumentNode<PaginatedCaseData, PaginatedCaseVariables> =
     gql`
-      query letters($limit: Int, $offset: Int) {
-        letters(limit: $limit) {
+      query LettersQuery($limit: Int, $offset: Int) {
+        letters(limit: $limit, offset: $offset) {
           letter
           position
         }

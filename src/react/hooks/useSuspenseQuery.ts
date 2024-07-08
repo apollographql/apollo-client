@@ -20,7 +20,7 @@ import type {
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
-import { __use, useDeepMemo } from "./internal/index.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { getSuspenseCache } from "../internal/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
@@ -175,6 +175,22 @@ export function useSuspenseQuery<
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
     | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
+  return wrapHook(
+    "useSuspenseQuery",
+    _useSuspenseQuery,
+    useApolloClient(typeof options === "object" ? options.client : undefined)
+  )(query, options);
+}
+
+function _useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options:
+    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
+    | SuspenseQueryHookOptions<TData, TVariables>
+): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions<any, any>({
@@ -235,18 +251,18 @@ export function useSuspenseQuery<
   }, [queryRef.result]);
 
   const result = fetchPolicy === "standby" ? skipResult : __use(promise);
-  const fetchMore = React.useCallback(
-    ((options) => {
+
+  const fetchMore = React.useCallback<
+    FetchMoreFunction<unknown, OperationVariables>
+  >(
+    (options) => {
       const promise = queryRef.fetchMore(options);
       setPromise([queryRef.key, queryRef.promise]);
 
       return promise;
-    }) satisfies FetchMoreFunction<
-      unknown,
-      OperationVariables
-    > as FetchMoreFunction<TData | undefined, TVariables>,
+    },
     [queryRef]
-  );
+  ) as FetchMoreFunction<TData | undefined, TVariables>;
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {
@@ -258,13 +274,7 @@ export function useSuspenseQuery<
     [queryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<
-    TData | undefined,
-    TVariables
-  > = React.useCallback(
-    (options) => queryRef.observable.subscribeToMore(options),
-    [queryRef]
-  );
+  const subscribeToMore = queryRef.observable.subscribeToMore;
 
   return React.useMemo<
     UseSuspenseQueryResult<TData | undefined, TVariables>

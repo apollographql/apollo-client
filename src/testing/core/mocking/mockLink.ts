@@ -13,21 +13,31 @@ import {
   Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
-  removeConnectionDirectiveFromDocument,
   cloneDeep,
   stringifyForDisplay,
   print,
+  getOperationDefinition,
+  getDefaultValues,
+  removeDirectivesFromDocument,
+  checkDocument,
 } from "../../../utilities/index.js";
 
-export type ResultFunction<T, V = Record<string, any>> = (variables: V) => T;
+/** @internal */
+type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
 
-export type VariableMatcher<V = Record<string, any>> = (
-  variables: V
-) => boolean;
+export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
+  V,
+  T
+>;
+
+export type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
+  V,
+  boolean
+>;
 
 export interface MockedResponse<
-  TData = Record<string, any>,
-  TVariables = Record<string, any>,
+  out TData = Record<string, any>,
+  out TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
   maxUsageCount?: number;
@@ -202,11 +212,12 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
     mockedResponse: MockedResponse
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
-    const queryWithoutConnection = removeConnectionDirectiveFromDocument(
-      newMockedResponse.request.query
+    const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
+      [{ name: "connection" }, { name: "nonreactive" }],
+      checkDocument(newMockedResponse.request.query)
     );
-    invariant(queryWithoutConnection, "query is required");
-    newMockedResponse.request.query = queryWithoutConnection!;
+    invariant(queryWithoutClientOnlyDirectives, "query is required");
+    newMockedResponse.request.query = queryWithoutClientOnlyDirectives!;
     const query = removeClientSetsFromDocument(newMockedResponse.request.query);
     if (query) {
       newMockedResponse.request.query = query;
@@ -224,17 +235,21 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
   }
 
   private normalizeVariableMatching(mockedResponse: MockedResponse) {
-    const variables = mockedResponse.request.variables;
-    if (mockedResponse.variableMatcher && variables) {
+    const request = mockedResponse.request;
+    if (mockedResponse.variableMatcher && request.variables) {
       throw new Error(
         "Mocked response should contain either variableMatcher or request.variables"
       );
     }
 
     if (!mockedResponse.variableMatcher) {
+      request.variables = {
+        ...getDefaultValues(getOperationDefinition(request.query)),
+        ...request.variables,
+      };
       mockedResponse.variableMatcher = (vars) => {
         const requestVariables = vars || {};
-        const mockedResponseVariables = variables || {};
+        const mockedResponseVariables = request.variables || {};
         return equal(requestVariables, mockedResponseVariables);
       };
     }

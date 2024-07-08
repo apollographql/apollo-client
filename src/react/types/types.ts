@@ -32,7 +32,11 @@ import type {
 
 /* QueryReference type */
 
-export type { QueryReference } from "../internal/index.js";
+export type {
+  QueryReference,
+  QueryRef,
+  PreloadedQueryRef,
+} from "../internal/index.js";
 
 /* Common types */
 
@@ -480,7 +484,9 @@ export interface SubscriptionDataOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  children?: null | ((result: SubscriptionResult<TData>) => JSX.Element | null);
+  children?:
+    | null
+    | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
 }
 
 export interface SubscriptionCurrentObservable {

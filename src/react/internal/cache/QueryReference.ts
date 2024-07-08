@@ -15,8 +15,8 @@ import {
   createRejectedPromise,
 } from "../../../utilities/index.js";
 import type { QueryKey } from "./types.js";
-import type { useBackgroundQuery, useReadQuery } from "../../hooks/index.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
+import { invariant } from "../../../utilities/globals/invariantWrappers.js";
 
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
 
@@ -28,17 +28,51 @@ type FetchMoreOptions<TData> = Parameters<
 
 const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
 const PROMISE_SYMBOL: unique symbol = Symbol();
-
+declare const QUERY_REF_BRAND: unique symbol;
 /**
- * A `QueryReference` is an opaque object returned by {@link useBackgroundQuery}.
- * A child component reading the `QueryReference` via {@link useReadQuery} will
+ * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.
+ * A child component reading the `QueryReference` via `useReadQuery` will
  * suspend until the promise resolves.
  */
-export interface QueryReference<TData = unknown, TVariables = unknown> {
+export interface QueryRef<TData = unknown, TVariables = unknown> {
+  /** @internal */
+  [QUERY_REF_BRAND]?(variables: TVariables): TData;
+}
+
+/**
+ * @internal
+ * For usage in internal helpers only.
+ */
+interface WrappedQueryRef<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
   /** @internal */
   readonly [QUERY_REFERENCE_SYMBOL]: InternalQueryReference<TData>;
   /** @internal */
   [PROMISE_SYMBOL]: QueryRefPromise<TData>;
+  /** @internal */
+  toPromise?(): Promise<unknown>;
+}
+
+/**
+ * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+ *
+ * {@inheritDoc @apollo/client!QueryRef:interface}
+ */
+export interface QueryReference<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
+  /**
+   * @deprecated Please use the `QueryRef` interface instead of `QueryReference`.
+   *
+   * {@inheritDoc @apollo/client!PreloadedQueryRef#toPromise:member(1)}
+   */
+  toPromise?: unknown;
+}
+
+/**
+ * {@inheritDoc @apollo/client!QueryRef:interface}
+ */
+export interface PreloadedQueryRef<TData = unknown, TVariables = unknown>
+  extends QueryRef<TData, TVariables> {
   /**
    * A function that returns a promise that resolves when the query has finished
    * loading. The promise resolves with the `QueryReference` itself.
@@ -74,9 +108,9 @@ export interface QueryReference<TData = unknown, TVariables = unknown> {
    * }
    * ```
    *
-   * @alpha
+   * @since 3.9.0
    */
-  toPromise(): Promise<QueryReference<TData, TVariables>>;
+  toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
 
 interface InternalQueryReferenceOptions {
@@ -87,7 +121,7 @@ interface InternalQueryReferenceOptions {
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   internalQueryRef: InternalQueryReference<TData>
 ) {
-  const ref: QueryReference<TData, TVariables> = {
+  const ref: WrappedQueryRef<TData, TVariables> = {
     toPromise() {
       // We avoid resolving this promise with the query data because we want to
       // discourage using the server data directly from the queryRef. Instead,
@@ -109,7 +143,24 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(
   return ref;
 }
 
-export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables>
+): asserts queryRef is WrappedQueryRef<TData, TVariables>;
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables> | undefined | null
+): asserts queryRef is WrappedQueryRef<TData, TVariables> | undefined | null;
+export function assertWrappedQueryRef<TData, TVariables>(
+  queryRef: QueryRef<TData, TVariables> | undefined | null
+) {
+  invariant(
+    !queryRef || QUERY_REFERENCE_SYMBOL in queryRef,
+    "Expected a QueryRef object, but got something else instead."
+  );
+}
+
+export function getWrappedPromise<TData>(
+  queryRef: WrappedQueryRef<TData, any>
+) {
   const internalQueryRef = unwrapQueryRef(queryRef);
 
   return internalQueryRef.promise.status === "fulfilled" ?
@@ -118,13 +169,19 @@ export function getWrappedPromise<TData>(queryRef: QueryReference<TData, any>) {
 }
 
 export function unwrapQueryRef<TData>(
-  queryRef: QueryReference<TData>
-): InternalQueryReference<TData> {
+  queryRef: WrappedQueryRef<TData>
+): InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<WrappedQueryRef<TData>>
+): undefined | InternalQueryReference<TData>;
+export function unwrapQueryRef<TData>(
+  queryRef: Partial<WrappedQueryRef<TData>>
+) {
   return queryRef[QUERY_REFERENCE_SYMBOL];
 }
 
 export function updateWrappedQueryRef<TData>(
-  queryRef: QueryReference<TData>,
+  queryRef: WrappedQueryRef<TData>,
   promise: QueryRefPromise<TData>
 ) {
   queryRef[PROMISE_SYMBOL] = promise;
@@ -159,6 +216,7 @@ export class InternalQueryReference<TData = unknown> {
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
+  private softReferences = 0;
 
   constructor(
     observable: ObservableQuery<TData, any>,
@@ -207,18 +265,20 @@ export class InternalQueryReference<TData = unknown> {
     const { observable } = this;
 
     const originalFetchPolicy = this.watchQueryOptions.fetchPolicy;
+    const avoidNetworkRequests =
+      originalFetchPolicy === "no-cache" || originalFetchPolicy === "standby";
 
     try {
-      if (originalFetchPolicy !== "no-cache") {
+      if (avoidNetworkRequests) {
+        observable.silentSetOptions({ fetchPolicy: "standby" });
+      } else {
         observable.resetLastResults();
         observable.silentSetOptions({ fetchPolicy: "cache-first" });
-      } else {
-        observable.silentSetOptions({ fetchPolicy: "standby" });
       }
 
       this.subscribeToQuery();
 
-      if (originalFetchPolicy === "no-cache") {
+      if (avoidNetworkRequests) {
         return;
       }
 
@@ -242,9 +302,30 @@ export class InternalQueryReference<TData = unknown> {
       disposed = true;
       this.references--;
 
-      // Wait before fully disposing in case the app is running in strict mode.
       setTimeout(() => {
         if (!this.references) {
+          this.dispose();
+        }
+      });
+    };
+  }
+
+  softRetain() {
+    this.softReferences++;
+    let disposed = false;
+
+    return () => {
+      // Tracking if this has already been called helps ensure that
+      // multiple calls to this function won't decrement the reference
+      // counter more than it should. Subsequent calls just result in a noop.
+      if (disposed) {
+        return;
+      }
+
+      disposed = true;
+      this.softReferences--;
+      setTimeout(() => {
+        if (!this.softReferences && !this.references) {
           this.dispose();
         }
       });
@@ -254,6 +335,7 @@ export class InternalQueryReference<TData = unknown> {
   didChangeOptions(watchQueryOptions: ObservedOptions) {
     return OBSERVED_CHANGED_OPTIONS.some(
       (option) =>
+        option in watchQueryOptions &&
         !equal(this.watchQueryOptions[option], watchQueryOptions[option])
     );
   }
@@ -378,11 +460,31 @@ export class InternalQueryReference<TData = unknown> {
     // to resolve the promise if `handleNext` hasn't been run to ensure the
     // promise is resolved correctly.
     returnedPromise
-      .then((result) => {
-        if (this.promise.status === "pending") {
-          this.result = result;
-          this.resolve?.(result);
-        }
+      .then(() => {
+        // In the case of `fetchMore`, this promise is resolved before a cache
+        // result is emitted due to the fact that `fetchMore` sets a `no-cache`
+        // fetch policy and runs `cache.batch` in its `.then` handler. Because
+        // the timing is different, we accidentally run this update twice
+        // causing an additional re-render with the `fetchMore` result by
+        // itself. By wrapping in `setTimeout`, this should provide a short
+        // delay to allow the `QueryInfo.notify` handler to run before this
+        // promise is checked.
+        // See https://github.com/apollographql/apollo-client/issues/11315 for
+        // more information
+        setTimeout(() => {
+          if (this.promise.status === "pending") {
+            // Use the current result from the observable instead of the value
+            // resolved from the promise. This avoids issues in some cases where
+            // the raw resolved value should not be the emitted value, such as
+            // when a `fetchMore` call returns an empty array after it has
+            // reached the end of the list.
+            //
+            // See the following for more information:
+            // https://github.com/apollographql/apollo-client/issues/11642
+            this.result = this.observable.getCurrentResult();
+            this.resolve?.(this.result);
+          }
+        });
       })
       .catch(() => {});
 

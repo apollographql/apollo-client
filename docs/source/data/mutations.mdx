@@ -154,7 +154,7 @@ if (error) return `Submission error! ${error.message}`;
 
 ### Resetting mutation status
 
-The mutation result object returned by `useMutation` includes a [`reset` function](#reset):
+The mutation result object returned by `useMutation` includes a [`reset` function](#mutationresult-interface-reset):
 
 ```js
 const [login, { data, loading, error, reset }] = useMutation(LOGIN_MUTATION);
@@ -382,7 +382,7 @@ detail with usage examples, see the [API reference](../api/react/hooks/).
 
 The `useMutation` hook accepts the following options:
 
-<PropertySignatureTable canonicalReference="@apollo/client!MutationHookOptions:interface" />
+<PropertySignatureTable canonicalReference="@apollo/client!MutationHookOptions:interface" idPrefix="mutationhookoptions-interface" />
 
 ### Result
 
@@ -390,7 +390,7 @@ The `useMutation` result is a tuple with a mutate function in the first position
 
 You call the mutate function to trigger the mutation from your UI.
 
-<PropertySignatureTable canonicalReference="@apollo/client!MutationResult:interface" />
+<PropertySignatureTable canonicalReference="@apollo/client!MutationResult:interface" idPrefix="mutationresult-interface" />
 
 ## Next steps
 

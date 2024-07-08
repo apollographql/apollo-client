@@ -1,8 +1,9 @@
-import type { DocumentNode } from "graphql";
 import type * as ReactTypes from "react";
 
 import type { ObservableQuery, OperationVariables } from "../../core/index.js";
 import type { QueryDataOptions } from "../types/types.js";
+import { Trie } from "@wry/trie";
+import { canonicalStringify } from "../../cache/index.js";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
@@ -16,11 +17,13 @@ type QueryInfo = {
   observable: ObservableQuery<any, any> | null;
 };
 
-function makeDefaultQueryInfo(): QueryInfo {
-  return {
+function makeQueryInfoTrie() {
+  // these Tries are very short-lived, so we don't need to worry about making it
+  // "weak" - it's easier to test and debug as a strong Trie.
+  return new Trie<QueryInfo>(false, () => ({
     seen: false,
     observable: null,
-  };
+  }));
 }
 
 export class RenderPromises {
@@ -31,13 +34,13 @@ export class RenderPromises {
   // objects. These QueryInfo objects are intended to survive through the whole
   // getMarkupFromTree process, whereas specific Query instances do not survive
   // beyond a single call to renderToStaticMarkup.
-  private queryInfoTrie = new Map<DocumentNode, Map<string, QueryInfo>>();
+  private queryInfoTrie = makeQueryInfoTrie();
 
   private stopped = false;
   public stop() {
     if (!this.stopped) {
       this.queryPromises.clear();
-      this.queryInfoTrie.clear();
+      this.queryInfoTrie = makeQueryInfoTrie();
       this.stopped = true;
     }
   }
@@ -133,13 +136,9 @@ export class RenderPromises {
   private lookupQueryInfo<TData, TVariables extends OperationVariables>(
     props: QueryDataOptions<TData, TVariables>
   ): QueryInfo {
-    const { queryInfoTrie } = this;
-    const { query, variables } = props;
-    const varMap = queryInfoTrie.get(query) || new Map<string, QueryInfo>();
-    if (!queryInfoTrie.has(query)) queryInfoTrie.set(query, varMap);
-    const variablesString = JSON.stringify(variables);
-    const info = varMap.get(variablesString) || makeDefaultQueryInfo();
-    if (!varMap.has(variablesString)) varMap.set(variablesString, info);
-    return info;
+    return this.queryInfoTrie.lookup(
+      props.query,
+      canonicalStringify(props.variables)
+    );
   }
 }

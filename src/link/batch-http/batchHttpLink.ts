@@ -3,6 +3,7 @@ import { ApolloLink } from "../core/index.js";
 import {
   Observable,
   hasDirectives,
+  maybe,
   removeClientSetsFromDocument,
 } from "../../utilities/index.js";
 import { fromError } from "../utils/index.js";
@@ -27,6 +28,8 @@ export namespace BatchHttpLink {
     Omit<HttpOptions, "useGETForQueries">;
 }
 
+const backupFetch = maybe(() => fetch);
+
 /**
  * Transforms Operation for into HTTP results.
  * context can include the headers property, which will be passed to the fetch function
@@ -43,7 +46,7 @@ export class BatchHttpLink extends ApolloLink {
     let {
       uri = "/graphql",
       // use default global fetch if nothing is passed in
-      fetch: fetcher,
+      fetch: preferredFetch,
       print = defaultPrinter,
       includeExtensions,
       preserveHeaderCase,
@@ -55,14 +58,10 @@ export class BatchHttpLink extends ApolloLink {
       ...requestOptions
     } = fetchParams || ({} as BatchHttpLink.Options);
 
-    // dev warnings to ensure fetch is present
-    checkFetcher(fetcher);
-
-    //fetcher is set here rather than the destructuring to ensure fetch is
-    //declared before referencing it. Reference in the destructuring would cause
-    //a ReferenceError
-    if (!fetcher) {
-      fetcher = fetch;
+    if (__DEV__) {
+      // Make sure at least one of preferredFetch, window.fetch, or backupFetch
+      // is defined, so requests won't fail at runtime.
+      checkFetcher(preferredFetch || backupFetch);
     }
 
     const linkConfig = {
@@ -163,7 +162,16 @@ export class BatchHttpLink extends ApolloLink {
       }
 
       return new Observable<FetchResult[]>((observer) => {
-        fetcher!(chosenURI, options)
+        // Prefer BatchHttpLink.Options.fetch (preferredFetch) if provided, and
+        // otherwise fall back to the *current* global window.fetch function
+        // (see issue #7832), or (if all else fails) the backupFetch function we
+        // saved when this module was first evaluated. This last option protects
+        // against the removal of window.fetch, which is unlikely but not
+        // impossible.
+        const currentFetch =
+          preferredFetch || maybe(() => fetch) || backupFetch;
+
+        currentFetch!(chosenURI, options)
           .then((response) => {
             // Make the raw response available in the context.
             operations.forEach((operation) =>

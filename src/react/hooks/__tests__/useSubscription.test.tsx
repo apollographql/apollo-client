@@ -1179,7 +1179,7 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timesout: 20 });
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
@@ -1241,7 +1241,7 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timesout: 20 });
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
@@ -1332,7 +1332,7 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timesout: 20 });
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
@@ -1394,7 +1394,7 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timesout: 20 });
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
@@ -1449,7 +1449,7 @@ describe("`restart` callback", () => {
       new InvariantError("A subscription that is skipped cannot be restarted.")
     );
 
-    await expect(ProfiledHook).not.toRerender({ timesout: 20 });
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
   });

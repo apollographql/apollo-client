@@ -1,5 +1,5 @@
 import React from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { render, renderHook, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import {
@@ -14,7 +14,10 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
 import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
+import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { SubscriptionHookOptions } from "../../types/types";
+import { GraphQLError } from "graphql";
+import { InvariantError } from "ts-invariant";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1119,6 +1122,336 @@ followed by new in-flight setup", async () => {
     expect(result.current.tails.data).toBeUndefined();
 
     unmount();
+  });
+});
+
+describe("`restart` callback", () => {
+  function setup() {
+    const subscription: TypedDocumentNode<
+      { totalLikes: number },
+      { id: string }
+    > = gql`
+      subscription ($id: ID!) {
+        totalLikes(postId: $id)
+      }
+    `;
+    const onSubscribe = jest.fn();
+    const onUnsubscribe = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(onSubscribe);
+    link.onUnsubscribe(onUnsubscribe);
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+    const ProfiledHook = profileHook(
+      (
+        options: SubscriptionHookOptions<{ totalLikes: number }, { id: string }>
+      ) => useSubscription(subscription, options)
+    );
+    return { client, link, ProfiledHook, onSubscribe, onUnsubscribe };
+  }
+  it("can restart a running subscription", async () => {
+    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
+    render(<ProfiledHook variables={{ id: "1" }} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    link.simulateResult({ result: { data: { totalLikes: 1 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 1 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    ProfiledHook.getCurrentSnapshot().restart();
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+
+    link.simulateResult({ result: { data: { totalLikes: 2 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 2 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+  });
+  it("will use the most recently passed in options", async () => {
+    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
+    const { rerender } = render(<ProfiledHook variables={{ id: "1" }} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    // deliberately keeping a reference to a very old `restart` function
+    // to show that the most recent options are used even with that
+    const restart = ProfiledHook.getCurrentSnapshot().restart;
+    link.simulateResult({ result: { data: { totalLikes: 1 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 1 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    rerender(<ProfiledHook variables={{ id: "2" }} />);
+    await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+    expect(link.operation?.variables).toStrictEqual({ id: "2" });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "2" },
+      });
+    }
+    link.simulateResult({ result: { data: { totalLikes: 1000 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 1000 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "2" },
+      });
+    }
+
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(2);
+    expect(link.operation?.variables).toStrictEqual({ id: "2" });
+
+    restart();
+
+    await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(2));
+    expect(onSubscribe).toHaveBeenCalledTimes(3);
+    expect(link.operation?.variables).toStrictEqual({ id: "2" });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "2" },
+      });
+    }
+    link.simulateResult({ result: { data: { totalLikes: 1005 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 1005 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "2" },
+      });
+    }
+  });
+  it("can restart a subscription that has completed", async () => {
+    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
+    render(<ProfiledHook variables={{ id: "1" }} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    link.simulateResult({ result: { data: { totalLikes: 1 } } }, true);
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 1 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    ProfiledHook.getCurrentSnapshot().restart();
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    link.simulateResult({ result: { data: { totalLikes: 2 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 2 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+  });
+  it("can restart a subscription that has errored", async () => {
+    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
+    render(<ProfiledHook variables={{ id: "1" }} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    const error = new GraphQLError("error");
+    link.simulateResult({
+      result: { errors: [error] },
+    });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [error] }),
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onSubscribe).toHaveBeenCalledTimes(1);
+
+    ProfiledHook.getCurrentSnapshot().restart();
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
+    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+
+    link.simulateResult({ result: { data: { totalLikes: 2 } } });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: { totalLikes: 2 },
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+  });
+  it("will not restart a subscription that has been `skip`ped", async () => {
+    const { client, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
+    render(<ProfiledHook variables={{ id: "1" }} skip />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        data: undefined,
+        error: undefined,
+        restart: expect.any(Function),
+        variables: { id: "1" },
+      });
+    }
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+    expect(onSubscribe).toHaveBeenCalledTimes(0);
+
+    expect(() => ProfiledHook.getCurrentSnapshot().restart()).toThrow(
+      new InvariantError("A subscription that is skipped cannot be restarted.")
+    );
+
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
+    expect(onSubscribe).toHaveBeenCalledTimes(0);
   });
 });
 

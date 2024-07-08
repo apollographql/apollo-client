@@ -2023,7 +2023,13 @@ export interface UseReadQueryResult<TData = unknown> {
 // Warning: (ae-forgotten-export) The symbol "SubscriptionHookOptions" needs to be exported by the entry point index.d.ts
 //
 // @public
-export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): SubscriptionResult<TData, TVariables>;
+export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
+    restart(): void;
+    loading: boolean;
+    data?: TData | undefined;
+    error?: ApolloError;
+    variables?: TVariables | undefined;
+};
 
 // Warning: (ae-forgotten-export) The symbol "SuspenseQueryHookOptions" needs to be exported by the entry point index.d.ts
 //

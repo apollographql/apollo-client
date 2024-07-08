@@ -6,11 +6,12 @@
 
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { ExecutionResult } from 'graphql';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
-import type { GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import type * as ReactTypes from 'react';
@@ -102,7 +103,7 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult>;
+    __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
     // Warning: (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // Warning: (ae-forgotten-export) The symbol "ApolloCache" needs to be exported by the entry point index.d.ts
@@ -231,10 +232,8 @@ class ApolloError extends Error {
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)
     extraInfo: any;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLErrors" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    graphQLErrors: GraphQLErrors;
+    graphQLErrors: GraphQLError[];
     // (undocumented)
     message: string;
     // (undocumented)
@@ -260,7 +259,7 @@ interface ApolloErrorOptions {
     // (undocumented)
     extraInfo?: any;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
@@ -746,7 +745,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -861,9 +860,6 @@ const getApolloClientMemoryInternals: (() => {
 export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 
 // @public (undocumented)
-type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
-// @public (undocumented)
 interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     context?: Context;
@@ -901,7 +897,7 @@ interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -1467,7 +1463,7 @@ class QueryInfo {
     // (undocumented)
     getDiff(): Cache_2.DiffResult<any>;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     init(query: {
         document: DocumentNode;
@@ -1865,11 +1861,15 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
 }
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // @public (undocumented)
@@ -2310,9 +2310,9 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:390:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:125:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:391:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts

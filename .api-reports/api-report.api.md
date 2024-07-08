@@ -9,12 +9,13 @@ import { disableExperimentalFragmentVariables } from 'graphql-tag';
 import { disableFragmentWarnings } from 'graphql-tag';
 import type { DocumentNode } from 'graphql';
 import { enableExperimentalFragmentVariables } from 'graphql-tag';
-import type { ExecutionResult } from 'graphql';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import { gql } from 'graphql-tag';
-import type { GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import { InvariantError } from 'ts-invariant';
 import { Observable } from 'zen-observable-ts';
@@ -96,7 +97,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     __actionHookForDevTools(cb: () => any): void;
     constructor(options: ApolloClientOptions<TCacheShape>);
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult>;
+    __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // (undocumented)
     cache: ApolloCache<TCacheShape>;
@@ -203,10 +204,8 @@ export class ApolloError extends Error {
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)
     extraInfo: any;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLErrors" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    graphQLErrors: GraphQLErrors;
+    graphQLErrors: GraphQLError[];
     // (undocumented)
     message: string;
     // (undocumented)
@@ -229,7 +228,7 @@ interface ApolloErrorOptions {
     // (undocumented)
     extraInfo?: any;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
@@ -875,7 +874,7 @@ export interface ExecutionPatchInitialResult<TData = Record<string, any>, TExten
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -1104,9 +1103,6 @@ const getInMemoryCacheMemoryInternals: (() => {
 export { gql }
 
 // @public (undocumented)
-type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
-// @public (undocumented)
 export interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     context?: DefaultContext;
@@ -1200,7 +1196,7 @@ export interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -2043,7 +2039,7 @@ class QueryInfo {
     // (undocumented)
     getDiff(): Cache_2.DiffResult<any>;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     init(query: {
         document: DocumentNode;
@@ -2485,11 +2481,15 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
 }
 
 // @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+export interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // @public (undocumented)
@@ -3000,9 +3000,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:390:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:125:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:391:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts

@@ -4,9 +4,9 @@
 
 ```ts
 
-import type { ExecutionResult } from 'graphql';
-import type { GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 
 // @public (undocumented)
 export class ApolloError extends Error {
@@ -20,7 +20,7 @@ export class ApolloError extends Error {
     // (undocumented)
     extraInfo: any;
     // (undocumented)
-    graphQLErrors: GraphQLErrors;
+    graphQLErrors: GraphQLError[];
     // (undocumented)
     message: string;
     // (undocumented)
@@ -46,7 +46,7 @@ export interface ApolloErrorOptions {
     // (undocumented)
     extraInfo?: any;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
@@ -81,7 +81,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -126,7 +126,7 @@ interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -149,6 +149,9 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
 
+// @public
+export function reviveGraphQLError(error: GraphQLFormattedError): GraphQLError;
+
 // @public (undocumented)
 type ServerError = Error & {
     response: Response;
@@ -166,11 +169,15 @@ type ServerParseError = Error & {
 // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // (No @packageDocumentation comment for this package)

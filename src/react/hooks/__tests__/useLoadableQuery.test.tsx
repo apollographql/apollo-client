@@ -22,6 +22,8 @@ import {
   Observable,
   OperationVariables,
   RefetchWritePolicy,
+  SubscribeToMoreOptions,
+  split,
 } from "../../../core";
 import {
   MockedProvider,
@@ -35,6 +37,7 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
+  getMainDefinition,
 } from "../../../utilities";
 import { useLoadableQuery } from "../useLoadableQuery";
 import type { UseReadQueryResult } from "../useReadQuery";
@@ -43,7 +46,11 @@ import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryRef } from "../../../react";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
+import {
+  FetchMoreFunction,
+  RefetchFunction,
+  SubscribeToMoreFunction,
+} from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   Profiler,
@@ -4665,6 +4672,218 @@ it("allows loadQuery to be called in useEffect on first render", async () => {
   }
 
   expect(() => renderWithMocks(<App />, { mocks })).not.toThrow();
+});
+
+it("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
+  interface SubscriptionData {
+    greetingUpdated: string;
+  }
+
+  type UpdateQueryFn = NonNullable<
+    SubscribeToMoreOptions<
+      SimpleCaseData,
+      Record<string, never>,
+      SubscriptionData
+    >["updateQuery"]
+  >;
+
+  const subscription: TypedDocumentNode<
+    SubscriptionData,
+    Record<string, never>
+  > = gql`
+    subscription {
+      greetingUpdated
+    }
+  `;
+
+  const { mocks, query } = setupSimpleCase();
+
+  const wsLink = new MockSubscriptionLink();
+  const mockLink = new MockLink(mocks);
+
+  const link = split(
+    ({ query }) => {
+      const definition = getMainDefinition(query);
+
+      return (
+        definition.kind === "OperationDefinition" &&
+        definition.operation === "subscription"
+      );
+    },
+    wsLink,
+    mockLink
+  );
+
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      subscribeToMore: null as SubscribeToMoreFunction<
+        SimpleCaseData,
+        Record<string, never>
+      > | null,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [loadQuery, queryRef, { subscribeToMore }] = useLoadableQuery(query);
+
+    Profiler.mergeSnapshot({ subscribeToMore });
+
+    return (
+      <div>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </div>
+    );
+  }
+
+  const { user } = renderWithClient(<App />, { client, wrapper: Profiler });
+  // initial render
+  await Profiler.takeRender();
+
+  await act(() => user.click(screen.getByText("Load query")));
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { renderedComponents, snapshot } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  const updateQuery = jest.fn<
+    ReturnType<UpdateQueryFn>,
+    Parameters<UpdateQueryFn>
+  >((_, { subscriptionData: { data } }) => {
+    return { greeting: data.greetingUpdated };
+  });
+
+  const { snapshot } = Profiler.getCurrentRender();
+
+  snapshot.subscribeToMore!({ document: subscription, updateQuery });
+
+  wsLink.simulateResult({
+    result: {
+      data: {
+        greetingUpdated: "Subscription hello",
+      },
+    },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Subscription hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(updateQuery).toHaveBeenCalledTimes(1);
+  expect(updateQuery).toHaveBeenCalledWith(
+    { greeting: "Hello" },
+    {
+      subscriptionData: {
+        data: { greetingUpdated: "Subscription hello" },
+      },
+      variables: {},
+    }
+  );
+});
+
+it("throws when calling `subscribeToMore` before loading the query", async () => {
+  interface SubscriptionData {
+    greetingUpdated: string;
+  }
+
+  const subscription: TypedDocumentNode<
+    SubscriptionData,
+    Record<string, never>
+  > = gql`
+    subscription {
+      greetingUpdated
+    }
+  `;
+
+  const { mocks, query } = setupSimpleCase();
+
+  const wsLink = new MockSubscriptionLink();
+  const mockLink = new MockLink(mocks);
+
+  const link = split(
+    ({ query }) => {
+      const definition = getMainDefinition(query);
+
+      return (
+        definition.kind === "OperationDefinition" &&
+        definition.operation === "subscription"
+      );
+    },
+    wsLink,
+    mockLink
+  );
+
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      subscribeToMore: null as SubscribeToMoreFunction<
+        SimpleCaseData,
+        Record<string, never>
+      > | null,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultProfiledComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [loadQuery, queryRef, { subscribeToMore }] = useLoadableQuery(query);
+
+    Profiler.mergeSnapshot({ subscribeToMore });
+
+    return (
+      <div>
+        <button onClick={() => loadQuery()}>Load query</button>
+        <Suspense fallback={<SuspenseFallback />}>
+          {queryRef && <ReadQueryHook queryRef={queryRef} />}
+        </Suspense>
+      </div>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+  // initial render
+  await Profiler.takeRender();
+
+  const { snapshot } = Profiler.getCurrentRender();
+
+  expect(() => {
+    snapshot.subscribeToMore!({ document: subscription });
+  }).toThrow(
+    new InvariantError("The query has not been loaded. Please load the query.")
+  );
 });
 
 describe.skip("type tests", () => {

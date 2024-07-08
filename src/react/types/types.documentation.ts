@@ -532,7 +532,7 @@ export interface SubscriptionOptionsDocumentation {
   shouldResubscribe: unknown;
 
   /**
-   * If `true`, the hook will not cause a component to rerender - this is useful when you want to control the rendering of your component yourself with logic in the `onData` and `onError` callbacks.
+   * If `true`, the hook will not cause the component to rerender. This is useful when you want to control the rendering of your component yourself with logic in the `onData` and `onError` callbacks.
    */
   ignoreResults: unknown;
   /**

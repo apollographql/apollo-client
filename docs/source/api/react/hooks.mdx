@@ -343,7 +343,7 @@ function useBackgroundQuery<TData, TVariables>(
 ): [
   // Will return `undefined` here if no query has been executed yet and the query
   // is currently skipped using `skipToken` or { skip: true }
-  QueryReference<TData> | undefined,
+  QueryRef<TData> | undefined,
   {
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
@@ -388,7 +388,7 @@ See the [example](#example-10) in the `useBackgroundQuery` section above.
 
 ```ts
 function useReadQuery<TData>(
-  queryRef: QueryReference<TData>
+  queryRef: QueryRef<TData>
 ): {
   data: TData;
   networkStatus: NetworkStatus;
@@ -402,7 +402,7 @@ function useReadQuery<TData>(
 
 | Param   | Type         | Description                                                   |
 | ------- | ------------ | ------------------------------------------------------------- |
-| `queryRef` | QueryReference | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
+| `queryRef` | QueryRef | The [`queryRef`](#queryref) that was generated via `useBackgroundQuery`. |
 
 ### Result
 

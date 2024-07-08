@@ -203,3 +203,188 @@ describe("mockLink", () => {
     }
   });
 });
+
+test("removes @nonreactive directives from fields", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      b
+      c
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @nonreactive
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2, c: 3 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c
+          }
+        `,
+      },
+      result: { data: { a: 4, b: 5, c: 6 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3 },
+    });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 4, b: 5, c: 6 },
+    });
+  }
+});
+
+test("removes @connection directives", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      b
+      c
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @connection(key: "test")
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2, c: 3 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c
+          }
+        `,
+      },
+      result: { data: { a: 4, b: 5, c: 6 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 1, b: 2, c: 3 },
+    });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({
+      data: { a: 4, b: 5, c: 6 },
+    });
+  }
+});
+
+test("removes fields with @client directives", async () => {
+  const serverQuery = gql`
+    query A {
+      a
+      b
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+            c @client
+          }
+        `,
+      },
+      result: { data: { a: 1, b: 2 } },
+    },
+    {
+      request: {
+        query: gql`
+          query A {
+            a
+            b
+          }
+        `,
+      },
+      result: { data: { a: 3, b: 4 } },
+    },
+  ]);
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 1, b: 2 } });
+  }
+
+  {
+    const stream = new ObservableStream(execute(link, { query: serverQuery }));
+
+    await expect(stream.takeNext()).resolves.toEqual({ data: { a: 3, b: 4 } });
+  }
+});
+
+describe.skip("type tests", () => {
+  const ANY = {} as any;
+  test("covariant behaviour: `MockedResponses<X,Y>` should be assignable to `MockedResponse`", () => {
+    let unspecificArray: MockedResponse[] = [];
+    let specificArray: MockedResponse<{ foo: string }, { foo: string }>[] = [];
+    let unspecificResponse: MockedResponse = ANY;
+    let specificResponse: MockedResponse<{ foo: string }, { foo: string }> =
+      ANY;
+
+    unspecificArray.push(specificResponse);
+    unspecificArray.push(unspecificResponse);
+
+    specificArray.push(specificResponse);
+    // @ts-expect-error
+    specificArray.push(unspecificResponse);
+
+    unspecificArray = [specificResponse];
+    unspecificArray = [unspecificResponse];
+    unspecificArray = [specificResponse, unspecificResponse];
+
+    specificArray = [specificResponse];
+    // @ts-expect-error
+    specificArray = [unspecificResponse];
+    // @ts-expect-error
+    specificArray = [specificResponse, unspecificResponse];
+
+    unspecificResponse = specificResponse;
+    // @ts-expect-error
+    specificResponse = unspecificResponse;
+  });
+});

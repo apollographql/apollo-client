@@ -23,10 +23,13 @@
     {
       "files": ["**/*.ts", "**/*.tsx"],
       "excludedFiles": ["**/__tests__/**/*.*", "*.d.ts"],
+      "extends": ["plugin:react-hooks/recommended"],
       "parserOptions": {
         "project": "./tsconfig.json"
       },
+      "plugins": ["eslint-plugin-react-compiler"],
       "rules": {
+        "react-compiler/react-compiler": "error",
         "@typescript-eslint/consistent-type-imports": [
           "error",
           {

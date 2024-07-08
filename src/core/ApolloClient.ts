@@ -253,13 +253,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.defaultOptions = defaultOptions || Object.create(null);
     this.typeDefs = typeDefs;
     this.devtoolsConfig = {
+      ...devtools,
       enabled:
         devtools?.enabled ??
         connectToDevTools ??
         (typeof window === "object" &&
           (window as any).__APOLLO_CLIENT__ &&
           __DEV__),
-      name: devtools?.name,
     };
 
     if (ssrForceFetchDelay) {

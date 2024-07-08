@@ -11,7 +11,10 @@ import type { GraphQLErrorExtensions } from 'graphql';
 // @public (undocumented)
 export class ApolloError extends Error {
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
-    cause: Error | null;
+    cause: ({
+        message: string;
+        extensions?: GraphQLErrorExtensions[];
+    } & Partial<Error>) | null;
     // (undocumented)
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)

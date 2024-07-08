@@ -16,6 +16,7 @@ import {
   TypedDocumentNode,
   ApolloLink,
   Observable,
+  split,
 } from "../../../core";
 import {
   MockedResponse,
@@ -29,15 +30,19 @@ import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
+  getMainDefinition,
 } from "../../../utilities";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
 import { ApolloProvider } from "../../context";
-import { QueryReference } from "../../internal";
+import { QueryRef, QueryReference } from "../../internal";
 import { InMemoryCache } from "../../../cache";
 import { SuspenseQueryHookFetchPolicy } from "../../types/types";
 import equal from "@wry/equality";
-import { RefetchWritePolicy } from "../../../core/watchQueryOptions";
+import {
+  RefetchWritePolicy,
+  SubscribeToMoreOptions,
+} from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
 import {
   PaginatedCaseData,
@@ -54,6 +59,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+import { SubscribeToMoreFunction } from "../useSuspenseQuery";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -70,7 +76,7 @@ function createDefaultTrackedComponents<
     return <div>Loading</div>;
   }
 
-  function ReadQueryHook({ queryRef }: { queryRef: QueryReference<TData> }) {
+  function ReadQueryHook({ queryRef }: { queryRef: QueryRef<TData> }) {
     useTrackRenders();
     Profiler.mergeSnapshot({
       result: useReadQuery(queryRef),
@@ -532,6 +538,88 @@ it("does not recreate queryRef and execute a network request when rerendering us
   }
 
   expect(fetchCount).toBe(1);
+
+  await expect(Profiler).not.toRerender({ timeout: 50 });
+});
+
+// https://github.com/apollographql/apollo-client/issues/11815
+it("does not recreate queryRef or execute a network request when rerendering useBackgroundQuery in strict mode", async () => {
+  const { query } = setupSimpleCase();
+  const user = userEvent.setup();
+  let fetchCount = 0;
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      fetchCount++;
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { greeting: "Hello" } });
+          observer.complete();
+        }, 20);
+      });
+    }),
+    cache: new InMemoryCache(),
+  });
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      queryRef: null as QueryRef<SimpleCaseData> | null,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+  const { SuspenseFallback, ReadQueryHook } =
+    createDefaultTrackedComponents(Profiler);
+
+  function App() {
+    useTrackRenders();
+    const [, setCount] = React.useState(0);
+    // Use a fetchPolicy of no-cache to ensure we can more easily track if
+    // another network request was made
+    const [queryRef] = useBackgroundQuery(query, { fetchPolicy: "no-cache" });
+
+    Profiler.mergeSnapshot({ queryRef });
+
+    return (
+      <>
+        <button onClick={() => setCount((count) => count + 1)}>
+          Increment
+        </button>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      </>
+    );
+  }
+
+  renderWithClient(<App />, {
+    client,
+    wrapper: ({ children }) => (
+      <Profiler>
+        <React.StrictMode>{children}</React.StrictMode>
+      </Profiler>
+    ),
+  });
+
+  const incrementButton = screen.getByText("Increment");
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  // eslint-disable-next-line testing-library/render-result-naming-convention
+  const firstRender = await Profiler.takeRender();
+  const initialQueryRef = firstRender.snapshot.queryRef;
+
+  await act(() => user.click(incrementButton));
+
+  {
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.queryRef).toBe(initialQueryRef);
+    expect(fetchCount).toBe(1);
+  }
 
   await expect(Profiler).not.toRerender({ timeout: 50 });
 });
@@ -4761,7 +4849,7 @@ describe("refetch", () => {
       );
     }
 
-    function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+    function Todo({ queryRef }: { queryRef: QueryRef<Data> }) {
       useTrackRenders();
       Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
@@ -4891,7 +4979,7 @@ describe("refetch", () => {
       );
     }
 
-    function Todo({ queryRef }: { queryRef: QueryReference<Data> }) {
+    function Todo({ queryRef }: { queryRef: QueryRef<Data> }) {
       useTrackRenders();
       Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
 
@@ -5970,6 +6058,135 @@ describe("fetchMore", () => {
 
     await expect(Profiler).not.toRerender();
   });
+
+  it("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
+    interface SubscriptionData {
+      greetingUpdated: string;
+    }
+
+    type UpdateQueryFn = NonNullable<
+      SubscribeToMoreOptions<
+        SimpleCaseData,
+        Record<string, never>,
+        SubscriptionData
+      >["updateQuery"]
+    >;
+
+    const subscription: TypedDocumentNode<
+      SubscriptionData,
+      Record<string, never>
+    > = gql`
+      subscription {
+        greetingUpdated
+      }
+    `;
+
+    const { mocks, query } = setupSimpleCase();
+
+    const wsLink = new MockSubscriptionLink();
+    const mockLink = new MockLink(mocks);
+
+    const link = split(
+      ({ query }) => {
+        const definition = getMainDefinition(query);
+
+        return (
+          definition.kind === "OperationDefinition" &&
+          definition.operation === "subscription"
+        );
+      },
+      wsLink,
+      mockLink
+    );
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        subscribeToMore: null as SubscribeToMoreFunction<
+          SimpleCaseData,
+          Record<string, never>
+        > | null,
+        result: null as UseReadQueryResult<SimpleCaseData> | null,
+      },
+    });
+
+    const { SuspenseFallback, ReadQueryHook } =
+      createDefaultTrackedComponents(Profiler);
+
+    function App() {
+      useTrackRenders();
+      const [queryRef, { subscribeToMore }] = useBackgroundQuery(query);
+
+      Profiler.mergeSnapshot({ subscribeToMore });
+
+      return (
+        <Suspense fallback={<SuspenseFallback />}>
+          <ReadQueryHook queryRef={queryRef} />
+        </Suspense>
+      );
+    }
+
+    renderWithClient(<App />, { client, wrapper: Profiler });
+
+    {
+      const { renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+    }
+
+    {
+      const { renderedComponents, snapshot } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+      expect(snapshot.result).toEqual({
+        data: { greeting: "Hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    const updateQuery = jest.fn<
+      ReturnType<UpdateQueryFn>,
+      Parameters<UpdateQueryFn>
+    >((_, { subscriptionData: { data } }) => {
+      return { greeting: data.greetingUpdated };
+    });
+
+    const { snapshot } = Profiler.getCurrentRender();
+
+    snapshot.subscribeToMore!({ document: subscription, updateQuery });
+
+    wsLink.simulateResult({
+      result: {
+        data: {
+          greetingUpdated: "Subscription hello",
+        },
+      },
+    });
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+      expect(snapshot.result).toEqual({
+        data: { greeting: "Subscription hello" },
+        error: undefined,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    expect(updateQuery).toHaveBeenCalledTimes(1);
+    expect(updateQuery).toHaveBeenCalledWith(
+      { greeting: "Hello" },
+      {
+        subscriptionData: {
+          data: { greetingUpdated: "Subscription hello" },
+        },
+        variables: {},
+      }
+    );
+  });
 });
 
 describe.skip("type tests", () => {
@@ -6255,7 +6472,7 @@ describe.skip("type tests", () => {
     expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
   });
 
-  it("returns QueryReference<TData> | undefined when `skip` is present", () => {
+  it("returns QueryRef<TData> | undefined when `skip` is present", () => {
     const { query } = setupVariablesCase();
 
     const [inferredQueryRef] = useBackgroundQuery(query, {
@@ -6263,10 +6480,13 @@ describe.skip("type tests", () => {
     });
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(inferredQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData>
+      QueryRef<VariablesCaseData>
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6275,10 +6495,13 @@ describe.skip("type tests", () => {
     >(query, { skip: true });
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(explicitQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
 
     // TypeScript is too smart and using a `const` or `let` boolean variable
@@ -6293,10 +6516,13 @@ describe.skip("type tests", () => {
     });
 
     expectTypeOf(dynamicQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(dynamicQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(dynamicQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
   });
 
@@ -6307,7 +6533,7 @@ describe.skip("type tests", () => {
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<undefined>();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6317,11 +6543,11 @@ describe.skip("type tests", () => {
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<undefined>();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
   });
 
-  it("returns QueryReference<TData> | undefined when using conditional `skipToken`", () => {
+  it("returns QueryRef<TData> | undefined when using conditional `skipToken`", () => {
     const { query } = setupVariablesCase();
     const options = {
       skip: true,
@@ -6333,10 +6559,13 @@ describe.skip("type tests", () => {
     );
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(inferredQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6345,14 +6574,17 @@ describe.skip("type tests", () => {
     >(query, options.skip ? skipToken : undefined);
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<
+      QueryRef<VariablesCaseData, VariablesCaseVariables> | undefined
+    >();
+    expectTypeOf(explicitQueryRef).toMatchTypeOf<
       QueryReference<VariablesCaseData, VariablesCaseVariables> | undefined
     >();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
   });
 
-  it("returns QueryReference<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`", () => {
+  it("returns QueryRef<DeepPartial<TData>> | undefined when using `skipToken` with `returnPartialData`", () => {
     const { query } = setupVariablesCase();
     const options = {
       skip: true,
@@ -6364,11 +6596,15 @@ describe.skip("type tests", () => {
     );
 
     expectTypeOf(inferredQueryRef).toEqualTypeOf<
+      | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+      | undefined
+    >();
+    expectTypeOf(inferredQueryRef).toMatchTypeOf<
       | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
       | undefined
     >();
     expectTypeOf(inferredQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
 
     const [explicitQueryRef] = useBackgroundQuery<
@@ -6377,11 +6613,15 @@ describe.skip("type tests", () => {
     >(query, options.skip ? skipToken : { returnPartialData: true });
 
     expectTypeOf(explicitQueryRef).toEqualTypeOf<
+      | QueryRef<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
+      | undefined
+    >();
+    expectTypeOf(explicitQueryRef).toMatchTypeOf<
       | QueryReference<DeepPartial<VariablesCaseData>, VariablesCaseVariables>
       | undefined
     >();
     expectTypeOf(explicitQueryRef).not.toEqualTypeOf<
-      QueryReference<VariablesCaseData, VariablesCaseVariables>
+      QueryRef<VariablesCaseData, VariablesCaseVariables>
     >();
   });
 });

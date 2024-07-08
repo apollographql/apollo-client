@@ -1,6 +1,10 @@
 ---
 title: Reading and writing data to the cache
+api_doc:
+  - "@apollo/client!ApolloClient#watchFragment:member(1)"
 ---
+
+import { DocBlock } from '../../shared/ApiDoc';
 
 You can read and write data directly to the Apollo Client cache, _without_ communicating with your GraphQL server. You can interact with data that you previously fetched from your server, _and_ with data that's only available [locally](../local-state/local-state-management/).
 
@@ -210,6 +214,14 @@ client.writeFragment({
 ```
 
 All subscribers to the Apollo Client cache (including all active queries) see this change and update your application's UI accordingly.
+
+<MinVersion version="3.10.0">
+
+### `watchFragment`
+
+</MinVersion>
+
+<DocBlock canonicalReference={"@apollo/client!ApolloClient#watchFragment:member(1)"} />
 
 <MinVersion version="3.8.0">
 

@@ -1500,6 +1500,7 @@ describe("ignoreResults", () => {
       error: undefined,
       data: undefined,
       variables: undefined,
+      restart: expect.any(Function),
     });
     link.simulateResult(results[0]);
 
@@ -1571,6 +1572,7 @@ describe("ignoreResults", () => {
       error: undefined,
       data: undefined,
       variables: undefined,
+      restart: expect.any(Function),
     });
     link.simulateResult(results[0]);
 
@@ -1633,6 +1635,7 @@ describe("ignoreResults", () => {
         error: undefined,
         data: undefined,
         variables: undefined,
+        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
@@ -1649,6 +1652,7 @@ describe("ignoreResults", () => {
         // `data` appears immediately after changing to `ignoreResults: false`
         data: results[0].result.data,
         variables: undefined,
+        restart: expect.any(Function),
       });
       // `onData` should not be called again for the same result
       expect(onData).toHaveBeenCalledTimes(1);
@@ -1662,6 +1666,7 @@ describe("ignoreResults", () => {
         error: undefined,
         data: results[1].result.data,
         variables: undefined,
+        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(2);
     }
@@ -1699,6 +1704,7 @@ describe("ignoreResults", () => {
         error: undefined,
         data: undefined,
         variables: undefined,
+        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
@@ -1710,6 +1716,7 @@ describe("ignoreResults", () => {
         error: undefined,
         data: results[0].result.data,
         variables: undefined,
+        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
@@ -1724,6 +1731,7 @@ describe("ignoreResults", () => {
         // switching back to the default `ignoreResults: true` return value
         data: undefined,
         variables: undefined,
+        restart: expect.any(Function),
       });
       // `onData` should not be called again
       expect(onData).toHaveBeenCalledTimes(1);

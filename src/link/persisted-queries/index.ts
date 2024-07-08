@@ -1,7 +1,12 @@
 import { invariant } from "../../utilities/globals/index.js";
 
 import { print } from "../../utilities/index.js";
-import type { DocumentNode, ExecutionResult, GraphQLError } from "graphql";
+import type {
+  DocumentNode,
+  ExecutionResult,
+  GraphQLError,
+  GraphQLFormattedError,
+} from "graphql";
 
 import type { Operation } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
@@ -10,11 +15,7 @@ import type {
   ObservableSubscription,
 } from "../../utilities/index.js";
 import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type {
-  GraphQLErrorFromResponse,
-  GraphQLErrorsFromResponse,
-  NetworkError,
-} from "../../errors/index.js";
+import type { NetworkError } from "../../errors/index.js";
 import type { ServerError } from "../utils/index.js";
 import {
   cacheSizes,
@@ -25,7 +26,7 @@ import {
 export const VERSION = 1;
 
 export interface ErrorResponse {
-  graphQLErrors?: GraphQLErrorsFromResponse;
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   networkError?: NetworkError;
   response?: ExecutionResult;
   operation: Operation;
@@ -64,8 +65,8 @@ export namespace PersistedQueryLink {
 
 function processErrors(
   graphQLErrors:
-    | GraphQLErrorFromResponse[]
-    | readonly GraphQLErrorFromResponse[]
+    | GraphQLFormattedError[]
+    | ReadonlyArray<GraphQLFormattedError>
     | undefined
 ): ErrorMeta {
   const byMessage = Object.create(null),
@@ -187,7 +188,7 @@ export const createPersistedQueryLink = (
           if (!retried && ((response && response.errors) || networkError)) {
             retried = true;
 
-            const graphQLErrors: GraphQLErrorFromResponse[] = [];
+            const graphQLErrors: GraphQLFormattedError[] = [];
 
             const responseErrors = response && response.errors;
             if (isNonEmptyArray(responseErrors)) {

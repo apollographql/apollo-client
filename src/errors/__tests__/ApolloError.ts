@@ -1,5 +1,5 @@
 import { ApolloError } from "..";
-import { GraphQLError } from "graphql";
+import { ExecutableDefinitionNode, GraphQLError, parse, Source } from "graphql";
 
 describe("ApolloError", () => {
   it("should construct itself correctly", () => {
@@ -106,5 +106,39 @@ describe("ApolloError", () => {
       networkError,
     });
     expect(apolloError.stack).toBeDefined();
+  });
+
+  it("will revive `GraphQLError` instances from `graphQLErrors`", () => {
+    const source = new Source(`
+      {
+        field
+      }
+    `);
+    const ast = parse(source);
+    const operationNode = ast.definitions[0] as ExecutableDefinitionNode;
+    const fieldNode = operationNode.selectionSet.selections[0];
+    const original = new GraphQLError("msg" /* message */, {
+      nodes: [fieldNode],
+      source,
+      positions: [1, 2, 3],
+      path: ["a", "b", "c"],
+      originalError: new Error("test"),
+      extensions: { foo: "bar" },
+    });
+
+    const apolloError = new ApolloError({
+      graphQLErrors: [JSON.parse(JSON.stringify(original))],
+    });
+    const graphQLError = apolloError.graphQLErrors[0];
+
+    console.log({
+      graphQLError,
+      original,
+      serialized: JSON.stringify(original),
+    });
+
+    expect(graphQLError).toBeInstanceOf(GraphQLError);
+    // test equality of enumberable fields. non-enumerable fields will differ
+    expect({ ...graphQLError }).toStrictEqual({ ...original });
   });
 });

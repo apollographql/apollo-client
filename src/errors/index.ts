@@ -1,6 +1,6 @@
 import "../utilities/globals/index.js";
 
-import type { GraphQLErrorExtensions } from "graphql";
+import type { GraphQLErrorExtensions, GraphQLFormattedError } from "graphql";
 import { GraphQLError } from "graphql";
 
 import { isNonNullObject } from "../utilities/index.js";
@@ -18,7 +18,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 };
 
 export interface ApolloErrorOptions {
-  graphQLErrors?: GraphQLErrorsFromResponse;
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   protocolErrors?: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -68,17 +68,6 @@ const generateErrorMessage = (err: ApolloError) => {
   );
 };
 
-/**
- * A GraphQLError, as received from the server in a GraphQL Response
- *
- * See https://github.com/graphql/graphql-spec/blob/main/spec/Section%207%20--%20Response.md#errors
- * (scroll down to Error Result Format)
- * Only `message` is mandatory in the spec, the other fields are optional.
- */
-export type GraphQLErrorFromResponse = Pick<GraphQLError, "message"> &
-  Partial<GraphQLError>;
-export type GraphQLErrorsFromResponse = ReadonlyArray<GraphQLErrorFromResponse>;
-
 export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 
 export type NetworkError = Error | ServerParseError | ServerError | null;
@@ -86,7 +75,7 @@ export type NetworkError = Error | ServerParseError | ServerError | null;
 export class ApolloError extends Error {
   public name: string;
   public message: string;
-  public graphQLErrors: GraphQLErrorsFromResponse;
+  public graphQLErrors: GraphQLError[];
   public protocolErrors: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -132,7 +121,7 @@ export class ApolloError extends Error {
     this.cause =
       [
         networkError,
-        ...(graphQLErrors || []),
+        ...(this.graphQLErrors || []),
         ...(protocolErrors || []),
         ...(clientErrors || []),
       ].find((e) => !!e) || null;
@@ -149,16 +138,18 @@ export class ApolloError extends Error {
  * spec, but they are not optional in the `GraphQLError` type.
  * This function ensures that all errors are instances of the `GraphQLError` class.
  */
-export function reviveGraphQLError(
-  error: GraphQLErrorFromResponse
-): GraphQLError {
+export function reviveGraphQLError(error: GraphQLFormattedError): GraphQLError {
   return error instanceof GraphQLError ? error : (
-      new GraphQLError(
-        error.message,
-        // This will pass `message` into the `options` parameter.
-        // The constructor does not expect that, but it will ignore it and we
-        // don't need to destructure `error`, saving some bundle size.
-        error
+      Object.assign(
+        new GraphQLError(
+          error.message,
+          // This will pass `message` into the `options` parameter.
+          // The constructor does not expect that, but it will ignore it and we
+          // don't need to destructure `error`, saving some bundle size.
+          error
+        ),
+        //
+        { locations: error.locations }
       )
     );
 }

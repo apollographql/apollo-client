@@ -459,6 +459,11 @@ export interface BaseSubscriptionOptions<
   onError?: (error: ApolloError) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
+  /**
+   * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
+   * @defaultValue `false`
+   */
+  ignoreResults?: boolean;
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {

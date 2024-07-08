@@ -1,4 +1,4 @@
-import type { GraphQLError, GraphQLFormattedError } from "graphql";
+import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
 import type { DefaultContext } from "../../core/index.js";
 export type { DocumentNode };
@@ -18,7 +18,7 @@ export interface ExecutionPatchInitialResult<
   // if data is present, incremental is not
   data: TData | null | undefined;
   incremental?: never;
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: TExtensions;
 }
 
@@ -28,7 +28,7 @@ export interface IncrementalPayload<TData, TExtensions> {
   data: TData | null;
   label?: string;
   path: Path;
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   extensions?: TExtensions;
 }
 

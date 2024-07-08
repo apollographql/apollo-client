@@ -3,7 +3,7 @@ import { invariant } from "../../utilities/globals/index.js";
 import { print } from "../../utilities/index.js";
 import type {
   DocumentNode,
-  ExecutionResult,
+  FormattedExecutionResult,
   GraphQLError,
   GraphQLFormattedError,
 } from "graphql";
@@ -28,7 +28,7 @@ export const VERSION = 1;
 export interface ErrorResponse {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   networkError?: NetworkError;
-  response?: ExecutionResult;
+  response?: FormattedExecutionResult;
   operation: Operation;
   meta: ErrorMeta;
 }
@@ -173,7 +173,7 @@ export const createPersistedQueryLink = (
 
       const { query } = operation;
 
-      return new Observable((observer: Observer<ExecutionResult>) => {
+      return new Observable((observer: Observer<FormattedExecutionResult>) => {
         let subscription: ObservableSubscription;
         let retried = false;
         let originalFetchOptions: any;
@@ -182,7 +182,10 @@ export const createPersistedQueryLink = (
           {
             response,
             networkError,
-          }: { response?: ExecutionResult; networkError?: ServerError },
+          }: {
+            response?: FormattedExecutionResult;
+            networkError?: ServerError;
+          },
           cb: () => void
         ) => {
           if (!retried && ((response && response.errors) || networkError)) {
@@ -251,7 +254,7 @@ export const createPersistedQueryLink = (
           cb();
         };
         const handler = {
-          next: (response: ExecutionResult) => {
+          next: (response: FormattedExecutionResult) => {
             maybeRetry({ response }, () => observer.next!(response));
           },
           error: (networkError: ServerError) => {

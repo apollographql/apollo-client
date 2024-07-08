@@ -461,7 +461,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     T = any,
     TVariables extends OperationVariables = OperationVariables,
   >(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>> {
-    console.log(options);
     return this.queryManager.startGraphQLSubscription<T>(options);
   }
 

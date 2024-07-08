@@ -19,7 +19,6 @@ import { SubscriptionHookOptions } from "../../types/types";
 import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
-import { on } from "events";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1203,12 +1202,13 @@ followed by new in-flight setup", async () => {
               data: undefined,
               variables: undefined,
             });
+            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
-
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(
             graphQlErrorResult.result!.errors![0]
           );
+          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
@@ -1240,12 +1240,14 @@ followed by new in-flight setup", async () => {
             data: { totalLikes: 42 },
             variables: undefined,
           });
+          expect(snapshot.error).toBeInstanceOf(ApolloError);
         }
 
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError).toHaveBeenCalledWith(
           graphQlErrorResult.result!.errors![0]
         );
+        expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
         expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
@@ -1331,12 +1333,11 @@ followed by new in-flight setup", async () => {
               data: undefined,
               variables: undefined,
             });
+            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
 
           expect(onError).toHaveBeenCalledTimes(1);
-          // this is not an `ApolloError` - that's different from how queries are handled
-          // but in line with how we currently handle subscriptions
-          // do we want to decide on consistency with `useQuery` and adjust subscription behaviour later, too?
+          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
           expect(onError).toHaveBeenCalledWith(protocolErrorResult.error);
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);

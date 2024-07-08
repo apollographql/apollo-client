@@ -37,6 +37,7 @@ import {
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
+import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -7097,21 +7098,14 @@ describe("useQuery Hook", () => {
         link,
       });
 
-      const fetchQueryByPolicySpy = jest.spyOn(
-        client["queryManager"] as any as {
-          fetchQueryByPolicy(
-            info: {},
-            options: { fetchPolicy: WatchQueryFetchPolicy }
-          ): unknown;
-        },
-        "fetchQueryByPolicy"
-      );
+      const mocks = mockFetchQuery(client["queryManager"]);
+
       const expectQueryTriggered = (
         nth: number,
         fetchPolicy: WatchQueryFetchPolicy
       ) => {
-        expect(fetchQueryByPolicySpy).toHaveBeenCalledTimes(nth);
-        expect(fetchQueryByPolicySpy).toHaveBeenNthCalledWith(
+        expect(mocks.fetchQueryByPolicy).toHaveBeenCalledTimes(nth);
+        expect(mocks.fetchQueryByPolicy).toHaveBeenNthCalledWith(
           nth,
           expect.anything(),
           expect.objectContaining({ fetchPolicy }),

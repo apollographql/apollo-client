@@ -457,6 +457,11 @@ export interface BaseSubscriptionOptions<
   onError?: (error: ApolloError) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
+  /**
+   * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
+   * @defaultValue `false`
+   */
+  ignoreResults?: boolean;
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {
@@ -479,6 +484,9 @@ export interface SubscriptionHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
 
+/**
+ * @deprecated This type is not used anymore. It will be removed in the next major version of Apollo Client
+ */
 export interface SubscriptionDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

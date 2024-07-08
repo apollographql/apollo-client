@@ -359,6 +359,7 @@ interface BaseSubscriptionOptions<TData = any, TVariables extends OperationVaria
     context?: DefaultContext;
     // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
     fetchPolicy?: FetchPolicy;
+    ignoreResults?: boolean;
     onComplete?: () => void;
     // Warning: (ae-forgotten-export) The symbol "OnDataOptions" needs to be exported by the entry point index.d.ts
     onData?: (options: OnDataOptions<TData>) => any;

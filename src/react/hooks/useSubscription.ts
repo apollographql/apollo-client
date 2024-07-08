@@ -138,7 +138,8 @@ export function useSubscription<
     }
   }
 
-  const { skip, fetchPolicy, shouldResubscribe, context } = options;
+  const { skip, fetchPolicy, shouldResubscribe, context, ignoreResults } =
+    options;
   const variables = useDeepMemo(() => options.variables, [options.variables]);
 
   let [observable, setObservable] = React.useState(() =>
@@ -177,15 +178,29 @@ export function useSubscription<
     optionsRef.current = options;
   });
 
+  const fallbackLoading = !skip && !ignoreResults;
   const fallbackResult = React.useMemo<SubscriptionResult<TData, TVariables>>(
     () => ({
-      loading: !skip,
+      loading: fallbackLoading,
       error: void 0,
       data: void 0,
       variables,
     }),
-    [skip, variables]
+    [fallbackLoading, variables]
   );
+
+  const ignoreResultsRef = React.useRef(ignoreResults);
+  useIsomorphicLayoutEffect(() => {
+    // We cannot reference `ignoreResults` directly in the effect below
+    // it would add a dependency to the `useEffect` deps array, which means the
+    // subscription would be recreated if `ignoreResults` changes
+    // As a result, on resubscription, the last result would be re-delivered,
+    // rendering the component one additional time, and re-triggering `onData`.
+    // The same applies to `fetchPolicy`, which results in a new `observable`
+    // being created. We cannot really avoid it in that case, but we can at least
+    // avoid it for `ignoreResults`.
+    ignoreResultsRef.current = ignoreResults;
+  });
 
   const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
     React.useCallback(
@@ -212,7 +227,7 @@ export function useSubscription<
               variables,
             };
             observable.__.setResult(result);
-            update();
+            if (!ignoreResultsRef.current) update();
 
             if (optionsRef.current.onData) {
               optionsRef.current.onData({
@@ -234,7 +249,7 @@ export function useSubscription<
                 error,
                 variables,
               });
-              update();
+              if (!ignoreResultsRef.current) update();
               optionsRef.current.onError?.(error);
             }
           },
@@ -261,7 +276,10 @@ export function useSubscription<
       },
       [observable]
     ),
-    () => (observable && !skip ? observable.__.result : fallbackResult)
+    () =>
+      observable && !skip && !ignoreResults ?
+        observable.__.result
+      : fallbackResult
   );
   return React.useMemo(
     () => ({

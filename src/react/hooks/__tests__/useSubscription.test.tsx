@@ -1455,6 +1455,297 @@ describe("`restart` callback", () => {
   });
 });
 
+describe("ignoreResults", () => {
+  const subscription = gql`
+    subscription {
+      car {
+        make
+      }
+    }
+  `;
+
+  const results = ["Audi", "BMW"].map((make) => ({
+    result: { data: { car: { make } } },
+  }));
+
+  it("should not rerender when ignoreResults is true, but will call `onData` and `onComplete`", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onComplete = jest.fn(
+      (() => {}) as SubscriptionHookOptions["onComplete"]
+    );
+    const ProfiledHook = profileHook(() =>
+      useSubscription(subscription, {
+        ignoreResults: true,
+        onData,
+        onError,
+        onComplete,
+      })
+    );
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const snapshot = await ProfiledHook.takeSnapshot();
+    expect(snapshot).toStrictEqual({
+      loading: false,
+      error: undefined,
+      data: undefined,
+      variables: undefined,
+      restart: expect.any(Function),
+    });
+    link.simulateResult(results[0]);
+
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: {
+            data: results[0].result.data,
+            error: undefined,
+            loading: false,
+            variables: undefined,
+          },
+        })
+      );
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onComplete).toHaveBeenCalledTimes(0);
+    });
+
+    link.simulateResult(results[1], true);
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(2);
+      expect(onData).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: {
+            data: results[1].result.data,
+            error: undefined,
+            loading: false,
+            variables: undefined,
+          },
+        })
+      );
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onComplete).toHaveBeenCalledTimes(1);
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("should not rerender when ignoreResults is true and an error occurs", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onComplete = jest.fn(
+      (() => {}) as SubscriptionHookOptions["onComplete"]
+    );
+    const ProfiledHook = profileHook(() =>
+      useSubscription(subscription, {
+        ignoreResults: true,
+        onData,
+        onError,
+        onComplete,
+      })
+    );
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const snapshot = await ProfiledHook.takeSnapshot();
+    expect(snapshot).toStrictEqual({
+      loading: false,
+      error: undefined,
+      data: undefined,
+      variables: undefined,
+      restart: expect.any(Function),
+    });
+    link.simulateResult(results[0]);
+
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: {
+            data: results[0].result.data,
+            error: undefined,
+            loading: false,
+            variables: undefined,
+          },
+        })
+      );
+      expect(onError).toHaveBeenCalledTimes(0);
+      expect(onComplete).toHaveBeenCalledTimes(0);
+    });
+
+    const error = new Error("test");
+    link.simulateResult({ error });
+    await waitFor(() => {
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenLastCalledWith(error);
+      expect(onComplete).toHaveBeenCalledTimes(0);
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("can switch from `ignoreResults: true` to `ignoreResults: false` and will start rerendering, without creating a new subscription", async () => {
+    const subscriptionCreated = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(subscriptionCreated);
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const ProfiledHook = profileHook(
+      ({ ignoreResults }: { ignoreResults: boolean }) =>
+        useSubscription(subscription, {
+          ignoreResults,
+          onData,
+        })
+    );
+    const { rerender } = render(<ProfiledHook ignoreResults={true} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        error: undefined,
+        data: undefined,
+        variables: undefined,
+        restart: expect.any(Function),
+      });
+      expect(onData).toHaveBeenCalledTimes(0);
+    }
+    link.simulateResult(results[0]);
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onData).toHaveBeenCalledTimes(1);
+
+    rerender(<ProfiledHook ignoreResults={false} />);
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        error: undefined,
+        // `data` appears immediately after changing to `ignoreResults: false`
+        data: results[0].result.data,
+        variables: undefined,
+        restart: expect.any(Function),
+      });
+      // `onData` should not be called again for the same result
+      expect(onData).toHaveBeenCalledTimes(1);
+    }
+
+    link.simulateResult(results[1]);
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        error: undefined,
+        data: results[1].result.data,
+        variables: undefined,
+        restart: expect.any(Function),
+      });
+      expect(onData).toHaveBeenCalledTimes(2);
+    }
+    // a second subscription should not have been started
+    expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+  });
+  it("can switch from `ignoreResults: false` to `ignoreResults: true` and will stop rerendering, without creating a new subscription", async () => {
+    const subscriptionCreated = jest.fn();
+    const link = new MockSubscriptionLink();
+    link.onSetup(subscriptionCreated);
+    const client = new ApolloClient({
+      link,
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const ProfiledHook = profileHook(
+      ({ ignoreResults }: { ignoreResults: boolean }) =>
+        useSubscription(subscription, {
+          ignoreResults,
+          onData,
+        })
+    );
+    const { rerender } = render(<ProfiledHook ignoreResults={false} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: true,
+        error: undefined,
+        data: undefined,
+        variables: undefined,
+        restart: expect.any(Function),
+      });
+      expect(onData).toHaveBeenCalledTimes(0);
+    }
+    link.simulateResult(results[0]);
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        error: undefined,
+        data: results[0].result.data,
+        variables: undefined,
+        restart: expect.any(Function),
+      });
+      expect(onData).toHaveBeenCalledTimes(1);
+    }
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+
+    rerender(<ProfiledHook ignoreResults={true} />);
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toStrictEqual({
+        loading: false,
+        error: undefined,
+        // switching back to the default `ignoreResults: true` return value
+        data: undefined,
+        variables: undefined,
+        restart: expect.any(Function),
+      });
+      // `onData` should not be called again
+      expect(onData).toHaveBeenCalledTimes(1);
+    }
+
+    link.simulateResult(results[1]);
+    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    expect(onData).toHaveBeenCalledTimes(2);
+
+    // a second subscription should not have been started
+    expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe.skip("Type Tests", () => {
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;

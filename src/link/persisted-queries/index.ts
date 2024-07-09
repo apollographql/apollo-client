@@ -4,7 +4,6 @@ import { print } from "../../utilities/index.js";
 import type {
   DocumentNode,
   FormattedExecutionResult,
-  GraphQLError,
   GraphQLFormattedError,
 } from "graphql";
 
@@ -204,7 +203,7 @@ export const createPersistedQueryLink = (
               networkErrors =
                 networkError &&
                 networkError.result &&
-                (networkError.result.errors as GraphQLError[]);
+                (networkError.result.errors as GraphQLFormattedError[]);
             }
             if (isNonEmptyArray(networkErrors)) {
               graphQLErrors.push(...networkErrors);

@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLError } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 
 import type { ApolloCache } from "../cache/index.js";
 import type { FetchResult } from "../link/core/index.js";
@@ -145,7 +145,7 @@ export interface ApolloQueryResult<T> {
    * A list of any errors that occurred during server-side execution of a GraphQL operation.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  errors?: ReadonlyArray<GraphQLError>;
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.

@@ -1,7 +1,6 @@
 import "../utilities/globals/index.js";
 
 import type { GraphQLErrorExtensions, GraphQLFormattedError } from "graphql";
-import { GraphQLError } from "graphql";
 
 import { isNonNullObject } from "../utilities/index.js";
 import type { ServerParseError } from "../link/http/index.js";
@@ -68,14 +67,20 @@ const generateErrorMessage = (err: ApolloError) => {
   );
 };
 
-export type GraphQLErrors = ReadonlyArray<GraphQLError>;
+/**
+ * @deprecated This type is deprecated and will be removed in the next major version of Apollo Client.
+ * It mistakenly referenced `GraqhQLError` instead of `GraphQLFormattedError`.
+ *
+ * Use `ReadonlyArray<GraphQLFormattedError>` instead.
+ */
+export type GraphQLErrors = ReadonlyArray<import("graphql").GraphQLError>;
 
 export type NetworkError = Error | ServerParseError | ServerError | null;
 
 export class ApolloError extends Error {
   public name: string;
   public message: string;
-  public graphQLErrors: GraphQLError[];
+  public graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
   public protocolErrors: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -89,9 +94,11 @@ export class ApolloError extends Error {
    */
   public cause:
     | ({
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-      } & Partial<Error>)
+        readonly message: string;
+        extensions?:
+          | GraphQLErrorExtensions[]
+          | GraphQLFormattedError["extensions"];
+      } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">)
     | null;
 
   // An object that can be used to provide some additional information
@@ -99,8 +106,9 @@ export class ApolloError extends Error {
   // internally within Apollo Client.
   public extraInfo: any;
 
-  // Constructs an instance of ApolloError given a GraphQLError
-  // or a network error. Note that one of these has to be a valid
+  // Constructs an instance of ApolloError given serialized GraphQL errors,
+  // client errors, protocol errors or network errors.
+  // Note that one of these has to be a valid
   // value or the constructed error will be meaningless.
   constructor({
     graphQLErrors,
@@ -112,7 +120,7 @@ export class ApolloError extends Error {
   }: ApolloErrorOptions) {
     super(errorMessage);
     this.name = "ApolloError";
-    this.graphQLErrors = (graphQLErrors || []).map(reviveGraphQLError);
+    this.graphQLErrors = graphQLErrors || [];
     this.protocolErrors = protocolErrors || [];
     this.clientErrors = clientErrors || [];
     this.networkError = networkError || null;
@@ -121,7 +129,7 @@ export class ApolloError extends Error {
     this.cause =
       [
         networkError,
-        ...(this.graphQLErrors || []),
+        ...(graphQLErrors || []),
         ...(protocolErrors || []),
         ...(clientErrors || []),
       ].find((e) => !!e) || null;
@@ -130,26 +138,4 @@ export class ApolloError extends Error {
     // supported on Android (see issue #3236).
     (this as any).__proto__ = ApolloError.prototype;
   }
-}
-
-/**
- * Revives a GraphQL error that has been received over the network.
- * Some fields of GraphQL errors, e.g. `extensions`, are not mandatory in the
- * spec, but they are not optional in the `GraphQLError` type.
- * This function ensures that all errors are instances of the `GraphQLError` class.
- */
-export function reviveGraphQLError(error: GraphQLFormattedError): GraphQLError {
-  return error instanceof GraphQLError ? error : (
-      Object.assign(
-        new GraphQLError(
-          error.message,
-          // This will pass `message` into the `options` parameter.
-          // The constructor does not expect that, but it will ignore it and we
-          // don't need to destructure `error`, saving some bundle size.
-          error
-        ),
-        //
-        { locations: error.locations }
-      )
-    );
 }

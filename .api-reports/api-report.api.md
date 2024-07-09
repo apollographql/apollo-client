@@ -364,6 +364,7 @@ export interface BaseQueryOptions<TVariables extends OperationVariables = Operat
 export interface BaseSubscriptionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> {
     client?: ApolloClient<object>;
     context?: DefaultContext;
+    errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     ignoreResults?: boolean;
     onComplete?: () => void;

@@ -363,6 +363,8 @@ interface BaseQueryOptions<TVariables extends OperationVariables = OperationVari
 interface BaseSubscriptionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> {
     client?: ApolloClient<object>;
     context?: DefaultContext;
+    // Warning: (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
+    errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
     fetchPolicy?: FetchPolicy;
     ignoreResults?: boolean;
@@ -954,7 +956,6 @@ interface LoadableQueryHookOptions {
     canonizeResults?: boolean;
     client?: ApolloClient<any>;
     context?: DefaultContext;
-    // Warning: (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
     errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "LoadableQueryHookFetchPolicy" needs to be exported by the entry point index.d.ts
     fetchPolicy?: LoadableQueryHookFetchPolicy;

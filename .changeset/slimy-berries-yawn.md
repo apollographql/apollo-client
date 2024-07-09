@@ -1,5 +1,5 @@
 ---
-"@apollo/client": patch
+"@apollo/client": minor
 ---
 
 Changes usages of the `GraphQLError` type to `GraphQLFormattedError`.

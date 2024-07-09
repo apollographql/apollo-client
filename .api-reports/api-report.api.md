@@ -13,7 +13,6 @@ import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import { gql } from 'graphql-tag';
-import { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
@@ -203,15 +202,15 @@ export class ApolloError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
     cause: ({
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    } & Partial<Error>) | null;
+        readonly message: string;
+        extensions?: GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
+    } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">) | null;
     // (undocumented)
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)
     extraInfo: any;
     // (undocumented)
-    graphQLErrors: GraphQLError[];
+    graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     message: string;
     // (undocumented)
@@ -301,7 +300,7 @@ export interface ApolloQueryResult<T> {
     // (undocumented)
     data: T;
     error?: ApolloError;
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     loading: boolean;
     // (undocumented)
@@ -3013,9 +3012,9 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:125:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:391:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:390:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts

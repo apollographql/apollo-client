@@ -4,7 +4,7 @@
 
 ```ts
 
-import { GraphQLError } from 'graphql';
+import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 
@@ -12,15 +12,15 @@ import type { GraphQLFormattedError } from 'graphql';
 export class ApolloError extends Error {
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
     cause: ({
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    } & Partial<Error>) | null;
+        readonly message: string;
+        extensions?: GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
+    } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">) | null;
     // (undocumented)
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)
     extraInfo: any;
     // (undocumented)
-    graphQLErrors: GraphQLError[];
+    graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     message: string;
     // (undocumented)
@@ -113,7 +113,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
     extensions: Record<string | symbol, any>;
 };
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 
 // Warning: (ae-forgotten-export) The symbol "FetchResultWithSymbolExtensions" needs to be exported by the entry point index.d.ts
@@ -148,9 +148,6 @@ type Path = ReadonlyArray<string | number>;
 
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
-
-// @public
-export function reviveGraphQLError(error: GraphQLFormattedError): GraphQLError;
 
 // @public (undocumented)
 type ServerError = Error & {

@@ -146,22 +146,10 @@ export function useSubscription<
     errorPolicy,
     shouldResubscribe,
     context,
+    extensions,
     ignoreResults,
   } = options;
   const variables = useDeepMemo(() => options.variables, [options.variables]);
-
-  let [observable, setObservable] = React.useState(() =>
-    options.skip ? null : (
-      createSubscription(
-        client,
-        subscription,
-        variables,
-        fetchPolicy,
-        errorPolicy,
-        context
-      )
-    )
-  );
 
   const recreate = () =>
     createSubscription(
@@ -170,8 +158,13 @@ export function useSubscription<
       variables,
       fetchPolicy,
       errorPolicy,
-      context
+      context,
+      extensions
     );
+
+  let [observable, setObservable] = React.useState(
+    options.skip ? null : recreate
+  );
 
   const recreateRef = React.useRef(recreate);
   useIsomorphicLayoutEffect(() => {
@@ -331,17 +324,23 @@ function createSubscription<
 >(
   client: ApolloClient<any>,
   query: TypedDocumentNode<TData, TVariables>,
-  variables?: TVariables,
-  fetchPolicy?: FetchPolicy,
-  errorPolicy?: ErrorPolicy,
-  context?: DefaultContext
+  variables: TVariables | undefined,
+  fetchPolicy: FetchPolicy | undefined,
+  errorPolicy: ErrorPolicy | undefined,
+  context: DefaultContext | undefined,
+  extensions: Record<string, any> | undefined
 ) {
-  const __ = {
-    variables,
-    client,
+  const options = {
     query,
+    variables,
     fetchPolicy,
     errorPolicy,
+    context,
+    extensions,
+  };
+  const __ = {
+    ...options,
+    client,
     result: {
       loading: true,
       data: void 0,
@@ -359,13 +358,7 @@ function createSubscription<
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {
-        observable = client.subscribe({
-          query,
-          variables,
-          fetchPolicy,
-          errorPolicy,
-          context,
-        });
+        observable = client.subscribe(options);
       }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();

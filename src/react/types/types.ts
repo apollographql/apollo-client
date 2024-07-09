@@ -449,6 +449,8 @@ export interface BaseSubscriptionOptions<
   skip?: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
   context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+  extensions?: Record<string, any>;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
   onComplete?: () => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */

@@ -459,6 +459,74 @@ describe("useSubscription Hook", () => {
     expect(context!).toBe("Audi");
   });
 
+  it("should share extensions set in options", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    let extensions: string;
+    const link = new MockSubscriptionLink();
+    const extensionsLink = new ApolloLink((operation, forward) => {
+      extensions = operation.extensions.make;
+      return forward(operation);
+    });
+    const client = new ApolloClient({
+      link: concat(extensionsLink, link),
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const { result } = renderHook(
+      () =>
+        useSubscription(subscription, {
+          extensions: { make: "Audi" },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBe(undefined);
+    expect(result.current.data).toBe(undefined);
+    setTimeout(() => {
+      link.simulateResult(results[0]);
+    }, 100);
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toEqual(results[0].result.data);
+      },
+      { interval: 1 }
+    );
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe(undefined);
+
+    setTimeout(() => {
+      link.simulateResult(results[1]);
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toEqual(results[1].result.data);
+      },
+      { interval: 1 }
+    );
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe(undefined);
+
+    expect(extensions!).toBe("Audi");
+  });
+
   it("should handle multiple subscriptions properly", async () => {
     const subscription = gql`
       subscription {

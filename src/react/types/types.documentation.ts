@@ -553,6 +553,11 @@ export interface SubscriptionOptionsDocumentation {
   context: unknown;
 
   /**
+   * Shared context between your component and your network interface (Apollo Link).
+   */
+  extensions: unknown;
+
+  /**
    * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component completes the subscription.
    *
    * @since 3.7.0

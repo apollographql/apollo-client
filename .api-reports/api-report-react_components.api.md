@@ -115,6 +115,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     get defaultContext(): Partial<DefaultContext>;
     // (undocumented)
     defaultOptions: DefaultOptions;
+    // Warning: (ae-forgotten-export) The symbol "DevtoolsOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly devtoolsConfig: DevtoolsOptions;
     // (undocumented)
     disableNetworkFetches: boolean;
     // Warning: (ae-forgotten-export) The symbol "DocumentTransform" needs to be exported by the entry point index.d.ts
@@ -173,12 +177,14 @@ class ApolloClient<TCacheShape> implements DataProxy {
 interface ApolloClientOptions<TCacheShape> {
     assumeImmutableResults?: boolean;
     cache: ApolloCache<TCacheShape>;
+    // @deprecated
     connectToDevTools?: boolean;
     // (undocumented)
     credentials?: string;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
     defaultOptions?: DefaultOptions;
+    devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
     // (undocumented)
@@ -333,6 +339,8 @@ interface BaseQueryOptions<TVariables extends OperationVariables = OperationVari
 interface BaseSubscriptionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> {
     client?: ApolloClient<object>;
     context?: DefaultContext;
+    // Warning: (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
+    errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
     fetchPolicy?: FetchPolicy;
     ignoreResults?: boolean;
@@ -619,6 +627,12 @@ interface DeleteModifier {
 
 // @public (undocumented)
 const _deleteModifier: unique symbol;
+
+// @public (undocumented)
+interface DevtoolsOptions {
+    enabled?: boolean;
+    name?: string;
+}
 
 // @public (undocumented)
 class DocumentTransform {
@@ -978,7 +992,6 @@ export interface Mutation<TData, TVariables> {
 interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> {
     awaitRefetchQueries?: boolean;
     context?: TContext;
-    // Warning: (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
     errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
     onQueryUpdated?: OnQueryUpdated<any>;

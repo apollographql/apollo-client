@@ -16,6 +16,7 @@ import type {
 import { InternalQueryReference, wrapQueryRef } from "../internal/index.js";
 import type { PreloadedQueryRef } from "../internal/index.js";
 import type { NoInfer } from "../index.js";
+import { wrapHook } from "../hooks/internal/index.js";
 
 type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
@@ -168,6 +169,14 @@ export interface PreloadQueryFunction {
 export function createQueryPreloader(
   client: ApolloClient<any>
 ): PreloadQueryFunction {
+  return wrapHook(
+    "createQueryPreloader",
+    _createQueryPreloader,
+    client
+  )(client);
+}
+
+const _createQueryPreloader: typeof createQueryPreloader = (client) => {
   return function preloadQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -189,4 +198,4 @@ export function createQueryPreloader(
 
     return wrapQueryRef(queryRef) as PreloadedQueryRef<TData, TVariables>;
   };
-}
+};

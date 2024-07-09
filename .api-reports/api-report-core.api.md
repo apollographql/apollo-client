@@ -104,6 +104,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     get defaultContext(): Partial<DefaultContext>;
     // (undocumented)
     defaultOptions: DefaultOptions;
+    // Warning: (ae-forgotten-export) The symbol "DevtoolsOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly devtoolsConfig: DevtoolsOptions;
     // (undocumented)
     disableNetworkFetches: boolean;
     get documentTransform(): DocumentTransform;
@@ -145,12 +149,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 export interface ApolloClientOptions<TCacheShape> {
     assumeImmutableResults?: boolean;
     cache: ApolloCache<TCacheShape>;
+    // @deprecated
     connectToDevTools?: boolean;
     // (undocumented)
     credentials?: string;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
     defaultOptions?: DefaultOptions;
+    devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
     // (undocumented)
@@ -591,6 +597,12 @@ interface DeleteModifier {
 
 // @public (undocumented)
 const _deleteModifier: unique symbol;
+
+// @public (undocumented)
+interface DevtoolsOptions {
+    enabled?: boolean;
+    name?: string;
+}
 
 // @public (undocumented)
 export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {

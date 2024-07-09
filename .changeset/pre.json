@@ -4,5 +4,21 @@
   "initialVersions": {
     "@apollo/client": "3.10.8"
   },
-  "changesets": []
+  "changesets": [
+    "angry-ravens-mate",
+    "angry-seals-jog",
+    "chilly-dots-shake",
+    "clever-bikes-admire",
+    "flat-onions-guess",
+    "fluffy-badgers-rush",
+    "little-suits-return",
+    "nasty-olives-act",
+    "pink-ants-remember",
+    "slimy-balloons-cheat",
+    "slimy-berries-yawn",
+    "tasty-chairs-dress",
+    "thin-lies-begin",
+    "unlucky-birds-press",
+    "weak-ads-develop"
+  ]
 }

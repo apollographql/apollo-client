@@ -1,5 +1,5 @@
 import { execute, validate } from "graphql";
-import type { GraphQLError, GraphQLSchema } from "graphql";
+import type { GraphQLFormattedError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 import { wait } from "../core/wait.js";
@@ -69,7 +69,16 @@ const createSchemaFetch = (
         validationErrors = validate(schema, document);
       } catch (e) {
         validationErrors = [
-          new ApolloError({ graphQLErrors: [e as GraphQLError] }),
+          new ApolloError({
+            graphQLErrors: [
+              /*
+               * Technically, these are even `GraphQLError` instances,
+               * but we try to avoid referencing that type, and `GraphQLError`
+               * implements the `GraphQLFormattedError` interface.
+               */
+              e as GraphQLFormattedError,
+            ],
+          }),
         ];
       }
 

@@ -5,8 +5,8 @@
 ```ts
 
 import type { DocumentNode } from 'graphql';
-import type { ExecutionResult } from 'graphql';
-import type { GraphQLError } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 
@@ -88,7 +88,7 @@ type ErrorMeta = {
 // @public (undocumented)
 export interface ErrorResponse {
     // (undocumented)
-    graphQLErrors?: readonly GraphQLError[];
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // Warning: (ae-forgotten-export) The symbol "ErrorMeta" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -100,7 +100,7 @@ export interface ErrorResponse {
     // (undocumented)
     operation: Operation;
     // (undocumented)
-    response?: ExecutionResult;
+    response?: FormattedExecutionResult;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
@@ -124,7 +124,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -173,7 +173,7 @@ interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -263,11 +263,15 @@ type ServerParseError = Error & {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // @public (undocumented)

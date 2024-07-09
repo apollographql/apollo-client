@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLError } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -82,7 +82,7 @@ export class QueryInfo {
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
   networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   stopped = false;
 
   private cache: ApolloCache<any>;

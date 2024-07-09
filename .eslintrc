@@ -40,6 +40,22 @@
         ],
         "@typescript-eslint/consistent-type-exports": ["error"],
         "@typescript-eslint/no-import-type-side-effects": "error",
+        "@typescript-eslint/ban-types": [
+          "error",
+          {
+            "types": {
+              "GraphQLError": {
+                "message": "Use GraphQLFormattedError instead",
+                "fixWith": "GraphQLFormattedError"
+              },
+              "ExecutionResult": {
+                "message": "Use FormattedExecutionResult instead",
+                "fixWith": "FormattedExecutionResult"
+              }
+            },
+            "extendDefaults": false
+          }
+        ],
         "no-restricted-syntax": [
           "error",
           {

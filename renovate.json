@@ -35,6 +35,7 @@
     "@rollup/plugin-node-resolve",
     "rollup",
     "glob",
-    "prettier"
+    "prettier",
+    "eslint-plugin-react-compiler"
   ]
 }

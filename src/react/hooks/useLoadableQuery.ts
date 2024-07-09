@@ -18,7 +18,11 @@ import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { LoadableQueryHookOptions } from "../types/types.js";
 import { __use, useRenderGuard } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import type {
+  FetchMoreFunction,
+  RefetchFunction,
+  SubscribeToMoreFunction,
+} from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type {
   DeepPartial,
@@ -49,6 +53,8 @@ export type UseLoadableQueryResult<
     fetchMore: FetchMoreFunction<TData, TVariables>;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: RefetchFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
     /**
      * A function that resets the `queryRef` back to `null`.
      */
@@ -255,9 +261,22 @@ export function useLoadableQuery<
     ]
   );
 
+  const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
+    React.useCallback(
+      (options) => {
+        invariant(
+          internalQueryRef,
+          "The query has not been loaded. Please load the query."
+        );
+
+        return internalQueryRef.observable.subscribeToMore(options);
+      },
+      [internalQueryRef]
+    );
+
   const reset: ResetFunction = React.useCallback(() => {
     setQueryRef(null);
   }, []);
 
-  return [loadQuery, queryRef, { fetchMore, refetch, reset }];
+  return [loadQuery, queryRef, { fetchMore, refetch, reset, subscribeToMore }];
 }

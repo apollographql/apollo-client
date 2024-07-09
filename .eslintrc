@@ -47,6 +47,10 @@
               "GraphQLError": {
                 "message": "Use GraphQLFormattedError instead",
                 "fixWith": "GraphQLFormattedError"
+              },
+              "ExecutionResult": {
+                "message": "Use FormattedExecutionResult instead",
+                "fixWith": "FormattedExecutionResult"
               }
             },
             "extendDefaults": false

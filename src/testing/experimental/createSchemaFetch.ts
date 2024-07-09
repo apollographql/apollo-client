@@ -31,7 +31,7 @@ import { wait } from "../core/wait.js";
  * @since 3.10.0
  * @alpha
  * @deprecated `createSchemaFetch` is deprecated and will be removed in 3.12.0.
- * Please migrate to [`graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
+ * Please migrate to [`@apollo/graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
  */
 const createSchemaFetch = (
   schema: GraphQLSchema,

@@ -51,7 +51,7 @@ interface TestSchemaOptions {
  * @since 3.9.0
  * @alpha
  * @deprecated `createTestSchema` is deprecated and will be removed in 3.12.0.
- * Please migrate to [`graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
+ * Please migrate to [`@apollo/graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
  */
 const createTestSchema = (
   schemaWithTypeDefs: GraphQLSchema,

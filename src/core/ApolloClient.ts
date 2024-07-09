@@ -1,6 +1,6 @@
 import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
-import type { ExecutionResult, DocumentNode } from "graphql";
+import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
 import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
@@ -606,7 +606,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.devToolsHookCb = cb;
   }
 
-  public __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult> {
+  public __requestRaw(
+    payload: GraphQLRequest
+  ): Observable<FormattedExecutionResult> {
     return execute(this.link, payload);
   }
 

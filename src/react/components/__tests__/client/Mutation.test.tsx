@@ -1,6 +1,10 @@
 import React, { useState, PropsWithChildren } from "react";
 import gql from "graphql-tag";
-import { ExecutionResult, GraphQLError } from "graphql";
+import {
+  ExecutionResult,
+  FormattedExecutionResult,
+  GraphQLError,
+} from "graphql";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, act } from "@testing-library/react";
 
@@ -1195,7 +1199,7 @@ describe("General Mutation testing", () => {
     }));
 
   it("has an update prop for updating the store after the mutation", async () => {
-    const update = (_proxy: DataProxy, response: ExecutionResult) => {
+    const update = (_proxy: DataProxy, response: FormattedExecutionResult) => {
       expect(response.data).toEqual(data);
     };
 

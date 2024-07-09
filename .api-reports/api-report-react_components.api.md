@@ -6,11 +6,11 @@
 
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { ExecutionResult } from 'graphql';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
-import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import * as PropTypes from 'prop-types';
@@ -102,7 +102,7 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult>;
+    __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
     // Warning: (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // Warning: (ae-forgotten-export) The symbol "ApolloCache" needs to be exported by the entry point index.d.ts
@@ -208,17 +208,15 @@ class ApolloError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
     cause: ({
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    } & Partial<Error>) | null;
+        readonly message: string;
+        extensions?: GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
+    } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">) | null;
     // (undocumented)
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)
     extraInfo: any;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLErrors" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    graphQLErrors: GraphQLErrors;
+    graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     message: string;
     // (undocumented)
@@ -244,7 +242,7 @@ interface ApolloErrorOptions {
     // (undocumented)
     extraInfo?: any;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
@@ -297,7 +295,7 @@ interface ApolloQueryResult<T> {
     data: T;
     // Warning: (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
     error?: ApolloError;
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     loading: boolean;
     // Warning: (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
@@ -692,7 +690,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -794,9 +792,6 @@ const getApolloClientMemoryInternals: (() => {
 }) | undefined;
 
 // @public (undocumented)
-type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
-// @public (undocumented)
 interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     context?: DefaultContext;
@@ -824,7 +819,7 @@ interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -1300,7 +1295,7 @@ class QueryInfo {
     // (undocumented)
     getDiff(): Cache_2.DiffResult<any>;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     init(query: {
         document: DocumentNode;
@@ -1631,11 +1626,15 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
 }
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // @public (undocumented)

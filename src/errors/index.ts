@@ -1,6 +1,10 @@
 import "../utilities/globals/index.js";
 
-import type { GraphQLError, GraphQLErrorExtensions } from "graphql";
+import type {
+  GraphQLError,
+  GraphQLErrorExtensions,
+  GraphQLFormattedError,
+} from "graphql";
 
 import { isNonNullObject } from "../utilities/index.js";
 import type { ServerParseError } from "../link/http/index.js";
@@ -17,7 +21,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 };
 
 export interface ApolloErrorOptions {
-  graphQLErrors?: ReadonlyArray<GraphQLError>;
+  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   protocolErrors?: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -67,6 +71,13 @@ const generateErrorMessage = (err: ApolloError) => {
   );
 };
 
+/**
+ * @deprecated This type is deprecated and will be removed in the next major version of Apollo Client.
+ * It mistakenly referenced `GraqhQLError` instead of `GraphQLFormattedError`.
+ *
+ * Use `ReadonlyArray<GraphQLFormattedError>` instead.
+ */
+// eslint-disable-next-line @typescript-eslint/ban-types
 export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 
 export type NetworkError = Error | ServerParseError | ServerError | null;
@@ -74,7 +85,7 @@ export type NetworkError = Error | ServerParseError | ServerError | null;
 export class ApolloError extends Error {
   public name: string;
   public message: string;
-  public graphQLErrors: GraphQLErrors;
+  public graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
   public protocolErrors: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];
@@ -88,9 +99,11 @@ export class ApolloError extends Error {
    */
   public cause:
     | ({
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-      } & Partial<Error>)
+        readonly message: string;
+        extensions?:
+          | GraphQLErrorExtensions[]
+          | GraphQLFormattedError["extensions"];
+      } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">)
     | null;
 
   // An object that can be used to provide some additional information
@@ -98,8 +111,9 @@ export class ApolloError extends Error {
   // internally within Apollo Client.
   public extraInfo: any;
 
-  // Constructs an instance of ApolloError given a GraphQLError
-  // or a network error. Note that one of these has to be a valid
+  // Constructs an instance of ApolloError given serialized GraphQL errors,
+  // client errors, protocol errors or network errors.
+  // Note that one of these has to be a valid
   // value or the constructed error will be meaningless.
   constructor({
     graphQLErrors,

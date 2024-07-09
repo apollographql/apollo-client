@@ -910,7 +910,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         options.fetchPolicy !== "standby" &&
         // If we're changing the fetchPolicy anyway, don't try to change it here
         // using applyNextFetchPolicy. The explicit options.fetchPolicy wins.
-        options.fetchPolicy === oldFetchPolicy
+        (options.fetchPolicy === oldFetchPolicy ||
+          // A `nextFetchPolicy` function has even higher priority, though,
+          // so in that case `applyNextFetchPolicy` must be called.
+          typeof options.nextFetchPolicy === "function")
       ) {
         this.applyNextFetchPolicy("variables-changed", options);
         if (newNetworkStatus === void 0) {

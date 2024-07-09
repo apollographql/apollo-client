@@ -388,6 +388,7 @@ export interface BaseSubscriptionOptions<TData = any, TVariables extends Operati
     context?: Context;
     // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
     fetchPolicy?: FetchPolicy;
+    ignoreResults?: boolean;
     onComplete?: () => void;
     onData?: (options: OnDataOptions<TData>) => any;
     onError?: (error: ApolloError) => void;
@@ -1919,7 +1920,7 @@ export interface SubscriptionCurrentObservable {
     subscription?: Subscription;
 }
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export interface SubscriptionDataOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
     // (undocumented)
     children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
@@ -2190,7 +2191,13 @@ export interface UseReadQueryResult<TData = unknown> {
 }
 
 // @public
-export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): SubscriptionResult<TData, TVariables>;
+export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
+    restart(): void;
+    loading: boolean;
+    data?: TData | undefined;
+    error?: ApolloError;
+    variables?: TVariables | undefined;
+};
 
 // @public (undocumented)
 export function useSuspenseQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & TOptions): UseSuspenseQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? TOptions["skip"] extends boolean ? DeepPartial<TData> | undefined : DeepPartial<TData> : TOptions["skip"] extends boolean ? TData | undefined : TData, TVariables>;

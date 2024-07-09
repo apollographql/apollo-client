@@ -13,14 +13,16 @@ import type {
 import type {
   ApolloClient,
   DefaultContext,
+  ErrorPolicy,
   FetchPolicy,
   FetchResult,
   OperationVariables,
 } from "../../core/index.js";
-import { Observable } from "../../core/index.js";
+import { ApolloError, Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { toApolloError } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 /**
@@ -138,18 +140,38 @@ export function useSubscription<
     }
   }
 
-  const { skip, fetchPolicy, shouldResubscribe, context, ignoreResults } =
-    options;
+  const {
+    skip,
+    fetchPolicy,
+    errorPolicy,
+    shouldResubscribe,
+    context,
+    ignoreResults,
+  } = options;
   const variables = useDeepMemo(() => options.variables, [options.variables]);
 
   let [observable, setObservable] = React.useState(() =>
     options.skip ? null : (
-      createSubscription(client, subscription, variables, fetchPolicy, context)
+      createSubscription(
+        client,
+        subscription,
+        variables,
+        fetchPolicy,
+        errorPolicy,
+        context
+      )
     )
   );
 
   const recreate = () =>
-    createSubscription(client, subscription, variables, fetchPolicy, context);
+    createSubscription(
+      client,
+      subscription,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      context
+    );
 
   const recreateRef = React.useRef(recreate);
   useIsomorphicLayoutEffect(() => {
@@ -165,6 +187,7 @@ export function useSubscription<
     ((client !== observable.__.client ||
       subscription !== observable.__.query ||
       fetchPolicy !== observable.__.fetchPolicy ||
+      errorPolicy !== observable.__.errorPolicy ||
       !equal(variables, observable.__.variables)) &&
       (typeof shouldResubscribe === "function" ?
         !!shouldResubscribe(options!)
@@ -223,13 +246,15 @@ export function useSubscription<
               // TODO: fetchResult.data can be null but SubscriptionResult.data
               // expects TData | undefined only
               data: fetchResult.data!,
-              error: void 0,
+              error: toApolloError(fetchResult),
               variables,
             };
             observable.__.setResult(result);
             if (!ignoreResultsRef.current) update();
 
-            if (optionsRef.current.onData) {
+            if (result.error) {
+              optionsRef.current.onError?.(result.error);
+            } else if (optionsRef.current.onData) {
               optionsRef.current.onData({
                 client,
                 data: result,
@@ -242,6 +267,10 @@ export function useSubscription<
             }
           },
           error(error) {
+            error =
+              error instanceof ApolloError ? error : (
+                new ApolloError({ protocolErrors: [error] })
+              );
             if (!subscriptionStopped) {
               observable.__.setResult({
                 loading: false,
@@ -304,6 +333,7 @@ function createSubscription<
   query: TypedDocumentNode<TData, TVariables>,
   variables?: TVariables,
   fetchPolicy?: FetchPolicy,
+  errorPolicy?: ErrorPolicy,
   context?: DefaultContext
 ) {
   const __ = {
@@ -311,6 +341,7 @@ function createSubscription<
     client,
     query,
     fetchPolicy,
+    errorPolicy,
     result: {
       loading: true,
       data: void 0,
@@ -332,6 +363,7 @@ function createSubscription<
           query,
           variables,
           fetchPolicy,
+          errorPolicy,
           context,
         });
       }

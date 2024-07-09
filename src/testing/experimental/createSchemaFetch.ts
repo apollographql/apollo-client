@@ -1,9 +1,5 @@
 import { execute, validate } from "graphql";
-import type {
-  GraphQLError,
-  GraphQLFormattedError,
-  GraphQLSchema,
-} from "graphql";
+import type { GraphQLFormattedError, GraphQLSchema } from "graphql";
 import { ApolloError, gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 import { wait } from "../core/wait.js";

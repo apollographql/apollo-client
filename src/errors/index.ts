@@ -1,6 +1,10 @@
 import "../utilities/globals/index.js";
 
-import type { GraphQLErrorExtensions, GraphQLFormattedError } from "graphql";
+import type {
+  GraphQLError,
+  GraphQLErrorExtensions,
+  GraphQLFormattedError,
+} from "graphql";
 
 import { isNonNullObject } from "../utilities/index.js";
 import type { ServerParseError } from "../link/http/index.js";
@@ -73,7 +77,8 @@ const generateErrorMessage = (err: ApolloError) => {
  *
  * Use `ReadonlyArray<GraphQLFormattedError>` instead.
  */
-export type GraphQLErrors = ReadonlyArray<import("graphql").GraphQLError>;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 
 export type NetworkError = Error | ServerParseError | ServerError | null;
 

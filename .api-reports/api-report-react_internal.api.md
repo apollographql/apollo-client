@@ -493,6 +493,11 @@ class Concast<T> extends Observable<T> {
 // @public (undocumented)
 type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
+// Warning: (ae-forgotten-export) The symbol "PreloadQueryFunction" needs to be exported by the entry point index.d.ts
+//
+// @public
+function createQueryPreloader(client: ApolloClient<any>): PreloadQueryFunction;
+
 // @public (undocumented)
 namespace DataProxy {
     // (undocumented)
@@ -1252,6 +1257,11 @@ const OBSERVED_CHANGED_OPTIONS: readonly ["canonizeResults", "context", "errorPo
 // @public (undocumented)
 type ObservedOptions = Pick<WatchQueryOptions, (typeof OBSERVED_CHANGED_OPTIONS)[number]>;
 
+// @public
+type OnlyRequiredProperties<T> = {
+    [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];
+};
+
 // @public (undocumented)
 type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
 
@@ -1290,6 +1300,50 @@ interface PendingPromise<TValue> extends Promise<TValue> {
 export interface PreloadedQueryRef<TData = unknown, TVariables = unknown> extends QueryRef<TData, TVariables> {
     toPromise(): Promise<PreloadedQueryRef<TData, TVariables>>;
 }
+
+// @public (undocumented)
+type PreloadQueryFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+
+// @public
+interface PreloadQueryFunction {
+    // Warning: (ae-forgotten-export) The symbol "PreloadQueryOptions" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "PreloadQueryOptionsArg" needs to be exported by the entry point index.d.ts
+    <TData, TVariables extends OperationVariables, TOptions extends Omit<PreloadQueryOptions, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer_2<TVariables>, TOptions>): PreloadedQueryRef<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+        returnPartialData: true;
+        errorPolicy: "ignore" | "all";
+    }): PreloadedQueryRef<DeepPartial<TData> | undefined, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+        errorPolicy: "ignore" | "all";
+    }): PreloadedQueryRef<TData | undefined, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: PreloadQueryOptions<NoInfer_2<TVariables>> & {
+        returnPartialData: true;
+    }): PreloadedQueryRef<DeepPartial<TData>, TVariables>;
+    <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer_2<TVariables>>): PreloadedQueryRef<TData, TVariables>;
+}
+
+// Warning: (ae-forgotten-export) The symbol "VariablesOption" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type PreloadQueryOptions<TVariables extends OperationVariables = OperationVariables> = {
+    canonizeResults?: boolean;
+    context?: DefaultContext;
+    errorPolicy?: ErrorPolicy;
+    fetchPolicy?: PreloadQueryFetchPolicy;
+    returnPartialData?: boolean;
+    refetchWritePolicy?: RefetchWritePolicy;
+} & VariablesOption<TVariables>;
+
+// Warning: (ae-forgotten-export) The symbol "OnlyRequiredProperties" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type PreloadQueryOptionsArg<TVariables extends OperationVariables, TOptions = unknown> = [TVariables] extends [never] ? [
+options?: PreloadQueryOptions<never> & TOptions
+] : {} extends OnlyRequiredProperties<TVariables> ? [
+options?: PreloadQueryOptions<NoInfer_2<TVariables>> & Omit<TOptions, "variables">
+] : [
+options: PreloadQueryOptions<NoInfer_2<TVariables>> & Omit<TOptions, "variables">
+];
 
 // @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
@@ -1692,7 +1746,6 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
     // @deprecated
     partialRefetch?: boolean;
     pollInterval?: number;
-    // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
     skipPollAttempt?: () => boolean;
@@ -2049,6 +2102,17 @@ interface UseSuspenseQueryResult<TData = unknown, TVariables extends OperationVa
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
+// @public (undocumented)
+type VariablesOption<TVariables extends OperationVariables> = [
+TVariables
+] extends [never] ? {
+    variables?: Record<string, never>;
+} : {} extends OnlyRequiredProperties<TVariables> ? {
+    variables?: TVariables;
+} : {
+    variables: TVariables;
+};
+
 // @public
 interface WatchFragmentOptions<TData, TVars> {
     // @deprecated (undocumented)
@@ -2081,6 +2145,10 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 
 // @public (undocumented)
 interface WrappableHooks {
+    // Warning: (ae-forgotten-export) The symbol "createQueryPreloader" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    createQueryPreloader: typeof createQueryPreloader;
     // Warning: (ae-forgotten-export) The symbol "useBackgroundQuery" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2141,6 +2209,8 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/react/hooks/useBackgroundQuery.ts:38:3 - (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:54:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:78:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:145:3 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:167:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

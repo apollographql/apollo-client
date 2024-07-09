@@ -217,7 +217,10 @@ export interface MutationBaseOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
     | TData
-    | ((vars: TVariables, { IGNORE }: { IGNORE: IgnoreModifier }) => TData);
+    | ((
+        vars: TVariables,
+        { IGNORE }: { IGNORE: IgnoreModifier }
+      ) => TData | IgnoreModifier);
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
   updateQueries?: MutationQueryReducersMap<TData>;

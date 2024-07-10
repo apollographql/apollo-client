@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Roadmap
 
-**Last updated: 2024-07-01**
+**Last updated: 2024-07-08**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,8 +13,8 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.11.0](https://github.com/apollographql/apollo-client/milestone/40) - July 16th, 2024
-_Release candidate - July 8th, 2024_
+## [3.11.0](https://github.com/apollographql/apollo-client/milestone/40) - July 17th, 2024
+_Release candidate - July 9th, 2024_
 
 - Rewriting `useQuery` and `useSubscription` for better React Compiler support
 - Add an `ignoreResults` option to the `useSubscription` API

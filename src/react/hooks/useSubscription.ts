@@ -13,14 +13,17 @@ import type {
 import type {
   ApolloClient,
   DefaultContext,
+  ErrorPolicy,
   FetchPolicy,
   FetchResult,
   OperationVariables,
 } from "../../core/index.js";
-import { Observable } from "../../core/index.js";
+import { ApolloError, Observable } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
+import { toApolloError } from "./useQuery.js";
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -137,14 +140,36 @@ export function useSubscription<
     }
   }
 
-  const { skip, fetchPolicy, shouldResubscribe, context } = options;
+  const {
+    skip,
+    fetchPolicy,
+    errorPolicy,
+    shouldResubscribe,
+    context,
+    extensions,
+    ignoreResults,
+  } = options;
   const variables = useDeepMemo(() => options.variables, [options.variables]);
 
-  let [observable, setObservable] = React.useState(() =>
-    options.skip ? null : (
-      createSubscription(client, subscription, variables, fetchPolicy, context)
-    )
+  const recreate = () =>
+    createSubscription(
+      client,
+      subscription,
+      variables,
+      fetchPolicy,
+      errorPolicy,
+      context,
+      extensions
+    );
+
+  let [observable, setObservable] = React.useState(
+    options.skip ? null : recreate
   );
+
+  const recreateRef = React.useRef(recreate);
+  useIsomorphicLayoutEffect(() => {
+    recreateRef.current = recreate;
+  });
 
   if (skip) {
     if (observable) {
@@ -155,20 +180,13 @@ export function useSubscription<
     ((client !== observable.__.client ||
       subscription !== observable.__.query ||
       fetchPolicy !== observable.__.fetchPolicy ||
+      errorPolicy !== observable.__.errorPolicy ||
       !equal(variables, observable.__.variables)) &&
       (typeof shouldResubscribe === "function" ?
         !!shouldResubscribe(options!)
       : shouldResubscribe) !== false)
   ) {
-    setObservable(
-      (observable = createSubscription(
-        client,
-        subscription,
-        variables,
-        fetchPolicy,
-        context
-      ))
-    );
+    setObservable((observable = recreate()));
   }
 
   const optionsRef = React.useRef(options);
@@ -176,17 +194,31 @@ export function useSubscription<
     optionsRef.current = options;
   });
 
+  const fallbackLoading = !skip && !ignoreResults;
   const fallbackResult = React.useMemo<SubscriptionResult<TData, TVariables>>(
     () => ({
-      loading: !skip,
+      loading: fallbackLoading,
       error: void 0,
       data: void 0,
       variables,
     }),
-    [skip, variables]
+    [fallbackLoading, variables]
   );
 
-  return useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
+  const ignoreResultsRef = React.useRef(ignoreResults);
+  useIsomorphicLayoutEffect(() => {
+    // We cannot reference `ignoreResults` directly in the effect below
+    // it would add a dependency to the `useEffect` deps array, which means the
+    // subscription would be recreated if `ignoreResults` changes
+    // As a result, on resubscription, the last result would be re-delivered,
+    // rendering the component one additional time, and re-triggering `onData`.
+    // The same applies to `fetchPolicy`, which results in a new `observable`
+    // being created. We cannot really avoid it in that case, but we can at least
+    // avoid it for `ignoreResults`.
+    ignoreResultsRef.current = ignoreResults;
+  });
+
+  const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -207,13 +239,15 @@ export function useSubscription<
               // TODO: fetchResult.data can be null but SubscriptionResult.data
               // expects TData | undefined only
               data: fetchResult.data!,
-              error: void 0,
+              error: toApolloError(fetchResult),
               variables,
             };
             observable.__.setResult(result);
-            update();
+            if (!ignoreResultsRef.current) update();
 
-            if (optionsRef.current.onData) {
+            if (result.error) {
+              optionsRef.current.onError?.(result.error);
+            } else if (optionsRef.current.onData) {
               optionsRef.current.onData({
                 client,
                 data: result,
@@ -226,6 +260,10 @@ export function useSubscription<
             }
           },
           error(error) {
+            error =
+              error instanceof ApolloError ? error : (
+                new ApolloError({ protocolErrors: [error] })
+              );
             if (!subscriptionStopped) {
               observable.__.setResult({
                 loading: false,
@@ -233,7 +271,7 @@ export function useSubscription<
                 error,
                 variables,
               });
-              update();
+              if (!ignoreResultsRef.current) update();
               optionsRef.current.onError?.(error);
             }
           },
@@ -260,7 +298,23 @@ export function useSubscription<
       },
       [observable]
     ),
-    () => (observable && !skip ? observable.__.result : fallbackResult)
+    () =>
+      observable && !skip && !ignoreResults ?
+        observable.__.result
+      : fallbackResult
+  );
+  return React.useMemo(
+    () => ({
+      ...ret,
+      restart() {
+        invariant(
+          !optionsRef.current.skip,
+          "A subscription that is skipped cannot be restarted."
+        );
+        setObservable(recreateRef.current());
+      },
+    }),
+    [ret]
   );
 }
 
@@ -270,15 +324,23 @@ function createSubscription<
 >(
   client: ApolloClient<any>,
   query: TypedDocumentNode<TData, TVariables>,
-  variables?: TVariables,
-  fetchPolicy?: FetchPolicy,
-  context?: DefaultContext
+  variables: TVariables | undefined,
+  fetchPolicy: FetchPolicy | undefined,
+  errorPolicy: ErrorPolicy | undefined,
+  context: DefaultContext | undefined,
+  extensions: Record<string, any> | undefined
 ) {
-  const __ = {
-    variables,
-    client,
+  const options = {
     query,
+    variables,
     fetchPolicy,
+    errorPolicy,
+    context,
+    extensions,
+  };
+  const __ = {
+    ...options,
+    client,
     result: {
       loading: true,
       data: void 0,
@@ -295,12 +357,9 @@ function createSubscription<
     new Observable<FetchResult<TData>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
-      observable ||= client.subscribe({
-        query,
-        variables,
-        fetchPolicy,
-        context,
-      });
+      if (!observable) {
+        observable = client.subscribe(options);
+      }
       const sub = observable.subscribe(observer);
       return () => sub.unsubscribe();
     }),

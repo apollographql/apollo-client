@@ -1,5 +1,61 @@
 # @apollo/client
 
+## 3.11.0-rc.0
+
+### Minor Changes
+
+- [#11923](https://github.com/apollographql/apollo-client/pull/11923) [`d88c7f8`](https://github.com/apollographql/apollo-client/commit/d88c7f8909e3cb31532e8b1fc7dd06be12f35591) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `subscribeToMore` function to `useQueryRefHandlers`.
+
+- [#11854](https://github.com/apollographql/apollo-client/pull/11854) [`3812800`](https://github.com/apollographql/apollo-client/commit/3812800c6e4e5e3e64f473543babdba35ce100c2) Thanks [@jcostello-atlassian](https://github.com/jcostello-atlassian)! - Support extensions in useSubscription
+
+- [#11923](https://github.com/apollographql/apollo-client/pull/11923) [`d88c7f8`](https://github.com/apollographql/apollo-client/commit/d88c7f8909e3cb31532e8b1fc7dd06be12f35591) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `subscribeToMore` function to `useLoadableQuery`.
+
+- [#11863](https://github.com/apollographql/apollo-client/pull/11863) [`98e44f7`](https://github.com/apollographql/apollo-client/commit/98e44f74cb7c7e93a81bdc7492c9218bf4a2dcd4) Thanks [@phryneas](https://github.com/phryneas)! - Reimplement `useSubscription` to fix rules of React violations.
+
+- [#11869](https://github.com/apollographql/apollo-client/pull/11869) [`a69327c`](https://github.com/apollographql/apollo-client/commit/a69327cce1b36e8855258e9b19427511e0af8748) Thanks [@phryneas](https://github.com/phryneas)! - Rewrite big parts of `useQuery` and `useLazyQuery` to be more compliant with the Rules of React and React Compiler
+
+- [#11936](https://github.com/apollographql/apollo-client/pull/11936) [`1b23337`](https://github.com/apollographql/apollo-client/commit/1b23337e5a9eec4ce3ed69531ca4f4afe8e897a6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add the ability to specify a name for the client instance for use with Apollo Client Devtools. This is useful when instantiating multiple clients to identify the client instance more easily. This deprecates the `connectToDevtools` option in favor of a new `devtools` configuration.
+
+  ```ts
+  new ApolloClient({
+    devtools: {
+      enabled: true,
+      name: "Test Client",
+    },
+  });
+  ```
+
+  This option is backwards-compatible with `connectToDevtools` and will be used in the absense of a `devtools` option.
+
+- [#11923](https://github.com/apollographql/apollo-client/pull/11923) [`d88c7f8`](https://github.com/apollographql/apollo-client/commit/d88c7f8909e3cb31532e8b1fc7dd06be12f35591) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `subscribeToMore` function to `useBackgroundQuery`.
+
+- [#11789](https://github.com/apollographql/apollo-client/pull/11789) [`5793301`](https://github.com/apollographql/apollo-client/commit/579330147d6bd6f7167a35413a33746103e375cb) Thanks [@phryneas](https://github.com/phryneas)! - Changes usages of the `GraphQLError` type to `GraphQLFormattedError`.
+
+  This was a type bug - these errors were never `GraphQLError` instances
+  to begin with, and the `GraphQLError` class has additional properties that can
+  never be correctly rehydrated from a GraphQL result.
+  The correct type to use here is `GraphQLFormattedError`.
+
+  Similarly, please ensure to use the type `FormattedExecutionResult`
+  instead of `ExecutionResult` - the non-"Formatted" versions of these types
+  are for use on the server only, but don't get transported over the network.
+
+- [#11930](https://github.com/apollographql/apollo-client/pull/11930) [`a768575`](https://github.com/apollographql/apollo-client/commit/a768575ac1454587208aad63abc811b6a966fe72) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deprecates experimental schema testing utilities introduced in 3.10 in favor of recommending [`@apollo/graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
+
+### Patch Changes
+
+- [#11927](https://github.com/apollographql/apollo-client/pull/11927) [`2941824`](https://github.com/apollographql/apollo-client/commit/2941824dd66cdd20eee5f2293373ad7a9cf991a4) Thanks [@phryneas](https://github.com/phryneas)! - Add `restart` function to `useSubscription`.
+
+- [#11902](https://github.com/apollographql/apollo-client/pull/11902) [`96422ce`](https://github.com/apollographql/apollo-client/commit/96422ce95b923b560321a88acd2eec35cf2a1c18) Thanks [@phryneas](https://github.com/phryneas)! - Add `cause` field to `ApolloError`.
+
+- [#11806](https://github.com/apollographql/apollo-client/pull/11806) [`8df6013`](https://github.com/apollographql/apollo-client/commit/8df6013b6b45452ec058fab3e068b5b6d6c493f7) Thanks [@phryneas](https://github.com/phryneas)! - MockLink: add query default variables if not specified in mock request
+
+- [#11626](https://github.com/apollographql/apollo-client/pull/11626) [`228429a`](https://github.com/apollographql/apollo-client/commit/228429a1d36eae691473b24fb641ec3cd84c8a3d) Thanks [@phryneas](https://github.com/phryneas)! - Call `nextFetchPolicy` with "variables-changed" even if there is a `fetchPolicy` specified. (fixes #11365)
+
+- [#11719](https://github.com/apollographql/apollo-client/pull/11719) [`09a6677`](https://github.com/apollographql/apollo-client/commit/09a6677ec1a0cffedeecb2cbac5cd3a3c8aa0fa1) Thanks [@phryneas](https://github.com/phryneas)! - Allow wrapping `createQueryPreloader`
+
+- [#11921](https://github.com/apollographql/apollo-client/pull/11921) [`70406bf`](https://github.com/apollographql/apollo-client/commit/70406bfd2b9a645d781638569853d9b435e047df) Thanks [@phryneas](https://github.com/phryneas)! - add `ignoreResults` option to `useSubscription`
+
 ## 3.10.8
 
 ### Patch Changes
@@ -457,7 +513,7 @@
   import { Environment, Network, RecordSource, Store } from "relay-runtime";
 
   const fetchMultipartSubs = createFetchMultipartSubscription(
-    "http://localhost:4000",
+    "http://localhost:4000"
   );
 
   const network = Network.create(fetchQuery, fetchMultipartSubs);
@@ -810,7 +866,7 @@
     return data.breeds.map(({ characteristics }) =>
       characteristics.map((characteristic) => (
         <div key={characteristic}>{characteristic}</div>
-      )),
+      ))
     );
   }
   ```
@@ -861,7 +917,7 @@
 
   const { data } = useSuspenseQuery(
     query,
-    id ? { variables: { id } } : skipToken,
+    id ? { variables: { id } } : skipToken
   );
   ```
 
@@ -2816,7 +2872,7 @@ In upcoming v3.6.x and v3.7 (beta) releases, we will be completely overhauling o
     fields: {
       comments(comments: Reference[], { readField }) {
         return comments.filter(
-          (comment) => idToRemove !== readField("id", comment),
+          (comment) => idToRemove !== readField("id", comment)
         );
       },
     },

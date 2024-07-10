@@ -2109,8 +2109,6 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
 
 // @public
 interface WatchFragmentOptions<TData, TVars> {
-    // @deprecated (undocumented)
-    canonizeResults?: boolean;
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
     fragmentName?: string;
     from: StoreObject | Reference | string;

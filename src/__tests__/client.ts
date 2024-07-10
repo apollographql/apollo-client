@@ -2855,7 +2855,7 @@ describe("client", () => {
 
           const lastError = observable.getLastError();
           expect(lastError).toBeInstanceOf(ApolloError);
-          expect(lastError!.networkError).toEqual(error);
+          expect(lastError!.networkError).toEqual((error as any).networkError);
 
           const lastResult = observable.getLastResult();
           expect(lastResult).toBeTruthy();

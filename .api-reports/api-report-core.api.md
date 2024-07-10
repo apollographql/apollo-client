@@ -2231,8 +2231,6 @@ export interface UriFunction {
 
 // @public
 export interface WatchFragmentOptions<TData, TVars> {
-    // @deprecated (undocumented)
-    canonizeResults?: boolean;
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
     fragmentName?: string;
     from: StoreObject | Reference | string;

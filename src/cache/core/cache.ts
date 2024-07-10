@@ -228,10 +228,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public watchFragment<TData = any, TVars = OperationVariables>(
     options: WatchFragmentOptions<TData, TVars>
   ): Observable<WatchFragmentResult<TData>> {
-    const { fragment, fragmentName, from, optimistic = true } = options;
+    const {
+      fragment,
+      fragmentName,
+      from,
+      optimistic = true,
+      ...otherOptions
+    } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
 
     const diffOptions: Cache.DiffOptions<TData, TVars> = {
+      ...otherOptions,
       returnPartialData: true,
       id: typeof from === "string" ? from : this.identify(from),
       query,

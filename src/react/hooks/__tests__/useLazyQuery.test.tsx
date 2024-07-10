@@ -1069,14 +1069,14 @@ describe("useLazyQuery Hook", () => {
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError("error 1")],
+          errors: [{ message: "error 1" }],
         },
         delay: 20,
       },
       {
         request: { query: helloQuery },
         result: {
-          errors: [new GraphQLError("error 2")],
+          errors: [{ message: "error 2" }],
         },
         delay: 20,
       },
@@ -1112,7 +1112,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(
-        new ApolloError({ graphQLErrors: [new Error("error 1")] })
+        new ApolloError({ graphQLErrors: [{ message: "error 1" }] })
       );
     }
 
@@ -1129,7 +1129,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(
-        new ApolloError({ graphQLErrors: [new Error("error 1")] })
+        new ApolloError({ graphQLErrors: [{ message: "error 1" }] })
       );
     }
 
@@ -1138,7 +1138,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(
-        new ApolloError({ graphQLErrors: [new Error("error 2")] })
+        new ApolloError({ graphQLErrors: [{ message: "error 2" }] })
       );
     }
   });

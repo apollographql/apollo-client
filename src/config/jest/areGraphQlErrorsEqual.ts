@@ -11,6 +11,7 @@ function isGraphQLFormattedError(e: any): e is GraphQLFormattedError {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 function isGraphQLError(e: any): e is GraphQLError {
   return e instanceof GraphQLError;
 }

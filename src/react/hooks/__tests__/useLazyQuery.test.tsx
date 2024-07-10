@@ -1111,7 +1111,9 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(new Error("error 1"));
+      expect(result.error).toEqual(
+        new ApolloError({ graphQLErrors: [new Error("error 1")] })
+      );
     }
 
     await executePromise.then((result) => {
@@ -1126,14 +1128,18 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(new Error("error 1"));
+      expect(result.error).toEqual(
+        new ApolloError({ graphQLErrors: [new Error("error 1")] })
+      );
     }
 
     {
       const [, result] = await ProfiledHook.takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(new Error("error 2"));
+      expect(result.error).toEqual(
+        new ApolloError({ graphQLErrors: [new Error("error 2")] })
+      );
     }
   });
 

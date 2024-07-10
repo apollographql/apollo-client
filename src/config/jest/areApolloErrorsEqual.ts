@@ -8,10 +8,6 @@ export const areApolloErrorsEqual: Tester = function (a, b, customTesters) {
   const isAApolloError = isApolloError(a);
   const isBApolloError = isApolloError(b);
 
-  // the user is not explicitly testing for an ApolloError
-  // so we don't do a deeper check
-  if (!isBApolloError) return undefined;
-
   if (isAApolloError && isBApolloError) {
     return (
       a.message === b.message &&

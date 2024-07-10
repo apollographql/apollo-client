@@ -5,8 +5,8 @@
 ```ts
 
 import type { DocumentNode } from 'graphql';
-import type { ExecutionResult } from 'graphql';
-import type { GraphQLError } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 
@@ -80,10 +80,8 @@ export class ErrorLink extends ApolloLink {
 export interface ErrorResponse {
     // (undocumented)
     forward: NextLink;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLErrors" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    graphQLErrors?: GraphQLErrors;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // Warning: (ae-forgotten-export) The symbol "NetworkError" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -91,7 +89,7 @@ export interface ErrorResponse {
     // (undocumented)
     operation: Operation;
     // (undocumented)
-    response?: ExecutionResult;
+    response?: FormattedExecutionResult;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
@@ -115,7 +113,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -141,9 +139,6 @@ interface ExecutionPatchResultBase {
 type FetchResult<TData = Record<string, any>, TContext = Record<string, any>, TExtensions = Record<string, any>> = SingleExecutionResult<TData, TContext, TExtensions> | ExecutionPatchResult<TData, TExtensions>;
 
 // @public (undocumented)
-type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
-// @public (undocumented)
 interface GraphQLRequest<TVariables = Record<string, any>> {
     // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
     //
@@ -164,7 +159,7 @@ interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -227,11 +222,15 @@ type ServerParseError = Error & {
 };
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // (No @packageDocumentation comment for this package)

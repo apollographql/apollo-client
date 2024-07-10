@@ -16,6 +16,8 @@ import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
 import { profileHook, spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
+import { ErrorBoundary } from "react-error-boundary";
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
 
@@ -455,6 +457,74 @@ describe("useSubscription Hook", () => {
     expect(result.current.error).toBe(undefined);
 
     expect(context!).toBe("Audi");
+  });
+
+  it("should share extensions set in options", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    let extensions: string;
+    const link = new MockSubscriptionLink();
+    const extensionsLink = new ApolloLink((operation, forward) => {
+      extensions = operation.extensions.make;
+      return forward(operation);
+    });
+    const client = new ApolloClient({
+      link: concat(extensionsLink, link),
+      cache: new Cache({ addTypename: false }),
+    });
+
+    const { result } = renderHook(
+      () =>
+        useSubscription(subscription, {
+          extensions: { make: "Audi" },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBe(undefined);
+    expect(result.current.data).toBe(undefined);
+    setTimeout(() => {
+      link.simulateResult(results[0]);
+    }, 100);
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toEqual(results[0].result.data);
+      },
+      { interval: 1 }
+    );
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe(undefined);
+
+    setTimeout(() => {
+      link.simulateResult(results[1]);
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current.data).toEqual(results[1].result.data);
+      },
+      { interval: 1 }
+    );
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBe(undefined);
+
+    expect(extensions!).toBe("Audi");
   });
 
   it("should handle multiple subscriptions properly", async () => {
@@ -1123,6 +1193,248 @@ followed by new in-flight setup", async () => {
 
     unmount();
   });
+
+  describe("errorPolicy", () => {
+    function setup() {
+      const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
+        subscription ($id: ID!) {
+          totalLikes
+        }
+      `;
+      const errorBoundaryOnError = jest.fn();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        link,
+        cache: new Cache(),
+      });
+      const ProfiledHook = profileHook(
+        (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
+          useSubscription(subscription, options)
+      );
+      const wrapper = ({ children }: { children: any }) => (
+        <ApolloProvider client={client}>
+          <ErrorBoundary onError={errorBoundaryOnError} fallback={<>error</>}>
+            {children}
+          </ErrorBoundary>
+        </ApolloProvider>
+      );
+      const graphQlErrorResult: MockedSubscriptionResult = {
+        result: {
+          data: { totalLikes: 42 },
+          errors: [{ message: "test" } as any],
+        },
+      };
+      const protocolErrorResult: MockedSubscriptionResult = {
+        error: new Error("Socket closed with event -1: I'm a test!"),
+      };
+      return {
+        client,
+        link,
+        errorBoundaryOnError,
+        ProfiledHook,
+        wrapper,
+        graphQlErrorResult,
+        protocolErrorResult,
+      };
+    }
+    describe("GraphQL error", () => {
+      it.each([undefined, "none"] as const)(
+        "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
+        async (errorPolicy) => {
+          const {
+            ProfiledHook,
+            wrapper,
+            link,
+            graphQlErrorResult,
+            errorBoundaryOnError,
+          } = setup();
+          const onData = jest.fn();
+          const onError = jest.fn();
+          render(
+            <ProfiledHook
+              errorPolicy={errorPolicy}
+              onError={onError}
+              onData={onData}
+            />,
+            {
+              wrapper,
+            }
+          );
+
+          await ProfiledHook.takeSnapshot();
+          link.simulateResult(graphQlErrorResult);
+          {
+            const snapshot = await ProfiledHook.takeSnapshot();
+            console.dir({ graphQlErrorResult, snapshot }, { depth: 5 });
+            expect(snapshot).toStrictEqual({
+              loading: false,
+              error: new ApolloError({
+                graphQLErrors: graphQlErrorResult.result!.errors as any,
+              }),
+              data: undefined,
+              restart: expect.any(Function),
+              variables: undefined,
+            });
+            expect(snapshot.error).toBeInstanceOf(ApolloError);
+          }
+          expect(onError).toHaveBeenCalledTimes(1);
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({
+              graphQLErrors: graphQlErrorResult.result!.errors as any,
+            })
+          );
+          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
+          expect(onData).toHaveBeenCalledTimes(0);
+          expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+        }
+      );
+      it("`errorPolicy: 'all'`: returns `{ error, data }`, calls `onError`", async () => {
+        const {
+          ProfiledHook,
+          wrapper,
+          link,
+          graphQlErrorResult,
+          errorBoundaryOnError,
+        } = setup();
+        const onData = jest.fn();
+        const onError = jest.fn();
+        render(
+          <ProfiledHook errorPolicy="all" onError={onError} onData={onData} />,
+          {
+            wrapper,
+          }
+        );
+
+        await ProfiledHook.takeSnapshot();
+        link.simulateResult(graphQlErrorResult);
+        {
+          const snapshot = await ProfiledHook.takeSnapshot();
+          expect(snapshot).toStrictEqual({
+            loading: false,
+            error: new ApolloError({
+              errorMessage: "test",
+              graphQLErrors: graphQlErrorResult.result!.errors as any,
+            }),
+            data: { totalLikes: 42 },
+            restart: expect.any(Function),
+            variables: undefined,
+          });
+          expect(snapshot.error).toBeInstanceOf(ApolloError);
+        }
+
+        expect(onError).toHaveBeenCalledTimes(1);
+        expect(onError).toHaveBeenCalledWith(
+          new ApolloError({
+            errorMessage: "test",
+            graphQLErrors: graphQlErrorResult.result!.errors as any,
+          })
+        );
+        expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
+        expect(onData).toHaveBeenCalledTimes(0);
+        expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+      });
+      it("`errorPolicy: 'ignore'`: returns `{ data }`, calls `onData`", async () => {
+        const {
+          ProfiledHook,
+          wrapper,
+          link,
+          graphQlErrorResult,
+          errorBoundaryOnError,
+        } = setup();
+        const onData = jest.fn();
+        const onError = jest.fn();
+        render(
+          <ProfiledHook
+            errorPolicy="ignore"
+            onError={onError}
+            onData={onData}
+          />,
+          {
+            wrapper,
+          }
+        );
+
+        await ProfiledHook.takeSnapshot();
+        link.simulateResult(graphQlErrorResult);
+        {
+          const snapshot = await ProfiledHook.takeSnapshot();
+          expect(snapshot).toStrictEqual({
+            loading: false,
+            error: undefined,
+            data: { totalLikes: 42 },
+            restart: expect.any(Function),
+            variables: undefined,
+          });
+        }
+
+        expect(onError).toHaveBeenCalledTimes(0);
+        expect(onData).toHaveBeenCalledTimes(1);
+        expect(onData).toHaveBeenCalledWith({
+          client: expect.anything(),
+          data: {
+            data: { totalLikes: 42 },
+            loading: false,
+            // should this be undefined?
+            error: undefined,
+            variables: undefined,
+          },
+        });
+        expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+      });
+    });
+    describe("protocol error", () => {
+      it.each([undefined, "none", "all", "ignore"] as const)(
+        "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
+        async (errorPolicy) => {
+          const {
+            ProfiledHook,
+            wrapper,
+            link,
+            protocolErrorResult,
+            errorBoundaryOnError,
+          } = setup();
+          const onData = jest.fn();
+          const onError = jest.fn();
+          render(
+            <ProfiledHook
+              errorPolicy={errorPolicy}
+              onError={onError}
+              onData={onData}
+            />,
+            {
+              wrapper,
+            }
+          );
+
+          await ProfiledHook.takeSnapshot();
+          link.simulateResult(protocolErrorResult);
+          {
+            const snapshot = await ProfiledHook.takeSnapshot();
+            expect(snapshot).toStrictEqual({
+              loading: false,
+              error: new ApolloError({
+                protocolErrors: [protocolErrorResult.error!],
+              }),
+              data: undefined,
+              restart: expect.any(Function),
+              variables: undefined,
+            });
+            expect(snapshot.error).toBeInstanceOf(ApolloError);
+          }
+
+          expect(onError).toHaveBeenCalledTimes(1);
+          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
+          expect(onError).toHaveBeenCalledWith(
+            new ApolloError({
+              protocolErrors: [protocolErrorResult.error!],
+            })
+          );
+          expect(onData).toHaveBeenCalledTimes(0);
+          expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
+        }
+      );
+    });
+  });
 });
 
 describe("`restart` callback", () => {
@@ -1597,7 +1909,9 @@ describe("ignoreResults", () => {
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(error);
+      expect(onError).toHaveBeenLastCalledWith(
+        new ApolloError({ protocolErrors: [error] })
+      );
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 

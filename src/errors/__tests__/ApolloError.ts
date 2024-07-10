@@ -1,11 +1,10 @@
 import { ApolloError } from "..";
-import { GraphQLError } from "graphql";
 
 describe("ApolloError", () => {
   it("should construct itself correctly", () => {
     const graphQLErrors = [
-      new GraphQLError("Something went wrong with GraphQL"),
-      new GraphQLError("Something else went wrong with GraphQL"),
+      { message: "Something went wrong with GraphQL" },
+      { message: "Something else went wrong with GraphQL" },
     ];
     const protocolErrors = [
       {
@@ -41,7 +40,7 @@ describe("ApolloError", () => {
   });
 
   it("should add a graphql error to the message", () => {
-    const graphQLErrors = [new GraphQLError("this is an error message")];
+    const graphQLErrors = [{ message: "this is an error message" }];
     const apolloError = new ApolloError({
       graphQLErrors,
     });
@@ -51,8 +50,8 @@ describe("ApolloError", () => {
 
   it("should add multiple graphql errors to the message", () => {
     const graphQLErrors = [
-      new GraphQLError("this is new"),
-      new GraphQLError("this is old"),
+      { message: "this is new" },
+      { message: "this is old" },
     ];
     const apolloError = new ApolloError({
       graphQLErrors,
@@ -64,7 +63,7 @@ describe("ApolloError", () => {
   });
 
   it("should add both network and graphql errors to the message", () => {
-    const graphQLErrors = [new GraphQLError("graphql error message")];
+    const graphQLErrors = [{ message: "graphql error message" }];
     const networkError = new Error("network error message");
     const apolloError = new ApolloError({
       graphQLErrors,
@@ -77,7 +76,7 @@ describe("ApolloError", () => {
   });
 
   it("should add both protocol and graphql errors to the message", () => {
-    const graphQLErrors = [new GraphQLError("graphql error message")];
+    const graphQLErrors = [{ message: "graphql error message" }];
     const protocolErrors = [
       {
         message: "cannot read message from websocket",
@@ -99,7 +98,7 @@ describe("ApolloError", () => {
   });
 
   it("should contain a stack trace", () => {
-    const graphQLErrors = [new GraphQLError("graphql error message")];
+    const graphQLErrors = [{ message: "graphql error message" }];
     const networkError = new Error("network error message");
     const apolloError = new ApolloError({
       graphQLErrors,

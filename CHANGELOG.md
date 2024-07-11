@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.11.0-rc.1
+
+### Patch Changes
+
+- [#11949](https://github.com/apollographql/apollo-client/pull/11949) [`4528918`](https://github.com/apollographql/apollo-client/commit/45289186bcaaa33dfe904913eb6df31e2541c219) Thanks [@alessbell](https://github.com/alessbell)! - Remove deprecated `watchFragment` option, `canonizeResults`
+
+- [#11926](https://github.com/apollographql/apollo-client/pull/11926) [`3dd6432`](https://github.com/apollographql/apollo-client/commit/3dd64324dc5156450cead27f8141ea93315ffe65) Thanks [@phryneas](https://github.com/phryneas)! - `watchFragment`: forward additional options to `diffOptions`
+
+- [#11946](https://github.com/apollographql/apollo-client/pull/11946) [`7d833b8`](https://github.com/apollographql/apollo-client/commit/7d833b80119a991e6d2eb58f2c71074d697b8e63) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where mutations were not accessible by Apollo Client Devtools in 3.11.0-rc.0.
+
 ## 3.11.0-rc.0
 
 ### Minor Changes

@@ -302,7 +302,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       localState: this.localState,
       assumeImmutableResults,
       onBroadcast:
-        connectToDevTools ?
+        this.devtoolsConfig.enabled ?
           () => {
             if (this.devToolsHookCb) {
               this.devToolsHookCb({

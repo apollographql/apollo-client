@@ -2735,7 +2735,9 @@ describe("ApolloClient", () => {
                   expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
                   expect(invariantDebugSpy).toHaveBeenCalledWith(
                     "In client.refetchQueries, Promise.all promise rejected with error %o",
-                    new ApolloError({ errorMessage: "refetch failed" })
+                    new ApolloError({
+                      networkError: new Error("refetch failed"),
+                    })
                   );
                   resolve();
                 } catch (err) {

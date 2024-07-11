@@ -204,5 +204,8 @@
     "**/*.js.map",
     "**/*.d.ts",
     "**/*.json"
-  ]
+  ],
+  "overrides": {
+    "pretty-format": "^29.7.0"
+  }
 }

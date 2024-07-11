@@ -305,7 +305,9 @@ describe("General Mutation testing", () => {
         {(createTodo: any) => {
           if (!called) {
             createTodo().catch((error: any) => {
-              expect(error).toEqual(new Error("Error 1"));
+              expect(error).toEqual(
+                new ApolloError({ networkError: new Error("Error 1") })
+              );
               done = true;
             });
           }
@@ -382,9 +384,13 @@ describe("General Mutation testing", () => {
 
     const onError = (error: Error) => {
       if (count === 1) {
-        expect(error).toEqual(new Error("Error 1"));
+        expect(error).toEqual(
+          new ApolloError({ networkError: new Error("Error 1") })
+        );
       } else if (count === 3) {
-        expect(error).toEqual(new Error("Error 2"));
+        expect(error).toEqual(
+          new ApolloError({ networkError: new Error("Error 2") })
+        );
       }
     };
     const Component = () => (
@@ -402,7 +408,9 @@ describe("General Mutation testing", () => {
             expect(result.loading).toEqual(false);
             expect(result.data).toEqual(undefined);
             expect(result.called).toEqual(true);
-            expect(result.error).toEqual(new Error("Error 2"));
+            expect(result.error).toEqual(
+              new ApolloError({ networkError: new Error("Error 2") })
+            );
           }
           count++;
           return <div />;
@@ -499,12 +507,16 @@ describe("General Mutation testing", () => {
         {(createTodo: any, result: any) => {
           if (count === 0) {
             createTodo().catch((err: any) => {
-              expect(err).toEqual(new Error("error occurred"));
+              expect(err).toEqual(
+                new ApolloError({ networkError: new Error("error occurred") })
+              );
             });
           } else if (count === 1) {
             expect(result.loading).toBeTruthy();
           } else if (count === 2) {
-            expect(result.error).toEqual(new Error("error occurred"));
+            expect(result.error).toEqual(
+              new ApolloError({ networkError: new Error("error occurred") })
+            );
           }
           count++;
           return <div />;

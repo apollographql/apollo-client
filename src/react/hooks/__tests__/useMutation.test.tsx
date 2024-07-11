@@ -8,6 +8,7 @@ import fetchMock from "fetch-mock";
 
 import {
   ApolloClient,
+  ApolloError,
   ApolloLink,
   ApolloQueryResult,
   Cache,
@@ -346,7 +347,7 @@ describe("useMutation Hook", () => {
               variables,
             },
             result: {
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
+              errors: [{ message: CREATE_TODO_ERROR }],
             },
           },
         ];
@@ -371,7 +372,9 @@ describe("useMutation Hook", () => {
           throw new Error("function did not error");
         });
 
-        expect(fetchError).toEqual(new GraphQLError(CREATE_TODO_ERROR));
+        expect(fetchError).toEqual(
+          new ApolloError({ graphQLErrors: [{ message: CREATE_TODO_ERROR }] })
+        );
       });
 
       it(`should reject when errorPolicy is 'none'`, async () => {
@@ -961,14 +964,13 @@ describe("useMutation Hook", () => {
 
       expect(fetchResult).toEqual({
         data: undefined,
-        // Not sure why we unwrap errors here.
-        errors: errors[0],
+        errors: new ApolloError({ graphQLErrors: errors }),
       });
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(
-        errors[0],
+        new ApolloError({ graphQLErrors: errors }),
         expect.objectContaining({ variables })
       );
     });
@@ -1012,7 +1014,7 @@ describe("useMutation Hook", () => {
     });
 
     it("should allow updating onError while mutation is executing", async () => {
-      const errors = [new GraphQLError(CREATE_TODO_ERROR)];
+      const errors = [{ message: CREATE_TODO_ERROR }];
       const variables = {
         priority: "Low",
         description: "Get milk.",
@@ -1060,15 +1062,14 @@ describe("useMutation Hook", () => {
 
       expect(fetchResult).toEqual({
         data: undefined,
-        // Not sure why we unwrap errors here.
-        errors: errors[0],
+        errors: new ApolloError({ graphQLErrors: errors }),
       });
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onError1).toHaveBeenCalledTimes(1);
       expect(onError1).toHaveBeenCalledWith(
-        errors[0],
+        new ApolloError({ graphQLErrors: errors }),
         expect.objectContaining({ variables })
       );
     });

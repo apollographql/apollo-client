@@ -2,7 +2,7 @@ import React from "react";
 import gql from "graphql-tag";
 import { render, waitFor } from "@testing-library/react";
 
-import { ApolloClient } from "../../../../core";
+import { ApolloClient, ApolloError } from "../../../../core";
 import { InMemoryCache as Cache } from "../../../../cache";
 import { ApolloProvider } from "../../../context";
 import { ApolloLink, DocumentNode, Operation } from "../../../../link/core";
@@ -390,7 +390,9 @@ itAsync("renders an error", (resolve, reject) => {
             expect(error).toBeUndefined();
           } else if (count === 1) {
             expect(loading).toBe(false);
-            expect(error).toEqual(new Error("error occurred"));
+            expect(error).toEqual(
+              new ApolloError({ protocolErrors: [new Error("error occurred")] })
+            );
             expect(data).toBeUndefined();
           }
         } catch (error) {

@@ -61,14 +61,11 @@ const {
   prototype: { hasOwnProperty },
 } = Object;
 
-const originalResult = Symbol();
 interface InternalQueryResult<TData, TVariables extends OperationVariables>
   extends Omit<
     QueryResult<TData, TVariables>,
     Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
-  > {
-  [originalResult]: ApolloQueryResult<TData>;
-}
+  > {}
 
 function noop() {}
 export const lastWatchOptions = Symbol();
@@ -688,16 +685,12 @@ function setResult<TData, TVariables extends OperationVariables>(
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
-  handleErrorOrCompleted(
-    nextResult,
-    previousResult?.[originalResult],
-    callbacks
-  );
+  handleErrorOrCompleted(nextResult, previousResult?.networkStatus, callbacks);
 }
 
 function handleErrorOrCompleted<TData>(
   result: ApolloQueryResult<TData>,
-  previousResult: ApolloQueryResult<TData> | undefined,
+  previousNetworkStatus: NetworkStatus | undefined,
   callbacks: Callbacks<TData>
 ) {
   if (!result.loading) {
@@ -710,7 +703,7 @@ function handleErrorOrCompleted<TData>(
           callbacks.onError(error);
         } else if (
           result.data &&
-          previousResult?.networkStatus !== result.networkStatus &&
+          previousNetworkStatus !== result.networkStatus &&
           result.networkStatus === NetworkStatus.ready
         ) {
           callbacks.onCompleted(result.data);
@@ -785,13 +778,7 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
     variables: observable.variables,
     called: result !== ssrDisabledResult && result !== skipStandbyResult,
     previousData,
-  } satisfies Omit<
-    InternalQueryResult<TData, TVariables>,
-    typeof originalResult
-  > as InternalQueryResult<TData, TVariables>;
-  // non-enumerable property to hold the original result, for referential equality checks
-  Object.defineProperty(queryResult, originalResult, { value: result });
-
+  };
   return queryResult;
 }
 

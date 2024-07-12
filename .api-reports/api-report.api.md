@@ -2265,6 +2265,8 @@ export interface QueryResult<TData = any, TVariables extends OperationVariables 
     client: ApolloClient<any>;
     data: TData | undefined;
     error?: ApolloError;
+    // @deprecated (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     loading: boolean;
     networkStatus: NetworkStatus;
     observable: ObservableQuery<TData, TVariables>;

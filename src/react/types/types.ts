@@ -149,7 +149,7 @@ export interface QueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
   /**
-   * @deprecate This property will be removed in a future version of Apollo Client.
+   * @deprecated This property will be removed in a future version of Apollo Client.
    * Please use `error.graphQLErrors` instead.
    */
   errors?: ReadonlyArray<GraphQLFormattedError>;

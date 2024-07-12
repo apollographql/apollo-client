@@ -295,22 +295,14 @@ export function useQueryInternals<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
   >(() => bindObservableMethods(observable), [observable]);
 
-  useHandleSkip<TData, TVariables>(
-    resultData, // might get mutated during render
-    observable,
-    client,
-    options,
-    watchQueryOptions,
-    disableNetworkFetches,
-    isSyncSSR
-  );
-
   useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
     observable,
     client,
+    options,
+    watchQueryOptions,
     disableNetworkFetches,
     partialRefetch,
     isSyncSSR,
@@ -337,9 +329,11 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>,
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   disableNetworkFetches: boolean,
   partialRefetch: boolean | undefined,
-  skipSubscribing: boolean,
+  isSyncSSR: boolean,
   callbacks: {
     onCompleted: (data: TData) => void;
     onError: (error: ApolloError) => void;
@@ -356,6 +350,41 @@ function useObservableSubscriptionResult<
     callbackRef.current = callbacks;
   });
 
+  const resultOverride =
+    (
+      (isSyncSSR || disableNetworkFetches) &&
+      options.ssr === false &&
+      !options.skip
+    ) ?
+      // If SSR has been explicitly disabled, and this function has been called
+      // on the server side, return the default loading state.
+      ssrDisabledResult
+    : options.skip || watchQueryOptions.fetchPolicy === "standby" ?
+      // When skipping a query (ie. we're not querying for data but still want to
+      // render children), make sure the `data` is cleared out and `loading` is
+      // set to `false` (since we aren't loading anything).
+      //
+      // NOTE: We no longer think this is the correct behavior. Skipping should
+      // not automatically set `data` to `undefined`, but instead leave the
+      // previous data in place. In other words, skipping should not mandate that
+      // previously received data is all of a sudden removed. Unfortunately,
+      // changing this is breaking, so we'll have to wait until Apollo Client 4.0
+      // to address this.
+      skipStandbyResult
+    : void 0;
+
+  const currentResultOverride = React.useMemo(
+    () =>
+      resultOverride &&
+      toQueryResult(
+        resultOverride,
+        resultData.previousData,
+        observable,
+        client
+      ),
+    [client, observable, resultOverride, resultData.previousData]
+  );
+
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
@@ -363,7 +392,7 @@ function useObservableSubscriptionResult<
         // keep it as a dependency of this effect, even though it's not used
         disableNetworkFetches;
 
-        if (skipSubscribing) {
+        if (isSyncSSR) {
           return () => {};
         }
 
@@ -447,7 +476,7 @@ function useObservableSubscriptionResult<
 
       [
         disableNetworkFetches,
-        skipSubscribing,
+        isSyncSSR,
         observable,
         resultData,
         partialRefetch,
@@ -455,6 +484,7 @@ function useObservableSubscriptionResult<
       ]
     ),
     () =>
+      currentResultOverride ||
       getCurrentResult(
         resultData,
         observable,
@@ -463,6 +493,7 @@ function useObservableSubscriptionResult<
         client
       ),
     () =>
+      currentResultOverride ||
       getCurrentResult(
         resultData,
         observable,
@@ -485,52 +516,6 @@ function useRegisterSSRObservable(
       // TODO: This is a legacy API which could probably be cleaned up
       renderPromises.addObservableQueryPromise(observable);
     }
-  }
-}
-
-function useHandleSkip<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  /** this hook will mutate properties on `resultData` */
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObsQueryWithMeta<TData, TVariables>,
-  client: ApolloClient<object>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  disableNetworkFetches: boolean,
-  isSyncSSR: boolean
-) {
-  if (
-    (isSyncSSR || disableNetworkFetches) &&
-    options.ssr === false &&
-    !options.skip
-  ) {
-    // If SSR has been explicitly disabled, and this function has been called
-    // on the server side, return the default loading state.
-    resultData.current = toQueryResult(
-      ssrDisabledResult,
-      resultData.previousData,
-      observable,
-      client
-    );
-  } else if (options.skip || watchQueryOptions.fetchPolicy === "standby") {
-    // When skipping a query (ie. we're not querying for data but still want to
-    // render children), make sure the `data` is cleared out and `loading` is
-    // set to `false` (since we aren't loading anything).
-    //
-    // NOTE: We no longer think this is the correct behavior. Skipping should
-    // not automatically set `data` to `undefined`, but instead leave the
-    // previous data in place. In other words, skipping should not mandate that
-    // previously received data is all of a sudden removed. Unfortunately,
-    // changing this is breaking, so we'll have to wait until Apollo Client 4.0
-    // to address this.
-    resultData.current = toQueryResult(
-      skipStandbyResult,
-      resultData.previousData,
-      observable,
-      client
-    );
   }
 }
 

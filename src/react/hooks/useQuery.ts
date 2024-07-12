@@ -370,16 +370,12 @@ function useObservableSubscriptionResult<
       skipStandbyResult
     : void 0;
 
+  const previousData = resultData.previousData;
   const currentResultOverride = React.useMemo(
     () =>
       resultOverride &&
-      toQueryResult(
-        resultOverride,
-        resultData.previousData,
-        observable,
-        client
-      ),
-    [client, observable, resultOverride, resultData.previousData]
+      toQueryResult(resultOverride, previousData, observable, client),
+    [client, observable, resultOverride, previousData]
   );
 
   return useSyncExternalStore(

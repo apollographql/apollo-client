@@ -4,6 +4,14 @@ title: Advanced topics on caching in Apollo Client
 
 This article describes special cases and considerations when using the [Apollo Client cache](./overview).
 
+## SSR and Caching
+
+We reccomend against a long-running Apollo Client instances in the server. For SSR it has the risk of memory leaks, outdated data and sensitive user information leaking between users, and query deduplication does not look at headers. Every Client instance on the server should always be short-lived - one per request. The only long-living Apollo Client instance should be in the user's browser.
+
+If a short-lived client makes requests that don't contain any authentication information, the request cache (like from Next.js) can take over and answer those requests from the cache - but that kind of caching is outside of the scope of Apollo Client, as this is very complex and already provided framework functionaliy that we do not need to duplicate on top.
+
+It is also not reccomended to add any persistence unless you want to build an offline-ready app, but using Next.js would probably not be your first for that solution.
+
 ## Bypassing the cache
 
 Sometimes you _shouldn't_ use the cache for a particular GraphQL operation. For example, a query's response might be a token that's only used once. In cases like this, use [the `no-cache` fetch policy](../data/queries/#setting-a-fetch-policy):

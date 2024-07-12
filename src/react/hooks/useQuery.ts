@@ -685,6 +685,15 @@ function setResult<TData, TVariables extends OperationVariables>(
   if (previousResult && previousResult.data) {
     resultData.previousData = previousResult.data;
   }
+
+  if (!nextResult.error && isNonEmptyArray(nextResult.errors)) {
+    // Until a set naming convention for networkError and graphQLErrors is
+    // decided upon, we map errors (graphQLErrors) to the error options.
+    // TODO: Is it possible for both result.error and result.errors to be
+    // defined here?
+    nextResult.error = new ApolloError({ graphQLErrors: nextResult.errors });
+  }
+
   resultData.current = toQueryResult(
     unsafeHandlePartialRefetch(nextResult, observable, partialRefetch),
     resultData.previousData,
@@ -797,14 +806,6 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
   > as InternalQueryResult<TData, TVariables>;
   // non-enumerable property to hold the original result, for referential equality checks
   Object.defineProperty(queryResult, originalResult, { value: result });
-
-  if (!queryResult.error && isNonEmptyArray(result.errors)) {
-    // Until a set naming convention for networkError and graphQLErrors is
-    // decided upon, we map errors (graphQLErrors) to the error options.
-    // TODO: Is it possible for both result.error and result.errors to be
-    // defined here?
-    queryResult.error = new ApolloError({ graphQLErrors: result.errors });
-  }
 
   return queryResult;
 }

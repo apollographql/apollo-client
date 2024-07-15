@@ -61,11 +61,10 @@ const {
   prototype: { hasOwnProperty },
 } = Object;
 
-interface InternalQueryResult<TData, TVariables extends OperationVariables>
-  extends Omit<
-    QueryResult<TData, TVariables>,
-    Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
-  > {}
+type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
+  QueryResult<TData, TVariables>,
+  Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
+>;
 
 function noop() {}
 export const lastWatchOptions = Symbol();

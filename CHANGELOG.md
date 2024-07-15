@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 3.11.0-rc.2
+
+### Patch Changes
+
+- [#11951](https://github.com/apollographql/apollo-client/pull/11951) [`0de03af`](https://github.com/apollographql/apollo-client/commit/0de03af912a76c4e0111f21b4f90a073317b63b6) Thanks [@phryneas](https://github.com/phryneas)! - add React 19 RC to `peerDependencies`
+
+- [#11937](https://github.com/apollographql/apollo-client/pull/11937) [`78332be`](https://github.com/apollographql/apollo-client/commit/78332be32a9af0da33eb3e4100e7a76c3eac2496) Thanks [@phryneas](https://github.com/phryneas)! - `createSchemaFetch`: simulate serialized errors instead of an `ApolloError` instance
+
+- [#11944](https://github.com/apollographql/apollo-client/pull/11944) [`8f3d7eb`](https://github.com/apollographql/apollo-client/commit/8f3d7eb3bc2e0c2d79c5b1856655abe829390742) Thanks [@sneyderdev](https://github.com/sneyderdev)! - Allow `IgnoreModifier` to be returned from a `optimisticResponse` function when inferring from a `TypedDocumentNode` when used with a generic argument.
+
+- [#11954](https://github.com/apollographql/apollo-client/pull/11954) [`4a6e86a`](https://github.com/apollographql/apollo-client/commit/4a6e86aeaf6685abf0dd23110784848c8b085735) Thanks [@phryneas](https://github.com/phryneas)! - Document (and deprecate) the previously undocumented `errors` property on the `useQuery` `QueryResult` type.
+
 ## 3.11.0-rc.1
 
 ### Patch Changes

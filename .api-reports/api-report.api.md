@@ -2266,6 +2266,8 @@ export interface QueryResult<TData = any, TVariables extends OperationVariables 
     client: ApolloClient<any>;
     data: TData | undefined;
     error?: ApolloError;
+    // @deprecated (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     loading: boolean;
     networkStatus: NetworkStatus;
     observable: ObservableQuery<TData, TVariables>;
@@ -3016,8 +3018,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:391:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:272:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:272:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:275:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:38:3 - (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:54:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts

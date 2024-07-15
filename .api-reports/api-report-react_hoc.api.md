@@ -997,9 +997,10 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
     onQueryUpdated?: OnQueryUpdated<any>;
+    // Warning: (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
     optimisticResponse?: TData | ((vars: TVariables, { IGNORE }: {
         IGNORE: IgnoreModifier;
-    }) => TData);
+    }) => TData | IgnoreModifier);
     refetchQueries?: ((result: FetchResult<TData>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     // Warning: (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
     update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
@@ -1696,8 +1697,6 @@ interface UriFunction {
 
 // @public
 interface WatchFragmentOptions<TData, TVars> {
-    // @deprecated (undocumented)
-    canonizeResults?: boolean;
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
     fragmentName?: string;
     from: StoreObject | Reference | string;

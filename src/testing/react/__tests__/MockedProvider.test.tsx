@@ -10,6 +10,7 @@ import { InMemoryCache } from "../../../cache";
 import { QueryResult } from "../../../react/types/types";
 import { ApolloLink, FetchResult } from "../../../link/core";
 import { Observable } from "zen-observable-ts";
+import { ApolloError } from "../../../errors";
 
 const variables = {
   username: "mock_username",
@@ -422,7 +423,9 @@ describe("General use", () => {
         variables,
       });
       if (!loading) {
-        expect(error).toEqual(new Error("something went wrong"));
+        expect(error).toEqual(
+          new ApolloError({ networkError: new Error("something went wrong") })
+        );
         finished = true;
       }
       return null;

@@ -213,7 +213,9 @@ describe("Query component", () => {
               return null;
             }
             try {
-              expect(result.error).toEqual(new Error("error occurred"));
+              expect(result.error).toEqual(
+                new ApolloError({ networkError: new Error("error occurred") })
+              );
               finished = true;
             } catch (error) {
               reject(error);

@@ -9,6 +9,7 @@ import {
   ApolloLink,
   ApolloCache,
   MutationQueryReducersMap,
+  TypedDocumentNode,
 } from "../core";
 
 import { QueryManager } from "../core/QueryManager";
@@ -1089,6 +1090,25 @@ describe("optimistic mutation results", () => {
         resolve();
       }
     );
+
+    it("allows IgnoreModifier as return value when inferring from a TypedDocumentNode mutation", () => {
+      const mutation: TypedDocumentNode<{ bar: string }> = gql`
+        mutation foo {
+          foo {
+            bar
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+      });
+
+      client.mutate({
+        mutation,
+        optimisticResponse: (vars, { IGNORE }) => IGNORE,
+      });
+    });
   });
 
   describe("optimistic updates using `updateQueries`", () => {

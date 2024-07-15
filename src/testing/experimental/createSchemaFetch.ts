@@ -1,6 +1,6 @@
-import { execute, validate } from "graphql";
+import { execute, GraphQLError, validate } from "graphql";
 import type { GraphQLFormattedError, GraphQLSchema } from "graphql";
-import { ApolloError, gql } from "../../core/index.js";
+import { gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 import { wait } from "../core/wait.js";
 
@@ -63,22 +63,15 @@ const createSchemaFetch = (
     const document = gql(body.query);
 
     if (mockFetchOpts.validate) {
-      let validationErrors: readonly Error[] = [];
+      let validationErrors: readonly GraphQLFormattedError[] = [];
 
       try {
         validationErrors = validate(schema, document);
       } catch (e) {
         validationErrors = [
-          new ApolloError({
-            graphQLErrors: [
-              /*
-               * Technically, these are even `GraphQLError` instances,
-               * but we try to avoid referencing that type, and `GraphQLError`
-               * implements the `GraphQLFormattedError` interface.
-               */
-              e as GraphQLFormattedError,
-            ],
-          }),
+          e instanceof Error ?
+            GraphQLError.prototype.toJSON.apply(e)
+          : (e as any),
         ];
       }
 

@@ -1,5 +1,5 @@
 import type * as ReactTypes from "react";
-import type { DocumentNode } from "graphql";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type {
@@ -148,6 +148,11 @@ export interface QueryResult<
   previousData?: TData;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
+  /**
+   * @deprecated This property will be removed in a future version of Apollo Client.
+   * Please use `error.graphQLErrors` instead.
+   */
+  errors?: ReadonlyArray<GraphQLFormattedError>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
@@ -437,6 +442,8 @@ export interface BaseSubscriptionOptions<
   variables?: TVariables;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
   shouldResubscribe?:
     | boolean
@@ -447,6 +454,8 @@ export interface BaseSubscriptionOptions<
   skip?: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
   context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+  extensions?: Record<string, any>;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */
   onComplete?: () => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
@@ -457,6 +466,11 @@ export interface BaseSubscriptionOptions<
   onError?: (error: ApolloError) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
+  /**
+   * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
+   * @defaultValue `false`
+   */
+  ignoreResults?: boolean;
 }
 
 export interface SubscriptionResult<TData = any, TVariables = any> {
@@ -479,6 +493,9 @@ export interface SubscriptionHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
 
+/**
+ * @deprecated This type is not used anymore. It will be removed in the next major version of Apollo Client
+ */
 export interface SubscriptionDataOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

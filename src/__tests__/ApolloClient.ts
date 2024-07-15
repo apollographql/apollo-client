@@ -2419,6 +2419,102 @@ describe("ApolloClient", () => {
         new Error("Timeout waiting for next event")
       );
     });
+    it("works with `variables`", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text(language: $language)
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        variables: { language: "Esperanto" },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+        variables: { language: "Esperanto" },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toStrictEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+    });
+    it("supports the @includes directive with `variables`", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text @include(if: $withText)
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        variables: { withText: true },
+      });
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+        },
+        variables: { withText: false },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+        variables: { withText: true },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toStrictEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+    });
   });
 
   describe("defaultOptions", () => {
@@ -2639,7 +2735,9 @@ describe("ApolloClient", () => {
                   expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
                   expect(invariantDebugSpy).toHaveBeenCalledWith(
                     "In client.refetchQueries, Promise.all promise rejected with error %o",
-                    new ApolloError({ errorMessage: "refetch failed" })
+                    new ApolloError({
+                      networkError: new Error("refetch failed"),
+                    })
                   );
                   resolve();
                 } catch (err) {

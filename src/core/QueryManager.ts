@@ -64,7 +64,7 @@ import type {
   InternalRefetchQueriesMap,
   DefaultContext,
 } from "./types.js";
-import { LocalState } from "./LocalState.js";
+import type { LocalState } from "./LocalState.js";
 
 import type { QueryStoreValue } from "./QueryInfo.js";
 import {
@@ -105,6 +105,20 @@ import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 
+export interface QueryManagerOptions<TStore> {
+  cache: ApolloCache<TStore>;
+  link: ApolloLink;
+  defaultOptions: DefaultOptions;
+  documentTransform: DocumentTransform | null | undefined;
+  queryDeduplication: boolean;
+  onBroadcast: undefined | (() => void);
+  ssrMode: boolean;
+  clientAwareness: Record<string, string>;
+  localState: LocalState<TStore>;
+  assumeImmutableResults: boolean;
+  defaultContext: Partial<DefaultContext> | undefined;
+}
+
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
   public link: ApolloLink;
@@ -134,45 +148,22 @@ export class QueryManager<TStore> {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected fetchCancelFns = new Map<string, (error: any) => any>();
 
-  constructor({
-    cache,
-    link,
-    defaultOptions,
-    documentTransform,
-    queryDeduplication = false,
-    onBroadcast,
-    ssrMode = false,
-    clientAwareness = {},
-    localState,
-    assumeImmutableResults = !!cache.assumeImmutableResults,
-    defaultContext,
-  }: {
-    cache: ApolloCache<TStore>;
-    link: ApolloLink;
-    defaultOptions?: DefaultOptions;
-    documentTransform?: DocumentTransform;
-    queryDeduplication?: boolean;
-    onBroadcast?: () => void;
-    ssrMode?: boolean;
-    clientAwareness?: Record<string, string>;
-    localState?: LocalState<TStore>;
-    assumeImmutableResults?: boolean;
-    defaultContext?: Partial<DefaultContext>;
-  }) {
+  constructor(options: QueryManagerOptions<TStore>) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
       { cache: false }
     );
 
-    this.cache = cache;
-    this.link = link;
-    this.defaultOptions = defaultOptions || Object.create(null);
-    this.queryDeduplication = queryDeduplication;
-    this.clientAwareness = clientAwareness;
-    this.localState = localState || new LocalState({ cache });
-    this.ssrMode = ssrMode;
-    this.assumeImmutableResults = assumeImmutableResults;
+    this.cache = options.cache;
+    this.link = options.link;
+    this.defaultOptions = options.defaultOptions;
+    this.queryDeduplication = options.queryDeduplication;
+    this.clientAwareness = options.clientAwareness;
+    this.localState = options.localState;
+    this.ssrMode = options.ssrMode;
+    this.assumeImmutableResults = options.assumeImmutableResults;
+    const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
         defaultDocumentTransform
@@ -183,9 +174,9 @@ export class QueryManager<TStore> {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
-    this.defaultContext = defaultContext || Object.create(null);
+    this.defaultContext = options.defaultContext || Object.create(null);
 
-    if ((this.onBroadcast = onBroadcast)) {
+    if ((this.onBroadcast = options.onBroadcast)) {
       this.mutationStore = Object.create(null);
     }
   }

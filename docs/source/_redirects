@@ -1,3 +1,5 @@
+/docs/react/performance/server-side-rendering /docs/react/ssr-and-rsc/server-side-rendering-string
+
 # Redirect all 3.0 beta docs to root
 /v3.0-beta/* /docs/react/:splat
 

@@ -1,0 +1,181 @@
+---
+title: Setting up Apollo Client with the Next.js App Router
+---
+
+## Using Apollo Client in Next.js React Server components
+
+The setup for React Server Components in Next.js is the same as for other React frameworks with RSC support, so for this topic, please refer to the [general RSC documentation](./usage-in-rsc).
+
+The only difference between the instructions on that page and the setup for Next.js is that you will need to use the `@apollo/experimental-nextjs-app-support` package instead of `@apollo/client-react-streaming`.
+
+## Using Apollo Client in Next.js React Client components
+
+If you are using Apollo Client in Client Components in the Next.js App router, you will need to perform some additional setup steps.
+That is because the App Router will render your Client Components in an SSR pass when the page is first loaded, and this requires some additional setup to ensure this data is correctly hydrated on the client without causing additional network requests both on SSR server and in the Browser.
+
+### Prerequisites
+
+Ensure you have a Next.js project set up with the Next.js App Router.
+
+### 1. Install Necessary Packages
+
+First, install the Apollo Client packages along with the experimental support package for Next.js:
+
+```bash
+npm install @apollo/client @apollo/experimental-nextjs-app-support graphql
+```
+
+### 2. Create a `makeClient` function to configure Apollo Client
+
+Next, you will need to create a function that sets up your Apollo Client.
+This function needs to return streaming-enabled versions of `ApolloClient` and `InMemoryCache`, so instead of importing these classes from `@apollo/client`, you need to import them from `@apollo/experimental-nextjs-app-support`.
+
+Create a new file `components/ApolloClientProvider.tsx` and set up a `makeClient` function like this:
+
+```js title="components/ApolloClientProvider.tsx"
+import {
+  ApolloClient,
+  InMemoryCache,
+} from "@apollo/experimental-nextjs-app-support";
+import { HttpLink } from "@apollo/client";
+
+function makeClient() {
+  const httpLink = new HttpLink({
+    // See more information about this GraphQL endpoint at https://studio.apollographql.com/public/spacex-l4uc6p/variant/main/home
+    uri: "https://main--spacex-l4uc6p.apollographos.net/graphql",
+    // you can configure the Next.js fetch cache here if you want to
+    fetchOptions: { cache: "no-store" },
+  });
+
+  return new NextSSRApolloClient({
+    cache: new NextSSRInMemoryCache(),
+    link: httpLink,
+  });
+}
+```
+
+### 3. Create a `ApolloClientProvider` component.
+
+Add `ApolloNextAppProvider` to your imports.
+
+```js title="components/ApolloClientProvider.tsx"
+import {
+  ApolloClient,
+  InMemoryCache,
+  ApolloNextAppProvider,
+} from "@apollo/experimental-nextjs-app-support";
+```
+
+And export a `ApolloClientProvider` component from the file.
+
+```js title="components/ApolloClientProvider.tsx"
+export function ApolloClientProvider({ children }: React.PropsWithChildren) {
+  return (
+    <ApolloNextAppProvider makeClient={makeClient}>
+      {children}
+    </ApolloNextAppProvider>
+  );
+}
+```
+
+### 4. Wrap the children of your root layout with the `ApolloClientProvider`.
+
+Adjust your `app/layout.tsx` file to wrap the children of your root layout with the `ApolloClientProvider`:
+
+```diff title="app/layout.tsx"
++import { ApolloClientProvider } from "@/components/ApolloClientProvider";
+
+// ...
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body className={inter.className}>
+-        {children}
++        <ApolloClientProvider>{children}</ApolloClientProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### 5. Start using suspense-enabled hooks in your application
+
+At this point, you're all set.
+
+You can now use the suspense-enabled hooks `useSuspenseQuery` and `useBackgroundQuery`/`useReadQuery` in your application, and their data will be streamed from the server to the browser as it comes in.
+For more details on these hooks, check out the [Apollo Client React Suspense documentation](../data/suspense).
+
+<Note>
+
+You can also keep using the old-school `useQuery` hook, but it will not be able to stream data from the server to the browser.
+During SSR and hydration, it will render `loading`, and it will only make a network request in the browser after hydration.
+
+</Note>
+
+Give it a try - create a component that uses `useSuspenseQuery`:
+
+```ts title="components/DisplayLocations.js"
+import { gql, useSuspenseQuery } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
+
+const GET_LOCATIONS: TypedDocumentNode<{
+  locations: Array<{
+    id: string;
+    name: string;
+    description: string;
+    photo: string;
+  }>;
+}> = gql`
+  query GetLocations {
+    locations {
+      id
+      name
+      description
+      photo
+    }
+  }
+`;
+
+export function DisplayLocations() {
+  const { data } = useSuspenseQuery(GET_LOCATIONS);
+  console.log(data);
+  return data.locations.map(({ id, name, description, photo }) => (
+    <div key={id}>
+      <h3>{name}</h3>
+      <img width="400" height="250" alt="location-reference" src={`${photo}`} />
+      <br />
+      <b>About this location:</b>
+      <p>{description}</p>
+      <br />
+    </div>
+  ));
+}
+```
+
+Once you add the `DisplayLocations` to your page, you will notice that the whole page will pause while the request is being made on the server, and it will continue rendering after that.
+
+You can now create a [loading.ts (Next.js documentation)](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming) or wrap your component in a `<Suspense>` boundary to work with dynamic loading states for your streamed content.
+
+## Interacting with the Next.js fetch cache
+
+Apollo Client's `HttpLink` internally uses the `fetch` api, so every request made by Apollo Client
+will be cached by the [Next.js fetch cache (Next.js documentation)](https://nextjs.org/docs/app/building-your-application/data-fetching/fetching-caching-and-revalidating#fetching-data-on-the-server-with-fetch) by default.
+
+The example above already showed that you can configure this behavior in the
+`HttpLink`'s `fetchOptions` options, but if you want more fine-grained control, you
+can also specify these options on the hook level:
+
+```js
+const { data } = useSuspenseQuery(MY_QUERY, {
+  context: {
+    fetchOptions: {
+      cache: "force-cache",
+    },
+  },
+});
+```

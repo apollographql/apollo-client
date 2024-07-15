@@ -22,32 +22,28 @@ Apollo Client provides a handy API for using it with server-side rendering, incl
 
 When you render your React app on the server side, _most_ of the code is identical to its client-side counterpart, with a few important exceptions:
 
-* You need to use a server-compatible router for React, such as [React Router](https://reactrouter.com/web/guides/server-rendering).
+- You need to use a server-compatible router for React, such as [React Router](https://reactrouter.com/web/guides/server-rendering).
 
-    (In the case of React Router, you wrap your application in a `StaticRouter` component instead of the `BrowserRouter` you use on the client side.)
+  (In the case of React Router, you wrap your application in a `StaticRouter` component instead of the `BrowserRouter` you use on the client side.)
 
-* You need to replace relative URLs with absolute URLs wherever applicable.
+- You need to replace relative URLs with absolute URLs wherever applicable.
 
-* The initialization of Apollo Client changes slightly, as [described below](#initializing-apollo-client).
+- The initialization of Apollo Client changes slightly, as [described below](#initializing-apollo-client).
 
 ## Initializing Apollo Client
 
 Here's an example _server-side_ initialization of Apollo Client:
 
 ```js {7-17}
-import {
-  ApolloClient,
-  createHttpLink,
-  InMemoryCache
-} from '@apollo/client';
+import { ApolloClient, createHttpLink, InMemoryCache } from "@apollo/client";
 
 const client = new ApolloClient({
   ssrMode: true,
   link: createHttpLink({
-    uri: 'http://localhost:3010',
-    credentials: 'same-origin',
+    uri: "http://localhost:3010",
+    credentials: "same-origin",
     headers: {
-      cookie: req.header('Cookie'),
+      cookie: req.header("Cookie"),
     },
   }),
   cache: new InMemoryCache(),
@@ -56,11 +52,11 @@ const client = new ApolloClient({
 
 You'll notice a couple differences from a typical client-side initialization:
 
-* You provide `ssrMode: true`. This prevents Apollo Client from refetching queries unnecessarily, and it also enables you to use the `getDataFromTree` function (covered below).
+- You provide `ssrMode: true`. This prevents Apollo Client from refetching queries unnecessarily, and it also enables you to use the `getDataFromTree` function (covered below).
 
-* Instead of providing a `uri` option, you provide an `HttpLink` instance to the `link` option. This enables you to specify any required authentication details when sending requests to your GraphQL endpoint from the server side.
+- Instead of providing a `uri` option, you provide an `HttpLink` instance to the `link` option. This enables you to specify any required authentication details when sending requests to your GraphQL endpoint from the server side.
 
-    Note that you also might need to make sure your GraphQL endpoint is configured to accept GraphQL operations from your SSR server (for example, by safelisting its domain or IP).
+  Note that you also might need to make sure your GraphQL endpoint is configured to accept GraphQL operations from your SSR server (for example, by safelisting its domain or IP).
 
 > It's possible and valid for your GraphQL endpoint to be hosted by the _same server_ that's performing SSR. In this case, Apollo Client doesn't need to make network requests to execute queries. For details, see [Avoiding the network for local queries](#avoiding-the-network-for-local-queries).
 
@@ -77,25 +73,24 @@ import {
   ApolloProvider,
   ApolloClient,
   createHttpLink,
-  InMemoryCache
-} from '@apollo/client';
-import Express from 'express';
-import React from 'react';
-import { StaticRouter } from 'react-router';
+  InMemoryCache,
+} from "@apollo/client";
+import Express from "express";
+import React from "react";
+import { StaticRouter } from "react-router";
 
 // File shown below
-import Layout from './routes/Layout';
+import Layout from "./routes/Layout";
 
 const app = new Express();
 app.use((req, res) => {
-
   const client = new ApolloClient({
     ssrMode: true,
     link: createHttpLink({
-      uri: 'http://localhost:3010',
-      credentials: 'same-origin',
+      uri: "http://localhost:3010",
+      credentials: "same-origin",
       headers: {
-        cookie: req.header('Cookie'),
+        cookie: req.header("Cookie"),
       },
     }),
     cache: new InMemoryCache(),
@@ -115,9 +110,9 @@ app.use((req, res) => {
   // TODO: rendering code (see below)
 });
 
-app.listen(basePort, () => console.log(
-  `app Server is now running on http://localhost:${basePort}`
-));
+app.listen(basePort, () =>
+  console.log(`app Server is now running on http://localhost:${basePort}`)
+);
 ```
 
 </ExpansionPanel>
@@ -165,9 +160,14 @@ export function Html({ content, state }) {
     <html>
       <body>
         <div id="root" dangerouslySetInnerHTML={{ __html: content }} />
-        <script dangerouslySetInnerHTML={{
-          __html: `window.__APOLLO_STATE__=${JSON.stringify(state).replace(/</g, '\\u003c')};`,
-        }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__APOLLO_STATE__=${JSON.stringify(state).replace(
+              /</g,
+              "\\u003c"
+            )};`,
+          }}
+        />
       </body>
     </html>
   );
@@ -187,7 +187,7 @@ In your client-side initialization of Apollo Client, you can rehydrate the cache
 ```js
 const client = new ApolloClient({
   cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
-  uri: 'https://example.com/graphql'
+  uri: "https://example.com/graphql",
 });
 ```
 
@@ -212,8 +212,8 @@ If your GraphQL endpoint is hosted by the same server that you're rendering from
 One option is to use Apollo Link to fetch data using a local GraphQL schema instead of making a network request. To achieve this, when creating an Apollo Client on the server, you could use a [SchemaLink](../api/link/apollo-link-schema/) instead of using `createHttpLink`. `SchemaLink` uses your schema and context to run the query immediately, without any additional network requests:
 
 ```js
-import { ApolloClient, InMemoryCache } from '@apollo/client'
-import { SchemaLink } from '@apollo/client/link/schema';
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { SchemaLink } from "@apollo/client/link/schema";
 
 // ...
 

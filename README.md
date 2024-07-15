@@ -9,6 +9,13 @@
 
 </div>
 
+---
+
+**Announcement:**   
+Join 1000+ engineers at GraphQL Summit for talks, workshops, and office hours, Oct 8-10 in NYC. [Get your pass here ->](https://summit.graphql.com/?utm_campaign=github_federation_readme)
+
+---
+
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL.
 
 | ☑️  Apollo Client User Survey |

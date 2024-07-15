@@ -1809,8 +1809,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/QueryManager.ts:391:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:272:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:272:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:275:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

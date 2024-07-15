@@ -8,7 +8,11 @@ import {
 } from "../internal/index.js";
 import type { QueryRef } from "../internal/index.js";
 import type { OperationVariables } from "../../core/types.js";
-import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
+import type {
+  RefetchFunction,
+  FetchMoreFunction,
+  SubscribeToMoreFunction,
+} from "./useSuspenseQuery.js";
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { wrapHook } from "./internal/index.js";
@@ -21,6 +25,8 @@ export interface UseQueryRefHandlersResult<
   refetch: RefetchFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
 /**
@@ -112,5 +118,9 @@ function _useQueryRefHandlers<
     [internalQueryRef]
   );
 
-  return { refetch, fetchMore };
+  return {
+    refetch,
+    fetchMore,
+    subscribeToMore: internalQueryRef.observable.subscribeToMore,
+  };
 }

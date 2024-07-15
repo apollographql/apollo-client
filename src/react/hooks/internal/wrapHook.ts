@@ -9,10 +9,12 @@ import type {
 import type { QueryManager } from "../../../core/QueryManager.js";
 import type { ApolloClient } from "../../../core/ApolloClient.js";
 import type { ObservableQuery } from "../../../core/ObservableQuery.js";
+import type { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 
 interface WrappableHooks {
+  createQueryPreloader: typeof createQueryPreloader;
   useQuery: typeof useQuery;
   useSuspenseQuery: typeof useSuspenseQuery;
   useBackgroundQuery: typeof useBackgroundQuery;

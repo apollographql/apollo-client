@@ -4,10 +4,16 @@ import {
   ApolloClient,
   InMemoryCache,
   NetworkStatus,
+  SubscribeToMoreOptions,
   TypedDocumentNode,
   gql,
+  split,
 } from "../../../core";
-import { MockLink, MockedResponse } from "../../../testing";
+import {
+  MockLink,
+  MockSubscriptionLink,
+  MockedResponse,
+} from "../../../testing";
 import {
   PaginatedCaseData,
   SimpleCaseData,
@@ -19,13 +25,14 @@ import {
 } from "../../../testing/internal";
 import { useQueryRefHandlers } from "../useQueryRefHandlers";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
+import type { SubscribeToMoreFunction } from "../useSuspenseQuery";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
 import userEvent from "@testing-library/user-event";
 import { QueryRef } from "../../internal";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useLoadableQuery } from "../useLoadableQuery";
-import { concatPagination } from "../../../utilities";
+import { concatPagination, getMainDefinition } from "../../../utilities";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
@@ -1926,4 +1933,148 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   }
 
   await expect(Profiler).not.toRerender();
+});
+
+test("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
+  interface SubscriptionData {
+    greetingUpdated: string;
+  }
+
+  type UpdateQueryFn = NonNullable<
+    SubscribeToMoreOptions<
+      SimpleCaseData,
+      Record<string, never>,
+      SubscriptionData
+    >["updateQuery"]
+  >;
+
+  const subscription: TypedDocumentNode<
+    SubscriptionData,
+    Record<string, never>
+  > = gql`
+    subscription {
+      greetingUpdated
+    }
+  `;
+
+  const { mocks, query } = setupSimpleCase();
+
+  const wsLink = new MockSubscriptionLink();
+  const mockLink = new MockLink(mocks);
+
+  const link = split(
+    ({ query }) => {
+      const definition = getMainDefinition(query);
+
+      return (
+        definition.kind === "OperationDefinition" &&
+        definition.operation === "subscription"
+      );
+    },
+    wsLink,
+    mockLink
+  );
+
+  const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(query);
+
+  const Profiler = createProfiler({
+    initialSnapshot: {
+      subscribeToMore: null as SubscribeToMoreFunction<
+        SimpleCaseData,
+        Record<string, never>
+      > | null,
+      result: null as UseReadQueryResult<SimpleCaseData> | null,
+    },
+  });
+
+  function SuspenseFallback() {
+    useTrackRenders();
+    return <p>Loading</p>;
+  }
+
+  function ReadQueryHook() {
+    useTrackRenders();
+    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+
+    return null;
+  }
+
+  function App() {
+    useTrackRenders();
+    // We can ignore the return result here since we are testing the mechanics
+    // of this hook to ensure it doesn't interfere with the updates from
+    // useReadQuery
+    const { subscribeToMore } = useQueryRefHandlers(queryRef);
+
+    Profiler.mergeSnapshot({ subscribeToMore });
+
+    return (
+      <Suspense fallback={<SuspenseFallback />}>
+        <ReadQueryHook />
+      </Suspense>
+    );
+  }
+
+  renderWithClient(<App />, { client, wrapper: Profiler });
+
+  {
+    const { renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  const updateQuery = jest.fn<
+    ReturnType<UpdateQueryFn>,
+    Parameters<UpdateQueryFn>
+  >((_, { subscriptionData: { data } }) => {
+    return { greeting: data.greetingUpdated };
+  });
+
+  const { snapshot } = Profiler.getCurrentRender();
+
+  snapshot.subscribeToMore!({ document: subscription, updateQuery });
+
+  wsLink.simulateResult({
+    result: {
+      data: {
+        greetingUpdated: "Subscription hello",
+      },
+    },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+    expect(renderedComponents).toStrictEqual([ReadQueryHook]);
+    expect(snapshot.result).toEqual({
+      data: { greeting: "Subscription hello" },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+
+  expect(updateQuery).toHaveBeenCalledTimes(1);
+  expect(updateQuery).toHaveBeenCalledWith(
+    { greeting: "Hello" },
+    {
+      subscriptionData: {
+        data: { greetingUpdated: "Subscription hello" },
+      },
+      variables: {},
+    }
+  );
 });

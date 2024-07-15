@@ -92,6 +92,9 @@ describe("ObservableQuery", () => {
   const error = new GraphQLError("is offline.", undefined, null, null, [
     "people_one",
   ]);
+  const wrappedError = new ApolloError({
+    graphQLErrors: [error],
+  });
 
   const createQueryManager = ({ link }: { link: ApolloLink }) => {
     return new QueryManager({
@@ -2136,9 +2139,9 @@ describe("ObservableQuery", () => {
         .result()
         .then(() => reject("Observable did not error when it should have"))
         .catch((currentError) => {
-          expect(currentError).toEqual(error);
+          expect(currentError).toEqual(wrappedError);
           const lastError = observable.getLastError();
-          expect(lastError).toEqual(error);
+          expect(lastError).toEqual(wrappedError);
           resolve();
         })
         .catch(reject);
@@ -2177,9 +2180,9 @@ describe("ObservableQuery", () => {
               )
             )
             .catch((currentError) => {
-              expect(currentError).toEqual(error);
+              expect(currentError).toEqual(wrappedError);
               const lastError = observable.getLastError();
-              expect(lastError).toEqual(error);
+              expect(lastError).toEqual(wrappedError);
               resolve();
             })
             .catch(reject)

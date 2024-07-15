@@ -13,7 +13,7 @@ import {
   spyOnConsole,
 } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
-import { GraphQLError, buildSchema } from "graphql";
+import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
 import userEvent from "@testing-library/user-event";
@@ -740,7 +740,9 @@ describe("schema proxy", () => {
 
       expect(snapshot.error).toEqual(
         new ApolloError({
-          graphQLErrors: [new GraphQLError("Could not resolve type")],
+          graphQLErrors: [
+            { message: "Could not resolve type", path: ["viewer", "book"] },
+          ],
         })
       );
     }
@@ -816,7 +818,7 @@ describe("schema proxy", () => {
       expect(snapshot.error).toEqual(
         new ApolloError({
           graphQLErrors: [
-            new GraphQLError('Expected { foo: "bar" } to be a GraphQL schema.'),
+            { message: 'Expected { foo: "bar" } to be a GraphQL schema.' },
           ],
         })
       );

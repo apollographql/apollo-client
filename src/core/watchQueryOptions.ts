@@ -206,6 +206,9 @@ export interface SubscriptionOptions<
 
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
   context?: DefaultContext;
+
+  /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
+  extensions?: Record<string, any>;
 }
 
 export interface MutationBaseOptions<

@@ -274,13 +274,7 @@ function _useSuspenseQuery<
     [queryRef]
   );
 
-  const subscribeToMore: SubscribeToMoreFunction<
-    TData | undefined,
-    TVariables
-  > = React.useCallback(
-    (options) => queryRef.observable.subscribeToMore(options),
-    [queryRef]
-  );
+  const subscribeToMore = queryRef.observable.subscribeToMore;
 
   return React.useMemo<
     UseSuspenseQueryResult<TData | undefined, TVariables>

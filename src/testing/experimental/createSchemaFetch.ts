@@ -1,6 +1,6 @@
-import { execute, validate } from "graphql";
-import type { GraphQLError, GraphQLSchema } from "graphql";
-import { ApolloError, gql } from "../../core/index.js";
+import { execute, GraphQLError, validate } from "graphql";
+import type { GraphQLFormattedError, GraphQLSchema } from "graphql";
+import { gql } from "../../core/index.js";
 import { withCleanup } from "../internal/index.js";
 import { wait } from "../core/wait.js";
 
@@ -30,6 +30,8 @@ import { wait } from "../core/wait.js";
  * ```
  * @since 3.10.0
  * @alpha
+ * @deprecated `createSchemaFetch` is deprecated and will be removed in 3.12.0.
+ * Please migrate to [`@apollo/graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
  */
 const createSchemaFetch = (
   schema: GraphQLSchema,
@@ -61,13 +63,15 @@ const createSchemaFetch = (
     const document = gql(body.query);
 
     if (mockFetchOpts.validate) {
-      let validationErrors: readonly Error[] = [];
+      let validationErrors: readonly GraphQLFormattedError[] = [];
 
       try {
         validationErrors = validate(schema, document);
       } catch (e) {
         validationErrors = [
-          new ApolloError({ graphQLErrors: [e as GraphQLError] }),
+          e instanceof Error ?
+            GraphQLError.prototype.toJSON.apply(e)
+          : (e as any),
         ];
       }
 

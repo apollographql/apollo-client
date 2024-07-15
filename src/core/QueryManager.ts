@@ -104,6 +104,7 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+
 export interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
   link: ApolloLink;

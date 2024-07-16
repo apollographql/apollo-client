@@ -871,6 +871,103 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
 });
 
+test("warns when accessing would-be masked fields with complex selections", () => {
+  using consoleSpy = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery @unmask {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+      profile {
+        __typename
+        email
+        ... @defer {
+          username
+        }
+        ...ProfileFields
+      }
+    }
+
+    fragment ProfileFields on Profile {
+      settings {
+        __typename
+        dark: darkMode
+      }
+    }
+  `;
+
+  const currentUser = {
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 30,
+    profile: {
+      __typename: "Profile",
+      email: "testuser@example.com",
+      username: "testuser",
+      settings: {
+        __typename: "Settings",
+        dark: true,
+      },
+    },
+  };
+
+  const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+
+  const data = maskQuery({ currentUser }, query, fragmentMatcher);
+
+  data.currentUser.age;
+  data.currentUser.profile;
+  data.currentUser.profile.email;
+  data.currentUser.profile.username;
+  data.currentUser.profile.settings;
+  data.currentUser.profile.settings.dark;
+
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(6);
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "currentUser.age",
+    "query 'UnmaskedQuery'"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "currentUser.profile",
+    "query 'UnmaskedQuery'"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "currentUser.profile.email",
+    "query 'UnmaskedQuery'"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "currentUser.profile.username",
+    "query 'UnmaskedQuery'"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "currentUser.profile.settings",
+    "query 'UnmaskedQuery'"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "currentUser.profile.settings.dark",
+    "query 'UnmaskedQuery'"
+  );
+});
+
 test("does not warn when accessing fields shared between the query and fragment", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`

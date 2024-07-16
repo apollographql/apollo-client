@@ -29,6 +29,8 @@ interface MaskingContext {
   matchesFragment: MatchesFragmentFn;
 }
 
+type PathSelection = Array<string | number>;
+
 export function maskQuery<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
@@ -48,6 +50,7 @@ export function maskQuery<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
+    [],
     context
   );
 
@@ -95,6 +98,7 @@ export function maskFragment<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     fragment.selectionSet,
+    [],
     context
   );
 
@@ -104,15 +108,17 @@ export function maskFragment<TData = unknown>(
 function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
+  path: PathSelection,
   context: MaskingContext
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
 
-    const masked = data.map((item) => {
+    const masked = data.map((item, index) => {
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
+        [...path, index],
         context
       );
       changed ||= itemChanged;
@@ -146,6 +152,7 @@ function maskSelectionSet(
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
+              [...path, keyName],
               context
             );
 
@@ -168,6 +175,7 @@ function maskSelectionSet(
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             selection.selectionSet,
+            path,
             context
           );
 
@@ -184,7 +192,13 @@ function maskSelectionSet(
 
           return [
             context.unmasked ?
-              unmaskFragmentFields(memo, data, fragment.selectionSet, context)
+              unmaskFragmentFields(
+                memo,
+                data,
+                fragment.selectionSet,
+                path,
+                context
+              )
             : memo,
             true,
           ];
@@ -198,6 +212,7 @@ function unmaskFragmentFields(
   memo: Record<string, unknown>,
   parent: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
+  path: PathSelection,
   context: MaskingContext
 ) {
   selectionSetNode.selections.forEach((selection) => {
@@ -218,11 +233,12 @@ function unmaskFragmentFields(
               memo[keyName] ?? Object.create(null),
               parent[keyName] as Record<string, unknown>,
               childSelectionSet,
+              [...path, keyName],
               context
             );
           }
 
-          addAccessorWarning(memo, value, keyName, context.operationName);
+          addAccessorWarning(memo, value, keyName, path, context.operationName);
         } else {
           memo[keyName] = parent[keyName];
         }
@@ -234,6 +250,7 @@ function unmaskFragmentFields(
           memo,
           parent,
           selection.selectionSet,
+          path,
           context
         );
       }
@@ -242,6 +259,7 @@ function unmaskFragmentFields(
           memo,
           parent,
           context.fragmentMap[selection.name.value].selectionSet,
+          path,
           context
         );
       }
@@ -255,6 +273,7 @@ function addAccessorWarning(
   data: Record<string, any>,
   value: any,
   fieldName: string,
+  path: PathSelection,
   operationName: string | null
 ) {
   let currentValue = value;
@@ -265,7 +284,7 @@ function addAccessorWarning(
       if (!warned) {
         invariant.warn(
           "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-          fieldName,
+          getPathString([...path, fieldName]),
           operationName ? `query '${operationName}'` : "anonymous query"
         );
         warned = true;
@@ -279,4 +298,16 @@ function addAccessorWarning(
     enumerable: true,
     configurable: true,
   });
+}
+
+function getPathString(path: PathSelection) {
+  return path.reduce<string>((memo, segment, index) => {
+    if (typeof segment === "number") {
+      return `${memo}[${segment}]`;
+    }
+
+    return index === 0 || memo.at(-1) === "]" ?
+        memo + segment
+      : `${memo}.${segment}`;
+  }, "");
 }

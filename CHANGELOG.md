@@ -1,5 +1,12 @@
 # @apollo/client
 
+## 3.11.0-rc.3
+
+### Patch Changes
+
+- [#11922](https://github.com/apollographql/apollo-client/pull/11922) [`6116982`](https://github.com/apollographql/apollo-client/commit/6116982a7b0b19f4ce06f0143c662a3f89b7e0d1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Slightly reduce bundle size by making all `QueryManager` constructor arguments required.
+  (`QueryManager` is an internal API, so this change has no consequences for userland code.)
+
 ## 3.11.0-rc.2
 
 ### Patch Changes

@@ -126,10 +126,10 @@ function maskSelectionSet(
           // which fields are masked/unmasked and avoids dependence on field
           // order.
           if (descriptor) {
-            Object.defineProperty(memo, keyName, { value: data[keyName] });
-          } else {
-            memo[keyName] = data[keyName];
+            delete memo[keyName];
           }
+
+          memo[keyName] = data[keyName];
 
           if (childSelectionSet) {
             const [masked, childChanged] = maskSelectionSet(

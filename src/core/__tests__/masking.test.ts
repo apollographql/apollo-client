@@ -880,6 +880,43 @@ test("does not warn when accessing fields shared between the query and fragment"
   expect(consoleSpy.warn).not.toHaveBeenCalled();
 });
 
+test("disables warnings when setting warnOnFieldAccess to false", () => {
+  using consoleSpy = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery @unmask(warnOnFieldAccess: false) {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+
+  const data = maskQuery(
+    {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    },
+    query,
+    fragmentMatcher
+  );
+
+  data.currentUser.age;
+
+  expect(consoleSpy.warn).not.toHaveBeenCalled();
+});
+
 test("masks named fragments in fragment documents", () => {
   const fragment = gql`
     fragment UserFields on User {

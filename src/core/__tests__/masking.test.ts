@@ -851,7 +851,7 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
   expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
     "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "age",
+    "currentUser.age",
     "query 'UnmaskedQuery'"
   );
 
@@ -860,7 +860,7 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
     "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "age",
+    "currentUser.age",
     "anonymous query"
   );
 

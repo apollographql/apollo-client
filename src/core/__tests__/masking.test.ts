@@ -781,26 +781,54 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
     }
   `;
 
-  const data = maskQuery(
-    {
-      currentUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
-        age: 30,
-      },
-    },
-    query,
-    createFragmentMatcher(new InMemoryCache())
+  const anonymousQuery = gql`
+    query @unmask {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const currentUser = {
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 30,
+  };
+
+  const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+
+  const data = maskQuery({ currentUser }, query, fragmentMatcher);
+
+  const dataFromAnonymous = maskQuery(
+    { currentUser },
+    anonymousQuery,
+    fragmentMatcher
   );
 
   data.currentUser.age;
 
   expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on query %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
     "age",
-    "UnmaskedQuery"
+    "query 'UnmaskedQuery'"
+  );
+
+  dataFromAnonymous.currentUser.age;
+
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "age",
+    "anonymous query"
   );
 });
 

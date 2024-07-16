@@ -245,9 +245,9 @@ function addAccessorWarning(
     get() {
       if (!warned) {
         invariant.warn(
-          "Accessing unmasked field '%s' on query %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+          "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
           fieldName,
-          operationName
+          operationName ? `query '${operationName}'` : "anonymous query"
         );
         warned = true;
       }

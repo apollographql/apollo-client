@@ -10,6 +10,7 @@ import {
   resultKeyNameFromField,
   isUnmaskedDocument,
   getFragmentDefinitions,
+  getOperationName,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
@@ -21,6 +22,7 @@ type MatchesFragmentFn = (
 ) => boolean;
 
 interface MaskingContext {
+  operationName: string | null;
   fragmentMap: FragmentMap;
   warnOnFieldAccess: boolean;
 }
@@ -34,6 +36,7 @@ export function maskQuery<TData = unknown>(
   const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
 
   const context: MaskingContext = {
+    operationName: getOperationName(document),
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess,
   };
@@ -61,6 +64,7 @@ export function maskFragment<TData = unknown>(
   );
 
   const context: MaskingContext = {
+    operationName: null,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess: true,
   };
@@ -212,7 +216,12 @@ function addAccessorWarnings(
         }
 
         if (context.warnOnFieldAccess) {
-          return addAccessorWarning(memo, parent[keyName], keyName);
+          return addAccessorWarning(
+            memo,
+            parent[keyName],
+            keyName,
+            context.operationName
+          );
         } else {
           memo[keyName] = parent[keyName];
         }
@@ -226,7 +235,8 @@ function addAccessorWarnings(
 function addAccessorWarning(
   data: Record<string, any>,
   value: any,
-  fieldName: string
+  fieldName: string,
+  operationName: string | null
 ) {
   let currentValue = value;
   let warned = false;
@@ -236,7 +246,8 @@ function addAccessorWarning(
       if (!warned) {
         invariant.warn(
           "Accessing unmasked field '%s' on query %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-          fieldName
+          fieldName,
+          operationName
         );
         warned = true;
       }

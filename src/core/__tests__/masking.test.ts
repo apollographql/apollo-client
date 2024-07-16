@@ -764,6 +764,46 @@ test("does not mask fields when using `@unmask` directive", () => {
   });
 });
 
+test("warns when accessing would-be masked fields when using `@unmask` directive", () => {
+  using consoleSpy = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery @unmask {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const data = maskQuery(
+    {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    },
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  data.currentUser.age;
+
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field '%s' on query %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "age",
+    "UnmaskedQuery"
+  );
+});
+
 test("masks named fragments in fragment documents", () => {
   const fragment = gql`
     fragment UserFields on User {

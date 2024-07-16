@@ -204,21 +204,46 @@ function unmaskFragmentFields(
     switch (selection.kind) {
       case Kind.FIELD: {
         const keyName = resultKeyNameFromField(selection);
+        const childSelectionSet = selection.selectionSet;
 
         if (keyName in memo) {
           return;
         }
 
         if (context.warnOnFieldAccess) {
-          return addAccessorWarning(
-            memo,
-            parent[keyName],
-            keyName,
-            context.operationName
-          );
+          let value = parent[keyName];
+
+          if (childSelectionSet) {
+            value = unmaskFragmentFields(
+              memo[keyName] ?? Object.create(null),
+              parent[keyName] as Record<string, unknown>,
+              childSelectionSet,
+              context
+            );
+          }
+
+          addAccessorWarning(memo, value, keyName, context.operationName);
         } else {
           memo[keyName] = parent[keyName];
         }
+
+        return;
+      }
+      case Kind.INLINE_FRAGMENT: {
+        return unmaskFragmentFields(
+          memo,
+          parent,
+          selection.selectionSet,
+          context
+        );
+      }
+      case Kind.FRAGMENT_SPREAD: {
+        return unmaskFragmentFields(
+          memo,
+          parent,
+          context.fragmentMap[selection.name.value].selectionSet,
+          context
+        );
       }
     }
   });

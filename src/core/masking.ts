@@ -25,6 +25,7 @@ interface MaskingContext {
   operationName: string | null;
   fragmentMap: FragmentMap;
   warnOnFieldAccess: boolean;
+  unmasked: boolean;
 }
 
 export function maskQuery<TData = unknown>(
@@ -33,19 +34,19 @@ export function maskQuery<TData = unknown>(
   matchesFragment: MatchesFragmentFn
 ): TData {
   const definition = getMainDefinition(document);
-  const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
+  const [unmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
 
   const context: MaskingContext = {
     operationName: getOperationName(document),
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess,
+    unmasked,
   };
 
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
     matchesFragment,
-    isUnmasked,
     context
   );
 
@@ -67,6 +68,7 @@ export function maskFragment<TData = unknown>(
     operationName: null,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess: true,
+    unmasked: false,
   };
 
   if (typeof fragmentName === "undefined") {
@@ -92,7 +94,6 @@ export function maskFragment<TData = unknown>(
     data,
     fragment.selectionSet,
     matchesFragment,
-    false,
     context
   );
 
@@ -103,7 +104,6 @@ function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   matchesFragment: MatchesFragmentFn,
-  isUnmasked: boolean,
   context: MaskingContext
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
@@ -114,7 +114,6 @@ function maskSelectionSet(
         item,
         selectionSet,
         matchesFragment,
-        isUnmasked,
         context
       );
       changed ||= itemChanged;
@@ -149,7 +148,6 @@ function maskSelectionSet(
               data[keyName],
               childSelectionSet,
               matchesFragment,
-              isUnmasked,
               context
             );
 
@@ -173,7 +171,6 @@ function maskSelectionSet(
             data,
             selection.selectionSet,
             matchesFragment,
-            isUnmasked,
             context
           );
 
@@ -189,7 +186,7 @@ function maskSelectionSet(
           const fragment = context.fragmentMap[selection.name.value];
 
           return [
-            isUnmasked ?
+            context.unmasked ?
               addAccessorWarnings(memo, data, fragment.selectionSet, context)
             : memo,
             true,

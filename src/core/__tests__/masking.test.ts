@@ -738,6 +738,21 @@ test("does not mask fields when using `@unmask` directive", () => {
 
     fragment UserFields on User {
       age
+      profile {
+        __typename
+        email
+        ... @defer {
+          username
+        }
+        ...ProfileFields
+      }
+    }
+
+    fragment ProfileFields on Profile {
+      settings {
+        __typename
+        darkMode
+      }
     }
   `;
 
@@ -748,6 +763,15 @@ test("does not mask fields when using `@unmask` directive", () => {
         id: 1,
         name: "Test User",
         age: 30,
+        profile: {
+          __typename: "Profile",
+          email: "testuser@example.com",
+          username: "testuser",
+          settings: {
+            __typename: "Settings",
+            darkMode: true,
+          },
+        },
       },
     },
     query,
@@ -760,6 +784,15 @@ test("does not mask fields when using `@unmask` directive", () => {
       id: 1,
       name: "Test User",
       age: 30,
+      profile: {
+        __typename: "Profile",
+        email: "testuser@example.com",
+        username: "testuser",
+        settings: {
+          __typename: "Settings",
+          darkMode: true,
+        },
+      },
     },
   });
 });

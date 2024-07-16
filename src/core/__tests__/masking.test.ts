@@ -850,18 +850,18 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
 
   expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.age",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.age"
   );
 
   dataFromAnonymous.currentUser.age;
 
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.age",
-    "anonymous query"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "anonymous query",
+    "currentUser.age"
   );
 
   data.currentUser.age;
@@ -932,39 +932,39 @@ test("warns when accessing would-be masked fields with complex selections", () =
 
   expect(consoleSpy.warn).toHaveBeenCalledTimes(6);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.age",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.age"
   );
 
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.profile",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.profile"
   );
 
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.profile.email",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.profile.email"
   );
 
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.profile.username",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.profile.username"
   );
 
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.profile.settings",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.profile.settings"
   );
 
   expect(consoleSpy.warn).toHaveBeenCalledWith(
-    "Accessing unmasked field '%s' on %s. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-    "currentUser.profile.settings.dark",
-    "query 'UnmaskedQuery'"
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.profile.settings.dark"
   );
 });
 

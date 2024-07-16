@@ -832,6 +832,48 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
   );
 });
 
+test("does not warn when accessing fields shared between the query and fragment", () => {
+  using consoleSpy = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery @unmask {
+      currentUser {
+        __typename
+        id
+        name
+        age
+        ...UserFields
+        email
+      }
+    }
+
+    fragment UserFields on User {
+      age
+      email
+    }
+  `;
+
+  const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+
+  const data = maskQuery(
+    {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        email: "testuser@example.com",
+      },
+    },
+    query,
+    fragmentMatcher
+  );
+
+  data.currentUser.age;
+  data.currentUser.email;
+
+  expect(consoleSpy.warn).not.toHaveBeenCalled();
+});
+
 test("masks named fragments in fragment documents", () => {
   const fragment = gql`
     fragment UserFields on User {

@@ -20,21 +20,30 @@ type MatchesFragmentFn = (
   typename: string
 ) => boolean;
 
+interface MaskingContext {
+  fragmentMap: FragmentMap;
+  warnOnFieldAccess: boolean;
+}
+
 export function maskQuery<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
   matchesFragment: MatchesFragmentFn
 ): TData {
   const definition = getMainDefinition(document);
-  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
   const [isUnmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
+
+  const context: MaskingContext = {
+    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+    warnOnFieldAccess,
+  };
+
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
     matchesFragment,
-    fragmentMap,
     isUnmasked,
-    warnOnFieldAccess
+    context
   );
 
   return changed ? masked : data;
@@ -51,7 +60,10 @@ export function maskFragment<TData = unknown>(
       node.kind === Kind.FRAGMENT_DEFINITION
   );
 
-  const fragmentMap = createFragmentMap(getFragmentDefinitions(document));
+  const context: MaskingContext = {
+    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+    warnOnFieldAccess: true,
+  };
 
   if (typeof fragmentName === "undefined") {
     invariant(
@@ -76,9 +88,8 @@ export function maskFragment<TData = unknown>(
     data,
     fragment.selectionSet,
     matchesFragment,
-    fragmentMap,
     false,
-    true
+    context
   );
 
   return changed ? masked : data;
@@ -88,9 +99,8 @@ function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   matchesFragment: MatchesFragmentFn,
-  fragmentMap: FragmentMap,
   isUnmasked: boolean,
-  warnOnFieldAccess: boolean
+  context: MaskingContext
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -100,9 +110,8 @@ function maskSelectionSet(
         item,
         selectionSet,
         matchesFragment,
-        fragmentMap,
         isUnmasked,
-        warnOnFieldAccess
+        context
       );
       changed ||= itemChanged;
 
@@ -136,9 +145,8 @@ function maskSelectionSet(
               data[keyName],
               childSelectionSet,
               matchesFragment,
-              fragmentMap,
               isUnmasked,
-              warnOnFieldAccess
+              context
             );
 
             if (childChanged) {
@@ -161,9 +169,8 @@ function maskSelectionSet(
             data,
             selection.selectionSet,
             matchesFragment,
-            fragmentMap,
             isUnmasked,
-            warnOnFieldAccess
+            context
           );
 
           return [
@@ -175,16 +182,11 @@ function maskSelectionSet(
           ];
         }
         default:
-          const fragment = fragmentMap[selection.name.value];
+          const fragment = context.fragmentMap[selection.name.value];
 
           return [
             isUnmasked ?
-              addAccessorWarnings(
-                memo,
-                data,
-                fragment.selectionSet,
-                warnOnFieldAccess
-              )
+              addAccessorWarnings(memo, data, fragment.selectionSet, context)
             : memo,
             true,
           ];
@@ -198,7 +200,7 @@ function addAccessorWarnings(
   memo: Record<string, unknown>,
   parent: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
-  warnOnFieldAccess: boolean
+  context: MaskingContext
 ) {
   selectionSetNode.selections.forEach((selection) => {
     switch (selection.kind) {
@@ -209,7 +211,7 @@ function addAccessorWarnings(
           return;
         }
 
-        if (warnOnFieldAccess) {
+        if (context.warnOnFieldAccess) {
           return addAccessorWarning(memo, parent[keyName], keyName);
         } else {
           memo[keyName] = parent[keyName];

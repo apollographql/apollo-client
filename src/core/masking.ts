@@ -184,7 +184,7 @@ function maskSelectionSet(
 
           return [
             context.unmasked ?
-              addAccessorWarnings(memo, data, fragment.selectionSet, context)
+              unmaskFragmentFields(memo, data, fragment.selectionSet, context)
             : memo,
             true,
           ];
@@ -194,7 +194,7 @@ function maskSelectionSet(
   );
 }
 
-function addAccessorWarnings(
+function unmaskFragmentFields(
   memo: Record<string, unknown>,
   parent: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,

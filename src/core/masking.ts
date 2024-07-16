@@ -26,6 +26,7 @@ interface MaskingContext {
   fragmentMap: FragmentMap;
   warnOnFieldAccess: boolean;
   unmasked: boolean;
+  matchesFragment: MatchesFragmentFn;
 }
 
 export function maskQuery<TData = unknown>(
@@ -41,12 +42,12 @@ export function maskQuery<TData = unknown>(
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess,
     unmasked,
+    matchesFragment,
   };
 
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
-    matchesFragment,
     context
   );
 
@@ -69,6 +70,7 @@ export function maskFragment<TData = unknown>(
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess: true,
     unmasked: false,
+    matchesFragment,
   };
 
   if (typeof fragmentName === "undefined") {
@@ -93,7 +95,6 @@ export function maskFragment<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     fragment.selectionSet,
-    matchesFragment,
     context
   );
 
@@ -103,7 +104,6 @@ export function maskFragment<TData = unknown>(
 function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
-  matchesFragment: MatchesFragmentFn,
   context: MaskingContext
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
@@ -113,7 +113,6 @@ function maskSelectionSet(
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
-        matchesFragment,
         context
       );
       changed ||= itemChanged;
@@ -147,7 +146,6 @@ function maskSelectionSet(
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
-              matchesFragment,
               context
             );
 
@@ -162,7 +160,7 @@ function maskSelectionSet(
         case Kind.INLINE_FRAGMENT: {
           if (
             selection.typeCondition &&
-            !matchesFragment(selection, data.__typename)
+            !context.matchesFragment(selection, data.__typename)
           ) {
             return [memo, changed];
           }
@@ -170,7 +168,6 @@ function maskSelectionSet(
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             selection.selectionSet,
-            matchesFragment,
             context
           );
 

@@ -3,6 +3,7 @@ import { InMemoryCache, gql } from "../index.js";
 import { InlineFragmentNode } from "graphql";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { InvariantError } from "../../utilities/globals/index.js";
+import { spyOnConsole } from "../../testing/internal/index.js";
 
 test("strips top-level fragment data from query", () => {
   const query = gql`
@@ -719,6 +720,48 @@ test("maintains referential equality the entire result if there are no fragments
   );
 
   expect(data).toBe(originalData);
+});
+
+test("does not mask fields when using `@unmask` directive", () => {
+  // Silence masked field access warning
+  using _ = spyOnConsole("warn");
+
+  const query = gql`
+    query UnmaskedQuery @unmask {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const data = maskQuery(
+    {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    },
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toEqual({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
 });
 
 test("masks named fragments in fragment documents", () => {

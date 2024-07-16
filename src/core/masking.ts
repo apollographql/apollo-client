@@ -179,7 +179,7 @@ function maskSelectionSet(
             changed || childChanged,
           ];
         }
-        default:
+        case Kind.FRAGMENT_SPREAD:
           const fragment = context.fragmentMap[selection.name.value];
 
           return [

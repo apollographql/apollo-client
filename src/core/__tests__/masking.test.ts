@@ -830,6 +830,12 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
     "age",
     "anonymous query"
   );
+
+  data.currentUser.age;
+  dataFromAnonymous.currentUser.age;
+
+  // Ensure we only warn once for each masked field
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
 });
 
 test("does not warn when accessing fields shared between the query and fragment", () => {

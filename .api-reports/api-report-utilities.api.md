@@ -1470,6 +1470,11 @@ export type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never
 export function isSubscriptionOperation(document: DocumentNode): boolean;
 
 // @public (undocumented)
+export function isUnmaskedDocument(document: DocumentNode): [isUnmasked: boolean, options: {
+    warnOnFieldAccess: boolean;
+}];
+
+// @public (undocumented)
 export function iterateObserversSafely<E, A>(observers: Set<Observer<E>>, method: keyof Observer<E>, argument?: A): void;
 
 // @public (undocumented)

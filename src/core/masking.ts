@@ -318,6 +318,6 @@ function getPathString(path: PathSelection) {
       return `${memo}[${segment}]`;
     }
 
-    return index === 0 ? memo + segment : `${memo}.${segment}`;
+    return index === 0 ? segment : `${memo}.${segment}`;
   }, "");
 }

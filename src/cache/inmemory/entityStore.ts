@@ -53,6 +53,8 @@ export abstract class EntityStore implements NormalizedCache {
 
   public abstract removeLayer(layerId: string): EntityStore;
 
+  public abstract removeLayers(layersIds: string[]): EntityStore;
+
   // Although the EntityStore class is abstract, it contains concrete
   // implementations of the various NormalizedCache interface methods that
   // are inherited by the Root and Layer subclasses.
@@ -721,6 +723,10 @@ export namespace EntityStore {
       return this;
     }
 
+    public removeLayers(): Root {
+      return this;
+    }
+
     public readonly storageTrie = new Trie<StorageType>(canUseWeakMap);
     public getStorage(): StorageType {
       return this.storageTrie.lookupArray(arguments);
@@ -745,52 +751,73 @@ class Layer extends EntityStore {
     return new Layer(layerId, this, replay, this.group);
   }
 
+  private dirtyFieds(newParent: EntityStore): void {
+    if (this.group.caching) {
+      // Dirty every ID we're removing. Technically we might be able to avoid
+      // dirtying fields that have values in higher layers, but we don't have
+      // easy access to higher layers here, and we're about to recreate those
+      // layers anyway (see parent.addLayer below).
+      Object.keys(this.data).forEach((dataId) => {
+        const ownStoreObject = this.data[dataId];
+        const parentStoreObject = newParent["lookup"](dataId);
+        if (!parentStoreObject) {
+          // The StoreObject identified by dataId was defined in this layer
+          // but will be undefined in the parent layer, so we can delete the
+          // whole entity using this.delete(dataId). Since we're about to
+          // throw this layer away, the only goal of this deletion is to dirty
+          // the removed fields.
+          this.delete(dataId);
+        } else if (!ownStoreObject) {
+          // This layer had an entry for dataId but it was undefined, which
+          // means the entity was deleted in this layer, and it's about to
+          // become undeleted when we remove this layer, so we need to dirty
+          // all fields that are about to be reexposed.
+          this.group.dirty(dataId, "__exists");
+          Object.keys(parentStoreObject).forEach((storeFieldName) => {
+            this.group.dirty(dataId, storeFieldName);
+          });
+        } else if (ownStoreObject !== parentStoreObject) {
+          // If ownStoreObject is not exactly the same as parentStoreObject,
+          // dirty any fields whose values will change as a result of this
+          // removal.
+          Object.keys(ownStoreObject).forEach((storeFieldName) => {
+            if (
+              !equal(
+                ownStoreObject[storeFieldName],
+                parentStoreObject[storeFieldName]
+              )
+            ) {
+              this.group.dirty(dataId, storeFieldName);
+            }
+          });
+        }
+      });
+    }
+  }
+
   public removeLayer(layerId: string): EntityStore {
     // Remove all instances of the given id, not just the first one.
     const parent = this.parent.removeLayer(layerId);
 
     if (layerId === this.id) {
-      if (this.group.caching) {
-        // Dirty every ID we're removing. Technically we might be able to avoid
-        // dirtying fields that have values in higher layers, but we don't have
-        // easy access to higher layers here, and we're about to recreate those
-        // layers anyway (see parent.addLayer below).
-        Object.keys(this.data).forEach((dataId) => {
-          const ownStoreObject = this.data[dataId];
-          const parentStoreObject = parent["lookup"](dataId);
-          if (!parentStoreObject) {
-            // The StoreObject identified by dataId was defined in this layer
-            // but will be undefined in the parent layer, so we can delete the
-            // whole entity using this.delete(dataId). Since we're about to
-            // throw this layer away, the only goal of this deletion is to dirty
-            // the removed fields.
-            this.delete(dataId);
-          } else if (!ownStoreObject) {
-            // This layer had an entry for dataId but it was undefined, which
-            // means the entity was deleted in this layer, and it's about to
-            // become undeleted when we remove this layer, so we need to dirty
-            // all fields that are about to be reexposed.
-            this.group.dirty(dataId, "__exists");
-            Object.keys(parentStoreObject).forEach((storeFieldName) => {
-              this.group.dirty(dataId, storeFieldName);
-            });
-          } else if (ownStoreObject !== parentStoreObject) {
-            // If ownStoreObject is not exactly the same as parentStoreObject,
-            // dirty any fields whose values will change as a result of this
-            // removal.
-            Object.keys(ownStoreObject).forEach((storeFieldName) => {
-              if (
-                !equal(
-                  ownStoreObject[storeFieldName],
-                  parentStoreObject[storeFieldName]
-                )
-              ) {
-                this.group.dirty(dataId, storeFieldName);
-              }
-            });
-          }
-        });
-      }
+      this.dirtyFieds(parent);
+
+      return parent;
+    }
+
+    // No changes are necessary if the parent chain remains identical.
+    if (parent === this.parent) return this;
+
+    // Recreate this layer on top of the new parent.
+    return parent.addLayer(this.id, this.replay);
+  }
+
+  public removeLayers(layerIds: string[]): EntityStore {
+    // Remove all instances of the given id, not just the first one.
+    const parent = this.parent.removeLayers(layerIds);
+
+    if (layerIds.includes(this.id)) {
+      this.dirtyFieds(parent);
 
       return parent;
     }
@@ -846,6 +873,10 @@ class Stump extends Layer {
 
   public removeLayer() {
     // Never remove the Stump layer.
+    return this;
+  }
+
+  public removeLayers() {
     return this;
   }
 

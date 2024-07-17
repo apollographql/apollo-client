@@ -411,6 +411,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
+  public removeOptimistics(idsToRemove: string[]) {
+    const newOptimisticData = this.optimisticData.removeLayers(idsToRemove);
+    if (newOptimisticData !== this.optimisticData) {
+      this.optimisticData = newOptimisticData;
+      this.broadcastWatches();
+    }
+  }
+
   private txCount = 0;
 
   public batch<TUpdateResult>(

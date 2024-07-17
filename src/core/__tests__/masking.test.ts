@@ -871,6 +871,53 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
 });
 
+test("warns when accessing would-be masked fields with in arrays", () => {
+  using consoleSpy = spyOnConsole("warn");
+  const query = gql`
+    query UnmaskedQuery @unmask {
+      users {
+        __typename
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+
+  const data = maskQuery(
+    {
+      users: [
+        { __typename: "User", id: 1, name: "John Doe", age: 30 },
+        { __typename: "User", id: 2, name: "Jane Doe", age: 30 },
+      ],
+    },
+    query,
+    fragmentMatcher
+  );
+
+  data.users[0].age;
+  data.users[1].age;
+
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "users[0].age"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "users[1].age"
+  );
+});
+
 test("warns when accessing would-be masked fields with complex selections", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`

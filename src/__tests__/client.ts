@@ -7403,7 +7403,7 @@ describe("data masking", () => {
     }
   );
 
-  it("warns when accessing a would-be masked field while using @unmask", async () => {
+  it("warns when accessing a unmasked field while using @unmask", async () => {
     using consoleSpy = spyOnConsole("warn");
 
     interface Query {

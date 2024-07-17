@@ -797,7 +797,7 @@ test("does not mask fields when using `@unmask` directive", () => {
   });
 });
 
-test("warns when accessing would-be masked fields when using `@unmask` directive", () => {
+test("warns when accessing unmasked fields when using `@unmask` directive", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery @unmask {
@@ -871,7 +871,7 @@ test("warns when accessing would-be masked fields when using `@unmask` directive
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
 });
 
-test("warns when accessing would-be masked fields with in arrays", () => {
+test("warns when accessing unmasked fields in arrays", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery @unmask {
@@ -918,7 +918,7 @@ test("warns when accessing would-be masked fields with in arrays", () => {
   );
 });
 
-test("warns when accessing would-be masked fields with complex selections", () => {
+test("warns when accessing unmasked fields with complex selections", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery @unmask {

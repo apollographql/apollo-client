@@ -215,6 +215,18 @@ function unmaskFragmentFields(
   path: PathSelection,
   context: MaskingContext
 ) {
+  if (Array.isArray(parent)) {
+    return parent.map((item, index): unknown => {
+      return unmaskFragmentFields(
+        memo[index] ?? Object.create(null),
+        item,
+        selectionSetNode,
+        [...path, index],
+        context
+      );
+    });
+  }
+
   selectionSetNode.selections.forEach((selection) => {
     switch (selection.kind) {
       case Kind.FIELD: {

@@ -746,6 +746,11 @@ test("does not mask fields when using `@unmask` directive", () => {
         }
         ...ProfileFields
       }
+      skills {
+        __typename
+        name
+        ...SkillFields
+      }
     }
 
     fragment ProfileFields on Profile {
@@ -753,6 +758,10 @@ test("does not mask fields when using `@unmask` directive", () => {
         __typename
         darkMode
       }
+    }
+
+    fragment SkillFields on Skill {
+      description
     }
   `;
 
@@ -772,6 +781,18 @@ test("does not mask fields when using `@unmask` directive", () => {
             darkMode: true,
           },
         },
+        skills: [
+          {
+            __typename: "Skill",
+            name: "Skill 1",
+            description: "Skill 1 description",
+          },
+          {
+            __typename: "Skill",
+            name: "Skill 2",
+            description: "Skill 2 description",
+          },
+        ],
       },
     },
     query,
@@ -793,6 +814,18 @@ test("does not mask fields when using `@unmask` directive", () => {
           darkMode: true,
         },
       },
+      skills: [
+        {
+          __typename: "Skill",
+          name: "Skill 1",
+          description: "Skill 1 description",
+        },
+        {
+          __typename: "Skill",
+          name: "Skill 2",
+          description: "Skill 2 description",
+        },
+      ],
     },
   });
 });
@@ -940,6 +973,11 @@ test("warns when accessing unmasked fields with complex selections", () => {
         }
         ...ProfileFields
       }
+      skills {
+        __typename
+        name
+        ...SkillFields
+      }
     }
 
     fragment ProfileFields on Profile {
@@ -947,6 +985,10 @@ test("warns when accessing unmasked fields with complex selections", () => {
         __typename
         dark: darkMode
       }
+    }
+
+    fragment SkillFields on Skill {
+      description
     }
   `;
 
@@ -964,6 +1006,18 @@ test("warns when accessing unmasked fields with complex selections", () => {
         dark: true,
       },
     },
+    skills: [
+      {
+        __typename: "Skill",
+        name: "Skill 1",
+        description: "Skill 1 description",
+      },
+      {
+        __typename: "Skill",
+        name: "Skill 2",
+        description: "Skill 2 description",
+      },
+    ],
   };
 
   const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
@@ -971,13 +1025,14 @@ test("warns when accessing unmasked fields with complex selections", () => {
   const data = maskQuery({ currentUser }, query, fragmentMatcher);
 
   data.currentUser.age;
-  data.currentUser.profile;
   data.currentUser.profile.email;
   data.currentUser.profile.username;
   data.currentUser.profile.settings;
   data.currentUser.profile.settings.dark;
+  data.currentUser.skills[0].description;
+  data.currentUser.skills[1].description;
 
-  expect(consoleSpy.warn).toHaveBeenCalledTimes(6);
+  expect(consoleSpy.warn).toHaveBeenCalledTimes(9);
   expect(consoleSpy.warn).toHaveBeenCalledWith(
     "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
     "query 'UnmaskedQuery'",
@@ -1012,6 +1067,24 @@ test("warns when accessing unmasked fields with complex selections", () => {
     "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
     "query 'UnmaskedQuery'",
     "currentUser.profile.settings.dark"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.skills"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.skills[0].description"
+  );
+
+  expect(consoleSpy.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.skills[1].description"
   );
 });
 

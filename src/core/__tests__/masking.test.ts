@@ -1444,6 +1444,43 @@ test("honors @unmask used in subscription documents", () => {
   expect(data).toBe(subscriptionData);
 });
 
+test("warns when accessing unmasked fields used in subscription documents with @unmask(mode: 'migrate')", () => {
+  using _ = spyOnConsole("warn");
+
+  const subscription = gql`
+    subscription UserUpdatedSubscription {
+      onUserUpdated {
+        __typename
+        id
+        ...UserFields @unmask(mode: "migrate")
+      }
+    }
+
+    fragment UserFields on User {
+      name
+    }
+  `;
+
+  const subscriptionData = deepFreeze({
+    onUserUpdated: { __typename: "User", id: 1, name: "Test User" },
+  });
+
+  const data = maskOperation(
+    subscriptionData,
+    subscription,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  data.onUserUpdated.name;
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "subscription 'UserUpdatedSubscription'",
+    "onUserUpdated.name"
+  );
+});
+
 test("masks fragments in mutation documents", () => {
   const mutation = gql`
     mutation {
@@ -1496,6 +1533,43 @@ test("honors @unmask used in mutation documents", () => {
   );
 
   expect(data).toBe(mutationData);
+});
+
+test("warns when accessing unmasked fields used in mutation documents with @unmask(mode: 'migrate')", () => {
+  using _ = spyOnConsole("warn");
+
+  const mutation = gql`
+    mutation UpdateUserMutation {
+      updateUser {
+        __typename
+        id
+        ...UserFields @unmask(mode: "migrate")
+      }
+    }
+
+    fragment UserFields on User {
+      name
+    }
+  `;
+
+  const mutationData = deepFreeze({
+    updateUser: { __typename: "User", id: 1, name: "Test User" },
+  });
+
+  const data = maskOperation(
+    mutationData,
+    mutation,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  data.updateUser.name;
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "mutation 'UpdateUserMutation'",
+    "updateUser.name"
+  );
 });
 
 test("masks named fragments in fragment documents", () => {

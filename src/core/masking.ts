@@ -22,6 +22,7 @@ type MatchesFragmentFn = (
 ) => boolean;
 
 interface MaskingContext {
+  operationType: "query" | "mutation" | "subscription" | "fragment";
   operationName: string | null;
   fragmentMap: FragmentMap;
   matchesFragment: MatchesFragmentFn;
@@ -37,6 +38,11 @@ export function maskOperation<TData = unknown>(
   const definition = getMainDefinition(document);
 
   const context: MaskingContext = {
+    operationType:
+      definition.kind === Kind.OPERATION_DEFINITION ?
+        definition.operation
+        // FIXME: Use better means to get definition
+      : "query",
     operationName: getOperationName(document),
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
@@ -64,6 +70,7 @@ export function maskFragment<TData = unknown>(
   );
 
   const context: MaskingContext = {
+    operationType: "fragment",
     operationName: null,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
@@ -262,13 +269,7 @@ function unmaskFragmentFields(
           }
 
           if (__DEV__) {
-            addAccessorWarning(
-              memo,
-              value,
-              keyName,
-              path,
-              context.operationName
-            );
+            addAccessorWarning(memo, value, keyName, path, context);
           }
 
           if (!__DEV__) {
@@ -311,7 +312,7 @@ function addAccessorWarning(
   value: any,
   fieldName: string,
   path: PathSelection,
-  operationName: string | null
+  context: MaskingContext
 ) {
   let currentValue = value;
   let warned = false;
@@ -321,7 +322,9 @@ function addAccessorWarning(
       if (!warned) {
         invariant.warn(
           "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-          operationName ? `query '${operationName}'` : "anonymous query",
+          context.operationName ?
+            `${context.operationType} '${context.operationName}'`
+          : `anonymous ${context.operationType}`,
           getPathString([...path, fieldName])
         );
         warned = true;

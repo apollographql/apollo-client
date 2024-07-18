@@ -6,7 +6,6 @@ import {
   Kind,
   print,
   visit,
-  OperationDefinitionNode,
   FragmentSpreadNode,
 } from "graphql";
 import gql from "graphql-tag";

@@ -1897,6 +1897,208 @@ describe("maskFragment", () => {
 
     expect(data).toBe(user);
   });
+
+  test("does not mask named fragments and returns original object when using `@unmask` directive", () => {
+    const fragment = gql`
+      fragment UnmaskedFragment on User {
+        id
+        name
+        ...UserFields @unmask
+        __typename
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const fragmentData = deepFreeze({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    });
+
+    const data = maskFragment(
+      fragmentData,
+      fragment,
+      createFragmentMatcher(new InMemoryCache()),
+      "UnmaskedFragment"
+    );
+
+    expect(data).toBe(fragmentData);
+  });
+
+  test("warns when accessing unmasked fields when using `@unmask` directive with mode 'migrate'", () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      fragment UnmaskedFragment on User {
+        __typename
+        id
+        name
+        ...UserFields @unmask(mode: "migrate")
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+
+    const data = maskFragment(
+      deepFreeze({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      }),
+      query,
+      fragmentMatcher,
+      "UnmaskedFragment"
+    );
+
+    data.age;
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "fragment 'UnmaskedFragment'",
+      "age"
+    );
+
+    data.age;
+
+    // Ensure we only warn once for each masked field
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
+  test("maintains referential equality on `@unmask` fragment subtrees", () => {
+    const fragment = gql`
+      fragment UserFields on User {
+        __typename
+        id
+        profile {
+          __typename
+          ...ProfileFields @unmask
+        }
+        post {
+          __typename
+          id
+          title
+        }
+        industries {
+          __typename
+          ... on TechIndustry {
+            languageRequirements
+          }
+          ... on FinanceIndustry {
+            ...FinanceIndustryFields
+          }
+          ... on TradeIndustry {
+            id
+            yearsInBusiness
+            ...TradeIndustryFields
+          }
+        }
+        drinks {
+          __typename
+          ... on SportsDrink {
+            ...SportsDrinkFields @unmask
+          }
+          ... on Espresso {
+            __typename
+          }
+        }
+      }
+
+      fragment ProfileFields on Profile {
+        age
+        ...ProfileSubfields @unmask
+      }
+
+      fragment ProfileSubfields on Profile {
+        name
+      }
+
+      fragment FinanceIndustryFields on FinanceIndustry {
+        yearsInBusiness
+      }
+
+      fragment TradeIndustryFields on TradeIndustry {
+        languageRequirements
+      }
+
+      fragment SportsDrinkFields on SportsDrink {
+        saltContent
+      }
+    `;
+
+    const profile = {
+      __typename: "Profile",
+      age: 30,
+      name: "Test User",
+    };
+    const post = { __typename: "Post", id: 1, title: "Test Post" };
+    const industries = [
+      { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+      { __typename: "FinanceIndustry", yearsInBusiness: 10 },
+      {
+        __typename: "TradeIndustry",
+        id: 10,
+        yearsInBusiness: 15,
+        languageRequirements: ["English", "German"],
+      },
+    ];
+    const drinks = [
+      { __typename: "Espresso" },
+      { __typename: "SportsDrink", saltContent: "1000mg" },
+    ];
+    const user = deepFreeze({
+      __typename: "User",
+      id: 1,
+      profile,
+      post,
+      industries,
+      drinks,
+    });
+
+    const data = maskFragment(
+      user,
+      fragment,
+      createFragmentMatcher(new InMemoryCache()),
+      "UserFields"
+    );
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      profile: { __typename: "Profile", age: 30, name: "Test User" },
+      post: { __typename: "Post", id: 1, title: "Test Post" },
+      industries: [
+        { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+        { __typename: "FinanceIndustry" },
+        { __typename: "TradeIndustry", id: 10, yearsInBusiness: 15 },
+      ],
+      drinks: [
+        { __typename: "Espresso" },
+        { __typename: "SportsDrink", saltContent: "1000mg" },
+      ],
+    });
+
+    expect(data).not.toBe(user);
+    expect(data.profile).toBe(profile);
+    expect(data.post).toBe(post);
+    expect(data.industries).not.toBe(industries);
+    expect(data.industries[0]).toBe(industries[0]);
+    expect(data.industries[1]).not.toBe(industries[1]);
+    expect(data.industries[2]).not.toBe(industries[2]);
+    expect(data.drinks).toBe(drinks);
+    expect(data.drinks[0]).toBe(drinks[0]);
+    expect(data.drinks[1]).toBe(drinks[1]);
+  });
 });
 
 function createFragmentMatcher(cache: InMemoryCache) {

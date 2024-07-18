@@ -51,7 +51,6 @@ export function maskOperation<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
-    [],
     context
   );
 
@@ -98,7 +97,6 @@ export function maskFragment<TData = unknown>(
   const [masked, changed] = maskSelectionSet(
     data,
     fragment.selectionSet,
-    [],
     context
   );
 
@@ -108,8 +106,8 @@ export function maskFragment<TData = unknown>(
 function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
-  path: PathSelection,
-  context: MaskingContext
+  context: MaskingContext,
+  path: PathSelection = []
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -118,8 +116,8 @@ function maskSelectionSet(
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
-        [...path, index],
-        context
+        context,
+        [...path, index]
       );
       changed ||= itemChanged;
 
@@ -152,8 +150,8 @@ function maskSelectionSet(
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
-              [...path, keyName],
-              context
+              context,
+              [...path, keyName]
             );
 
             if (childChanged) {
@@ -175,8 +173,8 @@ function maskSelectionSet(
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             selection.selectionSet,
-            path,
-            context
+            context,
+            path
           );
 
           return [
@@ -199,8 +197,8 @@ function maskSelectionSet(
             const [fragmentData, changed] = maskSelectionSet(
               data,
               fragment.selectionSet,
-              path,
-              context
+              context,
+              path
             );
 
             return [{ ...memo, ...fragmentData }, changed];

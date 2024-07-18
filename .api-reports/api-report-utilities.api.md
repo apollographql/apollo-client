@@ -1151,6 +1151,9 @@ export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNod
 // @public (undocumented)
 export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?: FragmentMap | FragmentMapFunction): InlineFragmentNode | FragmentDefinitionNode | null;
 
+// @public (undocumented)
+export function getFragmentMaskMode(fragment: FragmentSpreadNode): "mask" | "migrate" | "unmask";
+
 // @public
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;
 
@@ -1468,11 +1471,6 @@ export type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never
 
 // @public (undocumented)
 export function isSubscriptionOperation(document: DocumentNode): boolean;
-
-// @public (undocumented)
-export function isUnmaskedDocument(document: DocumentNode): [isUnmasked: boolean, options: {
-    warnOnFieldAccess: boolean;
-}];
 
 // @public (undocumented)
 export function iterateObserversSafely<E, A>(observers: Set<Observer<E>>, method: keyof Observer<E>, argument?: A): void;

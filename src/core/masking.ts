@@ -8,9 +8,9 @@ import {
   createFragmentMap,
   getMainDefinition,
   resultKeyNameFromField,
-  isUnmaskedDocument,
   getFragmentDefinitions,
   getOperationName,
+  isUnmaskedFragment,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
@@ -25,7 +25,6 @@ interface MaskingContext {
   operationName: string | null;
   fragmentMap: FragmentMap;
   warnOnFieldAccess: boolean;
-  unmasked: boolean;
   matchesFragment: MatchesFragmentFn;
 }
 
@@ -37,13 +36,11 @@ export function maskQuery<TData = unknown>(
   matchesFragment: MatchesFragmentFn
 ): TData {
   const definition = getMainDefinition(document);
-  const [unmasked, { warnOnFieldAccess }] = isUnmaskedDocument(document);
 
   const context: MaskingContext = {
     operationName: getOperationName(document),
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    warnOnFieldAccess,
-    unmasked,
+    warnOnFieldAccess: true,
     matchesFragment,
   };
 
@@ -72,7 +69,6 @@ export function maskFragment<TData = unknown>(
     operationName: null,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     warnOnFieldAccess: true,
-    unmasked: false,
     matchesFragment,
   };
 
@@ -189,9 +185,10 @@ function maskSelectionSet(
         }
         case Kind.FRAGMENT_SPREAD:
           const fragment = context.fragmentMap[selection.name.value];
+          const unmasked = isUnmaskedFragment(selection);
 
           return [
-            context.unmasked ?
+            unmasked ?
               unmaskFragmentFields(
                 memo,
                 data,

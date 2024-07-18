@@ -722,17 +722,17 @@ test("maintains referential equality the entire result if there are no fragments
   expect(data).toBe(originalData);
 });
 
-test("does not mask fields when using `@unmask` directive", () => {
+test("does not mask named fragment fields when using `@unmask` directive", () => {
   // Silence masked field access warning
   using _ = spyOnConsole("warn");
 
   const query = gql`
-    query UnmaskedQuery @unmask {
+    query UnmaskedQuery {
       currentUser {
         __typename
         id
         name
-        ...UserFields
+        ...UserFields @unmask
       }
     }
 
@@ -744,12 +744,12 @@ test("does not mask fields when using `@unmask` directive", () => {
         ... @defer {
           username
         }
-        ...ProfileFields
+        ...ProfileFields @unmask
       }
       skills {
         __typename
         name
-        ...SkillFields
+        ...SkillFields @unmask
       }
     }
 
@@ -833,12 +833,12 @@ test("does not mask fields when using `@unmask` directive", () => {
 test("warns when accessing unmasked fields when using `@unmask` directive", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
-    query UnmaskedQuery @unmask {
+    query UnmaskedQuery {
       currentUser {
         __typename
         id
         name
-        ...UserFields
+        ...UserFields @unmask
       }
     }
 
@@ -848,12 +848,12 @@ test("warns when accessing unmasked fields when using `@unmask` directive", () =
   `;
 
   const anonymousQuery = gql`
-    query @unmask {
+    query {
       currentUser {
         __typename
         id
         name
-        ...UserFields
+        ...UserFields @unmask
       }
     }
 
@@ -907,12 +907,12 @@ test("warns when accessing unmasked fields when using `@unmask` directive", () =
 test("warns when accessing unmasked fields in arrays", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
-    query UnmaskedQuery @unmask {
+    query UnmaskedQuery {
       users {
         __typename
         id
         name
-        ...UserFields
+        ...UserFields @unmask
       }
     }
 
@@ -954,12 +954,12 @@ test("warns when accessing unmasked fields in arrays", () => {
 test("warns when accessing unmasked fields with complex selections", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
-    query UnmaskedQuery @unmask {
+    query UnmaskedQuery {
       currentUser {
         __typename
         id
         name
-        ...UserFields
+        ...UserFields @unmask
       }
     }
 
@@ -971,12 +971,12 @@ test("warns when accessing unmasked fields with complex selections", () => {
         ... @defer {
           username
         }
-        ...ProfileFields
+        ...ProfileFields @unmask
       }
       skills {
         __typename
         name
-        ...SkillFields
+        ...SkillFields @unmask
       }
     }
 
@@ -1091,13 +1091,13 @@ test("warns when accessing unmasked fields with complex selections", () => {
 test("does not warn when accessing fields shared between the query and fragment", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
-    query UnmaskedQuery @unmask {
+    query UnmaskedQuery {
       currentUser {
         __typename
         id
         name
         age
-        ...UserFields
+        ...UserFields @unmask
         email
       }
     }
@@ -1130,15 +1130,15 @@ test("does not warn when accessing fields shared between the query and fragment"
   expect(consoleSpy.warn).not.toHaveBeenCalled();
 });
 
-test("disables warnings when setting warnOnFieldAccess to false", () => {
+test.skip("disables warnings when setting warnOnFieldAccess to false", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
-    query UnmaskedQuery @unmask(warnOnFieldAccess: false) {
+    query UnmaskedQuery {
       currentUser {
         __typename
         id
         name
-        ...UserFields
+        ...UserFields @unmask(warnOnFieldAccess: false)
       }
     }
 

@@ -726,10 +726,10 @@ test("does not mask named fragment fields and returns original object when using
   const query = gql`
     query UnmaskedQuery {
       currentUser {
-        __typename
         id
         name
         ...UserFields @unmask
+        __typename
       }
     }
 

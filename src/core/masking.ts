@@ -198,7 +198,6 @@ function maskSelectionSet(
               data,
               fragment.selectionSet,
               path,
-              mode,
               context
             ),
             true,
@@ -214,7 +213,6 @@ function unmaskFragmentFields(
   parent: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
   path: PathSelection,
-  mode: "unmask" | "migrate",
   context: MaskingContext
 ) {
   if (Array.isArray(parent)) {
@@ -224,7 +222,6 @@ function unmaskFragmentFields(
         item,
         selectionSetNode,
         [...path, index],
-        mode,
         context
       );
     });
@@ -240,28 +237,23 @@ function unmaskFragmentFields(
           return;
         }
 
-        if (mode === "migrate") {
-          let value = parent[keyName];
+        let value = parent[keyName];
 
-          if (childSelectionSet) {
-            value = unmaskFragmentFields(
-              memo[keyName] ?? Object.create(null),
-              parent[keyName] as Record<string, unknown>,
-              childSelectionSet,
-              [...path, keyName],
-              mode,
-              context
-            );
-          }
+        if (childSelectionSet) {
+          value = unmaskFragmentFields(
+            memo[keyName] ?? Object.create(null),
+            parent[keyName] as Record<string, unknown>,
+            childSelectionSet,
+            [...path, keyName],
+            context
+          );
+        }
 
-          if (__DEV__) {
-            addAccessorWarning(memo, value, keyName, path, context);
-          }
+        if (__DEV__) {
+          addAccessorWarning(memo, value, keyName, path, context);
+        }
 
-          if (!__DEV__) {
-            memo[keyName] = parent[keyName];
-          }
-        } else {
+        if (!__DEV__) {
           memo[keyName] = parent[keyName];
         }
 
@@ -273,7 +265,6 @@ function unmaskFragmentFields(
           parent,
           selection.selectionSet,
           path,
-          mode,
           context
         );
       }
@@ -283,7 +274,6 @@ function unmaskFragmentFields(
           parent,
           context.fragmentMap[selection.name.value].selectionSet,
           path,
-          mode,
           context
         );
       }

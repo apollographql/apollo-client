@@ -196,7 +196,7 @@ function maskSelectionSet(
               context
             );
 
-            return [changed ? { ...memo, ...fragmentData } : data, changed];
+            return [{ ...memo, ...fragmentData }, changed];
           }
 
           return [

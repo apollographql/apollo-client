@@ -5,6 +5,61 @@ import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { InvariantError } from "../../utilities/globals/index.js";
 import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
 
+test("throws when passing document with no operation to maskOperation", () => {
+  const document = gql`
+    fragment Foo on Bar {
+      foo
+    }
+  `;
+
+  expect(() =>
+    maskOperation({}, document, createFragmentMatcher(new InMemoryCache()))
+  ).toThrow(
+    new InvariantError(
+      "Expected a parsed GraphQL document with a query, mutation, or subscription."
+    )
+  );
+});
+
+test("throws when passing string query to maskOperation", () => {
+  const document = `
+    query Foo {
+      foo
+    }
+  `;
+
+  expect(() =>
+    maskOperation(
+      {},
+      // @ts-expect-error
+      document,
+      createFragmentMatcher(new InMemoryCache())
+    )
+  ).toThrow(
+    new InvariantError(
+      'Expecting a parsed GraphQL document. Perhaps you need to wrap the query string in a "gql" tag? http://docs.apollostack.com/apollo-client/core.html#gql'
+    )
+  );
+});
+
+test("throws when passing multiple operations to maskOperation", () => {
+  const document = gql`
+    query Foo {
+      foo
+    }
+
+    query Bar {
+      bar
+    }
+  `;
+
+  expect(() =>
+    maskOperation({}, document, createFragmentMatcher(new InMemoryCache()))
+  ).toThrow(
+    new InvariantError("Ambiguous GraphQL document: contains 2 operations")
+  );
+});
+
 test("strips top-level fragment data from query", () => {
   const query = gql`
     query {

@@ -6,11 +6,11 @@ import type {
 } from "graphql";
 import {
   createFragmentMap,
-  getMainDefinition,
   resultKeyNameFromField,
   getFragmentDefinitions,
   getOperationName,
   getFragmentMaskMode,
+  getOperationDefinition,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
@@ -35,14 +35,15 @@ export function maskOperation<TData = unknown>(
   document: TypedDocumentNode<TData> | DocumentNode,
   matchesFragment: MatchesFragmentFn
 ): TData {
-  const definition = getMainDefinition(document);
+  const definition = getOperationDefinition(document);
+
+  invariant(
+    definition,
+    "Expected a parsed GraphQL document with a query, mutation, or subscription."
+  );
 
   const context: MaskingContext = {
-    operationType:
-      definition.kind === Kind.OPERATION_DEFINITION ?
-        definition.operation
-        // FIXME: Use better means to get definition
-      : "query",
+    operationType: definition.operation,
     operationName: getOperationName(document),
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,

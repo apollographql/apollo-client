@@ -193,7 +193,7 @@ function maskSelectionSet(
           }
 
           return [
-            unmaskFragmentFields(
+            addFieldAccessorWarnings(
               memo,
               data,
               fragment.selectionSet,
@@ -208,7 +208,7 @@ function maskSelectionSet(
   );
 }
 
-function unmaskFragmentFields(
+function addFieldAccessorWarnings(
   memo: Record<string, unknown>,
   parent: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
@@ -217,7 +217,7 @@ function unmaskFragmentFields(
 ) {
   if (Array.isArray(parent)) {
     return parent.map((item, index): unknown => {
-      return unmaskFragmentFields(
+      return addFieldAccessorWarnings(
         memo[index] ?? Object.create(null),
         item,
         selectionSetNode,
@@ -240,7 +240,7 @@ function unmaskFragmentFields(
         let value = parent[keyName];
 
         if (childSelectionSet) {
-          value = unmaskFragmentFields(
+          value = addFieldAccessorWarnings(
             memo[keyName] ?? Object.create(null),
             parent[keyName] as Record<string, unknown>,
             childSelectionSet,
@@ -260,7 +260,7 @@ function unmaskFragmentFields(
         return;
       }
       case Kind.INLINE_FRAGMENT: {
-        return unmaskFragmentFields(
+        return addFieldAccessorWarnings(
           memo,
           parent,
           selection.selectionSet,
@@ -269,7 +269,7 @@ function unmaskFragmentFields(
         );
       }
       case Kind.FRAGMENT_SPREAD: {
-        return unmaskFragmentFields(
+        return addFieldAccessorWarnings(
           memo,
           parent,
           context.fragmentMap[selection.name.value].selectionSet,

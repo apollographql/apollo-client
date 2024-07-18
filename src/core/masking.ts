@@ -173,7 +173,7 @@ function maskSelectionSet(
             changed || childChanged,
           ];
         }
-        case Kind.FRAGMENT_SPREAD:
+        case Kind.FRAGMENT_SPREAD: {
           const fragment = context.fragmentMap[selection.name.value];
           const mode = getFragmentMaskMode(selection);
 
@@ -202,6 +202,7 @@ function maskSelectionSet(
             ),
             true,
           ];
+        }
       }
     },
     [Object.create(null), false]
@@ -269,10 +270,30 @@ function addFieldAccessorWarnings(
         );
       }
       case Kind.FRAGMENT_SPREAD: {
+        const fragment = context.fragmentMap[selection.name.value];
+        const mode = getFragmentMaskMode(selection);
+
+        if (mode === "mask") {
+          return memo;
+        }
+
+        if (mode === "unmask") {
+          const [fragmentData] = maskSelectionSet(
+            data,
+            fragment.selectionSet,
+            context,
+            path
+          );
+
+          Object.assign(memo, fragmentData);
+
+          return;
+        }
+
         return addFieldAccessorWarnings(
           memo,
           data,
-          context.fragmentMap[selection.name.value].selectionSet,
+          fragment.selectionSet,
           path,
           context
         );

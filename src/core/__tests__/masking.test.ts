@@ -1229,6 +1229,67 @@ describe("maskOperation", () => {
     );
   });
 
+  test("masks child fragments of @unmask(mode: 'migrate')", () => {
+    using _ = spyOnConsole("warn");
+
+    const query = gql`
+      query UnmaskedQuery {
+        currentUser {
+          __typename
+          id
+          name
+          ...UserFields @unmask(mode: "migrate")
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        ...UserSubfields
+        ...UserSubfields2 @unmask
+      }
+
+      fragment UserSubfields on User {
+        username
+      }
+
+      fragment UserSubfields2 on User {
+        email
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+          username: "testuser",
+          email: "test@example.com",
+        },
+      }),
+      query,
+      createFragmentMatcher(new InMemoryCache())
+    );
+
+    expect(data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        email: "test@example.com",
+      },
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'UnmaskedQuery'",
+      "currentUser.age"
+    );
+  });
+
   test("warns when accessing unmasked fields with complex selections with mode: 'migrate'", () => {
     using _ = spyOnConsole("warn");
     const query = gql`

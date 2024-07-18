@@ -723,9 +723,6 @@ test("maintains referential equality the entire result if there are no fragments
 });
 
 test("does not mask named fragment fields when using `@unmask` directive", () => {
-  // Silence masked field access warning
-  using _ = spyOnConsole("warn");
-
   const query = gql`
     query UnmaskedQuery {
       currentUser {
@@ -830,7 +827,7 @@ test("does not mask named fragment fields when using `@unmask` directive", () =>
   });
 });
 
-test("warns when accessing unmasked fields when using `@unmask` directive", () => {
+test("warns when accessing unmasked fields when using `@unmask` directive with mode 'migrate'", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery {
@@ -838,7 +835,7 @@ test("warns when accessing unmasked fields when using `@unmask` directive", () =
         __typename
         id
         name
-        ...UserFields @unmask
+        ...UserFields @unmask(mode: "migrate")
       }
     }
 
@@ -853,7 +850,7 @@ test("warns when accessing unmasked fields when using `@unmask` directive", () =
         __typename
         id
         name
-        ...UserFields @unmask
+        ...UserFields @unmask(mode: "migrate")
       }
     }
 
@@ -904,7 +901,7 @@ test("warns when accessing unmasked fields when using `@unmask` directive", () =
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
 });
 
-test("warns when accessing unmasked fields in arrays", () => {
+test("warns when accessing unmasked fields in arrays with mode: 'migrate'", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery {
@@ -912,7 +909,7 @@ test("warns when accessing unmasked fields in arrays", () => {
         __typename
         id
         name
-        ...UserFields @unmask
+        ...UserFields @unmask(mode: "migrate")
       }
     }
 
@@ -951,7 +948,7 @@ test("warns when accessing unmasked fields in arrays", () => {
   );
 });
 
-test("warns when accessing unmasked fields with complex selections", () => {
+test("warns when accessing unmasked fields with complex selections with mode: 'migrate'", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery {
@@ -959,7 +956,7 @@ test("warns when accessing unmasked fields with complex selections", () => {
         __typename
         id
         name
-        ...UserFields @unmask
+        ...UserFields @unmask(mode: "migrate")
       }
     }
 
@@ -971,12 +968,12 @@ test("warns when accessing unmasked fields with complex selections", () => {
         ... @defer {
           username
         }
-        ...ProfileFields @unmask
+        ...ProfileFields @unmask(mode: "migrate")
       }
       skills {
         __typename
         name
-        ...SkillFields @unmask
+        ...SkillFields @unmask(mode: "migrate")
       }
     }
 
@@ -1088,7 +1085,7 @@ test("warns when accessing unmasked fields with complex selections", () => {
   );
 });
 
-test("does not warn when accessing fields shared between the query and fragment", () => {
+test("does not warn when accessing fields shared between the query and fragment with mode: 'migrate'", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery {
@@ -1097,7 +1094,7 @@ test("does not warn when accessing fields shared between the query and fragment"
         id
         name
         age
-        ...UserFields @unmask
+        ...UserFields @unmask(mode: "migrate")
         email
       }
     }
@@ -1130,7 +1127,7 @@ test("does not warn when accessing fields shared between the query and fragment"
   expect(consoleSpy.warn).not.toHaveBeenCalled();
 });
 
-test.skip("disables warnings when setting warnOnFieldAccess to false", () => {
+test("does not warn accessing fields with `@unmask` without mode argument", () => {
   using consoleSpy = spyOnConsole("warn");
   const query = gql`
     query UnmaskedQuery {
@@ -1138,7 +1135,7 @@ test.skip("disables warnings when setting warnOnFieldAccess to false", () => {
         __typename
         id
         name
-        ...UserFields @unmask(warnOnFieldAccess: false)
+        ...UserFields @unmask
       }
     }
 

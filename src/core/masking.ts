@@ -10,7 +10,7 @@ import {
   resultKeyNameFromField,
   getFragmentDefinitions,
   getOperationName,
-  isUnmaskedFragment,
+  getFragmentMaskMode,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
@@ -24,7 +24,6 @@ type MatchesFragmentFn = (
 interface MaskingContext {
   operationName: string | null;
   fragmentMap: FragmentMap;
-  warnOnFieldAccess: boolean;
   matchesFragment: MatchesFragmentFn;
 }
 
@@ -40,7 +39,6 @@ export function maskQuery<TData = unknown>(
   const context: MaskingContext = {
     operationName: getOperationName(document),
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    warnOnFieldAccess: true,
     matchesFragment,
   };
 
@@ -68,7 +66,6 @@ export function maskFragment<TData = unknown>(
   const context: MaskingContext = {
     operationName: null,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    warnOnFieldAccess: true,
     matchesFragment,
   };
 
@@ -185,18 +182,19 @@ function maskSelectionSet(
         }
         case Kind.FRAGMENT_SPREAD:
           const fragment = context.fragmentMap[selection.name.value];
-          const unmasked = isUnmaskedFragment(selection);
+          const mode = getFragmentMaskMode(selection);
 
           return [
-            unmasked ?
+            mode === "mask" ? memo : (
               unmaskFragmentFields(
                 memo,
                 data,
                 fragment.selectionSet,
                 path,
+                mode,
                 context
               )
-            : memo,
+            ),
             true,
           ];
       }
@@ -210,6 +208,7 @@ function unmaskFragmentFields(
   parent: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
   path: PathSelection,
+  mode: "unmask" | "migrate",
   context: MaskingContext
 ) {
   if (Array.isArray(parent)) {
@@ -219,6 +218,7 @@ function unmaskFragmentFields(
         item,
         selectionSetNode,
         [...path, index],
+        mode,
         context
       );
     });
@@ -234,7 +234,7 @@ function unmaskFragmentFields(
           return;
         }
 
-        if (context.warnOnFieldAccess) {
+        if (mode === "migrate") {
           let value = parent[keyName];
 
           if (childSelectionSet) {
@@ -243,6 +243,7 @@ function unmaskFragmentFields(
               parent[keyName] as Record<string, unknown>,
               childSelectionSet,
               [...path, keyName],
+              mode,
               context
             );
           }
@@ -260,6 +261,7 @@ function unmaskFragmentFields(
           parent,
           selection.selectionSet,
           path,
+          mode,
           context
         );
       }
@@ -269,6 +271,7 @@ function unmaskFragmentFields(
           parent,
           context.fragmentMap[selection.name.value].selectionSet,
           path,
+          mode,
           context
         );
       }

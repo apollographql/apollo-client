@@ -135,6 +135,7 @@ export function getInclusionDirectives(
   return result;
 }
 
+/** @internal */
 export function getFragmentMaskMode(
   fragment: FragmentSpreadNode
 ): "mask" | "migrate" | "unmask" {

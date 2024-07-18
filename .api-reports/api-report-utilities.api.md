@@ -1151,7 +1151,7 @@ export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNod
 // @public (undocumented)
 export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?: FragmentMap | FragmentMapFunction): InlineFragmentNode | FragmentDefinitionNode | null;
 
-// @public (undocumented)
+// @internal (undocumented)
 export function getFragmentMaskMode(fragment: FragmentSpreadNode): "mask" | "migrate" | "unmask";
 
 // @public

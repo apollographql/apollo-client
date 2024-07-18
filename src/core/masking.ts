@@ -41,18 +41,12 @@ export function maskOperation<TData = unknown>(
     "Expected a parsed GraphQL document with a query, mutation, or subscription."
   );
 
-  const context: MaskingContext = {
+  const [masked, changed] = maskSelectionSet(data, definition.selectionSet, {
     operationType: definition.operation,
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
-  };
-
-  const [masked, changed] = maskSelectionSet(
-    data,
-    definition.selectionSet,
-    context
-  );
+  });
 
   return changed ? masked : data;
 }
@@ -87,18 +81,12 @@ export function maskFragment<TData = unknown>(
     fragmentName
   );
 
-  const context: MaskingContext = {
+  const [masked, changed] = maskSelectionSet(data, fragment.selectionSet, {
     operationType: "fragment",
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
-  };
-
-  const [masked, changed] = maskSelectionSet(
-    data,
-    fragment.selectionSet,
-    context
-  );
+  });
 
   return changed ? masked : data;
 }

@@ -29,7 +29,7 @@ interface MaskingContext {
 
 type PathSelection = Array<string | number>;
 
-export function maskQuery<TData = unknown>(
+export function maskOperation<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
   matchesFragment: MatchesFragmentFn

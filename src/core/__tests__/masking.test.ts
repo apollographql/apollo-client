@@ -1,4 +1,4 @@
-import { maskFragment, maskQuery } from "../masking.js";
+import { maskFragment, maskOperation } from "../masking.js";
 import { InMemoryCache, gql } from "../index.js";
 import { InlineFragmentNode } from "graphql";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
@@ -17,7 +17,7 @@ test("strips top-level fragment data from query", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     { foo: true, bar: true },
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -41,7 +41,7 @@ test("strips fragment data from nested object", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({ user: { __typename: "User", id: 1, name: "Test User" } }),
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -65,7 +65,7 @@ test("strips fragment data from arrays", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       users: [
         { __typename: "User", id: 1, name: "Test User 1" },
@@ -104,7 +104,7 @@ test("strips multiple fragments in the same selection set", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     {
       user: {
         __typename: "User",
@@ -146,7 +146,7 @@ test("strips multiple fragments across different selection sets", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     {
       user: {
         __typename: "User",
@@ -186,7 +186,7 @@ test("leaves overlapping fields in query", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       user: {
         __typename: "User",
@@ -227,7 +227,7 @@ test("does not strip inline fragments", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       user: {
         __typename: "User",
@@ -298,7 +298,7 @@ test("strips named fragments inside inline fragments", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       user: {
         __typename: "User",
@@ -349,7 +349,7 @@ test("handles objects with no matching inline fragment condition", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       drinks: [
         { __typename: "HotChocolate", id: 1 },
@@ -382,7 +382,7 @@ test("handles field aliases", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       user: {
         __typename: "User",
@@ -475,7 +475,7 @@ test("handles overlapping fields inside multiple inline fragments", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       drinks: [
         {
@@ -566,7 +566,7 @@ test("does nothing if there are no fragments to mask", () => {
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({ user: { __typename: "User", id: 1, name: "Test User" } }),
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -657,7 +657,7 @@ test("maintains referential equality on subtrees that did not change", () => {
   const drink = { __typename: "Espresso" };
   const originalData = deepFreeze({ user, post, authors, industries, drink });
 
-  const data = maskQuery(
+  const data = maskOperation(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -713,7 +713,7 @@ test("maintains referential equality the entire result if there are no fragments
     },
   });
 
-  const data = maskQuery(
+  const data = maskOperation(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -747,7 +747,7 @@ test("does not mask named fragment fields and returns original object when using
     },
   });
 
-  const data = maskQuery(
+  const data = maskOperation(
     queryData,
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -850,7 +850,7 @@ test("maintains referential equality on subtrees that contain @unmask", () => {
   ];
   const originalData = deepFreeze({ user, post, authors, industries });
 
-  const data = maskQuery(
+  const data = maskOperation(
     originalData,
     query,
     createFragmentMatcher(new InMemoryCache())
@@ -933,9 +933,13 @@ test("warns when accessing unmasked fields when using `@unmask` directive with m
 
   const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
 
-  const data = maskQuery(deepFreeze({ currentUser }), query, fragmentMatcher);
+  const data = maskOperation(
+    deepFreeze({ currentUser }),
+    query,
+    fragmentMatcher
+  );
 
-  const dataFromAnonymous = maskQuery(
+  const dataFromAnonymous = maskOperation(
     { currentUser },
     anonymousQuery,
     fragmentMatcher
@@ -985,7 +989,7 @@ test("does not warn when accessing unmasked fields when using `@unmask` directiv
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       currentUser: {
         __typename: "User",
@@ -1023,7 +1027,7 @@ test("warns when accessing unmasked fields in arrays with mode: 'migrate'", () =
 
   const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       users: [
         { __typename: "User", id: 1, name: "John Doe", age: 30 },
@@ -1093,7 +1097,7 @@ test("can mix and match masked vs unmasked fragment fields with proper warnings"
     }
   `;
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       currentUser: {
         __typename: "User",
@@ -1237,7 +1241,11 @@ test("warns when accessing unmasked fields with complex selections with mode: 'm
 
   const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
 
-  const data = maskQuery(deepFreeze({ currentUser }), query, fragmentMatcher);
+  const data = maskOperation(
+    deepFreeze({ currentUser }),
+    query,
+    fragmentMatcher
+  );
 
   data.currentUser.age;
   data.currentUser.profile.email;
@@ -1325,7 +1333,7 @@ test("does not warn when accessing fields shared between the query and fragment 
 
   const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       currentUser: {
         __typename: "User",
@@ -1364,7 +1372,7 @@ test("does not warn accessing fields with `@unmask` without mode argument", () =
 
   const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
 
-  const data = maskQuery(
+  const data = maskOperation(
     deepFreeze({
       currentUser: {
         __typename: "User",

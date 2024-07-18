@@ -11,6 +11,7 @@ import type {
   ArgumentNode,
   ValueNode,
   ASTNode,
+  FragmentSpreadNode,
 } from "graphql";
 import { visit, BREAK, Kind } from "graphql";
 
@@ -207,4 +208,12 @@ export function isUnmaskedDocument(
   });
 
   return [masked, { warnOnFieldAccess }];
+}
+
+export function isUnmaskedFragment(fragment: FragmentSpreadNode) {
+  if (!fragment.directives) {
+    return false;
+  }
+
+  return fragment.directives.some(({ name }) => name.value === "unmask");
 }

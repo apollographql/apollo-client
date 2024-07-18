@@ -8,8 +8,11 @@ import {
   hasAnyDirectives,
   hasAllDirectives,
   isUnmaskedDocument,
+  isUnmaskedFragment,
 } from "../directives";
 import { spyOnConsole } from "../../../testing/internal";
+import { Kind } from "graphql";
+import type { FragmentSpreadNode } from "graphql";
 
 describe("hasDirectives", () => {
   it("should allow searching the ast for a directive", () => {
@@ -642,5 +645,70 @@ describe("isUnmaskedDocument", () => {
       "@unmask directive used in %s is provided in a location other than the document root which is ignored.",
       "'MyQuery': "
     );
+  });
+});
+
+describe("isUnmaskedFragment", () => {
+  it("returns true when @unmask used on fragment node", () => {
+    const fragmentNode: FragmentSpreadNode = {
+      kind: Kind.FRAGMENT_SPREAD,
+      name: { kind: Kind.NAME, value: "MyFragment" },
+      directives: [
+        { kind: Kind.DIRECTIVE, name: { kind: Kind.NAME, value: "unmask" } },
+      ],
+    };
+
+    const isUnmasked = isUnmaskedFragment(fragmentNode);
+
+    expect(isUnmasked).toBe(true);
+  });
+
+  it("returns false when no directives are present", () => {
+    const fragmentNode: FragmentSpreadNode = {
+      kind: Kind.FRAGMENT_SPREAD,
+      name: { kind: Kind.NAME, value: "MyFragment" },
+    };
+
+    const isUnmasked = isUnmaskedFragment(fragmentNode);
+
+    expect(isUnmasked).toBe(false);
+  });
+
+  it("returns false when a different directive is used", () => {
+    const fragmentNode: FragmentSpreadNode = {
+      kind: Kind.FRAGMENT_SPREAD,
+      name: { kind: Kind.NAME, value: "MyFragment" },
+      directives: [
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: "myDirective" },
+        },
+      ],
+    };
+
+    const isUnmasked = isUnmaskedFragment(fragmentNode);
+
+    expect(isUnmasked).toBe(false);
+  });
+
+  it("returns true when used with other directives", () => {
+    const fragmentNode: FragmentSpreadNode = {
+      kind: Kind.FRAGMENT_SPREAD,
+      name: { kind: Kind.NAME, value: "MyFragment" },
+      directives: [
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: "myDirective" },
+        },
+        {
+          kind: Kind.DIRECTIVE,
+          name: { kind: Kind.NAME, value: "unmask" },
+        },
+      ],
+    };
+
+    const isUnmasked = isUnmaskedFragment(fragmentNode);
+
+    expect(isUnmasked).toBe(true);
   });
 });

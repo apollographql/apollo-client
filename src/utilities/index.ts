@@ -12,7 +12,6 @@ export {
   hasClientExports,
   getDirectiveNames,
   getInclusionDirectives,
-  isUnmaskedDocument,
   getFragmentMaskMode,
 } from "./graphql/directives.js";
 

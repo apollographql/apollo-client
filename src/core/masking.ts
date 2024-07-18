@@ -210,13 +210,13 @@ function maskSelectionSet(
 
 function addFieldAccessorWarnings(
   memo: Record<string, unknown>,
-  parent: Record<string, unknown>,
+  data: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
   path: PathSelection,
   context: MaskingContext
 ) {
-  if (Array.isArray(parent)) {
-    return parent.map((item, index): unknown => {
+  if (Array.isArray(data)) {
+    return data.map((item, index): unknown => {
       return addFieldAccessorWarnings(
         memo[index] ?? Object.create(null),
         item,
@@ -237,12 +237,12 @@ function addFieldAccessorWarnings(
           return;
         }
 
-        let value = parent[keyName];
+        let value = data[keyName];
 
         if (childSelectionSet) {
           value = addFieldAccessorWarnings(
             memo[keyName] ?? Object.create(null),
-            parent[keyName] as Record<string, unknown>,
+            data[keyName] as Record<string, unknown>,
             childSelectionSet,
             [...path, keyName],
             context
@@ -254,7 +254,7 @@ function addFieldAccessorWarnings(
         }
 
         if (!__DEV__) {
-          memo[keyName] = parent[keyName];
+          memo[keyName] = data[keyName];
         }
 
         return;
@@ -262,7 +262,7 @@ function addFieldAccessorWarnings(
       case Kind.INLINE_FRAGMENT: {
         return addFieldAccessorWarnings(
           memo,
-          parent,
+          data,
           selection.selectionSet,
           path,
           context
@@ -271,7 +271,7 @@ function addFieldAccessorWarnings(
       case Kind.FRAGMENT_SPREAD: {
         return addFieldAccessorWarnings(
           memo,
-          parent,
+          data,
           context.fragmentMap[selection.name.value].selectionSet,
           path,
           context

@@ -7,6 +7,7 @@ import {
   print,
   visit,
   OperationDefinitionNode,
+  FragmentSpreadNode,
 } from "graphql";
 import gql from "graphql-tag";
 
@@ -6600,7 +6601,7 @@ describe("data masking", () => {
     }
   });
 
-  it("does not mask queries marked with @unmask", async () => {
+  it("does not mask fragments marked with @unmask", async () => {
     interface Query {
       currentUser: {
         __typename: "User";
@@ -6610,11 +6611,11 @@ describe("data masking", () => {
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
-      query UnmaskedQuery @unmask {
+      query UnmaskedQuery {
         currentUser {
           id
           name
-          ...UserFields
+          ...UserFields @unmask
         }
       }
 
@@ -6666,10 +6667,10 @@ describe("data masking", () => {
     }
   });
 
-  it("does not mask queries marked with @unmask added by document transforms", async () => {
+  it("does not mask fragments marked with @unmask added by document transforms", async () => {
     const documentTransform = new DocumentTransform((document) => {
       return visit(document, {
-        OperationDefinition(node) {
+        FragmentSpread(node) {
           return {
             ...node,
             directives: [
@@ -6678,7 +6679,7 @@ describe("data masking", () => {
                 name: { kind: Kind.NAME, value: "unmask" },
               },
             ],
-          } satisfies OperationDefinitionNode;
+          } satisfies FragmentSpreadNode;
         },
       });
     });
@@ -7403,7 +7404,7 @@ describe("data masking", () => {
     }
   );
 
-  it("warns when accessing a unmasked field while using @unmask", async () => {
+  it("warns when accessing a unmasked field while using @unmask with mode: 'migrate'", async () => {
     using consoleSpy = spyOnConsole("warn");
 
     interface Query {
@@ -7416,11 +7417,11 @@ describe("data masking", () => {
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
-      query UnmaskedQuery @unmask {
+      query UnmaskedQuery {
         currentUser {
           id
           name
-          ...UserFields
+          ...UserFields @unmask(mode: "migrate")
         }
       }
 
@@ -7476,70 +7477,6 @@ describe("data masking", () => {
       // Ensure we only warn once
       data.currentUser.age;
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-    }
-  });
-
-  it("allows disabling warnings when accessing a fragmented field while using @unmask", async () => {
-    using consoleSpy = spyOnConsole("warn");
-
-    interface Query {
-      currentUser: {
-        __typename: "User";
-        id: number;
-        name: string;
-        age: number;
-      };
-    }
-
-    const query: TypedDocumentNode<Query, never> = gql`
-      query UnmaskedQuery @unmask(warnOnFieldAccess: false) {
-        currentUser {
-          id
-          name
-          ...UserFields
-        }
-      }
-
-      fragment UserFields on User {
-        age
-        name
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query },
-        result: {
-          data: {
-            currentUser: {
-              __typename: "User",
-              id: 1,
-              name: "Test User",
-              age: 34,
-            },
-          },
-        },
-        delay: 20,
-      },
-    ];
-
-    const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
-      link: new MockLink(mocks),
-    });
-
-    const observable = client.watchQuery({ query });
-    const stream = new ObservableStream(observable);
-
-    {
-      const { data } = await stream.takeNext();
-      data.currentUser.__typename;
-      data.currentUser.id;
-      data.currentUser.name;
-      data.currentUser.age;
-
-      expect(consoleSpy.warn).not.toHaveBeenCalled();
     }
   });
 });

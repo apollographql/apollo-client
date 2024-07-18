@@ -2160,6 +2160,62 @@ describe("maskFragment", () => {
     expect(data.drinks[0]).toBe(drinks[0]);
     expect(data.drinks[1]).toBe(drinks[1]);
   });
+
+  test("masks child fragments of @unmask(mode: 'migrate')", () => {
+    using _ = spyOnConsole("warn");
+
+    const fragment = gql`
+      fragment UnmaskedUser on User {
+        __typename
+        id
+        name
+        ...UserFields @unmask(mode: "migrate")
+      }
+
+      fragment UserFields on User {
+        age
+        ...UserSubfields
+        ...UserSubfields2 @unmask
+      }
+
+      fragment UserSubfields on User {
+        username
+      }
+
+      fragment UserSubfields2 on User {
+        email
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        username: "testuser",
+        email: "test@example.com",
+      }),
+      fragment,
+      createFragmentMatcher(new InMemoryCache()),
+      "UnmaskedUser"
+    );
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+      email: "test@example.com",
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "fragment 'UnmaskedUser'",
+      "age"
+    );
+  });
 });
 
 function createFragmentMatcher(cache: InMemoryCache) {

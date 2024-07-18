@@ -756,6 +756,142 @@ test("does not mask named fragment fields and returns original object when using
   expect(data).toBe(queryData);
 });
 
+test("maintains referential equality on subtrees that contain @unmask", () => {
+  const query = gql`
+    query {
+      user {
+        __typename
+        id
+        profile {
+          __typename
+          avatarUrl
+        }
+        ...UserFields @unmask
+      }
+      post {
+        __typename
+        id
+        title
+      }
+      authors {
+        __typename
+        id
+        name
+      }
+      industries {
+        __typename
+        ... on TechIndustry {
+          ...TechIndustryFields @unmask
+        }
+        ... on FinanceIndustry {
+          ...FinanceIndustryFields
+        }
+        ... on TradeIndustry {
+          id
+          yearsInBusiness
+          ...TradeIndustryFields @unmask
+        }
+      }
+    }
+
+    fragment UserFields on User {
+      name
+      ...UserSubfields @unmask
+    }
+
+    fragment UserSubfields on User {
+      age
+    }
+
+    fragment FinanceIndustryFields on FinanceIndustry {
+      yearsInBusiness
+    }
+
+    fragment TradeIndustryFields on TradeIndustry {
+      languageRequirements
+    }
+
+    fragment TechIndustryFields on TechIndustry {
+      languageRequirements
+      ...TechIndustrySubFields
+    }
+
+    fragment TechIndustrySubFields on TechIndustry {
+      focus
+    }
+  `;
+
+  const profile = {
+    __typename: "Profile",
+    avatarUrl: "https://example.com/avatar.jpg",
+  };
+  const user = {
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    profile,
+    age: 30,
+  };
+  const post = { __typename: "Post", id: 1, title: "Test Post" };
+  const authors = [{ __typename: "Author", id: 1, name: "A Author" }];
+  const industries = [
+    {
+      __typename: "TechIndustry",
+      languageRequirements: ["TypeScript"],
+      focus: "innovation",
+    },
+    { __typename: "FinanceIndustry", yearsInBusiness: 10 },
+    {
+      __typename: "TradeIndustry",
+      id: 10,
+      yearsInBusiness: 15,
+      languageRequirements: ["English", "German"],
+    },
+  ];
+  const originalData = deepFreeze({ user, post, authors, industries });
+
+  const data = maskQuery(
+    originalData,
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toEqual({
+    user: {
+      __typename: "User",
+      name: "Test User",
+      id: 1,
+      profile: {
+        __typename: "Profile",
+        avatarUrl: "https://example.com/avatar.jpg",
+      },
+      age: 30,
+    },
+    post: { __typename: "Post", id: 1, title: "Test Post" },
+    authors: [{ __typename: "Author", id: 1, name: "A Author" }],
+    industries: [
+      { __typename: "TechIndustry", languageRequirements: ["TypeScript"] },
+      { __typename: "FinanceIndustry" },
+      {
+        __typename: "TradeIndustry",
+        id: 10,
+        yearsInBusiness: 15,
+        languageRequirements: ["English", "German"],
+      },
+    ],
+  });
+
+  expect(data).not.toBe(originalData);
+  expect(data.user).toBe(user);
+  expect(data.user.profile).toBe(profile);
+  expect(data.post).toBe(post);
+  expect(data.authors).toBe(authors);
+  expect(data.industries).not.toBe(industries);
+  expect(data.industries[0]).not.toBe(industries[0]);
+  expect(data.industries[1]).not.toBe(industries[1]);
+  expect(data.industries[2]).toBe(industries[2]);
+});
+
 test("warns when accessing unmasked fields when using `@unmask` directive with mode 'migrate'", () => {
   using _ = spyOnConsole("warn");
   const query = gql`

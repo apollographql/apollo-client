@@ -1782,6 +1782,48 @@ describe("maskFragment", () => {
     });
   });
 
+  test("deep freezes the masked result if the original data is frozen", () => {
+    const fragment = gql`
+      fragment UserFields on User {
+        __typename
+        id
+        profile {
+          __typename
+          ...UserProfile
+        }
+      }
+
+      fragment UserProfile on User {
+        age
+      }
+    `;
+
+    const frozenData = maskFragment(
+      deepFreeze({
+        __typename: "User",
+        id: 1,
+        profile: { __typename: "Profile", age: 30 },
+      }),
+      fragment,
+      createFragmentMatcher(new InMemoryCache()),
+      "UserFields"
+    );
+
+    const nonFrozenData = maskFragment(
+      {
+        __typename: "User",
+        id: 1,
+        profile: { __typename: "Profile", age: 30 },
+      },
+      fragment,
+      createFragmentMatcher(new InMemoryCache()),
+      "UserFields"
+    );
+
+    expect(Object.isFrozen(frozenData)).toBe(true);
+    expect(Object.isFrozen(nonFrozenData)).toBe(false);
+  });
+
   test("does not mask inline fragment in fragment documents", () => {
     const fragment = gql`
       fragment UserFields on User {

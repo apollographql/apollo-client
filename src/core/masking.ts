@@ -95,12 +95,24 @@ export function maskFragment<TData = unknown>(
     fragmentName
   );
 
-  const [masked, changed] = maskSelectionSet(data, fragment.selectionSet, {
+  const context: MaskingContext = {
     operationType: "fragment",
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
-  });
+  };
+
+  const [masked, changed] = maskSelectionSet(
+    data,
+    fragment.selectionSet,
+    context
+  );
+
+  if (Object.isFrozen(data)) {
+    context.disableWarnings = true;
+    maybeDeepFreeze(masked);
+    context.disableWarnings = false;
+  }
 
   return changed ? masked : data;
 }

@@ -8,7 +8,6 @@ import {
   createFragmentMap,
   resultKeyNameFromField,
   getFragmentDefinitions,
-  getOperationName,
   getFragmentMaskMode,
   getOperationDefinition,
 } from "../utilities/index.js";
@@ -23,7 +22,7 @@ type MatchesFragmentFn = (
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
-  operationName: string | null;
+  operationName: string | undefined;
   fragmentMap: FragmentMap;
   matchesFragment: MatchesFragmentFn;
 }
@@ -44,7 +43,7 @@ export function maskOperation<TData = unknown>(
 
   const context: MaskingContext = {
     operationType: definition.operation,
-    operationName: getOperationName(document),
+    operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
   };
@@ -72,7 +71,6 @@ export function maskFragment<TData = unknown>(
 
   const context: MaskingContext = {
     operationType: "fragment",
-    operationName: null,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
   };

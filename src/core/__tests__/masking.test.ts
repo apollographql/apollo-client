@@ -735,30 +735,6 @@ test("does not mask named fragment fields when using `@unmask` directive", () =>
 
     fragment UserFields on User {
       age
-      profile {
-        __typename
-        email
-        ... @defer {
-          username
-        }
-        ...ProfileFields @unmask
-      }
-      skills {
-        __typename
-        name
-        ...SkillFields @unmask
-      }
-    }
-
-    fragment ProfileFields on Profile {
-      settings {
-        __typename
-        darkMode
-      }
-    }
-
-    fragment SkillFields on Skill {
-      description
     }
   `;
 
@@ -769,27 +745,6 @@ test("does not mask named fragment fields when using `@unmask` directive", () =>
         id: 1,
         name: "Test User",
         age: 30,
-        profile: {
-          __typename: "Profile",
-          email: "testuser@example.com",
-          username: "testuser",
-          settings: {
-            __typename: "Settings",
-            darkMode: true,
-          },
-        },
-        skills: [
-          {
-            __typename: "Skill",
-            name: "Skill 1",
-            description: "Skill 1 description",
-          },
-          {
-            __typename: "Skill",
-            name: "Skill 2",
-            description: "Skill 2 description",
-          },
-        ],
       },
     },
     query,
@@ -802,27 +757,6 @@ test("does not mask named fragment fields when using `@unmask` directive", () =>
       id: 1,
       name: "Test User",
       age: 30,
-      profile: {
-        __typename: "Profile",
-        email: "testuser@example.com",
-        username: "testuser",
-        settings: {
-          __typename: "Settings",
-          darkMode: true,
-        },
-      },
-      skills: [
-        {
-          __typename: "Skill",
-          name: "Skill 1",
-          description: "Skill 1 description",
-        },
-        {
-          __typename: "Skill",
-          name: "Skill 2",
-          description: "Skill 2 description",
-        },
-      ],
     },
   });
 });

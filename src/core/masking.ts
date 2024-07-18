@@ -248,7 +248,19 @@ function unmaskFragmentFields(
             );
           }
 
-          addAccessorWarning(memo, value, keyName, path, context.operationName);
+          if (__DEV__) {
+            addAccessorWarning(
+              memo,
+              value,
+              keyName,
+              path,
+              context.operationName
+            );
+          }
+
+          if (!__DEV__) {
+            memo[keyName] = parent[keyName];
+          }
         } else {
           memo[keyName] = parent[keyName];
         }

@@ -3,7 +3,7 @@ import { InMemoryCache, gql } from "../index.js";
 import { InlineFragmentNode } from "graphql";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { InvariantError } from "../../utilities/globals/index.js";
-import { spyOnConsole } from "../../testing/internal/index.js";
+import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
 
 test("strips top-level fragment data from query", () => {
   const query = gql`
@@ -899,6 +899,44 @@ test("warns when accessing unmasked fields when using `@unmask` directive with m
 
   // Ensure we only warn once for each masked field
   expect(consoleSpy.warn).toHaveBeenCalledTimes(2);
+});
+
+test("does not warn when accessing unmasked fields when using `@unmask` directive with mode 'migrate' in non-DEV mode", () => {
+  using _ = withProdMode();
+  using __ = spyOnConsole("warn");
+
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields @unmask(mode: "migrate")
+      }
+    }
+
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const data = maskQuery(
+    {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    },
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  const age = data.currentUser.age;
+
+  expect(age).toBe(30);
+  expect(console.warn).not.toHaveBeenCalled();
 });
 
 test("warns when accessing unmasked fields in arrays with mode: 'migrate'", () => {

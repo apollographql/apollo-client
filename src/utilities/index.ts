@@ -13,7 +13,7 @@ export {
   getDirectiveNames,
   getInclusionDirectives,
   isUnmaskedDocument,
-  isUnmaskedFragment,
+  getFragmentMaskMode,
 } from "./graphql/directives.js";
 
 export type { DocumentTransformCacheKey } from "./graphql/DocumentTransform.js";

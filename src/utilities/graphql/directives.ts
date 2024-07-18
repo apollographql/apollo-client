@@ -210,10 +210,43 @@ export function isUnmaskedDocument(
   return [masked, { warnOnFieldAccess }];
 }
 
-export function isUnmaskedFragment(fragment: FragmentSpreadNode) {
-  if (!fragment.directives) {
-    return false;
+export function getFragmentMaskMode(
+  fragment: FragmentSpreadNode
+): "mask" | "migrate" | "unmask" {
+  const directive = fragment.directives?.find(
+    ({ name }) => name.value === "unmask"
+  );
+
+  if (!directive) {
+    return "mask";
   }
 
-  return fragment.directives.some(({ name }) => name.value === "unmask");
+  const modeArg = directive.arguments?.find(
+    ({ name }) => name.value === "mode"
+  );
+
+  if (__DEV__) {
+    if (modeArg) {
+      if (modeArg.value.kind === Kind.VARIABLE) {
+        invariant.warn("@unmask 'mode' argument does not support variables.");
+      } else if (modeArg.value.kind !== Kind.STRING) {
+        invariant.warn("@unmask 'mode' argument must be of type string.");
+      } else if (modeArg.value.value !== "migrate") {
+        invariant.warn(
+          "@unmask 'mode' argument does not recognize value '%s'.",
+          modeArg.value.value
+        );
+      }
+    }
+  }
+
+  if (
+    modeArg &&
+    "value" in modeArg.value &&
+    modeArg.value.value === "migrate"
+  ) {
+    return "migrate";
+  }
+
+  return "unmask";
 }

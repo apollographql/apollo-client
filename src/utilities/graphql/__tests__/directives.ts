@@ -8,11 +8,11 @@ import {
   hasAnyDirectives,
   hasAllDirectives,
   isUnmaskedDocument,
-  isUnmaskedFragment,
+  getFragmentMaskMode,
 } from "../directives";
 import { spyOnConsole } from "../../../testing/internal";
-import { Kind } from "graphql";
-import type { FragmentSpreadNode } from "graphql";
+import { BREAK, visit } from "graphql";
+import type { DocumentNode, FragmentSpreadNode } from "graphql";
 
 describe("hasDirectives", () => {
   it("should allow searching the ast for a directive", () => {
@@ -648,67 +648,133 @@ describe("isUnmaskedDocument", () => {
   });
 });
 
-describe("isUnmaskedFragment", () => {
-  it("returns true when @unmask used on fragment node", () => {
-    const fragmentNode: FragmentSpreadNode = {
-      kind: Kind.FRAGMENT_SPREAD,
-      name: { kind: Kind.NAME, value: "MyFragment" },
-      directives: [
-        { kind: Kind.DIRECTIVE, name: { kind: Kind.NAME, value: "unmask" } },
-      ],
-    };
+describe("getFragmentMaskMode", () => {
+  it("returns 'unmask' when @unmask used on fragment node", () => {
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment @unmask
+      }
+    `);
 
-    const isUnmasked = isUnmaskedFragment(fragmentNode);
+    const mode = getFragmentMaskMode(fragmentNode);
 
-    expect(isUnmasked).toBe(true);
+    expect(mode).toBe("unmask");
   });
 
-  it("returns false when no directives are present", () => {
-    const fragmentNode: FragmentSpreadNode = {
-      kind: Kind.FRAGMENT_SPREAD,
-      name: { kind: Kind.NAME, value: "MyFragment" },
-    };
+  it("returns 'mask' when no directives are present", () => {
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment
+      }
+    `);
 
-    const isUnmasked = isUnmaskedFragment(fragmentNode);
+    const mode = getFragmentMaskMode(fragmentNode);
 
-    expect(isUnmasked).toBe(false);
+    expect(mode).toBe("mask");
   });
 
-  it("returns false when a different directive is used", () => {
-    const fragmentNode: FragmentSpreadNode = {
-      kind: Kind.FRAGMENT_SPREAD,
-      name: { kind: Kind.NAME, value: "MyFragment" },
-      directives: [
-        {
-          kind: Kind.DIRECTIVE,
-          name: { kind: Kind.NAME, value: "myDirective" },
-        },
-      ],
-    };
+  it("returns 'mask' when a different directive is used", () => {
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment @myDirective
+      }
+    `);
 
-    const isUnmasked = isUnmaskedFragment(fragmentNode);
+    const mode = getFragmentMaskMode(fragmentNode);
 
-    expect(isUnmasked).toBe(false);
+    expect(mode).toBe("mask");
   });
 
-  it("returns true when used with other directives", () => {
-    const fragmentNode: FragmentSpreadNode = {
-      kind: Kind.FRAGMENT_SPREAD,
-      name: { kind: Kind.NAME, value: "MyFragment" },
-      directives: [
-        {
-          kind: Kind.DIRECTIVE,
-          name: { kind: Kind.NAME, value: "myDirective" },
-        },
-        {
-          kind: Kind.DIRECTIVE,
-          name: { kind: Kind.NAME, value: "unmask" },
-        },
-      ],
-    };
+  it("returns 'unmask' when used with other directives", () => {
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment @myDirective @unmask
+      }
+    `);
 
-    const isUnmasked = isUnmaskedFragment(fragmentNode);
+    const mode = getFragmentMaskMode(fragmentNode);
 
-    expect(isUnmasked).toBe(true);
+    expect(mode).toBe("unmask");
+  });
+
+  it("returns 'migrate' when passing mode: 'migrate' as argument", () => {
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment @unmask(mode: "migrate")
+      }
+    `);
+
+    const mode = getFragmentMaskMode(fragmentNode);
+
+    expect(mode).toBe("migrate");
+  });
+
+  it("warns and returns 'unmask' when using variable for mode argument", () => {
+    using _ = spyOnConsole("warn");
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query ($mode: String!) {
+        ...MyFragment @unmask(mode: $mode)
+      }
+    `);
+
+    const mode = getFragmentMaskMode(fragmentNode);
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "@unmask 'mode' argument does not support variables."
+    );
+    expect(mode).toBe("unmask");
+  });
+
+  it("warns and returns 'unmask' when passing a non-string argument to mode", () => {
+    using _ = spyOnConsole("warn");
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment @unmask(mode: true)
+      }
+    `);
+
+    const mode = getFragmentMaskMode(fragmentNode);
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "@unmask 'mode' argument must be of type string."
+    );
+    expect(mode).toBe("unmask");
+  });
+
+  it("warns and returns 'unmask' when passing a value other than 'migrate' to mode", () => {
+    using _ = spyOnConsole("warn");
+    const fragmentNode = getFragmentSpreadNode(gql`
+      query {
+        ...MyFragment @unmask(mode: "invalid")
+      }
+    `);
+
+    const mode = getFragmentMaskMode(fragmentNode);
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "@unmask 'mode' argument does not recognize value '%s'.",
+      "invalid"
+    );
+    expect(mode).toBe("unmask");
   });
 });
+
+function getFragmentSpreadNode(document: DocumentNode): FragmentSpreadNode {
+  let fragmentSpreadNode: FragmentSpreadNode | undefined = undefined;
+
+  visit(document, {
+    FragmentSpread: (node) => {
+      fragmentSpreadNode = node;
+      return BREAK;
+    },
+  });
+
+  if (!fragmentSpreadNode) {
+    throw new Error("Must give a document with a fragment spread");
+  }
+
+  return fragmentSpreadNode;
+}

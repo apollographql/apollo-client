@@ -184,16 +184,29 @@ function maskSelectionSet(
           const fragment = context.fragmentMap[selection.name.value];
           const mode = getFragmentMaskMode(selection);
 
+          if (mode === "mask") {
+            return [memo, true];
+          }
+
+          if (mode === "unmask") {
+            const [fragmentData, changed] = maskSelectionSet(
+              data,
+              fragment.selectionSet,
+              path,
+              context
+            );
+
+            return [changed ? { ...memo, ...fragmentData } : data, changed];
+          }
+
           return [
-            mode === "mask" ? memo : (
-              unmaskFragmentFields(
-                memo,
-                data,
-                fragment.selectionSet,
-                path,
-                mode,
-                context
-              )
+            unmaskFragmentFields(
+              memo,
+              data,
+              fragment.selectionSet,
+              path,
+              mode,
+              context
             ),
             true,
           ];

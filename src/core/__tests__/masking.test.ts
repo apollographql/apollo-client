@@ -920,6 +920,121 @@ test("warns when accessing unmasked fields in arrays with mode: 'migrate'", () =
   );
 });
 
+test("can mix and match masked vs unmasked fragment fields with proper warnings", () => {
+  using _ = spyOnConsole("warn");
+
+  const query = gql`
+    query UnmaskedQuery {
+      currentUser {
+        __typename
+        id
+        name
+        ...UserFields @unmask
+      }
+    }
+
+    fragment UserFields on User {
+      age
+      profile {
+        __typename
+        email
+        ... @defer {
+          username
+        }
+        ...ProfileFields
+      }
+      skills {
+        __typename
+        name
+        ...SkillFields @unmask(mode: "migrate")
+      }
+    }
+
+    fragment ProfileFields on Profile {
+      settings {
+        __typename
+        darkMode
+      }
+    }
+
+    fragment SkillFields on Skill {
+      description
+    }
+  `;
+
+  const data = maskQuery(
+    {
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        profile: {
+          __typename: "Profile",
+          email: "testuser@example.com",
+          username: "testuser",
+          settings: {
+            __typename: "Settings",
+            darkMode: true,
+          },
+        },
+        skills: [
+          {
+            __typename: "Skill",
+            name: "Skill 1",
+            description: "Skill 1 description",
+          },
+          {
+            __typename: "Skill",
+            name: "Skill 2",
+            description: "Skill 2 description",
+          },
+        ],
+      },
+    },
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toEqual({
+    currentUser: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+      profile: {
+        __typename: "Profile",
+        email: "testuser@example.com",
+        username: "testuser",
+      },
+      skills: [
+        {
+          __typename: "Skill",
+          name: "Skill 1",
+          description: "Skill 1 description",
+        },
+        {
+          __typename: "Skill",
+          name: "Skill 2",
+          description: "Skill 2 description",
+        },
+      ],
+    },
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(2);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.skills[0].description"
+  );
+  expect(console.warn).toHaveBeenCalledWith(
+    "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+    "query 'UnmaskedQuery'",
+    "currentUser.skills[1].description"
+  );
+});
+
 test("warns when accessing unmasked fields with complex selections with mode: 'migrate'", () => {
   using _ = spyOnConsole("warn");
   const query = gql`

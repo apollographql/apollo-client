@@ -10,6 +10,7 @@ import {
   getFragmentDefinitions,
   getFragmentMaskMode,
   getOperationDefinition,
+  maybeDeepFreeze,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { DocumentNode, TypedDocumentNode } from "./index.js";
@@ -25,6 +26,7 @@ interface MaskingContext {
   operationName: string | undefined;
   fragmentMap: FragmentMap;
   matchesFragment: MatchesFragmentFn;
+  disableWarnings?: boolean;
 }
 
 type PathSelection = Array<string | number>;
@@ -41,12 +43,24 @@ export function maskOperation<TData = unknown>(
     "Expected a parsed GraphQL document with a query, mutation, or subscription."
   );
 
-  const [masked, changed] = maskSelectionSet(data, definition.selectionSet, {
+  const context: MaskingContext = {
     operationType: definition.operation,
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
-  });
+  };
+
+  const [masked, changed] = maskSelectionSet(
+    data,
+    definition.selectionSet,
+    context
+  );
+
+  if (Object.isFrozen(data)) {
+    context.disableWarnings = true;
+    maybeDeepFreeze(masked);
+    context.disableWarnings = false;
+  }
 
   return changed ? masked : data;
 }
@@ -312,6 +326,10 @@ function addAccessorWarning(
 
   Object.defineProperty(data, fieldName, {
     get() {
+      if (context.disableWarnings) {
+        return currentValue;
+      }
+
       if (!warned) {
         invariant.warn(
           "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",

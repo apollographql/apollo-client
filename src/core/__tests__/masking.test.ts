@@ -1390,6 +1390,114 @@ test("does not warn accessing fields with `@unmask` without mode argument", () =
   expect(console.warn).not.toHaveBeenCalled();
 });
 
+test("masks fragments in subscription documents", () => {
+  const subscription = gql`
+    subscription {
+      onUserUpdated {
+        __typename
+        id
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      name
+    }
+  `;
+
+  const data = maskOperation(
+    deepFreeze({
+      onUserUpdated: { __typename: "User", id: 1, name: "Test User" },
+    }),
+    subscription,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toEqual({ onUserUpdated: { __typename: "User", id: 1 } });
+});
+
+test("honors @unmask used in subscription documents", () => {
+  const subscription = gql`
+    subscription {
+      onUserUpdated {
+        __typename
+        id
+        ...UserFields @unmask
+      }
+    }
+
+    fragment UserFields on User {
+      name
+    }
+  `;
+
+  const subscriptionData = deepFreeze({
+    onUserUpdated: { __typename: "User", id: 1, name: "Test User" },
+  });
+
+  const data = maskOperation(
+    subscriptionData,
+    subscription,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toBe(subscriptionData);
+});
+
+test("masks fragments in mutation documents", () => {
+  const mutation = gql`
+    mutation {
+      updateUser {
+        __typename
+        id
+        ...UserFields
+      }
+    }
+
+    fragment UserFields on User {
+      name
+    }
+  `;
+
+  const data = maskOperation(
+    deepFreeze({
+      updateUser: { __typename: "User", id: 1, name: "Test User" },
+    }),
+    mutation,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toEqual({ updateUser: { __typename: "User", id: 1 } });
+});
+
+test("honors @unmask used in mutation documents", () => {
+  const mutation = gql`
+    mutation {
+      updateUser {
+        __typename
+        id
+        ...UserFields @unmask
+      }
+    }
+
+    fragment UserFields on User {
+      name
+    }
+  `;
+
+  const mutationData = deepFreeze({
+    updateUser: { __typename: "User", id: 1, name: "Test User" },
+  });
+
+  const data = maskOperation(
+    mutationData,
+    mutation,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toBe(mutationData);
+});
+
 test("masks named fragments in fragment documents", () => {
   const fragment = gql`
     fragment UserFields on User {

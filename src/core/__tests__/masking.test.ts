@@ -722,7 +722,7 @@ test("maintains referential equality the entire result if there are no fragments
   expect(data).toBe(originalData);
 });
 
-test("does not mask named fragment fields when using `@unmask` directive", () => {
+test("does not mask named fragment fields and returns original object when using `@unmask` directive", () => {
   const query = gql`
     query UnmaskedQuery {
       currentUser {
@@ -738,27 +738,22 @@ test("does not mask named fragment fields when using `@unmask` directive", () =>
     }
   `;
 
-  const data = maskQuery(
-    {
-      currentUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
-        age: 30,
-      },
-    },
-    query,
-    createFragmentMatcher(new InMemoryCache())
-  );
-
-  expect(data).toEqual({
+  const queryData = {
     currentUser: {
       __typename: "User",
       id: 1,
       name: "Test User",
       age: 30,
     },
-  });
+  };
+
+  const data = maskQuery(
+    queryData,
+    query,
+    createFragmentMatcher(new InMemoryCache())
+  );
+
+  expect(data).toBe(queryData);
 });
 
 test("warns when accessing unmasked fields when using `@unmask` directive with mode 'migrate'", () => {

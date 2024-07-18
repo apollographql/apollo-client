@@ -69,12 +69,6 @@ export function maskFragment<TData = unknown>(
       node.kind === Kind.FRAGMENT_DEFINITION
   );
 
-  const context: MaskingContext = {
-    operationType: "fragment",
-    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    matchesFragment,
-  };
-
   if (typeof fragmentName === "undefined") {
     invariant(
       fragments.length === 1,
@@ -93,6 +87,13 @@ export function maskFragment<TData = unknown>(
     `Could not find fragment with name "%s".`,
     fragmentName
   );
+
+  const context: MaskingContext = {
+    operationType: "fragment",
+    operationName: fragment.name.value,
+    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+    matchesFragment,
+  };
 
   const [masked, changed] = maskSelectionSet(
     data,

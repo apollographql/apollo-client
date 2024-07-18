@@ -228,14 +228,14 @@ function addFieldAccessorWarnings(
     });
   }
 
-  selectionSetNode.selections.forEach((selection) => {
+  return selectionSetNode.selections.reduce<any>((memo, selection) => {
     switch (selection.kind) {
       case Kind.FIELD: {
         const keyName = resultKeyNameFromField(selection);
         const childSelectionSet = selection.selectionSet;
 
         if (keyName in memo) {
-          return;
+          return memo;
         }
 
         let value = data[keyName];
@@ -258,7 +258,7 @@ function addFieldAccessorWarnings(
           memo[keyName] = data[keyName];
         }
 
-        return;
+        return memo;
       }
       case Kind.INLINE_FRAGMENT: {
         return addFieldAccessorWarnings(
@@ -285,9 +285,7 @@ function addFieldAccessorWarnings(
             path
           );
 
-          Object.assign(memo, fragmentData);
-
-          return;
+          return Object.assign(memo, fragmentData);
         }
 
         return addFieldAccessorWarnings(
@@ -299,9 +297,7 @@ function addFieldAccessorWarnings(
         );
       }
     }
-  });
-
-  return memo;
+  }, memo);
 }
 
 function addAccessorWarning(

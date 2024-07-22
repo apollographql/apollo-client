@@ -2,6 +2,48 @@
 
 ## 3.11.0
 
+### Potentially Breaking Fixes
+
+- [#11789](https://github.com/apollographql/apollo-client/pull/11789) [`5793301`](https://github.com/apollographql/apollo-client/commit/579330147d6bd6f7167a35413a33746103e375cb) Thanks [@phryneas](https://github.com/phryneas)! - Changes usages of the `GraphQLError` type to `GraphQLFormattedError`.
+
+  This was a type bug - these errors were never `GraphQLError` instances
+  to begin with, and the `GraphQLError` class has additional properties that can
+  never be correctly rehydrated from a GraphQL result.
+  The correct type to use here is `GraphQLFormattedError`.
+
+  Similarly, please ensure to use the type `FormattedExecutionResult`
+  instead of `ExecutionResult` - the non-"Formatted" versions of these types
+  are for use on the server only, but don't get transported over the network.
+
+- [#11626](https://github.com/apollographql/apollo-client/pull/11626) [`228429a`](https://github.com/apollographql/apollo-client/commit/228429a1d36eae691473b24fb641ec3cd84c8a3d) Thanks [@phryneas](https://github.com/phryneas)! - Call `nextFetchPolicy` with "variables-changed" even if there is a `fetchPolicy` specified.
+
+  Previously this would only be called when the current `fetchPolicy` was equal to the `fetchPolicy` option or the option was not specified. If you use `nextFetchPolicy` as a function, expect to see this function called more often.
+
+  Due to this bug, this also meant that the `fetchPolicy` might be reset to the initial `fetchPolicy`, even when you specified a `nextFetchPolicy` function. If you previously relied on this behavior, you will need to update your `nextFetchPolicy` callback function to implement this resetting behavior.
+
+  As an example, if your code looked like the following:
+
+  ```js
+  useQuery(QUERY, {
+    nextFetchPolicy(currentFetchPolicy, info) {
+      // your logic here
+    }
+  );
+  ```
+
+  Update your function to the following to reimplement the resetting behavior:
+
+  ```js
+  useQuery(QUERY, {
+    nextFetchPolicy(currentFetchPolicy, info) {
+      if (info.reason === 'variables-changed') {
+        return info.initialFetchPolicy;
+      }
+      // your logic here
+    }
+  );
+  ```
+
 ### Minor Changes
 
 - [#11923](https://github.com/apollographql/apollo-client/pull/11923) [`d88c7f8`](https://github.com/apollographql/apollo-client/commit/d88c7f8909e3cb31532e8b1fc7dd06be12f35591) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `subscribeToMore` function to `useQueryRefHandlers`.
@@ -29,17 +71,6 @@
 
 - [#11923](https://github.com/apollographql/apollo-client/pull/11923) [`d88c7f8`](https://github.com/apollographql/apollo-client/commit/d88c7f8909e3cb31532e8b1fc7dd06be12f35591) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Add support for `subscribeToMore` function to `useBackgroundQuery`.
 
-- [#11789](https://github.com/apollographql/apollo-client/pull/11789) [`5793301`](https://github.com/apollographql/apollo-client/commit/579330147d6bd6f7167a35413a33746103e375cb) Thanks [@phryneas](https://github.com/phryneas)! - Changes usages of the `GraphQLError` type to `GraphQLFormattedError`.
-
-  This was a type bug - these errors were never `GraphQLError` instances
-  to begin with, and the `GraphQLError` class has additional properties that can
-  never be correctly rehydrated from a GraphQL result.
-  The correct type to use here is `GraphQLFormattedError`.
-
-  Similarly, please ensure to use the type `FormattedExecutionResult`
-  instead of `ExecutionResult` - the non-"Formatted" versions of these types
-  are for use on the server only, but don't get transported over the network.
-
 - [#11930](https://github.com/apollographql/apollo-client/pull/11930) [`a768575`](https://github.com/apollographql/apollo-client/commit/a768575ac1454587208aad63abc811b6a966fe72) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deprecates experimental schema testing utilities introduced in 3.10 in favor of recommending [`@apollo/graphql-testing-library`](https://github.com/apollographql/graphql-testing-library).
 
 ### Patch Changes
@@ -63,8 +94,6 @@
 - [#11944](https://github.com/apollographql/apollo-client/pull/11944) [`8f3d7eb`](https://github.com/apollographql/apollo-client/commit/8f3d7eb3bc2e0c2d79c5b1856655abe829390742) Thanks [@sneyderdev](https://github.com/sneyderdev)! - Allow `IgnoreModifier` to be returned from a `optimisticResponse` function when inferring from a `TypedDocumentNode` when used with a generic argument.
 
 - [#11954](https://github.com/apollographql/apollo-client/pull/11954) [`4a6e86a`](https://github.com/apollographql/apollo-client/commit/4a6e86aeaf6685abf0dd23110784848c8b085735) Thanks [@phryneas](https://github.com/phryneas)! - Document (and deprecate) the previously undocumented `errors` property on the `useQuery` `QueryResult` type.
-
-- [#11626](https://github.com/apollographql/apollo-client/pull/11626) [`228429a`](https://github.com/apollographql/apollo-client/commit/228429a1d36eae691473b24fb641ec3cd84c8a3d) Thanks [@phryneas](https://github.com/phryneas)! - Call `nextFetchPolicy` with "variables-changed" even if there is a `fetchPolicy` specified. (fixes #11365)
 
 - [#11719](https://github.com/apollographql/apollo-client/pull/11719) [`09a6677`](https://github.com/apollographql/apollo-client/commit/09a6677ec1a0cffedeecb2cbac5cd3a3c8aa0fa1) Thanks [@phryneas](https://github.com/phryneas)! - Allow wrapping `createQueryPreloader`
 

@@ -1,53 +1,53 @@
 // externals
+import { DocumentNode, GraphQLError } from "graphql";
+import gql from "graphql-tag";
+import { assign } from "lodash";
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
-import { assign } from "lodash";
-import gql from "graphql-tag";
-import { DocumentNode, GraphQLError } from "graphql";
 import { setVerbosity } from "ts-invariant";
 
-import {
-  Observable,
-  Observer,
-} from "../../../utilities/observables/Observable";
-import { ApolloLink, GraphQLRequest, FetchResult } from "../../../link/core";
 import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
 import {
   ApolloReducerConfig,
   NormalizedCacheObject,
 } from "../../../cache/inmemory/types";
+import { ApolloLink, FetchResult, GraphQLRequest } from "../../../link/core";
+import {
+  Observable,
+  Observer,
+} from "../../../utilities/observables/Observable";
 
 // mocks
-import mockQueryManager from "../../../testing/core/mocking/mockQueryManager";
-import mockWatchQuery from "../../../testing/core/mocking/mockWatchQuery";
 import {
   MockApolloLink,
   mockSingleLink,
 } from "../../../testing/core/mocking/mockLink";
+import mockQueryManager from "../../../testing/core/mocking/mockQueryManager";
+import mockWatchQuery from "../../../testing/core/mocking/mockWatchQuery";
 
 // core
-import { ApolloQueryResult } from "../../types";
-import { NetworkStatus } from "../../networkStatus";
 import { ObservableQuery } from "../../ObservableQuery";
+import { QueryManager } from "../../QueryManager";
+import { NetworkStatus } from "../../networkStatus";
+import { ApolloQueryResult } from "../../types";
 import {
   MutationBaseOptions,
   MutationOptions,
   WatchQueryOptions,
 } from "../../watchQueryOptions";
-import { QueryManager } from "../../QueryManager";
 
 import { ApolloError } from "../../../errors";
 
 // testing utils
 import { waitFor } from "@testing-library/react";
-import wrap from "../../../testing/core/wrap";
+import { ApolloClient } from "../../../core";
+import { itAsync, subscribeAndCount } from "../../../testing/core";
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from "../../../testing/core/observableToPromise";
-import { itAsync, subscribeAndCount } from "../../../testing/core";
-import { ApolloClient } from "../../../core";
-import { mockFetchQuery } from "../ObservableQuery";
+import wrap from "../../../testing/core/wrap";
 import { Concast, print } from "../../../utilities";
+import { mockFetchQuery } from "../ObservableQuery";
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -4877,6 +4877,44 @@ describe("QueryManager", () => {
           error: (error) => reject(error),
         });
     });
+
+    itAsync(
+      "will not update inactive query on `resetStore`",
+      (resolve, reject) => {
+        const testQuery = gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const link = new (class extends ApolloLink {
+          public request() {
+            reject(new Error("Query was not supposed to be called"));
+            return null;
+          }
+        })();
+
+        const queryManager = new QueryManager({
+          link,
+          cache: new InMemoryCache({ addTypename: false }),
+        });
+        const oq = queryManager.watchQuery({
+          query: testQuery,
+          fetchPolicy: "cache-and-network",
+        });
+        // Recreate state where an observable query is dirty but has no observers in the query manager
+        // @ts-expect-error -- Accessing private field for testing
+        oq.queryInfo.dirty = true;
+
+        resetStore(queryManager).then((q) => {
+          expect(q).toHaveLength(0);
+          expect(oq.hasObservers()).toBe(false);
+          resolve();
+        });
+      }
+    );
 
     itAsync(
       "will be true when partial data may be returned",

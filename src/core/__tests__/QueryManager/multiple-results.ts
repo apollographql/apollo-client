@@ -8,6 +8,7 @@ import { itAsync, MockSubscriptionLink } from "../../../testing/core";
 // core
 import { QueryManager } from "../../QueryManager";
 import { GraphQLError } from "graphql";
+import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 
 describe("mutiple results", () => {
   itAsync("allows multiple query results from link", (resolve, reject) => {
@@ -37,10 +38,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager({
-      cache: new InMemoryCache({ addTypename: false }),
-      link,
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      })
+    );
 
     const observable = queryManager.watchQuery<any>({
       query,
@@ -96,10 +99,12 @@ describe("mutiple results", () => {
         },
       };
       const link = new MockSubscriptionLink();
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -166,10 +171,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager({
-      cache: new InMemoryCache({ addTypename: false }),
-      link,
-    });
+    const queryManager = new QueryManager(
+      getDefaultOptionsForQueryManagerTests({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      })
+    );
 
     const observable = queryManager.watchQuery<any>({
       query,
@@ -242,10 +249,12 @@ describe("mutiple results", () => {
         },
       };
       const link = new MockSubscriptionLink();
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,
@@ -313,10 +322,12 @@ describe("mutiple results", () => {
       };
 
       const link = new MockSubscriptionLink();
-      const queryManager = new QueryManager({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      });
+      const queryManager = new QueryManager(
+        getDefaultOptionsForQueryManagerTests({
+          cache: new InMemoryCache({ addTypename: false }),
+          link,
+        })
+      );
 
       const observable = queryManager.watchQuery<any>({
         query,

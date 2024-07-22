@@ -8,18 +8,42 @@ Object {
 `;
 
 exports[`General use should error if the query in the mock and component do not match 1`] = `
-[ApolloError: No more mocked responses for the query: query GetUser($username: String!) {
+ApolloError {
+  "cause": [Error: No more mocked responses for the query: query GetUser($username: String!) {
   user(username: $username) {
     id
     __typename
   }
 }
 Expected variables: {"username":"mock_username"}
-]
+],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {\\"username\\":\\"mock_username\\"}
+",
+  "name": "ApolloError",
+  "networkError": [Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+],
+  "protocolErrors": Array [],
+}
 `;
 
 exports[`General use should error if the variableMatcher returns false 1`] = `
-[ApolloError: No more mocked responses for the query: query GetUser($username: String!) {
+ApolloError {
+  "cause": [Error: No more mocked responses for the query: query GetUser($username: String!) {
   user(username: $username) {
     id
     __typename
@@ -29,11 +53,40 @@ Expected variables: {"username":"mock_username"}
 
 Failed to match 1 mock for this query. The mocked response had the following variables:
   {}
-]
+],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {\\"username\\":\\"mock_username\\"}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {}
+",
+  "name": "ApolloError",
+  "networkError": [Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"mock_username"}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {}
+],
+  "protocolErrors": Array [],
+}
 `;
 
 exports[`General use should error if the variables do not deep equal 1`] = `
-[ApolloError: No more mocked responses for the query: query GetUser($username: String!) {
+ApolloError {
+  "cause": [Error: No more mocked responses for the query: query GetUser($username: String!) {
   user(username: $username) {
     id
     __typename
@@ -43,11 +96,40 @@ Expected variables: {"username":"some_user","age":42}
 
 Failed to match 1 mock for this query. The mocked response had the following variables:
   {"age":13,"username":"some_user"}
-]
+],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {\\"username\\":\\"some_user\\",\\"age\\":42}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {\\"age\\":13,\\"username\\":\\"some_user\\"}
+",
+  "name": "ApolloError",
+  "networkError": [Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"some_user","age":42}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {"age":13,"username":"some_user"}
+],
+  "protocolErrors": Array [],
+}
 `;
 
 exports[`General use should error if the variables in the mock and component do not match 1`] = `
-[ApolloError: No more mocked responses for the query: query GetUser($username: String!) {
+ApolloError {
+  "cause": [Error: No more mocked responses for the query: query GetUser($username: String!) {
   user(username: $username) {
     id
     __typename
@@ -57,7 +139,35 @@ Expected variables: {"username":"other_user","age":<undefined>}
 
 Failed to match 1 mock for this query. The mocked response had the following variables:
   {"username":"mock_username"}
-]
+],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {\\"username\\":\\"other_user\\",\\"age\\":<undefined>}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {\\"username\\":\\"mock_username\\"}
+",
+  "name": "ApolloError",
+  "networkError": [Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {"username":"other_user","age":<undefined>}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {"username":"mock_username"}
+],
+  "protocolErrors": Array [],
+}
 `;
 
 exports[`General use should mock the data 1`] = `
@@ -76,19 +186,64 @@ Object {
 }
 `;
 
-exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 1`] = `[ApolloError: oh no!]`;
+exports[`General use should pipe exceptions thrown in custom onError functions through the link chain 1`] = `
+ApolloError {
+  "cause": [Error: oh no!],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "oh no!",
+  "name": "ApolloError",
+  "networkError": [Error: oh no!],
+  "protocolErrors": Array [],
+}
+`;
 
-exports[`General use should return "Mocked response should contain" errors in response 1`] = `[ApolloError: Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}"}]`;
+exports[`General use should return "Mocked response should contain" errors in response 1`] = `
+ApolloError {
+  "cause": [Error: Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}"}],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: {\\"query\\":\\"query GetUser($username: String!) {\\\\n  user(username: $username) {\\\\n    id\\\\n    __typename\\\\n  }\\\\n}\\"}",
+  "name": "ApolloError",
+  "networkError": [Error: Mocked response should contain either \`result\`, \`error\` or a \`delay\` of \`Infinity\`: {"query":"query GetUser($username: String!) {\\n  user(username: $username) {\\n    id\\n    __typename\\n  }\\n}"}],
+  "protocolErrors": Array [],
+}
+`;
 
 exports[`General use should return "No more mocked responses" errors in response 1`] = `
-[ApolloError: No more mocked responses for the query: query GetUser($username: String!) {
+ApolloError {
+  "cause": [Error: No more mocked responses for the query: query GetUser($username: String!) {
   user(username: $username) {
     id
     __typename
   }
 }
 Expected variables: {}
-]
+],
+  "clientErrors": Array [],
+  "extraInfo": undefined,
+  "graphQLErrors": Array [],
+  "message": "No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {}
+",
+  "name": "ApolloError",
+  "networkError": [Error: No more mocked responses for the query: query GetUser($username: String!) {
+  user(username: $username) {
+    id
+    __typename
+  }
+}
+Expected variables: {}
+],
+  "protocolErrors": Array [],
+}
 `;
 
 exports[`General use should support custom error handling using setOnError 1`] = `

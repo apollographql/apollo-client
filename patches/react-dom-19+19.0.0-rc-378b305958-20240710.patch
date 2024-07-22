@@ -1,0 +1,88 @@
+diff --git a/node_modules/react-dom-19/cjs/react-dom-client.development.js b/node_modules/react-dom-19/cjs/react-dom-client.development.js
+index f9ae214..c29f983 100644
+--- a/node_modules/react-dom-19/cjs/react-dom-client.development.js
++++ b/node_modules/react-dom-19/cjs/react-dom-client.development.js
+@@ -14401,7 +14401,7 @@
+                   (lanes & RetryLanes) === lanes &&
+                   ((didTimeout =
+                     globalMostRecentFallbackTime +
+-                    FALLBACK_THROTTLE_MS -
++                    (globalThis.REACT_FALLBACK_THROTTLE_MS || FALLBACK_THROTTLE_MS) -
+                     now$1()),
+                   10 < didTimeout)
+                 ) {
+@@ -15599,7 +15599,7 @@
+         (workInProgressRootExitStatus === RootSuspended &&
+           (workInProgressRootRenderLanes & RetryLanes) ===
+             workInProgressRootRenderLanes &&
+-          now$1() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
++          now$1() - globalMostRecentFallbackTime < (globalThis.REACT_FALLBACK_THROTTLE_MS || FALLBACK_THROTTLE_MS))
+           ? (executionContext & RenderContext) === NoContext &&
+             prepareFreshStack(root, 0)
+           : (workInProgressRootPingedLanes |= pingedLanes));
+diff --git a/node_modules/react-dom-19/cjs/react-dom-client.production.js b/node_modules/react-dom-19/cjs/react-dom-client.production.js
+index b93642c..66bb184 100644
+--- a/node_modules/react-dom-19/cjs/react-dom-client.production.js
++++ b/node_modules/react-dom-19/cjs/react-dom-client.production.js
+@@ -10071,7 +10071,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
+           }
+           if (
+             (lanes & 62914560) === lanes &&
+-            ((didTimeout = globalMostRecentFallbackTime + 300 - now()),
++            ((didTimeout = globalMostRecentFallbackTime + (globalThis.REACT_FALLBACK_THROTTLE_MS || 300) - now()),
+             10 < didTimeout)
+           ) {
+             markRootSuspended(
+@@ -10936,7 +10936,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
+     (3 === workInProgressRootExitStatus &&
+       (workInProgressRootRenderLanes & 62914560) ===
+         workInProgressRootRenderLanes &&
+-      300 > now() - globalMostRecentFallbackTime)
++        (globalThis.REACT_FALLBACK_THROTTLE_MS || 300) > now() - globalMostRecentFallbackTime)
+       ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
+       : (workInProgressRootPingedLanes |= pingedLanes));
+   ensureRootIsScheduled(root);
+diff --git a/node_modules/react-dom-19/cjs/react-dom-profiling.development.js b/node_modules/react-dom-19/cjs/react-dom-profiling.development.js
+index 9e4fe6a..a4bd41e 100644
+--- a/node_modules/react-dom-19/cjs/react-dom-profiling.development.js
++++ b/node_modules/react-dom-19/cjs/react-dom-profiling.development.js
+@@ -14409,7 +14409,7 @@
+                   (lanes & RetryLanes) === lanes &&
+                   ((didTimeout =
+                     globalMostRecentFallbackTime +
+-                    FALLBACK_THROTTLE_MS -
++                    (globalThis.REACT_FALLBACK_THROTTLE_MS || FALLBACK_THROTTLE_MS) -
+                     now$1()),
+                   10 < didTimeout)
+                 ) {
+@@ -15611,7 +15611,7 @@
+         (workInProgressRootExitStatus === RootSuspended &&
+           (workInProgressRootRenderLanes & RetryLanes) ===
+             workInProgressRootRenderLanes &&
+-          now$1() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
++          now$1() - globalMostRecentFallbackTime < (globalThis.REACT_FALLBACK_THROTTLE_MS || FALLBACK_THROTTLE_MS))
+           ? (executionContext & RenderContext) === NoContext &&
+             prepareFreshStack(root, 0)
+           : (workInProgressRootPingedLanes |= pingedLanes));
+diff --git a/node_modules/react-dom-19/cjs/react-dom-profiling.profiling.js b/node_modules/react-dom-19/cjs/react-dom-profiling.profiling.js
+index 683c9d9..000bb78 100644
+--- a/node_modules/react-dom-19/cjs/react-dom-profiling.profiling.js
++++ b/node_modules/react-dom-19/cjs/react-dom-profiling.profiling.js
+@@ -10600,7 +10600,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
+           }
+           if (
+             (lanes & 62914560) === lanes &&
+-            ((didTimeout = globalMostRecentFallbackTime + 300 - now$1()),
++            ((didTimeout = globalMostRecentFallbackTime + (globalThis.REACT_FALLBACK_THROTTLE_MS || 300) - now$1()),
+             10 < didTimeout)
+           ) {
+             markRootSuspended(
+@@ -11621,7 +11621,7 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
+     (3 === workInProgressRootExitStatus &&
+       (workInProgressRootRenderLanes & 62914560) ===
+         workInProgressRootRenderLanes &&
+-      300 > now$1() - globalMostRecentFallbackTime)
++        (globalThis.REACT_FALLBACK_THROTTLE_MS || 300) > now$1() - globalMostRecentFallbackTime)
+       ? 0 === (executionContext & 2) && prepareFreshStack(root, 0)
+       : (workInProgressRootPingedLanes |= pingedLanes));
+   ensureRootIsScheduled(root);

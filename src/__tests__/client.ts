@@ -1,11 +1,11 @@
 import { cloneDeep, assign } from "lodash";
 import {
   GraphQLError,
-  ExecutionResult,
   DocumentNode,
   Kind,
   print,
   visit,
+  FormattedExecutionResult,
 } from "graphql";
 import gql from "graphql-tag";
 
@@ -752,7 +752,7 @@ describe("client", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client.query({ query }).then((result: ExecutionResult) => {
+    return client.query({ query }).then((result: FormattedExecutionResult) => {
       expect(result.data).toEqual(data);
     });
   });
@@ -2855,7 +2855,7 @@ describe("client", () => {
 
           const lastError = observable.getLastError();
           expect(lastError).toBeInstanceOf(ApolloError);
-          expect(lastError!.networkError).toEqual(error);
+          expect(lastError!.networkError).toEqual((error as any).networkError);
 
           const lastResult = observable.getLastResult();
           expect(lastResult).toBeTruthy();
@@ -6411,7 +6411,7 @@ function clientRoundtrip(
   resolve: (result: any) => any,
   reject: (reason: any) => any,
   query: DocumentNode,
-  data: ExecutionResult,
+  data: FormattedExecutionResult,
   variables?: any,
   possibleTypes?: PossibleTypesMap
 ) {

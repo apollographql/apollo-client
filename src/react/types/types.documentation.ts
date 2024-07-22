@@ -532,6 +532,12 @@ export interface SubscriptionOptionsDocumentation {
   shouldResubscribe: unknown;
 
   /**
+   * If `true`, the hook will not cause the component to rerender. This is useful when you want to control the rendering of your component yourself with logic in the `onData` and `onError` callbacks.
+   *
+   * Changing this to `true` when the hook already has `data` will reset the `data` to `undefined`.
+   */
+  ignoreResults: unknown;
+  /**
    * An `ApolloClient` instance. By default `useSubscription` / `Subscription` uses the client passed down via context, but a different client can be passed in.
    */
   client: unknown;
@@ -545,6 +551,11 @@ export interface SubscriptionOptionsDocumentation {
    * Shared context between your component and your network interface (Apollo Link).
    */
   context: unknown;
+
+  /**
+   * Shared context between your component and your network interface (Apollo Link).
+   */
+  extensions: unknown;
 
   /**
    * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component completes the subscription.

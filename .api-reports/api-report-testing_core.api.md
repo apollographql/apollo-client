@@ -6,11 +6,11 @@
 
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
-import type { ExecutionResult } from 'graphql';
 import type { FieldNode } from 'graphql';
+import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
-import type { GraphQLError } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
+import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 import type { Subscriber } from 'zen-observable-ts';
@@ -100,7 +100,7 @@ class ApolloClient<TCacheShape> implements DataProxy {
     // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    __requestRaw(payload: GraphQLRequest): Observable<ExecutionResult>;
+    __requestRaw(payload: GraphQLRequest): Observable<FormattedExecutionResult>;
     // Warning: (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
     addResolvers(resolvers: Resolvers | Resolvers[]): void;
     // Warning: (ae-forgotten-export) The symbol "ApolloCache" needs to be exported by the entry point index.d.ts
@@ -112,6 +112,10 @@ class ApolloClient<TCacheShape> implements DataProxy {
     get defaultContext(): Partial<DefaultContext>;
     // (undocumented)
     defaultOptions: DefaultOptions;
+    // Warning: (ae-forgotten-export) The symbol "DevtoolsOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly devtoolsConfig: DevtoolsOptions;
     // (undocumented)
     disableNetworkFetches: boolean;
     // Warning: (ae-forgotten-export) The symbol "DocumentTransform" needs to be exported by the entry point index.d.ts
@@ -170,12 +174,14 @@ class ApolloClient<TCacheShape> implements DataProxy {
 interface ApolloClientOptions<TCacheShape> {
     assumeImmutableResults?: boolean;
     cache: ApolloCache<TCacheShape>;
+    // @deprecated
     connectToDevTools?: boolean;
     // (undocumented)
     credentials?: string;
     // (undocumented)
     defaultContext?: Partial<DefaultContext>;
     defaultOptions?: DefaultOptions;
+    devtools?: DevtoolsOptions;
     // (undocumented)
     documentTransform?: DocumentTransform;
     // (undocumented)
@@ -199,14 +205,16 @@ interface ApolloClientOptions<TCacheShape> {
 class ApolloError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
     constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
+    cause: ({
+        readonly message: string;
+        extensions?: GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
+    } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">) | null;
     // (undocumented)
     clientErrors: ReadonlyArray<Error>;
     // (undocumented)
     extraInfo: any;
-    // Warning: (ae-forgotten-export) The symbol "GraphQLErrors" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    graphQLErrors: GraphQLErrors;
+    graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     message: string;
     // (undocumented)
@@ -232,7 +240,7 @@ interface ApolloErrorOptions {
     // (undocumented)
     extraInfo?: any;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
@@ -285,7 +293,7 @@ interface ApolloQueryResult<T> {
     data: T;
     // Warning: (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
     error?: ApolloError;
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     loading: boolean;
     // Warning: (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
@@ -584,6 +592,12 @@ interface DeleteModifier {
 const _deleteModifier: unique symbol;
 
 // @public (undocumented)
+interface DevtoolsOptions {
+    enabled?: boolean;
+    name?: string;
+}
+
+// @public (undocumented)
 class DocumentTransform {
     // Warning: (ae-forgotten-export) The symbol "TransformFn" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "DocumentTransformOptions" needs to be exported by the entry point index.d.ts
@@ -640,7 +654,7 @@ interface ExecutionPatchInitialResult<TData = Record<string, any>, TExtensions =
     // (undocumented)
     data: TData | null | undefined;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -742,9 +756,6 @@ const getApolloClientMemoryInternals: (() => {
 }) | undefined;
 
 // @public (undocumented)
-type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
-// @public (undocumented)
 interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     context?: DefaultContext;
@@ -772,7 +783,7 @@ interface IncrementalPayload<TData, TExtensions> {
     // (undocumented)
     data: TData | null;
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLError>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     extensions?: TExtensions;
     // (undocumented)
@@ -1028,9 +1039,10 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     errorPolicy?: ErrorPolicy;
     // Warning: (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
     onQueryUpdated?: OnQueryUpdated<any>;
+    // Warning: (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
     optimisticResponse?: TData | ((vars: TVariables, { IGNORE }: {
         IGNORE: IgnoreModifier;
-    }) => TData);
+    }) => TData | IgnoreModifier);
     refetchQueries?: ((result: FetchResult<TData>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     // Warning: (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
     update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
@@ -1236,7 +1248,7 @@ class QueryInfo {
     // (undocumented)
     getDiff(): Cache_2.DiffResult<any>;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLError>;
+    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     init(query: {
         document: DocumentNode;
@@ -1292,19 +1304,8 @@ type QueryListener = (queryInfo: QueryInfo) => void;
 
 // @public (undocumented)
 class QueryManager<TStore> {
-    constructor({ cache, link, defaultOptions, documentTransform, queryDeduplication, onBroadcast, ssrMode, clientAwareness, localState, assumeImmutableResults, defaultContext, }: {
-        cache: ApolloCache<TStore>;
-        link: ApolloLink;
-        defaultOptions?: DefaultOptions;
-        documentTransform?: DocumentTransform;
-        queryDeduplication?: boolean;
-        onBroadcast?: () => void;
-        ssrMode?: boolean;
-        clientAwareness?: Record<string, string>;
-        localState?: LocalState<TStore>;
-        assumeImmutableResults?: boolean;
-        defaultContext?: Partial<DefaultContext>;
-    });
+    // Warning: (ae-forgotten-export) The symbol "QueryManagerOptions" needs to be exported by the entry point index.d.ts
+    constructor(options: QueryManagerOptions<TStore>);
     // (undocumented)
     readonly assumeImmutableResults: boolean;
     // (undocumented)
@@ -1335,6 +1336,8 @@ class QueryManager<TStore> {
     //
     // (undocumented)
     getDocumentInfo(document: DocumentNode): TransformCacheEntry;
+    // Warning: (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     getLocalState(): LocalState<TStore>;
     // (undocumented)
@@ -1402,7 +1405,7 @@ class QueryManager<TStore> {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<T = any>({ query, fetchPolicy, errorPolicy, variables, context, }: SubscriptionOptions): Observable<FetchResult<T>>;
+    startGraphQLSubscription<T = any>({ query, fetchPolicy, errorPolicy, variables, context, extensions, }: SubscriptionOptions): Observable<FetchResult<T>>;
     stop(): void;
     // (undocumented)
     stopQuery(queryId: string): void;
@@ -1412,6 +1415,32 @@ class QueryManager<TStore> {
     transform(document: DocumentNode): DocumentNode;
     // (undocumented)
     watchQuery<T, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;
+}
+
+// @public (undocumented)
+interface QueryManagerOptions<TStore> {
+    // (undocumented)
+    assumeImmutableResults: boolean;
+    // (undocumented)
+    cache: ApolloCache<TStore>;
+    // (undocumented)
+    clientAwareness: Record<string, string>;
+    // (undocumented)
+    defaultContext: Partial<DefaultContext> | undefined;
+    // (undocumented)
+    defaultOptions: DefaultOptions;
+    // (undocumented)
+    documentTransform: DocumentTransform | null | undefined;
+    // (undocumented)
+    link: ApolloLink;
+    // (undocumented)
+    localState: LocalState<TStore>;
+    // (undocumented)
+    onBroadcast: undefined | (() => void);
+    // (undocumented)
+    queryDeduplication: boolean;
+    // (undocumented)
+    ssrMode: boolean;
 }
 
 // @public
@@ -1558,11 +1587,15 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
 }
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> extends ExecutionResult<TData, TExtensions> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
     data?: TData | null;
+    // (undocumented)
+    errors?: ReadonlyArray<GraphQLFormattedError>;
+    // (undocumented)
+    extensions?: TExtensions;
 }
 
 // @public (undocumented)
@@ -1603,6 +1636,7 @@ type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVaria
 interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
+    extensions?: Record<string, any>;
     fetchPolicy?: FetchPolicy;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: TVariables;
@@ -1669,8 +1703,6 @@ export function wait(ms: number): Promise<void>;
 
 // @public
 interface WatchFragmentOptions<TData, TVars> {
-    // @deprecated (undocumented)
-    canonizeResults?: boolean;
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
     fragmentName?: string;
     from: StoreObject | Reference | string;
@@ -1719,13 +1751,11 @@ export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:124:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "LocalState" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:390:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:138:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:382:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:269:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:275:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

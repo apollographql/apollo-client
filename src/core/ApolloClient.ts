@@ -345,29 +345,30 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       if (
         window.document &&
         window.top === window.self &&
-        !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ &&
         /^(https?|file):$/.test(window.location.protocol)
       ) {
         setTimeout(() => {
-          const nav = window.navigator;
-          const ua = nav && nav.userAgent;
-          let url: string | undefined;
-          if (typeof ua === "string") {
-            if (ua.indexOf("Chrome/") > -1) {
-              url =
-                "https://chrome.google.com/webstore/detail/" +
-                "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
-            } else if (ua.indexOf("Firefox/") > -1) {
-              url =
-                "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
+          if (!(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__) {
+            const nav = window.navigator;
+            const ua = nav && nav.userAgent;
+            let url: string | undefined;
+            if (typeof ua === "string") {
+              if (ua.indexOf("Chrome/") > -1) {
+                url =
+                  "https://chrome.google.com/webstore/detail/" +
+                  "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
+              } else if (ua.indexOf("Firefox/") > -1) {
+                url =
+                  "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
+              }
             }
-          }
-          if (url) {
-            invariant.log(
-              "Download the Apollo DevTools for a better development " +
-                "experience: %s",
-              url
-            );
+            if (url) {
+              invariant.log(
+                "Download the Apollo DevTools for a better development " +
+                  "experience: %s",
+                url
+              );
+            }
           }
         }, 10000);
       }

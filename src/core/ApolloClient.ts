@@ -319,21 +319,23 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   private connectToDevTools() {
-    if (typeof window === "object") {
-      type DevToolsConnector = {
-        push(client: ApolloClient<any>): void;
-      };
-      const windowWithDevTools = window as Window & {
-        [devtoolsSymbol]?: DevToolsConnector;
-        __APOLLO_CLIENT__?: ApolloClient<any>;
-      };
-      const devtoolsSymbol = Symbol.for("apollo.devtools");
-      (windowWithDevTools[devtoolsSymbol] =
-        windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
-        this
-      );
-      windowWithDevTools.__APOLLO_CLIENT__ = this;
+    if (typeof window === "undefined") {
+      return;
     }
+
+    type DevToolsConnector = {
+      push(client: ApolloClient<any>): void;
+    };
+    const windowWithDevTools = window as Window & {
+      [devtoolsSymbol]?: DevToolsConnector;
+      __APOLLO_CLIENT__?: ApolloClient<any>;
+    };
+    const devtoolsSymbol = Symbol.for("apollo.devtools");
+    (windowWithDevTools[devtoolsSymbol] =
+      windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
+      this
+    );
+    windowWithDevTools.__APOLLO_CLIENT__ = this;
 
     /**
      * Suggest installing the devtools for developers who don't have them
@@ -342,7 +344,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       hasSuggestedDevtools = true;
       setTimeout(() => {
         if (
-          typeof window !== "undefined" &&
           window.document &&
           window.top === window.self &&
           !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ &&

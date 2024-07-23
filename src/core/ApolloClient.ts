@@ -342,13 +342,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
      */
     if (!hasSuggestedDevtools && __DEV__) {
       hasSuggestedDevtools = true;
-      setTimeout(() => {
-        if (
-          window.document &&
-          window.top === window.self &&
-          !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ &&
-          /^(https?|file):$/.test(window.location.protocol)
-        ) {
+      if (
+        window.document &&
+        window.top === window.self &&
+        !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ &&
+        /^(https?|file):$/.test(window.location.protocol)
+      ) {
+        setTimeout(() => {
           const nav = window.navigator;
           const ua = nav && nav.userAgent;
           let url: string | undefined;
@@ -369,8 +369,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
               url
             );
           }
-        }
-      }, 10000);
+        }, 10000);
+      }
     }
   }
 

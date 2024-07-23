@@ -260,7 +260,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     if (this.devtoolsConfig.enabled === undefined) {
       this.devtoolsConfig.enabled =
         typeof window === "object" &&
-        (window as any).__APOLLO_CLIENT__ &&
+        !(window as any).__APOLLO_CLIENT__ &&
         __DEV__;
     }
 

@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.11.1
+
+### Patch Changes
+
+- [#11969](https://github.com/apollographql/apollo-client/pull/11969) [`061cab6`](https://github.com/apollographql/apollo-client/commit/061cab6627abd4ec81f83c40c1d281c418627c93) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove check for `window.__APOLLO_CLIENT__` when determining whether to connect to Apollo Client Devtools when `connectToDevtools` or `devtools.enabled` is not specified. This now simply checks to see if the application is in development mode.
+
+- [#11971](https://github.com/apollographql/apollo-client/pull/11971) [`ecf77f6`](https://github.com/apollographql/apollo-client/commit/ecf77f6f5b5ccf64cfba51e838e96549fb6c92fe) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent the `setTimeout` for suggesting devtools from running in non-browser environments.
+
 ## 3.11.0
 
 ### Potentially Breaking Fixes

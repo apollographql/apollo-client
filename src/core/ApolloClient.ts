@@ -319,57 +319,59 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   }
 
   private connectToDevTools() {
-    if (typeof window === "object") {
-      type DevToolsConnector = {
-        push(client: ApolloClient<any>): void;
-      };
-      const windowWithDevTools = window as Window & {
-        [devtoolsSymbol]?: DevToolsConnector;
-        __APOLLO_CLIENT__?: ApolloClient<any>;
-      };
-      const devtoolsSymbol = Symbol.for("apollo.devtools");
-      (windowWithDevTools[devtoolsSymbol] =
-        windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
-        this
-      );
-      windowWithDevTools.__APOLLO_CLIENT__ = this;
+    if (typeof window === "undefined") {
+      return;
     }
+
+    type DevToolsConnector = {
+      push(client: ApolloClient<any>): void;
+    };
+    const windowWithDevTools = window as Window & {
+      [devtoolsSymbol]?: DevToolsConnector;
+      __APOLLO_CLIENT__?: ApolloClient<any>;
+    };
+    const devtoolsSymbol = Symbol.for("apollo.devtools");
+    (windowWithDevTools[devtoolsSymbol] =
+      windowWithDevTools[devtoolsSymbol] || ([] as DevToolsConnector)).push(
+      this
+    );
+    windowWithDevTools.__APOLLO_CLIENT__ = this;
 
     /**
      * Suggest installing the devtools for developers who don't have them
      */
     if (!hasSuggestedDevtools && __DEV__) {
       hasSuggestedDevtools = true;
-      setTimeout(() => {
-        if (
-          typeof window !== "undefined" &&
-          window.document &&
-          window.top === window.self &&
-          !(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__ &&
-          /^(https?|file):$/.test(window.location.protocol)
-        ) {
-          const nav = window.navigator;
-          const ua = nav && nav.userAgent;
-          let url: string | undefined;
-          if (typeof ua === "string") {
-            if (ua.indexOf("Chrome/") > -1) {
-              url =
-                "https://chrome.google.com/webstore/detail/" +
-                "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
-            } else if (ua.indexOf("Firefox/") > -1) {
-              url =
-                "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
+      if (
+        window.document &&
+        window.top === window.self &&
+        /^(https?|file):$/.test(window.location.protocol)
+      ) {
+        setTimeout(() => {
+          if (!(window as any).__APOLLO_DEVTOOLS_GLOBAL_HOOK__) {
+            const nav = window.navigator;
+            const ua = nav && nav.userAgent;
+            let url: string | undefined;
+            if (typeof ua === "string") {
+              if (ua.indexOf("Chrome/") > -1) {
+                url =
+                  "https://chrome.google.com/webstore/detail/" +
+                  "apollo-client-developer-t/jdkknkkbebbapilgoeccciglkfbmbnfm";
+              } else if (ua.indexOf("Firefox/") > -1) {
+                url =
+                  "https://addons.mozilla.org/en-US/firefox/addon/apollo-developer-tools/";
+              }
+            }
+            if (url) {
+              invariant.log(
+                "Download the Apollo DevTools for a better development " +
+                  "experience: %s",
+                url
+              );
             }
           }
-          if (url) {
-            invariant.log(
-              "Download the Apollo DevTools for a better development " +
-                "experience: %s",
-              url
-            );
-          }
-        }
-      }, 10000);
+        }, 10000);
+      }
     }
   }
 

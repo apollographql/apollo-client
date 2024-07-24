@@ -119,7 +119,7 @@ function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   context: MaskingContext,
-  path: string = ""
+  path?: string | undefined
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -129,7 +129,7 @@ function maskSelectionSet(
         item,
         selectionSet,
         context,
-        `${path}[${index}]`
+        `${path || ""}[${index}]`
       );
       changed ||= itemChanged;
 
@@ -153,7 +153,7 @@ function maskSelectionSet(
               data[keyName],
               childSelectionSet,
               context,
-              `${path}.${keyName}`
+              `${path || ""}.${keyName}`
             );
 
             if (childChanged) {
@@ -202,7 +202,7 @@ function maskSelectionSet(
                   memo,
                   data,
                   fragment.selectionSet,
-                  path,
+                  path || "",
                   context
                 ),
                 true,

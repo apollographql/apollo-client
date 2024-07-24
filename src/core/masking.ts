@@ -29,8 +29,6 @@ interface MaskingContext {
   disableWarnings?: boolean;
 }
 
-type PathSelection = Array<string | number>;
-
 export function maskOperation<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
@@ -121,7 +119,7 @@ function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   context: MaskingContext,
-  path: PathSelection = []
+  path: string = ""
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -131,7 +129,7 @@ function maskSelectionSet(
         item,
         selectionSet,
         context,
-        [...path, index]
+        `${path}[${index}]`
       );
       changed ||= itemChanged;
 
@@ -155,7 +153,7 @@ function maskSelectionSet(
               data[keyName],
               childSelectionSet,
               context,
-              [...path, keyName]
+              `${path}.${keyName}`
             );
 
             if (childChanged) {
@@ -229,7 +227,7 @@ function addFieldAccessorWarnings(
   memo: Record<string, unknown>,
   data: Record<string, unknown>,
   selectionSetNode: SelectionSetNode,
-  path: PathSelection,
+  path: string,
   context: MaskingContext
 ) {
   if (Array.isArray(data)) {
@@ -238,7 +236,7 @@ function addFieldAccessorWarnings(
         memo[index] ?? Object.create(null),
         item,
         selectionSetNode,
-        [...path, index],
+        `${path}[${index}]`,
         context
       );
     });
@@ -261,7 +259,7 @@ function addFieldAccessorWarnings(
             memo[keyName] ?? Object.create(null),
             data[keyName] as Record<string, unknown>,
             childSelectionSet,
-            [...path, keyName],
+            `${path}.${keyName}`,
             context
           );
         }
@@ -320,7 +318,7 @@ function addAccessorWarning(
   data: Record<string, any>,
   value: any,
   fieldName: string,
-  path: PathSelection,
+  path: string,
   context: MaskingContext
 ) {
   let getValue = () => {
@@ -333,7 +331,7 @@ function addAccessorWarning(
       context.operationName ?
         `${context.operationType} '${context.operationName}'`
       : `anonymous ${context.operationType}`,
-      getPathString([...path, fieldName])
+      `${path}.${fieldName}`.replace(/^\./, "")
     );
 
     getValue = () => value;
@@ -351,14 +349,4 @@ function addAccessorWarning(
     enumerable: true,
     configurable: true,
   });
-}
-
-function getPathString(path: PathSelection) {
-  return path.reduce<string>((memo, segment, index) => {
-    if (typeof segment === "number") {
-      return `${memo}[${segment}]`;
-    }
-
-    return index === 0 ? segment : `${memo}.${segment}`;
-  }, "");
 }

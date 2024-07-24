@@ -129,7 +129,7 @@ function maskSelectionSet(
         item,
         selectionSet,
         context,
-        `${path || ""}[${index}]`
+        __DEV__ ? `${path || ""}[${index}]` : void 0
       );
       changed ||= itemChanged;
 
@@ -153,7 +153,7 @@ function maskSelectionSet(
               data[keyName],
               childSelectionSet,
               context,
-              `${path || ""}.${keyName}`
+              __DEV__ ? `${path || ""}.${keyName}` : void 0
             );
 
             if (childChanged) {

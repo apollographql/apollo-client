@@ -146,17 +146,7 @@ function maskSelectionSet(
       switch (selection.kind) {
         case Kind.FIELD: {
           const keyName = resultKeyNameFromField(selection);
-          const descriptor = Object.getOwnPropertyDescriptor(memo, keyName);
           const childSelectionSet = selection.selectionSet;
-
-          // If we've set a descriptor on the object by adding warnings to field
-          // access, overwrite the descriptor because we're adding a field that
-          // is accessible when masked. This avoids the need for us to maintain
-          // which fields are masked/unmasked and avoids dependence on field
-          // order.
-          if (descriptor) {
-            delete memo[keyName];
-          }
 
           memo[keyName] = data[keyName];
 
@@ -333,30 +323,30 @@ function addAccessorWarning(
   path: PathSelection,
   context: MaskingContext
 ) {
-  let currentValue = value;
-  let warned = false;
+  let getValue = () => {
+    if (context.disableWarnings) {
+      return value;
+    }
+
+    invariant.warn(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      context.operationName ?
+        `${context.operationType} '${context.operationName}'`
+      : `anonymous ${context.operationType}`,
+      getPathString([...path, fieldName])
+    );
+
+    getValue = () => value;
+
+    return value;
+  };
 
   Object.defineProperty(data, fieldName, {
     get() {
-      if (context.disableWarnings) {
-        return currentValue;
-      }
-
-      if (!warned) {
-        invariant.warn(
-          "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-          context.operationName ?
-            `${context.operationType} '${context.operationName}'`
-          : `anonymous ${context.operationType}`,
-          getPathString([...path, fieldName])
-        );
-        warned = true;
-      }
-
-      return currentValue;
+      return getValue();
     },
     set(value) {
-      currentValue = value;
+      getValue = () => value;
     },
     enumerable: true,
     configurable: true,

@@ -213,7 +213,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
     const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
-      [{ name: "connection" }, { name: "nonreactive" }],
+      [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
       checkDocument(newMockedResponse.request.query)
     );
     invariant(queryWithoutClientOnlyDirectives, "query is required");

@@ -23,7 +23,7 @@ import type {
 } from "../../core/types.js";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { maskQuery } from "../../core/masking.js";
+import { maskOperation } from "../../core/masking.js";
 import { invariant } from "../../utilities/globals/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
@@ -375,7 +375,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public maskDocument<TData = unknown>(document: DocumentNode, data: TData) {
+  public maskOperation<TData = unknown>(document: DocumentNode, data: TData) {
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(
@@ -386,7 +386,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       return data;
     }
 
-    return maskQuery(data, document, this.fragmentMatches.bind(this));
+    return maskOperation(data, document, this.fragmentMatches.bind(this));
   }
 
   /**

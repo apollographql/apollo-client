@@ -148,7 +148,7 @@ export interface ApolloClientOptions<TCacheShape> {
   /**
    * Determines if data masking is enabled for the client.
    *
-   * @default false
+   * @defaultValue false
    */
   dataMasking?: boolean;
 }

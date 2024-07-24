@@ -195,7 +195,7 @@ function maskSelectionSet(
             return [memo, true];
           }
 
-          if (mode === "unmask") {
+          if (mode === "unmask" || !__DEV__) {
             const [fragmentData, changed] = maskSelectionSet(
               data,
               fragment.selectionSet,

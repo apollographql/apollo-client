@@ -235,7 +235,7 @@ function addFieldAccessorWarnings(
   if (Array.isArray(data)) {
     return data.map((item, index): unknown => {
       return addFieldAccessorWarnings(
-        memo[index] ?? Object.create(null),
+        memo[index] || Object.create(null),
         item,
         selectionSetNode,
         `${path}[${index}]`,
@@ -258,7 +258,7 @@ function addFieldAccessorWarnings(
 
         if (childSelectionSet) {
           value = addFieldAccessorWarnings(
-            memo[keyName] ?? Object.create(null),
+            memo[keyName] || Object.create(null),
             data[keyName] as Record<string, unknown>,
             childSelectionSet,
             `${path}.${keyName}`,

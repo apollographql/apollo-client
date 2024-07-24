@@ -11,8 +11,9 @@ import type {
   ArgumentNode,
   ValueNode,
   ASTNode,
+  FragmentSpreadNode,
 } from "graphql";
-import { visit, BREAK } from "graphql";
+import { visit, BREAK, Kind } from "graphql";
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };
@@ -132,4 +133,46 @@ export function getInclusionDirectives(
   }
 
   return result;
+}
+
+/** @internal */
+export function getFragmentMaskMode(
+  fragment: FragmentSpreadNode
+): "mask" | "migrate" | "unmask" {
+  const directive = fragment.directives?.find(
+    ({ name }) => name.value === "unmask"
+  );
+
+  if (!directive) {
+    return "mask";
+  }
+
+  const modeArg = directive.arguments?.find(
+    ({ name }) => name.value === "mode"
+  );
+
+  if (__DEV__) {
+    if (modeArg) {
+      if (modeArg.value.kind === Kind.VARIABLE) {
+        invariant.warn("@unmask 'mode' argument does not support variables.");
+      } else if (modeArg.value.kind !== Kind.STRING) {
+        invariant.warn("@unmask 'mode' argument must be of type string.");
+      } else if (modeArg.value.value !== "migrate") {
+        invariant.warn(
+          "@unmask 'mode' argument does not recognize value '%s'.",
+          modeArg.value.value
+        );
+      }
+    }
+  }
+
+  if (
+    modeArg &&
+    "value" in modeArg.value &&
+    modeArg.value.value === "migrate"
+  ) {
+    return "migrate";
+  }
+
+  return "unmask";
 }

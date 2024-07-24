@@ -6,6 +6,7 @@ import {
   Kind,
   print,
   visit,
+  FragmentSpreadNode,
 } from "graphql";
 import gql from "graphql-tag";
 
@@ -6599,6 +6600,149 @@ describe("data masking", () => {
     }
   });
 
+  it("does not mask fragments marked with @unmask", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+  });
+
+  it("does not mask fragments marked with @unmask added by document transforms", async () => {
+    const documentTransform = new DocumentTransform((document) => {
+      return visit(document, {
+        FragmentSpread(node) {
+          return {
+            ...node,
+            directives: [
+              {
+                kind: Kind.DIRECTIVE,
+                name: { kind: Kind.NAME, value: "unmask" },
+              },
+            ],
+          } satisfies FragmentSpreadNode;
+        },
+      });
+    });
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+      documentTransform,
+    });
+
+    const observable = client.watchQuery({ query });
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+  });
+
   it("does not mask query when using a cache that does not support it", async () => {
     using _ = spyOnConsole("warn");
 
@@ -7252,6 +7396,82 @@ describe("data masking", () => {
       }
     }
   );
+
+  it("warns when accessing a unmasked field while using @unmask with mode: 'migrate'", async () => {
+    using consoleSpy = spyOnConsole("warn");
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask(mode: "migrate")
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        name
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 34,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+      data.currentUser.__typename;
+      data.currentUser.id;
+      data.currentUser.name;
+
+      expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+      data.currentUser.age;
+
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+        "query 'UnmaskedQuery'",
+        "currentUser.age"
+      );
+
+      // Ensure we only warn once
+      data.currentUser.age;
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    }
+  });
 });
 
 function clientRoundtrip(

@@ -66,7 +66,7 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
-    maskDocument<TData = unknown>(document: DocumentNode, data: TData): TData;
+    maskOperation<TData = unknown>(document: DocumentNode, data: TData): TData;
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // Warning: (ae-forgotten-export) The symbol "Transaction" needs to be exported by the entry point index.d.ts
@@ -1150,6 +1150,9 @@ export function getFragmentDefinitions(doc: DocumentNode): FragmentDefinitionNod
 
 // @public (undocumented)
 export function getFragmentFromSelection(selection: SelectionNode, fragmentMap?: FragmentMap | FragmentMapFunction): InlineFragmentNode | FragmentDefinitionNode | null;
+
+// @internal (undocumented)
+export function getFragmentMaskMode(fragment: FragmentSpreadNode): "mask" | "migrate" | "unmask";
 
 // @public
 export function getFragmentQueryDocument(document: DocumentNode, fragmentName?: string): DocumentNode;

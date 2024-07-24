@@ -57,7 +57,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
-    maskDocument<TData = unknown>(document: DocumentNode, data: TData): TData;
+    maskOperation<TData = unknown>(document: DocumentNode, data: TData): TData;
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // (undocumented)

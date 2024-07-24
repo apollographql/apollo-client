@@ -185,7 +185,7 @@ describe("abstract cache", () => {
       };
       const cache = new TestCache();
 
-      const result = cache.maskDocument(query, data);
+      const result = cache.maskOperation(query, data);
 
       expect(result).toBe(data);
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
@@ -223,7 +223,7 @@ describe("abstract cache", () => {
         user: { __typename: "User", id: 1, name: "Mister Masked" },
       };
 
-      const result = cache.maskDocument(query, data);
+      const result = cache.maskOperation(query, data);
 
       expect(result).toEqual({
         user: { __typename: "User", id: 1 },

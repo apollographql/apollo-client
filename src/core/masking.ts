@@ -195,27 +195,29 @@ function maskSelectionSet(
             return [memo, true];
           }
 
-          if (mode === "unmask" || !__DEV__) {
-            const [fragmentData, changed] = maskSelectionSet(
-              data,
-              fragment.selectionSet,
-              context,
-              path
-            );
-
-            return [{ ...memo, ...fragmentData }, changed];
+          if (__DEV__) {
+            if (mode === "migrate") {
+              return [
+                addFieldAccessorWarnings(
+                  memo,
+                  data,
+                  fragment.selectionSet,
+                  path,
+                  context
+                ),
+                true,
+              ];
+            }
           }
 
-          return [
-            addFieldAccessorWarnings(
-              memo,
-              data,
-              fragment.selectionSet,
-              path,
-              context
-            ),
-            true,
-          ];
+          const [fragmentData, changed] = maskSelectionSet(
+            data,
+            fragment.selectionSet,
+            context,
+            path
+          );
+
+          return [{ ...memo, ...fragmentData }, changed];
         }
       }
     },

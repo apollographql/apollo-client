@@ -33,6 +33,7 @@ import {
   createProfiler,
   disableActWarnings,
   profileHook,
+  setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
@@ -4047,6 +4048,73 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
+    });
+
+    // https://github.com/apollographql/apollo-client/issues/11965
+    it("should only execute single network request when calling fetchMore with no-cache fetch policy", async () => {
+      let fetches: Array<{ variables: Record<string, unknown> }> = [];
+      const { query, data } = setupPaginatedCase();
+
+      const link = new ApolloLink((operation) => {
+        fetches.push({ variables: operation.variables });
+
+        const { offset = 0, limit = 2 } = operation.variables;
+        const letters = data.slice(offset, offset + limit);
+
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.next({ data: { letters } });
+            observer.complete();
+          }, 10);
+        });
+      });
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(true);
+      }
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toStrictEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+          ],
+        });
+      }
+
+      expect(fetches).toStrictEqual([{ variables: { limit: 2 } }]);
+
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      const result = await fetchMore({ variables: { offset: 2 } });
+
+      expect(result.data).toStrictEqual({
+        letters: [
+          { __typename: "Letter", letter: "C", position: 3 },
+          { __typename: "Letter", letter: "D", position: 4 },
+        ],
+      });
+
+      expect(fetches).toStrictEqual([
+        { variables: { limit: 2 } },
+        { variables: { limit: 2, offset: 2 } },
+      ]);
     });
 
     it("regression test for issue #8600", async () => {

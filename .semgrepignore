@@ -1,20 +1,13 @@
 # semgrep defaults
 # https://semgrep.dev/docs/ignoring-files-folders-code#defining-ignored-files-and-folders-in-semgrepignore
 node_modules/
-build/
 dist/
-vendor/
-.env/
-.venv/
-.tox/
 *.min.js
 .npm/
 .yarn/
-test/
-tests/
-*_test.go
 .semgrep
 .semgrep_logs/
 
 # custom paths
+__tests__/
 ./docs/source/data/subscriptions.mdx

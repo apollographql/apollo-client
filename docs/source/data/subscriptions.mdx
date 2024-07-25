@@ -57,6 +57,8 @@ To consume a multipart subscription over HTTP in an app using Relay or urql, Apo
 
 ##### Relay
 
+<MultiCodeBlock>
+
 ```ts
 import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/relay";
 import { Environment, Network, RecordSource, Store } from "relay-runtime";
@@ -73,7 +75,11 @@ export const RelayEnvironment = new Environment({
 });
 ```
 
+</MultiCodeBlock>
+
 #### urql
+
+<MultiCodeBlock>
 
 ```ts
 import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/urql";
@@ -95,6 +101,8 @@ const client = new Client({
   ],
 });
 ```
+
+</MultiCodeBlock>
 
 ## Defining a subscription
 

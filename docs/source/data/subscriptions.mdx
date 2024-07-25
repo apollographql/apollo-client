@@ -140,6 +140,17 @@ const COMMENTS_SUBSCRIPTION: TypedDocumentNode<
 `;
 ```
 
+```js
+const COMMENTS_SUBSCRIPTION = gql`
+  subscription OnCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
+      id
+      content
+    }
+  }
+`;
+```
+
 </MultiCodeBlock>
 
 When Apollo Client executes the `OnCommentAdded` subscription, it establishes a connection to your GraphQL server and listens for response data. Unlike with a query, there is no expectation that the server will immediately process and return a response. Instead, your server only pushes data to your client when a particular event occurs on your backend.

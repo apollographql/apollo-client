@@ -57,6 +57,8 @@ To consume a multipart subscription over HTTP in an app using Relay or urql, Apo
 
 ##### Relay
 
+<MultiCodeBlock>
+
 ```ts
 import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/relay";
 import { Environment, Network, RecordSource, Store } from "relay-runtime";
@@ -73,7 +75,11 @@ export const RelayEnvironment = new Environment({
 });
 ```
 
+</MultiCodeBlock>
+
 #### urql
+
+<MultiCodeBlock>
 
 ```ts
 import { createFetchMultipartSubscription } from "@apollo/client/utilities/subscriptions/urql";
@@ -96,6 +102,8 @@ const client = new Client({
 });
 ```
 
+</MultiCodeBlock>
+
 ## Defining a subscription
 
 You define a subscription on both the server side and the client side, just like you do for queries and mutations.
@@ -116,6 +124,22 @@ For more information on implementing support for subscriptions on the server sid
 
 In your application's client, you define the shape of each subscription you want Apollo Client to execute, like so:
 
+<MultiCodeBlock>
+
+```ts
+const COMMENTS_SUBSCRIPTION: TypedDocumentNode<
+  OnCommentAddedSubscription,
+  OnCommentAddedSubscriptionVariables
+> = gql`
+  subscription OnCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
+      id
+      content
+    }
+  }
+`;
+```
+
 ```js
 const COMMENTS_SUBSCRIPTION = gql`
   subscription OnCommentAdded($postID: ID!) {
@@ -126,6 +150,8 @@ const COMMENTS_SUBSCRIPTION = gql`
   }
 `;
 ```
+
+</MultiCodeBlock>
 
 When Apollo Client executes the `OnCommentAdded` subscription, it establishes a connection to your GraphQL server and listens for response data. Unlike with a query, there is no expectation that the server will immediately process and return a response. Instead, your server only pushes data to your client when a particular event occurs on your backend.
 
@@ -158,7 +184,9 @@ npm install graphql-ws
 
 Import and initialize a `GraphQLWsLink` object in the same project file where you initialize `ApolloClient`:
 
-```js title="index.js"
+<MultiCodeBlock>
+
+```ts title="index.ts"
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { createClient } from 'graphql-ws';
 
@@ -166,6 +194,8 @@ const wsLink = new GraphQLWsLink(createClient({
   url: 'ws://localhost:4000/subscriptions',
 }));
 ```
+
+</MultiCodeBlock>
 
 Replace the value of the `url` option with your GraphQL server's subscription-specific WebSocket endpoint. If you're using Apollo Server, see [Setting a subscription endpoint](/apollo-server/data/subscriptions/#enabling-subscriptions).
 
@@ -177,7 +207,9 @@ To support this, the `@apollo/client` library provides a `split` function that l
 
 The following example expands on the previous one by initializing both a `GraphQLWsLink` _and_ an `HttpLink`. It then uses the `split` function to combine those two `Link`s into a _single_ `Link` that uses one or the other according to the type of operation being executed.
 
-```js title="index.js"
+<MultiCodeBlock>
+
+```ts title="index.ts"
 import { split, HttpLink } from '@apollo/client';
 import { getMainDefinition } from '@apollo/client/utilities';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
@@ -209,11 +241,26 @@ const splitLink = split(
 );
 ```
 
+</MultiCodeBlock>
+
 Using this logic, queries and mutations will use HTTP as normal, and subscriptions will use WebSocket.
 
 ### 4. Provide the link chain to Apollo Client
 
 After you define your link chain, you provide it to Apollo Client via the `link` constructor option:
+
+<MultiCodeBlock>
+
+```ts {6} title="index.ts"
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
+// ...code from the above example goes here...
+
+const client = new ApolloClient({
+  link: splitLink,
+  cache: new InMemoryCache()
+});
+```
 
 ```js {6} title="index.js"
 import { ApolloClient, InMemoryCache } from '@apollo/client';
@@ -226,11 +273,27 @@ const client = new ApolloClient({
 });
 ```
 
+</MultiCodeBlock>
+
 > If you provide the `link` option, it takes precedence over the `uri` option (`uri` sets up a default HTTP link chain using the provided URL).
 
 ### 5. Authenticate over WebSocket (optional)
 
 It is often necessary to authenticate a client before allowing it to receive subscription results. To do this, you can provide a `connectionParams` option to the `GraphQLWsLink` constructor, like so:
+
+<MultiCodeBlock>
+
+```ts {6-8}
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { createClient } from 'graphql-ws';
+
+const wsLink = new GraphQLWsLink(createClient({
+  url: 'ws://localhost:4000/subscriptions',
+  connectionParams: {
+    authToken: user.authToken,
+  },
+}));
+```
 
 ```js {6-8}
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
@@ -243,6 +306,8 @@ const wsLink = new GraphQLWsLink(createClient({
   },
 }));
 ```
+
+</MultiCodeBlock>
 
 Your `GraphQLWsLink` passes the `connectionParams` object to your server whenever it connects. Your server receives the `connectionParams` object and can use it to perform authentication, along with any other connection-related tasks.
 
@@ -257,6 +322,31 @@ No additional libraries or configuration are required. Apollo Client adds the re
 You use Apollo Client's `useSubscription` Hook to execute a subscription from React. Like [`useQuery`](./queries/#executing-a-query), `useSubscription` returns an object from Apollo Client that contains `loading`, `error`, and `data` properties you can use to render your UI.
 
 The following example component uses the subscription we defined earlier to render the most recent comment that's been added to a specified blog post. Whenever the GraphQL server pushes a new comment to the client, the component re-renders with the new comment.
+
+<MultiCodeBlock>
+
+```tsx
+const COMMENTS_SUBSCRIPTION: TypedDocumentNode<
+  OnCommentAddedSubscription,
+  OnCommentAddedSubscriptionVariables
+> = gql`
+  subscription OnCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
+      id
+      content
+    }
+  }
+`;
+
+function LatestComment({ postID }: LatestCommentProps) {
+  const { data, loading } = useSubscription(
+    COMMENTS_SUBSCRIPTION,
+    { variables: { postID } }
+  );
+
+  return <h4>New comment: {!loading && data.commentAdded.content}</h4>;
+}
+```
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -273,9 +363,12 @@ function LatestComment({ postID }) {
     COMMENTS_SUBSCRIPTION,
     { variables: { postID } }
   );
+
   return <h4>New comment: {!loading && data.commentAdded.content}</h4>;
 }
 ```
+
+</MultiCodeBlock>
 
 ## Subscribing to updates for a query
 
@@ -284,6 +377,33 @@ Whenever a query returns a result in Apollo Client, that result includes a `subs
 > The `subscribeToMore` function is similar in structure to the [`fetchMore`](../caching/advanced-topics/#incremental-loading-fetchmore) function that's commonly used for handling pagination. The primary difference is that `fetchMore` executes a followup _query_, whereas `subscribeToMore` executes a subscription.
 
 As an example, let's start with a standard query that fetches all of the existing comments for a given blog post:
+
+<MultiCodeBlock>
+
+```tsx
+const COMMENTS_QUERY: TypedDocumentNode<
+  CommentsForPostQuery,
+  CommentsForPostQueryVariables
+> = gql`
+  query CommentsForPost($postID: ID!) {
+    post(postID: $postID) {
+      comments {
+        id
+        content
+      }
+    }
+  }
+`;
+
+function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
+  const result = useQuery(
+    COMMENTS_QUERY,
+    { variables: { postID: params.postID } }
+  );
+
+  return <CommentsPage {...result} />;
+}
+```
 
 ```jsx
 const COMMENTS_QUERY = gql`
@@ -302,11 +422,30 @@ function CommentsPageWithData({ params }) {
     COMMENTS_QUERY,
     { variables: { postID: params.postID } }
   );
+
   return <CommentsPage {...result} />;
 }
 ```
 
+</MultiCodeBlock>
+
 Let's say we want our GraphQL server to push an update to our client as soon as a _new_ comment is added to the post. First we need to define the subscription that Apollo Client will execute when the `COMMENTS_QUERY` returns:
+
+<MultiCodeBlock>
+
+```tsx
+const COMMENTS_SUBSCRIPTION: TypedDocumentNode<
+  OnCommentAddedSubscription,
+  OnCommentAddedSubscriptionVariables
+> = gql`
+  subscription OnCommentAdded($postID: ID!) {
+    commentAdded(postID: $postID) {
+      id
+      content
+    }
+  }
+`;
+```
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -319,7 +458,42 @@ const COMMENTS_SUBSCRIPTION = gql`
 `;
 ```
 
+</MultiCodeBlock>
+
 Next, we modify our `CommentsPageWithData` function to add a `subscribeToNewComments` property to the `CommentsPage` component it returns. This property is a function that will be responsible for calling `subscribeToMore` after the component mounts.
+
+<MultiCodeBlock>
+
+```tsx {10-25}
+function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
+  const { subscribeToMore, ...result } = useQuery(
+    COMMENTS_QUERY,
+    { variables: { postID: params.postID } }
+  );
+
+  return (
+    <CommentsPage
+      {...result}
+      subscribeToNewComments={() =>
+        subscribeToMore({
+          document: COMMENTS_SUBSCRIPTION,
+          variables: { postID: params.postID },
+          updateQuery: (prev, { subscriptionData }) => {
+            if (!subscriptionData.data) return prev;
+            const newFeedItem = subscriptionData.data.commentAdded;
+
+            return Object.assign({}, prev, {
+              post: {
+                comments: [newFeedItem, ...prev.post.comments]
+              }
+            });
+          }
+        })
+      }
+    />
+  );
+}
+```
 
 ```jsx {10-25}
 function CommentsPageWithData({ params }) {
@@ -352,6 +526,8 @@ function CommentsPageWithData({ params }) {
 }
 ```
 
+</MultiCodeBlock>
+
 In the example above, we pass three options to `subscribeToMore`:
 
 * `document` indicates the subscription to execute.
@@ -360,12 +536,25 @@ In the example above, we pass three options to `subscribeToMore`:
 
 Finally, in our definition of `CommentsPage`, we tell the component to `subscribeToNewComments` when it mounts:
 
-```jsx
-export function CommentsPage({subscribeToNewComments}) {
+<MultiCodeBlock>
+
+```tsx
+export function CommentsPage({ subscribeToNewComments }: CommentsPageProps) {
   useEffect(() => subscribeToNewComments(), []);
+
   return <>...</>
 }
 ```
+
+```jsx
+export function CommentsPage({ subscribeToNewComments }) {
+  useEffect(() => subscribeToNewComments(), []);
+
+  return <>...</>
+}
+```
+
+</MultiCodeBlock>
 
 ## `useSubscription` API reference
 
@@ -415,7 +604,9 @@ After you create your `wsLink`, everything else in this article still applies: `
 
 The following is an example of a typical `WebSocketLink` initialization:
 
-```js
+<MultiCodeBlock>
+
+```ts
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
@@ -427,5 +618,7 @@ const wsLink = new WebSocketLink(
   })
 );
 ```
+
+</MultiCodeBlock>
 
 More details on `WebSocketLink`'s API can be found in [its API docs](../api/link/apollo-link-ws).

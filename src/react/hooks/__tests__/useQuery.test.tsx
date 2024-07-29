@@ -4193,6 +4193,16 @@ describe("useQuery Hook", () => {
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         });
+
+        // Ensure we store the merged result as the last result
+        expect(snapshot.observable.getCurrentResult(false).data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        });
       }
 
       {
@@ -4213,6 +4223,13 @@ describe("useQuery Hook", () => {
         });
 
         expect(snapshot.data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "E", position: 5 },
+            { __typename: "Letter", letter: "F", position: 6 },
+          ],
+        });
+
+        expect(snapshot.observable.getCurrentResult(false).data).toEqual({
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },

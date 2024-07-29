@@ -4117,6 +4117,45 @@ describe("useQuery Hook", () => {
       ]);
     });
 
+    it("does not write to cache when using fetchMore with no-cache queries", async () => {
+      const { query, data } = setupPaginatedCase();
+
+      const link = new ApolloLink((operation) => {
+        const { offset = 0, limit = 2 } = operation.variables;
+        const letters = data.slice(offset, offset + limit);
+
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.next({ data: { letters } });
+            observer.complete();
+          }, 10);
+        });
+      });
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial loading
+      await ProfiledHook.takeSnapshot();
+
+      // Initial result
+      await ProfiledHook.takeSnapshot();
+
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      await fetchMore({ variables: { offset: 2 } });
+
+      expect(client.extract()).toStrictEqual({});
+    });
+
     it("regression test for issue #8600", async () => {
       const cache = new InMemoryCache({
         typePolicies: {

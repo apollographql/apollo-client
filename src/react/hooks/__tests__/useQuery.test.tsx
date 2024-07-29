@@ -4103,7 +4103,10 @@ describe("useQuery Hook", () => {
       expect(fetches).toStrictEqual([{ variables: { limit: 2 } }]);
 
       const { fetchMore } = ProfiledHook.getCurrentSnapshot();
-      const result = await fetchMore({ variables: { offset: 2 } });
+      const result = await fetchMore({
+        variables: { offset: 2 },
+        updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+      });
 
       expect(result.data).toStrictEqual({
         letters: [
@@ -4294,7 +4297,10 @@ describe("useQuery Hook", () => {
       await ProfiledHook.takeSnapshot();
 
       const { fetchMore } = ProfiledHook.getCurrentSnapshot();
-      await fetchMore({ variables: { offset: 2 } });
+      await fetchMore({
+        variables: { offset: 2 },
+        updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+      });
 
       expect(client.extract()).toStrictEqual({});
     });

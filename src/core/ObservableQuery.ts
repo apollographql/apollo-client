@@ -489,7 +489,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     if (this.options.fetchPolicy === "no-cache") {
       invariant(
         updateQuery,
-        "When using `fetchMore` with a `no-cache` query, you must provide an `updateQuery` function."
+        "You must provide an `updateQuery` function when using `fetchMore` with a `no-cache` fetch policy."
       );
     }
 

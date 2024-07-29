@@ -4258,7 +4258,7 @@ describe("useQuery Hook", () => {
 
       expect(() => fetchMore({ variables: { offset: 2 } })).toThrow(
         new InvariantError(
-          "When using `fetchMore` with a `no-cache` query, you must provide an `updateQuery` function."
+          "You must provide an `updateQuery` function when using `fetchMore` with a `no-cache` fetch policy."
         )
       );
     });

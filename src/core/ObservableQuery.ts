@@ -484,6 +484,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const updatedQuerySet = new Set<DocumentNode>();
 
+    const updateQuery = fetchMoreOptions?.updateQuery;
+
+    if (this.options.fetchPolicy === "no-cache") {
+      invariant(
+        updateQuery,
+        "When using `fetchMore` with a `no-cache` query, you must provide an `updateQuery` function."
+      );
+    }
+
     return this.queryManager
       .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
@@ -495,14 +504,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
         if (this.options.fetchPolicy === "no-cache") {
           const lastResult = this.getLast("result")!;
-          const data = fetchMoreOptions?.updateQuery?.(lastResult.data, {
+          const data = updateQuery!(lastResult.data, {
             fetchMoreResult: fetchMoreResult.data,
             variables: combinedOptions.variables as TFetchVars,
           });
 
           const result = {
             ...lastResult,
-            data: data!,
+            data,
             loading: false,
             networkStatus: NetworkStatus.ready,
           };

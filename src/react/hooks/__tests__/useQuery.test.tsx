@@ -39,6 +39,7 @@ import {
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
+import { InvariantError } from "../../../utilities/globals";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -4215,6 +4216,48 @@ describe("useQuery Hook", () => {
           ],
         });
       }
+    });
+
+    it("throws when using fetchMore without updateQuery for no-cache queries", async () => {
+      const { query, link } = setupPaginatedCase();
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(true);
+      }
+
+      {
+        const snapshot = await ProfiledHook.takeSnapshot();
+
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toStrictEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+          ],
+        });
+      }
+
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+
+      expect(() => fetchMore({ variables: { offset: 2 } })).toThrow(
+        new InvariantError(
+          "When using `fetchMore` with a `no-cache` query, you must provide an `updateQuery` function."
+        )
+      );
     });
 
     it("does not write to cache when using fetchMore with no-cache queries", async () => {

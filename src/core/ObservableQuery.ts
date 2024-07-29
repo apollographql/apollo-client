@@ -493,7 +493,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           queryInfo.networkStatus = originalNetworkStatus;
         }
 
-        if (this.options.fetchPolicy !== "no-cache") {
+        if (this.options.fetchPolicy === "no-cache") {
+          const lastResult = this.getLast("result")!;
+          const data = fetchMoreOptions?.updateQuery?.(lastResult.data, {
+            fetchMoreResult: fetchMoreResult.data,
+            variables: combinedOptions.variables as TFetchVars,
+          });
+
+          const result = {
+            ...lastResult,
+            data: data!,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+          };
+
+          this.reportResult(result, this.variables);
+        } else {
           // Performing this cache update inside a cache.batch transaction ensures
           // any affected cache.watch watchers are notified at most once about any
           // updates. Most watchers will be using the QueryInfo class, which
@@ -546,7 +561,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // likely because the written data were the same as what was already in
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
-        if (!updatedQuerySet.has(this.query)) {
+        if (
+          this.options.fetchPolicy !== "no-cache" &&
+          !updatedQuerySet.has(this.query)
+        ) {
           reobserveCacheFirst(this);
         }
       });

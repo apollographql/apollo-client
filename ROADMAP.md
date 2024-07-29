@@ -1,6 +1,6 @@
-# 🔮 Apollo Client Roadmap
+# 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-07-15**
+**Last updated: 2024-07-29**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -13,23 +13,44 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ---
 
-## [3.11.0](https://github.com/apollographql/apollo-client/milestone/40) - July 22nd, 2024
-_Release candidate - July 9th, 2024_
+## In progress
 
-- Rewriting `useQuery` and `useSubscription` for better React Compiler support
-- Add an `ignoreResults` option to the `useSubscription` API
-- Support extensions in useSubscription
-- Support errorPolicy in useSubscription hook
-- React 19 rc compatibility
-- Deprecate experimental schema testing utilities in favor of [`@apollo/graphql-testing-library`](https://github.com/apollographql/graphql-testing-library)
+### Apollo Client
 
-## Upcoming features
+#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - October 7, 2024
+_Release candidate - September 30, 2024_
 
 - Data masking
 - Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+
+#### Upcoming features
+
 - Leaner client (under alternate entry point)
 - Better types for `useQuery`/`useMutation`/`useSubscription`
 
-## 4.0
+#### 4.0
 
 - `Release 4.0` will be our next major release of the Client and is still in early planning.  See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.
+
+### GraphQL Testing Library
+
+- New documentation
+- Subscription support (waiting for MSW WebSocket support to land)
+- Better TypeScript support
+
+### VSCode Extension
+
+- Modernization
+- Bug fixes and long-requested features
+
+### GraphQL Tag
+
+_no work in progress_
+
+### Apollo Client DevTools
+
+_no work in progress_
+
+### Apollo Client NextJS
+
+- New/more robust documentation

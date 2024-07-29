@@ -493,48 +493,50 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           queryInfo.networkStatus = originalNetworkStatus;
         }
 
-        // Performing this cache update inside a cache.batch transaction ensures
-        // any affected cache.watch watchers are notified at most once about any
-        // updates. Most watchers will be using the QueryInfo class, which
-        // responds to notifications by calling reobserveCacheFirst to deliver
-        // fetchMore cache results back to this ObservableQuery.
-        this.queryManager.cache.batch({
-          update: (cache) => {
-            const { updateQuery } = fetchMoreOptions;
-            if (updateQuery) {
-              cache.updateQuery(
-                {
-                  query: this.query,
-                  variables: this.variables,
-                  returnPartialData: true,
-                  optimistic: false,
-                },
-                (previous) =>
-                  updateQuery(previous!, {
-                    fetchMoreResult: fetchMoreResult.data,
-                    variables: combinedOptions.variables as TFetchVars,
-                  })
-              );
-            } else {
-              // If we're using a field policy instead of updateQuery, the only
-              // thing we need to do is write the new data to the cache using
-              // combinedOptions.variables (instead of this.variables, which is
-              // what this.updateQuery uses, because it works by abusing the
-              // original field value, keyed by the original variables).
-              cache.writeQuery({
-                query: combinedOptions.query,
-                variables: combinedOptions.variables,
-                data: fetchMoreResult.data,
-              });
-            }
-          },
+        if (this.options.fetchPolicy !== "no-cache") {
+          // Performing this cache update inside a cache.batch transaction ensures
+          // any affected cache.watch watchers are notified at most once about any
+          // updates. Most watchers will be using the QueryInfo class, which
+          // responds to notifications by calling reobserveCacheFirst to deliver
+          // fetchMore cache results back to this ObservableQuery.
+          this.queryManager.cache.batch({
+            update: (cache) => {
+              const { updateQuery } = fetchMoreOptions;
+              if (updateQuery) {
+                cache.updateQuery(
+                  {
+                    query: this.query,
+                    variables: this.variables,
+                    returnPartialData: true,
+                    optimistic: false,
+                  },
+                  (previous) =>
+                    updateQuery(previous!, {
+                      fetchMoreResult: fetchMoreResult.data,
+                      variables: combinedOptions.variables as TFetchVars,
+                    })
+                );
+              } else {
+                // If we're using a field policy instead of updateQuery, the only
+                // thing we need to do is write the new data to the cache using
+                // combinedOptions.variables (instead of this.variables, which is
+                // what this.updateQuery uses, because it works by abusing the
+                // original field value, keyed by the original variables).
+                cache.writeQuery({
+                  query: combinedOptions.query,
+                  variables: combinedOptions.variables,
+                  data: fetchMoreResult.data,
+                });
+              }
+            },
 
-          onWatchUpdated: (watch) => {
-            // Record the DocumentNode associated with any watched query whose
-            // data were updated by the cache writes above.
-            updatedQuerySet.add(watch.query);
-          },
-        });
+            onWatchUpdated: (watch) => {
+              // Record the DocumentNode associated with any watched query whose
+              // data were updated by the cache writes above.
+              updatedQuerySet.add(watch.query);
+            },
+          });
+        }
 
         return fetchMoreResult;
       })

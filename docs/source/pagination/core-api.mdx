@@ -226,11 +226,11 @@ As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update
 
 <Note>
 
-`updateQuery` is not a replacement for your type policy `merge` functions. `merge` functions still run using the result from `updateQuery`.
+`updateQuery` is not a replacement for your field policy `merge` functions. `merge` functions still run using the result from `updateQuery`.
 
 </Note>
 
-Let's see the example above using `updateQuery` to merge results together instead of a type policy merge function:
+Let's see the example above using `updateQuery` to merge results together instead of a field policy merge function:
 
 ```ts
 fetchMore({

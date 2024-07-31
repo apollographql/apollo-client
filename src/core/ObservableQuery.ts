@@ -510,12 +510,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             variables: combinedOptions.variables as TFetchVars,
           });
 
-          const result = {
-            ...lastResult,
-            data,
-          };
-
-          this.reportResult(result, this.variables);
+          this.reportResult({ ...lastResult, data }, this.variables);
         } else {
           // Performing this cache update inside a cache.batch transaction ensures
           // any affected cache.watch watchers are notified at most once about any

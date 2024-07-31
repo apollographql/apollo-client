@@ -247,6 +247,12 @@ fetchMore({
 })
 ```
 
+<Tip>
+
+We recommend defining field policies that contain at least a [`keyArgs`](/pagination/key-args/) value even if you use `updateQuery`. This prevents fragmenting the data unnecessarily in the cache.
+
+</Tip>
+
 ## `read` functions for paginated fields
 
 [As shown above](#defining-a-field-policy), a `merge` function helps you combine paginated query results from your GraphQL server into a single list in your client cache. But what if you also want to configure how that locally cached list is _read_? For that, you can define a **`read` function**.

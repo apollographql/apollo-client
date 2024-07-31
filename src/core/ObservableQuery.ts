@@ -547,6 +547,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             },
           });
         } else {
+          // There is a possibility `lastResult` may not be set when
+          // `fetchMore` is called which would cause this to crash. This should
+          // only happen if we haven't previously reported a result. We don't
+          // quite know what the right behavior should be here since this block
+          // of code runs after the fetch result has executed on the network.
+          // We plan to let it crash in the meantime.
+          //
+          // If we get bug reports due to the `data` property access on
+          // undefined, this should give us a real-world scenario that we can
+          // use to test against and determine the right behavior. If we do end
+          // up changing this behavior, this may require, for example, an
+          // adjustment to the types on `updateQuery` since that function
+          // expects that the first argument always contains previous result
+          // data, but not `undefined`.
           const lastResult = this.getLast("result")!;
           const data = updateQuery!(lastResult.data, {
             fetchMoreResult: fetchMoreResult.data,

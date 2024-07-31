@@ -218,6 +218,35 @@ const cache = new InMemoryCache({
 
 This logic handles sequential page writes the same way the single-line strategy does, but it can also tolerate repeated, overlapping, or out-of-order writes, without duplicating any list items.
 
+### Updating the query with the fetch more result
+
+At times the call to `fetchMore` may need to perform additional cache updates for your query. While you can use the [`cache.readQuery`](/caching/cache-interaction#readquery) and [`cache.writeQuery`](/caching/cache-interaction#writequery) functions to to do this work yourself, it can be cumbsersome to use both of these together.
+
+As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update your query with the result from the `fetchMore` call.
+
+<Note>
+
+`updateQuery` is not a replacement for your type policy `merge` functions. `merge` functions will still run using the result from `updateQuery`.
+
+</Note>
+
+Let's see the example above using `updateQuery` to merge results together instead of a type policy merge function:
+
+```ts
+fetchMore({
+  variables: { offset: data.feed.length },
+  updateQuery(previousData, { fetchMoreResult, variables: { offset }}) {
+    // Slicing is necessary because the existing data is
+    // immutable, and frozen in development.
+    const updatedFeed = previousData.feed.slice(0);
+    for (let i = 0; i < fetchMoreResult.feed.length; ++i) {
+      updatedFeed[offset + i] = fetchMoreResult.feed[i];
+    }
+    return { ...previousData, feed: updatedFeed };
+  },
+})
+```
+
 ## `read` functions for paginated fields
 
 [As shown above](#defining-a-field-policy), a `merge` function helps you combine paginated query results from your GraphQL server into a single list in your client cache. But what if you also want to configure how that locally cached list is _read_? For that, you can define a **`read` function**.

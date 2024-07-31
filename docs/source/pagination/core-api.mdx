@@ -350,7 +350,7 @@ We recommend upgrading to version 3.11.3 or later to address bugs that exhibit u
 
 The examples shown above use field policies and `merge` functions to update the result of a paginated field. But what about queries that use a `no-cache` fetch policy? Data is not written to the cache, so field policies have no effect.
 
-Instead we can take advantage of the `updateQuery` option available to the `fetchMore` function. `updateQuery` gives you control over how the query is merged with the result fetched from the `fetchMore` call.
+To update our query, we provide the `updateQuery` option to the `fetchMore` function.
 
 Let's use the example above, but instead provide the `updateQuery` function to `fetchMore` to update the query.
 

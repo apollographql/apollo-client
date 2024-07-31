@@ -4216,9 +4216,7 @@ describe("useQuery Hook", () => {
       act(() => {
         fetchMorePromise = fetchMore({
           variables: { offset: 4 },
-          updateQuery: (_, { fetchMoreResult }) => ({
-            letters: fetchMoreResult.letters,
-          }),
+          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
         });
       });
 

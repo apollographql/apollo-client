@@ -371,6 +371,6 @@ fetchMore({
 
 <Note>
 
-As of Apollo Client version 3.11.3, the `updateQuery` option is required when using `fetchMore` with a `no-cache` fetch policy. This is required to correctly determine how the results should be merged with the absense of a type policy. Calling `fetchMore` without an `updateQuery` function will throw an error.
+As of Apollo Client version 3.11.3, the `updateQuery` option is required when using `fetchMore` with a `no-cache` fetch policy. This is required to correctly determine how the results should be merged since field policy `merge` functions are ignored. Calling `fetchMore` without an `updateQuery` function will throw an error.
 
 </Note>

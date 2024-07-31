@@ -513,8 +513,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           const result = {
             ...lastResult,
             data,
-            loading: false,
-            networkStatus: NetworkStatus.ready,
           };
 
           this.reportResult(result, this.variables);

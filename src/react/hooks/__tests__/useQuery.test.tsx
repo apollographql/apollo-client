@@ -4336,10 +4336,12 @@ describe("useQuery Hook", () => {
       await ProfiledHook.takeSnapshot();
 
       const { fetchMore } = ProfiledHook.getCurrentSnapshot();
-      await fetchMore({
-        variables: { offset: 2 },
-        updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
-      });
+      await act(() =>
+        fetchMore({
+          variables: { offset: 2 },
+          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+        })
+      );
 
       expect(client.extract()).toStrictEqual({});
     });

@@ -7,6 +7,7 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
+  ApolloQueryResult,
   NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
@@ -32,6 +33,7 @@ import { useMutation } from "../useMutation";
 import {
   createProfiler,
   disableActWarnings,
+  PaginatedCaseData,
   profileHook,
   setupPaginatedCase,
   spyOnConsole,
@@ -4117,7 +4119,11 @@ describe("useQuery Hook", () => {
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
       const ProfiledHook = profileHook(() =>
-        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+        useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+          fetchPolicy: "no-cache",
+          variables: { limit: 2 },
+        })
       );
 
       render(<ProfiledHook />, {
@@ -4127,16 +4133,21 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const { loading, networkStatus, data } =
+          await ProfiledHook.takeSnapshot();
 
-        expect(snapshot.loading).toBe(true);
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.loading);
+        expect(data).toBeUndefined();
       }
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const { loading, networkStatus, data } =
+          await ProfiledHook.takeSnapshot();
 
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toStrictEqual({
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toStrictEqual({
           letters: [
             { __typename: "Letter", letter: "A", position: 1 },
             { __typename: "Letter", letter: "B", position: 2 },
@@ -4144,26 +4155,39 @@ describe("useQuery Hook", () => {
         });
       }
 
+      let fetchMorePromise!: Promise<ApolloQueryResult<PaginatedCaseData>>;
       const { fetchMore } = ProfiledHook.getCurrentSnapshot();
 
-      {
-        const result = await fetchMore({
+      act(() => {
+        fetchMorePromise = fetchMore({
           variables: { offset: 2 },
           updateQuery: (prev, { fetchMoreResult }) => ({
             letters: prev.letters.concat(fetchMoreResult.letters),
           }),
         });
+      });
 
-        const snapshot = await ProfiledHook.takeSnapshot();
+      {
+        const { loading, networkStatus, data } =
+          await ProfiledHook.takeSnapshot();
 
-        expect(result.data).toStrictEqual({
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(data).toStrictEqual({
           letters: [
-            { __typename: "Letter", letter: "C", position: 3 },
-            { __typename: "Letter", letter: "D", position: 4 },
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
           ],
         });
+      }
 
-        expect(snapshot.data).toEqual({
+      {
+        const { loading, networkStatus, data, observable } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
           letters: [
             { __typename: "Letter", letter: "A", position: 1 },
             { __typename: "Letter", letter: "B", position: 2 },
@@ -4173,7 +4197,45 @@ describe("useQuery Hook", () => {
         });
 
         // Ensure we store the merged result as the last result
-        expect(snapshot.observable.getCurrentResult(false).data).toEqual({
+        expect(observable.getCurrentResult(false).data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        });
+      }
+
+      await expect(fetchMorePromise).resolves.toStrictEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(ProfiledHook).not.toRerender();
+
+      act(() => {
+        fetchMorePromise = fetchMore({
+          variables: { offset: 4 },
+          updateQuery: (_, { fetchMoreResult }) => ({
+            letters: fetchMoreResult.letters,
+          }),
+        });
+      });
+
+      {
+        const { data, loading, networkStatus } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(data).toEqual({
           letters: [
             { __typename: "Letter", letter: "A", position: 1 },
             { __typename: "Letter", letter: "B", position: 2 },
@@ -4184,36 +4246,38 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const result = await fetchMore({
-          variables: { offset: 4 },
-          updateQuery: (_, { fetchMoreResult }) => ({
-            letters: fetchMoreResult.letters,
-          }),
-        });
+        const { data, loading, networkStatus, observable } =
+          await ProfiledHook.takeSnapshot();
 
-        const snapshot = await ProfiledHook.takeSnapshot();
-
-        expect(result.data).toStrictEqual({
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },
           ],
         });
 
-        expect(snapshot.data).toEqual({
-          letters: [
-            { __typename: "Letter", letter: "E", position: 5 },
-            { __typename: "Letter", letter: "F", position: 6 },
-          ],
-        });
-
-        expect(snapshot.observable.getCurrentResult(false).data).toEqual({
+        expect(observable.getCurrentResult(false).data).toEqual({
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },
           ],
         });
       }
+
+      await expect(fetchMorePromise).resolves.toStrictEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", letter: "E", position: 5 },
+            { __typename: "Letter", letter: "F", position: 6 },
+          ],
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(ProfiledHook).not.toRerender();
     });
 
     it("throws when using fetchMore without updateQuery for no-cache queries", async () => {

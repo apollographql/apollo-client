@@ -301,7 +301,8 @@ export function useSubscription<
     () =>
       observable && !skip && !ignoreResults ?
         observable.__.result
-      : fallbackResult
+      : fallbackResult,
+    () => fallbackResult
   );
   return React.useMemo(
     () => ({

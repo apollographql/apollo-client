@@ -4112,19 +4112,7 @@ describe("useQuery Hook", () => {
     });
 
     it("uses updateQuery to update the result of the query with no-cache queries", async () => {
-      const { query, data } = setupPaginatedCase();
-
-      const link = new ApolloLink((operation) => {
-        const { offset = 0, limit = 2 } = operation.variables;
-        const letters = data.slice(offset, offset + limit);
-
-        return new Observable((observer) => {
-          setTimeout(() => {
-            observer.next({ data: { letters } });
-            observer.complete();
-          }, 10);
-        });
-      });
+      const { query, link } = setupPaginatedCase();
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 

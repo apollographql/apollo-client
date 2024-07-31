@@ -222,7 +222,7 @@ This logic handles sequential page writes the same way the single-line strategy 
 
 At times the call to `fetchMore` may need to perform additional cache updates for your query. While you can use the [`cache.readQuery`](/caching/cache-interaction#readquery) and [`cache.writeQuery`](/caching/cache-interaction#writequery) functions to to do this work yourself, it can be cumbsersome to use both of these together.
 
-As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update your query with the result from the `fetchMore` call.
+As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update your query using the result from the `fetchMore` call.
 
 <Note>
 

@@ -485,8 +485,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const updatedQuerySet = new Set<DocumentNode>();
 
     const updateQuery = fetchMoreOptions?.updateQuery;
+    const isCached = this.options.fetchPolicy !== "no-cache";
 
-    if (this.options.fetchPolicy === "no-cache") {
+    if (!isCached) {
       invariant(
         updateQuery,
         "You must provide an `updateQuery` function when using `fetchMore` with a `no-cache` fetch policy."
@@ -502,7 +503,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           queryInfo.networkStatus = originalNetworkStatus;
         }
 
-        if (this.options.fetchPolicy === "no-cache") {
+        if (!isCached) {
           const lastResult = this.getLast("result")!;
           const data = updateQuery!(lastResult.data, {
             fetchMoreResult: fetchMoreResult.data,
@@ -570,10 +571,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // likely because the written data were the same as what was already in
         // the cache, we still want fetchMore to deliver its final loading:false
         // result with the unchanged data.
-        if (
-          this.options.fetchPolicy !== "no-cache" &&
-          !updatedQuerySet.has(this.query)
-        ) {
+        if (isCached && !updatedQuerySet.has(this.query)) {
           reobserveCacheFirst(this);
         }
       });

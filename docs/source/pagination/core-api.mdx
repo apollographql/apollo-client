@@ -226,7 +226,7 @@ As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update
 
 <Note>
 
-`updateQuery` is not a replacement for your field policy `merge` functions. `merge` functions still run using the result from `updateQuery`.
+`updateQuery` is not a replacement for your field policy `merge` functions. While you can use `updateQuery` without the need to define a `merge` function, `merge` functions defined for fields in the query will run using the result from `updateQuery`.
 
 </Note>
 

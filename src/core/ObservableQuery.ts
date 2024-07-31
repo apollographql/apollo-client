@@ -503,15 +503,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           queryInfo.networkStatus = originalNetworkStatus;
         }
 
-        if (!isCached) {
-          const lastResult = this.getLast("result")!;
-          const data = updateQuery!(lastResult.data, {
-            fetchMoreResult: fetchMoreResult.data,
-            variables: combinedOptions.variables as TFetchVars,
-          });
-
-          this.reportResult({ ...lastResult, data }, this.variables);
-        } else {
+        if (isCached) {
           // Performing this cache update inside a cache.batch transaction ensures
           // any affected cache.watch watchers are notified at most once about any
           // updates. Most watchers will be using the QueryInfo class, which
@@ -554,6 +546,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               updatedQuerySet.add(watch.query);
             },
           });
+        } else {
+          const lastResult = this.getLast("result")!;
+          const data = updateQuery!(lastResult.data, {
+            fetchMoreResult: fetchMoreResult.data,
+            variables: combinedOptions.variables as TFetchVars,
+          });
+
+          this.reportResult({ ...lastResult, data }, this.variables);
         }
 
         return fetchMoreResult;

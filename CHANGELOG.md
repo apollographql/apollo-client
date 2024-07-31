@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.11.2
+
+### Patch Changes
+
+- [#11980](https://github.com/apollographql/apollo-client/pull/11980) [`38c0a2c`](https://github.com/apollographql/apollo-client/commit/38c0a2c43dd28677ee240754cd389c8a08c05738) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix missing `getServerSnapshot` error when using `useSubscription` on the server.
+
 ## 3.11.1
 
 ### Patch Changes

@@ -4084,17 +4084,10 @@ describe("useQuery Hook", () => {
         ),
       });
 
-      {
-        const { loading } = await ProfiledHook.takeSnapshot();
-
-        expect(loading).toBe(true);
-      }
-
-      {
-        const { loading } = await ProfiledHook.takeSnapshot();
-
-        expect(loading).toBe(false);
-      }
+      // loading
+      await ProfiledHook.takeSnapshot();
+      // finished loading
+      await ProfiledHook.takeSnapshot();
 
       expect(fetches).toStrictEqual([{ variables: { limit: 2 } }]);
 

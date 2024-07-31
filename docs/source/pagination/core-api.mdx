@@ -304,3 +304,38 @@ The `read` function for a paginated field can choose to _ignore_ arguments like 
 If you adopt this approach, you might not need to define a `read` function at all, because the cached list can be returned without any processing. That's why the [`offsetLimitPagination` helper function](./offset-based/#the-offsetlimitpagination-helper) is implemented _without_ a `read` function.
 
 Regardless of how you configure `keyArgs`, your `read` (and `merge`) functions can always examine any arguments passed to the field using the `options.args` object. See [The `keyArgs` API](./key-args) for a deeper discussion of how to reason about dividing argument-handling responsibility between `keyArgs` and your `read` or `merge` functions.
+
+## Using `fetchMore` with queries that set a `no-cache` fetch policy
+
+<Note>
+
+We recommend upgrading to version 3.11.3 or later to address bugs that exhibit unexpected behavior when using `fetchMore` with queries that set `no-cache` fetch policies. Please see pull request [#11974](https://github.com/apollographql/apollo-client/pull/11974) for more information.
+
+</Note>
+
+The examples shown above use type policies to update the result of a paginated field. But what about queries that use a `no-cache` fetch policy? Data is not written to the cache, so type policies have no effect.
+
+Instead we can take advantage of the `updateQuery` option available to the `fetchMore` function. `updateQuery` gives you control over how the query is merged with the result fetched from the `fetchMore` call.
+
+Let's use the example above, but instead provide the `updateQuery` function to `fetchMore` to update the query.
+
+```ts
+fetchMore({
+  variables: { offset: data.feed.length },
+  updateQuery(previousData, { fetchMoreResult, variables: { offset }}) {
+    // Slicing is necessary because the existing data is
+    // immutable, and frozen in development.
+    const updatedFeed = previousData.feed.slice(0);
+    for (let i = 0; i < fetchMoreResult.feed.length; ++i) {
+      updatedFeed[offset + i] = fetchMoreResult.feed[i];
+    }
+    return { ...previousData, feed: updatedFeed };
+  },
+})
+```
+
+<Note>
+
+As of Apollo Client version 3.11.3, the `updateQuery` option is required when using `fetchMore` with a `no-cache` fetch policy. This is required to correctly determine how the results should be merged with the absense of a type policy. Calling `fetchMore` without an `updateQuery` function will throw an error.
+
+</Note>

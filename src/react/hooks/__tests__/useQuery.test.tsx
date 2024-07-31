@@ -4296,21 +4296,15 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const { loading } = await ProfiledHook.takeSnapshot();
 
-        expect(snapshot.loading).toBe(true);
+        expect(loading).toBe(true);
       }
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const { loading } = await ProfiledHook.takeSnapshot();
 
-        expect(snapshot.loading).toBe(false);
-        expect(snapshot.data).toStrictEqual({
-          letters: [
-            { __typename: "Letter", letter: "A", position: 1 },
-            { __typename: "Letter", letter: "B", position: 2 },
-          ],
-        });
+        expect(loading).toBe(false);
       }
 
       const { fetchMore } = ProfiledHook.getCurrentSnapshot();

@@ -1206,6 +1206,14 @@ export class QueryManager<TStore> {
           networkStatus: NetworkStatus.ready,
         };
 
+        // In the case we start multiple network requests simulatenously, we
+        // want to ensure we properly set `data` if we're reporting on an old
+        // result which will not be caught by the conditional above that ends up
+        // throwing the markError result.
+        if (hasErrors && options.errorPolicy === "none") {
+          aqr.data = void 0 as TData;
+        }
+
         if (hasErrors && options.errorPolicy !== "ignore") {
           aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;

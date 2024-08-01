@@ -249,7 +249,7 @@ fetchMore({
 
 <Tip>
 
-We recommend defining field policies that contain at least a [`keyArgs`](/pagination/key-args/) value even if you use `updateQuery`. This prevents fragmenting the data unnecessarily in the cache.
+We recommend defining field policies that contain at least a [`keyArgs`](/pagination/key-args/) value even when you use `updateQuery`. This prevents fragmenting the data unnecessarily in the cache. Setting `keyArgs` to `false` is adequate for most situations to ignore the `offset` and `limit` arguments and write the paginated data as one big array.
 
 </Tip>
 

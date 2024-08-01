@@ -199,7 +199,7 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         feed: {
-          keyArgs: [],
+          keyArgs: false,
           merge(existing, incoming, { args: { offset = 0 }}) {
             // Slicing is necessary because the existing data is
             // immutable, and frozen in development.
@@ -217,6 +217,41 @@ const cache = new InMemoryCache({
 ```
 
 This logic handles sequential page writes the same way the single-line strategy does, but it can also tolerate repeated, overlapping, or out-of-order writes, without duplicating any list items.
+
+### Updating the query with the fetch more result
+
+At times the call to `fetchMore` may need to perform additional cache updates for your query. While you can use the [`cache.readQuery`](/caching/cache-interaction#readquery) and [`cache.writeQuery`](/caching/cache-interaction#writequery) functions to to do this work yourself, it can be cumbsersome to use both of these together.
+
+As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update your query using the result from the `fetchMore` call.
+
+<Note>
+
+`updateQuery` is not a replacement for your field policy `merge` functions. While you can use `updateQuery` without the need to define a `merge` function, `merge` functions defined for fields in the query will run using the result from `updateQuery`.
+
+</Note>
+
+Let's see the example above using `updateQuery` to merge results together instead of a field policy merge function:
+
+```ts
+fetchMore({
+  variables: { offset: data.feed.length },
+  updateQuery(previousData, { fetchMoreResult, variables: { offset }}) {
+    // Slicing is necessary because the existing data is
+    // immutable, and frozen in development.
+    const updatedFeed = previousData.feed.slice(0);
+    for (let i = 0; i < fetchMoreResult.feed.length; ++i) {
+      updatedFeed[offset + i] = fetchMoreResult.feed[i];
+    }
+    return { ...previousData, feed: updatedFeed };
+  },
+})
+```
+
+<Tip>
+
+We recommend defining field policies that contain at least a [`keyArgs`](/pagination/key-args/) value even when you use `updateQuery`. This prevents fragmenting the data unnecessarily in the cache. Setting `keyArgs` to `false` is adequate for most situations to ignore the `offset` and `limit` arguments and write the paginated data as one big array.
+
+</Tip>
 
 ## `read` functions for paginated fields
 
@@ -304,3 +339,38 @@ The `read` function for a paginated field can choose to _ignore_ arguments like 
 If you adopt this approach, you might not need to define a `read` function at all, because the cached list can be returned without any processing. That's why the [`offsetLimitPagination` helper function](./offset-based/#the-offsetlimitpagination-helper) is implemented _without_ a `read` function.
 
 Regardless of how you configure `keyArgs`, your `read` (and `merge`) functions can always examine any arguments passed to the field using the `options.args` object. See [The `keyArgs` API](./key-args) for a deeper discussion of how to reason about dividing argument-handling responsibility between `keyArgs` and your `read` or `merge` functions.
+
+## Using `fetchMore` with queries that set a `no-cache` fetch policy
+
+<Note>
+
+We recommend upgrading to version 3.11.3 or later to address bugs that exhibit unexpected behavior when using `fetchMore` with queries that set `no-cache` fetch policies. Please see pull request [#11974](https://github.com/apollographql/apollo-client/pull/11974) for more information.
+
+</Note>
+
+The examples shown above use field policies and `merge` functions to update the result of a paginated field. But what about queries that use a `no-cache` fetch policy? Data is not written to the cache, so field policies have no effect.
+
+To update our query, we provide the `updateQuery` option to the `fetchMore` function.
+
+Let's use the example above, but instead provide the `updateQuery` function to `fetchMore` to update the query.
+
+```ts
+fetchMore({
+  variables: { offset: data.feed.length },
+  updateQuery(previousData, { fetchMoreResult, variables: { offset }}) {
+    // Slicing is necessary because the existing data is
+    // immutable, and frozen in development.
+    const updatedFeed = previousData.feed.slice(0);
+    for (let i = 0; i < fetchMoreResult.feed.length; ++i) {
+      updatedFeed[offset + i] = fetchMoreResult.feed[i];
+    }
+    return { ...previousData, feed: updatedFeed };
+  },
+})
+```
+
+<Note>
+
+As of Apollo Client version 3.11.3, the `updateQuery` option is required when using `fetchMore` with a `no-cache` fetch policy. This is required to correctly determine how the results should be merged since field policy `merge` functions are ignored. Calling `fetchMore` without an `updateQuery` function will throw an error.
+
+</Note>

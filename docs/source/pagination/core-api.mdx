@@ -199,7 +199,7 @@ const cache = new InMemoryCache({
     Query: {
       fields: {
         feed: {
-          keyArgs: [],
+          keyArgs: false,
           merge(existing, incoming, { args: { offset = 0 }}) {
             // Slicing is necessary because the existing data is
             // immutable, and frozen in development.

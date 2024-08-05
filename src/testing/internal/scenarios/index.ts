@@ -106,5 +106,5 @@ export function setupPaginatedCase() {
     });
   });
 
-  return { query, link };
+  return { query, link, data };
 }

@@ -7,6 +7,7 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
+  ApolloQueryResult,
   NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
@@ -32,12 +33,15 @@ import { useMutation } from "../useMutation";
 import {
   createProfiler,
   disableActWarnings,
+  PaginatedCaseData,
   profileHook,
+  setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
+import { InvariantError } from "../../../utilities/globals";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -4047,6 +4051,297 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab.concat(cd) });
+    });
+
+    // https://github.com/apollographql/apollo-client/issues/11965
+    it("should only execute single network request when calling fetchMore with no-cache fetch policy", async () => {
+      let fetches: Array<{ variables: Record<string, unknown> }> = [];
+      const { query, data } = setupPaginatedCase();
+
+      const link = new ApolloLink((operation) => {
+        fetches.push({ variables: operation.variables });
+
+        const { offset = 0, limit = 2 } = operation.variables;
+        const letters = data.slice(offset, offset + limit);
+
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.next({ data: { letters } });
+            observer.complete();
+          }, 10);
+        });
+      });
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await ProfiledHook.takeSnapshot();
+      // finished loading
+      await ProfiledHook.takeSnapshot();
+
+      expect(fetches).toStrictEqual([{ variables: { limit: 2 } }]);
+
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+
+      await act(() =>
+        fetchMore({
+          variables: { offset: 2 },
+          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+        })
+      );
+
+      expect(fetches).toStrictEqual([
+        { variables: { limit: 2 } },
+        { variables: { limit: 2, offset: 2 } },
+      ]);
+    });
+
+    it("uses updateQuery to update the result of the query with no-cache queries", async () => {
+      const { query, link } = setupPaginatedCase();
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, {
+          notifyOnNetworkStatusChange: true,
+          fetchPolicy: "no-cache",
+          variables: { limit: 2 },
+        })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const { loading, networkStatus, data } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.loading);
+        expect(data).toBeUndefined();
+      }
+
+      {
+        const { loading, networkStatus, data } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toStrictEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+          ],
+        });
+      }
+
+      let fetchMorePromise!: Promise<ApolloQueryResult<PaginatedCaseData>>;
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+
+      act(() => {
+        fetchMorePromise = fetchMore({
+          variables: { offset: 2 },
+          updateQuery: (prev, { fetchMoreResult }) => ({
+            letters: prev.letters.concat(fetchMoreResult.letters),
+          }),
+        });
+      });
+
+      {
+        const { loading, networkStatus, data } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(data).toStrictEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+          ],
+        });
+      }
+
+      {
+        const { loading, networkStatus, data, observable } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        });
+
+        // Ensure we store the merged result as the last result
+        expect(observable.getCurrentResult(false).data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        });
+      }
+
+      await expect(fetchMorePromise).resolves.toStrictEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(ProfiledHook).not.toRerender();
+
+      act(() => {
+        fetchMorePromise = fetchMore({
+          variables: { offset: 4 },
+          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+        });
+      });
+
+      {
+        const { data, loading, networkStatus } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "A", position: 1 },
+            { __typename: "Letter", letter: "B", position: 2 },
+            { __typename: "Letter", letter: "C", position: 3 },
+            { __typename: "Letter", letter: "D", position: 4 },
+          ],
+        });
+      }
+
+      {
+        const { data, loading, networkStatus, observable } =
+          await ProfiledHook.takeSnapshot();
+
+        expect(loading).toBe(false);
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "E", position: 5 },
+            { __typename: "Letter", letter: "F", position: 6 },
+          ],
+        });
+
+        expect(observable.getCurrentResult(false).data).toEqual({
+          letters: [
+            { __typename: "Letter", letter: "E", position: 5 },
+            { __typename: "Letter", letter: "F", position: 6 },
+          ],
+        });
+      }
+
+      await expect(fetchMorePromise).resolves.toStrictEqual({
+        data: {
+          letters: [
+            { __typename: "Letter", letter: "E", position: 5 },
+            { __typename: "Letter", letter: "F", position: 6 },
+          ],
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(ProfiledHook).not.toRerender();
+    });
+
+    it("throws when using fetchMore without updateQuery for no-cache queries", async () => {
+      const { query, link } = setupPaginatedCase();
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await ProfiledHook.takeSnapshot();
+      // finished loading
+      await ProfiledHook.takeSnapshot();
+
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+
+      expect(() => fetchMore({ variables: { offset: 2 } })).toThrow(
+        new InvariantError(
+          "You must provide an `updateQuery` function when using `fetchMore` with a `no-cache` fetch policy."
+        )
+      );
+    });
+
+    it("does not write to cache when using fetchMore with no-cache queries", async () => {
+      const { query, data } = setupPaginatedCase();
+
+      const link = new ApolloLink((operation) => {
+        const { offset = 0, limit = 2 } = operation.variables;
+        const letters = data.slice(offset, offset + limit);
+
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.next({ data: { letters } });
+            observer.complete();
+          }, 10);
+        });
+      });
+
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+      const ProfiledHook = profileHook(() =>
+        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      );
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial loading
+      await ProfiledHook.takeSnapshot();
+
+      // Initial result
+      await ProfiledHook.takeSnapshot();
+
+      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      await act(() =>
+        fetchMore({
+          variables: { offset: 2 },
+          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+        })
+      );
+
+      expect(client.extract()).toStrictEqual({});
     });
 
     it("regression test for issue #8600", async () => {

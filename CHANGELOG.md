@@ -1,5 +1,21 @@
 # @apollo/client
 
+## 3.11.3
+
+### Patch Changes
+
+- [#11984](https://github.com/apollographql/apollo-client/pull/11984) [`5db1659`](https://github.com/apollographql/apollo-client/commit/5db1659dc07e3de697894fc1c6f00a151d068291) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where multiple fetches with results that returned errors would sometimes set the `data` property with an `errorPolicy` of `none`.
+
+- [#11974](https://github.com/apollographql/apollo-client/pull/11974) [`c95848e`](https://github.com/apollographql/apollo-client/commit/c95848e859fb7ce0b3b9439ac71dff880f991450) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where `fetchMore` would write its result data to the cache when using it with a `no-cache` fetch policy.
+
+- [#11974](https://github.com/apollographql/apollo-client/pull/11974) [`c95848e`](https://github.com/apollographql/apollo-client/commit/c95848e859fb7ce0b3b9439ac71dff880f991450) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where executing `fetchMore` with a `no-cache` fetch policy could sometimes result in multiple network requests.
+
+- [#11974](https://github.com/apollographql/apollo-client/pull/11974) [`c95848e`](https://github.com/apollographql/apollo-client/commit/c95848e859fb7ce0b3b9439ac71dff880f991450) Thanks [@jerelmiller](https://github.com/jerelmiller)! -
+
+  #### Potentially disruptive change
+
+  When calling `fetchMore` with a query that has a `no-cache` fetch policy, `fetchMore` will now throw if an `updateQuery` function is not provided. This provides a mechanism to merge the results from the `fetchMore` call with the query's previous result.
+
 ## 3.11.2
 
 ### Patch Changes

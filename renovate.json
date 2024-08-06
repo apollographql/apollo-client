@@ -37,5 +37,8 @@
     "glob",
     "prettier",
     "eslint-plugin-react-compiler"
-  ]
+  ],
+  "reviewers": [],
+  "reviewersFromCodeOwners": false,
+  "ignoreReviewers": ["team:@apollographql/client-typescript"]
 }

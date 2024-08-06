@@ -1076,6 +1076,77 @@ test("warns when accessing a unmasked field while using @unmask with mode: 'migr
   }
 });
 
+test("reads fragment by passing parent object to `from`", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+    };
+  }
+
+  interface Fragment {
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  const { data } = await queryStream.takeNext();
+  const fragmentObservable = client.watchFragment({
+    fragment,
+    from: data.currentUser,
+  });
+
+  const fragmentStream = new ObservableStream(fragmentObservable);
+
+  {
+    const { data, complete } = await fragmentStream.takeNext();
+
+    expect(complete).toBe(true);
+    expect(data).toEqual({ __typename: "User", age: 30 });
+  }
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

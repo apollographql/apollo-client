@@ -25,6 +25,7 @@ import {
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 import { profileHook } from "../../../testing/internal";
+import { InvariantError } from "../../../utilities/globals";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
@@ -1921,6 +1922,69 @@ describe("useLazyQuery Hook", () => {
       const { options } = result.current.query.observable;
       expect(options.fetchPolicy).toBe(defaultFetchPolicy);
     });
+  });
+
+  // regression for https://github.com/apollographql/apollo-client/issues/11988
+  test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
+    const link = new MockSubscriptionLink();
+    let requests = 0;
+    link.onSetup(() => requests++);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    const ProfiledHook = profileHook(() => useLazyQuery(helloQuery));
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+    }
+    const execute = ProfiledHook.getCurrentSnapshot()[0];
+
+    const promise = execute();
+    expect(requests).toBe(1);
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+    }
+
+    client.clearStore();
+
+    const executionResult = await promise;
+    expect(executionResult.data).toBeUndefined();
+    expect(executionResult.loading).toBe(true);
+    expect(executionResult.error).toEqual(
+      new ApolloError({
+        networkError: new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        ),
+      })
+    );
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toEqual(
+        new ApolloError({
+          networkError: new InvariantError(
+            "Store reset while query was in flight (not completed in link chain)"
+          ),
+        })
+      );
+    }
+
+    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+    await expect(ProfiledHook).not.toRerender({ timeout: 50 });
+    expect(requests).toBe(1);
   });
 });
 

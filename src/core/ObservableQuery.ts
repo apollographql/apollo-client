@@ -17,7 +17,7 @@ import {
   fixObservableSubclass,
   getQueryDefinition,
 } from "../utilities/index.js";
-import type { ApolloError } from "../errors/index.js";
+import { ApolloError, isApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -974,6 +974,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
       error: (error) => {
         if (equal(this.variables, variables)) {
+          // Coming from `getResultsFromLink`, `error` here should always be an `ApolloError`.
+          // However, calling `concast.cancel` can inject another type of error, so we have to
+          // wrap it again here.
+          if (!isApolloError(error)) {
+            error = new ApolloError({ networkError: error });
+          }
           finishWaitingForOwnResult();
           this.reportError(error, variables);
         }

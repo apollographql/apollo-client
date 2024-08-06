@@ -10082,6 +10082,54 @@ describe("useQuery Hook", () => {
     );
   });
 
+  test("calling `clearStore` while a query is running puts the hook into an error state", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    let requests = 0;
+    link.onSetup(() => requests++);
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+    const ProfiledHook = profileHook(() => useQuery(query));
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    expect(requests).toBe(1);
+    {
+      const result = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+    }
+
+    client.clearStore();
+
+    {
+      const result = await ProfiledHook.takeSnapshot();
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toEqual(
+        new ApolloError({
+          networkError: new InvariantError(
+            "Store reset while query was in flight (not completed in link chain)"
+          ),
+        })
+      );
+    }
+
+    link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
+    await expect(ProfiledHook).not.toRerender({ timeout: 50 });
+    expect(requests).toBe(1);
+  });
+
   // https://github.com/apollographql/apollo-client/issues/11938
   it("does not emit `data` on previous fetch when a 2nd fetch is kicked off and the result returns an error when errorPolicy is none", async () => {
     const query = gql`

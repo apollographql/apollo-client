@@ -10128,6 +10128,8 @@ describe("useQuery Hook", () => {
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
     await expect(ProfiledHook).not.toRerender({ timeout: 50 });
     expect(requests).toBe(1);
+  });
+
   // https://github.com/apollographql/apollo-client/issues/11938
   it("does not emit `data` on previous fetch when a 2nd fetch is kicked off and the result returns an error when errorPolicy is none", async () => {
     const query = gql`

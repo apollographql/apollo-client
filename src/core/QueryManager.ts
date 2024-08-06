@@ -1176,11 +1176,12 @@ export class QueryManager<TStore> {
       (result) => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;
+        const { errorPolicy } = options;
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
-          if (hasErrors && options.errorPolicy === "none") {
+          if (hasErrors && errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
             throw queryInfo.markError(
               new ApolloError({
@@ -1206,7 +1207,15 @@ export class QueryManager<TStore> {
           networkStatus: NetworkStatus.ready,
         };
 
-        if (hasErrors && options.errorPolicy !== "ignore") {
+        // In the case we start multiple network requests simulatenously, we
+        // want to ensure we properly set `data` if we're reporting on an old
+        // result which will not be caught by the conditional above that ends up
+        // throwing the markError result.
+        if (hasErrors && errorPolicy === "none") {
+          aqr.data = void 0 as TData;
+        }
+
+        if (hasErrors && errorPolicy !== "ignore") {
           aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;
         }

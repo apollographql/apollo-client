@@ -1,5 +1,5 @@
 import React, { Fragment, ReactNode, useEffect, useRef, useState } from "react";
-import { DocumentNode, GraphQLError } from "graphql";
+import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
 import gql from "graphql-tag";
 import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10128,6 +10128,83 @@ describe("useQuery Hook", () => {
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
     await expect(ProfiledHook).not.toRerender({ timeout: 50 });
     expect(requests).toBe(1);
+  // https://github.com/apollographql/apollo-client/issues/11938
+  it("does not emit `data` on previous fetch when a 2nd fetch is kicked off and the result returns an error when errorPolicy is none", async () => {
+    const query = gql`
+      query {
+        user {
+          id
+          name
+        }
+      }
+    `;
+
+    const graphQLError: GraphQLFormattedError = { message: "Cannot get name" };
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: { user: { __typename: "User", id: "1", name: null } },
+          errors: [graphQLError],
+        },
+        delay: 10,
+        maxUsageCount: Number.POSITIVE_INFINITY,
+      },
+    ];
+
+    const ProfiledHook = profileHook(() =>
+      useQuery(query, { notifyOnNetworkStatusChange: true })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
+    });
+
+    {
+      const { loading, data, error } = await ProfiledHook.takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(error).toBeUndefined();
+    }
+
+    {
+      const { loading, data, error } = await ProfiledHook.takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toBeUndefined();
+      expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
+    }
+
+    const { refetch } = ProfiledHook.getCurrentSnapshot();
+
+    refetch().catch(() => {});
+    refetch().catch(() => {});
+
+    {
+      const { loading, networkStatus, data, error } =
+        await ProfiledHook.takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(networkStatus).toBe(NetworkStatus.refetch);
+      expect(error).toBeUndefined();
+    }
+
+    {
+      const { loading, networkStatus, data, error } =
+        await ProfiledHook.takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toBeUndefined();
+      expect(networkStatus).toBe(NetworkStatus.error);
+      expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
+    }
+
+    await expect(ProfiledHook).not.toRerender({ timeout: 200 });
   });
 });
 

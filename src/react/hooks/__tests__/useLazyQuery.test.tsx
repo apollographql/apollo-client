@@ -1924,7 +1924,8 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  test("regression for #11988: calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
+  // regression for https://github.com/apollographql/apollo-client/issues/11988
+  test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
     const link = new MockSubscriptionLink();
     let requests = 0;
     link.onSetup(() => requests++);

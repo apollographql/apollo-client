@@ -517,5 +517,28 @@ describe.skip("Cache type tests", () => {
         },
       });
     });
+
+    test("Allow for mixed arrays on union fields", () => {
+      const cache = new TestCache();
+      cache.modify<{
+        union: Array<
+          | { __typename: "Type1"; a: string }
+          | { __typename: "Type2"; b: string }
+        >;
+      }>({
+        fields: {
+          union(field) {
+            expectTypeOf(field).toEqualTypeOf<
+              ReadonlyArray<
+                | Reference
+                | { __typename: "Type1"; a: string }
+                | { __typename: "Type2"; b: string }
+              >
+            >();
+            return field;
+          },
+        },
+      });
+    });
   });
 });

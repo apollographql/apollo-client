@@ -1,5 +1,22 @@
 # @apollo/client
 
+## 3.11.4
+
+### Patch Changes
+
+- [#11994](https://github.com/apollographql/apollo-client/pull/11994) [`41b17e5`](https://github.com/apollographql/apollo-client/commit/41b17e5950f4db5ef9e32ded5bb327b3bf19e6e8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update the `Modifier` function type to allow `cache.modify` to return deeply partial data.
+
+- [#11989](https://github.com/apollographql/apollo-client/pull/11989) [`e609156`](https://github.com/apollographql/apollo-client/commit/e609156c4989def88ae1a28b2e0f0378077a5528) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential crash when calling `clearStore` while a query was running.
+
+  Previously, calling `client.clearStore()` while a query was running had one of these results:
+
+  - `useQuery` would stay in a `loading: true` state.
+  - `useLazyQuery` would stay in a `loading: true` state, but also crash with a `"Cannot read property 'data' of undefined"` error.
+
+  Now, in both cases, the hook will enter an error state with a `networkError`, and the promise returned by the `useLazyQuery` `execute` function will return a result in an error state.
+
+- [#11994](https://github.com/apollographql/apollo-client/pull/11994) [`41b17e5`](https://github.com/apollographql/apollo-client/commit/41b17e5950f4db5ef9e32ded5bb327b3bf19e6e8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent accidental distribution on `cache.modify` field modifiers when a field is a union type array.
+
 ## 3.11.3
 
 ### Patch Changes

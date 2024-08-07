@@ -6,6 +6,7 @@ export type {
 } from "./graphql/directives.js";
 export {
   shouldInclude,
+  shouldMask,
   hasDirectives,
   hasAnyDirectives,
   hasAllDirectives,

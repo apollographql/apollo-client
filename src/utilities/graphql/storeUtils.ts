@@ -211,6 +211,7 @@ const KNOWN_DIRECTIVES: string[] = [
   "rest",
   "export",
   "nonreactive",
+  'mask'
 ];
 
 // Default stable JSON.stringify implementation used by getStoreKeyName. Can be

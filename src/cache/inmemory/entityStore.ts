@@ -257,7 +257,7 @@ export abstract class EntityStore implements NormalizedCache {
             if (newValue !== fieldValue) {
               changedFields[storeFieldName] = newValue;
               needToMerge = true;
-              fieldValue = newValue;
+              fieldValue = newValue as StoreValue;
 
               if (__DEV__) {
                 const checkReference = (ref: Reference) => {

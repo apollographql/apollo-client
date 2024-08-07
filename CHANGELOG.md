@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#11994](https://github.com/apollographql/apollo-client/pull/11994) [`41b17e5`](https://github.com/apollographql/apollo-client/commit/41b17e5950f4db5ef9e32ded5bb327b3bf19e6e8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `cache.modify` to return deeply partial data.
+- [#11994](https://github.com/apollographql/apollo-client/pull/11994) [`41b17e5`](https://github.com/apollographql/apollo-client/commit/41b17e5950f4db5ef9e32ded5bb327b3bf19e6e8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update the `Modifier` function type to allow `cache.modify` to return deeply partial data.
 
 - [#11989](https://github.com/apollographql/apollo-client/pull/11989) [`e609156`](https://github.com/apollographql/apollo-client/commit/e609156c4989def88ae1a28b2e0f0378077a5528) Thanks [@phryneas](https://github.com/phryneas)! - Fix a potential crash when calling `clearStore` while a query was running.
 

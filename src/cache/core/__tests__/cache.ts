@@ -540,5 +540,36 @@ describe.skip("Cache type tests", () => {
         },
       });
     });
+
+    test("Allows partial return data", () => {
+      const cache = new TestCache();
+      cache.modify<{
+        union: Array<
+          | { __typename: "Type1"; a: string; c: { foo: string } }
+          | { __typename: "Type2"; b: string; d: { bar: number } }
+        >;
+      }>({
+        fields: {
+          union(field) {
+            expectTypeOf(field).toEqualTypeOf<
+              ReadonlyArray<
+                | Reference
+                | {
+                    __typename: "Type1";
+                    a: string;
+                    c: { foo: string };
+                  }
+                | {
+                    __typename: "Type2";
+                    b: string;
+                    d: { bar: number };
+                  }
+              >
+            >();
+            return [{ __typename: "Type1", a: "foo" }];
+          },
+        },
+      });
+    });
   });
 });

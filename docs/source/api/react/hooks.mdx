@@ -21,7 +21,6 @@ import UseSuspenseQueryResult from '../../../shared/useSuspenseQuery-result.mdx'
 import UseBackgroundQueryResult from '../../../shared/useBackgroundQuery-result.mdx';
 import UseReadQueryResult from '../../../shared/useReadQuery-result.mdx';
 import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails } from '../../../shared/ApiDoc';
-import { UseLoadableQueryResult } from '../../../shared/Overrides/UseLoadableQueryResult'
 
 ## The `ApolloProvider` component
 
@@ -404,7 +403,43 @@ function useReadQuery<TData>(
   canonicalReference="@apollo/client!useLoadableQuery:function(5)"
   headingLevel={2}
 >
-  <UseLoadableQueryResult />
+  ```ts
+  [
+    loadQuery: LoadQueryFunction<TVariables>,
+    queryRef: QueryRef<TData, TVariables> | null,
+    {
+      fetchMore: FetchMoreFunction<TData, TVariables>;
+      refetch: RefetchFunction<TData, TVariables>;
+      reset: ResetFunction;
+    }
+  ]
+  ```
+
+  A tuple of three values:
+  <ManualTuple>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="loadQuery"
+      type="LoadQueryFunction<TVariables>"
+    >
+      A function used to imperatively load a query. Calling this function will create or update the `queryRef` returned by `useLoadableQuery`, which should be passed to `useReadQuery`.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="queryRef"
+      type="QueryRef<TData, TVariables> | null"
+      canonicalReference="@apollo/client!QueryRef:interface"
+    >
+      The `queryRef` used by `useReadQuery` to read the query result.
+    </ManualTupleItem>
+    <ManualTupleItem
+      idPrefix="useloadablequery-result"
+      name="handlers"
+      type="{ fetchMore: FetchMoreFunction<TData, TVariables>; refetch: RefetchFunction<TData, TVariables>; reset: ResetFunction; }"
+    >
+      Additional handlers used for the query, such as `refetch`.
+    </ManualTupleItem>
+  </ManualTuple>
 </FunctionDetails>
 
 <FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />

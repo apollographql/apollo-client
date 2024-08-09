@@ -196,6 +196,13 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
+  private prepareVariables(variables: TVariables, query = this.query) {
+    return this.queryManager["getVariables"](
+      this.queryManager.transform(query),
+      variables
+    ) as TVariables;
+  }
+
   public result(): Promise<ApolloQueryResult<TData>> {
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer
@@ -412,10 +419,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     if (variables && !equal(this.options.variables, variables)) {
       // Update the existing options with new variables
-      reobserveOptions.variables = this.options.variables = {
-        ...this.options.variables,
-        ...variables,
-      } as TVariables;
+      reobserveOptions.variables = this.options.variables =
+        this.prepareVariables({
+          ...this.options.variables,
+          ...variables,
+        } as TVariables);
     }
 
     this.queryInfo.resetLastWrite();
@@ -914,6 +922,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const oldVariables = this.options.variables;
     const oldFetchPolicy = this.options.fetchPolicy;
 
+    if (newOptions && newOptions.variables) {
+      newOptions = {
+        ...newOptions,
+        variables: this.prepareVariables(
+          newOptions.variables,
+          newOptions.query
+        ),
+      };
+    }
     const mergedOptions = compact(this.options, newOptions || {});
     const options =
       useDisposableConcast ?

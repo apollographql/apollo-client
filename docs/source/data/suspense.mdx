@@ -564,7 +564,7 @@ const preloadedQueryRef = preloadQuery(GET_DOGS_QUERY);
 
 function App() {
   const { data } = useReadQuery(preloadedQueryRef);
-  const [queryRef, loadDog] = useLoadableQuery(GET_DOG_QUERY)
+  const [loadDog, queryRef] = useLoadableQuery(GET_DOG_QUERY)
 
   return (
     <>

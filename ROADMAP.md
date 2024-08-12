@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-07-29**
+**Last updated: 2024-08-12**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -40,7 +40,6 @@ _Release candidate - September 30, 2024_
 
 ### VSCode Extension
 
-- Modernization
 - Bug fixes and long-requested features
 
 ### GraphQL Tag

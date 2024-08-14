@@ -245,10 +245,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): Observable<WatchFragmentResult<TData>> {
     const { fragment, fragmentName, from, optimistic = true } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
+    const id = typeof from === "string" ? from : this.identify(from);
+
+    if (!id) {
+      invariant.warn(
+        "Could not identify object passed to `from` either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object."
+      );
+    }
 
     const diffOptions: Cache.DiffOptions<TData, TVars> = {
       returnPartialData: true,
-      id: typeof from === "string" ? from : this.identify(from),
+      id,
       query,
       optimistic,
     };

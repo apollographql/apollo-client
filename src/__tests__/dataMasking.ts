@@ -1147,7 +1147,9 @@ test("reads fragment by passing parent object to `from`", async () => {
   }
 });
 
-test("reads fragment by passing parent object to `from` when id is masked", async () => {
+test("warns when passing parent object to `from` when id is masked", async () => {
+  using _ = spyOnConsole("warn");
+
   interface Query {
     currentUser: {
       __typename: "User";
@@ -1208,13 +1210,19 @@ test("reads fragment by passing parent object to `from` when id is masked", asyn
     from: data.currentUser,
   });
 
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not identify object passed to `from` either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object."
+  );
+
   const fragmentStream = new ObservableStream(fragmentObservable);
 
   {
     const { data, complete } = await fragmentStream.takeNext();
 
+    expect(data).toEqual({});
+    // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
     expect(complete).toBe(true);
-    expect(data).toEqual({ __typename: "User", age: 30 });
   }
 });
 

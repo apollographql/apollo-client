@@ -1226,6 +1226,82 @@ test("warns when passing parent object to `from` when id is masked", async () =>
   }
 });
 
+test("warns when passing parent object to `from` that is non-normalized", async () => {
+  using _ = spyOnConsole("warn");
+
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      name: string;
+    };
+  }
+
+  interface Fragment {
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      age
+    }
+  `;
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        name
+        ...UserFields
+      }
+    }
+
+    ${fragment}
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const queryStream = new ObservableStream(client.watchQuery({ query }));
+
+  const { data } = await queryStream.takeNext();
+  const fragmentObservable = client.watchFragment({
+    fragment,
+    from: data.currentUser,
+  });
+
+  expect(console.warn).toHaveBeenCalledTimes(1);
+  expect(console.warn).toHaveBeenCalledWith(
+    "Could not identify object passed to `from` either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object."
+  );
+
+  const fragmentStream = new ObservableStream(fragmentObservable);
+
+  {
+    const { data, complete } = await fragmentStream.takeNext();
+
+    expect(data).toEqual({});
+    // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+    expect(complete).toBe(true);
+  }
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

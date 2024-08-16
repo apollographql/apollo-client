@@ -10,6 +10,7 @@ import {
   Observable,
   cacheSizes,
   defaultCacheSizes,
+  getFragmentDefinition,
   getFragmentQueryDocument,
   mergeDeepArray,
 } from "../../utilities/index.js";
@@ -240,20 +241,33 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       ...otherOptions
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
+    // While our TypeScript types do not allow for `undefined` as a valid
+    // `from`, its possible `useFragment` gives us an `undefined` since it
+    // calls` cache.identify` and provides that value to `from`. We are
+    // adding this fix here however to ensure those using plain JavaScript
+    // and using `cache.identify` themselves will avoid seeing the obscure
+    // warning.
+    const id =
+      typeof from === "undefined" || typeof from === "string" ?
+        from
+      : this.identify(from);
+
+    if (__DEV__) {
+      const actualFragmentName =
+        fragmentName || getFragmentDefinition(fragment).name.value;
+
+      if (!id) {
+        invariant.warn(
+          "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+          actualFragmentName
+        );
+      }
+    }
 
     const diffOptions: Cache.DiffOptions<TData, TVars> = {
       ...otherOptions,
       returnPartialData: true,
-      id:
-        // While our TypeScript types do not allow for `undefined` as a valid
-        // `from`, its possible `useFragment` gives us an `undefined` since it
-        // calls` cache.identify` and provides that value to `from`. We are
-        // adding this fix here however to ensure those using plain JavaScript
-        // and using `cache.identify` themselves will avoid seeing the obscure
-        // warning.
-        typeof from === "undefined" || typeof from === "string" ?
-          from
-        : this.identify(from),
+      id,
       query,
       optimistic,
     };

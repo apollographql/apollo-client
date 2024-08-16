@@ -1558,6 +1558,46 @@ describe("useFragment", () => {
     await expect(ProfiledHook).not.toRerender();
   });
 
+  it("warns when passing parent object to `from` when key fields are missing", async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Fragment {
+      age: number;
+    }
+
+    const fragment: TypedDocumentNode<Fragment, never> = gql`
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({ fragment, from: { __typename: "User" } })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+      "UserFields"
+    );
+
+    {
+      const { data, complete } = await ProfiledHook.takeSnapshot();
+
+      expect(data).toEqual({});
+      // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+      expect(complete).toBe(true);
+    }
+  });
+
   describe("tests with incomplete data", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
     const ItemFragment = gql`

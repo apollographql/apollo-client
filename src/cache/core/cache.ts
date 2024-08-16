@@ -10,6 +10,7 @@ import {
   Observable,
   cacheSizes,
   defaultCacheSizes,
+  getFragmentDefinition,
   getFragmentQueryDocument,
   mergeDeepArray,
 } from "../../utilities/index.js";
@@ -240,11 +241,24 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       ...otherOptions
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
+    const id = typeof from === "string" ? from : this.identify(from);
+
+    if (__DEV__) {
+      const actualFragmentName =
+        fragmentName || getFragmentDefinition(fragment).name.value;
+
+      if (!id) {
+        invariant.warn(
+          "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+          actualFragmentName
+        );
+      }
+    }
 
     const diffOptions: Cache.DiffOptions<TData, TVars> = {
       ...otherOptions,
       returnPartialData: true,
-      id: typeof from === "string" ? from : this.identify(from),
+      id,
       query,
       optimistic,
     };

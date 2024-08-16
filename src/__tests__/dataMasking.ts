@@ -1,8 +1,7 @@
-import { FragmentSpreadNode, GraphQLError, Kind, visit } from "graphql";
+import { FragmentSpreadNode, Kind, visit } from "graphql";
 import {
   ApolloCache,
   ApolloClient,
-  ApolloError,
   Cache,
   DataProxy,
   DocumentTransform,
@@ -888,7 +887,7 @@ test("masks partial data returned from data on errors with errorPolicy `all`", a
             age: 34,
           },
         },
-        errors: [new GraphQLError("Couldn't get name")],
+        errors: [{ message: "Couldn't get name" }],
       },
       delay: 20,
     },
@@ -915,11 +914,7 @@ test("masks partial data returned from data on errors with errorPolicy `all`", a
       },
     });
 
-    expect(errors).toEqual([
-      new ApolloError({
-        graphQLErrors: [new GraphQLError("Couldn't get name")],
-      }),
-    ]);
+    expect(errors).toEqual([{ message: "Couldn't get name" }]);
   }
 });
 

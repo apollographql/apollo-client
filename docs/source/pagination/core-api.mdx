@@ -220,7 +220,7 @@ This logic handles sequential page writes the same way the single-line strategy 
 
 ### Updating the query with the fetch more result
 
-At times the call to `fetchMore` may need to perform additional cache updates for your query. While you can use the [`cache.readQuery`](/caching/cache-interaction#readquery) and [`cache.writeQuery`](/caching/cache-interaction#writequery) functions to to do this work yourself, it can be cumbsersome to use both of these together.
+At times the call to `fetchMore` may need to perform additional cache updates for your query. While you can use the [`cache.readQuery`](/react/caching/cache-interaction#readquery) and [`cache.writeQuery`](/react/caching/cache-interaction#writequery) functions to to do this work yourself, it can be cumbsersome to use both of these together.
 
 As a shortcut, you can provide the `updateQuery` option to `fetchMore` to update your query using the result from the `fetchMore` call.
 
@@ -249,7 +249,7 @@ fetchMore({
 
 <Tip>
 
-We recommend defining field policies that contain at least a [`keyArgs`](/pagination/key-args/) value even when you use `updateQuery`. This prevents fragmenting the data unnecessarily in the cache. Setting `keyArgs` to `false` is adequate for most situations to ignore the `offset` and `limit` arguments and write the paginated data as one big array.
+We recommend defining field policies that contain at least a [`keyArgs`](/react/pagination/key-args/) value even when you use `updateQuery`. This prevents fragmenting the data unnecessarily in the cache. Setting `keyArgs` to `false` is adequate for most situations to ignore the `offset` and `limit` arguments and write the paginated data as one big array.
 
 </Tip>
 

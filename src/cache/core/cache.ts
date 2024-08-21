@@ -24,7 +24,7 @@ import type {
 } from "../../core/types.js";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { maskOperation } from "../../core/masking.js";
+import { maskFragment, maskOperation } from "../../core/masking.js";
 import { invariant } from "../../utilities/globals/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
@@ -392,6 +392,29 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     }
 
     return maskOperation(data, document, this.fragmentMatches.bind(this));
+  }
+
+  public maskFragment<TData = unknown>(
+    document: DocumentNode,
+    data: TData,
+    fragmentName?: string
+  ) {
+    if (!this.fragmentMatches) {
+      if (__DEV__) {
+        invariant.warn(
+          "This cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+        );
+      }
+
+      return data;
+    }
+
+    return maskFragment(
+      data,
+      document,
+      this.fragmentMatches.bind(this),
+      fragmentName
+    );
   }
 
   /**

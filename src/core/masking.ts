@@ -149,12 +149,22 @@ function maskSelectionSet(
           memo[keyName] = data[keyName];
 
           if (childSelectionSet) {
-            const [masked, childChanged] = maskSelectionSet(
+            let [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
               context,
               __DEV__ ? `${path || ""}.${keyName}` : void 0
             );
+
+            // This check prevents cases where masked fields may accidentally be
+            // returned as part of this object when the fragment also selects
+            // additional fields from the same child selection.
+            if (
+              !childChanged &&
+              Object.keys(masked).length !== Object.keys(data[keyName]).length
+            ) {
+              childChanged = true;
+            }
 
             if (childChanged) {
               memo[keyName] = masked;

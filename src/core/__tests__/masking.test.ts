@@ -144,6 +144,46 @@ describe("maskOperation", () => {
     });
   });
 
+  test("masks fragments from nested objects when query gets fields from same object", () => {
+    const query = gql`
+      query {
+        user {
+          __typename
+          profile {
+            __typename
+            id
+          }
+          ...UserFields
+        }
+      }
+      fragment UserFields on User {
+        profile {
+          __typename
+          id
+          fullName
+        }
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        user: {
+          __typename: "User",
+          profile: { __typename: "Profile", id: "1", fullName: "Test User" },
+        },
+      }),
+      query,
+      createFragmentMatcher(new InMemoryCache())
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        profile: { __typename: "Profile", id: "1" },
+      },
+    });
+  });
+
   test("deep freezes the masked result if the original data is frozen", () => {
     const query = gql`
       query {

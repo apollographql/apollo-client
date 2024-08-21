@@ -2515,6 +2515,63 @@ describe("ApolloClient", () => {
         });
       }
     });
+
+    it("works with nested fragments", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      const ItemNestedFragment = gql`
+        fragment ItemNestedFragment on Item {
+          complete
+        }
+      `;
+
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+          ...ItemNestedFragment
+        }
+
+        ${ItemNestedFragment}
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+          complete: true,
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+            complete: true,
+          },
+          complete: true,
+        });
+      }
+    });
   });
 
   describe("defaultOptions", () => {

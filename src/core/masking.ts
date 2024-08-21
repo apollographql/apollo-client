@@ -139,7 +139,7 @@ function maskSelectionSet(
     return [changed ? masked : data, changed];
   }
 
-  return selectionSet.selections.reduce<[any, boolean]>(
+  const result = selectionSet.selections.reduce<[any, boolean]>(
     ([memo, changed], selection) => {
       switch (selection.kind) {
         case Kind.FIELD: {
@@ -223,6 +223,12 @@ function maskSelectionSet(
     },
     [Object.create(null), false]
   );
+
+  if ("__typename" in data && !("__typename" in result[0])) {
+    result[0].__typename = data.__typename;
+  }
+
+  return result;
 }
 
 function addFieldAccessorWarnings(

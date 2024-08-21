@@ -106,6 +106,45 @@ describe("maskOperation", () => {
     expect(data).toEqual({ user: { __typename: "User", id: 1 } });
   });
 
+  test("retains __typename in the result", () => {
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            id
+          }
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on Query {
+        age
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        user: {
+          __typename: "User",
+          id: 1,
+          age: 30,
+          profile: { __typename: "Profile", id: 2 },
+        },
+      }),
+      query,
+      createFragmentMatcher(new InMemoryCache())
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        id: 1,
+        profile: { __typename: "Profile", id: 2 },
+      },
+    });
+  });
+
   test("deep freezes the masked result if the original data is frozen", () => {
     const query = gql`
       query {

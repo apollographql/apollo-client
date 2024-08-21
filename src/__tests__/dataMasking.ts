@@ -1301,13 +1301,6 @@ test("warns when passing parent object to `from` that is non-normalized", async 
 });
 
 test("masks nested fragments when dataMasking is `true`", async () => {
-  interface Query {
-    currentUser: {
-      __typename: "User";
-      id: number;
-    };
-  }
-
   type UserFieldsFragment = {
     __typename: "User";
     id: number;
@@ -1337,52 +1330,29 @@ test("masks nested fragments when dataMasking is `true`", async () => {
     ${nameFieldsFragment}
   `;
 
-  const query: TypedDocumentNode<Query, never> = gql`
-    query MaskedQuery {
-      currentUser {
-        id
-        ...UserFields
-      }
-    }
-
-    ${userFieldsFragment}
-  `;
-
-  const mocks = [
-    {
-      request: { query },
-      result: {
-        data: {
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            firstName: "Test",
-            lastName: "User",
-            age: 30,
-          },
-        },
-      },
-    },
-  ];
-
   const client = new ApolloClient({
     dataMasking: true,
     cache: new InMemoryCache(),
-    link: new MockLink(mocks),
   });
 
-  const observable = client.watchQuery({ query });
-
-  const queryStream = new ObservableStream(observable);
-  const {
-    data: { currentUser },
-  } = await queryStream.takeNext();
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      age: 30,
+      // @ts-expect-error Need to determine types when writing data for masked fragment types
+      firstName: "Test",
+      lastName: "User",
+    },
+  });
 
   const fragmentStream = new ObservableStream(
     client.watchFragment({
       fragment: userFieldsFragment,
       fragmentName: "UserFields",
-      from: currentUser,
+      from: { __typename: "User", id: 1 },
     })
   );
 
@@ -1393,10 +1363,7 @@ test("masks nested fragments when dataMasking is `true`", async () => {
   invariant(complete, "Should never be incomplete");
 
   const nestedFragmentStream = new ObservableStream(
-    client.watchFragment({
-      fragment: nameFieldsFragment,
-      from: data,
-    })
+    client.watchFragment({ fragment: nameFieldsFragment, from: data })
   );
 
   {

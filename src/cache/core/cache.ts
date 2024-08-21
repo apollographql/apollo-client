@@ -269,21 +269,19 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       return this.watch<TData, TVars>({
         ...diffOptions,
         immediate: true,
-        callback(diff) {
+        callback: (diff) => {
+          const data = this.maskFragment(fragment, diff.result, fragmentName);
+
           if (
             // Always ensure we deliver the first result
             latestDiff &&
-            equalByQuery(
-              query,
-              { data: latestDiff?.result },
-              { data: diff.result }
-            )
+            equalByQuery(query, { data: latestDiff?.result }, { data })
           ) {
             return;
           }
 
           const result = {
-            data: diff.result as DeepPartial<TData>,
+            data: data as DeepPartial<TData>,
             complete: !!diff.complete,
           } as WatchFragmentResult<TData>;
 
@@ -293,7 +291,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
             );
           }
 
-          latestDiff = diff;
+          latestDiff = { ...diff, result: data };
           observer.next(result);
         },
       });

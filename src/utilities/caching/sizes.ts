@@ -252,7 +252,7 @@ export interface CacheSizes {
    * will fall back to this configuration value if the option is not set.
    *
    * @defaultValue
-   * Defaults to `10000`.
+   * Defaults to `50000`.
    *
    * @remarks
    * Every object that is read from the cache will be cached here, so it is
@@ -267,7 +267,7 @@ export interface CacheSizes {
    * will fall back to this configuration value if the option is not set.
    *
    * @defaultValue
-   * Defaults to `5000`.
+   * Defaults to `10000`.
    *
    * @remarks
    * Every array that is read from the cache will be cached here, so it is

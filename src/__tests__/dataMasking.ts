@@ -13,6 +13,7 @@ import {
 } from "../core";
 import { MockLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { invariant } from "../utilities/globals";
 
 test("masks queries when dataMasking is `true`", async () => {
   interface Query {
@@ -1296,6 +1297,117 @@ test("warns when passing parent object to `from` that is non-normalized", async 
     expect(data).toEqual({});
     // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
     expect(complete).toBe(true);
+  }
+});
+
+test("masks nested fragments when dataMasking is `true`", async () => {
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+    };
+  }
+
+  type UserFieldsFragment = {
+    __typename: "User";
+    id: number;
+    age: number;
+  };
+
+  type NameFieldsFragment = {
+    __typename: "User";
+    firstName: string;
+    lastName: string;
+  };
+
+  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+    fragment NameFields on User {
+      firstName
+      lastName
+    }
+  `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+    fragment UserFields on User {
+      id
+      age
+      ...NameFields
+    }
+
+    ${nameFieldsFragment}
+  `;
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        ...UserFields
+      }
+    }
+
+    ${userFieldsFragment}
+  `;
+
+  const mocks = [
+    {
+      request: { query },
+      result: {
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            firstName: "Test",
+            lastName: "User",
+            age: 30,
+          },
+        },
+      },
+    },
+  ];
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  const observable = client.watchQuery({ query });
+
+  const queryStream = new ObservableStream(observable);
+  const {
+    data: { currentUser },
+  } = await queryStream.takeNext();
+
+  const fragmentStream = new ObservableStream(
+    client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: currentUser,
+    })
+  );
+
+  const { data, complete } = await fragmentStream.takeNext();
+
+  expect(data).toEqual({ __typename: "User", id: 1, age: 30 });
+  expect(complete).toBe(true);
+  invariant(complete, "Should never be incomplete");
+
+  const nestedFragmentStream = new ObservableStream(
+    client.watchFragment({
+      fragment: nameFieldsFragment,
+      from: data,
+    })
+  );
+
+  {
+    const { data, complete } = await nestedFragmentStream.takeNext();
+
+    expect(complete).toBe(true);
+    expect(data).toEqual({
+      __typename: "User",
+      firstName: "Test",
+      lastName: "User",
+    });
   }
 });
 

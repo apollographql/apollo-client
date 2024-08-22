@@ -86,7 +86,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           ...UserFields
         }
@@ -106,11 +105,49 @@ describe("maskOperation", () => {
     expect(data).toEqual({ user: { __typename: "User", id: 1 } });
   });
 
+  test("retains __typename in the result", () => {
+    const query = gql`
+      query {
+        user {
+          id
+          profile {
+            id
+          }
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on Query {
+        age
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        user: {
+          __typename: "User",
+          id: 1,
+          age: 30,
+          profile: { __typename: "Profile", id: 2 },
+        },
+      }),
+      query,
+      createFragmentMatcher(new InMemoryCache())
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        id: 1,
+        profile: { __typename: "Profile", id: 2 },
+      },
+    });
+  });
+
   test("deep freezes the masked result if the original data is frozen", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           ...UserFields
         }
@@ -141,7 +178,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         users {
-          __typename
           id
           ...UserFields
         }
@@ -175,7 +211,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           ...UserProfileFields
           ...UserAvatarFields
@@ -213,12 +248,10 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           ...UserFields
         }
         post {
-          __typename
           id
           ...PostFields
         }
@@ -260,7 +293,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           birthdate
           ...UserProfileFields
@@ -299,14 +331,12 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           ... @defer {
             name
           }
         }
         profile {
-          __typename
           ... on UserProfile {
             avatarUrl
           }
@@ -350,7 +380,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           ... @defer {
             name
@@ -358,13 +387,11 @@ describe("maskOperation", () => {
           }
         }
         profile {
-          __typename
           ... on UserProfile {
             avatarUrl
             ...UserProfileFields
           }
           industry {
-            __typename
             ... on TechIndustry {
               ...TechIndustryFields
             }
@@ -430,7 +457,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         drinks {
-          __typename
           id
           ... on Juice {
             fruitBase
@@ -462,7 +488,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           fullName: name
           ... @defer {
@@ -512,7 +537,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         drinks {
-          __typename
           id
           ... @defer {
             amount
@@ -521,7 +545,6 @@ describe("maskOperation", () => {
             milkType
             ... on Latte {
               flavor {
-                __typename
                 name
                 ...FlavorFields
               }
@@ -649,7 +672,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           name
         }
@@ -671,26 +693,21 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           profile {
-            __typename
             avatarUrl
           }
           ...UserFields
         }
         post {
-          __typename
           id
           title
         }
         authors {
-          __typename
           id
           name
         }
         industries {
-          __typename
           ... on TechIndustry {
             languageRequirements
           }
@@ -704,7 +721,6 @@ describe("maskOperation", () => {
           }
         }
         drink {
-          __typename
           ... on SportsDrink {
             saltContent
           }
@@ -788,7 +804,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           name
         }
@@ -819,7 +834,6 @@ describe("maskOperation", () => {
           id
           name
           ...UserFields @unmask
-          __typename
         }
       }
 
@@ -850,26 +864,21 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           id
           profile {
-            __typename
             avatarUrl
           }
           ...UserFields @unmask
         }
         post {
-          __typename
           id
           title
         }
         authors {
-          __typename
           id
           name
         }
         industries {
-          __typename
           ... on TechIndustry {
             ...TechIndustryFields @unmask
           }
@@ -987,7 +996,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask(mode: "migrate")
@@ -1002,7 +1010,6 @@ describe("maskOperation", () => {
     const anonymousQuery = gql`
       query {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask(mode: "migrate")
@@ -1067,7 +1074,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask(mode: "migrate")
@@ -1103,7 +1109,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         users {
-          __typename
           id
           name
           ...UserFields @unmask(mode: "migrate")
@@ -1151,7 +1156,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask
@@ -1161,7 +1165,6 @@ describe("maskOperation", () => {
       fragment UserFields on User {
         age
         profile {
-          __typename
           email
           ... @defer {
             username
@@ -1169,7 +1172,6 @@ describe("maskOperation", () => {
           ...ProfileFields
         }
         skills {
-          __typename
           name
           ...SkillFields @unmask(mode: "migrate")
         }
@@ -1177,7 +1179,6 @@ describe("maskOperation", () => {
 
       fragment ProfileFields on Profile {
         settings {
-          __typename
           darkMode
         }
       }
@@ -1266,7 +1267,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask(mode: "migrate")
@@ -1326,7 +1326,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask(mode: "migrate")
@@ -1336,7 +1335,6 @@ describe("maskOperation", () => {
       fragment UserFields on User {
         age
         profile {
-          __typename
           email
           ... @defer {
             username
@@ -1344,7 +1342,6 @@ describe("maskOperation", () => {
           ...ProfileFields @unmask(mode: "migrate")
         }
         skills {
-          __typename
           name
           ...SkillFields @unmask(mode: "migrate")
         }
@@ -1352,7 +1349,6 @@ describe("maskOperation", () => {
 
       fragment ProfileFields on Profile {
         settings {
-          __typename
           dark: darkMode
         }
       }
@@ -1467,7 +1463,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           age
@@ -1509,7 +1504,6 @@ describe("maskOperation", () => {
     const query = gql`
       query UnmaskedQuery {
         currentUser {
-          __typename
           id
           name
           ...UserFields @unmask
@@ -1545,7 +1539,6 @@ describe("maskOperation", () => {
     const subscription = gql`
       subscription {
         onUserUpdated {
-          __typename
           id
           ...UserFields
         }
@@ -1571,7 +1564,6 @@ describe("maskOperation", () => {
     const subscription = gql`
       subscription {
         onUserUpdated {
-          __typename
           id
           ...UserFields @unmask
         }
@@ -1601,7 +1593,6 @@ describe("maskOperation", () => {
     const subscription = gql`
       subscription UserUpdatedSubscription {
         onUserUpdated {
-          __typename
           id
           ...UserFields @unmask(mode: "migrate")
         }
@@ -1636,7 +1627,6 @@ describe("maskOperation", () => {
     const mutation = gql`
       mutation {
         updateUser {
-          __typename
           id
           ...UserFields
         }
@@ -1662,7 +1652,6 @@ describe("maskOperation", () => {
     const mutation = gql`
       mutation {
         updateUser {
-          __typename
           id
           ...UserFields @unmask
         }
@@ -1692,7 +1681,6 @@ describe("maskOperation", () => {
     const mutation = gql`
       mutation UpdateUserMutation {
         updateUser {
-          __typename
           id
           ...UserFields @unmask(mode: "migrate")
         }
@@ -1728,7 +1716,6 @@ describe("maskFragment", () => {
   test("masks named fragments in fragment documents", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         ...UserProfile
       }
@@ -1751,10 +1738,8 @@ describe("maskFragment", () => {
   test("masks named fragments in nested fragment objects", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         profile {
-          __typename
           ...UserProfile
         }
       }
@@ -1785,10 +1770,8 @@ describe("maskFragment", () => {
   test("deep freezes the masked result if the original data is frozen", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         profile {
-          __typename
           ...UserProfile
         }
       }
@@ -1827,7 +1810,6 @@ describe("maskFragment", () => {
   test("does not mask inline fragment in fragment documents", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         ... @defer {
           age
@@ -1848,7 +1830,6 @@ describe("maskFragment", () => {
   test("throws when document contains more than 1 fragment without a fragmentName", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         ...UserProfile
       }
@@ -1874,7 +1855,6 @@ describe("maskFragment", () => {
   test("throws when fragment cannot be found within document", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         ...UserProfile
       }
@@ -1899,19 +1879,15 @@ describe("maskFragment", () => {
   test("maintains referential equality on fragment subtrees that did not change", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         profile {
-          __typename
           ...ProfileFields
         }
         post {
-          __typename
           id
           title
         }
         industries {
-          __typename
           ... on TechIndustry {
             languageRequirements
           }
@@ -1925,7 +1901,6 @@ describe("maskFragment", () => {
           }
         }
         drinks {
-          __typename
           ... on SportsDrink {
             ...SportsDrinkFields
           }
@@ -2015,7 +1990,6 @@ describe("maskFragment", () => {
   test("maintains referential equality on fragment when no data is masked", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         age
       }
@@ -2038,7 +2012,6 @@ describe("maskFragment", () => {
         id
         name
         ...UserFields @unmask
-        __typename
       }
 
       fragment UserFields on User {
@@ -2067,7 +2040,6 @@ describe("maskFragment", () => {
     using _ = spyOnConsole("warn");
     const query = gql`
       fragment UnmaskedFragment on User {
-        __typename
         id
         name
         ...UserFields @unmask(mode: "migrate")
@@ -2112,19 +2084,15 @@ describe("maskFragment", () => {
   test("maintains referential equality on `@unmask` fragment subtrees", () => {
     const fragment = gql`
       fragment UserFields on User {
-        __typename
         id
         profile {
-          __typename
           ...ProfileFields @unmask
         }
         post {
-          __typename
           id
           title
         }
         industries {
-          __typename
           ... on TechIndustry {
             languageRequirements
           }
@@ -2138,7 +2106,6 @@ describe("maskFragment", () => {
           }
         }
         drinks {
-          __typename
           ... on SportsDrink {
             ...SportsDrinkFields @unmask
           }
@@ -2239,7 +2206,6 @@ describe("maskFragment", () => {
 
     const fragment = gql`
       fragment UnmaskedUser on User {
-        __typename
         id
         name
         ...UserFields @unmask(mode: "migrate")

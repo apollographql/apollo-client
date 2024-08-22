@@ -149,7 +149,7 @@ function maskSelectionSet(
           memo[keyName] = data[keyName];
 
           if (childSelectionSet) {
-            let [masked, childChanged] = maskSelectionSet(
+            const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
               context,

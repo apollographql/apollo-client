@@ -148,7 +148,6 @@ describe("maskOperation", () => {
     const query = gql`
       query {
         user {
-          __typename
           profile {
             __typename
             id
@@ -158,7 +157,6 @@ describe("maskOperation", () => {
       }
       fragment UserFields on User {
         profile {
-          __typename
           id
           fullName
         }

@@ -156,7 +156,13 @@ function maskSelectionSet(
               __DEV__ ? `${path || ""}.${keyName}` : void 0
             );
 
-            if (childChanged) {
+            if (
+              childChanged ||
+              // This check prevents cases where masked fields may accidentally be
+              // returned as part of this object when the fragment also selects
+              // additional fields from the same child selection.
+              Object.keys(masked).length !== Object.keys(data[keyName]).length
+            ) {
               memo[keyName] = masked;
               changed = true;
             }

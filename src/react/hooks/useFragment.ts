@@ -65,32 +65,30 @@ function _useFragment<TData = any, TVars = OperationVariables>(
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient(options.client);
 
-  const diffOptions = useDeepMemo<Cache.DiffOptions<TData, TVars>>(() => {
-    const {
-      fragment,
-      fragmentName,
-      from,
-      optimistic = true,
-      ...rest
-    } = options;
-
-    return {
-      ...rest,
-      returnPartialData: true,
-      id: typeof from === "string" ? from : cache.identify(from),
-      query: cache["getFragmentDoc"](fragment, fragmentName),
-      optimistic,
-    };
-  }, [options]);
-
   const resultRef = React.useRef<UseFragmentResult<TData>>();
   const stableOptions = useDeepMemo(() => options, [options]);
 
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
   React.useMemo(() => {
-    resultRef.current = diffToResult(cache.diff<TData>(diffOptions));
-  }, [diffOptions, cache]);
+    const {
+      fragment,
+      fragmentName,
+      from,
+      optimistic = true,
+      ...rest
+    } = stableOptions;
+
+    resultRef.current = diffToResult(
+      cache.diff<TData>({
+        ...rest,
+        returnPartialData: true,
+        id: typeof from === "string" ? from : cache.identify(from),
+        query: cache["getFragmentDoc"](fragment, fragmentName),
+        optimistic,
+      })
+    );
+  }, [stableOptions, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = React.useCallback(() => resultRef.current!, []);

@@ -232,8 +232,9 @@ describe("abstract cache", () => {
   });
 
   describe("maskFragment", () => {
-    it("warns on caches that don't implement the required interface and returns original data", () => {
+    it("returns original data and warns on caches that don't implement the required interface", () => {
       using consoleSpy = spyOnConsole("warn");
+
       const fragment = gql`
         fragment UserFields on User {
           id

@@ -161,6 +161,7 @@ export interface ApolloClientOptions<TCacheShape> {
 import { mergeOptions } from "../utilities/index.js";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
 import type {
+  MaskFragmentOptions,
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
@@ -556,13 +557,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     return new Observable((observer) => {
       const subscription = observable.subscribe({
         next: (result) => {
-          if (this.queryManager.dataMasking) {
-            result.data = this.cache.maskFragment({
-              fragment,
-              fragmentName,
-              data: result.data,
-            });
-          }
+          result.data = this.maskFragment({
+            fragment,
+            fragmentName,
+            data: result.data,
+          });
 
           if (equal(result, latestResult)) {
             return;
@@ -859,6 +858,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
 
   public get defaultContext() {
     return this.queryManager.defaultContext;
+  }
+
+  /** @internal */
+  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
+    return this.queryManager.dataMasking ?
+        this.cache.maskFragment(options)
+      : options.data;
   }
 
   /**

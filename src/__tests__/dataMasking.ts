@@ -1300,7 +1300,7 @@ test("warns when passing parent object to `from` that is non-normalized", async 
   }
 });
 
-test("masks nested fragments when dataMasking is `true`", async () => {
+test("masks watched fragments when dataMasking is `true`", async () => {
   type UserFieldsFragment = {
     __typename: "User";
     id: number;
@@ -1378,7 +1378,7 @@ test("masks nested fragments when dataMasking is `true`", async () => {
   }
 });
 
-test("does not mask nested fragments when dataMasking is disabled", async () => {
+test("does not mask watched fragments when dataMasking is disabled", async () => {
   type UserFieldsFragment = {
     __typename: "User";
     id: number;
@@ -1465,7 +1465,7 @@ test("does not mask nested fragments when dataMasking is disabled", async () => 
   }
 });
 
-test("does not mask nested fragments by default", async () => {
+test("does not mask watched fragments by default", async () => {
   type UserFieldsFragment = {
     __typename: "User";
     id: number;
@@ -1551,7 +1551,7 @@ test("does not mask nested fragments by default", async () => {
   }
 });
 
-test("does not mask nested fragments marked with @unmask", async () => {
+test("does not mask watched fragments marked with @unmask", async () => {
   interface Fragment {
     __typename: "User";
     id: number;

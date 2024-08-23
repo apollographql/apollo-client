@@ -340,7 +340,7 @@ test("does not mask fragments marked with @unmask added by document transforms",
   }
 });
 
-test("does not mask query when using a cache that does not support it", async () => {
+test("does not mask query when using a cache that improperly implements the required interface", async () => {
   using _ = spyOnConsole("warn");
 
   interface Query {
@@ -1284,6 +1284,7 @@ test("warns when passing parent object to `from` that is non-normalized", async 
 });
 
 class TestCache extends ApolloCache<unknown> {
+  public readonly dataMasking = true;
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};
   }

@@ -231,6 +231,71 @@ describe("abstract cache", () => {
     });
   });
 
+  describe("maskFragment", () => {
+    it("warns on caches that don't implement the required interface and returns original data", () => {
+      using consoleSpy = spyOnConsole("warn");
+      const fragment = gql`
+        fragment UserFields on User {
+          id
+          ...NameFields
+        }
+
+        fragment NameFields on User {
+          name
+        }
+      `;
+      const data = {
+        __typename: "User",
+        id: 1,
+        name: "Mister Masked",
+      };
+      const cache = new TestCache();
+
+      const result = cache.maskFragment(fragment, data);
+
+      expect(result).toBe(data);
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        expect.stringContaining("does not support data masking")
+      );
+    });
+
+    it("returns masked fragment for caches that implement required interface", () => {
+      class MaskingCache extends TestCache {
+        protected fragmentMatches(
+          _fragment: InlineFragmentNode,
+          _typename: string
+        ): boolean {
+          return true;
+        }
+      }
+
+      const cache = new MaskingCache();
+
+      const fragment = gql`
+        fragment UserFields on User {
+          __typename
+          id
+          ...NameFields
+        }
+
+        fragment NameFields on User {
+          name
+        }
+      `;
+
+      const data = {
+        __typename: "User",
+        id: 1,
+        name: "Mister Masked",
+      };
+
+      const result = cache.maskFragment(fragment, data, "UserFields");
+
+      expect(result).toEqual({ __typename: "User", id: 1 });
+    });
+  });
+
   describe("updateQuery", () => {
     it("runs the readQuery & writeQuery methods", () => {
       const test = new TestCache();

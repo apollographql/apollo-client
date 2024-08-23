@@ -10611,8 +10611,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -10697,8 +10696,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: false,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: false }),
       link: new MockLink(mocks),
     });
 
@@ -10864,8 +10862,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -10977,8 +10974,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -11087,8 +11083,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -11181,8 +11176,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -11291,8 +11285,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -11404,8 +11397,7 @@ describe("useSuspenseQuery", () => {
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 

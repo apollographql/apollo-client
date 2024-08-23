@@ -10251,8 +10251,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: true }),
         link: new MockLink(mocks),
       });
 
@@ -10339,8 +10338,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: false,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: false }),
         link: new MockLink(mocks),
       });
 
@@ -10502,8 +10500,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: true }),
         link: new MockLink(mocks),
       });
 
@@ -10611,8 +10608,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: true }),
         link: new MockLink(mocks),
       });
 
@@ -10721,8 +10717,7 @@ describe("useQuery Hook", () => {
         ];
 
         const client = new ApolloClient({
-          dataMasking: true,
-          cache: new InMemoryCache(),
+          cache: new InMemoryCache({ dataMasking: true }),
           link: new MockLink(mocks),
         });
 
@@ -10814,8 +10809,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: true }),
         link: new MockLink(mocks),
       });
 
@@ -10920,8 +10914,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: true }),
         link: new MockLink(mocks),
       });
 
@@ -11025,8 +11018,7 @@ describe("useQuery Hook", () => {
       ];
 
       const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
+        cache: new InMemoryCache({ dataMasking: true }),
         link: new MockLink(mocks),
       });
 

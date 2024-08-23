@@ -98,7 +98,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
 
     resultRef.current = diffToResult({
       ...diff,
-      result: client.maskFragment({
+      result: client["queryManager"].maskFragment({
         fragment,
         fragmentName,
         data: diff.result,

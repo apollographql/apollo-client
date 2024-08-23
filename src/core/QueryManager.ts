@@ -14,7 +14,11 @@ import {
   isExecutionPatchResult,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
-import type { Cache, ApolloCache } from "../cache/index.js";
+import type {
+  Cache,
+  ApolloCache,
+  MaskFragmentOptions,
+} from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
 import type {
@@ -1518,6 +1522,10 @@ export class QueryManager<TStore> {
     }
 
     return results;
+  }
+
+  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
+    return this.dataMasking ? this.cache.maskFragment(options) : options.data;
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

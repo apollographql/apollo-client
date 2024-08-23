@@ -164,7 +164,7 @@ describe("abstract cache", () => {
     });
   });
 
-  describe("maskDocument", () => {
+  describe("maskOperation", () => {
     it("warns on caches that don't implement the required interface and returns original data", () => {
       using consoleSpy = spyOnConsole("warn");
       const query = gql`

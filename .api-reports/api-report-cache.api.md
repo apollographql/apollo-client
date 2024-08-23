@@ -40,6 +40,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
+    maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>): TData;
+    // (undocumented)
     maskOperation<TData = unknown>(document: DocumentNode, data: TData): TData;
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
@@ -701,6 +703,13 @@ export function makeReference(id: string): Reference;
 
 // @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
+
+// @public (undocumented)
+export interface MaskFragmentOptions<TData> {
+    data: TData;
+    fragment: DocumentNode | TypedDocumentNode<TData>;
+    fragmentName?: string;
+}
 
 // @public (undocumented)
 export interface MergeInfo {

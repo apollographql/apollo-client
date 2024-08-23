@@ -164,7 +164,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
-import { equal } from "@wry/equality";
+import { equalByQuery } from "./equalByQuery.js";
 export { mergeOptions };
 
 /**
@@ -562,7 +562,14 @@ export class ApolloClient<TCacheShape> implements DataProxy {
             data: result.data,
           });
 
-          if (equal(result, latestResult)) {
+          if (
+            latestResult &&
+            equalByQuery(
+              this.cache["getFragmentDoc"](fragment, fragmentName),
+              { data: latestResult.data },
+              { data: result.data }
+            )
+          ) {
             return;
           }
 

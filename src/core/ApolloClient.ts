@@ -570,7 +570,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           observer.next(result);
         },
         complete: observer.complete.bind(observer),
-        error: observer.complete.bind(observer),
+        error: observer.error.bind(observer),
       });
 
       return () => subscription.unsubscribe();

@@ -196,6 +196,8 @@ describe("abstract cache", () => {
 
     it("returns masked query for caches that implement required interface", () => {
       class MaskingCache extends TestCache {
+        public readonly dataMasking = true;
+
         protected fragmentMatches(
           _fragment: InlineFragmentNode,
           _typename: string

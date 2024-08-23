@@ -382,7 +382,6 @@ test("does not mask query when using a cache that does not support it", async ()
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
     cache: new TestCache(),
     link: new MockLink(mocks),
   });

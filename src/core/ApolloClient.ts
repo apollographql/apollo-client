@@ -5,7 +5,8 @@ import type { DocumentNode, FormattedExecutionResult } from "graphql";
 import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform, Observable } from "../utilities/index.js";
+import type { DocumentTransform } from "../utilities/index.js";
+import { Observable } from "../utilities/index.js";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";
@@ -546,7 +547,29 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   >(
     options: WatchFragmentOptions<TFragmentData, TVariables>
   ): Observable<WatchFragmentResult<TFragmentData>> {
-    return this.cache.watchFragment<TFragmentData, TVariables>(options);
+    const { fragment, fragmentName } = options;
+
+    const observable = this.cache.watchFragment(options);
+
+    return new Observable((observer) => {
+      const subscription = observable.subscribe({
+        next: (result) => {
+          if (this.queryManager.dataMasking) {
+            result.data = this.cache.maskFragment(
+              fragment,
+              result.data,
+              fragmentName
+            );
+          }
+
+          observer.next(result);
+        },
+        complete: observer.complete.bind(observer),
+        error: observer.complete.bind(observer),
+      });
+
+      return () => subscription.unsubscribe();
+    });
   }
 
   /**

@@ -54,8 +54,7 @@ test("masks queries when dataMasking is `true`", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -116,8 +115,7 @@ test("does not mask query when dataMasking is `false`", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: false,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: false }),
     link: new MockLink(mocks),
   });
 
@@ -241,8 +239,7 @@ test("does not mask fragments marked with @unmask", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -320,8 +317,7 @@ test("does not mask fragments marked with @unmask added by document transforms",
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
     documentTransform,
   });
@@ -454,8 +450,7 @@ test("masks queries updated by the cache", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -542,8 +537,7 @@ test("does not trigger update when updating field in named fragment", async () =
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -633,8 +627,7 @@ it.each(["cache-first", "cache-only"] as FetchPolicy[])(
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -708,8 +701,7 @@ test("masks cache and network result when using cache-and-network fetch policy",
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -799,8 +791,7 @@ test("masks partial cache data when returnPartialData is `true`", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -894,8 +885,7 @@ test("masks partial data returned from data on errors with errorPolicy `all`", a
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -961,8 +951,7 @@ it.each(["cache-first", "network-only", "cache-and-network"] as FetchPolicy[])(
     ];
 
     const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
+      cache: new InMemoryCache({ dataMasking: true }),
       link: new MockLink(mocks),
     });
 
@@ -1040,8 +1029,7 @@ test("warns when accessing a unmasked field while using @unmask with mode: 'migr
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -1119,8 +1107,7 @@ test("reads fragment by passing parent object to `from`", async () => {
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -1192,8 +1179,7 @@ test("warns when passing parent object to `from` when id is masked", async () =>
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 
@@ -1269,8 +1255,7 @@ test("warns when passing parent object to `from` that is non-normalized", async 
   ];
 
   const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache({ dataMasking: true }),
     link: new MockLink(mocks),
   });
 

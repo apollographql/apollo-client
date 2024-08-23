@@ -1607,6 +1607,84 @@ test("does not mask watched fragments marked with @unmask", async () => {
   }
 });
 
+test("masks watched fragments updated by the cache", async () => {
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...NameFields
+    }
+
+    fragment NameFields on User {
+      age
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-expect-error Need to determine how to handle masked fragment types with writes
+      age: 30,
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User (updated)",
+      // @ts-ignore TODO: Determine how to handle cache writes with masked
+      // query type
+      age: 35,
+    },
+  });
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User (updated)",
+    });
+  }
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

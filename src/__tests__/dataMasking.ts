@@ -1764,6 +1764,124 @@ test("does not trigger update on watched fragment when updating field in named f
   });
 });
 
+test("triggers update to child watched fragment when updating field in named fragment", async () => {
+  interface UserFieldsFragment {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  interface NameFieldsFragment {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment, never> = gql`
+    fragment NameFields on User {
+      age
+    }
+  `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...NameFields
+    }
+
+    ${nameFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  const userFieldsObservable = client.watchFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const nameFieldsObservable = client.watchFragment({
+    fragment: nameFieldsFragment,
+    from: { __typename: "User", id: 1 },
+  });
+
+  const userFieldsStream = new ObservableStream(userFieldsObservable);
+  const nameFieldsStream = new ObservableStream(nameFieldsObservable);
+
+  {
+    const { data } = await userFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    });
+  }
+
+  {
+    const { data } = await nameFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 30,
+    });
+  }
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 35,
+    },
+  });
+
+  {
+    const { data } = await nameFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 35,
+    });
+  }
+
+  await expect(userFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+
+  expect(
+    client.readFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      id: "User:1",
+    })
+  ).toEqual({
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 35,
+  });
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

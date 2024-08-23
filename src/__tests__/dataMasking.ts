@@ -1882,6 +1882,64 @@ test("triggers update to child watched fragment when updating field in named fra
   });
 });
 
+test("warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'", async () => {
+  using consoleSpy = spyOnConsole("warn");
+
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...ProfileFields @unmask(mode: "migrate")
+    }
+
+    fragment ProfileFields on User {
+      age
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+    data.__typename;
+    data.id;
+    data.name;
+
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+    data.age;
+
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "fragment 'UserFields'",
+      "age"
+    );
+
+    // Ensure we only warn once
+    data.age;
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+  }
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

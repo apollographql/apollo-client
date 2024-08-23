@@ -58,6 +58,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // in development and expected to remain logically immutable in production.
   public readonly assumeImmutableResults = true;
 
+  // Override the default and allow our constructor to assign the value
+  public readonly dataMasking;
+
   // Dynamically imported code can augment existing typePolicies or
   // possibleTypes by calling cache.policies.addTypePolicies or
   // cache.policies.addPossibletypes.
@@ -69,6 +72,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     super();
     this.config = normalizeConfig(config);
     this.addTypename = !!this.config.addTypename;
+    this.dataMasking = !!this.config.dataMasking;
 
     this.policies = new Policies({
       cache: this,

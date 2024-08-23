@@ -157,6 +157,13 @@ export interface InMemoryCacheConfig extends ApolloReducerConfig {
    */
   canonizeResults?: boolean;
   fragments?: FragmentRegistryAPI;
+
+  /**
+   * Determines if data masking is enabled.
+   *
+   * @defaultValue false
+   */
+  dataMasking?: boolean;
 }
 
 export interface MergeInfo {

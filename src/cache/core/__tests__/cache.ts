@@ -165,7 +165,7 @@ describe("abstract cache", () => {
   });
 
   describe("maskOperation", () => {
-    it("warns on caches that don't implement the required interface and returns original data", () => {
+    it("returns original data and warns on caches that enable data masking but don't implement the required interface", () => {
       using consoleSpy = spyOnConsole("warn");
       class IncompleteMaskingCache extends TestCache {
         public dataMasking = true;

@@ -1465,6 +1465,92 @@ test("does not mask nested fragments when dataMasking is disabled", async () => 
   }
 });
 
+test("does not mask nested fragments by default", async () => {
+  type UserFieldsFragment = {
+    __typename: "User";
+    id: number;
+    age: number;
+    firstName: string;
+    lastName: string;
+  };
+
+  type NameFieldsFragment = {
+    __typename: "User";
+    firstName: string;
+    lastName: string;
+  };
+
+  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+    fragment NameFields on User {
+      __typename
+      firstName
+      lastName
+    }
+  `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      age
+      ...NameFields
+    }
+
+    ${nameFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      age: 30,
+      firstName: "Test",
+      lastName: "User",
+    },
+  });
+
+  const fragmentStream = new ObservableStream(
+    client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    })
+  );
+
+  const { data, complete } = await fragmentStream.takeNext();
+
+  expect(data).toEqual({
+    __typename: "User",
+    id: 1,
+    age: 30,
+    firstName: "Test",
+    lastName: "User",
+  });
+  expect(complete).toBe(true);
+  invariant(complete, "Should never be incomplete");
+
+  const nestedFragmentStream = new ObservableStream(
+    client.watchFragment({ fragment: nameFieldsFragment, from: data })
+  );
+
+  {
+    const { data, complete } = await nestedFragmentStream.takeNext();
+
+    expect(complete).toBe(true);
+    expect(data).toEqual({
+      __typename: "User",
+      firstName: "Test",
+      lastName: "User",
+    });
+  }
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

@@ -12,7 +12,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
 
 export interface UseFragmentOptions<TData, TVars>
@@ -83,10 +83,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     };
   }, [options]);
 
-  const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
-    diffToResult(cache.diff<TData>(diffOptions))
-  );
-
+  const resultRef = React.useRef<UseFragmentResult<TData>>();
   const stableOptions = useDeepMemo(() => options, [options]);
 
   // Since .next is async, we need to make sure that we
@@ -96,7 +93,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   }, [diffOptions, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = React.useCallback(() => resultRef.current, []);
+  const getSnapshot = React.useCallback(() => resultRef.current!, []);
 
   return useSyncExternalStore(
     React.useCallback(

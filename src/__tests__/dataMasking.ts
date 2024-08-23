@@ -1882,6 +1882,120 @@ test("triggers update to child watched fragment when updating field in named fra
   });
 });
 
+test("does not trigger update to watched fragments when updating field in named fragment with @nonreactive", async () => {
+  interface UserFieldsFragment {
+    __typename: "User";
+    id: number;
+    lastUpdatedAt: string;
+  }
+
+  interface ProfileFieldsFragment {
+    __typename: "User";
+    lastUpdatedAt: string;
+  }
+
+  const profileFieldsFragment: TypedDocumentNode<ProfileFieldsFragment, never> =
+    gql`
+      fragment ProfileFields on User {
+        age
+        lastUpdatedAt @nonreactive
+      }
+    `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    fragment UserFields on User {
+      id
+      lastUpdatedAt @nonreactive
+      ...ProfileFields
+    }
+
+    ${profileFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-01",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  const userFieldsObservable = client.watchFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const profileFieldsObservable = client.watchFragment({
+    fragment: profileFieldsFragment,
+    from: { __typename: "User", id: 1 },
+  });
+
+  const userFieldsStream = new ObservableStream(userFieldsObservable);
+  const profileFieldsStream = new ObservableStream(profileFieldsObservable);
+
+  {
+    const { data } = await userFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-01",
+    });
+  }
+
+  {
+    const { data } = await profileFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 30,
+      lastUpdatedAt: "2024-01-01",
+    });
+  }
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-02",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  await expect(userFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+  await expect(profileFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+
+  expect(
+    client.readFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      id: "User:1",
+    })
+  ).toEqual({
+    __typename: "User",
+    id: 1,
+    lastUpdatedAt: "2024-01-02",
+    age: 30,
+  });
+});
+
 test("warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'", async () => {
   using consoleSpy = spyOnConsole("warn");
 

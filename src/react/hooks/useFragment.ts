@@ -93,8 +93,18 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
   React.useMemo(() => {
-    resultRef.current = diffToResult(cache.diff<TData>(diffOptions));
-  }, [diffOptions, cache]);
+    const diff = client.cache.diff<TData>(diffOptions);
+    const { fragment, fragmentName } = stableOptions;
+
+    resultRef.current = diffToResult({
+      ...diff,
+      result: client.maskFragment({
+        fragment,
+        fragmentName,
+        data: diff.result,
+      }),
+    });
+  }, [diffOptions, stableOptions, client]);
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = React.useCallback(() => resultRef.current, []);

@@ -1728,6 +1728,74 @@ describe("useFragment", () => {
   });
 });
 
+describe("data masking", () => {
+  it("returns masked fragment when data masking is enabled", async () => {
+    type Post = {
+      __typename: "Post";
+      id: number;
+      title: string;
+    };
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        ...PostFields
+      }
+
+      fragment PostFields on Post {
+        updatedAt
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        // @ts-expect-error Need to determine how to work with masked types
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+        },
+      });
+    }
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+});
+
 describe("has the same timing as `useQuery`", () => {
   const itemFragment = gql`
     fragment ItemFragment on Item {

@@ -164,6 +164,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
+import { equal } from "@wry/equality";
 export { mergeOptions };
 
 /**
@@ -550,6 +551,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     const { fragment, fragmentName } = options;
 
     const observable = this.cache.watchFragment(options);
+    let latestResult: WatchFragmentResult<TFragmentData> | undefined;
 
     return new Observable((observer) => {
       const subscription = observable.subscribe({
@@ -562,6 +564,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
             );
           }
 
+          if (equal(result, latestResult)) {
+            return;
+          }
+
+          latestResult = result;
           observer.next(result);
         },
         complete: observer.complete.bind(observer),

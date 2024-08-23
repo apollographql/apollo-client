@@ -167,6 +167,10 @@ describe("abstract cache", () => {
   describe("maskOperation", () => {
     it("warns on caches that don't implement the required interface and returns original data", () => {
       using consoleSpy = spyOnConsole("warn");
+      class IncompleteMaskingCache extends TestCache {
+        public dataMasking = true;
+      }
+
       const query = gql`
         query {
           user {
@@ -183,7 +187,7 @@ describe("abstract cache", () => {
       const data = {
         user: { __typename: "User", id: 1, name: "Mister Masked" },
       };
-      const cache = new TestCache();
+      const cache = new IncompleteMaskingCache();
 
       const result = cache.maskOperation(query, data);
 

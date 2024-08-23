@@ -557,11 +557,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       const subscription = observable.subscribe({
         next: (result) => {
           if (this.queryManager.dataMasking) {
-            result.data = this.cache.maskFragment(
+            result.data = this.cache.maskFragment({
               fragment,
-              result.data,
-              fragmentName
-            );
+              fragmentName,
+              data: result.data,
+            });
           }
 
           if (equal(result, latestResult)) {

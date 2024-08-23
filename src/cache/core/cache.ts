@@ -74,6 +74,31 @@ export interface WatchFragmentOptions<TData, TVars> {
   optimistic?: boolean;
 }
 
+export interface MaskFragmentOptions<TData> {
+  /**
+   * A GraphQL fragment document parsed into an AST with the `gql`
+   * template literal.
+   *
+   * @docGroup 1. Required options
+   */
+  fragment: DocumentNode | TypedDocumentNode<TData>;
+  /**
+   * The raw, unmasked data that should be masked.
+   *
+   * @docGroup 1. Required options
+   */
+  data: TData;
+  /**
+   * The name of the fragment defined in the fragment document.
+   *
+   * Required if the fragment document includes more than one fragment,
+   * optional otherwise.
+   *
+   * @docGroup 2. Cache options
+   */
+  fragmentName?: string;
+}
+
 /**
  * Watched fragment results.
  */
@@ -394,11 +419,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     return maskOperation(data, document, this.fragmentMatches.bind(this));
   }
 
-  public maskFragment<TData = unknown>(
-    document: DocumentNode,
-    data: TData,
-    fragmentName?: string
-  ) {
+  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
+    const { data, fragment, fragmentName } = options;
+
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(
@@ -411,7 +434,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
     return maskFragment(
       data,
-      document,
+      fragment,
       this.fragmentMatches.bind(this),
       fragmentName
     );

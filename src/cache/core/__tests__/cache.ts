@@ -252,7 +252,7 @@ describe("abstract cache", () => {
       };
       const cache = new TestCache();
 
-      const result = cache.maskFragment(fragment, data);
+      const result = cache.maskFragment({ fragment, data });
 
       expect(result).toBe(data);
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
@@ -291,7 +291,11 @@ describe("abstract cache", () => {
         name: "Mister Masked",
       };
 
-      const result = cache.maskFragment(fragment, data, "UserFields");
+      const result = cache.maskFragment({
+        fragment,
+        data,
+        fragmentName: "UserFields",
+      });
 
       expect(result).toEqual({ __typename: "User", id: 1 });
     });

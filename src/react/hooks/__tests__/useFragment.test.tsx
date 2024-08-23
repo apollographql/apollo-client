@@ -1805,7 +1805,7 @@ describe("data masking", () => {
     await expect(ProfiledHook).not.toRerender();
   });
 
-  it("does not updated when value in masked field is updated", async () => {
+  it("does not rerender for cache writes to masked fields", async () => {
     type Post = {
       __typename: "Post";
       id: number;

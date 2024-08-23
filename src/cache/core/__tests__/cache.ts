@@ -198,6 +198,33 @@ describe("abstract cache", () => {
       );
     });
 
+    it("returns original data and does not warn on caches that don't implement the required interface with the default data masking config", () => {
+      using consoleSpy = spyOnConsole("warn");
+
+      const query = gql`
+        query {
+          user {
+            __typename
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          name
+        }
+      `;
+      const data = {
+        user: { __typename: "User", id: 1, name: "Mister Masked" },
+      };
+      const cache = new TestCache();
+
+      const result = cache.maskOperation(query, data);
+
+      expect(result).toBe(data);
+      expect(consoleSpy.warn).not.toHaveBeenCalled();
+    });
+
     it("returns masked query for caches that implement required interface", () => {
       class MaskingCache extends TestCache {
         public readonly dataMasking = true;

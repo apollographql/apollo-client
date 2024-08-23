@@ -63,7 +63,8 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 function _useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
-  const { cache } = useApolloClient(options.client);
+  const client = useApolloClient(options.client);
+  const { cache } = client;
 
   const diffOptions = useDeepMemo<Cache.DiffOptions<TData, TVars>>(() => {
     const {
@@ -102,7 +103,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscription = cache.watchFragment(stableOptions).subscribe({
+        const subscription = client.watchFragment(stableOptions).subscribe({
           next: (result) => {
             if (equal(result, resultRef.current)) return;
             resultRef.current = result;
@@ -119,7 +120,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
           clearTimeout(lastTimeout);
         };
       },
-      [cache, stableOptions]
+      [client, stableOptions]
     ),
     getSnapshot,
     getSnapshot

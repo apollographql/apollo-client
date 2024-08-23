@@ -1551,6 +1551,62 @@ test("does not mask nested fragments by default", async () => {
   }
 });
 
+test("does not mask nested fragments marked with @unmask", async () => {
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...NameFields @unmask
+    }
+
+    fragment NameFields on User {
+      age
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    });
+  }
+});
+
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return {};

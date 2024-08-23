@@ -25,6 +25,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     batch<U>(options: Cache_2.BatchOptions<this, U>): U;
     // (undocumented)
+    readonly dataMasking: boolean;
+    // (undocumented)
     abstract diff<T>(query: Cache_2.DiffOptions): Cache_2.DiffResult<T>;
     // (undocumented)
     abstract evict(options: Cache_2.EvictOptions): boolean;
@@ -575,6 +577,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // (undocumented)
     protected config: InMemoryCacheConfig;
     // (undocumented)
+    readonly dataMasking: boolean;
+    // (undocumented)
     diff<TData, TVariables extends OperationVariables = any>(options: Cache_2.DiffOptions<TData, TVariables>): Cache_2.DiffResult<TData>;
     // (undocumented)
     evict(options: Cache_2.EvictOptions): boolean;
@@ -625,6 +629,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 export interface InMemoryCacheConfig extends ApolloReducerConfig {
     // @deprecated (undocumented)
     canonizeResults?: boolean;
+    dataMasking?: boolean;
     // (undocumented)
     fragments?: FragmentRegistryAPI;
     // (undocumented)

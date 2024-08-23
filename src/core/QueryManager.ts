@@ -117,7 +117,6 @@ export interface QueryManagerOptions<TStore> {
   localState: LocalState<TStore>;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
-  dataMasking: boolean;
 }
 
 export class QueryManager<TStore> {
@@ -129,7 +128,6 @@ export class QueryManager<TStore> {
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
-  public readonly dataMasking: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
@@ -165,7 +163,6 @@ export class QueryManager<TStore> {
     this.localState = options.localState;
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
-    this.dataMasking = options.dataMasking;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?

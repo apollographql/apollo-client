@@ -144,13 +144,6 @@ export interface ApolloClientOptions<TCacheShape> {
    * @since 3.11.0
    */
   devtools?: DevtoolsOptions;
-
-  /**
-   * Determines if data masking is enabled for the client.
-   *
-   * @defaultValue false
-   */
-  dataMasking?: boolean;
 }
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -244,7 +237,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
-      dataMasking,
     } = options;
 
     let { link } = options;
@@ -300,7 +292,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       documentTransform,
       queryDeduplication,
       ssrMode,
-      dataMasking: !!dataMasking,
       clientAwareness: {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,

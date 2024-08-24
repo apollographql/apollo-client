@@ -2287,6 +2287,7 @@ test("can lookup unmasked fragments from the fragment registry in watched fragme
       data: {
         __typename: "User",
         id: 1,
+        age: 30,
       },
       complete: true,
     });

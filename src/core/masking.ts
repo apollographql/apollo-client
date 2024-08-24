@@ -27,9 +27,7 @@ export function maskOperation<TData = unknown>(
 ): TData {
   if (!cache.fragmentMatches) {
     if (__DEV__) {
-      invariant.warn(
-        "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-      );
+      warnOnImproperCacheImplementation();
     }
 
     return data;
@@ -72,9 +70,7 @@ export function maskFragment<TData = unknown>(
 ): TData {
   if (!cache.fragmentMatches) {
     if (__DEV__) {
-      invariant.warn(
-        "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-      );
+      warnOnImproperCacheImplementation();
     }
 
     return data;
@@ -384,4 +380,10 @@ function addAccessorWarning(
     enumerable: true,
     configurable: true,
   });
+}
+
+function warnOnImproperCacheImplementation() {
+  invariant.warn(
+    "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+  );
 }

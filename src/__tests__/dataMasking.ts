@@ -2,12 +2,14 @@ import { FragmentSpreadNode, Kind, visit } from "graphql";
 import {
   ApolloCache,
   ApolloClient,
+  ApolloLink,
   Cache,
   DataProxy,
   DocumentTransform,
   FetchPolicy,
   gql,
   InMemoryCache,
+  Observable,
   Reference,
   TypedDocumentNode,
 } from "../core";
@@ -1309,18 +1311,9 @@ test("can lookup unmasked fragments from the fragment registry in queries", asyn
       __typename: "User";
       id: number;
       name: string;
+      age: number;
     };
   }
-
-  interface Fragment {
-    age: number;
-  }
-
-  const fragment: TypedDocumentNode<Fragment, never> = gql`
-    fragment UserFields on User {
-      age
-    }
-  `;
 
   const query: TypedDocumentNode<Query, never> = gql`
     query MaskedQuery {
@@ -1332,12 +1325,17 @@ test("can lookup unmasked fragments from the fragment registry in queries", asyn
     }
   `;
 
-  fragments.register(fragment);
+  fragments.register(gql`
+    fragment UserFields on User {
+      age
+    }
+  `);
 
-  const mocks = [
-    {
-      request: { query },
-      result: {
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({ fragments }),
+    link: new ApolloLink(() => {
+      return Observable.of({
         data: {
           currentUser: {
             __typename: "User",
@@ -1346,14 +1344,8 @@ test("can lookup unmasked fragments from the fragment registry in queries", asyn
             age: 30,
           },
         },
-      },
-    },
-  ];
-
-  const client = new ApolloClient({
-    dataMasking: true,
-    cache: new InMemoryCache({ fragments }),
-    link: new MockLink(mocks),
+      });
+    }),
   });
 
   const stream = new ObservableStream(client.watchQuery({ query }));

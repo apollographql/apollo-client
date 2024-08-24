@@ -414,7 +414,9 @@ test("does not mask query when using a cache that does not support it", async ()
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining("This cache does not support data masking")
+    expect.stringContaining(
+      "The configured cache does not support data masking"
+    )
   );
 });
 

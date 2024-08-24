@@ -1534,16 +1534,6 @@ export class QueryManager<TStore> {
       return data;
     }
 
-    if (!cache.fragmentMatches) {
-      if (__DEV__) {
-        invariant.warn(
-          "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-        );
-      }
-
-      return data;
-    }
-
     return maskOperation(data, document, cache);
   }
 
@@ -1552,16 +1542,6 @@ export class QueryManager<TStore> {
     const { cache } = this;
 
     if (!this.dataMasking) {
-      return data;
-    }
-
-    if (!cache.fragmentMatches) {
-      if (__DEV__) {
-        invariant.warn(
-          "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-        );
-      }
-
       return data;
     }
 

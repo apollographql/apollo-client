@@ -1,4 +1,8 @@
-import type { DocumentNode, InlineFragmentNode } from "graphql";
+import type {
+  DocumentNode,
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+} from "graphql";
 import { wrap } from "optimism";
 
 import type {
@@ -174,6 +178,13 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     fragment: InlineFragmentNode,
     typename: string
   ): boolean;
+
+  // Function used to lookup a fragment when a fragment definition is not part
+  // of the GraphQL document. This is useful for caches, such as InMemoryCache,
+  // that register fragments ahead of time so they can be referenced by name.
+  public lookupFragment(fragmentName: string): FragmentDefinitionNode | null {
+    return null;
+  }
 
   // Transactional API
 

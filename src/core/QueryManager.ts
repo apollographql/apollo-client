@@ -18,6 +18,7 @@ import type {
   Cache,
   ApolloCache,
   MaskFragmentOptions,
+  MaskOperationOptions,
 } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
@@ -1522,6 +1523,10 @@ export class QueryManager<TStore> {
     }
 
     return results;
+  }
+
+  public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
+    return this.dataMasking ? this.cache.maskOperation(options) : options.data;
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {

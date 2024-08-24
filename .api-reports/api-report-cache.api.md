@@ -705,19 +705,6 @@ export function makeReference(id: string): Reference;
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
 // @public (undocumented)
-export interface MaskFragmentOptions<TData> {
-    data: TData;
-    fragment: DocumentNode | TypedDocumentNode<TData>;
-    fragmentName?: string;
-}
-
-// @public (undocumented)
-export interface MaskOperationOptions<TData> {
-    data: TData;
-    document: DocumentNode | TypedDocumentNode<TData>;
-}
-
-// @public (undocumented)
 export interface MergeInfo {
     // (undocumented)
     field: FieldNode;

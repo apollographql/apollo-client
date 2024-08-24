@@ -452,6 +452,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       data,
       fragment,
       this.fragmentMatches.bind(this),
+      this.lookupFragment.bind(this),
       fragmentName
     );
   }

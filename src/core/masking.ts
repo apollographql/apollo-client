@@ -72,6 +72,7 @@ export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
   matchesFragment: MatchesFragmentFn,
+  lookupFragment: LookupFragmentFn,
   fragmentName?: string
 ): TData {
   const fragments = document.definitions.filter(
@@ -103,7 +104,7 @@ export function maskFragment<TData = unknown>(
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
-    lookupFragment: () => null,
+    lookupFragment,
   };
 
   const [masked, changed] = maskSelectionSet(

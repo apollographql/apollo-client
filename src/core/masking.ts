@@ -184,7 +184,7 @@ function maskSelectionSet(
         case Kind.INLINE_FRAGMENT: {
           if (
             selection.typeCondition &&
-            !context.cache.fragmentMatches?.(selection, data.__typename)
+            !context.cache.fragmentMatches!(selection, data.__typename)
           ) {
             return [memo, changed];
           }

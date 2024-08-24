@@ -185,7 +185,7 @@ describe("abstract cache", () => {
       };
       const cache = new TestCache();
 
-      const result = cache.maskOperation(query, data);
+      const result = cache.maskOperation({ document: query, data });
 
       expect(result).toBe(data);
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);

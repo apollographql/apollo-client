@@ -103,6 +103,21 @@ export interface MaskFragmentOptions<TData> {
   fragmentName?: string;
 }
 
+export interface MaskOperationOptions<TData> {
+  /**
+   * A GraphQL document parsed into an AST with the `gql` template literal.
+   *
+   * @docGroup 1. Required options
+   */
+  document: DocumentNode | TypedDocumentNode<TData>;
+  /**
+   * The raw, unmasked data that should be masked.
+   *
+   * @docGroup 1. Required options
+   */
+  data: TData;
+}
+
 /**
  * Watched fragment results.
  */
@@ -416,7 +431,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     });
   }
 
-  public maskOperation<TData = unknown>(document: DocumentNode, data: TData) {
+  public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
+    const { data, document } = options;
+
     if (!this.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(

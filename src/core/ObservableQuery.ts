@@ -1113,7 +1113,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { queryManager } = this;
 
     return queryManager.dataMasking ?
-        queryManager.cache.maskOperation(this.query, data)
+        queryManager.cache.maskOperation({ document: this.query, data })
       : data;
   }
 }

@@ -189,7 +189,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // If not implemented by a cache subclass, data masking will effectively be
   // disabled since we will not be able to accurately determine if a given type
   // condition for a union or interface matches a particular type.
-  protected fragmentMatches?(
+  public fragmentMatches?(
     fragment: InlineFragmentNode,
     typename: string
   ): boolean;

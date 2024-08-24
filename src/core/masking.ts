@@ -66,7 +66,7 @@ export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
   cache: ApolloCache<unknown>,
-  fragmentName: string | undefined
+  fragmentName?: string
 ): TData {
   if (!cache.fragmentMatches) {
     if (__DEV__) {

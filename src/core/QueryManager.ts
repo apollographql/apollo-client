@@ -1534,24 +1534,16 @@ export class QueryManager<TStore> {
 
   public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
     const { document, data } = options;
-    const { cache } = this;
 
-    if (!this.dataMasking) {
-      return data;
-    }
-
-    return maskOperation(data, document, cache);
+    return this.dataMasking ? maskOperation(data, document, this.cache) : data;
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
     const { data, fragment, fragmentName } = options;
-    const { cache } = this;
 
-    if (!this.dataMasking) {
-      return data;
-    }
-
-    return maskFragment(data, fragment, cache, fragmentName);
+    return this.dataMasking ?
+        maskFragment(data, fragment, this.cache, fragmentName)
+      : data;
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

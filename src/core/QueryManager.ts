@@ -1554,12 +1554,13 @@ export class QueryManager<TStore> {
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
     const { data, fragment, fragmentName } = options;
+    const { cache } = this;
 
     if (!this.dataMasking) {
       return data;
     }
 
-    if (!this.cache.fragmentMatches) {
+    if (!cache.fragmentMatches) {
       if (__DEV__) {
         invariant.warn(
           "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
@@ -1572,8 +1573,8 @@ export class QueryManager<TStore> {
     return maskFragment(
       data,
       fragment,
-      this.cache.fragmentMatches.bind(this.cache),
-      this.cache.lookupFragment.bind(this.cache),
+      cache.fragmentMatches.bind(cache),
+      cache.lookupFragment.bind(cache),
       fragmentName
     );
   }

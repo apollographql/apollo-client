@@ -1110,11 +1110,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private maskQuery(data: TData) {
-    const { queryManager } = this;
-
-    return queryManager.dataMasking ?
-        queryManager.cache.maskOperation({ document: this.query, data })
-      : data;
+    return this.queryManager.maskOperation({ document: this.query, data });
   }
 }
 

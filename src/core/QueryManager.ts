@@ -109,6 +109,7 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+import { maskFragment } from "./masking.js";
 
 export interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
@@ -1530,7 +1531,29 @@ export class QueryManager<TStore> {
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
-    return this.dataMasking ? this.cache.maskFragment(options) : options.data;
+    const { data, fragment, fragmentName } = options;
+
+    if (!this.dataMasking) {
+      return data;
+    }
+
+    if (!this.cache.fragmentMatches) {
+      if (__DEV__) {
+        invariant.warn(
+          "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+        );
+      }
+
+      return data;
+    }
+
+    return maskFragment(
+      data,
+      fragment,
+      this.cache.fragmentMatches.bind(this.cache),
+      this.cache.lookupFragment.bind(this.cache),
+      fragmentName
+    );
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

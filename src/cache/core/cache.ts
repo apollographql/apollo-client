@@ -77,46 +77,6 @@ export interface WatchFragmentOptions<TData, TVars> {
   optimistic?: boolean;
 }
 
-export interface MaskFragmentOptions<TData> {
-  /**
-   * A GraphQL fragment document parsed into an AST with the `gql`
-   * template literal.
-   *
-   * @docGroup 1. Required options
-   */
-  fragment: DocumentNode | TypedDocumentNode<TData>;
-  /**
-   * The raw, unmasked data that should be masked.
-   *
-   * @docGroup 1. Required options
-   */
-  data: TData;
-  /**
-   * The name of the fragment defined in the fragment document.
-   *
-   * Required if the fragment document includes more than one fragment,
-   * optional otherwise.
-   *
-   * @docGroup 2. Cache options
-   */
-  fragmentName?: string;
-}
-
-export interface MaskOperationOptions<TData> {
-  /**
-   * A GraphQL document parsed into an AST with the `gql` template literal.
-   *
-   * @docGroup 1. Required options
-   */
-  document: DocumentNode | TypedDocumentNode<TData>;
-  /**
-   * The raw, unmasked data that should be masked.
-   *
-   * @docGroup 1. Required options
-   */
-  data: TData;
-}
-
 /**
  * Watched fragment results.
  */

@@ -4,8 +4,6 @@ export type {
   Transaction,
   WatchFragmentOptions,
   WatchFragmentResult,
-  MaskFragmentOptions,
-  MaskOperationOptions,
 } from "./core/cache.js";
 export { ApolloCache } from "./core/cache.js";
 export { Cache } from "./core/types/Cache.js";

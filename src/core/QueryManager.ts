@@ -14,12 +14,7 @@ import {
   isExecutionPatchResult,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
-import type {
-  Cache,
-  ApolloCache,
-  MaskFragmentOptions,
-  MaskOperationOptions,
-} from "../cache/index.js";
+import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
 import type {
@@ -110,6 +105,17 @@ import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "./masking.js";
+
+interface MaskFragmentOptions<TData> {
+  fragment: DocumentNode;
+  data: TData;
+  fragmentName?: string;
+}
+
+interface MaskOperationOptions<TData> {
+  document: DocumentNode;
+  data: TData;
+}
 
 export interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;

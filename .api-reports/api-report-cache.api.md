@@ -30,7 +30,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     abstract evict(options: Cache_2.EvictOptions): boolean;
     abstract extract(optimistic?: boolean): TSerialized;
     // (undocumented)
-    protected fragmentMatches?(fragment: InlineFragmentNode, typename: string): boolean;
+    fragmentMatches?(fragment: InlineFragmentNode, typename: string): boolean;
     // (undocumented)
     gc(): string[];
     // Warning: (ae-forgotten-export) The symbol "getApolloCacheMemoryInternals" needs to be exported by the entry point index.d.ts
@@ -40,9 +40,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
     // (undocumented)
-    maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>): TData;
-    // (undocumented)
-    maskOperation<TData = unknown>(document: DocumentNode, data: TData): TData;
+    lookupFragment(fragmentName: string): FragmentDefinitionNode | null;
     // (undocumented)
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // (undocumented)
@@ -583,7 +581,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // (undocumented)
     extract(optimistic?: boolean): NormalizedCacheObject;
     // (undocumented)
-    protected fragmentMatches(fragment: InlineFragmentNode, typename: string): boolean;
+    fragmentMatches(fragment: InlineFragmentNode, typename: string): boolean;
     // (undocumented)
     gc(options?: {
         resetResultCache?: boolean;
@@ -595,6 +593,8 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
+    // (undocumented)
+    lookupFragment(fragmentName: string): FragmentDefinitionNode | null;
     // (undocumented)
     readonly makeVar: typeof makeVar;
     // (undocumented)
@@ -709,6 +709,12 @@ export interface MaskFragmentOptions<TData> {
     data: TData;
     fragment: DocumentNode | TypedDocumentNode<TData>;
     fragmentName?: string;
+}
+
+// @public (undocumented)
+export interface MaskOperationOptions<TData> {
+    data: TData;
+    document: DocumentNode | TypedDocumentNode<TData>;
 }
 
 // @public (undocumented)

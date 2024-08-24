@@ -21,18 +21,22 @@ type MatchesFragmentFn = (
   typename: string
 ) => boolean;
 
+type LookupFragmentFn = (fragmentName: string) => FragmentDefinitionNode | null;
+
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
   operationName: string | undefined;
   fragmentMap: FragmentMap;
   matchesFragment: MatchesFragmentFn;
   disableWarnings?: boolean;
+  lookupFragment: LookupFragmentFn;
 }
 
 export function maskOperation<TData = unknown>(
   data: TData,
-  document: TypedDocumentNode<TData> | DocumentNode,
-  matchesFragment: MatchesFragmentFn
+  document: DocumentNode | TypedDocumentNode<TData>,
+  matchesFragment: MatchesFragmentFn,
+  lookupFragment: LookupFragmentFn
 ): TData {
   const definition = getOperationDefinition(document);
 
@@ -46,6 +50,7 @@ export function maskOperation<TData = unknown>(
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
+    lookupFragment,
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -98,6 +103,7 @@ export function maskFragment<TData = unknown>(
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     matchesFragment,
+    lookupFragment: () => null,
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -194,7 +200,17 @@ function maskSelectionSet(
           ];
         }
         case Kind.FRAGMENT_SPREAD: {
-          const fragment = context.fragmentMap[selection.name.value];
+          const fragmentName = selection.name.value;
+          const fragment: FragmentDefinitionNode | null =
+            context.fragmentMap[fragmentName] ||
+            context.lookupFragment(fragmentName);
+
+          invariant(
+            fragment,
+            "Could not find fragment with name '%s'.",
+            fragmentName
+          );
+
           const mode = getFragmentMaskMode(selection);
 
           if (mode === "mask") {

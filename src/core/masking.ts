@@ -1,9 +1,5 @@
 import { Kind } from "graphql";
-import type {
-  FragmentDefinitionNode,
-  InlineFragmentNode,
-  SelectionSetNode,
-} from "graphql";
+import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import {
   createFragmentMap,
   resultKeyNameFromField,
@@ -13,30 +9,21 @@ import {
   maybeDeepFreeze,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
-import type { DocumentNode, TypedDocumentNode } from "./index.js";
+import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
-
-type MatchesFragmentFn = (
-  fragmentNode: InlineFragmentNode,
-  typename: string
-) => boolean;
-
-type LookupFragmentFn = (fragmentName: string) => FragmentDefinitionNode | null;
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
   operationName: string | undefined;
   fragmentMap: FragmentMap;
-  matchesFragment: MatchesFragmentFn;
+  cache: ApolloCache<unknown>;
   disableWarnings?: boolean;
-  lookupFragment: LookupFragmentFn;
 }
 
 export function maskOperation<TData = unknown>(
   data: TData,
   document: DocumentNode | TypedDocumentNode<TData>,
-  matchesFragment: MatchesFragmentFn,
-  lookupFragment: LookupFragmentFn
+  cache: ApolloCache<unknown>
 ): TData {
   const definition = getOperationDefinition(document);
 
@@ -49,8 +36,7 @@ export function maskOperation<TData = unknown>(
     operationType: definition.operation,
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    matchesFragment,
-    lookupFragment,
+    cache,
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -71,9 +57,8 @@ export function maskOperation<TData = unknown>(
 export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
-  matchesFragment: MatchesFragmentFn,
-  lookupFragment: LookupFragmentFn,
-  fragmentName?: string
+  cache: ApolloCache<unknown>,
+  fragmentName: string | undefined
 ): TData {
   const fragments = document.definitions.filter(
     (node): node is FragmentDefinitionNode =>
@@ -103,8 +88,7 @@ export function maskFragment<TData = unknown>(
     operationType: "fragment",
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    matchesFragment,
-    lookupFragment,
+    cache,
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -180,7 +164,7 @@ function maskSelectionSet(
         case Kind.INLINE_FRAGMENT: {
           if (
             selection.typeCondition &&
-            !context.matchesFragment(selection, data.__typename)
+            !context.cache.fragmentMatches?.(selection, data.__typename)
           ) {
             return [memo, changed];
           }
@@ -204,7 +188,7 @@ function maskSelectionSet(
           const fragmentName = selection.name.value;
           const fragment: FragmentDefinitionNode | null =
             context.fragmentMap[fragmentName] ||
-            context.lookupFragment(fragmentName);
+            context.cache.lookupFragment(fragmentName);
 
           invariant(
             fragment,

@@ -1544,12 +1544,7 @@ export class QueryManager<TStore> {
       return data;
     }
 
-    return maskOperation(
-      data,
-      document,
-      cache.fragmentMatches.bind(cache),
-      cache.lookupFragment.bind(cache)
-    );
+    return maskOperation(data, document, cache);
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
@@ -1570,13 +1565,7 @@ export class QueryManager<TStore> {
       return data;
     }
 
-    return maskFragment(
-      data,
-      fragment,
-      cache.fragmentMatches.bind(cache),
-      cache.lookupFragment.bind(cache),
-      fragmentName
-    );
+    return maskFragment(data, fragment, cache, fragmentName);
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

@@ -805,10 +805,12 @@ export class QueryManager<TStore> {
       query: this.transform(options.query),
     })
       .then((result) => {
-        result.data = this.maskOperation({
-          document: options.query,
-          data: result.data,
-        });
+        if (result) {
+          result.data = this.maskOperation({
+            document: options.query,
+            data: result.data,
+          });
+        }
 
         return result;
       })

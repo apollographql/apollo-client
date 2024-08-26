@@ -264,22 +264,10 @@ describe("maskOperation", () => {
       }
     `;
 
-    const nullUsers = maskOperation(
+    const data = maskOperation(
       deepFreeze({
         users: [
           null,
-          {
-            __typename: "User",
-            profile: { __typename: "Profile", id: "1", fullName: "Test User" },
-          },
-        ],
-      }),
-      query,
-      new InMemoryCache()
-    );
-    const nullProfiles = maskOperation(
-      deepFreeze({
-        users: [
           { __typename: "User", profile: null },
           {
             __typename: "User",
@@ -291,14 +279,9 @@ describe("maskOperation", () => {
       new InMemoryCache()
     );
 
-    expect(nullUsers).toEqual({
+    expect(data).toEqual({
       users: [
         null,
-        { __typename: "User", profile: { __typename: "Profile", id: "1" } },
-      ],
-    });
-    expect(nullProfiles).toEqual({
-      users: [
         { __typename: "User", profile: null },
         { __typename: "User", profile: { __typename: "Profile", id: "1" } },
       ],

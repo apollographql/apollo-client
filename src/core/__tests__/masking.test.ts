@@ -211,6 +211,41 @@ describe("maskOperation", () => {
     });
   });
 
+  test("handles nulls in child selection sets", () => {
+    const query = gql`
+      query {
+        user {
+          profile {
+            id
+          }
+          ...UserFields
+        }
+      }
+      fragment UserFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const nullUser = maskOperation(
+      deepFreeze({ user: null }),
+      query,
+      new InMemoryCache()
+    );
+    const nullProfile = maskOperation(
+      deepFreeze({ user: { __typename: "User", profile: null } }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(nullUser).toEqual({ user: null });
+    expect(nullProfile).toEqual({
+      user: { __typename: "User", profile: null },
+    });
+  });
+
   test("deep freezes the masked result if the original data is frozen", () => {
     const query = gql`
       query {

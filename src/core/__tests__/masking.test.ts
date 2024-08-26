@@ -1821,6 +1821,39 @@ describe("maskOperation", () => {
 });
 
 describe("maskFragment", () => {
+  test("returns null when data is null", () => {
+    const fragment = gql`
+      fragment Foo on Query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskFragment(null, fragment, new InMemoryCache(), "Foo");
+
+    expect(data).toBe(null);
+  });
+
+  test("returns undefined when data is undefined", () => {
+    const fragment = gql`
+      fragment Foo on Query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskFragment(undefined, fragment, new InMemoryCache(), "Foo");
+
+    expect(data).toBe(undefined);
+  });
   test("masks named fragments in fragment documents", () => {
     const fragment = gql`
       fragment UserFields on User {

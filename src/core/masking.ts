@@ -105,6 +105,11 @@ export function maskFragment<TData = unknown>(
     fragmentName
   );
 
+  if (data == null) {
+    // Maintain the original `null` or `undefined` value
+    return data;
+  }
+
   const context: MaskingContext = {
     operationType: "fragment",
     operationName: fragment.name.value,

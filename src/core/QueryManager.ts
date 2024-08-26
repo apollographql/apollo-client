@@ -803,7 +803,16 @@ export class QueryManager<TStore> {
     return this.fetchQuery<TData, TVars>(queryId, {
       ...options,
       query: this.transform(options.query),
-    }).finally(() => this.stopQuery(queryId));
+    })
+      .then((result) => {
+        result.data = this.maskOperation({
+          document: options.query,
+          data: result.data,
+        });
+
+        return result;
+      })
+      .finally(() => this.stopQuery(queryId));
   }
 
   private queryIdCounter = 1;

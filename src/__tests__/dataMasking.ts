@@ -2524,6 +2524,46 @@ describe("client.query", () => {
       })
     );
   });
+
+  test("handles errors returned when using errorPolicy `all`", async () => {
+    const query = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: { currentUser: null },
+          errors: [{ message: "User not logged in" }],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+
+    expect(data).toEqual({
+      currentUser: null,
+    });
+
+    expect(errors).toEqual([{ message: "User not logged in" }]);
+  });
 });
 
 class TestCache extends ApolloCache<unknown> {

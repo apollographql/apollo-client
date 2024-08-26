@@ -2,6 +2,7 @@ import { FragmentSpreadNode, Kind, visit } from "graphql";
 import {
   ApolloCache,
   ApolloClient,
+  ApolloError,
   ApolloLink,
   Cache,
   DataProxy,
@@ -2485,6 +2486,43 @@ describe("client.query", () => {
         age: 30,
       },
     });
+  });
+
+  test("handles errors returned when using errorPolicy `none`", async () => {
+    const query = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          errors: [{ message: "User not logged in" }],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    await expect(client.query({ query, errorPolicy: "none" })).rejects.toEqual(
+      new ApolloError({
+        graphQLErrors: [{ message: "User not logged in" }],
+      })
+    );
   });
 });
 

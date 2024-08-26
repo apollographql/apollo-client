@@ -106,6 +106,10 @@ function _useFragment<TData = any, TVars = OperationVariables>(
         let lastTimeout = 0;
         const subscription = cache.watchFragment(stableOptions).subscribe({
           next: (result) => {
+            // Since `next` is called async by zen-observable, we want to avoid
+            // unnecessarily rerendering this hook for the initial result
+            // emitted from watchFragment which should be equal to
+            // `currentDiff`.
             if (equal(result, currentDiff)) return;
             resultRef.current = result;
             // If we get another update before we've re-rendered, bail out of

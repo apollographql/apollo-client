@@ -56,6 +56,40 @@ describe("maskOperation", () => {
     );
   });
 
+  test("returns null when data is null", () => {
+    const query = gql`
+      query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskOperation(null, query, new InMemoryCache());
+
+    expect(data).toBe(null);
+  });
+
+  test("returns undefined when data is undefined", () => {
+    const query = gql`
+      query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskOperation(undefined, query, new InMemoryCache());
+
+    expect(data).toBe(undefined);
+  });
+
   test("strips top-level fragment data from query", () => {
     const query = gql`
       query {

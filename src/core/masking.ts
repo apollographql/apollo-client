@@ -40,6 +40,11 @@ export function maskOperation<TData = unknown>(
     "Expected a parsed GraphQL document with a query, mutation, or subscription."
   );
 
+  if (data == null) {
+    // Maintain the original `null` or `undefined` value
+    return data;
+  }
+
   const context: MaskingContext = {
     operationType: definition.operation,
     operationName: definition.name?.value,

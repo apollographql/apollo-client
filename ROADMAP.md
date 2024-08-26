@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-08-12**
+**Last updated: 2024-08-26**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -48,7 +48,7 @@ _no work in progress_
 
 ### Apollo Client DevTools
 
-_no work in progress_
+- Ongoing work with fixing error messages shown in devtools
 
 ### Apollo Client NextJS
 

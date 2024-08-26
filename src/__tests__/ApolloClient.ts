@@ -12,7 +12,7 @@ import { Kind } from "graphql";
 import { Observable } from "../utilities";
 import { ApolloLink } from "../link/core";
 import { HttpLink } from "../link/http";
-import { InMemoryCache } from "../cache";
+import { createFragmentRegistry, InMemoryCache } from "../cache";
 import { itAsync } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
@@ -2510,6 +2510,120 @@ describe("ApolloClient", () => {
             __typename: "Item",
             id: 5,
             text: "Item #5",
+          },
+          complete: true,
+        });
+      }
+    });
+
+    it("works with nested fragments", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      const ItemNestedFragment = gql`
+        fragment ItemNestedFragment on Item {
+          complete
+        }
+      `;
+
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+          ...ItemNestedFragment
+        }
+
+        ${ItemNestedFragment}
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+          complete: true,
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+            complete: true,
+          },
+          complete: true,
+        });
+      }
+    });
+
+    it("can use the fragment registry for nested fragments", async () => {
+      const fragments = createFragmentRegistry();
+      const cache = new InMemoryCache({ fragments });
+
+      fragments.register(gql`
+        fragment ItemNestedFragment on Item {
+          complete
+        }
+      `);
+
+      const client = new ApolloClient({
+        cache,
+        link: ApolloLink.empty(),
+      });
+
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+          ...ItemNestedFragment
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+          complete: true,
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        fragmentName: "ItemFragment",
+        from: { __typename: "Item", id: 5 },
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          data: {
+            __typename: "Item",
+            id: 5,
+            text: "Item #5",
+            complete: true,
           },
           complete: true,
         });

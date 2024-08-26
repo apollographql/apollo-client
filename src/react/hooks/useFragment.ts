@@ -64,57 +64,67 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient(options.client);
+  const { from, ...rest } = options;
+
+  // We calculate the cache id seperately from `stableOptions` because we don't
+  // want changes to non key fields in the `from` property to affect
+  // `stableOptions` and retrigger our subscription. If the cache identifier
+  // stays the same between renders, we want to reuse the existing subscription.
+  const id = React.useMemo(
+    () => (typeof from === "string" ? from : cache.identify(from)),
+    [cache, from]
+  );
 
   const resultRef = React.useRef<UseFragmentResult<TData>>();
-  const stableOptions = useDeepMemo(() => options, [options]);
+  const stableOptions = useDeepMemo(() => rest, [rest]);
 
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
-  React.useMemo(() => {
-    const {
-      fragment,
-      fragmentName,
-      from,
-      optimistic = true,
-      ...rest
-    } = stableOptions;
+  const currentDiff = React.useMemo(() => {
+    const { fragment, fragmentName, optimistic = true } = stableOptions;
 
-    resultRef.current = diffToResult(
+    return diffToResult(
       cache.diff<TData>({
-        ...rest,
+        ...stableOptions,
         returnPartialData: true,
-        id: typeof from === "string" ? from : cache.identify(from),
+        id,
         query: cache["getFragmentDoc"](fragment, fragmentName),
         optimistic,
       })
     );
-  }, [stableOptions, cache]);
+  }, [stableOptions, id, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = React.useCallback(() => resultRef.current!, []);
+  const getSnapshot = React.useCallback(
+    () => resultRef.current || currentDiff,
+    [currentDiff]
+  );
 
   return useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscription = cache.watchFragment(stableOptions).subscribe({
-          next: (result) => {
-            if (equal(result, resultRef.current)) return;
-            resultRef.current = result;
-            // If we get another update before we've re-rendered, bail out of
-            // the update and try again. This ensures that the relative timing
-            // between useQuery and useFragment stays roughly the same as
-            // fixed in https://github.com/apollographql/apollo-client/pull/11083
-            clearTimeout(lastTimeout);
-            lastTimeout = setTimeout(forceUpdate) as any;
-          },
-        });
+        const subscription = cache
+          .watchFragment({ ...stableOptions, from: id! })
+          .subscribe({
+            next: (result) => {
+              if (equal(result, currentDiff)) return;
+              resultRef.current = result;
+              // If we get another update before we've re-rendered, bail out of
+              // the update and try again. This ensures that the relative timing
+              // between useQuery and useFragment stays roughly the same as
+              // fixed in https://github.com/apollographql/apollo-client/pull/11083
+              clearTimeout(lastTimeout);
+              lastTimeout = setTimeout(forceUpdate) as any;
+            },
+          });
         return () => {
+          resultRef.current = void 0;
           subscription.unsubscribe();
           clearTimeout(lastTimeout);
         };
       },
-      [cache, stableOptions]
+      [cache, id, stableOptions, currentDiff]
     ),
     getSnapshot,
     getSnapshot

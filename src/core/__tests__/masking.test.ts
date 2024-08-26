@@ -1875,6 +1875,75 @@ describe("maskFragment", () => {
     });
   });
 
+  test("handles nulls in child selection sets", () => {
+    const fragment = gql`
+      fragment UserFields on User {
+        profile {
+          id
+        }
+        ...ProfileFields
+      }
+      fragment ProfileFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({ __typename: "User", profile: null }),
+      fragment,
+      new InMemoryCache(),
+      "UserFields"
+    );
+
+    expect(data).toEqual({ __typename: "User", profile: null });
+  });
+
+  test("handles nulls in arrays", () => {
+    const fragment = gql`
+      fragment UserFields on Query {
+        users {
+          profile {
+            id
+          }
+          ...ProfileFields
+        }
+      }
+      fragment ProfileFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        users: [
+          null,
+          { __typename: "User", profile: null },
+          {
+            __typename: "User",
+            profile: { __typename: "Profile", id: "1", fullName: "Test User" },
+          },
+        ],
+      }),
+      fragment,
+      new InMemoryCache(),
+      "UserFields"
+    );
+
+    expect(data).toEqual({
+      users: [
+        null,
+        { __typename: "User", profile: null },
+        { __typename: "User", profile: { __typename: "Profile", id: "1" } },
+      ],
+    });
+  });
+
   test("deep freezes the masked result if the original data is frozen", () => {
     const fragment = gql`
       fragment UserFields on User {

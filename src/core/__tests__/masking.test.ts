@@ -246,6 +246,65 @@ describe("maskOperation", () => {
     });
   });
 
+  test("handles nulls in arrays", () => {
+    const query = gql`
+      query {
+        users {
+          profile {
+            id
+          }
+          ...UserFields
+        }
+      }
+      fragment UserFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const nullUsers = maskOperation(
+      deepFreeze({
+        users: [
+          null,
+          {
+            __typename: "User",
+            profile: { __typename: "Profile", id: "1", fullName: "Test User" },
+          },
+        ],
+      }),
+      query,
+      new InMemoryCache()
+    );
+    const nullProfiles = maskOperation(
+      deepFreeze({
+        users: [
+          { __typename: "User", profile: null },
+          {
+            __typename: "User",
+            profile: { __typename: "Profile", id: "1", fullName: "Test User" },
+          },
+        ],
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(nullUsers).toEqual({
+      users: [
+        null,
+        { __typename: "User", profile: { __typename: "Profile", id: "1" } },
+      ],
+    });
+    expect(nullProfiles).toEqual({
+      users: [
+        { __typename: "User", profile: null },
+        { __typename: "User", profile: { __typename: "Profile", id: "1" } },
+      ],
+    });
+  });
+
   test("deep freezes the masked result if the original data is frozen", () => {
     const query = gql`
       query {

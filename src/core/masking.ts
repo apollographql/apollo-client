@@ -137,6 +137,10 @@ function maskSelectionSet(
     let changed = false;
 
     const masked = data.map((item, index) => {
+      if (item === null) {
+        return null;
+      }
+
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,

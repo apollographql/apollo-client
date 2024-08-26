@@ -1629,7 +1629,7 @@ export interface MutationResult<TData = any> {
     data?: TData | null;
     error?: ApolloError;
     loading: boolean;
-    reset(): void;
+    reset: () => void;
 }
 
 // Warning: (ae-forgotten-export) The symbol "MutationBaseOptions" needs to be exported by the entry point index.d.ts

@@ -2277,6 +2277,96 @@ describe("data masking", () => {
 
     await expect(ProfiledHook).not.toRerender();
   });
+
+  test("uses unmasked data when using the @unmask directive", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields @unmask
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new Cache(),
+      link,
+    });
+
+    const onData = jest.fn();
+    const ProfiledHook = profileHook(() =>
+      useSubscription(subscription, { onData })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(error).toBeUndefined();
+    }
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    {
+      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Test comment",
+          author: "Test User",
+        },
+      });
+      expect(error).toBeUndefined();
+
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData).toHaveBeenCalledWith({
+        client: expect.anything(),
+        data: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Test comment",
+              author: "Test User",
+            },
+          },
+          loading: false,
+          error: undefined,
+          variables: undefined,
+        },
+      });
+    }
+
+    await expect(ProfiledHook).not.toRerender();
+  });
 });
 
 describe.skip("Type Tests", () => {

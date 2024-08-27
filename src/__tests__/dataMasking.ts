@@ -2564,6 +2564,57 @@ describe("client.query", () => {
 
     expect(errors).toEqual([{ message: "User not logged in" }]);
   });
+
+  test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
+    const query = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: null,
+            },
+          },
+          errors: [{ message: "Could not determine age" }],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+
+    expect(data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    });
+
+    expect(errors).toEqual([{ message: "Could not determine age" }]);
+  });
 });
 
 class TestCache extends ApolloCache<unknown> {

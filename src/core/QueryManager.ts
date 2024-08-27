@@ -994,16 +994,22 @@ export class QueryManager<TStore> {
     this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
-  public startGraphQLSubscription<T = any>({
-    query,
-    fetchPolicy,
-    errorPolicy = "none",
-    variables,
-    context = {},
-    extensions = {},
-  }: SubscriptionOptions): Observable<FetchResult<T>> {
+  public startGraphQLSubscription<T = any>(
+    options: SubscriptionOptions
+  ): Observable<FetchResult<T>> {
+    let { query, variables } = options;
+    const {
+      fetchPolicy,
+      errorPolicy = "none",
+      context = {},
+      extensions = {},
+    } = options;
+
     query = this.transform(query);
     variables = this.getVariables(query, variables);
+    const dataMasking: boolean | undefined = (options as any)[
+      Symbol.for("apollo.dataMasking")
+    ];
 
     const makeObservable = (variables: OperationVariables) =>
       this.getObservableFromLink<T>(query, context, variables, extensions).map(
@@ -1046,10 +1052,11 @@ export class QueryManager<TStore> {
             delete result.errors;
           }
 
-          result.data = this.maskOperation({
-            document: query,
-            data: result.data,
-          });
+          if (dataMasking !== false)
+            result.data = this.maskOperation({
+              document: query,
+              data: result.data,
+            });
 
           return result;
         }

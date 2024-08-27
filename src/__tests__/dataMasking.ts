@@ -14,7 +14,7 @@ import {
   Reference,
   TypedDocumentNode,
 } from "../core";
-import { MockLink } from "../testing";
+import { MockLink, MockSubscriptionLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { invariant } from "../utilities/globals";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
@@ -2614,6 +2614,159 @@ describe("client.query", () => {
     });
 
     expect(errors).toEqual([{ message: "Could not determine age" }]);
+  });
+});
+
+describe("client.subscribe", () => {
+  test("masks data returned from subscriptions when dataMasking is `true`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+      },
+    });
+  });
+
+  test("does not mask data returned from subscriptions when dataMasking is `false`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: "Test User",
+      },
+    });
+  });
+
+  test("does not mask data returned from subscriptions by default", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: "Test User",
+      },
+    });
   });
 });
 

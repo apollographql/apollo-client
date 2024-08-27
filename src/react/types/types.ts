@@ -380,7 +380,7 @@ export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
   client: ApolloClient<object>;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
-  reset(): void;
+  reset: () => void;
 }
 
 export declare type MutationFunction<

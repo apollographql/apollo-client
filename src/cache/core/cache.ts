@@ -24,7 +24,7 @@ import type {
 } from "../../core/types.js";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { maskOperation } from "../../core/masking.js";
+import { maskFragment, maskOperation } from "../../core/masking.js";
 import { invariant } from "../../utilities/globals/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
@@ -72,6 +72,31 @@ export interface WatchFragmentOptions<TData, TVars> {
    * @docGroup 2. Cache options
    */
   optimistic?: boolean;
+}
+
+export interface MaskFragmentOptions<TData> {
+  /**
+   * A GraphQL fragment document parsed into an AST with the `gql`
+   * template literal.
+   *
+   * @docGroup 1. Required options
+   */
+  fragment: DocumentNode | TypedDocumentNode<TData>;
+  /**
+   * The raw, unmasked data that should be masked.
+   *
+   * @docGroup 1. Required options
+   */
+  data: TData;
+  /**
+   * The name of the fragment defined in the fragment document.
+   *
+   * Required if the fragment document includes more than one fragment,
+   * optional otherwise.
+   *
+   * @docGroup 2. Cache options
+   */
+  fragmentName?: string;
 }
 
 /**
@@ -392,6 +417,27 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     }
 
     return maskOperation(data, document, this.fragmentMatches.bind(this));
+  }
+
+  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
+    const { data, fragment, fragmentName } = options;
+
+    if (!this.fragmentMatches) {
+      if (__DEV__) {
+        invariant.warn(
+          "This cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+        );
+      }
+
+      return data;
+    }
+
+    return maskFragment(
+      data,
+      fragment,
+      this.fragmentMatches.bind(this),
+      fragmentName
+    );
   }
 
   /**

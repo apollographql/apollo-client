@@ -13,6 +13,7 @@ import {
 } from "../core";
 import { MockLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { invariant } from "../utilities/globals";
 
 test("masks queries when dataMasking is `true`", async () => {
   interface Query {
@@ -1296,6 +1297,881 @@ test("warns when passing parent object to `from` that is non-normalized", async 
     expect(data).toEqual({});
     // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
     expect(complete).toBe(true);
+  }
+});
+
+test("masks watched fragments when dataMasking is `true`", async () => {
+  type UserFieldsFragment = {
+    __typename: "User";
+    id: number;
+    age: number;
+  };
+
+  type NameFieldsFragment = {
+    __typename: "User";
+    firstName: string;
+    lastName: string;
+  };
+
+  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+    fragment NameFields on User {
+      firstName
+      lastName
+    }
+  `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+    fragment UserFields on User {
+      id
+      age
+      ...NameFields
+    }
+
+    ${nameFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      age: 30,
+      // @ts-expect-error Need to determine types when writing data for masked fragment types
+      firstName: "Test",
+      lastName: "User",
+    },
+  });
+
+  const fragmentStream = new ObservableStream(
+    client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    })
+  );
+
+  const { data, complete } = await fragmentStream.takeNext();
+
+  expect(data).toEqual({ __typename: "User", id: 1, age: 30 });
+  expect(complete).toBe(true);
+  invariant(complete, "Should never be incomplete");
+
+  const nestedFragmentStream = new ObservableStream(
+    client.watchFragment({ fragment: nameFieldsFragment, from: data })
+  );
+
+  {
+    const { data, complete } = await nestedFragmentStream.takeNext();
+
+    expect(complete).toBe(true);
+    expect(data).toEqual({
+      __typename: "User",
+      firstName: "Test",
+      lastName: "User",
+    });
+  }
+});
+
+test("does not mask watched fragments when dataMasking is disabled", async () => {
+  type UserFieldsFragment = {
+    __typename: "User";
+    id: number;
+    age: number;
+    firstName: string;
+    lastName: string;
+  };
+
+  type NameFieldsFragment = {
+    __typename: "User";
+    firstName: string;
+    lastName: string;
+  };
+
+  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+    fragment NameFields on User {
+      __typename
+      firstName
+      lastName
+    }
+  `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      age
+      ...NameFields
+    }
+
+    ${nameFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: false,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      age: 30,
+      firstName: "Test",
+      lastName: "User",
+    },
+  });
+
+  const fragmentStream = new ObservableStream(
+    client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    })
+  );
+
+  const { data, complete } = await fragmentStream.takeNext();
+
+  expect(data).toEqual({
+    __typename: "User",
+    id: 1,
+    age: 30,
+    firstName: "Test",
+    lastName: "User",
+  });
+  expect(complete).toBe(true);
+  invariant(complete, "Should never be incomplete");
+
+  const nestedFragmentStream = new ObservableStream(
+    client.watchFragment({ fragment: nameFieldsFragment, from: data })
+  );
+
+  {
+    const { data, complete } = await nestedFragmentStream.takeNext();
+
+    expect(complete).toBe(true);
+    expect(data).toEqual({
+      __typename: "User",
+      firstName: "Test",
+      lastName: "User",
+    });
+  }
+});
+
+test("does not mask watched fragments by default", async () => {
+  type UserFieldsFragment = {
+    __typename: "User";
+    id: number;
+    age: number;
+    firstName: string;
+    lastName: string;
+  };
+
+  type NameFieldsFragment = {
+    __typename: "User";
+    firstName: string;
+    lastName: string;
+  };
+
+  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+    fragment NameFields on User {
+      __typename
+      firstName
+      lastName
+    }
+  `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+    fragment UserFields on User {
+      __typename
+      id
+      age
+      ...NameFields
+    }
+
+    ${nameFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      age: 30,
+      firstName: "Test",
+      lastName: "User",
+    },
+  });
+
+  const fragmentStream = new ObservableStream(
+    client.watchFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    })
+  );
+
+  const { data, complete } = await fragmentStream.takeNext();
+
+  expect(data).toEqual({
+    __typename: "User",
+    id: 1,
+    age: 30,
+    firstName: "Test",
+    lastName: "User",
+  });
+  expect(complete).toBe(true);
+  invariant(complete, "Should never be incomplete");
+
+  const nestedFragmentStream = new ObservableStream(
+    client.watchFragment({ fragment: nameFieldsFragment, from: data })
+  );
+
+  {
+    const { data, complete } = await nestedFragmentStream.takeNext();
+
+    expect(complete).toBe(true);
+    expect(data).toEqual({
+      __typename: "User",
+      firstName: "Test",
+      lastName: "User",
+    });
+  }
+});
+
+test("does not mask watched fragments marked with @unmask", async () => {
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...ProfileFields @unmask
+    }
+
+    fragment ProfileFields on User {
+      age
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+    });
+  }
+});
+
+test("masks watched fragments updated by the cache", async () => {
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...ProfileFields
+    }
+
+    fragment ProfileFields on User {
+      age
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-expect-error Need to determine how to handle masked fragment types with writes
+      age: 30,
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User (updated)",
+      // @ts-ignore TODO: Determine how to handle cache writes with masked
+      // query type
+      age: 35,
+    },
+  });
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User (updated)",
+    });
+  }
+});
+
+test("does not trigger update on watched fragment when updating field in named fragment", async () => {
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...ProfileFields
+    }
+
+    fragment ProfileFields on User {
+      age
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 35,
+    },
+  });
+
+  await expect(stream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+
+  expect(
+    client.readFragment({ fragment, fragmentName: "UserFields", id: "User:1" })
+  ).toEqual({
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 35,
+  });
+});
+
+test("triggers update to child watched fragment when updating field in named fragment", async () => {
+  interface UserFieldsFragment {
+    __typename: "User";
+    id: number;
+    name: string;
+  }
+
+  interface ProfileFieldsFragment {
+    __typename: "User";
+    age: number;
+  }
+
+  const profileFieldsFragment: TypedDocumentNode<ProfileFieldsFragment, never> =
+    gql`
+      fragment ProfileFields on User {
+        age
+      }
+    `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...ProfileFields
+    }
+
+    ${profileFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  const userFieldsObservable = client.watchFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const nameFieldsObservable = client.watchFragment({
+    fragment: profileFieldsFragment,
+    from: { __typename: "User", id: 1 },
+  });
+
+  const userFieldsStream = new ObservableStream(userFieldsObservable);
+  const nameFieldsStream = new ObservableStream(nameFieldsObservable);
+
+  {
+    const { data } = await userFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+    });
+  }
+
+  {
+    const { data } = await nameFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 30,
+    });
+  }
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 35,
+    },
+  });
+
+  {
+    const { data } = await nameFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 35,
+    });
+  }
+
+  await expect(userFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+
+  expect(
+    client.readFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      id: "User:1",
+    })
+  ).toEqual({
+    __typename: "User",
+    id: 1,
+    name: "Test User",
+    age: 35,
+  });
+});
+
+test("does not trigger update to watched fragments when updating field in named fragment with @nonreactive", async () => {
+  interface UserFieldsFragment {
+    __typename: "User";
+    id: number;
+    lastUpdatedAt: string;
+  }
+
+  interface ProfileFieldsFragment {
+    __typename: "User";
+    lastUpdatedAt: string;
+  }
+
+  const profileFieldsFragment: TypedDocumentNode<ProfileFieldsFragment, never> =
+    gql`
+      fragment ProfileFields on User {
+        age
+        lastUpdatedAt @nonreactive
+      }
+    `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    fragment UserFields on User {
+      id
+      lastUpdatedAt @nonreactive
+      ...ProfileFields
+    }
+
+    ${profileFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-01",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  const userFieldsObservable = client.watchFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const profileFieldsObservable = client.watchFragment({
+    fragment: profileFieldsFragment,
+    from: { __typename: "User", id: 1 },
+  });
+
+  const userFieldsStream = new ObservableStream(userFieldsObservable);
+  const profileFieldsStream = new ObservableStream(profileFieldsObservable);
+
+  {
+    const { data } = await userFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-01",
+    });
+  }
+
+  {
+    const { data } = await profileFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 30,
+      lastUpdatedAt: "2024-01-01",
+    });
+  }
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-02",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  await expect(userFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+  await expect(profileFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+
+  expect(
+    client.readFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      id: "User:1",
+    })
+  ).toEqual({
+    __typename: "User",
+    id: 1,
+    lastUpdatedAt: "2024-01-02",
+    age: 30,
+  });
+});
+
+test("does not trigger update to watched fragments when updating parent field with @nonreactive and child field", async () => {
+  interface UserFieldsFragment {
+    __typename: "User";
+    id: number;
+    lastUpdatedAt: string;
+  }
+
+  interface ProfileFieldsFragment {
+    __typename: "User";
+    lastUpdatedAt: string;
+  }
+
+  const profileFieldsFragment: TypedDocumentNode<ProfileFieldsFragment, never> =
+    gql`
+      fragment ProfileFields on User {
+        age
+        lastUpdatedAt @nonreactive
+      }
+    `;
+
+  const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
+    fragment UserFields on User {
+      id
+      lastUpdatedAt @nonreactive
+      ...ProfileFields
+    }
+
+    ${profileFieldsFragment}
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-01",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 30,
+    },
+  });
+
+  const userFieldsObservable = client.watchFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const profileFieldsObservable = client.watchFragment({
+    fragment: profileFieldsFragment,
+    from: { __typename: "User", id: 1 },
+  });
+
+  const userFieldsStream = new ObservableStream(userFieldsObservable);
+  const profileFieldsStream = new ObservableStream(profileFieldsObservable);
+
+  {
+    const { data } = await userFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-01",
+    });
+  }
+
+  {
+    const { data } = await profileFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 30,
+      lastUpdatedAt: "2024-01-01",
+    });
+  }
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      lastUpdatedAt: "2024-01-02",
+      // @ts-ignore TODO: Determine how to handle cache writes with masking
+      age: 31,
+    },
+  });
+
+  {
+    const { data } = await profileFieldsStream.takeNext();
+
+    expect(data).toEqual({
+      __typename: "User",
+      age: 31,
+      lastUpdatedAt: "2024-01-02",
+    });
+  }
+
+  await expect(userFieldsStream.takeNext()).rejects.toThrow(
+    new Error("Timeout waiting for next event")
+  );
+
+  expect(
+    client.readFragment({
+      fragment: userFieldsFragment,
+      fragmentName: "UserFields",
+      id: "User:1",
+    })
+  ).toEqual({
+    __typename: "User",
+    id: 1,
+    lastUpdatedAt: "2024-01-02",
+    age: 31,
+  });
+});
+
+test("warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'", async () => {
+  using consoleSpy = spyOnConsole("warn");
+
+  interface Fragment {
+    __typename: "User";
+    id: number;
+    name: string;
+    age: number;
+  }
+
+  const fragment: TypedDocumentNode<Fragment, never> = gql`
+    fragment UserFields on User {
+      id
+      name
+      ...ProfileFields @unmask(mode: "migrate")
+    }
+
+    fragment ProfileFields on User {
+      age
+      name
+    }
+  `;
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  const observable = client.watchFragment({
+    fragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+  const stream = new ObservableStream(observable);
+
+  {
+    const { data } = await stream.takeNext();
+    data.__typename;
+    data.id;
+    data.name;
+
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+    data.age;
+
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    expect(consoleSpy.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "fragment 'UserFields'",
+      "age"
+    );
+
+    // Ensure we only warn once
+    data.age;
+    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   }
 });
 

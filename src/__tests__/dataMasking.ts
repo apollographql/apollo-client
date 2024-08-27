@@ -2736,7 +2736,6 @@ describe("client.subscribe", () => {
     const link = new MockSubscriptionLink();
 
     const client = new ApolloClient({
-      dataMasking: false,
       cache: new InMemoryCache(),
       link,
     });

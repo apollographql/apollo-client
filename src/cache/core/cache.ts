@@ -29,6 +29,7 @@ import type {
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
 import { invariant } from "../../utilities/globals/index.js";
+import { maskFragment } from "../../core/masking.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -252,6 +253,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
     const id = typeof from === "string" ? from : this.identify(from);
+    const dataMasking = !!(options as any)[Symbol.for("apollo.dataMasking")];
 
     if (__DEV__) {
       const actualFragmentName =
@@ -279,21 +281,22 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       return this.watch<TData, TVars>({
         ...diffOptions,
         immediate: true,
-        callback(diff) {
+        callback: (diff) => {
+          const data =
+            dataMasking ?
+              maskFragment(diff.result, fragment, this, fragmentName)
+            : diff.result;
+
           if (
             // Always ensure we deliver the first result
             latestDiff &&
-            equalByQuery(
-              query,
-              { data: latestDiff?.result },
-              { data: diff.result }
-            )
+            equalByQuery(query, { data: latestDiff?.result }, { data })
           ) {
             return;
           }
 
           const result = {
-            data: diff.result as DeepPartial<TData>,
+            data,
             complete: !!diff.complete,
           } as WatchFragmentResult<TData>;
 
@@ -303,7 +306,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
             );
           }
 
-          latestDiff = diff;
+          latestDiff = { ...diff, result: data };
           observer.next(result);
         },
       });

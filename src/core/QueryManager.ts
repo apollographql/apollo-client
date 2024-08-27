@@ -104,7 +104,13 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
-import { maskOperation } from "./masking.js";
+import { maskFragment, maskOperation } from "./masking.js";
+
+interface MaskFragmentOptions<TData> {
+  fragment: DocumentNode;
+  data: TData;
+  fragmentName?: string;
+}
 
 interface MaskOperationOptions<TData> {
   document: DocumentNode;
@@ -1530,6 +1536,14 @@ export class QueryManager<TStore> {
     const { document, data } = options;
 
     return this.dataMasking ? maskOperation(data, document, this.cache) : data;
+  }
+
+  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
+    const { data, fragment, fragmentName } = options;
+
+    return this.dataMasking ?
+        maskFragment(data, fragment, this.cache, fragmentName)
+      : data;
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

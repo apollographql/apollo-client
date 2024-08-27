@@ -50,6 +50,10 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     //
     // (undocumented)
     identify(object: StoreObject | Reference): string | undefined;
+    // Warning: (ae-forgotten-export) The symbol "MaskFragmentOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>): TData;
     // (undocumented)
     maskOperation<TData = unknown>(document: DocumentNode, data: TData): TData;
     // (undocumented)
@@ -1018,6 +1022,13 @@ type LocalStateOptions<TCacheShape> = {
 };
 
 // @public (undocumented)
+interface MaskFragmentOptions<TData> {
+    data: TData;
+    fragment: DocumentNode | TypedDocumentNode<TData>;
+    fragmentName?: string;
+}
+
+// @public (undocumented)
 type MaybeAsync<T> = T | PromiseLike<T>;
 
 // @public (undocumented)
@@ -1493,6 +1504,8 @@ class QueryManager<TStore> {
         onQueryUpdated?: OnQueryUpdated<any>;
         keepRootFields?: boolean;
     }, cache?: ApolloCache<TStore>): Promise<FetchResult<TData>>;
+    // (undocumented)
+    maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>): TData;
     // (undocumented)
     mutate<TData, TVariables extends OperationVariables, TContext extends Record<string, any>, TCache extends ApolloCache<any>>({ mutation, variables, optimisticResponse, updateQueries, refetchQueries, awaitRefetchQueries, update: updateWithProxyFn, onQueryUpdated, fetchPolicy, errorPolicy, keepRootFields, context, }: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<TData>>;
     // (undocumented)
@@ -2178,8 +2191,8 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:140:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:385:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:144:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:389:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:275:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts

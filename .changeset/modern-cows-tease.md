@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Type Mutation.reset as an arrow function
+Type `MutationResult.reset` as an arrow function

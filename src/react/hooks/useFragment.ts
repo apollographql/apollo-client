@@ -12,7 +12,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, useLazyRef, wrapHook } from "./internal/index.js";
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
 
 export interface UseFragmentOptions<TData, TVars>
@@ -64,39 +64,41 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const { cache } = useApolloClient(options.client);
+  const { from, ...rest } = options;
 
-  const diffOptions = useDeepMemo<Cache.DiffOptions<TData, TVars>>(() => {
-    const {
-      fragment,
-      fragmentName,
-      from,
-      optimistic = true,
-      ...rest
-    } = options;
-
-    return {
-      ...rest,
-      returnPartialData: true,
-      id: typeof from === "string" ? from : cache.identify(from),
-      query: cache["getFragmentDoc"](fragment, fragmentName),
-      optimistic,
-    };
-  }, [options]);
-
-  const resultRef = useLazyRef<UseFragmentResult<TData>>(() =>
-    diffToResult(cache.diff<TData>(diffOptions))
+  // We calculate the cache id seperately from `stableOptions` because we don't
+  // want changes to non key fields in the `from` property to affect
+  // `stableOptions` and retrigger our subscription. If the cache identifier
+  // stays the same between renders, we want to reuse the existing subscription.
+  const id = React.useMemo(
+    () => (typeof from === "string" ? from : cache.identify(from)),
+    [cache, from]
   );
 
-  const stableOptions = useDeepMemo(() => options, [options]);
+  const resultRef = React.useRef<UseFragmentResult<TData>>();
+  const stableOptions = useDeepMemo(() => ({ ...rest, from: id! }), [rest, id]);
 
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
-  React.useMemo(() => {
-    resultRef.current = diffToResult(cache.diff<TData>(diffOptions));
-  }, [diffOptions, cache]);
+  const currentDiff = React.useMemo(() => {
+    const { fragment, fragmentName, from, optimistic = true } = stableOptions;
+
+    return diffToResult(
+      cache.diff<TData>({
+        ...stableOptions,
+        returnPartialData: true,
+        id: from,
+        query: cache["getFragmentDoc"](fragment, fragmentName),
+        optimistic,
+      })
+    );
+  }, [stableOptions, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = React.useCallback(() => resultRef.current, []);
+  const getSnapshot = React.useCallback(
+    () => resultRef.current || currentDiff,
+    [currentDiff]
+  );
 
   return useSyncExternalStore(
     React.useCallback(
@@ -104,7 +106,11 @@ function _useFragment<TData = any, TVars = OperationVariables>(
         let lastTimeout = 0;
         const subscription = cache.watchFragment(stableOptions).subscribe({
           next: (result) => {
-            if (equal(result, resultRef.current)) return;
+            // Since `next` is called async by zen-observable, we want to avoid
+            // unnecessarily rerendering this hook for the initial result
+            // emitted from watchFragment which should be equal to
+            // `currentDiff`.
+            if (equal(result, currentDiff)) return;
             resultRef.current = result;
             // If we get another update before we've re-rendered, bail out of
             // the update and try again. This ensures that the relative timing
@@ -115,11 +121,12 @@ function _useFragment<TData = any, TVars = OperationVariables>(
           },
         });
         return () => {
+          resultRef.current = void 0;
           subscription.unsubscribe();
           clearTimeout(lastTimeout);
         };
       },
-      [cache, stableOptions]
+      [cache, stableOptions, currentDiff]
     ),
     getSnapshot,
     getSnapshot

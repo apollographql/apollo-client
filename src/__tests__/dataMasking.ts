@@ -2767,6 +2767,144 @@ describe("client.subscribe", () => {
       },
     });
   });
+
+  test("handles errors returned from the subscription when errorPolicy is `none`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      errorPolicy: "none",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: null,
+        },
+        errors: [{ message: "Something went wrong" }],
+      },
+    });
+
+    const error = await stream.takeError();
+
+    expect(error).toEqual(
+      new ApolloError({ graphQLErrors: [{ message: "Something went wrong" }] })
+    );
+  });
+
+  test("handles errors returned from the subscription when errorPolicy is `all`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      errorPolicy: "all",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: null,
+        },
+        errors: [{ message: "Something went wrong" }],
+      },
+    });
+
+    const { data, errors } = await stream.takeNext();
+
+    expect(data).toEqual({ addedComment: null });
+    expect(errors).toEqual([{ message: "Something went wrong" }]);
+  });
+
+  test("masks partial data for errors returned from the subscription when errorPolicy is `all`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      errorPolicy: "all",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: null,
+          },
+        },
+        errors: [{ message: "Could not get author" }],
+      },
+    });
+
+    const { data, errors } = await stream.takeNext();
+
+    expect(data).toEqual({ addedComment: { __typename: "Comment", id: 1 } });
+    expect(errors).toEqual([{ message: "Could not get author" }]);
+  });
 });
 
 class TestCache extends ApolloCache<unknown> {

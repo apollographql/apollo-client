@@ -3033,6 +3033,269 @@ describe("observable.subscribeToMore", () => {
       expect(data).toEqual({ recentComment: { __typename: "Comment", id: 2 } });
     }
   });
+
+  test("does not mask data returned from subscriptions when dataMasking is `false`", async () => {
+    const fragment = gql`
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const query = gql`
+      query RecentCommentQuery {
+        recentComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const mocks: MockedResponse[] = [
+      {
+        request: { query },
+        result: {
+          data: {
+            recentComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Recent comment",
+              author: "Test User",
+            },
+          },
+        },
+      },
+    ];
+
+    const subscriptionLink = new MockSubscriptionLink();
+    const link = ApolloLink.split(
+      (operation) => isSubscriptionOperation(operation.query),
+      subscriptionLink,
+      new MockLink(mocks)
+    );
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query });
+    const queryStream = new ObservableStream(observable);
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      });
+    }
+
+    const updateQuery = jest.fn((_, { subscriptionData }) => {
+      return { recentComment: subscriptionData.data.addedComment };
+    });
+
+    observable.subscribeToMore({ document: subscription, updateQuery });
+
+    subscriptionLink.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 2,
+            comment: "Most recent comment",
+            author: "Test User Jr.",
+          },
+        },
+      },
+    });
+
+    await wait(0);
+
+    expect(updateQuery).toHaveBeenLastCalledWith(
+      {
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      },
+      {
+        variables: {},
+        subscriptionData: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 2,
+              comment: "Most recent comment",
+              author: "Test User Jr.",
+            },
+          },
+        },
+      }
+    );
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 2,
+          comment: "Most recent comment",
+          author: "Test User Jr.",
+        },
+      });
+    }
+  });
+
+  test("does not mask data by default", async () => {
+    const fragment = gql`
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const query = gql`
+      query RecentCommentQuery {
+        recentComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const mocks: MockedResponse[] = [
+      {
+        request: { query },
+        result: {
+          data: {
+            recentComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Recent comment",
+              author: "Test User",
+            },
+          },
+        },
+      },
+    ];
+
+    const subscriptionLink = new MockSubscriptionLink();
+    const link = ApolloLink.split(
+      (operation) => isSubscriptionOperation(operation.query),
+      subscriptionLink,
+      new MockLink(mocks)
+    );
+
+    const client = new ApolloClient({ cache: new InMemoryCache(), link });
+    const observable = client.watchQuery({ query });
+    const queryStream = new ObservableStream(observable);
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      });
+    }
+
+    const updateQuery = jest.fn((_, { subscriptionData }) => {
+      return { recentComment: subscriptionData.data.addedComment };
+    });
+
+    observable.subscribeToMore({ document: subscription, updateQuery });
+
+    subscriptionLink.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 2,
+            comment: "Most recent comment",
+            author: "Test User Jr.",
+          },
+        },
+      },
+    });
+
+    await wait(0);
+
+    expect(updateQuery).toHaveBeenLastCalledWith(
+      {
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      },
+      {
+        variables: {},
+        subscriptionData: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 2,
+              comment: "Most recent comment",
+              author: "Test User Jr.",
+            },
+          },
+        },
+      }
+    );
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 2,
+          comment: "Most recent comment",
+          author: "Test User Jr.",
+        },
+      });
+    }
+  });
 });
 
 class TestCache extends ApolloCache<unknown> {

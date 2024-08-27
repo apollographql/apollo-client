@@ -1046,6 +1046,11 @@ export class QueryManager<TStore> {
             delete result.errors;
           }
 
+          result.data = this.maskOperation({
+            document: query,
+            data: result.data,
+          });
+
           return result;
         }
       );

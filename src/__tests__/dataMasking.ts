@@ -2913,7 +2913,7 @@ describe("client.subscribe", () => {
   });
 });
 
-describe("observable.subscribeToMore", () => {
+describe("observableQuery.subscribeToMore", () => {
   test("masks query data, does not mask updateQuery callback when dataMasking is `true`", async () => {
     const fragment = gql`
       fragment CommentFields on Comment {

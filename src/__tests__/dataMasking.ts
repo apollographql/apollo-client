@@ -1563,10 +1563,10 @@ test("does not mask watched fragments marked with @unmask", async () => {
     fragment UserFields on User {
       id
       name
-      ...NameFields @unmask
+      ...ProfileFields @unmask
     }
 
-    fragment NameFields on User {
+    fragment ProfileFields on User {
       age
     }
   `;
@@ -1618,10 +1618,10 @@ test("masks watched fragments updated by the cache", async () => {
     fragment UserFields on User {
       id
       name
-      ...NameFields
+      ...ProfileFields
     }
 
-    fragment NameFields on User {
+    fragment ProfileFields on User {
       age
     }
   `;
@@ -1696,10 +1696,10 @@ test("does not trigger update on watched fragment when updating field in named f
     fragment UserFields on User {
       id
       name
-      ...NameFields
+      ...ProfileFields
     }
 
-    fragment NameFields on User {
+    fragment ProfileFields on User {
       age
     }
   `;
@@ -1771,26 +1771,26 @@ test("triggers update to child watched fragment when updating field in named fra
     name: string;
   }
 
-  interface NameFieldsFragment {
+  interface ProfileFieldsFragment {
     __typename: "User";
-    id: number;
-    name: string;
+    age: number;
   }
 
-  const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment, never> = gql`
-    fragment NameFields on User {
-      age
-    }
-  `;
+  const profileFieldsFragment: TypedDocumentNode<ProfileFieldsFragment, never> =
+    gql`
+      fragment ProfileFields on User {
+        age
+      }
+    `;
 
   const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
     fragment UserFields on User {
       id
       name
-      ...NameFields
+      ...ProfileFields
     }
 
-    ${nameFieldsFragment}
+    ${profileFieldsFragment}
   `;
 
   const client = new ApolloClient({
@@ -1817,7 +1817,7 @@ test("triggers update to child watched fragment when updating field in named fra
   });
 
   const nameFieldsObservable = client.watchFragment({
-    fragment: nameFieldsFragment,
+    fragment: profileFieldsFragment,
     from: { __typename: "User", id: 1 },
   });
 

@@ -40,6 +40,11 @@ export function maskOperation<TData = unknown>(
     "Expected a parsed GraphQL document with a query, mutation, or subscription."
   );
 
+  if (data == null) {
+    // Maintain the original `null` or `undefined` value
+    return data;
+  }
+
   const context: MaskingContext = {
     operationType: definition.operation,
     operationName: definition.name?.value,
@@ -100,6 +105,11 @@ export function maskFragment<TData = unknown>(
     fragmentName
   );
 
+  if (data == null) {
+    // Maintain the original `null` or `undefined` value
+    return data;
+  }
+
   const context: MaskingContext = {
     operationType: "fragment",
     operationName: fragment.name.value,
@@ -132,6 +142,10 @@ function maskSelectionSet(
     let changed = false;
 
     const masked = data.map((item, index) => {
+      if (item === null) {
+        return null;
+      }
+
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
@@ -155,7 +169,7 @@ function maskSelectionSet(
 
           memo[keyName] = data[keyName];
 
-          if (childSelectionSet) {
+          if (childSelectionSet && data[keyName] !== null) {
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,

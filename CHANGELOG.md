@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.11.5
+
+### Patch Changes
+
+- [#12027](https://github.com/apollographql/apollo-client/pull/12027) [`eb3e21b`](https://github.com/apollographql/apollo-client/commit/eb3e21b9f7fa6a3161705c2c7270129c17b65095) Thanks [@JavaScriptBach](https://github.com/JavaScriptBach)! - Type `MutationResult.reset` as an arrow function
+
+- [#12020](https://github.com/apollographql/apollo-client/pull/12020) [`82d8cb4`](https://github.com/apollographql/apollo-client/commit/82d8cb4255be497748829f12eb25ac87c11ee5e4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Better conform to Rules of React by avoiding write of ref in render for `useFragment`.
+
 ## 3.11.4
 
 ### Patch Changes

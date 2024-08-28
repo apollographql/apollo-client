@@ -25,6 +25,7 @@ import {
   mockSingleLink,
   subscribeAndCount,
   MockedResponse,
+  MockLink,
 } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import { useQuery } from "../useQuery";
@@ -2823,6 +2824,216 @@ describe("useMutation Hook", () => {
         expect(consoleSpies.error).not.toHaveBeenCalled();
       });
     });
+  });
+});
+
+describe("data masking", () => {
+  test("masks data returned from useMutation when dataMasking is `true`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const ProfiledHook = profileHook(() => useMutation(mutation));
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const [mutate, result] = await ProfiledHook.takeSnapshot();
+
+    expect(result.loading).toBe(false);
+    expect(result.data).toBeUndefined();
+    expect(result.error).toBeUndefined();
+
+    let promise!: Promise<FetchResult<Mutation>>;
+    act(() => {
+      promise = mutate();
+    });
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toBeUndefined();
+    }
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+      expect(result.error).toBeUndefined();
+    }
+
+    {
+      const { data, errors } = await promise;
+
+      expect(data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+      expect(errors).toBeUndefined();
+    }
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  test("does not mask data returned from useMutation when dataMasking is `false`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const ProfiledHook = profileHook(() => useMutation(mutation));
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const [mutate, result] = await ProfiledHook.takeSnapshot();
+
+    expect(result.loading).toBe(false);
+    expect(result.data).toBeUndefined();
+    expect(result.error).toBeUndefined();
+
+    let promise!: Promise<FetchResult<Mutation>>;
+    act(() => {
+      promise = mutate();
+    });
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toBeUndefined();
+    }
+
+    {
+      const [, result] = await ProfiledHook.takeSnapshot();
+
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(result.error).toBeUndefined();
+    }
+
+    {
+      const { data, errors } = await promise;
+
+      expect(data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(errors).toBeUndefined();
+    }
+
+    await expect(ProfiledHook).not.toRerender();
   });
 });
 

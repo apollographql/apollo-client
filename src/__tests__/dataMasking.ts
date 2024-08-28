@@ -14,10 +14,16 @@ import {
   Reference,
   TypedDocumentNode,
 } from "../core";
-import { MockLink } from "../testing";
+import {
+  MockedResponse,
+  MockLink,
+  MockSubscriptionLink,
+  wait,
+} from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { invariant } from "../utilities/globals";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
+import { isSubscriptionOperation } from "../utilities";
 
 describe("client.watchQuery", () => {
   test("masks queries when dataMasking is `true`", async () => {
@@ -2614,6 +2620,681 @@ describe("client.query", () => {
     });
 
     expect(errors).toEqual([{ message: "Could not determine age" }]);
+  });
+});
+
+describe("client.subscribe", () => {
+  test("masks data returned from subscriptions when dataMasking is `true`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+      },
+    });
+  });
+
+  test("does not mask data returned from subscriptions when dataMasking is `false`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: "Test User",
+      },
+    });
+  });
+
+  test("does not mask data returned from subscriptions by default", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({ query: subscription });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: "Test User",
+      },
+    });
+  });
+
+  test("handles errors returned from the subscription when errorPolicy is `none`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      errorPolicy: "none",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: null,
+        },
+        errors: [{ message: "Something went wrong" }],
+      },
+    });
+
+    const error = await stream.takeError();
+
+    expect(error).toEqual(
+      new ApolloError({ graphQLErrors: [{ message: "Something went wrong" }] })
+    );
+  });
+
+  test("handles errors returned from the subscription when errorPolicy is `all`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      errorPolicy: "all",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: null,
+        },
+        errors: [{ message: "Something went wrong" }],
+      },
+    });
+
+    const { data, errors } = await stream.takeNext();
+
+    expect(data).toEqual({ addedComment: null });
+    expect(errors).toEqual([{ message: "Something went wrong" }]);
+  });
+
+  test("masks partial data for errors returned from the subscription when errorPolicy is `all`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      errorPolicy: "all",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: null,
+          },
+        },
+        errors: [{ message: "Could not get author" }],
+      },
+    });
+
+    const { data, errors } = await stream.takeNext();
+
+    expect(data).toEqual({ addedComment: { __typename: "Comment", id: 1 } });
+    expect(errors).toEqual([{ message: "Could not get author" }]);
+  });
+});
+
+describe("observableQuery.subscribeToMore", () => {
+  test("masks query data, does not mask updateQuery callback when dataMasking is `true`", async () => {
+    const fragment = gql`
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const query = gql`
+      query RecentCommentQuery {
+        recentComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const mocks: MockedResponse[] = [
+      {
+        request: { query },
+        result: {
+          data: {
+            recentComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Recent comment",
+              author: "Test User",
+            },
+          },
+        },
+      },
+    ];
+
+    const subscriptionLink = new MockSubscriptionLink();
+    const link = ApolloLink.split(
+      (operation) => isSubscriptionOperation(operation.query),
+      subscriptionLink,
+      new MockLink(mocks)
+    );
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query });
+    const queryStream = new ObservableStream(observable);
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({ recentComment: { __typename: "Comment", id: 1 } });
+    }
+
+    const updateQuery = jest.fn((_, { subscriptionData }) => {
+      return { recentComment: subscriptionData.data.addedComment };
+    });
+
+    observable.subscribeToMore({ document: subscription, updateQuery });
+
+    subscriptionLink.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 2,
+            comment: "Most recent comment",
+            author: "Test User Jr.",
+          },
+        },
+      },
+    });
+
+    await wait(0);
+
+    expect(updateQuery).toHaveBeenLastCalledWith(
+      {
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      },
+      {
+        variables: {},
+        subscriptionData: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 2,
+              comment: "Most recent comment",
+              author: "Test User Jr.",
+            },
+          },
+        },
+      }
+    );
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({ recentComment: { __typename: "Comment", id: 2 } });
+    }
+  });
+
+  test("does not mask data returned from subscriptions when dataMasking is `false`", async () => {
+    const fragment = gql`
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const query = gql`
+      query RecentCommentQuery {
+        recentComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const mocks: MockedResponse[] = [
+      {
+        request: { query },
+        result: {
+          data: {
+            recentComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Recent comment",
+              author: "Test User",
+            },
+          },
+        },
+      },
+    ];
+
+    const subscriptionLink = new MockSubscriptionLink();
+    const link = ApolloLink.split(
+      (operation) => isSubscriptionOperation(operation.query),
+      subscriptionLink,
+      new MockLink(mocks)
+    );
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query });
+    const queryStream = new ObservableStream(observable);
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      });
+    }
+
+    const updateQuery = jest.fn((_, { subscriptionData }) => {
+      return { recentComment: subscriptionData.data.addedComment };
+    });
+
+    observable.subscribeToMore({ document: subscription, updateQuery });
+
+    subscriptionLink.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 2,
+            comment: "Most recent comment",
+            author: "Test User Jr.",
+          },
+        },
+      },
+    });
+
+    await wait(0);
+
+    expect(updateQuery).toHaveBeenLastCalledWith(
+      {
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      },
+      {
+        variables: {},
+        subscriptionData: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 2,
+              comment: "Most recent comment",
+              author: "Test User Jr.",
+            },
+          },
+        },
+      }
+    );
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 2,
+          comment: "Most recent comment",
+          author: "Test User Jr.",
+        },
+      });
+    }
+  });
+
+  test("does not mask data by default", async () => {
+    const fragment = gql`
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const query = gql`
+      query RecentCommentQuery {
+        recentComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const mocks: MockedResponse[] = [
+      {
+        request: { query },
+        result: {
+          data: {
+            recentComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Recent comment",
+              author: "Test User",
+            },
+          },
+        },
+      },
+    ];
+
+    const subscriptionLink = new MockSubscriptionLink();
+    const link = ApolloLink.split(
+      (operation) => isSubscriptionOperation(operation.query),
+      subscriptionLink,
+      new MockLink(mocks)
+    );
+
+    const client = new ApolloClient({ cache: new InMemoryCache(), link });
+    const observable = client.watchQuery({ query });
+    const queryStream = new ObservableStream(observable);
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      });
+    }
+
+    const updateQuery = jest.fn((_, { subscriptionData }) => {
+      return { recentComment: subscriptionData.data.addedComment };
+    });
+
+    observable.subscribeToMore({ document: subscription, updateQuery });
+
+    subscriptionLink.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 2,
+            comment: "Most recent comment",
+            author: "Test User Jr.",
+          },
+        },
+      },
+    });
+
+    await wait(0);
+
+    expect(updateQuery).toHaveBeenLastCalledWith(
+      {
+        recentComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Recent comment",
+          author: "Test User",
+        },
+      },
+      {
+        variables: {},
+        subscriptionData: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 2,
+              comment: "Most recent comment",
+              author: "Test User Jr.",
+            },
+          },
+        },
+      }
+    );
+
+    {
+      const { data } = await queryStream.takeNext();
+
+      expect(data).toEqual({
+        recentComment: {
+          __typename: "Comment",
+          id: 2,
+          comment: "Most recent comment",
+          author: "Test User Jr.",
+        },
+      });
+    }
   });
 });
 

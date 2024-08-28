@@ -1488,7 +1488,7 @@ class QueryManager<TStore> {
     // (undocumented)
     readonly ssrMode: boolean;
     // (undocumented)
-    startGraphQLSubscription<T = any>({ query, fetchPolicy, errorPolicy, variables, context, extensions, }: SubscriptionOptions): Observable<FetchResult<T>>;
+    startGraphQLSubscription<T = any>(options: SubscriptionOptions): Observable<FetchResult<T>>;
     stop(): void;
     // (undocumented)
     stopQuery(queryId: string): void;

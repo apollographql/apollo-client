@@ -6,6 +6,7 @@ export type {
   WatchFragmentResult,
 } from "./core/cache.js";
 export { ApolloCache } from "./core/cache.js";
+// eslint-disable-next-line @typescript-eslint/consistent-type-exports
 export { Cache } from "./core/types/Cache.js";
 export type { DataProxy } from "./core/types/DataProxy.js";
 export type {

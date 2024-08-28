@@ -550,7 +550,7 @@ describe("queries", () => {
     });
     const Container = graphql<Vars, Data>(query)(() => null);
 
-    let errorCaught = null;
+    let errorCaught: unknown = null;
     try {
       const { unmount } = render(
         <ApolloProvider client={client}>

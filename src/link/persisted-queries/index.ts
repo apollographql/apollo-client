@@ -206,7 +206,7 @@ export const createPersistedQueryLink = (
                 (networkError.result.errors as GraphQLFormattedError[]);
             }
             if (isNonEmptyArray(networkErrors)) {
-              graphQLErrors.push(...networkErrors);
+              graphQLErrors.push(...(networkErrors as GraphQLFormattedError[]));
             }
 
             const disablePayload: ErrorResponse = {

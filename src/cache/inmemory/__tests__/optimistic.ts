@@ -1,6 +1,8 @@
 import gql from "graphql-tag";
 
 import { InMemoryCache } from "../inMemoryCache";
+import { ApolloCache } from "../../core/cache";
+import type { NormalizedCacheObject } from "../types";
 
 describe("optimistic cache layers", () => {
   it("return === results for repeated reads", () => {
@@ -28,7 +30,7 @@ describe("optimistic cache layers", () => {
       }
     `;
 
-    function readOptimistic(cache: InMemoryCache) {
+    function readOptimistic(cache: ApolloCache<NormalizedCacheObject>) {
       return cache.readQuery<{ book: any }>({ query }, true);
     }
 

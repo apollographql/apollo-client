@@ -39,11 +39,13 @@ import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream } from "../../testing/internal";
 
-export const mockFetchQuery = (queryManager: QueryManager<any>) => {
-  const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
-  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
-    queryManager as any
-  ).fetchQueryByPolicy;
+export const mockFetchQuery = (
+  queryManager: QueryManager<NormalizedCacheObject>
+) => {
+  const fetchConcastWithInfo: QueryManager<NormalizedCacheObject>["fetchConcastWithInfo"] =
+    queryManager["fetchConcastWithInfo"];
+  const fetchQueryByPolicy: QueryManager<NormalizedCacheObject>["fetchQueryByPolicy"] =
+    queryManager["fetchQueryByPolicy"];
 
   const mock = <
     T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy,

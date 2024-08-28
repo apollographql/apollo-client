@@ -1,15 +1,19 @@
-import { DataProxy } from "./DataProxy.js";
+import type { DataProxy } from "./DataProxy.js";
 import type { AllFieldsModifier, Modifiers } from "./common.js";
 import type { ApolloCache } from "../cache.js";
 
 export namespace Cache {
+  // @ts-ignore
+  const _ = ""; // Make typescript export something
   export type WatchCallback<TData = any> = (
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  export interface ReadOptions<TVariables = any, TData = any>
-    extends DataProxy.Query<TVariables, TData> {
+  export type ReadOptions<TVariables = any, TData = any> = DataProxy.Query<
+    TVariables,
+    TData
+  > & {
     rootId?: string;
     previousResult?: any;
     optimistic: boolean;
@@ -22,7 +26,7 @@ export namespace Cache {
      * the risk of memory leaks.
      */
     canonizeResults?: boolean;
-  }
+  };
 
   export interface WriteOptions<TResult = any, TVariables = any>
     extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
@@ -104,12 +108,23 @@ export namespace Cache {
     ) => any;
   }
 
-  export import DiffResult = DataProxy.DiffResult;
-  export import ReadQueryOptions = DataProxy.ReadQueryOptions;
-  export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
-  export import WriteQueryOptions = DataProxy.WriteQueryOptions;
-  export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
-  export import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
-  export import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
-  export import Fragment = DataProxy.Fragment;
+  export type DiffResult<T> = DataProxy.DiffResult<T>;
+  export type ReadQueryOptions<TData, TVariables> = DataProxy.ReadQueryOptions<
+    TData,
+    TVariables
+  >;
+  export type ReadFragmentOptions<TData, TVariables> =
+    DataProxy.ReadFragmentOptions<TData, TVariables>;
+  export type WriteQueryOptions<TData, TVariables> =
+    DataProxy.WriteQueryOptions<TData, TVariables>;
+  export type WriteFragmentOptions<TData, TVariables> =
+    DataProxy.WriteFragmentOptions<TData, TVariables>;
+  export type UpdateQueryOptions<TData, TVariables> =
+    DataProxy.UpdateQueryOptions<TData, TVariables>;
+  export type UpdateFragmentOptions<TData, TVariables> =
+    DataProxy.UpdateFragmentOptions<TData, TVariables>;
+  export type Fragment<TVariables, TData> = DataProxy.Fragment<
+    TVariables,
+    TData
+  >;
 }

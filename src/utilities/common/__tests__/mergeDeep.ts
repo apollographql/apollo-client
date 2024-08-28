@@ -1,5 +1,25 @@
 import { mergeDeep, mergeDeepArray, DeepMerger } from "../mergeDeep";
 
+type Value = {
+  value: number;
+};
+
+type Nested = {
+  [p: `nested${number}`]: Value;
+  value?: number;
+};
+
+type FromNested = {
+  [p: `from${number}`]: Value | Nested;
+  nested: Nested;
+  value?: number;
+};
+
+type UniqueConflict = {
+  [p: `unique${number}`]: Value | FromNested;
+  conflict: FromNested;
+};
+
 describe("mergeDeep", function () {
   it("should return an object if first argument falsy", function () {
     expect(mergeDeep()).toEqual({});
@@ -41,15 +61,15 @@ describe("mergeDeep", function () {
   });
 
   it("should resolve conflicts among more than two objects", function () {
-    const sources = [];
+    const sources: UniqueConflict[] = [];
 
     for (let i = 0; i < 100; ++i) {
       sources.push({
-        ["unique" + i]: { value: i },
+        [`unique${i}`]: { value: i },
         conflict: {
-          ["from" + i]: { value: i },
+          [`from${i}`]: { value: i },
           nested: {
-            ["nested" + i]: { value: i },
+            [`nested${i}`]: { value: i },
           },
         },
       });
@@ -58,17 +78,17 @@ describe("mergeDeep", function () {
     const merged = mergeDeep(...sources);
 
     sources.forEach((source, i) => {
-      expect(merged["unique" + i].value).toBe(i);
-      expect(source["unique" + i]).toBe(merged["unique" + i]);
+      expect(merged[`unique${i}`].value).toBe(i);
+      expect(source[`unique${i}`]).toBe(merged[`unique${i}`]);
 
       expect(merged.conflict).not.toBe(source.conflict);
-      expect(merged.conflict["from" + i].value).toBe(i);
-      expect(merged.conflict["from" + i]).toBe(source.conflict["from" + i]);
+      expect(merged.conflict[`from${i}`].value).toBe(i);
+      expect(merged.conflict[`from${i}`]).toBe(source.conflict[`from${i}`]);
 
       expect(merged.conflict.nested).not.toBe(source.conflict.nested);
-      expect(merged.conflict.nested["nested" + i].value).toBe(i);
-      expect(merged.conflict.nested["nested" + i]).toBe(
-        source.conflict.nested["nested" + i]
+      expect(merged.conflict.nested[`nested${i}`].value).toBe(i);
+      expect(merged.conflict.nested[`nested${i}`]).toBe(
+        source.conflict.nested[`nested${i}`]
       );
     });
   });

@@ -1,5 +1,5 @@
 /** @jest-environment node */
-import React from "react";
+import React, { ReactElement } from "react";
 import { DocumentNode } from "graphql";
 import gql from "graphql-tag";
 import { mockSingleLink } from "../../../testing";
@@ -44,7 +44,7 @@ describe("useLazyQuery Hook SSR", () => {
     });
 
     const Component = () => {
-      let html = null;
+      let html: ReactElement | null = null;
       const [execute, { loading, called, data }] = useLazyQuery(CAR_QUERY);
 
       if (!loading && !called) {

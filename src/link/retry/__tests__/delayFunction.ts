@@ -8,7 +8,7 @@ describe("buildDelayFunction", () => {
   }
 
   function delayRange(delayFunction: SimpleDelayFunction, count: number) {
-    const results = [];
+    const results: number[] = [];
     for (let i = 1; i <= count; i++) {
       results.push(delayFunction(i));
     }

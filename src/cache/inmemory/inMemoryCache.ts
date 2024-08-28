@@ -32,23 +32,23 @@ import type { OperationVariables } from "../../core/index.js";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 type BroadcastOptions = Pick<
-  Cache.BatchOptions<InMemoryCache>,
+  Cache.BatchOptions<ApolloCache<NormalizedCacheObject>>,
   "optimistic" | "onWatchUpdated"
 >;
 
 export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
-  private data!: EntityStore;
-  private optimisticData!: EntityStore;
+  data!: EntityStore;
+  optimisticData!: EntityStore;
 
-  protected config: InMemoryCacheConfig;
-  private watches = new Set<Cache.WatchOptions>();
-  private addTypename: boolean;
+  config: InMemoryCacheConfig;
+  watches = new Set<Cache.WatchOptions>();
+  addTypename: boolean;
 
-  private storeReader!: StoreReader;
-  private storeWriter!: StoreWriter;
-  private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
+  storeReader!: StoreReader;
+  storeWriter!: StoreWriter;
+  addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
-  private maybeBroadcastWatch!: OptimisticWrapperFunction<
+  maybeBroadcastWatch!: OptimisticWrapperFunction<
     [Cache.WatchOptions, BroadcastOptions?],
     any,
     [Cache.WatchOptions]
@@ -80,7 +80,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.init();
   }
 
-  private init() {
+  init() {
     // Passing { resultCaching: false } in the InMemoryCache constructor options
     // will completely disable dependency tracking, which will improve memory
     // usage but worsen the performance of repeated reads.
@@ -99,7 +99,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.resetResultCache();
   }
 
-  private resetResultCache(resetResultIdentities?: boolean) {
+  resetResultCache(resetResultIdentities?: boolean) {
     const previousReader = this.storeReader;
     const { fragments } = this.config;
 
@@ -411,10 +411,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     }
   }
 
-  private txCount = 0;
+  txCount = 0;
 
   public batch<TUpdateResult>(
-    options: Cache.BatchOptions<InMemoryCache, TUpdateResult>
+    options: Cache.BatchOptions<
+      ApolloCache<NormalizedCacheObject>,
+      TUpdateResult
+    >
   ): TUpdateResult {
     const {
       update,
@@ -515,7 +518,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public performTransaction(
-    update: (cache: InMemoryCache) => any,
+    update: (cache: ApolloCache<NormalizedCacheObject>) => any,
     optimisticId?: string | null
   ) {
     return this.batch({
@@ -528,18 +531,18 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return this.addTypenameToDocument(this.addFragmentsToDocument(document));
   }
 
-  protected broadcastWatches(options?: BroadcastOptions) {
+  broadcastWatches(options?: BroadcastOptions) {
     if (!this.txCount) {
       this.watches.forEach((c) => this.maybeBroadcastWatch(c, options));
     }
   }
 
-  private addFragmentsToDocument(document: DocumentNode) {
+  addFragmentsToDocument(document: DocumentNode) {
     const { fragments } = this.config;
     return fragments ? fragments.transform(document) : document;
   }
 
-  private addTypenameToDocument(document: DocumentNode) {
+  addTypenameToDocument(document: DocumentNode) {
     if (this.addTypename) {
       return this.addTypenameTransform.transformDocument(document);
     }
@@ -552,7 +555,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   // simpler to check for changes after recomputing a result but before
   // broadcasting it, but this wrapping approach allows us to skip both
   // the recomputation and the broadcast, in most cases.
-  private broadcastWatch(c: Cache.WatchOptions, options?: BroadcastOptions) {
+  broadcastWatch(c: Cache.WatchOptions, options?: BroadcastOptions) {
     const { lastDiff } = c;
 
     // Both WatchOptions and DiffOptions extend ReadOptions, and DiffOptions

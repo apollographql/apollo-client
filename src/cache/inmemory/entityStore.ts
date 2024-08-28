@@ -34,9 +34,9 @@ import type {
 } from "../core/types/common.js";
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
-const DELETE: DeleteModifier = Object.create(null);
-const delModifier: Modifier<any> = () => DELETE;
-const INVALIDATE: InvalidateModifier = Object.create(null);
+export const DELETE: DeleteModifier = Object.create(null);
+export const delModifier: Modifier<any> = () => DELETE;
+export const INVALIDATE: InvalidateModifier = Object.create(null);
 
 export abstract class EntityStore implements NormalizedCache {
   protected data: NormalizedCacheObject = Object.create(null);

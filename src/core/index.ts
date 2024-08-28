@@ -43,8 +43,9 @@ export type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/index.js";
+// eslint-disable-next-line @typescript-eslint/consistent-type-exports
+export { Cache } from "../cache/index.js";
 export {
-  Cache,
   ApolloCache,
   InMemoryCache,
   MissingFieldError,

@@ -202,10 +202,10 @@ function maskSelectionSet(
         }
         case Kind.FRAGMENT_SPREAD: {
           const fragmentName = selection.name.value;
-          const fragment: FragmentDefinitionNode | null =
+          let fragment: FragmentDefinitionNode | null =
             context.fragmentMap[fragmentName] ||
-            context.cache.lookupFragment(fragmentName);
-
+            (context.fragmentMap[fragmentName] =
+              context.cache.lookupFragment(fragmentName)!);
           invariant(
             fragment,
             "Could not find fragment with name '%s'.",

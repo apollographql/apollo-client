@@ -3468,6 +3468,72 @@ describe("client.mutate", () => {
     });
   });
 
+  test("does not mask data passed to update function", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      query MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache,
+      link: new MockLink(mocks),
+    });
+
+    const update = jest.fn();
+    await client.mutate({ mutation, update });
+
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith(
+      cache,
+      {
+        data: {
+          updateUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+      { context: undefined, variables: {} }
+    );
+  });
+
   test("handles errors returned when using errorPolicy `none`", async () => {
     interface Mutation {
       updateUser: {

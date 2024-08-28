@@ -2,18 +2,21 @@ import { FragmentSpreadNode, Kind, visit } from "graphql";
 import {
   ApolloCache,
   ApolloClient,
+  ApolloLink,
   Cache,
   DataProxy,
   DocumentTransform,
   FetchPolicy,
   gql,
   InMemoryCache,
+  Observable,
   Reference,
   TypedDocumentNode,
 } from "../core";
 import { MockLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { invariant } from "../utilities/globals";
+import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
 
 test("masks queries when dataMasking is `true`", async () => {
   interface Query {
@@ -411,7 +414,9 @@ test("does not mask query when using a cache that does not support it", async ()
 
   expect(console.warn).toHaveBeenCalledTimes(1);
   expect(console.warn).toHaveBeenCalledWith(
-    expect.stringContaining("This cache does not support data masking")
+    expect.stringContaining(
+      "The configured cache does not support data masking"
+    )
   );
 });
 
@@ -1300,6 +1305,67 @@ test("warns when passing parent object to `from` that is non-normalized", async 
   }
 });
 
+test("can lookup unmasked fragments from the fragment registry in queries", async () => {
+  const fragments = createFragmentRegistry();
+
+  interface Query {
+    currentUser: {
+      __typename: "User";
+      id: number;
+      name: string;
+      age: number;
+    };
+  }
+
+  const query: TypedDocumentNode<Query, never> = gql`
+    query MaskedQuery {
+      currentUser {
+        id
+        name
+        ...UserFields @unmask
+      }
+    }
+  `;
+
+  fragments.register(gql`
+    fragment UserFields on User {
+      age
+    }
+  `);
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({ fragments }),
+    link: new ApolloLink(() => {
+      return Observable.of({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      });
+    }),
+  });
+
+  const stream = new ObservableStream(client.watchQuery({ query }));
+
+  {
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+  }
+});
+
 test("masks watched fragments when dataMasking is `true`", async () => {
   type UserFieldsFragment = {
     __typename: "User";
@@ -2172,6 +2238,61 @@ test("warns when accessing an unmasked field on a watched fragment while using @
     // Ensure we only warn once
     data.age;
     expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+  }
+});
+
+test("can lookup unmasked fragments from the fragment registry in watched fragments", async () => {
+  const fragments = createFragmentRegistry();
+
+  const profileFieldsFragment = gql`
+    fragment ProfileFields on User {
+      age
+    }
+  `;
+
+  const userFieldsFragment = gql`
+    fragment UserFields on User {
+      id
+      ...ProfileFields @unmask
+    }
+  `;
+
+  fragments.register(profileFieldsFragment);
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache({ fragments }),
+  });
+
+  client.writeFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    data: {
+      __typename: "User",
+      id: 1,
+      age: 30,
+    },
+  });
+
+  const observable = client.watchFragment({
+    fragment: userFieldsFragment,
+    fragmentName: "UserFields",
+    from: { __typename: "User", id: 1 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  {
+    const result = await stream.takeNext();
+
+    expect(result).toEqual({
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+      },
+      complete: true,
+    });
   }
 });
 

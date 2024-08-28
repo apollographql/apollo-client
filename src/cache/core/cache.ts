@@ -1,4 +1,8 @@
-import type { DocumentNode, InlineFragmentNode } from "graphql";
+import type {
+  DocumentNode,
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+} from "graphql";
 import { wrap } from "optimism";
 
 import type {
@@ -24,8 +28,8 @@ import type {
 } from "../../core/types.js";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { maskFragment, maskOperation } from "../../core/masking.js";
 import { invariant } from "../../utilities/globals/index.js";
+import { maskFragment } from "../../core/masking.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -72,31 +76,6 @@ export interface WatchFragmentOptions<TData, TVars> {
    * @docGroup 2. Cache options
    */
   optimistic?: boolean;
-}
-
-export interface MaskFragmentOptions<TData> {
-  /**
-   * A GraphQL fragment document parsed into an AST with the `gql`
-   * template literal.
-   *
-   * @docGroup 1. Required options
-   */
-  fragment: DocumentNode | TypedDocumentNode<TData>;
-  /**
-   * The raw, unmasked data that should be masked.
-   *
-   * @docGroup 1. Required options
-   */
-  data: TData;
-  /**
-   * The name of the fragment defined in the fragment document.
-   *
-   * Required if the fragment document includes more than one fragment,
-   * optional otherwise.
-   *
-   * @docGroup 2. Cache options
-   */
-  fragmentName?: string;
 }
 
 /**
@@ -170,10 +149,17 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // If not implemented by a cache subclass, data masking will effectively be
   // disabled since we will not be able to accurately determine if a given type
   // condition for a union or interface matches a particular type.
-  protected fragmentMatches?(
+  public fragmentMatches?(
     fragment: InlineFragmentNode,
     typename: string
   ): boolean;
+
+  // Function used to lookup a fragment when a fragment definition is not part
+  // of the GraphQL document. This is useful for caches, such as InMemoryCache,
+  // that register fragments ahead of time so they can be referenced by name.
+  public lookupFragment(fragmentName: string): FragmentDefinitionNode | null {
+    return null;
+  }
 
   // Transactional API
 
@@ -267,6 +253,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
     const id = typeof from === "string" ? from : this.identify(from);
+    const dataMasking = !!(options as any)[Symbol.for("apollo.dataMasking")];
 
     if (__DEV__) {
       const actualFragmentName =
@@ -294,21 +281,22 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       return this.watch<TData, TVars>({
         ...diffOptions,
         immediate: true,
-        callback(diff) {
+        callback: (diff) => {
+          const data =
+            dataMasking ?
+              maskFragment(diff.result, fragment, this, fragmentName)
+            : diff.result;
+
           if (
             // Always ensure we deliver the first result
             latestDiff &&
-            equalByQuery(
-              query,
-              { data: latestDiff?.result },
-              { data: diff.result }
-            )
+            equalByQuery(query, { data: latestDiff?.result }, { data })
           ) {
             return;
           }
 
           const result = {
-            data: diff.result as DeepPartial<TData>,
+            data,
             complete: !!diff.complete,
           } as WatchFragmentResult<TData>;
 
@@ -318,7 +306,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
             );
           }
 
-          latestDiff = diff;
+          latestDiff = { ...diff, result: data };
           observer.next(result);
         },
       });
@@ -403,41 +391,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         return data;
       },
     });
-  }
-
-  public maskOperation<TData = unknown>(document: DocumentNode, data: TData) {
-    if (!this.fragmentMatches) {
-      if (__DEV__) {
-        invariant.warn(
-          "This cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-        );
-      }
-
-      return data;
-    }
-
-    return maskOperation(data, document, this.fragmentMatches.bind(this));
-  }
-
-  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
-    const { data, fragment, fragmentName } = options;
-
-    if (!this.fragmentMatches) {
-      if (__DEV__) {
-        invariant.warn(
-          "This cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-        );
-      }
-
-      return data;
-    }
-
-    return maskFragment(
-      data,
-      fragment,
-      this.fragmentMatches.bind(this),
-      fragmentName
-    );
   }
 
   /**

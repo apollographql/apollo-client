@@ -1,6 +1,5 @@
 import { maskFragment, maskOperation } from "../masking.js";
 import { InMemoryCache, gql } from "../index.js";
-import { InlineFragmentNode } from "graphql";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { InvariantError } from "../../utilities/globals/index.js";
 import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
@@ -13,9 +12,7 @@ describe("maskOperation", () => {
       }
     `;
 
-    expect(() =>
-      maskOperation({}, document, createFragmentMatcher(new InMemoryCache()))
-    ).toThrow(
+    expect(() => maskOperation({}, document, new InMemoryCache())).toThrow(
       new InvariantError(
         "Expected a parsed GraphQL document with a query, mutation, or subscription."
       )
@@ -34,7 +31,7 @@ describe("maskOperation", () => {
         {},
         // @ts-expect-error
         document,
-        createFragmentMatcher(new InMemoryCache())
+        new InMemoryCache()
       )
     ).toThrow(
       new InvariantError(
@@ -54,9 +51,7 @@ describe("maskOperation", () => {
       }
     `;
 
-    expect(() =>
-      maskOperation({}, document, createFragmentMatcher(new InMemoryCache()))
-    ).toThrow(
+    expect(() => maskOperation({}, document, new InMemoryCache())).toThrow(
       new InvariantError("Ambiguous GraphQL document: contains 2 operations")
     );
   });
@@ -76,7 +71,7 @@ describe("maskOperation", () => {
     const data = maskOperation(
       { foo: true, bar: true },
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({ foo: true });
@@ -99,7 +94,7 @@ describe("maskOperation", () => {
     const data = maskOperation(
       deepFreeze({ user: { __typename: "User", id: 1, name: "Test User" } }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({ user: { __typename: "User", id: 1 } });
@@ -132,7 +127,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -171,7 +166,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -199,13 +194,13 @@ describe("maskOperation", () => {
     const frozenData = maskOperation(
       deepFreeze({ user: { __typename: "User", id: 1, name: "Test User" } }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     const nonFrozenData = maskOperation(
       { user: { __typename: "User", id: 1, name: "Test User" } },
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(Object.isFrozen(frozenData)).toBe(true);
@@ -234,7 +229,7 @@ describe("maskOperation", () => {
         ],
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -274,7 +269,7 @@ describe("maskOperation", () => {
         },
       },
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -318,7 +313,7 @@ describe("maskOperation", () => {
         },
       },
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -353,7 +348,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -395,7 +390,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(cache)
+      cache
     );
 
     expect(data).toEqual({
@@ -468,7 +463,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(cache)
+      cache
     );
 
     expect(data).toEqual({
@@ -511,7 +506,7 @@ describe("maskOperation", () => {
         ],
       }),
       query,
-      createFragmentMatcher(cache)
+      cache
     );
 
     expect(data).toEqual({
@@ -545,7 +540,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -666,7 +661,7 @@ describe("maskOperation", () => {
         ],
       }),
       query,
-      createFragmentMatcher(cache)
+      cache
     );
 
     expect(data).toEqual({
@@ -719,7 +714,7 @@ describe("maskOperation", () => {
     const data = maskOperation(
       deepFreeze({ user: { __typename: "User", id: 1, name: "Test User" } }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -801,11 +796,7 @@ describe("maskOperation", () => {
     const drink = { __typename: "Espresso" };
     const originalData = deepFreeze({ user, post, authors, industries, drink });
 
-    const data = maskOperation(
-      originalData,
-      query,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskOperation(originalData, query, new InMemoryCache());
 
     expect(data).toEqual({
       user: {
@@ -856,11 +847,7 @@ describe("maskOperation", () => {
       },
     });
 
-    const data = maskOperation(
-      originalData,
-      query,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskOperation(originalData, query, new InMemoryCache());
 
     expect(data).toBe(originalData);
   });
@@ -889,11 +876,7 @@ describe("maskOperation", () => {
       },
     });
 
-    const data = maskOperation(
-      queryData,
-      query,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskOperation(queryData, query, new InMemoryCache());
 
     expect(data).toBe(queryData);
   });
@@ -987,11 +970,7 @@ describe("maskOperation", () => {
     ];
     const originalData = deepFreeze({ user, post, authors, industries });
 
-    const data = maskOperation(
-      originalData,
-      query,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskOperation(originalData, query, new InMemoryCache());
 
     expect(data).toEqual({
       user: {
@@ -1066,18 +1045,14 @@ describe("maskOperation", () => {
       age: 30,
     };
 
-    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
+    const cache = new InMemoryCache();
 
-    const data = maskOperation(
-      deepFreeze({ currentUser }),
-      query,
-      fragmentMatcher
-    );
+    const data = maskOperation(deepFreeze({ currentUser }), query, cache);
 
     const dataFromAnonymous = maskOperation(
       { currentUser },
       anonymousQuery,
-      fragmentMatcher
+      cache
     );
 
     data.currentUser.age;
@@ -1133,7 +1108,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     const age = data.currentUser.age;
@@ -1158,8 +1133,6 @@ describe("maskOperation", () => {
       }
     `;
 
-    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
-
     const data = maskOperation(
       deepFreeze({
         users: [
@@ -1168,7 +1141,7 @@ describe("maskOperation", () => {
         ],
       }),
       query,
-      fragmentMatcher
+      new InMemoryCache()
     );
 
     data.users[0].age;
@@ -1257,7 +1230,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -1338,7 +1311,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({
@@ -1424,12 +1397,10 @@ describe("maskOperation", () => {
       ],
     };
 
-    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
-
     const data = maskOperation(
       deepFreeze({ currentUser }),
       query,
-      fragmentMatcher
+      new InMemoryCache()
     );
 
     data.currentUser.age;
@@ -1515,8 +1486,6 @@ describe("maskOperation", () => {
       }
     `;
 
-    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
-
     const data = maskOperation(
       deepFreeze({
         currentUser: {
@@ -1528,7 +1497,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      fragmentMatcher
+      new InMemoryCache()
     );
 
     data.currentUser.age;
@@ -1553,8 +1522,6 @@ describe("maskOperation", () => {
       }
     `;
 
-    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
-
     const data = maskOperation(
       deepFreeze({
         currentUser: {
@@ -1565,7 +1532,7 @@ describe("maskOperation", () => {
         },
       }),
       query,
-      fragmentMatcher
+      new InMemoryCache()
     );
 
     data.currentUser.age;
@@ -1592,7 +1559,7 @@ describe("maskOperation", () => {
         onUserUpdated: { __typename: "User", id: 1, name: "Test User" },
       }),
       subscription,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({ onUserUpdated: { __typename: "User", id: 1 } });
@@ -1619,7 +1586,7 @@ describe("maskOperation", () => {
     const data = maskOperation(
       subscriptionData,
       subscription,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toBe(subscriptionData);
@@ -1648,7 +1615,7 @@ describe("maskOperation", () => {
     const data = maskOperation(
       subscriptionData,
       subscription,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     data.onUserUpdated.name;
@@ -1680,7 +1647,7 @@ describe("maskOperation", () => {
         updateUser: { __typename: "User", id: 1, name: "Test User" },
       }),
       mutation,
-      createFragmentMatcher(new InMemoryCache())
+      new InMemoryCache()
     );
 
     expect(data).toEqual({ updateUser: { __typename: "User", id: 1 } });
@@ -1704,11 +1671,7 @@ describe("maskOperation", () => {
       updateUser: { __typename: "User", id: 1, name: "Test User" },
     });
 
-    const data = maskOperation(
-      mutationData,
-      mutation,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskOperation(mutationData, mutation, new InMemoryCache());
 
     expect(data).toBe(mutationData);
   });
@@ -1733,11 +1696,7 @@ describe("maskOperation", () => {
       updateUser: { __typename: "User", id: 1, name: "Test User" },
     });
 
-    const data = maskOperation(
-      mutationData,
-      mutation,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskOperation(mutationData, mutation, new InMemoryCache());
 
     data.updateUser.name;
 
@@ -1766,7 +1725,7 @@ describe("maskFragment", () => {
     const data = maskFragment(
       deepFreeze({ __typename: "User", id: 1, age: 30 }),
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -1794,7 +1753,7 @@ describe("maskFragment", () => {
         profile: { __typename: "Profile", age: 30 },
       }),
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -1826,7 +1785,7 @@ describe("maskFragment", () => {
         profile: { __typename: "Profile", age: 30 },
       }),
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -1837,7 +1796,7 @@ describe("maskFragment", () => {
         profile: { __typename: "Profile", age: 30 },
       },
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -1858,7 +1817,7 @@ describe("maskFragment", () => {
     const data = maskFragment(
       deepFreeze({ __typename: "User", id: 1, age: 30 }),
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -1881,7 +1840,7 @@ describe("maskFragment", () => {
       maskFragment(
         deepFreeze({ __typename: "User", id: 1, age: 30 }),
         fragment,
-        createFragmentMatcher(new InMemoryCache())
+        new InMemoryCache()
       )
     ).toThrow(
       new InvariantError(
@@ -1906,7 +1865,7 @@ describe("maskFragment", () => {
       maskFragment(
         deepFreeze({ __typename: "User", id: 1, age: 30 }),
         fragment,
-        createFragmentMatcher(new InMemoryCache()),
+        new InMemoryCache(),
         "ProfileFields"
       )
     ).toThrow(
@@ -1996,7 +1955,7 @@ describe("maskFragment", () => {
     const data = maskFragment(
       user,
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -2035,11 +1994,7 @@ describe("maskFragment", () => {
 
     const user = { __typename: "User", id: 1, age: 30 };
 
-    const data = maskFragment(
-      deepFreeze(user),
-      fragment,
-      createFragmentMatcher(new InMemoryCache())
-    );
+    const data = maskFragment(deepFreeze(user), fragment, new InMemoryCache());
 
     expect(data).toBe(user);
   });
@@ -2067,7 +2022,7 @@ describe("maskFragment", () => {
     const data = maskFragment(
       fragmentData,
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UnmaskedFragment"
     );
 
@@ -2088,8 +2043,6 @@ describe("maskFragment", () => {
       }
     `;
 
-    const fragmentMatcher = createFragmentMatcher(new InMemoryCache());
-
     const data = maskFragment(
       deepFreeze({
         currentUser: {
@@ -2100,7 +2053,7 @@ describe("maskFragment", () => {
         },
       }),
       query,
-      fragmentMatcher,
+      new InMemoryCache(),
       "UnmaskedFragment"
     );
 
@@ -2207,7 +2160,7 @@ describe("maskFragment", () => {
     const data = maskFragment(
       user,
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UserFields"
     );
 
@@ -2274,7 +2227,7 @@ describe("maskFragment", () => {
         email: "test@example.com",
       }),
       fragment,
-      createFragmentMatcher(new InMemoryCache()),
+      new InMemoryCache(),
       "UnmaskedUser"
     );
 
@@ -2294,8 +2247,3 @@ describe("maskFragment", () => {
     );
   });
 });
-
-function createFragmentMatcher(cache: InMemoryCache) {
-  return (node: InlineFragmentNode, typename: string) =>
-    cache.policies.fragmentMatches(node, typename);
-}

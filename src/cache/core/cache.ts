@@ -252,7 +252,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
       ...otherOptions
     } = options;
     const query = this.getFragmentDoc(fragment, fragmentName);
-    const id = typeof from === "string" ? from : this.identify(from);
+    const id =
+      typeof from === "string" || typeof from === "undefined" ?
+        from
+      : this.identify(from);
     const dataMasking = !!(options as any)[Symbol.for("apollo.dataMasking")];
 
     if (__DEV__) {

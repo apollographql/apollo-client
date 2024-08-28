@@ -3309,7 +3309,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name
@@ -3365,7 +3365,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name
@@ -3422,7 +3422,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name
@@ -3478,7 +3478,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name
@@ -3544,7 +3544,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name
@@ -3591,7 +3591,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name
@@ -3639,7 +3639,7 @@ describe("client.mutate", () => {
     }
 
     const mutation: TypedDocumentNode<Mutation, never> = gql`
-      query MaskedMutation {
+      mutation MaskedMutation {
         updateUser {
           id
           name

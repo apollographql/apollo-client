@@ -56,6 +56,40 @@ describe("maskOperation", () => {
     );
   });
 
+  test("returns null when data is null", () => {
+    const query = gql`
+      query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskOperation(null, query, new InMemoryCache());
+
+    expect(data).toBe(null);
+  });
+
+  test("returns undefined when data is undefined", () => {
+    const query = gql`
+      query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskOperation(undefined, query, new InMemoryCache());
+
+    expect(data).toBe(undefined);
+  });
+
   test("strips top-level fragment data from query", () => {
     const query = gql`
       query {
@@ -174,6 +208,83 @@ describe("maskOperation", () => {
         __typename: "User",
         profile: { __typename: "Profile", id: "1" },
       },
+    });
+  });
+
+  test("handles nulls in child selection sets", () => {
+    const query = gql`
+      query {
+        user {
+          profile {
+            id
+          }
+          ...UserFields
+        }
+      }
+      fragment UserFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const nullUser = maskOperation(
+      deepFreeze({ user: null }),
+      query,
+      new InMemoryCache()
+    );
+    const nullProfile = maskOperation(
+      deepFreeze({ user: { __typename: "User", profile: null } }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(nullUser).toEqual({ user: null });
+    expect(nullProfile).toEqual({
+      user: { __typename: "User", profile: null },
+    });
+  });
+
+  test("handles nulls in arrays", () => {
+    const query = gql`
+      query {
+        users {
+          profile {
+            id
+          }
+          ...UserFields
+        }
+      }
+      fragment UserFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        users: [
+          null,
+          { __typename: "User", profile: null },
+          {
+            __typename: "User",
+            profile: { __typename: "Profile", id: "1", fullName: "Test User" },
+          },
+        ],
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(data).toEqual({
+      users: [
+        null,
+        { __typename: "User", profile: null },
+        { __typename: "User", profile: { __typename: "Profile", id: "1" } },
+      ],
     });
   });
 
@@ -1710,6 +1821,39 @@ describe("maskOperation", () => {
 });
 
 describe("maskFragment", () => {
+  test("returns null when data is null", () => {
+    const fragment = gql`
+      fragment Foo on Query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskFragment(null, fragment, new InMemoryCache(), "Foo");
+
+    expect(data).toBe(null);
+  });
+
+  test("returns undefined when data is undefined", () => {
+    const fragment = gql`
+      fragment Foo on Query {
+        foo
+        ...QueryFields
+      }
+
+      fragment QueryFields on Query {
+        bar
+      }
+    `;
+
+    const data = maskFragment(undefined, fragment, new InMemoryCache(), "Foo");
+
+    expect(data).toBe(undefined);
+  });
   test("masks named fragments in fragment documents", () => {
     const fragment = gql`
       fragment UserFields on User {
@@ -1761,6 +1905,75 @@ describe("maskFragment", () => {
       __typename: "User",
       id: 1,
       profile: { __typename: "Profile" },
+    });
+  });
+
+  test("handles nulls in child selection sets", () => {
+    const fragment = gql`
+      fragment UserFields on User {
+        profile {
+          id
+        }
+        ...ProfileFields
+      }
+      fragment ProfileFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({ __typename: "User", profile: null }),
+      fragment,
+      new InMemoryCache(),
+      "UserFields"
+    );
+
+    expect(data).toEqual({ __typename: "User", profile: null });
+  });
+
+  test("handles nulls in arrays", () => {
+    const fragment = gql`
+      fragment UserFields on Query {
+        users {
+          profile {
+            id
+          }
+          ...ProfileFields
+        }
+      }
+      fragment ProfileFields on User {
+        profile {
+          id
+          fullName
+        }
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        users: [
+          null,
+          { __typename: "User", profile: null },
+          {
+            __typename: "User",
+            profile: { __typename: "Profile", id: "1", fullName: "Test User" },
+          },
+        ],
+      }),
+      fragment,
+      new InMemoryCache(),
+      "UserFields"
+    );
+
+    expect(data).toEqual({
+      users: [
+        null,
+        { __typename: "User", profile: null },
+        { __typename: "User", profile: { __typename: "Profile", id: "1" } },
+      ],
     });
   });
 

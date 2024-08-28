@@ -3035,6 +3035,98 @@ describe("data masking", () => {
 
     await expect(ProfiledHook).not.toRerender();
   });
+
+  test("passes masked data to onCompleted, does not pass masked data to update", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache,
+      link: new MockLink(mocks),
+    });
+
+    const update = jest.fn();
+    const onCompleted = jest.fn();
+    const ProfiledHook = profileHook(() =>
+      useMutation(mutation, { onCompleted, update })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    const [mutate] = await ProfiledHook.takeSnapshot();
+
+    await act(() => mutate());
+
+    expect(onCompleted).toHaveBeenCalledTimes(1);
+    expect(onCompleted).toHaveBeenCalledWith(
+      {
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      expect.anything()
+    );
+
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith(
+      cache,
+      {
+        data: {
+          updateUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+      { context: undefined, variables: {} }
+    );
+  });
 });
 
 describe.skip("Type Tests", () => {

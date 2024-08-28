@@ -352,12 +352,13 @@ export class QueryManager<TStore> {
           // ExecutionPatchResult has arrived and we have assembled the
           // multipart response into a single result.
           if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
-            storeResult.data = self.maskOperation({
-              document: mutation,
-              data: storeResult.data as TData,
-            });
-
-            resolve(storeResult);
+            resolve({
+              ...storeResult,
+              data: self.maskOperation({
+                document: mutation,
+                data: storeResult.data,
+              }),
+            } as FetchResult<TData>);
           }
         },
 

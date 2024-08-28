@@ -3467,6 +3467,163 @@ describe("client.mutate", () => {
       },
     });
   });
+
+  test("handles errors returned when using errorPolicy `none`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      query MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          errors: [{ message: "User not logged in" }],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    await expect(
+      client.mutate({ mutation, errorPolicy: "none" })
+    ).rejects.toEqual(
+      new ApolloError({
+        graphQLErrors: [{ message: "User not logged in" }],
+      })
+    );
+  });
+
+  test("handles errors returned when using errorPolicy `all`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      query MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: { updateUser: null },
+          errors: [{ message: "User not logged in" }],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data, errors } = await client.mutate({
+      mutation,
+      errorPolicy: "all",
+    });
+
+    expect(data).toEqual({ updateUser: null });
+    expect(errors).toEqual([{ message: "User not logged in" }]);
+  });
+
+  test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      query MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: null,
+            },
+          },
+          errors: [{ message: "Could not determine age" }],
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data, errors } = await client.mutate({
+      mutation,
+      errorPolicy: "all",
+    });
+
+    expect(data).toEqual({
+      updateUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    });
+
+    expect(errors).toEqual([{ message: "Could not determine age" }]);
+  });
 });
 
 class TestCache extends ApolloCache<unknown> {

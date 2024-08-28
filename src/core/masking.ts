@@ -1,9 +1,5 @@
 import { Kind } from "graphql";
-import type {
-  FragmentDefinitionNode,
-  InlineFragmentNode,
-  SelectionSetNode,
-} from "graphql";
+import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import {
   createFragmentMap,
   resultKeyNameFromField,
@@ -13,27 +9,30 @@ import {
   maybeDeepFreeze,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
-import type { DocumentNode, TypedDocumentNode } from "./index.js";
+import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
-
-type MatchesFragmentFn = (
-  fragmentNode: InlineFragmentNode,
-  typename: string
-) => boolean;
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
   operationName: string | undefined;
   fragmentMap: FragmentMap;
-  matchesFragment: MatchesFragmentFn;
+  cache: ApolloCache<unknown>;
   disableWarnings?: boolean;
 }
 
 export function maskOperation<TData = unknown>(
   data: TData,
-  document: TypedDocumentNode<TData> | DocumentNode,
-  matchesFragment: MatchesFragmentFn
+  document: DocumentNode | TypedDocumentNode<TData>,
+  cache: ApolloCache<unknown>
 ): TData {
+  if (!cache.fragmentMatches) {
+    if (__DEV__) {
+      warnOnImproperCacheImplementation();
+    }
+
+    return data;
+  }
+
   const definition = getOperationDefinition(document);
 
   invariant(
@@ -45,7 +44,7 @@ export function maskOperation<TData = unknown>(
     operationType: definition.operation,
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    matchesFragment,
+    cache,
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -66,9 +65,17 @@ export function maskOperation<TData = unknown>(
 export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
-  matchesFragment: MatchesFragmentFn,
+  cache: ApolloCache<unknown>,
   fragmentName?: string
 ): TData {
+  if (!cache.fragmentMatches) {
+    if (__DEV__) {
+      warnOnImproperCacheImplementation();
+    }
+
+    return data;
+  }
+
   const fragments = document.definitions.filter(
     (node): node is FragmentDefinitionNode =>
       node.kind === Kind.FRAGMENT_DEFINITION
@@ -97,7 +104,7 @@ export function maskFragment<TData = unknown>(
     operationType: "fragment",
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    matchesFragment,
+    cache,
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -173,7 +180,7 @@ function maskSelectionSet(
         case Kind.INLINE_FRAGMENT: {
           if (
             selection.typeCondition &&
-            !context.matchesFragment(selection, data.__typename)
+            !context.cache.fragmentMatches!(selection, data.__typename)
           ) {
             return [memo, changed];
           }
@@ -194,7 +201,17 @@ function maskSelectionSet(
           ];
         }
         case Kind.FRAGMENT_SPREAD: {
-          const fragment = context.fragmentMap[selection.name.value];
+          const fragmentName = selection.name.value;
+          let fragment: FragmentDefinitionNode | null =
+            context.fragmentMap[fragmentName] ||
+            (context.fragmentMap[fragmentName] =
+              context.cache.lookupFragment(fragmentName)!);
+          invariant(
+            fragment,
+            "Could not find fragment with name '%s'.",
+            fragmentName
+          );
+
           const mode = getFragmentMaskMode(selection);
 
           if (mode === "mask") {
@@ -363,4 +380,10 @@ function addAccessorWarning(
     enumerable: true,
     configurable: true,
   });
+}
+
+function warnOnImproperCacheImplementation() {
+  invariant.warn(
+    "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+  );
 }

@@ -6,7 +6,7 @@ import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
 import type { DocumentTransform } from "../utilities/index.js";
-import { Observable } from "../utilities/index.js";
+import type { Observable } from "../utilities/index.js";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";
@@ -164,7 +164,6 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
-import { equalByQuery } from "./equalByQuery.js";
 export { mergeOptions };
 
 /**
@@ -548,39 +547,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   >(
     options: WatchFragmentOptions<TFragmentData, TVariables>
   ): Observable<WatchFragmentResult<TFragmentData>> {
-    const { fragment, fragmentName } = options;
-
-    const observable = this.cache.watchFragment(options);
-    let latestResult: WatchFragmentResult<TFragmentData> | undefined;
-
-    return new Observable((observer) => {
-      const subscription = observable.subscribe({
-        next: (result) => {
-          result.data = this.queryManager.maskFragment({
-            fragment,
-            fragmentName,
-            data: result.data,
-          });
-
-          if (
-            latestResult &&
-            equalByQuery(
-              this.cache["getFragmentDoc"](fragment, fragmentName),
-              { data: latestResult.data },
-              { data: result.data }
-            )
-          ) {
-            return;
-          }
-
-          latestResult = result;
-          observer.next(result);
-        },
-        complete: observer.complete.bind(observer),
-        error: observer.error.bind(observer),
-      });
-
-      return () => subscription.unsubscribe();
+    return this.cache.watchFragment({
+      ...options,
+      [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
     });
   }
 

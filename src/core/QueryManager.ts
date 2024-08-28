@@ -14,11 +14,7 @@ import {
   isExecutionPatchResult,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
-import type {
-  Cache,
-  ApolloCache,
-  MaskFragmentOptions,
-} from "../cache/index.js";
+import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
 import type {
@@ -108,6 +104,18 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+import { maskFragment, maskOperation } from "./masking.js";
+
+interface MaskFragmentOptions<TData> {
+  fragment: DocumentNode;
+  data: TData;
+  fragmentName?: string;
+}
+
+interface MaskOperationOptions<TData> {
+  document: DocumentNode;
+  data: TData;
+}
 
 export interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
@@ -1524,8 +1532,18 @@ export class QueryManager<TStore> {
     return results;
   }
 
+  public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
+    const { document, data } = options;
+
+    return this.dataMasking ? maskOperation(data, document, this.cache) : data;
+  }
+
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
-    return this.dataMasking ? this.cache.maskFragment(options) : options.data;
+    const { data, fragment, fragmentName } = options;
+
+    return this.dataMasking ?
+        maskFragment(data, fragment, this.cache, fragmentName)
+      : data;
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

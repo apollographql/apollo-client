@@ -16,6 +16,7 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { stringifyForDisplay } from "../../../utilities";
 import { InvariantError } from "../../../utilities/globals";
 import { spyOnConsole } from "../../../testing/internal";
+import { $ } from "../privates";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {
@@ -220,13 +221,13 @@ describe("EntityStore", () => {
 
     // Nothing left to collect, but let's also reset the result cache to
     // demonstrate that the recomputed cache results are unchanged.
-    const originalReader = cache["storeReader"];
+    const { storeReader: originalReader } = $(cache);
     expect(
       cache.gc({
         resetResultCache: true,
       })
     ).toEqual([]);
-    expect(cache["storeReader"]).not.toBe(originalReader);
+    expect($(cache).storeReader).not.toBe(originalReader);
     const resultAfterResetResultCache = read();
     expect(resultAfterResetResultCache).toBe(resultBeforeGC);
     expect(resultAfterResetResultCache).toBe(resultAfterGC);
@@ -1000,7 +1001,7 @@ describe("EntityStore", () => {
     expect(cache.gc()).toEqual([]);
 
     const willId = cache.identify(data.parent)!;
-    const store = cache["data"];
+    const { data: store } = $(cache);
     const storeRootData = store["data"];
     // Hacky way of injecting a stray __ref field into the Will Smith Person
     // object, clearing store.refs (which was populated by the previous GC).
@@ -2675,7 +2676,7 @@ describe("EntityStore", () => {
       },
     });
 
-    const store = cache["data"];
+    const { data: store } = $(cache);
 
     const query = gql`
       query Book($isbn: string) {

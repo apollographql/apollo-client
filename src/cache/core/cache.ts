@@ -273,7 +273,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   // Make sure we compute the same (===) fragment query document every
   // time we receive the same fragment in readFragment.
-  private getFragmentDoc = wrap(getFragmentQueryDocument, {
+  getFragmentDoc = wrap(getFragmentQueryDocument, {
     max:
       cacheSizes["cache.fragmentQueryDocuments"] ||
       defaultCacheSizes["cache.fragmentQueryDocuments"],

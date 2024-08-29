@@ -30,6 +30,7 @@ import {
 import { ApolloLink } from "../link/core";
 import {
   createFragmentRegistry,
+  EntityStore,
   InMemoryCache,
   makeVar,
   PossibleTypesMap,
@@ -45,6 +46,8 @@ import {
 } from "../testing";
 import { spyOnConsole } from "../testing/internal";
 import { waitFor } from "@testing-library/react";
+import { $ } from "../cache/inmemory/privates";
+import { LayerType } from "../cache/inmemory/entityStore";
 
 describe("client", () => {
   it("can be loaded via require", () => {
@@ -2434,10 +2437,11 @@ describe("client", () => {
       });
 
       {
-        const { data, optimisticData } = client.cache as any;
+        const { data, optimisticData } = $(client.cache);
         expect(optimisticData).not.toBe(data);
-        expect(optimisticData.parent).toBe(data.stump);
-        expect(optimisticData.parent.parent).toBe(data);
+        const layer = optimisticData as unknown as LayerType;
+        expect(layer.parent).toBe((data as EntityStore.Root).stump);
+        expect((layer.parent as LayerType).parent).toBe(data);
       }
 
       mutatePromise
@@ -2445,8 +2449,8 @@ describe("client", () => {
           reject(new Error("Returned a result when it should not have."));
         })
         .catch((_: ApolloError) => {
-          const { data, optimisticData } = client.cache as any;
-          expect(optimisticData).toBe(data.stump);
+          const { data, optimisticData } = $(client.cache);
+          expect(optimisticData).toBe((data as EntityStore.Root).stump);
           resolve();
         });
     }
@@ -3525,7 +3529,8 @@ describe("@connection", () => {
       const aResults = watch(aQuery);
       const bResults = watch(bQuery);
 
-      expect(cache["watches"].size).toBe(2);
+      const watches = $(cache)["watches"];
+      expect(watches.size).toBe(2);
 
       expect(aResults).toEqual([]);
       expect(bResults).toEqual([]);
@@ -3543,10 +3548,10 @@ describe("@connection", () => {
       expect(aResults).toEqual([]);
       expect(bResults).toEqual([]);
 
-      expect(cache["watches"].size).toBe(0);
+      expect(watches.size).toBe(0);
       const abResults = watch(abQuery);
       expect(abResults).toEqual([]);
-      expect(cache["watches"].size).toBe(1);
+      expect(watches.size).toBe(1);
 
       await wait();
 

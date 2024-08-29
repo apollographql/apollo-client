@@ -878,3 +878,5 @@ export function supportsResultCaching(store: any): store is EntityStore {
   // When result caching is disabled, store.depend will be null.
   return !!(store instanceof EntityStore && store.group.caching);
 }
+
+export type LayerType = Layer;

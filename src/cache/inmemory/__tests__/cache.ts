@@ -20,6 +20,7 @@ import { ObjectCanon } from "../object-canon";
 import { TypePolicies } from "../policies";
 import { spyOnConsole } from "../../../testing/internal";
 import { defaultCacheSizes } from "../../../utilities";
+import { $ } from "../privates";
 
 disableFragmentWarnings();
 
@@ -1498,13 +1499,15 @@ describe("Cache", () => {
         }
       `;
 
-      const originalReader = cache["storeReader"];
+      const privates = $(cache);
+
+      const originalReader = privates.storeReader;
       expect(originalReader).toBeInstanceOf(StoreReader);
 
-      const originalWriter = cache["storeWriter"];
+      const originalWriter = privates.storeWriter;
       expect(originalWriter).toBeInstanceOf(StoreWriter);
 
-      const originalMBW = cache["maybeBroadcastWatch"];
+      const originalMBW = privates.maybeBroadcastWatch;
       expect(typeof originalMBW).toBe("function");
 
       const originalCanon = originalReader.canon;
@@ -1534,12 +1537,12 @@ describe("Cache", () => {
         c: "see",
       });
 
-      expect(originalReader).not.toBe(cache["storeReader"]);
-      expect(originalWriter).not.toBe(cache["storeWriter"]);
-      expect(originalMBW).not.toBe(cache["maybeBroadcastWatch"]);
+      expect(originalReader).not.toBe(privates.storeReader);
+      expect(originalWriter).not.toBe(privates.storeWriter);
+      expect(originalMBW).not.toBe(privates.maybeBroadcastWatch);
       // The cache.storeReader.canon is preserved by default, but can be dropped
       // by passing resetResultIdentities:true to cache.gc.
-      expect(originalCanon).toBe(cache["storeReader"].canon);
+      expect(originalCanon).toBe(privates.storeReader.canon);
     });
   });
 
@@ -2122,10 +2125,11 @@ describe("Cache", () => {
 describe("resultCacheMaxSize", () => {
   it("uses default max size on caches if resultCacheMaxSize is not configured", () => {
     const cache = new InMemoryCache();
-    expect(cache["maybeBroadcastWatch"].options.max).toBe(
+    const privates = $(cache);
+    expect(privates.maybeBroadcastWatch.options.max).toBe(
       defaultCacheSizes["inMemoryCache.maybeBroadcastWatch"]
     );
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
+    expect(privates.storeReader["executeSelectionSet"].options.max).toBe(
       defaultCacheSizes["inMemoryCache.executeSelectionSet"]
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
@@ -2136,8 +2140,9 @@ describe("resultCacheMaxSize", () => {
   it("configures max size on caches when resultCacheMaxSize is set", () => {
     const resultCacheMaxSize = 12345;
     const cache = new InMemoryCache({ resultCacheMaxSize });
-    expect(cache["maybeBroadcastWatch"].options.max).toBe(resultCacheMaxSize);
-    expect(cache["storeReader"]["executeSelectionSet"].options.max).toBe(
+    const privates = $(cache);
+    expect(privates.maybeBroadcastWatch.options.max).toBe(resultCacheMaxSize);
+    expect(privates.storeReader["executeSelectionSet"].options.max).toBe(
       resultCacheMaxSize
     );
     expect(cache["getFragmentDoc"].options.max).toBe(
@@ -2400,7 +2405,7 @@ describe("InMemoryCache#broadcastWatches", function () {
     [canonicalCache, nonCanonicalCache].forEach((cache) => {
       // Hack: delete every watch.lastDiff, so subsequent results will be
       // broadcast, even though they are deeply equal to the previous results.
-      cache["watches"].forEach((watch) => {
+      $(cache)["watches"].forEach((watch) => {
         delete watch.lastDiff;
       });
     });
@@ -3813,19 +3818,20 @@ describe("ReactiveVar and makeVar", () => {
 
     expect(diffs.length).toBe(5);
 
-    expect(cache["watches"].size).toBe(5);
+    const watches = $(cache)["watches"];
+    expect(watches.size).toBe(5);
     expect(spy).not.toBeCalled();
 
     unwatchers.pop()!();
-    expect(cache["watches"].size).toBe(4);
+    expect(watches.size).toBe(4);
     expect(spy).not.toBeCalled();
 
     unwatchers.shift()!();
-    expect(cache["watches"].size).toBe(3);
+    expect(watches.size).toBe(3);
     expect(spy).not.toBeCalled();
 
     unwatchers.pop()!();
-    expect(cache["watches"].size).toBe(2);
+    expect(watches.size).toBe(2);
     expect(spy).not.toBeCalled();
 
     expect(diffs.length).toBe(5);
@@ -3835,7 +3841,7 @@ describe("ReactiveVar and makeVar", () => {
     expect(unwatchers.length).toBe(3);
     unwatchers.forEach((unwatch) => unwatch());
 
-    expect(cache["watches"].size).toBe(0);
+    expect(watches.size).toBe(0);
     expect(spy).toBeCalledTimes(1);
     expect(spy).toBeCalledWith(cache);
   });
@@ -3865,7 +3871,8 @@ describe("ReactiveVar and makeVar", () => {
     watch("a");
     watch("d");
 
-    expect(cache["watches"].size).toBe(5);
+    const watches = $(cache)["watches"];
+    expect(watches.size).toBe(5);
     expect(diffCounts).toEqual({
       a: 2,
       b: 1,
@@ -3875,7 +3882,7 @@ describe("ReactiveVar and makeVar", () => {
 
     unwatchers.a.forEach((unwatch) => unwatch());
     unwatchers.a.length = 0;
-    expect(cache["watches"].size).toBe(3);
+    expect(watches.size).toBe(3);
 
     nameVar("Hugh");
     expect(diffCounts).toEqual({
@@ -3886,7 +3893,7 @@ describe("ReactiveVar and makeVar", () => {
     });
 
     cache.reset({ discardWatches: true });
-    expect(cache["watches"].size).toBe(0);
+    expect(watches.size).toBe(0);
 
     expect(diffCounts).toEqual({
       a: 2,
@@ -3926,7 +3933,7 @@ describe("ReactiveVar and makeVar", () => {
     });
 
     nameVar("Trevor");
-    expect(cache["watches"].size).toBe(2);
+    expect(watches.size).toBe(2);
     expect(diffCounts).toEqual({
       a: 2,
       b: 2,
@@ -3937,7 +3944,7 @@ describe("ReactiveVar and makeVar", () => {
     });
 
     cache.reset({ discardWatches: true });
-    expect(cache["watches"].size).toBe(0);
+    expect(watches.size).toBe(0);
 
     nameVar("Danielle");
     expect(diffCounts).toEqual({
@@ -3949,7 +3956,7 @@ describe("ReactiveVar and makeVar", () => {
       f: 2,
     });
 
-    expect(cache["watches"].size).toBe(0);
+    expect(watches.size).toBe(0);
   });
 
   it("should recall forgotten vars once cache has watches again", () => {
@@ -3974,22 +3981,23 @@ describe("ReactiveVar and makeVar", () => {
     expect(diffs.length).toBe(3);
     expect(names()).toEqual(["Ben", "Ben", "Ben"]);
 
-    expect(cache["watches"].size).toBe(3);
+    const watches = $(cache)["watches"];
+    expect(watches.size).toBe(3);
     expect(spy).not.toBeCalled();
 
     unwatchers.pop()!();
-    expect(cache["watches"].size).toBe(2);
+    expect(watches.size).toBe(2);
     expect(spy).not.toBeCalled();
 
     unwatchers.shift()!();
-    expect(cache["watches"].size).toBe(1);
+    expect(watches.size).toBe(1);
     expect(spy).not.toBeCalled();
 
     nameVar("Hugh");
     expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     unwatchers.pop()!();
-    expect(cache["watches"].size).toBe(0);
+    expect(watches.size).toBe(0);
     expect(spy).toBeCalledTimes(1);
     expect(spy).toBeCalledWith(cache);
 
@@ -3999,7 +4007,7 @@ describe("ReactiveVar and makeVar", () => {
 
     // Call watch(false) to avoid immediate delivery of the "ignored" name.
     unwatchers.push(watch(false));
-    expect(cache["watches"].size).toBe(1);
+    expect(watches.size).toBe(1);
     expect(names()).toEqual(["Ben", "Ben", "Ben", "Hugh"]);
 
     // This is the test that would fail if cache.watch did not call

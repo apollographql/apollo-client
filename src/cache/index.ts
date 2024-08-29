@@ -32,6 +32,7 @@ export {
 } from "./inmemory/helpers.js";
 
 export { InMemoryCache } from "./inmemory/inMemoryCache.js";
+export { $ } from "./inmemory/privates.js";
 
 export type { ReactiveVar } from "./inmemory/reactiveVars.js";
 export { makeVar, cacheSlot } from "./inmemory/reactiveVars.js";

@@ -44,7 +44,7 @@ export type {
   WatchFragmentResult,
 } from "../cache/index.js";
 // eslint-disable-next-line @typescript-eslint/consistent-type-exports
-export { Cache } from "../cache/index.js";
+export { $, Cache } from "../cache/index.js";
 export {
   ApolloCache,
   InMemoryCache,

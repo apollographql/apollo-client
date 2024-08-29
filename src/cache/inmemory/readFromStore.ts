@@ -159,6 +159,10 @@ export class StoreReader {
     // by recreating the whole `StoreReader` in
     // `InMemoryCache.resetResultsCache`
     // (triggered from `InMemoryCache.gc` with `resetResultCache: true`)
+    const max =
+      this.config.resultCacheMaxSize ||
+      cacheSizes["inMemoryCache.executeSelectionSet"] ||
+      defaultCacheSizes["inMemoryCache.executeSelectionSet"];
     this.executeSelectionSet = wrap(
       (options) => {
         const { canonizeResults } = options.context;
@@ -195,10 +199,7 @@ export class StoreReader {
         return this.execSelectionSetImpl(options);
       },
       {
-        max:
-          this.config.resultCacheMaxSize ||
-          cacheSizes["inMemoryCache.executeSelectionSet"] ||
-          defaultCacheSizes["inMemoryCache.executeSelectionSet"],
+        max: max,
         keyArgs: execSelectionSetKeyArgs,
         // Note that the parameters of makeCacheKey are determined by the
         // array returned by keyArgs.

@@ -1,6 +1,7 @@
 import gql from "graphql-tag";
 
 import {
+  $,
   ApolloClient,
   ApolloError,
   DefaultOptions,
@@ -2745,7 +2746,7 @@ describe("ApolloClient", () => {
         `,
       });
 
-      expect((client.cache as any).data.data).toEqual({
+      expect($(client.cache).data["data"]).toEqual({
         ROOT_QUERY: {
           __typename: "Query",
           a: 1,
@@ -2753,7 +2754,7 @@ describe("ApolloClient", () => {
       });
 
       await client.clearStore();
-      expect((client.cache as any).data.data).toEqual({});
+      expect($(client.cache).data["data"]).toEqual({});
     });
   });
 

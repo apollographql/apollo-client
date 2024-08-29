@@ -50,6 +50,7 @@ import { itAsync, subscribeAndCount } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
+import { $ } from "../../../cache/inmemory/privates";
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -6020,8 +6021,7 @@ describe("QueryManager", () => {
             });
           })
           .then(() => {
-            // @ts-ignore
-            expect(cache.watches.size).toBe(0);
+            expect($(cache).watches.size).toBe(0);
           })
           .then(resolve, reject);
       }

@@ -1,5 +1,6 @@
 const assert = require("assert");
 const {
+  $,
   ApolloClient,
   InMemoryCache,
   gql,
@@ -182,7 +183,7 @@ describe("garbage collection", () => {
         });
 
         function register(suffix) {
-          const reader = cache["storeReader"];
+          const reader = $(cache)["storeReader"];
           registry.register(reader, "StoreReader" + suffix);
           registry.register(reader.canon, "ObjectCanon" + suffix);
         }

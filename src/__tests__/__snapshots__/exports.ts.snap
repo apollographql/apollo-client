@@ -2,6 +2,7 @@
 
 exports[`exports of public entry points @apollo/client 1`] = `
 Array [
+  "$",
   "ApolloCache",
   "ApolloClient",
   "ApolloConsumer",
@@ -73,6 +74,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
+  "$",
   "ApolloCache",
   "Cache",
   "EntityStore",
@@ -92,6 +94,7 @@ Array [
 
 exports[`exports of public entry points @apollo/client/core 1`] = `
 Array [
+  "$",
   "ApolloCache",
   "ApolloClient",
   "ApolloError",

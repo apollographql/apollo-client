@@ -8,6 +8,7 @@ import type {
 import type { ApolloClient } from "../../core/index.js";
 import type { CacheSizes } from "./sizes.js";
 import { cacheSizes, defaultCacheSizes } from "./sizes.js";
+import { $ } from "../../cache/inmemory/privates.js";
 
 const globalCaches: {
   print?: () => number;
@@ -161,7 +162,9 @@ function _getApolloCacheMemoryInternals(this: ApolloCache<any>) {
 }
 
 function _getInMemoryCacheMemoryInternals(this: InMemoryCache) {
-  const fragments = this.config.fragments as
+  const { config, addTypenameTransform, storeReader, maybeBroadcastWatch } =
+    $(this);
+  const fragments = config.fragments as
     | undefined
     | {
         findFragmentSpreads?: Function;
@@ -171,15 +174,15 @@ function _getInMemoryCacheMemoryInternals(this: InMemoryCache) {
 
   return {
     ..._getApolloCacheMemoryInternals.apply(this as any),
-    addTypenameDocumentTransform: transformInfo(this["addTypenameTransform"]),
+    addTypenameDocumentTransform: transformInfo(addTypenameTransform),
     inMemoryCache: {
       executeSelectionSet: getWrapperInformation(
-        this["storeReader"]["executeSelectionSet"]
+        storeReader["executeSelectionSet"]
       ),
       executeSubSelectedArray: getWrapperInformation(
-        this["storeReader"]["executeSubSelectedArray"]
+        storeReader["executeSubSelectedArray"]
       ),
-      maybeBroadcastWatch: getWrapperInformation(this["maybeBroadcastWatch"]),
+      maybeBroadcastWatch: getWrapperInformation(maybeBroadcastWatch),
     },
     fragmentRegistry: {
       findFragmentSpreads: getWrapperInformation(

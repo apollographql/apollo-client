@@ -52,6 +52,7 @@ import {
   keyArgsFnFromSpecifier,
   keyFieldsFnFromSpecifier,
 } from "./key-extractor.js";
+import { $ } from "./privates.js";
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
@@ -381,7 +382,7 @@ export class Policies {
         function () {
           const options = normalizeReadFieldOptions(arguments, storeObject);
           return policies.readField(options, {
-            store: policies.cache["data"],
+            store: $(policies.cache)["data"],
             variables: options.variables,
           });
         },

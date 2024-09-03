@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- [#12049](https://github.com/apollographql/apollo-client/pull/12049) [`9c26892`](https://github.com/apollographql/apollo-client/commit/9c268927b1f8e5921b9440a53c9979a37f594e75) Thanks [@phryneas](https://github.com/phryneas)! - Fix a bug where `useFragment` did not re-render as expected
+- [#12049](https://github.com/apollographql/apollo-client/pull/12049) [`9c26892`](https://github.com/apollographql/apollo-client/commit/9c268927b1f8e5921b9440a53c9979a37f594e75) Thanks [@phryneas](https://github.com/phryneas) and [@maciesielka](https://github.com/maciesielka)! - Fix a bug where `useFragment` did not re-render as expected
 
 - [#12044](https://github.com/apollographql/apollo-client/pull/12044) [`04462a2`](https://github.com/apollographql/apollo-client/commit/04462a274ad39b392142385a2f052abbf3014749) Thanks [@DoctorJohn](https://github.com/DoctorJohn)! - Cache the `useSubscription` hook's `restart` function definition between re-renders.
 

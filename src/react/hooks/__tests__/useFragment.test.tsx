@@ -260,6 +260,45 @@ describe("useFragment", () => {
       "item 4",
     ]);
 
+    // set Item #2 back to its original value
+    act(() => {
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 2,
+          text: "Item #2",
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(getItemTexts()).toEqual([
+        "Item #1",
+        "Item #2",
+        "Item #3 from cache.modify",
+        "Item #4 updated",
+        "Item #5",
+      ]);
+    });
+
+    expect(renders).toEqual([
+      "list",
+      "item 1",
+      "item 2",
+      "item 5",
+      "item 2",
+      "list",
+      "item 1",
+      "item 2",
+      "item 3",
+      "item 4",
+      "item 5",
+      "item 4",
+      // Only the second item should have re-rendered.
+      "item 2",
+    ]);
+
     expect(cache.extract()).toEqual({
       "Item:1": {
         __typename: "Item",
@@ -268,7 +307,7 @@ describe("useFragment", () => {
       "Item:2": {
         __typename: "Item",
         id: 2,
-        text: "Item #2 updated",
+        text: "Item #2",
       },
       "Item:3": {
         __typename: "Item",

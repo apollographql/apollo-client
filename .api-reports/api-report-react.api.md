@@ -2228,7 +2228,7 @@ export interface UseReadQueryResult<TData = unknown> {
 
 // @public
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
-    restart(): void;
+    restart: () => void;
     loading: boolean;
     data?: TData | undefined;
     error?: ApolloError;

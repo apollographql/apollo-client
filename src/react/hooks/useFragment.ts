@@ -75,30 +75,28 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     [cache, from]
   );
 
-  const resultRef = React.useRef<UseFragmentResult<TData>>();
   const stableOptions = useDeepMemo(() => ({ ...rest, from: id! }), [rest, id]);
 
   // Since .next is async, we need to make sure that we
   // get the correct diff on the next render given new diffOptions
-  const currentDiff = React.useMemo(() => {
+  const diff = React.useMemo(() => {
     const { fragment, fragmentName, from, optimistic = true } = stableOptions;
 
-    return diffToResult(
-      cache.diff<TData>({
-        ...stableOptions,
-        returnPartialData: true,
-        id: from,
-        query: cache["getFragmentDoc"](fragment, fragmentName),
-        optimistic,
-      })
-    );
+    return {
+      result: diffToResult(
+        cache.diff<TData>({
+          ...stableOptions,
+          returnPartialData: true,
+          id: from,
+          query: cache["getFragmentDoc"](fragment, fragmentName),
+          optimistic,
+        })
+      ),
+    };
   }, [stableOptions, cache]);
 
   // Used for both getSnapshot and getServerSnapshot
-  const getSnapshot = React.useCallback(
-    () => resultRef.current || currentDiff,
-    [currentDiff]
-  );
+  const getSnapshot = React.useCallback(() => diff.result, [diff]);
 
   return useSyncExternalStore(
     React.useCallback(
@@ -109,9 +107,9 @@ function _useFragment<TData = any, TVars = OperationVariables>(
             // Since `next` is called async by zen-observable, we want to avoid
             // unnecessarily rerendering this hook for the initial result
             // emitted from watchFragment which should be equal to
-            // `currentDiff`.
-            if (equal(result, currentDiff)) return;
-            resultRef.current = result;
+            // `diff.result`.
+            if (equal(result, diff.result)) return;
+            diff.result = result;
             // If we get another update before we've re-rendered, bail out of
             // the update and try again. This ensures that the relative timing
             // between useQuery and useFragment stays roughly the same as
@@ -121,12 +119,11 @@ function _useFragment<TData = any, TVars = OperationVariables>(
           },
         });
         return () => {
-          resultRef.current = void 0;
           subscription.unsubscribe();
           clearTimeout(lastTimeout);
         };
       },
-      [cache, stableOptions, currentDiff]
+      [cache, stableOptions, diff]
     ),
     getSnapshot,
     getSnapshot

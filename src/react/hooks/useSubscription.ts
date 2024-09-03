@@ -304,19 +304,16 @@ export function useSubscription<
       : fallbackResult,
     () => fallbackResult
   );
-  return React.useMemo(
-    () => ({
-      ...ret,
-      restart() {
-        invariant(
-          !optionsRef.current.skip,
-          "A subscription that is skipped cannot be restarted."
-        );
-        setObservable(recreateRef.current());
-      },
-    }),
-    [ret]
-  );
+
+  const restart = React.useCallback(() => {
+    invariant(
+      !optionsRef.current.skip,
+      "A subscription that is skipped cannot be restarted."
+    );
+    setObservable(recreateRef.current());
+  }, [optionsRef, recreateRef]);
+
+  return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }
 
 function createSubscription<

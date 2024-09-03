@@ -235,7 +235,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         // calls` cache.identify` and provides that value to `from`. We are
         // adding this fix here however to ensure those using plain JavaScript
         // and using `cache.identify` themselves will avoid seeing the obscure
-        // warning when passing `undefined` to `this.identify` below.
+        // warning.
         typeof from === "undefined" || typeof from === "string" ?
           from
         : this.identify(from),

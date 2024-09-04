@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.11.7
+
+### Patch Changes
+
+- [#12052](https://github.com/apollographql/apollo-client/pull/12052) [`e471cef`](https://github.com/apollographql/apollo-client/commit/e471cef875eadef04f8ee18ef431ee70e7b9bcab) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes a regression from where passing an invalid identifier to `from` in `useFragment` would result in the warning `TypeError: Cannot read properties of undefined (reading '__typename')`.
+
 ## 3.11.6
 
 ### Patch Changes

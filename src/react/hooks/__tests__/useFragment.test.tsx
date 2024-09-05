@@ -1725,6 +1725,34 @@ describe("useFragment", () => {
       });
     });
   });
+
+  // https://github.com/apollographql/apollo-client/issues/12051
+  it("does not warn when the cache identifier is invalid", async () => {
+    using _ = spyOnConsole("warn");
+    const cache = new InMemoryCache();
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({
+        fragment: ItemFragment,
+        // Force a value that results in cache.identify === undefined
+        from: { __typename: "Item" },
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <MockedProvider cache={cache}>{children}</MockedProvider>
+      ),
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    const { data, complete } = await ProfiledHook.takeSnapshot();
+
+    // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+    expect(complete).toBe(true);
+    expect(data).toEqual({});
+  });
 });
 
 describe("has the same timing as `useQuery`", () => {

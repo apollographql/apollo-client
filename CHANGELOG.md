@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.11.8
+
+### Patch Changes
+
+- [#12054](https://github.com/apollographql/apollo-client/pull/12054) [`35cf186`](https://github.com/apollographql/apollo-client/commit/35cf186ed9237e41735f150e0cbf4edd995ab0d9) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug where incorrect object access in some Safari extensions could cause a crash.
+
 ## 3.11.7
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-08-26**
+**Last updated: 2024-09-09**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -41,6 +41,7 @@ _Release candidate - September 30, 2024_
 ### VSCode Extension
 
 - Bug fixes and long-requested features
+- Apollo Client Devtools integration
 
 ### GraphQL Tag
 
@@ -49,6 +50,7 @@ _no work in progress_
 ### Apollo Client DevTools
 
 - Ongoing work with fixing error messages shown in devtools
+- Add a memory panel to monitor Apollo Client devtools internal caches
 
 ### Apollo Client NextJS
 

@@ -1,4 +1,4 @@
-name: Prerelease
+name: Pull Request Prerelease
 
 on:
   pull_request:

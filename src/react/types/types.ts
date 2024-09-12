@@ -3,6 +3,7 @@ import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type {
+  ApplyMasking,
   Observable,
   ObservableSubscription,
 } from "../../utilities/index.js";
@@ -351,7 +352,10 @@ export interface BaseMutationOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
+  onCompleted?: (
+    data: ApplyMasking<TData>,
+    clientOptions?: BaseMutationOptions
+  ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
@@ -370,7 +374,7 @@ export interface MutationFunctionOptions<
 
 export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-  data?: TData | null;
+  data?: ApplyMasking<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
   error?: ApolloError;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
@@ -418,7 +422,7 @@ export type MutationTuple<
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
-  ) => Promise<FetchResult<TData>>,
+  ) => Promise<FetchResult<ApplyMasking<TData>>>,
   result: MutationResult<TData>,
 ];
 

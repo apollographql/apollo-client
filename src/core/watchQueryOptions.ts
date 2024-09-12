@@ -13,6 +13,7 @@ import type {
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
+import type { ApplyMasking } from "../utilities/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -230,7 +231,9 @@ export interface MutationBaseOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
   refetchQueries?:
-    | ((result: FetchResult<TData>) => InternalRefetchQueriesInclude)
+    | ((
+        result: FetchResult<ApplyMasking<TData>>
+      ) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */

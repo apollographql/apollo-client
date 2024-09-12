@@ -12,7 +12,6 @@ import type {
 import type {
   ApolloCache,
   DefaultContext,
-  MaskedDocumentNode,
   MutationOptions,
   OperationVariables,
 } from "../../core/index.js";
@@ -75,20 +74,15 @@ export function useMutation<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
 >(
-  mutation:
-    | DocumentNode
-    | TypedDocumentNode<TData, TVariables>
-    | MaskedDocumentNode<TData, TVariables, TUnmaskedData>,
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<
     NoInfer<TData>,
     NoInfer<TVariables>,
     TContext,
-    TCache,
-    NoInfer<TUnmaskedData>
+    TCache
   >
-): MutationTuple<TData, TVariables, TContext, TCache, TUnmaskedData> {
+): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<Omit<MutationResult, "reset">>({
@@ -116,8 +110,7 @@ export function useMutation<
         TData,
         TVariables,
         TContext,
-        TCache,
-        TUnmaskedData
+        TCache
       > = {}
     ) => {
       const { options, mutation } = ref.current;

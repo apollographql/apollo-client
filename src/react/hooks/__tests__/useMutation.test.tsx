@@ -12,7 +12,6 @@ import {
   ApolloLink,
   ApolloQueryResult,
   Cache,
-  MaskedDocumentNode,
   NetworkStatus,
   Observable,
   ObservableQuery,
@@ -34,7 +33,6 @@ import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { profileHook, spyOnConsole } from "../../../testing/internal";
-import { expectTypeOf } from "expect-type";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -3141,148 +3139,5 @@ describe.skip("Type Tests", () => {
         nonExistingVariable: "string",
       },
     });
-  });
-
-  test("uses any as masked and unmasked type when using plain DocumentNode", () => {
-    const mutation = gql`
-      mutation ($id: ID!) {
-        updateUser(id: $id) {
-          id
-          ...UserFields
-        }
-      }
-
-      fragment UserFields on User {
-        age
-      }
-    `;
-
-    const [mutate, { data }] = useMutation(mutation, {
-      optimisticResponse: { foo: "foo" },
-      refetchQueries(result) {
-        expectTypeOf(result.data).toMatchTypeOf<any>();
-
-        return "active";
-      },
-      onCompleted(data) {
-        expectTypeOf(data).toMatchTypeOf<any>();
-      },
-      update(_, result) {
-        expectTypeOf(result.data).toMatchTypeOf<any>();
-      },
-    });
-
-    expectTypeOf(data).toMatchTypeOf<any>();
-    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<any>>>();
-  });
-
-  test("uses masked type when using TypedDocumentNode", () => {
-    interface MaskedMutation {
-      updateUser: {
-        id: string;
-      };
-    }
-
-    interface Variables {
-      id: string;
-    }
-
-    const mutation: TypedDocumentNode<MaskedMutation, Variables> = gql`
-      mutation ($id: ID!) {
-        updateUser(id: $id) {
-          id
-          ...UserFields
-        }
-      }
-
-      fragment UserFields on User {
-        age
-      }
-    `;
-
-    const [mutate, { data }] = useMutation(mutation, {
-      variables: { id: "1" },
-      optimisticResponse: { updateUser: { id: "1" } },
-      refetchQueries(result) {
-        expectTypeOf(result.data).toMatchTypeOf<
-          MaskedMutation | null | undefined
-        >();
-
-        return "active";
-      },
-      onCompleted(data) {
-        expectTypeOf(data).toMatchTypeOf<MaskedMutation>();
-      },
-      update(_, result) {
-        expectTypeOf(result.data).toMatchTypeOf<
-          MaskedMutation | null | undefined
-        >();
-      },
-    });
-
-    expectTypeOf(data).toMatchTypeOf<MaskedMutation | null | undefined>();
-    expectTypeOf(mutate()).toMatchTypeOf<
-      Promise<FetchResult<MaskedMutation>>
-    >();
-  });
-
-  test("uses masked/unmasked type when using MaskedDocumentNode", () => {
-    interface MaskedMutation {
-      updateUser: {
-        id: string;
-      };
-    }
-
-    interface Variables {
-      id: string;
-    }
-
-    interface UnmaskedMutation {
-      updateUser: {
-        id: string;
-        age: number;
-      };
-    }
-
-    const mutation: MaskedDocumentNode<
-      MaskedMutation,
-      Variables,
-      UnmaskedMutation
-    > = gql`
-      mutation ($id: ID!) {
-        updateUser(id: $id) {
-          id
-          ...UserFields
-        }
-      }
-
-      fragment UserFields on User {
-        age
-      }
-    `;
-
-    const [mutate, { data }] = useMutation(mutation, {
-      optimisticResponse: { updateUser: { id: "1", age: 30 } },
-      refetchQueries(result) {
-        expectTypeOf(result.data).toMatchTypeOf<
-          MaskedMutation | null | undefined
-        >();
-
-        return "active";
-      },
-      onCompleted(data) {
-        expectTypeOf(data).toMatchTypeOf<MaskedMutation>();
-      },
-      update(_, result) {
-        expectTypeOf(result.data).toMatchTypeOf<
-          UnmaskedMutation | null | undefined
-        >();
-      },
-    });
-
-    expectTypeOf(data).toMatchTypeOf<MaskedMutation | null | undefined>();
-    expectTypeOf(mutate()).toMatchTypeOf<
-      Promise<FetchResult<MaskedMutation>>
-    >();
   });
 });

@@ -486,20 +486,15 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
     TContext extends Record<string, any> = DefaultContext,
     TCache extends ApolloCache<any> = ApolloCache<any>,
-    TUnmaskedData = TData,
   >(
-    options: MutationOptions<TData, TVariables, TContext, TCache, TUnmaskedData>
+    options: MutationOptions<TData, TVariables, TContext>
   ): Promise<FetchResult<TData>> {
     if (this.defaultOptions.mutate) {
-      options = mergeOptions(this.defaultOptions.mutate, options as any);
+      options = mergeOptions(this.defaultOptions.mutate, options);
     }
-    return this.queryManager.mutate<
-      TData,
-      TVariables,
-      TContext,
-      TCache,
-      TUnmaskedData
-    >(options);
+    return this.queryManager.mutate<TData, TVariables, TContext, TCache>(
+      options
+    );
   }
 
   /**

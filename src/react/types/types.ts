@@ -24,7 +24,6 @@ import type {
   FetchMoreQueryOptions,
   ErrorPolicy,
   RefetchWritePolicy,
-  MaskedDocumentNode,
 } from "../../core/index.js";
 import type {
   MutationSharedOptions,
@@ -346,14 +345,7 @@ export interface BaseMutationOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
-> extends MutationSharedOptions<
-    TData,
-    TVariables,
-    TContext,
-    TCache,
-    TUnmaskedData
-  > {
+> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
   client?: ApolloClient<object>;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
@@ -371,19 +363,9 @@ export interface MutationFunctionOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
-> extends BaseMutationOptions<
-    TData,
-    TVariables,
-    TContext,
-    TCache,
-    TUnmaskedData
-  > {
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-  mutation?:
-    | DocumentNode
-    | TypedDocumentNode<TData, TVariables>
-    | MaskedDocumentNode<TData, TVariables, TUnmaskedData>;
+  mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface MutationResult<TData = any> {
@@ -415,14 +397,7 @@ export interface MutationHookOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
-> extends BaseMutationOptions<
-    TData,
-    TVariables,
-    TContext,
-    TCache,
-    TUnmaskedData
-  > {}
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
 
 export interface MutationDataOptions<
   TData = any,
@@ -438,16 +413,9 @@ export type MutationTuple<
   TVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
 > = [
   mutate: (
-    options?: MutationFunctionOptions<
-      TData,
-      TVariables,
-      TContext,
-      TCache,
-      TUnmaskedData
-    >
+    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
   ) => Promise<FetchResult<TData>>,

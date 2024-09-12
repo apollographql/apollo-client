@@ -9,7 +9,6 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   InternalRefetchQueriesInclude,
-  MaskedDocumentNode,
 } from "./types.js";
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -217,15 +216,14 @@ export interface MutationBaseOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
 > {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
-    | TUnmaskedData
+    | TData
     | ((
         vars: TVariables,
         { IGNORE }: { IGNORE: IgnoreModifier }
-      ) => TUnmaskedData | IgnoreModifier);
+      ) => TData | IgnoreModifier);
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
   updateQueries?: MutationQueryReducersMap<TData>;
@@ -239,7 +237,7 @@ export interface MutationBaseOptions<
   awaitRefetchQueries?: boolean;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
-  update?: MutationUpdaterFunction<TUnmaskedData, TVariables, TContext, TCache>;
+  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
   onQueryUpdated?: OnQueryUpdated<any>;
@@ -259,33 +257,16 @@ export interface MutationOptions<
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
-> extends MutationSharedOptions<
-    TData,
-    TVariables,
-    TContext,
-    TCache,
-    TUnmaskedData
-  > {
+> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-  mutation:
-    | DocumentNode
-    | TypedDocumentNode<TData, TVariables>
-    | MaskedDocumentNode<TData, TVariables, TUnmaskedData>;
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 export interface MutationSharedOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
-  TUnmaskedData = TData,
-> extends MutationBaseOptions<
-    TData,
-    TVariables,
-    TContext,
-    TCache,
-    TUnmaskedData
-  > {
+> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: MutationFetchPolicy;
 

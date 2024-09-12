@@ -220,7 +220,6 @@ export class QueryManager<TStore> {
     TVariables extends OperationVariables,
     TContext extends Record<string, any>,
     TCache extends ApolloCache<any>,
-    TUnmaskedData,
   >({
     mutation,
     variables,
@@ -234,13 +233,9 @@ export class QueryManager<TStore> {
     errorPolicy = this.defaultOptions.mutate?.errorPolicy || "none",
     keepRootFields,
     context,
-  }: MutationOptions<
-    TData,
-    TVariables,
-    TContext,
-    TCache,
-    TUnmaskedData
-  >): Promise<FetchResult<TData>> {
+  }: MutationOptions<TData, TVariables, TContext>): Promise<
+    FetchResult<TData>
+  > {
     invariant(
       mutation,
       "mutation option is required. You must specify your GraphQL document in the mutation option."
@@ -276,23 +271,20 @@ export class QueryManager<TStore> {
 
     const isOptimistic =
       optimisticResponse &&
-      this.markMutationOptimistic<
-        TData,
-        TVariables,
-        TContext,
-        TCache,
-        TUnmaskedData
-      >(optimisticResponse, {
-        mutationId,
-        document: mutation,
-        variables,
-        fetchPolicy,
-        errorPolicy,
-        context,
-        updateQueries,
-        update: updateWithProxyFn,
-        keepRootFields,
-      });
+      this.markMutationOptimistic<TData, TVariables, TContext, TCache>(
+        optimisticResponse,
+        {
+          mutationId,
+          document: mutation,
+          variables,
+          fetchPolicy,
+          errorPolicy,
+          context,
+          updateQueries,
+          update: updateWithProxyFn,
+          keepRootFields,
+        }
+      );
 
     this.broadcastQueries();
 
@@ -333,13 +325,7 @@ export class QueryManager<TStore> {
             delete storeResult.errors;
           }
 
-          return self.markMutationResult<
-            TData,
-            TVariables,
-            TContext,
-            TCache,
-            TUnmaskedData
-          >({
+          return self.markMutationResult<TData, TVariables, TContext, TCache>({
             mutationId,
             result: storeResult,
             document: mutation,
@@ -405,7 +391,6 @@ export class QueryManager<TStore> {
     TVariables,
     TContext,
     TCache extends ApolloCache<any>,
-    TUnmaskedData,
   >(
     mutation: {
       mutationId: string;
@@ -416,12 +401,7 @@ export class QueryManager<TStore> {
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<
-        TUnmaskedData,
-        TVariables,
-        TContext,
-        TCache
-      >;
+      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       awaitRefetchQueries?: boolean;
       refetchQueries?: InternalRefetchQueriesInclude;
       removeOptimistic?: string;
@@ -571,7 +551,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache as TCache, result as FetchResult<TUnmaskedData>, {
+              update(cache as TCache, result, {
                 context: mutation.context,
                 variables: mutation.variables,
               });
@@ -622,7 +602,6 @@ export class QueryManager<TStore> {
     TVariables,
     TContext,
     TCache extends ApolloCache<any>,
-    TUnmaskedData,
   >(
     optimisticResponse: any,
     mutation: {
@@ -633,12 +612,7 @@ export class QueryManager<TStore> {
       errorPolicy: ErrorPolicy;
       context?: TContext;
       updateQueries: UpdateQueries<TData>;
-      update?: MutationUpdaterFunction<
-        TUnmaskedData,
-        TVariables,
-        TContext,
-        TCache
-      >;
+      update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
       keepRootFields?: boolean;
     }
   ) {
@@ -653,13 +627,7 @@ export class QueryManager<TStore> {
 
     this.cache.recordOptimisticTransaction((cache) => {
       try {
-        this.markMutationResult<
-          TData,
-          TVariables,
-          TContext,
-          TCache,
-          TUnmaskedData
-        >(
+        this.markMutationResult<TData, TVariables, TContext, TCache>(
           {
             ...mutation,
             result: { data },

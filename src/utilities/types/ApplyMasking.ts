@@ -1,7 +1,10 @@
+import type { DataMasking } from "../../core/index.js";
+
 /** @internal */
 export type ApplyMasking<TData> =
   TData extends { __masked?: true } ?
     RemoveFragmentRefs<Omit<TData, "__masked">>
+  : DataMasking extends { enabled: true } ? RemoveFragmentRefs<TData>
   : TData;
 
 type RemoveFragmentRefs<TData> =

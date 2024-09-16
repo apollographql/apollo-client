@@ -14,6 +14,8 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
+export interface DataMasking {}
+
 export type Masked<TData> = TData & {
   __masked?: true;
 };

@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-09-09**
+**Last updated: 2024-09-16**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -21,12 +21,12 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 _Release candidate - September 30, 2024_
 
 - Data masking
-- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
 
 #### Upcoming features
 
 - Leaner client (under alternate entry point)
 - Better types for `useQuery`/`useMutation`/`useSubscription`
+- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
 
 #### 4.0
 

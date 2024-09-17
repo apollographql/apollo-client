@@ -1,6 +1,10 @@
 import { Trie } from "@wry/trie";
 import type { ObservableQuery } from "../../../core/index.js";
-import { canUseWeakMap } from "../../../utilities/index.js";
+import type { PromiseWithState } from "../../../utilities/index.js";
+import {
+  canUseWeakMap,
+  wrapPromiseWithState,
+} from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey } from "./types.js";
 
@@ -22,6 +26,9 @@ export class SuspenseCache {
   private queryRefs = new Trie<{ current?: InternalQueryReference }>(
     canUseWeakMap
   );
+  private fragmentPromises = new Trie<{
+    current?: PromiseWithStateAndResolvers<any>;
+  }>(canUseWeakMap);
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -48,8 +55,40 @@ export class SuspenseCache {
     return ref.current;
   }
 
+  getPromiseWithResolvers<TData>(cacheKey: CacheKey) {
+    const ref = this.fragmentPromises.lookupArray(cacheKey) as {
+      current?: PromiseWithStateAndResolvers<TData>;
+    };
+
+    if (!ref.current) {
+      ref.current = withResolvers<TData>();
+    }
+
+    return ref.current;
+  }
+
   add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>) {
     const ref = this.queryRefs.lookupArray(cacheKey);
     ref.current = queryRef;
   }
+}
+
+interface PromiseWithStateAndResolvers<T> {
+  promise: PromiseWithState<T>;
+  resolve: (value: T | PromiseLike<T>) => void;
+  reject: (reason?: unknown) => void;
+}
+
+function withResolvers<T>(): PromiseWithStateAndResolvers<T> {
+  let resolve!: (value: T | PromiseLike<T>) => void;
+  let reject!: (reason?: unknown) => void;
+
+  const promise = wrapPromiseWithState(
+    new Promise<T>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    })
+  );
+
+  return { promise, resolve, reject };
 }

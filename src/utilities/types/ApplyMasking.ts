@@ -1,4 +1,4 @@
-import type { DataMasking } from "../../core/index.js";
+import type { DataMasking } from "../../masking/index.js";
 
 /** @internal */
 export type ApplyMasking<TData> =

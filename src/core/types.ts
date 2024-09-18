@@ -10,20 +10,8 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
 import type { Cache } from "../cache/index.js";
 import type { IsStrictlyAny } from "../utilities/index.js";
-import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-
-export interface DataMasking {}
-
-export type Masked<TData> = TData & {
-  __masked?: true;
-};
-
-export type MaskedDocumentNode<
-  TData = { [key: string]: any },
-  TVariables = { [key: string]: any },
-> = TypedDocumentNode<Masked<TData>, TVariables>;
 
 export type MethodKeys<T> = {
   [P in keyof T]: T[P] extends Function ? P : never;

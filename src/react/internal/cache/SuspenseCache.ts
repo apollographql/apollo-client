@@ -3,11 +3,8 @@ import type {
   ObservableQuery,
   WatchFragmentResult,
 } from "../../../core/index.js";
-import type { Observable, PromiseWithState } from "../../../utilities/index.js";
-import {
-  canUseWeakMap,
-  wrapPromiseWithState,
-} from "../../../utilities/index.js";
+import type { Observable } from "../../../utilities/index.js";
+import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey } from "./types.js";
 import { FragmentReference } from "./FragmentReference.js";
@@ -83,24 +80,4 @@ export class SuspenseCache {
     const ref = this.queryRefs.lookupArray(cacheKey);
     ref.current = queryRef;
   }
-}
-
-interface PromiseWithStateAndResolvers<T> {
-  promise: PromiseWithState<T>;
-  resolve: (value: T | PromiseLike<T>) => void;
-  reject: (reason?: unknown) => void;
-}
-
-function withResolvers<T>(): PromiseWithStateAndResolvers<T> {
-  let resolve!: (value: T | PromiseLike<T>) => void;
-  let reject!: (reason?: unknown) => void;
-
-  const promise = wrapPromiseWithState(
-    new Promise<T>((res, rej) => {
-      resolve = res;
-      reject = rej;
-    })
-  );
-
-  return { promise, resolve, reject };
 }

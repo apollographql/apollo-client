@@ -10,7 +10,7 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
 import type { Cache } from "../cache/index.js";
 import type { IsStrictlyAny } from "../utilities/index.js";
-import type { Unmask } from "../utilities/types/ApplyMasking.js";
+import type { Unmask } from "../masking/index.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 

@@ -3,7 +3,6 @@ import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type {
-  ApplyMasking,
   Observable,
   ObservableSubscription,
 } from "../../utilities/index.js";
@@ -30,6 +29,7 @@ import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
 } from "../../core/watchQueryOptions.js";
+import type { MaybeMasked } from "../../masking/index.js";
 
 /* QueryReference type */
 
@@ -353,7 +353,7 @@ export interface BaseMutationOptions<
   notifyOnNetworkStatusChange?: boolean;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
   onCompleted?: (
-    data: ApplyMasking<TData>,
+    data: MaybeMasked<TData>,
     clientOptions?: BaseMutationOptions
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
@@ -374,7 +374,7 @@ export interface MutationFunctionOptions<
 
 export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-  data?: ApplyMasking<TData> | null;
+  data?: MaybeMasked<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
   error?: ApolloError;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
@@ -422,7 +422,7 @@ export type MutationTuple<
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
-  ) => Promise<FetchResult<ApplyMasking<TData>>>,
+  ) => Promise<FetchResult<MaybeMasked<TData>>>,
   result: MutationResult<TData>,
 ];
 

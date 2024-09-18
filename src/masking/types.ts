@@ -21,4 +21,4 @@ export type MaskedDocumentNode<
 export type Unmask<TData> =
   TData extends { " $unmasked": infer TUnmaskedData } ? TUnmaskedData : TData;
 
-type RemoveMaskedMarkers<TData> = Omit<TData, "__masked" | " $unmasked">;
+type RemoveMaskedMarkers<TData> = Omit<TData, "__masked" | " $unmasked"> & {};

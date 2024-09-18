@@ -12,7 +12,6 @@ import {
   ApolloLink,
   ApolloQueryResult,
   Cache,
-  Masked,
   NetworkStatus,
   Observable,
   ObservableQuery,
@@ -35,7 +34,7 @@ import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { profileHook, spyOnConsole } from "../../../testing/internal";
 import { expectTypeOf } from "expect-type";
-import { ApplyMasking } from "../../../utilities";
+import { Masked } from "../../../masking";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -3223,23 +3222,30 @@ describe.skip("Type Tests", () => {
   });
 
   test("uses masked/unmasked type when using MaskedDocumentNode", async () => {
-    interface UserFieldsFragment {
+    type UserFieldsFragment = {
       age: number;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" };
 
-    interface Mutation {
+    type Mutation = {
       updateUser: {
         __typename: "User";
         id: string;
-        // For now we are using the GraphQL Codegen type
       } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
-    }
+    } & {
+      " $unmasked": {
+        updateUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+    };
 
     type MaskedMutation = {
       updateUser: {
         __typename: "User";
         id: string;
-      };
+      } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
     };
 
     type UnmaskedMutation = {
@@ -3268,7 +3274,9 @@ describe.skip("Type Tests", () => {
     `;
 
     const [mutate, { data }] = useMutation(mutation, {
-      optimisticResponse: { updateUser: { id: "1", age: 30 } },
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
       refetchQueries(result) {
         expectTypeOf(result.data).toMatchTypeOf<
           MaskedMutation | null | undefined

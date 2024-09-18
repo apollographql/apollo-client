@@ -1,5 +1,8 @@
 import type { WatchFragmentResult } from "../../../cache/index.js";
-import { wrapPromiseWithState } from "../../../utilities/index.js";
+import {
+  createFulfilledPromise,
+  wrapPromiseWithState,
+} from "../../../utilities/index.js";
 import type {
   Observable,
   ObservableSubscription,
@@ -41,13 +44,7 @@ export class FragmentReference<TData = unknown> {
       this.onDispose = options.onDispose;
     }
 
-    this.promise = wrapPromiseWithState(
-      new Promise((resolve, reject) => {
-        this.resolve = resolve;
-        this.reject = reject;
-      })
-    );
-
+    this.promise = this.createPendingPromise();
     this.subscribeToFragment();
   }
 
@@ -99,10 +96,19 @@ export class FragmentReference<TData = unknown> {
     switch (this.promise.status) {
       case "pending": {
         if (result.complete) {
-          this.resolve?.(result.data);
+          return this.resolve?.(result.data);
         }
 
+        this.deliver(this.promise);
         break;
+      }
+      case "fulfilled": {
+        this.promise =
+          result.complete ?
+            createFulfilledPromise(result.data)
+          : this.createPendingPromise();
+
+        this.deliver(this.promise);
       }
     }
   }
@@ -113,5 +119,14 @@ export class FragmentReference<TData = unknown> {
 
   private deliver(promise: FragmentRefPromise<TData>) {
     this.listeners.forEach((listener) => listener(promise));
+  }
+
+  private createPendingPromise() {
+    return wrapPromiseWithState(
+      new Promise<TData>((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+      })
+    );
   }
 }

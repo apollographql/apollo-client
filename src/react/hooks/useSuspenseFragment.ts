@@ -1,4 +1,9 @@
-import type { ApolloClient, Reference, StoreObject } from "../../core/index.js";
+import type {
+  ApolloClient,
+  OperationVariables,
+  Reference,
+  StoreObject,
+} from "../../core/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { Cache } from "../../cache/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -7,6 +12,7 @@ import type { CacheKey } from "../internal/index.js";
 import React from "rehackt";
 import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
+import { wrapHook } from "./internal/index.js";
 
 export interface UseSuspenseFragmentOptions<TData, TVars>
   extends Omit<
@@ -33,7 +39,23 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
 
 export type UseSuspenseFragmentResult<TData> = { data: TData };
 
-export function useSuspenseFragment<TData, TVariables>(
+export function useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  options: UseSuspenseFragmentOptions<TData, TVariables>
+): UseSuspenseFragmentResult<TData> {
+  return wrapHook(
+    "useSuspenseFragment",
+    _useSuspenseFragment,
+    useApolloClient(typeof options === "object" ? options.client : undefined)
+  )(options);
+}
+
+function _useSuspenseFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
   options: UseSuspenseFragmentOptions<TData, TVariables>
 ): UseSuspenseFragmentResult<TData> {
   const client = useApolloClient(options.client);

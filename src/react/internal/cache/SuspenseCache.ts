@@ -6,7 +6,7 @@ import type {
 import type { Observable } from "../../../utilities/index.js";
 import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
-import type { CacheKey } from "./types.js";
+import type { CacheKey, FragmentCacheKey } from "./types.js";
 import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
@@ -58,7 +58,7 @@ export class SuspenseCache {
   }
 
   getFragmentRef<TData>(
-    cacheKey: CacheKey,
+    cacheKey: FragmentCacheKey,
     createObservable: () => Observable<WatchFragmentResult<TData>>
   ) {
     const ref = this.fragmentRefs.lookupArray(cacheKey) as {

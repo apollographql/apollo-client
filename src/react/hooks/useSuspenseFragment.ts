@@ -8,9 +8,8 @@ import { canonicalStringify } from "../../cache/index.js";
 import type { Cache } from "../../cache/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { getSuspenseCache } from "../internal/index.js";
-import type { CacheKey } from "../internal/index.js";
-import React from "rehackt";
-import type { FragmentKey } from "../internal/cache/types.js";
+import React, { useMemo } from "rehackt";
+import type { FragmentCacheKey, FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 
@@ -59,8 +58,16 @@ function _useSuspenseFragment<
   options: UseSuspenseFragmentOptions<TData, TVariables>
 ): UseSuspenseFragmentResult<TData> {
   const client = useApolloClient(options.client);
+  const { from } = options;
+  const { cache } = client;
 
-  const cacheKey: CacheKey = [
+  const id = useMemo(
+    () => (typeof from === "string" ? from : cache.identify(from)),
+    [cache, from]
+  )!;
+
+  const cacheKey: FragmentCacheKey = [
+    id,
     options.fragment,
     canonicalStringify(options.variables),
   ];

@@ -9,3 +9,7 @@ export type CacheKey = [
 export interface QueryKey {
   __queryKey?: string;
 }
+
+export interface FragmentKey {
+  __fragmentKey?: string;
+}

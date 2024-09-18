@@ -1,12 +1,16 @@
 import { Trie } from "@wry/trie";
-import type { ObservableQuery } from "../../../core/index.js";
-import type { PromiseWithState } from "../../../utilities/index.js";
+import type {
+  ObservableQuery,
+  WatchFragmentResult,
+} from "../../../core/index.js";
+import type { Observable, PromiseWithState } from "../../../utilities/index.js";
 import {
   canUseWeakMap,
   wrapPromiseWithState,
 } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey } from "./types.js";
+import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
   /**
@@ -26,9 +30,10 @@ export class SuspenseCache {
   private queryRefs = new Trie<{ current?: InternalQueryReference }>(
     canUseWeakMap
   );
-  private fragmentPromises = new Trie<{
-    current?: PromiseWithStateAndResolvers<any>;
-  }>(canUseWeakMap);
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
+    canUseWeakMap
+  );
+
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -55,13 +60,20 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  getPromiseWithResolvers<TData>(cacheKey: CacheKey) {
-    const ref = this.fragmentPromises.lookupArray(cacheKey) as {
-      current?: PromiseWithStateAndResolvers<TData>;
+  getFragmentRef<TData>(
+    cacheKey: CacheKey,
+    createObservable: () => Observable<WatchFragmentResult<TData>>
+  ) {
+    const ref = this.fragmentRefs.lookupArray(cacheKey) as {
+      current?: FragmentReference<TData>;
     };
 
     if (!ref.current) {
-      ref.current = withResolvers<TData>();
+      ref.current = new FragmentReference(createObservable(), {
+        onDispose: () => {
+          delete ref.current;
+        },
+      });
     }
 
     return ref.current;

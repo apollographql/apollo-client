@@ -43,7 +43,7 @@ export function maskOperation<TData = unknown>(
 
   if (data == null) {
     // Maintain the original `null` or `undefined` value
-    return data;
+    return data as MaybeMasked<TData>;
   }
 
   const context: MaskingContext = {

@@ -9,7 +9,7 @@ export type Unmask<TData> = RemoveMaskedMarkers<
 /** @internal */
 export type MaybeMasked<TData> =
   TData extends { __masked?: true } ? RemoveMaskedMarkers<TData>
-  : DataMasking extends { enabled: true } ? RemoveMaskedMarkers<TData>
+  : DataMasking extends { enabled: true } ? TData
   : Unmask<TData>;
 
 type UnwrapFragmentRefs<TData> =

@@ -164,6 +164,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
+import type { MaybeMasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -488,7 +489,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<TData>> {
+  ): Promise<FetchResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }

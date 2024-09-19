@@ -10,13 +10,15 @@ import {
 import { Kind } from "graphql";
 
 import { Observable } from "../utilities";
-import { ApolloLink } from "../link/core";
+import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
 import { itAsync } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
+import { expectTypeOf } from "expect-type";
+import { Masked } from "../masking";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -2863,5 +2865,169 @@ describe("ApolloClient", () => {
         }
       }
     );
+  });
+
+  describe("type tests", async () => {
+    test("uses any as masked and unmasked type when using plain DocumentNode", () => {
+      const mutation = gql`
+        mutation ($id: ID!) {
+          updateUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const promise = client.mutate({
+        mutation,
+        optimisticResponse: { foo: "foo" },
+        refetchQueries(result) {
+          expectTypeOf(result.data).toMatchTypeOf<any>();
+
+          return "active";
+        },
+        update(_, result) {
+          expectTypeOf(result.data).toMatchTypeOf<any>();
+        },
+      });
+
+      expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<any>>>();
+    });
+
+    test("uses TData type when using plain TypedDocumentNode", () => {
+      interface Mutation {
+        updateUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      }
+
+      interface Variables {
+        id: string;
+      }
+
+      const mutation: TypedDocumentNode<Mutation, Variables> = gql`
+        mutation ($id: ID!) {
+          updateUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const promise = client.mutate({
+        variables: { id: "1" },
+        mutation,
+        optimisticResponse: {
+          updateUser: { __typename: "User", id: "1", age: 30 },
+        },
+        refetchQueries(result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+
+          return "active";
+        },
+        update(_, result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+        },
+      });
+
+      expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    });
+
+    test("uses masked/unmasked type when using Masked<TData>", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
+      type Mutation = {
+        updateUser: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      } & {
+        " $unmasked": {
+          updateUser: {
+            __typename: "User";
+            id: string;
+            age: number;
+          };
+        };
+      };
+
+      type MaskedMutation = {
+        updateUser: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      type UnmaskedMutation = {
+        updateUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+
+      interface Variables {
+        id: string;
+      }
+
+      const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+        mutation ($id: ID!) {
+          updateUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const result = await client.mutate({
+        variables: { id: "1" },
+        mutation,
+        optimisticResponse: {
+          updateUser: { __typename: "User", id: "1", age: 30 },
+        },
+        refetchQueries(result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            MaskedMutation | null | undefined
+          >();
+
+          return "active";
+        },
+        update(_, result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            UnmaskedMutation | null | undefined
+          >();
+        },
+      });
+
+      expectTypeOf(result.data).toMatchTypeOf<
+        MaskedMutation | null | undefined
+      >();
+    });
   });
 });

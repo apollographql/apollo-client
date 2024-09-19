@@ -105,6 +105,7 @@ import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "./masking.js";
+import type { MaybeMasked } from "../masking/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -234,7 +235,7 @@ export class QueryManager<TStore> {
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<
-    FetchResult<TData>
+    FetchResult<MaybeMasked<TData>>
   > {
     invariant(
       mutation,
@@ -358,7 +359,7 @@ export class QueryManager<TStore> {
                 document: mutation,
                 data: storeResult.data,
               }),
-            } as FetchResult<TData>);
+            });
           }
         },
 
@@ -1561,10 +1562,14 @@ export class QueryManager<TStore> {
     return results;
   }
 
-  public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
+  public maskOperation<TData = unknown>(
+    options: MaskOperationOptions<TData>
+  ): MaybeMasked<TData> {
     const { document, data } = options;
 
-    return this.dataMasking ? maskOperation(data, document, this.cache) : data;
+    return this.dataMasking ?
+        maskOperation(data, document, this.cache)
+      : (data as MaybeMasked<TData>);
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {

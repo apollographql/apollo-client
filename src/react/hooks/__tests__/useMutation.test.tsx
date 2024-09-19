@@ -3176,9 +3176,10 @@ describe.skip("Type Tests", () => {
     expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<any>>>();
   });
 
-  test("uses masked type when using TypedDocumentNode", () => {
+  test("uses TData type when using plain TypedDocumentNode", () => {
     interface Mutation {
       updateUser: {
+        __typename: "User";
         id: string;
         age: number;
       };
@@ -3203,7 +3204,9 @@ describe.skip("Type Tests", () => {
 
     const [mutate, { data }] = useMutation(mutation, {
       variables: { id: "1" },
-      optimisticResponse: { updateUser: { id: "1", age: 30 } },
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
       refetchQueries(result) {
         expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
 
@@ -3221,7 +3224,7 @@ describe.skip("Type Tests", () => {
     expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
   });
 
-  test("uses masked/unmasked type when using MaskedDocumentNode", async () => {
+  test("uses masked/unmasked type when using Masked<TData>", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName": "UserFieldsFragment" };

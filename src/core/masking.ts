@@ -11,7 +11,6 @@ import {
 import type { FragmentMap } from "../utilities/index.js";
 import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
-import type { MaybeMasked } from "../masking/index.js";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
@@ -25,13 +24,13 @@ export function maskOperation<TData = unknown>(
   data: TData,
   document: DocumentNode | TypedDocumentNode<TData>,
   cache: ApolloCache<unknown>
-): MaybeMasked<TData> {
+): TData {
   if (!cache.fragmentMatches) {
     if (__DEV__) {
       warnOnImproperCacheImplementation();
     }
 
-    return data as MaybeMasked<TData>;
+    return data;
   }
 
   const definition = getOperationDefinition(document);
@@ -43,7 +42,7 @@ export function maskOperation<TData = unknown>(
 
   if (data == null) {
     // Maintain the original `null` or `undefined` value
-    return data as MaybeMasked<TData>;
+    return data;
   }
 
   const context: MaskingContext = {

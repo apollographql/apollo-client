@@ -1564,14 +1564,10 @@ export class QueryManager<TStore> {
     return results;
   }
 
-  public maskOperation<TData = unknown>(
-    options: MaskOperationOptions<TData>
-  ): MaybeMasked<TData> {
+  public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
     const { document, data } = options;
 
-    return this.dataMasking ?
-        maskOperation(data, document, this.cache)
-      : (data as MaybeMasked<TData>);
+    return this.dataMasking ? maskOperation(data, document, this.cache) : data;
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {

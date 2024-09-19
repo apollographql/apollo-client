@@ -9,7 +9,7 @@ export type Unmask<TData> =
 
 /** @internal */
 export type MaybeMasked<TData> =
-  TData extends { __masked?: true } ? RemoveMaskedMarker<TData>
+  TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
   : DataMasking extends { enabled: true } ? TData
   : Unmask<TData>;
 
@@ -35,5 +35,5 @@ type CombineFragmentRefs<FragmentRefMap extends Record<string, any>> =
     }[keyof FragmentRefMap]
   >;
 
-type RemoveMaskedMarker<TData> = Prettify<Omit<TData, "__masked">>;
+type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 type RemoveFragmentName<T> = Omit<T, " $fragmentName">;

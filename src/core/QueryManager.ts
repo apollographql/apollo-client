@@ -319,7 +319,13 @@ export class QueryManager<TStore> {
           const storeResult: typeof result = { ...result };
 
           if (typeof refetchQueries === "function") {
-            refetchQueries = refetchQueries(storeResult);
+            refetchQueries = refetchQueries({
+              ...storeResult,
+              data: this.maskOperation({
+                document: mutation,
+                data: storeResult.data,
+              }),
+            });
           }
 
           if (errorPolicy === "ignore" && graphQLResultHasError(storeResult)) {

@@ -3282,7 +3282,7 @@ describe.skip("Type Tests", () => {
       },
       refetchQueries(result) {
         expectTypeOf(result.data).toMatchTypeOf<
-          MaskedMutation | null | undefined
+          UnmaskedMutation | null | undefined
         >();
 
         return "active";

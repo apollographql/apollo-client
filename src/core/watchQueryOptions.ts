@@ -231,9 +231,7 @@ export interface MutationBaseOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
   refetchQueries?:
-    | ((
-        result: FetchResult<MaybeMasked<TData>>
-      ) => InternalRefetchQueriesInclude)
+    | ((result: FetchResult<Unmask<TData>>) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */

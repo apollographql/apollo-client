@@ -105,7 +105,7 @@ import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "./masking.js";
-import type { MaybeMasked } from "../masking/index.js";
+import type { MaybeMasked, Unmask } from "../masking/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -319,13 +319,9 @@ export class QueryManager<TStore> {
           const storeResult: typeof result = { ...result };
 
           if (typeof refetchQueries === "function") {
-            refetchQueries = refetchQueries({
-              ...storeResult,
-              data: this.maskOperation({
-                document: mutation,
-                data: storeResult.data,
-              }),
-            });
+            refetchQueries = refetchQueries(
+              storeResult as FetchResult<Unmask<TData>>
+            );
           }
 
           if (errorPolicy === "ignore" && graphQLResultHasError(storeResult)) {

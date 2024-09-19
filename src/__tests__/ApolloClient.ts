@@ -3013,7 +3013,7 @@ describe("ApolloClient", () => {
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<
-            MaskedMutation | null | undefined
+            UnmaskedMutation | null | undefined
           >();
 
           return "active";

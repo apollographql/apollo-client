@@ -263,6 +263,8 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/masking 1`] = `Array []`;
+
 exports[`exports of public entry points @apollo/client/react 1`] = `
 Array [
   "ApolloConsumer",

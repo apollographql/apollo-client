@@ -4,12 +4,12 @@ import type { DataMasking } from "../types.js";
 /** @internal */
 export type Unmask<TData> =
   TData extends object ?
-    RemoveMaskedMarkers<UnwrapFragmentRefs<RemoveFragmentName<TData>>>
+    RemoveMaskedMarker<UnwrapFragmentRefs<RemoveFragmentName<TData>>>
   : TData;
 
 /** @internal */
 export type MaybeMasked<TData> =
-  TData extends { __masked?: true } ? RemoveMaskedMarkers<TData>
+  TData extends { __masked?: true } ? RemoveMaskedMarker<TData>
   : DataMasking extends { enabled: true } ? TData
   : Unmask<TData>;
 
@@ -35,5 +35,5 @@ type CombineFragmentRefs<FragmentRefMap extends Record<string, any>> =
     }[keyof FragmentRefMap]
   >;
 
-type RemoveMaskedMarkers<TData> = Prettify<Omit<TData, "__masked">>;
+type RemoveMaskedMarker<TData> = Prettify<Omit<TData, "__masked">>;
 type RemoveFragmentName<T> = Omit<T, " $fragmentName">;

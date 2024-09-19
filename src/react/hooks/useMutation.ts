@@ -12,6 +12,7 @@ import type {
 import type {
   ApolloCache,
   DefaultContext,
+  FetchResult,
   MutationOptions,
   OperationVariables,
 } from "../../core/index.js";
@@ -21,6 +22,7 @@ import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { ApolloError } from "../../errors/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import type { MaybeMasked } from "../../masking/types.js";
 
 /**
  *
@@ -177,12 +179,12 @@ export function useMutation<
 
           if (!error) {
             onCompleted?.(
-              response.data!,
+              response.data! as MaybeMasked<TData>,
               clientOptions as MutationOptions<TData, OperationVariables>
             );
           }
 
-          return response;
+          return response as FetchResult<MaybeMasked<TData>>;
         })
         .catch((error) => {
           if (mutationId === ref.current.mutationId && ref.current.isMounted) {

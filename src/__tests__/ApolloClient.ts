@@ -2867,7 +2867,7 @@ describe("ApolloClient", () => {
     );
   });
 
-  describe("type tests", async () => {
+  describe.skip("type tests", () => {
     test("uses any as masked and unmasked type when using plain DocumentNode", () => {
       const mutation = gql`
         mutation ($id: ID!) {

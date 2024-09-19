@@ -454,7 +454,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public query<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<T>> {
+  >(
+    options: QueryOptions<TVariables, T>
+  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }

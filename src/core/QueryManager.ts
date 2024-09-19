@@ -787,7 +787,7 @@ export class QueryManager<TStore> {
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     invariant(
       options.query,
       "query option is required. You must specify your GraphQL document " +
@@ -821,7 +821,7 @@ export class QueryManager<TStore> {
           });
         }
 
-        return result;
+        return result as ApolloQueryResult<MaybeMasked<TData>>;
       })
       .finally(() => this.stopQuery(queryId));
   }

@@ -2977,21 +2977,6 @@ describe("ApolloClient", () => {
           __typename: "User";
           id: string;
         } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
-      } & {
-        " $unmasked": {
-          updateUser: {
-            __typename: "User";
-            id: string;
-            age: number;
-          };
-        };
-      };
-
-      type MaskedMutation = {
-        updateUser: {
-          __typename: "User";
-          id: string;
-        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
       };
 
       type UnmaskedMutation = {
@@ -3050,9 +3035,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(result.data).toMatchTypeOf<
-        MaskedMutation | null | undefined
-      >();
+      expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
     });
   });
 });

@@ -3250,21 +3250,6 @@ describe.skip("Type Tests", () => {
         __typename: "User";
         id: string;
       } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
-    } & {
-      " $unmasked": {
-        updateUser: {
-          __typename: "User";
-          id: string;
-          age: number;
-        };
-      };
-    };
-
-    type MaskedMutation = {
-      updateUser: {
-        __typename: "User";
-        id: string;
-      } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
     };
 
     type UnmaskedMutation = {
@@ -3313,7 +3298,7 @@ describe.skip("Type Tests", () => {
         return "active";
       },
       onCompleted(data) {
-        expectTypeOf(data).toMatchTypeOf<MaskedMutation>();
+        expectTypeOf(data).toMatchTypeOf<Mutation>();
       },
       update(_, result) {
         expectTypeOf(result.data).toMatchTypeOf<
@@ -3322,9 +3307,7 @@ describe.skip("Type Tests", () => {
       },
     });
 
-    expectTypeOf(data).toMatchTypeOf<MaskedMutation | null | undefined>();
-    expectTypeOf(mutate()).toMatchTypeOf<
-      Promise<FetchResult<MaskedMutation>>
-    >();
+    expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
   });
 });

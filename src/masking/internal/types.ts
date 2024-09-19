@@ -4,7 +4,7 @@ import type { DataMasking } from "../types.js";
 /** @internal */
 export type Unmask<TData> =
   TData extends object ?
-    RemoveMaskedMarker<UnwrapFragmentRefs<RemoveFragmentName<TData>>>
+    UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
   : TData;
 
 /** @internal */

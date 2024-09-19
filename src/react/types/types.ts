@@ -394,7 +394,7 @@ export declare type MutationFunction<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-) => Promise<FetchResult<TData>>;
+) => Promise<FetchResult<MaybeMasked<TData>>>;
 
 export interface MutationHookOptions<
   TData = any,

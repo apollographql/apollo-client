@@ -13,7 +13,7 @@ import type {
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { MaybeMasked, Unmask } from "../masking/index.js";
+import type { Unmask } from "../masking/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:

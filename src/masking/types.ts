@@ -1,4 +1,5 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { Prettify } from "../utilities/index.js";
 
 export interface DataMasking {}
 
@@ -21,4 +22,6 @@ export type MaskedDocumentNode<
 export type Unmask<TData> =
   TData extends { " $unmasked": infer TUnmaskedData } ? TUnmaskedData : TData;
 
-type RemoveMaskedMarkers<TData> = Omit<TData, "__masked" | " $unmasked"> & {};
+type RemoveMaskedMarkers<TData> = Prettify<
+  Omit<TData, "__masked" | " $unmasked">
+>;

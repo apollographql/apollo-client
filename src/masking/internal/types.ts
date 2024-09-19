@@ -16,8 +16,11 @@ type UnwrapFragmentRefs<TData> =
   TData extends { " $fragmentRefs"?: infer FragmentRefs } ?
     FragmentRefs extends Record<string, any> ?
       Prettify<
-        UnwrapFragmentRefs<RemoveFragmentRefs<TData>> &
-          CombineFragmentRefs<FragmentRefs>
+        {
+          [K in Exclude<keyof TData, " $fragmentRefs">]: UnwrapFragmentRefs<
+            TData[K]
+          >;
+        } & CombineFragmentRefs<FragmentRefs>
       >
     : never
   : TData extends object ? { [K in keyof TData]: UnwrapFragmentRefs<TData[K]> }
@@ -32,6 +35,4 @@ type CombineFragmentRefs<FragmentRefMap extends Record<string, any>> =
   >;
 
 type RemoveMaskedMarkers<TData> = Prettify<Omit<TData, "__masked">>;
-
 type RemoveFragmentName<T> = Omit<T, " $fragmentName">;
-type RemoveFragmentRefs<T> = Omit<T, " $fragmentRefs">;

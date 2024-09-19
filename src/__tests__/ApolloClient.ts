@@ -2868,7 +2868,7 @@ describe("ApolloClient", () => {
   });
 
   describe.skip("type tests", () => {
-    test("uses any as masked and unmasked type when using plain DocumentNode", () => {
+    test("client.mutate uses any as masked and unmasked type when using plain DocumentNode", () => {
       const mutation = gql`
         mutation ($id: ID!) {
           updateUser(id: $id) {
@@ -2907,7 +2907,7 @@ describe("ApolloClient", () => {
       expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<any>>>();
     });
 
-    test("uses TData type when using plain TypedDocumentNode", () => {
+    test("client.mutate uses TData type when using plain TypedDocumentNode", () => {
       interface Mutation {
         updateUser: {
           __typename: "User";
@@ -2967,7 +2967,7 @@ describe("ApolloClient", () => {
       expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
     });
 
-    test("uses masked/unmasked type when using Masked<TData>", async () => {
+    test("client.mutate uses masked/unmasked type when using Masked<TData>", async () => {
       type UserFieldsFragment = {
         age: number;
       } & { " $fragmentName": "UserFieldsFragment" };

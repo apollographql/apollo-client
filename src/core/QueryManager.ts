@@ -478,7 +478,7 @@ export class QueryManager<TStore> {
           if (complete && currentQueryResult) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: result,
+              mutationResult: result as FetchResult<Unmask<TData>>,
               queryName: (document && getOperationName(document)) || void 0,
               queryVariables: variables!,
             });
@@ -554,7 +554,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache as TCache, result, {
+              update(cache as TCache, result as FetchResult<Unmask<TData>>, {
                 context: mutation.context,
                 variables: mutation.variables,
               });

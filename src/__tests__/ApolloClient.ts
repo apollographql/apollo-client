@@ -2887,6 +2887,13 @@ describe("ApolloClient", () => {
       const promise = client.mutate({
         mutation,
         optimisticResponse: { foo: "foo" },
+        updateQueries: {
+          TestQuery: (_, { mutationResult }) => {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<any>();
+
+            return {};
+          },
+        },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<any>();
 
@@ -2933,6 +2940,15 @@ describe("ApolloClient", () => {
         mutation,
         optimisticResponse: {
           updateUser: { __typename: "User", id: "1", age: 30 },
+        },
+        updateQueries: {
+          TestQuery: (_, { mutationResult }) => {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              Mutation | null | undefined
+            >();
+
+            return {};
+          },
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<
@@ -3010,6 +3026,15 @@ describe("ApolloClient", () => {
         mutation,
         optimisticResponse: {
           updateUser: { __typename: "User", id: "1", age: 30 },
+        },
+        updateQueries: {
+          TestQuery: (_, { mutationResult }) => {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              UnmaskedMutation | null | undefined
+            >();
+
+            return {};
+          },
         },
         refetchQueries(result) {
           expectTypeOf(result.data).toMatchTypeOf<

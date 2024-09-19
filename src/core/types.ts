@@ -165,7 +165,7 @@ export interface ApolloQueryResult<T> {
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FetchResult<T>;
+    mutationResult: FetchResult<Unmask<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }

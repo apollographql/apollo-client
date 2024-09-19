@@ -3159,6 +3159,13 @@ describe.skip("Type Tests", () => {
 
     const [mutate, { data }] = useMutation(mutation, {
       optimisticResponse: { foo: "foo" },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<any>();
+
+          return {};
+        },
+      },
       refetchQueries(result) {
         expectTypeOf(result.data).toMatchTypeOf<any>();
 
@@ -3206,6 +3213,15 @@ describe.skip("Type Tests", () => {
       variables: { id: "1" },
       optimisticResponse: {
         updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+
+          return {};
+        },
       },
       refetchQueries(result) {
         expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
@@ -3279,6 +3295,15 @@ describe.skip("Type Tests", () => {
     const [mutate, { data }] = useMutation(mutation, {
       optimisticResponse: {
         updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<
+            UnmaskedMutation | null | undefined
+          >();
+
+          return {};
+        },
       },
       refetchQueries(result) {
         expectTypeOf(result.data).toMatchTypeOf<

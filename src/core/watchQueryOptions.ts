@@ -14,6 +14,7 @@ import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { Unmask } from "../masking/index.js";
+import type { NoInfer } from "../utilities/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -220,11 +221,11 @@ export interface MutationBaseOptions<
 > {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
-    | Unmask<TData>
+    | Unmask<NoInfer<TData>>
     | ((
         vars: TVariables,
         { IGNORE }: { IGNORE: IgnoreModifier }
-      ) => Unmask<TData> | IgnoreModifier);
+      ) => Unmask<NoInfer<TData>> | IgnoreModifier);
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
   updateQueries?: MutationQueryReducersMap<TData>;

@@ -1059,7 +1059,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<TData>,
     variables: TVariables | undefined
   ) {
-    result.data = this.maskQuery(result.data);
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
     // Update the last result even when isDifferentFromLastResult returns false,
@@ -1070,7 +1069,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.updateLastResult(result, variables);
     }
     if (lastError || isDifferent) {
-      iterateObserversSafely(this.observers, "next", result);
+      iterateObserversSafely(this.observers, "next", {
+        ...result,
+        data: this.maskQuery(result.data),
+      });
     }
   }
 

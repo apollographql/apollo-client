@@ -36,6 +36,7 @@ import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
+import type { MaybeMasked } from "../masking/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -65,7 +66,7 @@ interface Last<TData, TVariables> {
 export class ObservableQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends Observable<ApolloQueryResult<TData>> {
+> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;

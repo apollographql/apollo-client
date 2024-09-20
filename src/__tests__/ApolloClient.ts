@@ -4,6 +4,7 @@ import {
   ApolloClient,
   ApolloError,
   DefaultOptions,
+  ObservableQuery,
   QueryOptions,
   makeReference,
 } from "../core";
@@ -3071,6 +3072,52 @@ describe("ApolloClient", () => {
       const result = await client.query({ variables: { id: "1" }, query });
 
       expectTypeOf(result.data).toMatchTypeOf<Query | null | undefined>();
+    });
+
+    test("client.watchQuery uses correct masked/unmasked types", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
+      type Query = {
+        user: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      interface Variables {
+        id: string;
+      }
+
+      const query: TypedDocumentNode<Masked<Query>, Variables> = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const observableQuery = client.watchQuery({
+        query,
+        variables: { id: "1" },
+      });
+
+      expectTypeOf(observableQuery).toMatchTypeOf<
+        ObservableQuery<Query, Variables>
+      >();
+
+      observableQuery.subscribe({
+        next: (result) => {
+          expectTypeOf(result.data).toMatchTypeOf<Query>();
+        },
+      });
     });
   });
 });

@@ -988,7 +988,7 @@ describe("client.watchQuery", () => {
     "network-only",
     "cache-and-network",
   ] as FetchPolicy[])(
-    "does not mask result returned from getCurrentResult when using %s fetchPolicy",
+    "masks result returned from getCurrentResult when using %s fetchPolicy",
     async (fetchPolicy) => {
       type UserFieldsFragment = {
         age: number;
@@ -1061,7 +1061,6 @@ describe("client.watchQuery", () => {
           currentUser: {
             __typename: "User",
             id: 1,
-            age: 34,
             name: "Test User",
           },
         });

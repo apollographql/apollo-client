@@ -239,9 +239,9 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
-  public getCurrentResult(
+  private getCurrentFullResult(
     saveAsLastResult = true
-  ): ApolloQueryResult<Unmask<TData>> {
+  ): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);
 
@@ -320,7 +320,13 @@ export class ObservableQuery<
       this.updateLastResult(result);
     }
 
-    return result as ApolloQueryResult<Unmask<TData>>;
+    return result;
+  }
+
+  public getCurrentResult(
+    saveAsLastResult = true
+  ): ApolloQueryResult<MaybeMasked<TData>> {
+    return this.maskResult(this.getCurrentFullResult(saveAsLastResult));
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was
@@ -1067,7 +1073,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // save the fetchMore result as this.lastResult, causing it to be
       // ignored due to the this.isDifferentFromLastResult check in
       // this.reportResult.
-      this.getCurrentResult(false) as ApolloQueryResult<TData>,
+      this.getCurrentFullResult(false),
       this.variables
     );
   }

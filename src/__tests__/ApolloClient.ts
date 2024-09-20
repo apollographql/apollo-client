@@ -3164,10 +3164,10 @@ describe("ApolloClient", () => {
       });
 
       expectTypeOf(observableQuery.getCurrentResult()).toMatchTypeOf<
-        ApolloQueryResult<UnmaskedQuery>
+        ApolloQueryResult<Query>
       >();
       expectTypeOf(observableQuery.getCurrentResult()).not.toMatchTypeOf<
-        ApolloQueryResult<Query>
+        ApolloQueryResult<UnmaskedQuery>
       >();
 
       const fetchMoreResult = await observableQuery.fetchMore({

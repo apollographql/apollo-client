@@ -43,7 +43,7 @@ import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
-import { MaskedDocumentNode } from "../../../masking";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -10215,14 +10215,14 @@ describe("useQuery Hook", () => {
     it("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {
         age: number;
-      } & { " $fragmentName": "UserFieldsFragment" };
+      } & { " $fragmentName"?: "UserFieldsFragment" };
 
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: MaskedDocumentNode<Query, never> = gql`
@@ -10263,7 +10263,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10306,12 +10306,16 @@ describe("useQuery Hook", () => {
     });
 
     it("does not mask query when dataMasking is `false`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: TypedDocumentNode<Query, never> = gql`
@@ -10389,12 +10393,16 @@ describe("useQuery Hook", () => {
     });
 
     it("does not mask query by default", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: TypedDocumentNode<Query, never> = gql`
@@ -10473,14 +10481,14 @@ describe("useQuery Hook", () => {
     it("masks queries updated by the cache", async () => {
       type UserFieldsFragment = {
         age: number;
-      } & { " $fragmentName": "UserFieldsFragment" };
+      } & { " $fragmentName"?: "UserFieldsFragment" };
 
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: MaskedDocumentNode<Query, never> = gql`
@@ -10521,7 +10529,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10588,15 +10596,19 @@ describe("useQuery Hook", () => {
     });
 
     it("does not rerender when updating field in named fragment", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10634,7 +10646,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10699,15 +10711,19 @@ describe("useQuery Hook", () => {
     it.each(["cache-first", "cache-only"] as FetchPolicy[])(
       "masks result from cache when using with %s fetch policy",
       async (fetchPolicy) => {
+        type UserFieldsFragment = {
+          age: number;
+        } & { " $fragmentName"?: "UserFieldsFragment" };
+
         interface Query {
           currentUser: {
             __typename: "User";
             id: number;
             name: string;
-          };
+          } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
         }
 
-        const query: TypedDocumentNode<Query, never> = gql`
+        const query: MaskedDocumentNode<Query, never> = gql`
           query MaskedQuery {
             currentUser {
               id
@@ -10758,7 +10774,7 @@ describe("useQuery Hook", () => {
 
         const Profiler = createProfiler({
           initialSnapshot: {
-            result: null as QueryResult<Query, never> | null,
+            result: null as QueryResult<Masked<Query>, never> | null,
           },
         });
 
@@ -10794,14 +10810,14 @@ describe("useQuery Hook", () => {
     it("masks cache and network result when using cache-and-network fetch policy", async () => {
       type UserFieldsFragment = {
         age: number;
-      } & { " $fragmentName": "UserFieldsFragment" };
+      } & { " $fragmentName"?: "UserFieldsFragment" };
 
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: MaskedDocumentNode<Query, never> = gql`
@@ -10856,7 +10872,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10910,15 +10926,19 @@ describe("useQuery Hook", () => {
     });
 
     it("masks partial cache data when returnPartialData is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10969,7 +10989,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -11014,15 +11034,19 @@ describe("useQuery Hook", () => {
     });
 
     it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -11062,7 +11086,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 

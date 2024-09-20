@@ -432,8 +432,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return this.reobserve(reobserveOptions, NetworkStatus.refetch).then(
-      (result) => ({ ...result, data: this.maskQuery(result.data) })
+    return preventUnhandledRejection(
+      this.reobserve(reobserveOptions, NetworkStatus.refetch).then(
+        (result) => ({ ...result, data: this.maskQuery(result.data) })
+      )
     );
   }
 
@@ -663,10 +665,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    return this.reobserve(newOptions).then((result) => ({
-      ...result,
-      data: this.maskQuery(result.data),
-    }));
+    return preventUnhandledRejection(
+      this.reobserve(newOptions).then(
+        (result) =>
+          result && {
+            ...result,
+            data: this.maskQuery(result.data),
+          }
+      )
+    );
   }
 
   public silentSetOptions(
@@ -711,14 +718,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return Promise.resolve();
     }
 
-    return this.reobserve(
-      {
-        // Reset options.fetchPolicy to its original value.
-        fetchPolicy: this.options.initialFetchPolicy,
-        variables,
-      },
-      NetworkStatus.setVariables
-    ).then((result) => ({ ...result, data: this.maskQuery(result.data) }));
+    return preventUnhandledRejection(
+      this.reobserve(
+        {
+          // Reset options.fetchPolicy to its original value.
+          fetchPolicy: this.options.initialFetchPolicy,
+          variables,
+        },
+        NetworkStatus.setVariables
+      ).then((result) => ({ ...result, data: this.maskQuery(result.data) }))
+    );
   }
 
   /**
@@ -1203,4 +1212,10 @@ function skipCacheDataFor(
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
   );
+}
+
+function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T> {
+  promise.catch(() => {});
+
+  return promise;
 }

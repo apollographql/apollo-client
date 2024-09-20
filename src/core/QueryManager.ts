@@ -1064,12 +1064,6 @@ export class QueryManager<TStore> {
             delete result.errors;
           }
 
-          if (dataMasking !== false)
-            result.data = this.maskOperation({
-              document: query,
-              data: result.data,
-            });
-
           return result;
         }
       );

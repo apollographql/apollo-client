@@ -73,6 +73,7 @@ export type {
 } from "./graphql/transform.js";
 export {
   addTypenameToDocument,
+  addNonReactiveToNamedFragments,
   buildQueryFromSelectionSet,
   removeDirectivesFromDocument,
   removeConnectionDirectiveFromDocument,

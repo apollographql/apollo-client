@@ -1134,7 +1134,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private maskResult<T = TData>(
     result: ApolloQueryResult<T>
   ): ApolloQueryResult<MaybeMasked<T>> {
-    return "data" in result ?
+    return result && "data" in result ?
         {
           ...result,
           data: this.queryManager.maskOperation({

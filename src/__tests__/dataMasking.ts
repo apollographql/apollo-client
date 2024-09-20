@@ -1477,6 +1477,112 @@ describe("client.watchQuery", () => {
       new Error("Timeout waiting for next event")
     );
   });
+
+  test("masks result of setVariables", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: TypedDocumentNode<Query, Variables> = gql`
+      query UnmaskedQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 1,
+              name: "User 1",
+              age: 30,
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 2,
+              name: "User 2",
+              age: 31,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+        },
+      });
+    }
+
+    const result = await observable.setVariables({ id: 2 });
+
+    expect(result?.data).toEqual({
+      user: {
+        __typename: "User",
+        id: 2,
+        name: "User 2",
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 2,
+          name: "User 2",
+        },
+      });
+    }
+
+    // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
+    // see another result since the masked data did not change
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
 });
 
 describe("client.watchFragment", () => {

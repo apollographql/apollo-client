@@ -3158,6 +3158,15 @@ describe("ApolloClient", () => {
 
       expectTypeOf(refetchResult.data).toMatchTypeOf<Query>();
       expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+
+      const setVariablesResult = await observableQuery.setVariables({
+        id: "2",
+      });
+
+      expectTypeOf(setVariablesResult?.data).toMatchTypeOf<Query | undefined>();
+      expectTypeOf(setVariablesResult?.data).not.toMatchTypeOf<
+        UnmaskedQuery | undefined
+      >();
     });
   });
 });

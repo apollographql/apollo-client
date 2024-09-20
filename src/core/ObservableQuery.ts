@@ -694,7 +694,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<TData> | void> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
@@ -716,7 +716,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         variables,
       },
       NetworkStatus.setVariables
-    );
+    ).then((result) => ({ ...result, data: this.maskQuery(result.data) }));
   }
 
   /**

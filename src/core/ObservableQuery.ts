@@ -16,6 +16,7 @@ import {
   iterateObserversSafely,
   fixObservableSubclass,
   getQueryDefinition,
+  preventUnhandledRejection,
 } from "../utilities/index.js";
 import { ApolloError, isApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -1215,10 +1216,4 @@ function skipCacheDataFor(
     fetchPolicy === "no-cache" ||
     fetchPolicy === "standby"
   );
-}
-
-function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T> {
-  promise.catch(() => {});
-
-  return promise;
 }

@@ -108,6 +108,8 @@ export {
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
+export { preventUnhandledRejection } from "./promises/preventUnhandledRejection.js";
+
 export * from "./common/mergeDeep.js";
 export * from "./common/cloneDeep.js";
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";

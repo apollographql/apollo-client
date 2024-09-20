@@ -394,9 +394,8 @@ function useObservableSubscriptionResult<
           // We use `getCurrentResult()` instead of the onNext argument because
           // the values differ slightly. Specifically, loading results will have
           // an empty object for data instead of `undefined` for some reason.
-          const result = maskResult(
-            observable.getCurrentResult() as ApolloQueryResult<TData>,
-            observable
+          const result = observable["maskResult"](
+            observable.getCurrentResult() as ApolloQueryResult<TData>
           );
           // Make sure we're not attempting to re-render similar results
           if (
@@ -729,9 +728,8 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
     // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
     // this could call unsafeHandlePartialRefetch
     setResult(
-      maskResult(
-        observable.getCurrentResult() as ApolloQueryResult<TData>,
-        observable
+      observable["maskResult"](
+        observable.getCurrentResult() as ApolloQueryResult<TData>
       ),
       resultData,
       observable,
@@ -839,11 +837,4 @@ function bindObservableMethods<TData, TVariables extends OperationVariables>(
     stopPolling: observable.stopPolling.bind(observable),
     subscribeToMore: observable.subscribeToMore.bind(observable),
   };
-}
-
-function maskResult<TData>(
-  result: ApolloQueryResult<TData>,
-  observable: ObservableQuery<TData, any>
-): ApolloQueryResult<MaybeMasked<TData>> {
-  return { ...result, data: observable["maskQuery"](result.data as TData) };
 }

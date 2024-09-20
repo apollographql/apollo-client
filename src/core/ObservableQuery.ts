@@ -436,11 +436,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return preventUnhandledRejection(
-      this.reobserve(reobserveOptions, NetworkStatus.refetch).then(
-        this.maskResult
-      )
-    );
+    return this.reobserve(reobserveOptions, NetworkStatus.refetch);
   }
 
   /**
@@ -666,11 +662,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    return preventUnhandledRejection(
-      this.reobserve(newOptions).then(
-        (result) => result && this.maskResult(result)
-      )
-    );
+    return this.reobserve(newOptions);
   }
 
   public silentSetOptions(
@@ -715,15 +707,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return Promise.resolve();
     }
 
-    return preventUnhandledRejection(
-      this.reobserve(
-        {
-          // Reset options.fetchPolicy to its original value.
-          fetchPolicy: this.options.initialFetchPolicy,
-          variables,
-        },
-        NetworkStatus.setVariables
-      ).then(this.maskResult)
+    return this.reobserve(
+      {
+        // Reset options.fetchPolicy to its original value.
+        fetchPolicy: this.options.initialFetchPolicy,
+        variables,
+      },
+      NetworkStatus.setVariables
     );
   }
 
@@ -1035,9 +1025,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<TData>> {
-    return this.reobserveAsConcast(newOptions, newNetworkStatus)
-      .promise as TODO;
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+    return preventUnhandledRejection(
+      this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
+        this.maskResult as TODO
+      )
+    );
   }
 
   public resubscribeAfterError(

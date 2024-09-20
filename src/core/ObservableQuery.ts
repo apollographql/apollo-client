@@ -138,11 +138,7 @@ export class ObservableQuery<
       if (last && last.error) {
         observer.error && observer.error(last.error);
       } else if (last && last.result) {
-        observer.next &&
-          observer.next({
-            ...last.result,
-            data: this.maskQuery(last.result.data),
-          });
+        observer.next && observer.next(this.maskResult(last.result));
       }
 
       // Initiate observation of this query if it hasn't been reported to
@@ -171,6 +167,7 @@ export class ObservableQuery<
     this.isTornDown = false;
 
     this.subscribeToMore = this.subscribeToMore.bind(this);
+    this.maskResult = this.maskResult.bind(this);
 
     const {
       watchQuery: { fetchPolicy: defaultFetchPolicy = "cache-first" } = {},
@@ -434,7 +431,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.queryInfo.resetLastWrite();
     return preventUnhandledRejection(
       this.reobserve(reobserveOptions, NetworkStatus.refetch).then(
-        (result) => ({ ...result, data: this.maskQuery(result.data) })
+        this.maskResult
       )
     );
   }
@@ -590,10 +587,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           );
         }
 
-        return {
-          ...fetchMoreResult,
-          data: this.maskQuery(fetchMoreResult.data),
-        };
+        return this.maskResult(fetchMoreResult);
       })
       .finally(() => {
         // In case the cache writes above did not generate a broadcast
@@ -667,11 +661,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return preventUnhandledRejection(
       this.reobserve(newOptions).then(
-        (result) =>
-          result && {
-            ...result,
-            data: this.maskQuery(result.data),
-          }
+        (result) => result && this.maskResult(result)
       )
     );
   }
@@ -726,7 +716,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           variables,
         },
         NetworkStatus.setVariables
-      ).then((result) => ({ ...result, data: this.maskQuery(result.data) }))
+      ).then(this.maskResult)
     );
   }
 
@@ -1096,10 +1086,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.updateLastResult(result, variables);
     }
     if (lastError || isDifferent) {
-      iterateObserversSafely(this.observers, "next", {
-        ...result,
-        data: this.maskQuery(result.data),
-      });
+      iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }
   }
 
@@ -1146,6 +1133,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private maskQuery<T = TData>(data: T) {
     return this.queryManager.maskOperation({ document: this.query, data });
+  }
+
+  private maskResult<T = TData>(
+    result: ApolloQueryResult<T>
+  ): ApolloQueryResult<MaybeMasked<T>> {
+    return { ...result, data: this.maskQuery(result.data) };
   }
 }
 

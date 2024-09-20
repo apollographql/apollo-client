@@ -36,7 +36,7 @@ import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
-import type { MaybeMasked } from "../masking/index.js";
+import type { MaybeMasked, Unmask } from "../masking/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -444,14 +444,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   >(
     fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
       updateQuery?: (
-        previousQueryResult: TData,
+        previousQueryResult: Unmask<TData>,
         options: {
-          fetchMoreResult: TFetchData;
+          fetchMoreResult: Unmask<TFetchData>;
           variables: TFetchVars;
         }
-      ) => TData;
+      ) => Unmask<TData>;
     }
-  ): Promise<ApolloQueryResult<TFetchData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -534,10 +534,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     optimistic: false,
                   },
                   (previous) =>
-                    updateQuery(previous!, {
-                      fetchMoreResult: fetchMoreResult.data,
+                    updateQuery(previous! as any, {
+                      fetchMoreResult: fetchMoreResult.data as any,
                       variables: combinedOptions.variables as TFetchVars,
-                    })
+                    }) as TData
                 );
               } else {
                 // If we're using a field policy instead of updateQuery, the only
@@ -575,15 +575,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // expects that the first argument always contains previous result
           // data, but not `undefined`.
           const lastResult = this.getLast("result")!;
-          const data = updateQuery!(lastResult.data, {
-            fetchMoreResult: fetchMoreResult.data,
+          const data = updateQuery!(lastResult.data as Unmask<TData>, {
+            fetchMoreResult: fetchMoreResult.data as Unmask<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
 
-          this.reportResult({ ...lastResult, data }, this.variables);
+          this.reportResult(
+            { ...lastResult, data: data as TData },
+            this.variables
+          );
         }
 
-        return fetchMoreResult;
+        return {
+          ...fetchMoreResult,
+          data: this.maskQuery(fetchMoreResult.data),
+        } as unknown as ApolloQueryResult<TFetchData>;
       })
       .finally(() => {
         // In case the cache writes above did not generate a broadcast

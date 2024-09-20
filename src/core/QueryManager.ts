@@ -815,10 +815,13 @@ export class QueryManager<TStore> {
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
-      .then((result) => ({
-        ...result,
-        data: this.maskOperation({ document: query, data: result.data }),
-      }))
+      .then(
+        (result) =>
+          result && {
+            ...result,
+            data: this.maskOperation({ document: query, data: result.data }),
+          }
+      )
       .finally(() => this.stopQuery(queryId));
   }
 

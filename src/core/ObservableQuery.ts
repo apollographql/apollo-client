@@ -90,7 +90,9 @@ export class ObservableQuery<
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
-  private observers = new Set<Observer<ApolloQueryResult<TData>>>();
+  private observers = new Set<
+    Observer<ApolloQueryResult<MaybeMasked<TData>>>
+  >();
   private subscriptions = new Set<ObservableSubscription>();
 
   private waitForOwnResult: boolean;
@@ -118,7 +120,7 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<TData>>) => {
+    super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -136,7 +138,11 @@ export class ObservableQuery<
       if (last && last.error) {
         observer.error && observer.error(last.error);
       } else if (last && last.result) {
-        observer.next && observer.next(last.result);
+        observer.next &&
+          observer.next({
+            ...last.result,
+            data: this.maskQuery(last.result.data),
+          });
       }
 
       // Initiate observation of this query if it hasn't been reported to
@@ -197,13 +203,13 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
-  public result(): Promise<ApolloQueryResult<TData>> {
+  public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer
       // will never exist in this.observers due how zen-observable wraps observables.
       // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
-      const observer: Observer<ApolloQueryResult<TData>> = {
-        next: (result: ApolloQueryResult<TData>) => {
+      const observer: Observer<ApolloQueryResult<MaybeMasked<TData>>> = {
+        next: (result) => {
           resolve(result);
 
           // Stop the query within the QueryManager if we can before

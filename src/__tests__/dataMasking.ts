@@ -1582,6 +1582,110 @@ describe("client.watchQuery", () => {
     );
   });
 
+  test("masks result of setOptions", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: TypedDocumentNode<Query, Variables> = gql`
+      query UnmaskedQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 1,
+              name: "User 1",
+              age: 30,
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 2,
+              name: "User 2",
+              age: 31,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+        },
+      });
+    }
+
+    const result = await observable.setOptions({ variables: { id: 2 } });
+
+    expect(result?.data).toEqual({
+      user: {
+        __typename: "User",
+        id: 2,
+        name: "User 2",
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 2,
+          name: "User 2",
+        },
+      });
+    }
+
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
+
   test("does not mask data passed to updateQuery", async () => {
     interface Query {
       user: {

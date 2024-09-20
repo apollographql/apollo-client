@@ -3199,6 +3199,15 @@ describe("ApolloClient", () => {
         UnmaskedQuery | undefined
       >();
 
+      const setOptionsResult = await observableQuery.setOptions({
+        variables: { id: "2" },
+      });
+
+      expectTypeOf(setOptionsResult.data).toMatchTypeOf<Query | undefined>();
+      expectTypeOf(setOptionsResult.data).not.toMatchTypeOf<
+        UnmaskedQuery | undefined
+      >();
+
       observableQuery.updateQuery((previousData) => {
         expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
         expectTypeOf(previousData).not.toMatchTypeOf<Query>();

@@ -663,8 +663,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
-  ): Promise<ApolloQueryResult<TData>> {
-    return this.reobserve(newOptions);
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+    return this.reobserve(newOptions).then((result) => ({
+      ...result,
+      data: this.maskQuery(result.data),
+    }));
   }
 
   public silentSetOptions(

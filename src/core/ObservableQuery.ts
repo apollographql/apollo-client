@@ -1131,7 +1131,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.queryManager.transform(document);
   }
 
-  private maskQuery(data: TData) {
+  private maskQuery<T = TData>(data: T) {
     return this.queryManager.maskOperation({ document: this.query, data });
   }
 }

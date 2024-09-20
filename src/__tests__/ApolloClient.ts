@@ -3,6 +3,7 @@ import gql from "graphql-tag";
 import {
   ApolloClient,
   ApolloError,
+  ApolloQueryResult,
   DefaultOptions,
   ObservableQuery,
   QueryOptions,
@@ -3086,6 +3087,14 @@ describe("ApolloClient", () => {
         } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
       };
 
+      type UnmaskedQuery = {
+        user: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+
       interface Variables {
         id: string;
       }
@@ -3118,6 +3127,25 @@ describe("ApolloClient", () => {
           expectTypeOf(result.data).toMatchTypeOf<Query>();
         },
       });
+
+      expectTypeOf(observableQuery.getCurrentResult()).toMatchTypeOf<
+        ApolloQueryResult<UnmaskedQuery>
+      >();
+
+      const fetchMoreResult = await observableQuery.fetchMore({
+        updateQuery: (previousData, { fetchMoreResult }) => {
+          expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).toMatchTypeOf<UnmaskedQuery>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+
+      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query>();
+
+      const refetchResult = await observableQuery.refetch();
+
+      expectTypeOf(refetchResult.data).toMatchTypeOf<Query>();
     });
   });
 });

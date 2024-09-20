@@ -272,7 +272,7 @@ function _useSuspenseQuery<
       return promise;
     },
     [queryRef]
-  ) as FetchMoreFunction<TData | undefined, TVariables>;
+  ) as FetchMoreFunction<MaybeMasked<TData> | undefined, TVariables>;
 
   const refetch: RefetchFunction<TData, TVariables> = React.useCallback(
     (variables) => {

@@ -3095,6 +3095,21 @@ describe("ApolloClient", () => {
         };
       };
 
+      type Subscription = {
+        updatedUser: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      type UnmaskedSubscription = {
+        updatedUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+
       interface Variables {
         id: string;
       }
@@ -3102,6 +3117,22 @@ describe("ApolloClient", () => {
       const query: TypedDocumentNode<Masked<Query>, Variables> = gql`
         query ($id: ID!) {
           user(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const subscription: TypedDocumentNode<
+        Masked<Subscription>,
+        Variables
+      > = gql`
+        subscription ($id: ID!) {
+          updatedUser(id: $id) {
             id
             ...UserFields
           }
@@ -3173,6 +3204,21 @@ describe("ApolloClient", () => {
         expectTypeOf(previousData).not.toMatchTypeOf<Query>();
 
         return {} as UnmaskedQuery;
+      });
+
+      observableQuery.subscribeToMore({
+        document: subscription,
+        updateQuery(queryData, { subscriptionData }) {
+          expectTypeOf(queryData).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(queryData).not.toMatchTypeOf<Query>();
+
+          expectTypeOf(
+            subscriptionData.data
+          ).toMatchTypeOf<UnmaskedSubscription>();
+          expectTypeOf(subscriptionData.data).not.toMatchTypeOf<Subscription>();
+
+          return {} as UnmaskedQuery;
+        },
       });
     });
   });

@@ -169,12 +169,12 @@ export type UpdateQueryFn<
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData,
 > = (
-  previousQueryResult: TData,
+  previousQueryResult: Unmask<TData>,
   options: {
-    subscriptionData: { data: TSubscriptionData };
+    subscriptionData: { data: Unmask<TSubscriptionData> };
     variables?: TSubscriptionVariables;
   }
-) => TData;
+) => Unmask<TData>;
 
 export type SubscribeToMoreOptions<
   TData = any,

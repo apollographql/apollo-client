@@ -631,7 +631,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         [Symbol.for("apollo.dataMasking")]: false,
       })
       .subscribe({
-        next: (subscriptionData: { data: TSubscriptionData }) => {
+        next: (subscriptionData: { data: Unmask<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
             this.updateQuery<TSubscriptionVariables>(

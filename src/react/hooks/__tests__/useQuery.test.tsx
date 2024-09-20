@@ -43,6 +43,7 @@ import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
+import { MaskedDocumentNode } from "../../../masking";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -10212,15 +10213,19 @@ describe("useQuery Hook", () => {
 
   describe("data masking", () => {
     it("masks queries when dataMasking is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10296,6 +10301,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(result?.previousData).toBeUndefined();
       }
     });
 
@@ -10379,6 +10385,7 @@ describe("useQuery Hook", () => {
           age: 30,
         },
       });
+      expect(snapshot.result?.previousData).toBeUndefined();
     });
 
     it("does not mask query by default", async () => {
@@ -10460,18 +10467,23 @@ describe("useQuery Hook", () => {
           age: 30,
         },
       });
+      expect(snapshot.result?.previousData).toBeUndefined();
     });
 
     it("masks queries updated by the cache", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10542,6 +10554,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -10567,6 +10580,9 @@ describe("useQuery Hook", () => {
             id: 1,
             name: "Test User (updated)",
           },
+        });
+        expect(snapshot.result?.previousData).toEqual({
+          currentUser: { __typename: "User", id: 1, name: "Test User" },
         });
       }
     });
@@ -10651,6 +10667,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -10770,19 +10787,24 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
     );
 
     it("masks cache and network result when using cache-and-network fetch policy", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10864,6 +10886,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
 
       {
@@ -10874,6 +10897,13 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User (server)",
+          },
+        });
+        expect(snapshot.result?.previousData).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
           },
         });
       }

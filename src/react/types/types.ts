@@ -68,7 +68,7 @@ export interface QueryFunctionOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: TData) => void;
+  onCompleted?: (data: MaybeMasked<TData>) => void;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 
@@ -144,9 +144,9 @@ export interface QueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-  data: TData | undefined;
+  data: MaybeMasked<TData> | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
-  previousData?: TData;
+  previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
   /**
@@ -181,7 +181,7 @@ export interface LazyQueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: TData) => void;
+  onCompleted?: (data: MaybeMasked<TData>) => void;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 

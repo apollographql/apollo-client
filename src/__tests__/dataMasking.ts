@@ -1583,6 +1583,97 @@ describe("client.watchQuery", () => {
       new Error("Timeout waiting for next event")
     );
   });
+
+  test("does not mask data passed to updateQuery", async () => {
+    interface Query {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: TypedDocumentNode<Query, Variables> = gql`
+      query UnmaskedQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+          // @ts-expect-error: TODO: Fix soon
+          age: 30,
+        },
+      },
+      variables: { id: 1 },
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+        },
+      });
+    }
+
+    const updateQuery: Parameters<typeof observable.updateQuery>[0] = jest.fn(
+      (previousResult) => {
+        return { user: { ...previousResult.user, name: "User (updated)" } };
+      }
+    );
+
+    observable.updateQuery(updateQuery);
+
+    expect(updateQuery).toHaveBeenCalledWith(
+      { user: { __typename: "User", id: 1, name: "User 1", age: 30 } },
+      { variables: { id: 1 } }
+    );
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User (updated)",
+        },
+      });
+    }
+
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
 });
 
 describe("client.watchFragment", () => {

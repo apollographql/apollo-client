@@ -3167,6 +3167,13 @@ describe("ApolloClient", () => {
       expectTypeOf(setVariablesResult?.data).not.toMatchTypeOf<
         UnmaskedQuery | undefined
       >();
+
+      observableQuery.updateQuery((previousData) => {
+        expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
+        expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+
+        return {} as UnmaskedQuery;
+      });
     });
   });
 });

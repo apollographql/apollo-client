@@ -812,20 +812,13 @@ export class QueryManager<TStore> {
       "pollInterval option only supported on watchQuery."
     );
 
-    return this.fetchQuery<TData, TVars>(queryId, {
-      ...options,
-      query: this.transform(options.query),
-    })
-      .then((result) => {
-        if (result) {
-          result.data = this.maskOperation({
-            document: options.query,
-            data: result.data,
-          });
-        }
+    const query = this.transform(options.query);
 
-        return result as ApolloQueryResult<MaybeMasked<TData>>;
-      })
+    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+      .then((result) => ({
+        ...result,
+        data: this.maskOperation({ document: query, data: result.data }),
+      }))
       .finally(() => this.stopQuery(queryId));
   }
 

@@ -628,7 +628,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         query: options.document,
         variables: options.variables,
         context: options.context,
-        [Symbol.for("apollo.dataMasking")]: false,
       })
       .subscribe({
         next: (subscriptionData: { data: Unmask<TSubscriptionData> }) => {

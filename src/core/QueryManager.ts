@@ -1012,9 +1012,6 @@ export class QueryManager<TStore> {
 
     query = this.transform(query);
     variables = this.getVariables(query, variables);
-    const dataMasking: boolean | undefined = (options as any)[
-      Symbol.for("apollo.dataMasking")
-    ];
 
     const makeObservable = (variables: OperationVariables) =>
       this.getObservableFromLink<T>(query, context, variables, extensions).map(

@@ -236,7 +236,9 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
-  public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
+  public getCurrentResult(
+    saveAsLastResult = true
+  ): ApolloQueryResult<Unmask<TData>> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);
 
@@ -272,7 +274,7 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       if (diff.complete || this.options.returnPartialData) {
-        result.data = this.maskQuery(diff.result);
+        result.data = diff.result;
       }
 
       if (equal(result.data, {})) {
@@ -315,7 +317,7 @@ export class ObservableQuery<
       this.updateLastResult(result);
     }
 
-    return result;
+    return result as ApolloQueryResult<Unmask<TData>>;
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was

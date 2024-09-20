@@ -937,7 +937,7 @@ describe("client.watchQuery", () => {
     "network-only",
     "cache-and-network",
   ] as FetchPolicy[])(
-    "masks result returned from getCurrentResult when using %s fetchPolicy",
+    "does not mask result returned from getCurrentResult when using %s fetchPolicy",
     async (fetchPolicy) => {
       interface Query {
         currentUser: {
@@ -1006,6 +1006,7 @@ describe("client.watchQuery", () => {
           currentUser: {
             __typename: "User",
             id: 1,
+            age: 34,
             name: "Test User",
           },
         });

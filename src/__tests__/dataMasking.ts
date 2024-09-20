@@ -1577,8 +1577,6 @@ describe("client.watchQuery", () => {
       });
     }
 
-    // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
-    // see another result since the masked data did not change
     await expect(stream.takeNext()).rejects.toThrow(
       new Error("Timeout waiting for next event")
     );

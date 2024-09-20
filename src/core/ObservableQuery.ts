@@ -1064,7 +1064,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // save the fetchMore result as this.lastResult, causing it to be
       // ignored due to the this.isDifferentFromLastResult check in
       // this.reportResult.
-      this.getCurrentResult(false),
+      this.getCurrentResult(false) as ApolloQueryResult<TData>,
       this.variables
     );
   }

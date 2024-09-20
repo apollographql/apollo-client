@@ -394,9 +394,7 @@ function useObservableSubscriptionResult<
           // We use `getCurrentResult()` instead of the onNext argument because
           // the values differ slightly. Specifically, loading results will have
           // an empty object for data instead of `undefined` for some reason.
-          const result = observable["maskResult"](
-            observable.getCurrentResult() as ApolloQueryResult<TData>
-          );
+          const result = observable.getCurrentResult();
           // Make sure we're not attempting to re-render similar results
           if (
             previousResult &&
@@ -728,9 +726,7 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
     // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
     // this could call unsafeHandlePartialRefetch
     setResult(
-      observable["maskResult"](
-        observable.getCurrentResult() as ApolloQueryResult<TData>
-      ),
+      observable.getCurrentResult(),
       resultData,
       observable,
       client,

@@ -1378,6 +1378,105 @@ describe("client.watchQuery", () => {
       });
     }
   });
+
+  test("masks result of refetch", async () => {
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 31,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+
+    const result = await observable.refetch();
+
+    expect(result.data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    });
+
+    expect(client.readQuery({ query })).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 31,
+      },
+    });
+
+    // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
+    // see another result since the masked data did not change
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
 });
 
 describe("client.watchFragment", () => {

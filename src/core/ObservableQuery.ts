@@ -392,7 +392,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -432,7 +432,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return this.reobserve(reobserveOptions, NetworkStatus.refetch);
+    return this.reobserve(reobserveOptions, NetworkStatus.refetch).then(
+      (result) => ({ ...result, data: this.maskQuery(result.data) })
+    );
   }
 
   /**

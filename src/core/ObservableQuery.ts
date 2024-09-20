@@ -1137,15 +1137,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.queryManager.transform(document);
   }
 
-  private maskQuery<T = TData>(data: T) {
-    return this.queryManager.maskOperation({ document: this.query, data });
-  }
-
   private maskResult<T = TData>(
     result: ApolloQueryResult<T>
   ): ApolloQueryResult<MaybeMasked<T>> {
     return "data" in result ?
-        { ...result, data: this.maskQuery(result.data) }
+        {
+          ...result,
+          data: this.queryManager.maskOperation({
+            document: this.query,
+            data: result.data,
+          }),
+        }
       : result;
   }
 }

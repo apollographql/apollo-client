@@ -3121,31 +3121,43 @@ describe("ApolloClient", () => {
       expectTypeOf(observableQuery).toMatchTypeOf<
         ObservableQuery<Query, Variables>
       >();
+      expectTypeOf(observableQuery).not.toMatchTypeOf<
+        ObservableQuery<UnmaskedQuery, Variables>
+      >();
 
       observableQuery.subscribe({
         next: (result) => {
           expectTypeOf(result.data).toMatchTypeOf<Query>();
+          expectTypeOf(result.data).not.toMatchTypeOf<UnmaskedQuery>();
         },
       });
 
       expectTypeOf(observableQuery.getCurrentResult()).toMatchTypeOf<
         ApolloQueryResult<UnmaskedQuery>
       >();
+      expectTypeOf(observableQuery.getCurrentResult()).not.toMatchTypeOf<
+        ApolloQueryResult<Query>
+      >();
 
       const fetchMoreResult = await observableQuery.fetchMore({
         updateQuery: (previousData, { fetchMoreResult }) => {
           expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+
           expectTypeOf(fetchMoreResult).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).not.toMatchTypeOf<Query>();
 
           return {} as UnmaskedQuery;
         },
       });
 
       expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(fetchMoreResult.data).not.toMatchTypeOf<UnmaskedQuery>();
 
       const refetchResult = await observableQuery.refetch();
 
       expectTypeOf(refetchResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
     });
   });
 });

@@ -8,6 +8,7 @@ import { equal } from "@wry/equality";
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
+  addNonReactiveToNamedFragments,
   defaultCacheSizes,
   hasDirectives,
   isExecutionPatchIncrementalResult,
@@ -95,6 +96,7 @@ interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
+  nonReactiveQuery: DocumentNode;
   clientQuery: DocumentNode | null;
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
@@ -700,6 +702,7 @@ export class QueryManager<TStore> {
         hasClientExports: hasClientExports(document),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
+        nonReactiveQuery: addNonReactiveToNamedFragments(document),
         clientQuery: this.localState.clientQuery(document),
         serverQuery: removeDirectivesFromDocument(
           [

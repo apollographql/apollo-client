@@ -328,9 +328,13 @@ export class ObservableQuery<
       return true;
     }
 
+    const documentInfo = this.queryManager.getDocumentInfo(this.query);
+    const dataMasking = this.queryManager.dataMasking;
+    const query = dataMasking ? documentInfo.nonReactiveQuery : this.query;
+
     const resultIsDifferent =
-      this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective ?
-        !equalByQuery(this.query, this.last.result, newResult, this.variables)
+      dataMasking || documentInfo.hasNonreactiveDirective ?
+        !equalByQuery(query, this.last.result, newResult, this.variables)
       : !equal(this.last.result, newResult);
 
     return (

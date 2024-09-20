@@ -589,7 +589,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         return {
           ...fetchMoreResult,
           data: this.maskQuery(fetchMoreResult.data),
-        } as unknown as ApolloQueryResult<TFetchData>;
+        };
       })
       .finally(() => {
         // In case the cache writes above did not generate a broadcast

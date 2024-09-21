@@ -18,9 +18,8 @@ type UnwrapFragmentRefs<TData> =
     FragmentRefs extends Record<string, any> ?
       Prettify<
         {
-          [K in Exclude<keyof TData, " $fragmentRefs">]: UnwrapFragmentRefs<
-            TData[K]
-          >;
+          [K in keyof TData as K extends " $fragmentRefs" ? never
+          : K]: UnwrapFragmentRefs<TData[K]>;
         } & CombineFragmentRefs<FragmentRefs>
       >
     : never
@@ -28,12 +27,13 @@ type UnwrapFragmentRefs<TData> =
   : TData extends Array<infer TItem> ? UnwrapFragmentRefs<TItem>
   : TData;
 
-type CombineFragmentRefs<FragmentRefMap extends Record<string, any>> =
+type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =
   UnionToIntersection<
     {
-      [K in keyof FragmentRefMap]: RemoveFragmentName<FragmentRefMap[K]>;
-    }[keyof FragmentRefMap]
+      [K in keyof FragmentRefs]-?: RemoveFragmentName<FragmentRefs[K]>;
+    }[keyof FragmentRefs]
   >;
 
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
-type RemoveFragmentName<T> = Omit<T, " $fragmentName">;
+// force distrubution when T is a union with | undefined
+type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;

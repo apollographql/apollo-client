@@ -14,7 +14,9 @@ export type MaybeMasked<TData> =
   : Unmask<TData>;
 
 type UnwrapFragmentRefs<TData> =
-  " $fragmentRefs" extends keyof NonNullable<TData> ?
+  // Leave TData alone if it is Record<string, any> and not a specific shape
+  string extends keyof NonNullable<TData> ? TData
+  : " $fragmentRefs" extends keyof NonNullable<TData> ?
     TData extends { " $fragmentRefs"?: infer FragmentRefs } ?
       FragmentRefs extends object ?
         Prettify<

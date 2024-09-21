@@ -1034,7 +1034,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   public resubscribeAfterError(
-    onNext: (value: ApolloQueryResult<TData>) => void,
+    onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void,
     onError?: (error: any) => void,
     onComplete?: () => void
   ): ObservableSubscription;

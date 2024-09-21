@@ -301,10 +301,7 @@ interface UnmaskedVariablesCaseData {
 function useMaskedVariablesQueryCase() {
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
-  const query: MaskedDocumentNode<
-    MaskedVariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
+  const document = gql`
     query CharacterQuery($id: ID!) {
       character(id: $id) {
         id
@@ -317,6 +314,16 @@ function useMaskedVariablesQueryCase() {
     }
   `;
 
+  const query: MaskedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
+  const unmaskedQuery: TypedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
   const mocks = CHARACTERS.map((name, index) => ({
     request: { query, variables: { id: String(index + 1) } },
     result: {
@@ -326,7 +333,7 @@ function useMaskedVariablesQueryCase() {
     },
   }));
 
-  return { query, mocks };
+  return { query, unmaskedQuery, mocks };
 }
 
 function wait(delay: number) {
@@ -12529,43 +12536,86 @@ describe("useSuspenseQuery", () => {
     });
 
     it("uses proper masked types for refetch", async () => {
-      const { query } = useMaskedVariablesQueryCase();
-      const { refetch } = useSuspenseQuery(query);
+      const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
 
-      const result = await refetch();
+      {
+        const { refetch } = useSuspenseQuery(query);
 
-      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+        const result = await refetch();
+
+        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(
+          result.data
+        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { refetch } = useSuspenseQuery(unmaskedQuery);
+
+        const result = await refetch();
+
+        expectTypeOf(result.data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(result.data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
     });
 
     it("uses proper masked types for fetchMore", async () => {
-      const { query } = useMaskedVariablesQueryCase();
-      const { fetchMore } = useSuspenseQuery(query);
+      const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
 
-      const result = await fetchMore({
-        updateQuery: (queryData, { fetchMoreResult }) => {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
-          expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      {
+        const { fetchMore } = useSuspenseQuery(query);
 
-          expectTypeOf(
-            fetchMoreResult
-          ).toEqualTypeOf<UnmaskedVariablesCaseData>();
-          expectTypeOf(
-            fetchMoreResult
-          ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        const result = await fetchMore({
+          updateQuery: (queryData, { fetchMoreResult }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
-          return {} as UnmaskedVariablesCaseData;
-        },
-      });
+            expectTypeOf(
+              fetchMoreResult
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              fetchMoreResult
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
-      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
-      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+
+        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(
+          result.data
+        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { fetchMore } = useSuspenseQuery(unmaskedQuery);
+
+        const result = await fetchMore({
+          updateQuery: (queryData, { fetchMoreResult }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(
+              fetchMoreResult
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              fetchMoreResult
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+
+        expectTypeOf(result.data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(result.data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
     });
 
     it("uses proper masked types for subscribeToMore", async () => {
-      const { query } = useMaskedVariablesQueryCase();
-      const { subscribeToMore } = useSuspenseQuery(query);
-
       type CharacterFragment = {
         __typename: "Character";
         name: string;
@@ -12586,33 +12636,79 @@ describe("useSuspenseQuery", () => {
         };
       };
 
-      const subscription: MaskedDocumentNode<Subscription, never> = gql`
-        subscription {
-          pushLetter {
-            id
-            ...CharacterFragment
+      const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { subscribeToMore } = useSuspenseQuery(query);
+
+        const subscription: MaskedDocumentNode<Subscription, never> = gql`
+          subscription {
+            pushLetter {
+              id
+              ...CharacterFragment
+            }
           }
-        }
 
-        fragment CharacterFragment on Character {
-          name
-        }
-      `;
+          fragment CharacterFragment on Character {
+            name
+          }
+        `;
 
-      subscribeToMore({
-        document: subscription,
-        updateQuery: (queryData, { subscriptionData }) => {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
-          expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        subscribeToMore({
+          document: subscription,
+          updateQuery: (queryData, { subscriptionData }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
-          expectTypeOf(
-            subscriptionData.data
-          ).toEqualTypeOf<UnmaskedSubscription>();
-          expectTypeOf(subscriptionData.data).not.toEqualTypeOf<Subscription>();
+            expectTypeOf(
+              subscriptionData.data
+            ).toEqualTypeOf<UnmaskedSubscription>();
+            expectTypeOf(
+              subscriptionData.data
+            ).not.toEqualTypeOf<Subscription>();
 
-          return {} as UnmaskedVariablesCaseData;
-        },
-      });
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+      }
+
+      {
+        const { subscribeToMore } = useSuspenseQuery(unmaskedQuery);
+
+        const subscription: TypedDocumentNode<Subscription, never> = gql`
+          subscription {
+            pushLetter {
+              id
+              ...CharacterFragment
+            }
+          }
+
+          fragment CharacterFragment on Character {
+            name
+          }
+        `;
+
+        subscribeToMore({
+          document: subscription,
+          updateQuery: (queryData, { subscriptionData }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(
+              subscriptionData.data
+            ).toEqualTypeOf<UnmaskedSubscription>();
+            expectTypeOf(
+              subscriptionData.data
+            ).not.toEqualTypeOf<Subscription>();
+
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+      }
     });
   });
 });

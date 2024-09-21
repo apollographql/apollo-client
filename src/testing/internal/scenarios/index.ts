@@ -1,5 +1,6 @@
 import { ApolloLink, Observable, gql } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
+import type { MaskedDocumentNode } from "../../../masking/index.js";
 import type { MockedResponse } from "../../core/index.js";
 
 export interface SimpleCaseData {
@@ -49,6 +50,62 @@ export function setupVariablesCase() {
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
   const mocks: MockedResponse<VariablesCaseData>[] = [...CHARACTERS].map(
+    (name, index) => ({
+      request: { query, variables: { id: String(index + 1) } },
+      result: {
+        data: {
+          character: { __typename: "Character", id: String(index + 1), name },
+        },
+      },
+      delay: 20,
+    })
+  );
+
+  return { mocks, query };
+}
+
+export type MaskedVariablesCaseFragment = {
+  name: string;
+} & { " $fragmentName": "MaskedVariablesCaseFragment" };
+
+export interface MaskedVariablesCaseData {
+  character: {
+    __typename: "Character";
+    id: string;
+  } & {
+    " $fragmentRefs": {
+      MaskedVariablesCaseFragment: MaskedVariablesCaseFragment;
+    };
+  };
+}
+
+export interface UnmaskedVariablesCaseData {
+  character: {
+    __typename: "Character";
+    id: string;
+    name: string;
+  };
+}
+
+export function setupMaskedVariablesCase() {
+  const query: MaskedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        ...CharacterFragment
+      }
+    }
+
+    fragment CharacterFragment on Character {
+      name
+    }
+  `;
+  const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
+
+  const mocks: MockedResponse<MaskedVariablesCaseData>[] = [...CHARACTERS].map(
     (name, index) => ({
       request: { query, variables: { id: String(index + 1) } },
       result: {

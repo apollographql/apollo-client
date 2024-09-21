@@ -21,6 +21,7 @@ import {
   removeDirectivesFromDocument,
   checkDocument,
 } from "../../../utilities/index.js";
+import type { Unmask } from "../../../masking/index.js";
 
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
@@ -41,11 +42,13 @@ export interface MockedResponse<
 > {
   request: GraphQLRequest<TVariables>;
   maxUsageCount?: number;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
+  result?:
+    | FetchResult<Unmask<TData>>
+    | ResultFunction<FetchResult<Unmask<TData>>, TVariables>;
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
-  newData?: ResultFunction<FetchResult<TData>, TVariables>;
+  newData?: ResultFunction<FetchResult<Unmask<TData>>, TVariables>;
 }
 
 export interface MockLinkOptions {

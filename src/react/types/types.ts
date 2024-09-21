@@ -115,7 +115,7 @@ export interface ObservableQueryFields<
   reobserve: (
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ) => Promise<ApolloQueryResult<TData>>;
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
   variables: TVariables | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */

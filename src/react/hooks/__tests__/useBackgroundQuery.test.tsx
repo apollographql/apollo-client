@@ -65,7 +65,7 @@ import {
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios";
-import { Masked } from "../../../masking";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -4115,15 +4115,19 @@ it.each<SuspenseQueryHookFetchPolicy>([
 );
 
 it("masks queries when dataMasking is `true`", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4159,7 +4163,7 @@ it("masks queries when dataMasking is `true`", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const Profiler = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 
@@ -4197,12 +4201,16 @@ it("masks queries when dataMasking is `true`", async () => {
 });
 
 it("does not mask query when dataMasking is `false`", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
   const query: TypedDocumentNode<Query, never> = gql`
@@ -4278,12 +4286,16 @@ it("does not mask query when dataMasking is `false`", async () => {
 });
 
 it("does not mask query by default", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
   const query: TypedDocumentNode<Query, never> = gql`
@@ -4358,15 +4370,19 @@ it("does not mask query by default", async () => {
 });
 
 it("masks queries updated by the cache", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4402,7 +4418,7 @@ it("masks queries updated by the cache", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const Profiler = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 
@@ -4470,15 +4486,19 @@ it("masks queries updated by the cache", async () => {
 });
 
 it("does not rerender when updating field in named fragment", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4514,7 +4534,7 @@ it("does not rerender when updating field in named fragment", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const Profiler = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 
@@ -4577,15 +4597,19 @@ it("does not rerender when updating field in named fragment", async () => {
 });
 
 it("masks result from cache when using with cache-first fetch policy", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4634,7 +4658,7 @@ it("masks result from cache when using with cache-first fetch policy", async () 
     },
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const Profiler = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 
@@ -4669,15 +4693,19 @@ it("masks result from cache when using with cache-first fetch policy", async () 
 });
 
 it("masks cache and network result when using cache-and-network fetch policy", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4727,7 +4755,7 @@ it("masks cache and network result when using cache-and-network fetch policy", a
     },
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const Profiler = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 
@@ -4780,15 +4808,19 @@ it("masks cache and network result when using cache-and-network fetch policy", a
 });
 
 it("masks partial cache data when returnPartialData is `true`", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4840,7 +4872,7 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     });
   }
 
-  const Profiler = createDefaultProfiler<DeepPartial<Query>>();
+  const Profiler = createDefaultProfiler<DeepPartial<Masked<Query>>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 
@@ -4890,15 +4922,19 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
 });
 
 it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+  type UserFieldsFragment = {
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
   interface Query {
     currentUser: {
       __typename: "User";
       id: number;
       name: string;
-    };
+    } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
   }
 
-  const query: TypedDocumentNode<Query, never> = gql`
+  const query: MaskedDocumentNode<Query, never> = gql`
     query MaskedQuery {
       currentUser {
         id
@@ -4936,7 +4972,7 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Query | undefined>();
+  const Profiler = createDefaultProfiler<Masked<Query> | undefined>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(Profiler);
 

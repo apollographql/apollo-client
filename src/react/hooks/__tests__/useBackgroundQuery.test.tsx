@@ -4652,7 +4652,6 @@ it("masks result from cache when using with cache-first fetch policy", async () 
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-expect-error TODO: Determine how to write this with masked types
         age: 30,
       },
     },
@@ -4749,7 +4748,6 @@ it("masks cache and network result when using cache-and-network fetch policy", a
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-expect-error TODO: Determine how to write this with masked types
         age: 34,
       },
     },
@@ -4862,10 +4860,10 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     client.writeQuery({
       query,
       data: {
+        // @ts-expect-error writing partial cache data
         currentUser: {
           __typename: "User",
           id: 1,
-          // @ts-expect-error TODO: Determine how to write this with masked types
           age: 34,
         },
       },

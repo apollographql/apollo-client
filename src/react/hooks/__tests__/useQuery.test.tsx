@@ -10969,16 +10969,21 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      client.writeQuery({
-        query,
-        data: {
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            age: 34,
+      {
+        using _ = spyOnConsole("error");
+
+        client.writeQuery({
+          query,
+          data: {
+            // @ts-expect-error writing partial result
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              age: 34,
+            },
           },
-        },
-      });
+        });
+      }
 
       const Profiler = createProfiler({
         initialSnapshot: {

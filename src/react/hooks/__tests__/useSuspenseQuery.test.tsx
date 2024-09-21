@@ -11179,7 +11179,6 @@ describe("useSuspenseQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-expect-error TODO: Determine how to write this with masked types
           age: 30,
         },
       },
@@ -11277,7 +11276,6 @@ describe("useSuspenseQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-expect-error TODO: Determine how to write this with masked types
           age: 34,
         },
       },
@@ -11389,10 +11387,10 @@ describe("useSuspenseQuery", () => {
       client.writeQuery({
         query,
         data: {
+          // @ts-expect-error writing partial cache data
           currentUser: {
             __typename: "User",
             id: 1,
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 34,
           },
         },

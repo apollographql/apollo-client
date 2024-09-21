@@ -12527,5 +12527,92 @@ describe("useSuspenseQuery", () => {
         >();
       }
     });
+
+    it("uses proper masked types for refetch", async () => {
+      const { query } = useMaskedVariablesQueryCase();
+      const { refetch } = useSuspenseQuery(query);
+
+      const result = await refetch();
+
+      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+    });
+
+    it("uses proper masked types for fetchMore", async () => {
+      const { query } = useMaskedVariablesQueryCase();
+      const { fetchMore } = useSuspenseQuery(query);
+
+      const result = await fetchMore({
+        updateQuery: (queryData, { fetchMoreResult }) => {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+          expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+          expectTypeOf(
+            fetchMoreResult
+          ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+          expectTypeOf(
+            fetchMoreResult
+          ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+          return {} as UnmaskedVariablesCaseData;
+        },
+      });
+
+      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+      expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+    });
+
+    it("uses proper masked types for subscribeToMore", async () => {
+      const { query } = useMaskedVariablesQueryCase();
+      const { subscribeToMore } = useSuspenseQuery(query);
+
+      type CharacterFragment = {
+        __typename: "Character";
+        name: string;
+      } & { " $fragmentName": "CharacterFragment" };
+
+      type Subscription = {
+        pushLetter: {
+          __typename: "Character";
+          id: number;
+        } & { " $fragmentRefs": { CharacterFragment: CharacterFragment } };
+      };
+
+      type UnmaskedSubscription = {
+        pushLetter: {
+          __typename: "Character";
+          id: number;
+          name: string;
+        };
+      };
+
+      const subscription: MaskedDocumentNode<Subscription, never> = gql`
+        subscription {
+          pushLetter {
+            id
+            ...CharacterFragment
+          }
+        }
+
+        fragment CharacterFragment on Character {
+          name
+        }
+      `;
+
+      subscribeToMore({
+        document: subscription,
+        updateQuery: (queryData, { subscriptionData }) => {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+          expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+          expectTypeOf(
+            subscriptionData.data
+          ).toEqualTypeOf<UnmaskedSubscription>();
+          expectTypeOf(subscriptionData.data).not.toEqualTypeOf<Subscription>();
+
+          return {} as UnmaskedVariablesCaseData;
+        },
+      });
+    });
   });
 });

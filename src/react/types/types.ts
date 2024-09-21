@@ -481,7 +481,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
-  data?: TData;
+  data?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
   error?: ApolloError;
   // This was added by the legacy useSubscription type, and is tested in unit

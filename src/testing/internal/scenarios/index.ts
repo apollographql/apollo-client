@@ -88,10 +88,7 @@ export interface UnmaskedVariablesCaseData {
 }
 
 export function setupMaskedVariablesCase() {
-  const query: MaskedDocumentNode<
-    MaskedVariablesCaseData,
-    VariablesCaseVariables
-  > = gql`
+  const document = gql`
     query CharacterQuery($id: ID!) {
       character(id: $id) {
         id
@@ -103,6 +100,16 @@ export function setupMaskedVariablesCase() {
       name
     }
   `;
+  const query: MaskedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
+  const unmaskedQuery: TypedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
   const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
 
   const mocks: MockedResponse<MaskedVariablesCaseData>[] = [...CHARACTERS].map(
@@ -117,7 +124,7 @@ export function setupMaskedVariablesCase() {
     })
   );
 
-  return { mocks, query };
+  return { mocks, query, unmaskedQuery };
 }
 
 interface Letter {

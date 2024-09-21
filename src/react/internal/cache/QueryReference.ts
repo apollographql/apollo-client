@@ -445,7 +445,7 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       default: {
-        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
+        this.promise = createRejectedPromise(error);
         this.deliver(this.promise);
       }
     }
@@ -527,7 +527,7 @@ export class InternalQueryReference<TData = unknown> {
 
   private createPendingPromise() {
     return wrapPromiseWithState(
-      new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+      new Promise<ApolloQueryResult<MaybeMasked<TData>>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
       })

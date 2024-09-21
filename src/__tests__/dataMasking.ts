@@ -527,8 +527,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User (updated)",
-          // @ts-ignore TODO: Determine how to handle cache writes with masked
-          // query type
           age: 35,
         },
       },
@@ -619,8 +617,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-ignore TODO: Determine how to handle cache writes with masked
-          // query type
           age: 35,
         },
       },
@@ -698,7 +694,6 @@ describe("client.watchQuery", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 30,
           },
         },
@@ -777,7 +772,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-expect-error TODO: Determine how to write this with masked types
           age: 34,
         },
       },
@@ -872,10 +866,10 @@ describe("client.watchQuery", () => {
       client.writeQuery({
         query,
         data: {
+          // @ts-expect-error writing partial data
           currentUser: {
             __typename: "User",
             id: 1,
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 34,
           },
         },
@@ -1804,7 +1798,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "User 1",
-          // @ts-expect-error: TODO: Fix soon
           age: 30,
         },
       },
@@ -1902,7 +1895,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         age: 30,
-        // @ts-expect-error Need to determine types when writing data for masked fragment types
         firstName: "Test",
         lastName: "User",
       },
@@ -1984,7 +1976,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         age: 30,
-        // @ts-expect-error TODO: Determine how to write masked types
         firstName: "Test",
         lastName: "User",
       },
@@ -2071,7 +2062,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         age: 30,
-        // @ts-expect-error TODO: Determine how to write masked types
         firstName: "Test",
         lastName: "User",
       },
@@ -2214,7 +2204,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-expect-error Need to determine how to handle masked fragment types with writes
         age: 30,
       },
     });

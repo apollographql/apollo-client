@@ -10572,8 +10572,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User (updated)",
-            // @ts-ignore TODO: Determine how to handle cache writes with masked
-            // query type
             age: 35,
           },
         },
@@ -10689,8 +10687,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            // @ts-ignore TODO: Determine how to handle cache writes with masked
-            // query type
             age: 35,
           },
         },
@@ -10766,7 +10762,6 @@ describe("useQuery Hook", () => {
               __typename: "User",
               id: 1,
               name: "Test User",
-              // @ts-expect-error TODO: Determine how to write this with masked types
               age: 30,
             },
           },
@@ -10864,7 +10859,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 34,
           },
         },
@@ -10981,7 +10975,6 @@ describe("useQuery Hook", () => {
           currentUser: {
             __typename: "User",
             id: 1,
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 34,
           },
         },

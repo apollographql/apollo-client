@@ -1426,7 +1426,7 @@ describe("useFragment", () => {
 
   it("does not rerender when fields with @nonreactive change", async () => {
     type Post = {
-      __typename: "User";
+      __typename: "Post";
       id: number;
       title: string;
       updatedAt: string;
@@ -1493,7 +1493,7 @@ describe("useFragment", () => {
 
   it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
     type Post = {
-      __typename: "User";
+      __typename: "Post";
       id: number;
       title: string;
       updatedAt: string;

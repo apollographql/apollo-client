@@ -541,7 +541,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     updateQuery(previous! as any, {
                       fetchMoreResult: fetchMoreResult.data as any,
                       variables: combinedOptions.variables as TFetchVars,
-                    }) as TData
+                    })
                 );
               } else {
                 // If we're using a field policy instead of updateQuery, the only
@@ -552,7 +552,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.writeQuery({
                   query: combinedOptions.query,
                   variables: combinedOptions.variables,
-                  data: fetchMoreResult.data,
+                  data: fetchMoreResult.data as Unmask<TFetchData>,
                 });
               }
             },
@@ -738,7 +738,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const newResult = mapFn(result! as Unmask<TData>, {
       variables: (this as any).variables,
-    }) as TData;
+    });
 
     if (newResult) {
       queryManager.cache.writeQuery({

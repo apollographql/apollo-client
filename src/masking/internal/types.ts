@@ -14,17 +14,18 @@ export type MaybeMasked<TData> =
   : Unmask<TData>;
 
 type UnwrapFragmentRefs<TData> =
-  TData extends { " $fragmentRefs"?: infer FragmentRefs } ?
-    FragmentRefs extends Record<string, any> ?
-      Prettify<
-        {
-          [K in keyof TData as K extends " $fragmentRefs" ? never
-          : K]: UnwrapFragmentRefs<TData[K]>;
-        } & CombineFragmentRefs<FragmentRefs>
-      >
+  " $fragmentRefs" extends keyof NonNullable<TData> ?
+    TData extends { " $fragmentRefs"?: infer FragmentRefs } ?
+      FragmentRefs extends object ?
+        Prettify<
+          {
+            [K in keyof TData as K extends " $fragmentRefs" ? never
+            : K]: UnwrapFragmentRefs<TData[K]>;
+          } & CombineFragmentRefs<FragmentRefs>
+        >
+      : never
     : never
   : TData extends object ? { [K in keyof TData]: UnwrapFragmentRefs<TData[K]> }
-  : TData extends Array<infer TItem> ? UnwrapFragmentRefs<TItem>
   : TData;
 
 type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =

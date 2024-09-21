@@ -33,7 +33,7 @@ export interface UseSuspenseQueryResult<
   TVariables extends OperationVariables = OperationVariables,
 > {
   client: ApolloClient<any>;
-  data: TData;
+  data: MaybeMasked<TData>;
   error: ApolloError | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
@@ -74,14 +74,14 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<
   TOptions["errorPolicy"] extends "ignore" | "all" ?
     TOptions["returnPartialData"] extends true ?
-      DeepPartial<MaybeMasked<TData>> | undefined
-    : MaybeMasked<TData> | undefined
+      DeepPartial<TData> | undefined
+    : TData | undefined
   : TOptions["returnPartialData"] extends true ?
     TOptions["skip"] extends boolean ?
-      DeepPartial<MaybeMasked<TData>> | undefined
-    : DeepPartial<MaybeMasked<TData>>
-  : TOptions["skip"] extends boolean ? MaybeMasked<TData> | undefined
-  : MaybeMasked<TData>,
+      DeepPartial<TData> | undefined
+    : DeepPartial<TData>
+  : TOptions["skip"] extends boolean ? TData | undefined
+  : TData,
   TVariables
 >;
 
@@ -94,10 +94,7 @@ export function useSuspenseQuery<
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
-): UseSuspenseQueryResult<
-  DeepPartial<MaybeMasked<TData>> | undefined,
-  TVariables
->;
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -107,7 +104,7 @@ export function useSuspenseQuery<
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
-): UseSuspenseQueryResult<MaybeMasked<TData> | undefined, TVariables>;
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -118,10 +115,7 @@ export function useSuspenseQuery<
     skip: boolean;
     returnPartialData: true;
   }
-): UseSuspenseQueryResult<
-  DeepPartial<MaybeMasked<TData>> | undefined,
-  TVariables
->;
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -131,7 +125,7 @@ export function useSuspenseQuery<
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
   }
-): UseSuspenseQueryResult<DeepPartial<MaybeMasked<TData>>, TVariables>;
+): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -141,7 +135,7 @@ export function useSuspenseQuery<
   options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     skip: boolean;
   }
-): UseSuspenseQueryResult<MaybeMasked<TData> | undefined, TVariables>;
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -149,7 +143,7 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): UseSuspenseQueryResult<MaybeMasked<TData>, TVariables>;
+): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -161,10 +155,7 @@ export function useSuspenseQuery<
     | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
         returnPartialData: true;
       })
-): UseSuspenseQueryResult<
-  DeepPartial<MaybeMasked<TData>> | undefined,
-  TVariables
->;
+): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -174,7 +165,7 @@ export function useSuspenseQuery<
   options?:
     | SkipToken
     | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): UseSuspenseQueryResult<MaybeMasked<TData> | undefined, TVariables>;
+): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -184,7 +175,7 @@ export function useSuspenseQuery<
   options:
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
     | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
-): UseSuspenseQueryResult<MaybeMasked<TData> | undefined, TVariables> {
+): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
     _useSuspenseQuery,
@@ -200,7 +191,7 @@ function _useSuspenseQuery<
   options:
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
     | SuspenseQueryHookOptions<TData, TVariables>
-): UseSuspenseQueryResult<MaybeMasked<TData> | undefined, TVariables> {
+): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions<any, any>({

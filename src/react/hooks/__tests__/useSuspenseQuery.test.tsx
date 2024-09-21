@@ -10711,12 +10711,16 @@ describe("useSuspenseQuery", () => {
   });
 
   it("does not mask query when dataMasking is `false`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -10795,12 +10799,16 @@ describe("useSuspenseQuery", () => {
   });
 
   it("does not mask query by default", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -10878,15 +10886,19 @@ describe("useSuspenseQuery", () => {
   });
 
   it("masks queries updated by the cache", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -10924,7 +10936,7 @@ describe("useSuspenseQuery", () => {
 
     const Profiler = createProfiler({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
     });
 
@@ -10991,15 +11003,19 @@ describe("useSuspenseQuery", () => {
   });
 
   it("does not rerender when updating field in named fragment", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11037,7 +11053,7 @@ describe("useSuspenseQuery", () => {
 
     const Profiler = createProfiler({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
     });
 
@@ -11101,15 +11117,19 @@ describe("useSuspenseQuery", () => {
   });
 
   it("masks result from cache when using with cache-first fetch policy", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11160,7 +11180,7 @@ describe("useSuspenseQuery", () => {
 
     const Profiler = createProfiler({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
     });
 
@@ -11194,15 +11214,19 @@ describe("useSuspenseQuery", () => {
   });
 
   it("masks cache and network result when using cache-and-network fetch policy", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11254,7 +11278,7 @@ describe("useSuspenseQuery", () => {
 
     const Profiler = createProfiler({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
     });
 
@@ -11304,15 +11328,19 @@ describe("useSuspenseQuery", () => {
   });
 
   it("masks partial cache data when returnPartialData is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11367,7 +11395,7 @@ describe("useSuspenseQuery", () => {
     const Profiler = createProfiler({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<
-          DeepPartial<Query>,
+          DeepPartial<Masked<Query>>,
           never
         > | null,
       },
@@ -11416,15 +11444,19 @@ describe("useSuspenseQuery", () => {
   });
 
   it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -11464,7 +11496,10 @@ describe("useSuspenseQuery", () => {
 
     const Profiler = createProfiler({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query | undefined, never> | null,
+        result: null as UseSuspenseQueryResult<
+          Masked<Query> | undefined,
+          never
+        > | null,
       },
     });
 

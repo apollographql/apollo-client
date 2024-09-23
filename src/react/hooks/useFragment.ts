@@ -14,6 +14,7 @@ import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
+import type { MaybeMasked } from "../../masking/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -40,12 +41,12 @@ export interface UseFragmentOptions<TData, TVars>
 
 export type UseFragmentResult<TData> =
   | {
-      data: TData;
+      data: MaybeMasked<TData>;
       complete: true;
       missing?: never;
     }
   | {
-      data: DeepPartial<TData>;
+      data: DeepPartial<MaybeMasked<TData>>;
       complete: false;
       missing?: MissingTree;
     };

@@ -30,7 +30,7 @@ import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
 import { invariant } from "../../utilities/globals/index.js";
 import { maskFragment } from "../../core/masking.js";
-import type { Unmask } from "../../masking/index.js";
+import type { MaybeMasked, Unmask } from "../../masking/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -84,12 +84,12 @@ export interface WatchFragmentOptions<TData, TVars> {
  */
 export type WatchFragmentResult<TData> =
   | {
-      data: TData;
+      data: MaybeMasked<TData>;
       complete: true;
       missing?: never;
     }
   | {
-      data: DeepPartial<TData>;
+      data: DeepPartial<MaybeMasked<TData>>;
       complete: false;
       missing: MissingTree;
     };

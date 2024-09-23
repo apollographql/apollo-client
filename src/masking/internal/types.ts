@@ -9,9 +9,8 @@ export type Unmask<TData> =
 
 /** @internal */
 export type MaybeMasked<TData> =
-  TData extends { __masked?: true } ?
-    Prettify<RemoveMaskedMarker<RemoveFragmentName<TData>>>
-  : DataMasking extends { enabled: true } ? RemoveFragmentName<TData>
+  TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
+  : DataMasking extends { enabled: true } ? TData
   : Unmask<TData>;
 
 type UnwrapFragmentRefs<TData> =

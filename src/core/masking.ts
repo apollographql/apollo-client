@@ -396,8 +396,12 @@ function addAccessorWarning(
   });
 }
 
+let issuedWarning = false;
 function warnOnImproperCacheImplementation() {
-  invariant.warn(
-    "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-  );
+  if (!issuedWarning) {
+    issuedWarning = true;
+    invariant.warn(
+      "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
+    );
+  }
 }

@@ -61,14 +61,14 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     abstract performTransaction(transaction: Transaction<TSerialized>, optimisticId?: string | null): void;
     // Warning: (ae-forgotten-export) The symbol "Cache_2" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "Unmask" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "Unmasked" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    abstract read<TData = any, TVariables = any>(query: Cache_2.ReadOptions<TVariables, TData>): Unmask<TData> | null;
+    abstract read<TData = any, TVariables = any>(query: Cache_2.ReadOptions<TVariables, TData>): Unmasked<TData> | null;
     // (undocumented)
-    readFragment<FragmentType, TVariables = any>(options: Cache_2.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmask<FragmentType> | null;
+    readFragment<FragmentType, TVariables = any>(options: Cache_2.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmasked<FragmentType> | null;
     // (undocumented)
-    readQuery<QueryType, TVariables = any>(options: Cache_2.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmask<QueryType> | null;
+    readQuery<QueryType, TVariables = any>(options: Cache_2.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmasked<QueryType> | null;
     // (undocumented)
     recordOptimisticTransaction(transaction: Transaction<TSerialized>, optimisticId: string): void;
     // (undocumented)
@@ -81,9 +81,9 @@ abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     transformForLink(document: DocumentNode): DocumentNode;
     // (undocumented)
-    updateFragment<TData = any, TVariables = any>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmask<TData> | null) => Unmask<TData> | null | void): Unmask<TData> | null;
+    updateFragment<TData = any, TVariables = any>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
-    updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmask<TData> | null) => Unmask<TData> | null | void): Unmask<TData> | null;
+    updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void): Unmasked<TData> | null;
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
@@ -149,8 +149,8 @@ class ApolloClient<TCacheShape> implements DataProxy {
     query<T = any, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<MaybeMasked<T>>>;
     // (undocumented)
     queryDeduplication: boolean;
-    readFragment<T = any, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmask<T> | null;
-    readQuery<T = any, TVariables = OperationVariables>(options: DataProxy.Query<TVariables, T>, optimistic?: boolean): Unmask<T> | null;
+    readFragment<T = any, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
+    readQuery<T = any, TVariables = OperationVariables>(options: DataProxy.Query<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     reFetchObservableQueries(includeStandby?: boolean): Promise<ApolloQueryResult<any>[]>;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesResult" needs to be exported by the entry point index.d.ts
@@ -501,7 +501,7 @@ namespace Cache_2 {
         // (undocumented)
         dataId?: string;
         // (undocumented)
-        result: Unmask<TResult>;
+        result: Unmasked<TResult>;
     }
     import DiffResult = DataProxy.DiffResult;
     import ReadQueryOptions = DataProxy.ReadQueryOptions;
@@ -634,7 +634,7 @@ namespace DataProxy {
     // (undocumented)
     interface WriteOptions<TData> {
         broadcast?: boolean;
-        data: Unmask<TData>;
+        data: Unmasked<TData>;
         overwrite?: boolean;
     }
     // Warning: (ae-forgotten-export) The symbol "DataProxy" needs to be exported by the entry point index.d.ts
@@ -646,8 +646,8 @@ namespace DataProxy {
 
 // @public
 interface DataProxy {
-    readFragment<FragmentType, TVariables = any>(options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmask<FragmentType> | null;
-    readQuery<QueryType, TVariables = any>(options: DataProxy.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmask<QueryType> | null;
+    readFragment<FragmentType, TVariables = any>(options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmasked<FragmentType> | null;
+    readQuery<QueryType, TVariables = any>(options: DataProxy.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmasked<QueryType> | null;
     writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
@@ -802,10 +802,10 @@ interface ExecutionPatchResultBase {
 //
 // @public (undocumented)
 type FetchMoreFunction<TData, TVariables extends OperationVariables> = (fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
-    updateQuery?: (previousQueryResult: Unmask<TData>, options: {
-        fetchMoreResult: Unmask<TData>;
+    updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+        fetchMoreResult: Unmasked<TData>;
         variables: TVariables;
-    }) => Unmask<TData>;
+    }) => Unmasked<TData>;
 }) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
 
 // @public (undocumented)
@@ -847,6 +847,17 @@ interface FragmentMap {
 
 // @public (undocumented)
 type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
+
+// @public (undocumented)
+type FragmentType<TData> = [
+TData
+] extends [{
+    " $fragmentName"?: infer TKey;
+}] ? TKey extends string ? {
+    " $fragmentRefs"?: {
+        [key in TKey]: TData;
+    };
+} : never : never;
 
 // @internal
 const getApolloCacheMemoryInternals: (() => {
@@ -1112,7 +1123,7 @@ type MaybeMasked<TData> = TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
     enabled: true;
-} ? TData : Unmask<TData>;
+} ? TData : Unmasked<TData>;
 
 // @public (undocumented)
 class MissingFieldError extends Error {
@@ -1169,10 +1180,10 @@ interface MutationBaseOptions<TData = any, TVariables = OperationVariables, TCon
     // Warning: (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
     onQueryUpdated?: OnQueryUpdated<any>;
     // Warning: (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
-    optimisticResponse?: Unmask<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
+    optimisticResponse?: Unmasked<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
         IGNORE: IgnoreModifier;
-    }) => Unmask<NoInfer_2<TData>> | IgnoreModifier);
-    refetchQueries?: ((result: FetchResult<Unmask<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+    }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
+    refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
     // Warning: (ae-forgotten-export) The symbol "MutationUpdaterFunction" needs to be exported by the entry point index.d.ts
     update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
     // Warning: (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
@@ -1208,7 +1219,7 @@ interface MutationOptions<TData = any, TVariables = OperationVariables, TContext
 
 // @public (undocumented)
 type MutationQueryReducer<T> = (previousResult: Record<string, any>, options: {
-    mutationResult: FetchResult<Unmask<T>>;
+    mutationResult: FetchResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
 }) => Record<string, any>;
@@ -1258,7 +1269,7 @@ result: MutationResult<TData>
 ];
 
 // @public (undocumented)
-type MutationUpdaterFunction<TData, TVariables, TContext, TCache extends ApolloCache<any>> = (cache: TCache, result: Omit<FetchResult<Unmask<TData>>, "context">, options: {
+type MutationUpdaterFunction<TData, TVariables, TContext, TCache extends ApolloCache<any>> = (cache: TCache, result: Omit<FetchResult<Unmasked<TData>>, "context">, options: {
     context?: TContext;
     variables?: TVariables;
 }) => void;
@@ -1304,10 +1315,10 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
         options: WatchQueryOptions<TVariables, TData>;
     });
     fetchMore<TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmask<TData>, options: {
-            fetchMoreResult: Unmask<TFetchData>;
+        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+            fetchMoreResult: Unmasked<TFetchData>;
             variables: TFetchVars;
-        }) => Unmask<TData>;
+        }) => Unmasked<TData>;
     }): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
     // (undocumented)
     getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<MaybeMasked<TData>>;
@@ -1355,17 +1366,17 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     stopPolling(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreOptions" needs to be exported by the entry point index.d.ts
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>): () => void;
-    updateQuery<TVars extends OperationVariables = TVariables>(mapFn: (previousQueryResult: Unmask<TData>, options: Pick<WatchQueryOptions<TVars, TData>, "variables">) => Unmask<TData>): void;
+    updateQuery<TVars extends OperationVariables = TVariables>(mapFn: (previousQueryResult: Unmasked<TData>, options: Pick<WatchQueryOptions<TVars, TData>, "variables">) => Unmasked<TData>): void;
     get variables(): TVariables | undefined;
 }
 
 // @public (undocumented)
 export interface ObservableQueryFields<TData, TVariables extends OperationVariables> {
     fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmask<TData>, options: {
-            fetchMoreResult: Unmask<TFetchData>;
+        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+            fetchMoreResult: Unmasked<TFetchData>;
             variables: TFetchVars;
-        }) => Unmask<TData>;
+        }) => Unmasked<TData>;
     }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
     refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     // @internal (undocumented)
@@ -1373,7 +1384,7 @@ export interface ObservableQueryFields<TData, TVariables extends OperationVariab
     startPolling: (pollInterval: number) => void;
     stopPolling: () => void;
     subscribeToMore: <TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>) => () => void;
-    updateQuery: <TVars extends OperationVariables = TVariables>(mapFn: (previousQueryResult: Unmask<TData>, options: Pick<WatchQueryOptions<TVars, TData>, "variables">) => Unmask<TData>) => void;
+    updateQuery: <TVars extends OperationVariables = TVariables>(mapFn: (previousQueryResult: Unmasked<TData>, options: Pick<WatchQueryOptions<TVars, TData>, "variables">) => Unmasked<TData>) => void;
     variables: TVariables | undefined;
 }
 
@@ -2118,7 +2129,7 @@ type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends
 // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
 //
 // @internal (undocumented)
-type Unmask<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
+type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
 
 // Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
 //
@@ -2135,12 +2146,12 @@ type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
-type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = (previousQueryResult: Unmask<TData>, options: {
+type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = (previousQueryResult: Unmasked<TData>, options: {
     subscriptionData: {
-        data: Unmask<TSubscriptionData>;
+        data: Unmasked<TSubscriptionData>;
     };
     variables?: TSubscriptionVariables;
-}) => Unmask<TData>;
+}) => Unmasked<TData>;
 
 // @public (undocumented)
 interface UriFunction {
@@ -2234,19 +2245,21 @@ export function useFragment<TData = any, TVars = OperationVariables>(options: Us
 // @public (undocumented)
 export interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer_2<TData>, NoInfer_2<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
     client?: ApolloClient<any>;
+    // Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    from: StoreObject | Reference | string;
+    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     // (undocumented)
     optimistic?: boolean;
 }
 
 // @public (undocumented)
 export type UseFragmentResult<TData> = {
-    data: TData;
+    data: MaybeMasked<TData>;
     complete: true;
     missing?: never;
 } | {
-    data: DeepPartial<TData>;
+    data: DeepPartial<MaybeMasked<TData>>;
     complete: false;
     missing?: MissingTree;
 };
@@ -2402,18 +2415,18 @@ TVariables
 interface WatchFragmentOptions<TData, TVars> {
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
     fragmentName?: string;
-    from: StoreObject | Reference | string;
+    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     optimistic?: boolean;
     variables?: TVars;
 }
 
 // @public
 type WatchFragmentResult<TData> = {
-    data: TData;
+    data: MaybeMasked<TData>;
     complete: true;
     missing?: never;
 } | {
-    data: DeepPartial<TData>;
+    data: DeepPartial<MaybeMasked<TData>>;
     complete: false;
     missing: MissingTree;
 };

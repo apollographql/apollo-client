@@ -26,6 +26,7 @@ import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 import { profileHook } from "../../../testing/internal";
 import { InvariantError } from "../../../utilities/globals";
+import { MaskedDocumentNode } from "../../../masking";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
@@ -1985,6 +1986,96 @@ describe("useLazyQuery Hook", () => {
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
     await expect(ProfiledHook).not.toRerender({ timeout: 50 });
     expect(requests).toBe(1);
+  });
+
+  describe("data masking", () => {
+    it("masks queries when dataMasking is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const ProfiledHook = profileHook(() => useLazyQuery(query));
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial render
+      await ProfiledHook.takeSnapshot();
+
+      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+
+      // Loading
+      await ProfiledHook.takeSnapshot();
+
+      {
+        const [, { data }] = await ProfiledHook.takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+    });
   });
 });
 

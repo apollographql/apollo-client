@@ -10,9 +10,9 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type CombineFragmentRefs<FragmentRefMap extends Record<string, any>> = UnionToIntersection<{
-    [K in keyof FragmentRefMap]: RemoveFragmentName<FragmentRefMap[K]>;
-}[keyof FragmentRefMap]>;
+type CombineFragmentRefs<FragmentRefs extends Record<string, any>> = UnionToIntersection<{
+    [K in keyof FragmentRefs]-?: RemoveFragmentName<FragmentRefs[K]>;
+}[keyof FragmentRefs]>;
 
 // @public (undocumented)
 export interface DataMasking {
@@ -57,7 +57,7 @@ type Prettify<T> = {
 } & {};
 
 // @public (undocumented)
-type RemoveFragmentName<T> = Omit<T, " $fragmentName">;
+type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
 
 // @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
@@ -73,13 +73,13 @@ export type Unmask<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMask
 // Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = TData extends {
+type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
     " $fragmentRefs"?: infer FragmentRefs;
-} ? FragmentRefs extends Record<string, any> ? Prettify<{
-    [K in Exclude<keyof TData, " $fragmentRefs">]: UnwrapFragmentRefs<TData[K]>;
-} & CombineFragmentRefs<FragmentRefs>> : never : TData extends object ? {
+} ? FragmentRefs extends object ? Prettify<{
+    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
+} & CombineFragmentRefs<FragmentRefs>> : never : never : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
-} : TData extends Array<infer TItem> ? UnwrapFragmentRefs<TItem> : TData;
+} : TData;
 
 // (No @packageDocumentation comment for this package)
 

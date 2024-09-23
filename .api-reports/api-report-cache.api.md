@@ -45,12 +45,14 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // (undocumented)
     abstract performTransaction(transaction: Transaction<TSerialized>, optimisticId?: string | null): void;
+    // Warning: (ae-forgotten-export) The symbol "Unmask" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    abstract read<TData = any, TVariables = any>(query: Cache_2.ReadOptions<TVariables, TData>): TData | null;
+    abstract read<TData = any, TVariables = any>(query: Cache_2.ReadOptions<TVariables, TData>): Unmask<TData> | null;
     // (undocumented)
-    readFragment<FragmentType, TVariables = any>(options: Cache_2.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): FragmentType | null;
+    readFragment<FragmentType, TVariables = any>(options: Cache_2.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmask<FragmentType> | null;
     // (undocumented)
-    readQuery<QueryType, TVariables = any>(options: Cache_2.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): QueryType | null;
+    readQuery<QueryType, TVariables = any>(options: Cache_2.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmask<QueryType> | null;
     // (undocumented)
     recordOptimisticTransaction(transaction: Transaction<TSerialized>, optimisticId: string): void;
     // (undocumented)
@@ -63,9 +65,9 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     // (undocumented)
     transformForLink(document: DocumentNode): DocumentNode;
     // (undocumented)
-    updateFragment<TData = any, TVariables = any>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: TData | null) => TData | null | void): TData | null;
+    updateFragment<TData = any, TVariables = any>(options: Cache_2.UpdateFragmentOptions<TData, TVariables>, update: (data: Unmask<TData> | null) => Unmask<TData> | null | void): Unmask<TData> | null;
     // (undocumented)
-    updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: TData | null) => TData | null | void): TData | null;
+    updateQuery<TData = any, TVariables = any>(options: Cache_2.UpdateQueryOptions<TData, TVariables>, update: (data: Unmask<TData> | null) => Unmask<TData> | null | void): Unmask<TData> | null;
     // (undocumented)
     abstract watch<TData = any, TVariables = any>(watch: Cache_2.WatchOptions<TData, TVariables>): () => void;
     // Warning: (ae-forgotten-export) The symbol "OperationVariables" needs to be exported by the entry point index.d.ts
@@ -170,7 +172,7 @@ namespace Cache_2 {
         // (undocumented)
         dataId?: string;
         // (undocumented)
-        result: TResult;
+        result: Unmask<TResult>;
     }
     import DiffResult = DataProxy.DiffResult;
     import ReadQueryOptions = DataProxy.ReadQueryOptions;
@@ -213,6 +215,14 @@ export const canonicalStringify: ((value: any) => string) & {
 
 // @public (undocumented)
 type CanReadFunction = (value: StoreValue) => boolean;
+
+// Warning: (ae-forgotten-export) The symbol "UnionToIntersection" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type CombineFragmentRefs<FragmentRefs extends Record<string, any>> = UnionToIntersection<{
+    [K in keyof FragmentRefs]-?: RemoveFragmentName<FragmentRefs[K]>;
+}[keyof FragmentRefs]>;
 
 // @public (undocumented)
 export function createFragmentRegistry(...fragments: DocumentNode[]): FragmentRegistryAPI;
@@ -265,7 +275,7 @@ export namespace DataProxy {
     // (undocumented)
     export interface WriteOptions<TData> {
         broadcast?: boolean;
-        data: TData;
+        data: Unmask<TData>;
         overwrite?: boolean;
     }
     // (undocumented)
@@ -275,8 +285,8 @@ export namespace DataProxy {
 
 // @public
 export interface DataProxy {
-    readFragment<FragmentType, TVariables = any>(options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): FragmentType | null;
-    readQuery<QueryType, TVariables = any>(options: DataProxy.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): QueryType | null;
+    readFragment<FragmentType, TVariables = any>(options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>, optimistic?: boolean): Unmask<FragmentType> | null;
+    readQuery<QueryType, TVariables = any>(options: DataProxy.ReadQueryOptions<QueryType, TVariables>, optimistic?: boolean): Unmask<QueryType> | null;
     writeFragment<TData = any, TVariables = any>(options: DataProxy.WriteFragmentOptions<TData, TVariables>): Reference | undefined;
     writeQuery<TData = any, TVariables = any>(options: DataProxy.WriteQueryOptions<TData, TVariables>): Reference | undefined;
 }
@@ -868,6 +878,11 @@ export type PossibleTypesMap = {
 };
 
 // @public (undocumented)
+type Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+
+// @public (undocumented)
 type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
@@ -929,6 +944,12 @@ export interface Reference {
 }
 
 // @public (undocumented)
+type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
+
+// @public (undocumented)
+type RemoveMaskedMarker<T> = Omit<T, "__masked">;
+
+// @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
@@ -983,6 +1004,27 @@ export type TypePolicy = {
         [fieldName: string]: FieldPolicy<any> | FieldReadFunction<any>;
     };
 };
+
+// @public (undocumented)
+type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
+
+// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
+//
+// @internal (undocumented)
+type Unmask<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
+
+// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
+    " $fragmentRefs"?: infer FragmentRefs;
+} ? FragmentRefs extends object ? Prettify<{
+    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
+} & CombineFragmentRefs<FragmentRefs>> : never : never : TData extends object ? {
+    [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
+} : TData;
 
 // @public
 export interface WatchFragmentOptions<TData, TVars> {

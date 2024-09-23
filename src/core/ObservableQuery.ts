@@ -37,7 +37,7 @@ import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
-import type { MaybeMasked, Unmask } from "../masking/index.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -448,12 +448,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   >(
     fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
       updateQuery?: (
-        previousQueryResult: Unmask<TData>,
+        previousQueryResult: Unmasked<TData>,
         options: {
-          fetchMoreResult: Unmask<TFetchData>;
+          fetchMoreResult: Unmasked<TFetchData>;
           variables: TFetchVars;
         }
-      ) => Unmask<TData>;
+      ) => Unmasked<TData>;
     }
   ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
     const combinedOptions = {
@@ -552,7 +552,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.writeQuery({
                   query: combinedOptions.query,
                   variables: combinedOptions.variables,
-                  data: fetchMoreResult.data as Unmask<TFetchData>,
+                  data: fetchMoreResult.data as Unmasked<TFetchData>,
                 });
               }
             },
@@ -579,8 +579,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // expects that the first argument always contains previous result
           // data, but not `undefined`.
           const lastResult = this.getLast("result")!;
-          const data = updateQuery!(lastResult.data as Unmask<TData>, {
-            fetchMoreResult: fetchMoreResult.data as Unmask<TFetchData>,
+          const data = updateQuery!(lastResult.data as Unmasked<TData>, {
+            fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
 
@@ -629,7 +629,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         context: options.context,
       })
       .subscribe({
-        next: (subscriptionData: { data: Unmask<TSubscriptionData> }) => {
+        next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
             this.updateQuery<TSubscriptionVariables>(
@@ -724,9 +724,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
-      previousQueryResult: Unmask<TData>,
+      previousQueryResult: Unmasked<TData>,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmask<TData>
+    ) => Unmasked<TData>
   ): void {
     const { queryManager } = this;
     const { result } = queryManager.cache.diff<TData>({
@@ -736,7 +736,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       optimistic: false,
     });
 
-    const newResult = mapFn(result! as Unmask<TData>, {
+    const newResult = mapFn(result! as Unmasked<TData>, {
       variables: (this as any).variables,
     });
 

@@ -10,7 +10,7 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
 import type { Cache } from "../cache/index.js";
 import type { IsStrictlyAny } from "../utilities/index.js";
-import type { Unmask } from "../masking/index.js";
+import type { Unmasked } from "../masking/index.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -165,7 +165,7 @@ export interface ApolloQueryResult<T> {
 export type MutationQueryReducer<T> = (
   previousResult: Record<string, any>,
   options: {
-    mutationResult: FetchResult<Unmask<T>>;
+    mutationResult: FetchResult<Unmasked<T>>;
     queryName: string | undefined;
     queryVariables: Record<string, any>;
   }
@@ -193,7 +193,7 @@ export type MutationUpdaterFunction<
   TCache extends ApolloCache<any>,
 > = (
   cache: TCache,
-  result: Omit<FetchResult<Unmask<TData>>, "context">,
+  result: Omit<FetchResult<Unmasked<TData>>, "context">,
   options: {
     context?: TContext;
     variables?: TVariables;

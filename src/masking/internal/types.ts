@@ -2,7 +2,7 @@ import type { Prettify, UnionToIntersection } from "../../utilities/index.js";
 import type { DataMasking } from "../types.js";
 
 /** @internal */
-export type Unmask<TData> =
+export type Unmasked<TData> =
   TData extends object ?
     UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
   : TData;
@@ -11,7 +11,7 @@ export type Unmask<TData> =
 export type MaybeMasked<TData> =
   TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
   : DataMasking extends { enabled: true } ? TData
-  : Unmask<TData>;
+  : Unmasked<TData>;
 
 type UnwrapFragmentRefs<TData> =
   // Leave TData alone if it is Record<string, any> and not a specific shape

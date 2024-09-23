@@ -26,7 +26,7 @@ import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey, QueryKey } from "../internal/index.js";
-import type { MaybeMasked, Unmask } from "../../masking/index.js";
+import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -44,12 +44,12 @@ export interface UseSuspenseQueryResult<
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
-      previousQueryResult: Unmask<TData>,
+      previousQueryResult: Unmasked<TData>,
       options: {
-        fetchMoreResult: Unmask<TData>;
+        fetchMoreResult: Unmasked<TData>;
         variables: TVariables;
       }
-    ) => Unmask<TData>;
+    ) => Unmasked<TData>;
   }
 ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
 

@@ -107,7 +107,7 @@ import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "./masking.js";
-import type { MaybeMasked, Unmask } from "../masking/index.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -322,7 +322,7 @@ export class QueryManager<TStore> {
 
           if (typeof refetchQueries === "function") {
             refetchQueries = refetchQueries(
-              storeResult as FetchResult<Unmask<TData>>
+              storeResult as FetchResult<Unmasked<TData>>
             );
           }
 
@@ -480,7 +480,7 @@ export class QueryManager<TStore> {
           if (complete && currentQueryResult) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: result as FetchResult<Unmask<TData>>,
+              mutationResult: result as FetchResult<Unmasked<TData>>,
               queryName: (document && getOperationName(document)) || void 0,
               queryVariables: variables!,
             });
@@ -556,7 +556,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache as TCache, result as FetchResult<Unmask<TData>>, {
+              update(cache as TCache, result as FetchResult<Unmasked<TData>>, {
                 context: mutation.context,
                 variables: mutation.variables,
               });

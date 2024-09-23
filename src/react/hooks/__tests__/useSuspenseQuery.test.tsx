@@ -60,7 +60,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
-import { Masked, MaskedDocumentNode, Unmask } from "../../../masking";
+import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -222,7 +222,7 @@ function useErrorCase<TData extends ErrorCaseData>(
     networkError,
     graphQLErrors,
   }: {
-    data?: Unmask<TData>;
+    data?: Unmasked<TData>;
     networkError?: Error;
     graphQLErrors?: GraphQLError[];
   } = Object.create(null)

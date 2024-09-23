@@ -13,7 +13,7 @@ import type {
 import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { Unmask } from "../masking/index.js";
+import type { Unmasked } from "../masking/index.js";
 import type { NoInfer } from "../utilities/index.js";
 
 /**
@@ -169,12 +169,12 @@ export type UpdateQueryFn<
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData,
 > = (
-  previousQueryResult: Unmask<TData>,
+  previousQueryResult: Unmasked<TData>,
   options: {
-    subscriptionData: { data: Unmask<TSubscriptionData> };
+    subscriptionData: { data: Unmasked<TSubscriptionData> };
     variables?: TSubscriptionVariables;
   }
-) => Unmask<TData>;
+) => Unmasked<TData>;
 
 export type SubscribeToMoreOptions<
   TData = any,
@@ -221,18 +221,18 @@ export interface MutationBaseOptions<
 > {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
   optimisticResponse?:
-    | Unmask<NoInfer<TData>>
+    | Unmasked<NoInfer<TData>>
     | ((
         vars: TVariables,
         { IGNORE }: { IGNORE: IgnoreModifier }
-      ) => Unmask<NoInfer<TData>> | IgnoreModifier);
+      ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
   updateQueries?: MutationQueryReducersMap<TData>;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
   refetchQueries?:
-    | ((result: FetchResult<Unmask<TData>>) => InternalRefetchQueriesInclude)
+    | ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude)
     | InternalRefetchQueriesInclude;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */

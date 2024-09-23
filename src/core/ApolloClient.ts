@@ -164,7 +164,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
-import type { MaybeMasked, Unmask } from "../masking/index.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -533,7 +533,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readQuery<T = any, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false
-  ): Unmask<T> | null {
+  ): Unmasked<T> | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
   }
 
@@ -583,7 +583,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readFragment<T = any, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
-  ): Unmask<T> | null {
+  ): Unmasked<T> | null {
     return this.cache.readFragment<T, TVariables>(options, optimistic);
   }
 

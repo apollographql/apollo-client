@@ -29,7 +29,7 @@ import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
 } from "../../core/watchQueryOptions.js";
-import type { MaybeMasked, Unmask } from "../../masking/index.js";
+import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
 /* QueryReference type */
 
@@ -103,9 +103,9 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
   updateQuery: <TVars extends OperationVariables = TVariables>(
     mapFn: (
-      previousQueryResult: Unmask<TData>,
+      previousQueryResult: Unmasked<TData>,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmask<TData>
+    ) => Unmasked<TData>
   ) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
@@ -125,12 +125,12 @@ export interface ObservableQueryFields<
   >(
     fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
       updateQuery?: (
-        previousQueryResult: Unmask<TData>,
+        previousQueryResult: Unmasked<TData>,
         options: {
-          fetchMoreResult: Unmask<TFetchData>;
+          fetchMoreResult: Unmasked<TFetchData>;
           variables: TFetchVars;
         }
-      ) => Unmask<TData>;
+      ) => Unmasked<TData>;
     }
   ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
 }

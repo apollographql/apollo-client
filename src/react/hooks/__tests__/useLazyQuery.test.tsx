@@ -2076,6 +2076,395 @@ describe("useLazyQuery Hook", () => {
         });
       }
     });
+
+    it("does not mask queries when dataMasking is `false`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: false,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const ProfiledHook = profileHook(() => useLazyQuery(query));
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial render
+      await ProfiledHook.takeSnapshot();
+
+      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+
+      // Loading
+      await ProfiledHook.takeSnapshot();
+
+      {
+        const [, { data }] = await ProfiledHook.takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        });
+      }
+    });
+
+    it("does not mask queries by default", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const ProfiledHook = profileHook(() => useLazyQuery(query));
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial render
+      await ProfiledHook.takeSnapshot();
+
+      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+
+      // Loading
+      await ProfiledHook.takeSnapshot();
+
+      {
+        const [, { data }] = await ProfiledHook.takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        });
+      }
+    });
+
+    it("masks queries updated by the cache", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const ProfiledHook = profileHook(() => useLazyQuery(query));
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial render
+      await ProfiledHook.takeSnapshot();
+
+      const [execute] = ProfiledHook.getCurrentSnapshot();
+      execute();
+
+      // Loading
+      await ProfiledHook.takeSnapshot();
+
+      {
+        const [, { data }] = await ProfiledHook.takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+            age: 35,
+          },
+        },
+      });
+
+      {
+        const [, { data, previousData }] = await ProfiledHook.takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+          },
+        });
+
+        expect(previousData).toEqual({
+          currentUser: { __typename: "User", id: 1, name: "Test User" },
+        });
+      }
+    });
+
+    it("does not rerender when updating field in named fragment", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const ProfiledHook = profileHook(() => useLazyQuery(query));
+
+      render(<ProfiledHook />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // initial render
+      await ProfiledHook.takeSnapshot();
+
+      const [execute] = ProfiledHook.getCurrentSnapshot();
+      execute();
+
+      // Loading
+      await ProfiledHook.takeSnapshot();
+
+      {
+        const [, { data }] = await ProfiledHook.takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 35,
+          },
+        },
+      });
+
+      await expect(ProfiledHook).not.toRerender();
+
+      expect(client.readQuery({ query })).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 35,
+        },
+      });
+    });
   });
 });
 

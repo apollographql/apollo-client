@@ -20,6 +20,8 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
+import { MaskedDocumentNode } from "../../../masking";
+import { expectTypeOf } from "expect-type";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -2382,5 +2384,74 @@ describe.skip("Type Tests", () => {
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;
+  });
+
+  test("uses masked types when using masked document", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Subscription {
+      userUpdated: {
+        __typename: "User";
+        id: string;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const subscription: MaskedDocumentNode<Subscription> = gql``;
+
+    const { data } = useSubscription(subscription, {
+      onData: ({ data }) => {
+        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
+      },
+      onSubscriptionData: ({ subscriptionData }) => {
+        expectTypeOf(subscriptionData.data).toEqualTypeOf<
+          Subscription | undefined
+        >();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
+  });
+
+  test("uses unmasked types when using TypedDocumentNode", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Subscription {
+      userUpdated: {
+        __typename: "User";
+        id: string;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedSubscription {
+      userUpdated: {
+        __typename: "User";
+        id: string;
+        name: string;
+        age: number;
+      };
+    }
+
+    const subscription: TypedDocumentNode<Subscription> = gql``;
+
+    const { data } = useSubscription(subscription, {
+      onData: ({ data }) => {
+        expectTypeOf(data.data).toEqualTypeOf<
+          UnmaskedSubscription | undefined
+        >();
+      },
+      onSubscriptionData: ({ subscriptionData }) => {
+        expectTypeOf(subscriptionData.data).toEqualTypeOf<
+          UnmaskedSubscription | undefined
+        >();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<UnmaskedSubscription | undefined>();
   });
 });

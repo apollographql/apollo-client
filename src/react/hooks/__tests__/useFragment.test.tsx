@@ -40,6 +40,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+import { FragmentType } from "../../../masking";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -2303,7 +2304,7 @@ describe.skip("Type Tests", () => {
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
     expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
-      from: string | StoreObject | Reference;
+      from: string | StoreObject | Reference | FragmentType<TData>;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;
       optimistic?: boolean;

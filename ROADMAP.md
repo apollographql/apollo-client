@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-09-16**
+**Last updated: 2024-09-23**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,8 +17,8 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - October 7, 2024
-_Release candidate - September 30, 2024_
+#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - October 21, 2024
+_Release candidate - October 24, 2024_
 
 - Data masking
 
@@ -55,3 +55,4 @@ _no work in progress_
 ### Apollo Client NextJS
 
 - New/more robust documentation
+- Support for `@defer` in RSC

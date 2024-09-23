@@ -37,6 +37,7 @@ export type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
 >;
 
 export interface MockedResponse<
+  // @ts-ignore
   out TData = Record<string, any>,
   out TVariables = Record<string, any>,
 > {

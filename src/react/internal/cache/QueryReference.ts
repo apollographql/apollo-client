@@ -39,7 +39,7 @@ declare const QUERY_REF_BRAND: unique symbol;
  */
 export interface QueryRef<TData = unknown, TVariables = unknown> {
   /** @internal */
-  [QUERY_REF_BRAND]?(variables: TVariables): MaybeMasked<TData>;
+  [QUERY_REF_BRAND]?(variables: TVariables): TData;
 }
 
 /**

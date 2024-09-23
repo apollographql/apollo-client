@@ -14,7 +14,7 @@ import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
-import type { MaybeMasked } from "../../masking/index.js";
+import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -25,7 +25,7 @@ export interface UseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | string;
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**

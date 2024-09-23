@@ -9,6 +9,7 @@ import type {
   StoreObject,
   Reference,
   DeepPartial,
+  NoInfer,
 } from "../../utilities/index.js";
 import {
   Observable,
@@ -30,7 +31,7 @@ import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
 import { invariant } from "../../utilities/globals/index.js";
 import { maskFragment } from "../../core/masking.js";
-import type { MaybeMasked, Unmask } from "../../masking/index.js";
+import type { FragmentType, MaybeMasked, Unmask } from "../../masking/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -53,7 +54,7 @@ export interface WatchFragmentOptions<TData, TVars> {
    *
    * @docGroup 1. Required options
    */
-  from: StoreObject | Reference | string;
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
   /**
    * Any variables that the GraphQL fragment may depend on.
    *

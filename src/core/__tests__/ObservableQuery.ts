@@ -2402,6 +2402,53 @@ describe("ObservableQuery", () => {
         });
       }
     );
+    // reproduction of https://github.com/apollographql/apollo-client/issues/12069
+    it.only("bug: observable stuck on loading: true when notifyOnNetworkStatusChange is true and refetched data does not change", async () => {
+      const queryOptions = {
+        query: gql`
+          query {
+            value
+          }
+        `,
+        notifyOnNetworkStatusChange: true,
+      };
+
+      const client = new ApolloClient({
+        link: mockSingleLink(
+          { request: queryOptions, result: { data: { value: 1 } } },
+          { request: queryOptions, result: { data: { value: 1 } } }
+        ).setOnError((error) => {
+          throw error;
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      const obs = client.watchQuery(queryOptions);
+
+      const stream = new ObservableStream(obs);
+
+      {
+        const result = await stream.takeNext();
+        expect(result.data).toEqual({
+          value: 1,
+        });
+        expect(result.loading).toBe(false);
+      }
+
+      client.cache.modify({
+        fields: {
+          value: (_, { DELETE }) => DELETE,
+        },
+      });
+
+      {
+        const result = await stream.takeNext();
+        // this is the final event in the stream:
+        // data is an empty object and loading remains true
+        expect(result.data).toEqual({});
+        expect(result.loading).toBe(true);
+      }
+    });
 
     it("handles multiple calls to getCurrentResult without losing data", async () => {
       const query = gql`

@@ -8,10 +8,18 @@ import type { Prettify } from "../utilities/index.js";
 
 export interface DataMasking {}
 
+/**
+ * Marks a type as masked. This is used by MaybeMasked<T> when determining
+ * whether to use the masked or unmasked type.
+ */
 export type Masked<TData> = TData & {
   __masked?: true;
 };
 
+/**
+ * Marks a type as masked. This is a shortcut for
+ * TypedDocumentNode<Masked<TData>, TVariables>
+ */
 export type MaskedDocumentNode<
   TData = { [key: string]: any },
   TVariables = { [key: string]: any },
@@ -24,11 +32,18 @@ export type FragmentType<TData> =
     : never
   : never;
 
+/**
+ * Returns TData as either masked or unmasked depending on whether masking is
+ * enabled.
+ */
 export type MaybeMasked<TData> =
   TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
   : DataMasking extends { enabled: true } ? TData
   : Unmasked<TData>;
 
+/**
+ * Unmasks a type to provide its full result.
+ */
 export type Unmasked<TData> =
   TData extends object ?
     UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>

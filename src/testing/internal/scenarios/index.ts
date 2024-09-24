@@ -66,14 +66,14 @@ export function setupVariablesCase() {
 
 export type MaskedVariablesCaseFragment = {
   name: string;
-} & { " $fragmentName": "MaskedVariablesCaseFragment" };
+} & { " $fragmentName"?: "MaskedVariablesCaseFragment" };
 
 export interface MaskedVariablesCaseData {
   character: {
     __typename: "Character";
     id: string;
   } & {
-    " $fragmentRefs": {
+    " $fragmentRefs"?: {
       MaskedVariablesCaseFragment: MaskedVariablesCaseFragment;
     };
   };

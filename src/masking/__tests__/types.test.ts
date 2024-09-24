@@ -1,5 +1,6 @@
 import { expectTypeOf } from "expect-type";
 import type { Unmasked } from "../index";
+import { DeepPartial } from "../../utilities";
 
 describe.skip("Unmasked", () => {
   test("unmasks deeply nested fragments", () => {
@@ -92,6 +93,32 @@ describe.skip("Unmasked", () => {
         job: string;
         position: string;
       }>;
+    }>();
+  });
+
+  test("unmasks DeepPartial types", () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: {
+        NameFieldsFragment: NameFieldsFragment;
+      };
+    };
+
+    type NameFieldsFragment = {
+      __typename: "User";
+      firstName: string;
+      lastName: string;
+    } & { " $fragmentName"?: "NameFieldsFragment" };
+
+    expectTypeOf<Unmasked<DeepPartial<UserFieldsFragment>>>().toEqualTypeOf<{
+      __typename?: "User";
+      id?: number;
+      age?: number;
+      firstName?: string;
+      lastName?: string;
     }>();
   });
 

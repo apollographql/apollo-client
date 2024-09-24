@@ -1,10 +1,12 @@
-import type { Prettify } from "../../utilities/index.js";
+import type { DeepPrettify, Prettify } from "../../utilities/index.js";
 import type { DataMasking } from "../types.js";
 
 /** @internal */
 export type Unmasked<TData> =
   TData extends object ?
-    Prettify<UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>>
+    DeepPrettify<
+      UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
+    >
   : TData;
 
 /** @internal */

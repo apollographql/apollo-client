@@ -716,3 +716,22 @@ export function removeClientSetsFromDocument(
 
   return modifiedDoc;
 }
+
+export function addNonReactiveToNamedFragments(document: DocumentNode) {
+  checkDocument(document);
+
+  return visit(document, {
+    FragmentSpread: (node) => {
+      return {
+        ...node,
+        directives: [
+          ...(node.directives || []),
+          {
+            kind: Kind.DIRECTIVE,
+            name: { kind: Kind.NAME, value: "nonreactive" },
+          } satisfies DirectiveNode,
+        ],
+      };
+    },
+  });
+}

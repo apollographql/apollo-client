@@ -60,6 +60,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -221,7 +222,7 @@ function useErrorCase<TData extends ErrorCaseData>(
     networkError,
     graphQLErrors,
   }: {
-    data?: TData;
+    data?: Unmasked<TData>;
     networkError?: Error;
     graphQLErrors?: GraphQLError[];
   } = Object.create(null)
@@ -278,6 +279,61 @@ function useVariablesQueryCase() {
   }));
 
   return { query, mocks };
+}
+
+type CharacterFragment = {
+  name: string;
+} & { " $fragmentName"?: "CharacterFragment" };
+
+interface MaskedVariablesCaseData {
+  character: {
+    id: string;
+  } & { " $fragmentRefs"?: { CharacterFragment: CharacterFragment } };
+}
+
+interface UnmaskedVariablesCaseData {
+  character: {
+    id: string;
+    name: string;
+  };
+}
+
+function useMaskedVariablesQueryCase() {
+  const CHARACTERS = ["Spider-Man", "Black Widow", "Iron Man", "Hulk"];
+
+  const document = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        ...CharacterFragment
+      }
+    }
+
+    fragment CharacterFragment on Character {
+      name
+    }
+  `;
+
+  const query: MaskedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
+  const unmaskedQuery: TypedDocumentNode<
+    MaskedVariablesCaseData,
+    VariablesCaseVariables
+  > = document;
+
+  const mocks = CHARACTERS.map((name, index) => ({
+    request: { query, variables: { id: String(index + 1) } },
+    result: {
+      data: {
+        character: { __typename: "Character", id: String(index + 1), name },
+      },
+    },
+  }));
+
+  return { query, unmaskedQuery, mocks };
 }
 
 function wait(delay: number) {
@@ -10571,6 +10627,928 @@ describe("useSuspenseQuery", () => {
     await expect(Profiler).not.toRerender();
   });
 
+  it("masks queries when dataMasking is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query);
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // loading
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+      const { result } = snapshot;
+
+      expect(result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+  });
+
+  it("does not mask query when dataMasking is `false`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Query, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query);
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // loading
+    await Profiler.takeRender();
+
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result?.data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+  });
+
+  it("does not mask query by default", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: TypedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Query, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query);
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // loading
+    await Profiler.takeRender();
+
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result?.data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+  });
+
+  it("masks queries updated by the cache", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query);
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // loading
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+
+    setTimeout(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+            // @ts-ignore TODO: Determine how to handle cache writes with masked
+            // query type
+            age: 35,
+          },
+        },
+      });
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (updated)",
+        },
+      });
+    }
+  });
+
+  it("does not rerender when updating field in named fragment", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query);
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // loading
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          // @ts-ignore TODO: Determine how to handle cache writes with masked
+          // query type
+          age: 35,
+        },
+      },
+    });
+
+    await expect(Profiler).not.toRerender();
+
+    expect(client.readQuery({ query })).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 35,
+      },
+    });
+  });
+
+  it("masks result from cache when using with cache-first fetch policy", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      },
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query, { fetchPolicy: "cache-first" });
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    const { snapshot } = await Profiler.takeRender();
+
+    expect(snapshot.result?.data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    });
+  });
+
+  it("masks cache and network result when using cache-and-network fetch policy", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (server)",
+              age: 35,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 34,
+        },
+      },
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query, {
+        fetchPolicy: "cache-and-network",
+      });
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (server)",
+        },
+      });
+    }
+  });
+
+  it("masks partial cache data when returnPartialData is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (server)",
+              age: 35,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    {
+      using _ = spyOnConsole("error");
+      client.writeQuery({
+        query,
+        data: {
+          // @ts-expect-error writing partial cache data
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            age: 34,
+          },
+        },
+      });
+    }
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          DeepPartial<Masked<Query>>,
+          never
+        > | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query, { returnPartialData: true });
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+        },
+      });
+    }
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User (server)",
+        },
+      });
+    }
+  });
+
+  it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: null,
+              age: 34,
+            },
+          },
+          errors: [new GraphQLError("Couldn't get name")],
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          Masked<Query> | undefined,
+          never
+        > | null,
+      },
+    });
+
+    function App() {
+      const result = useSuspenseQuery(query, { errorPolicy: "all" });
+
+      Profiler.replaceSnapshot({ result });
+
+      return null;
+    }
+
+    render(<App />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>
+            <Suspense fallback="Loading">{children}</Suspense>
+          </Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    // loading
+    await Profiler.takeRender();
+
+    {
+      const { snapshot } = await Profiler.takeRender();
+      const { result } = snapshot;
+
+      expect(result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: null,
+        },
+      });
+
+      expect(result?.error).toEqual(
+        new ApolloError({
+          graphQLErrors: [new GraphQLError("Couldn't get name")],
+        })
+      );
+    }
+  });
+
   describe.skip("type tests", () => {
     it("returns unknown when TData cannot be inferred", () => {
       const query = gql`
@@ -10606,6 +11584,35 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery);
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery);
+
+        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery);
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
     });
 
     it('returns TData | undefined with errorPolicy: "ignore"', () => {
@@ -10627,6 +11634,45 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          errorPolicy: "ignore",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { errorPolicy: "ignore" });
+
+        expectTypeOf(data).toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { errorPolicy: "ignore" });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
     });
 
     it('returns TData | undefined with errorPolicy: "all"', () => {
@@ -10648,6 +11694,43 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, { errorPolicy: "all" });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { errorPolicy: "all" });
+
+        expectTypeOf(data).toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { errorPolicy: "all" });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
     });
 
     it('returns TData with errorPolicy: "none"', () => {
@@ -10669,6 +11752,35 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData | undefined>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, { errorPolicy: "none" });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { errorPolicy: "none" });
+
+        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { errorPolicy: "none" });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
     });
 
     it("returns DeepPartial<TData> with returnPartialData: true", () => {
@@ -10690,6 +11802,49 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          returnPartialData: true,
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData>
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData>
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { returnPartialData: true });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData>
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData>
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { returnPartialData: true });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData>
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData>
+        >();
+      }
     });
 
     it("returns TData with returnPartialData: false", () => {
@@ -10715,6 +11870,37 @@ describe("useSuspenseQuery", () => {
       expectTypeOf(explicit).not.toEqualTypeOf<
         DeepPartial<VariablesCaseData>
       >();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          returnPartialData: false,
+        });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { returnPartialData: false });
+
+        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { returnPartialData: false });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
     });
 
     it("returns TData | undefined when skip is present", () => {
@@ -10750,6 +11936,59 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(dynamic).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(dynamic).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, { skip: true });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { skip: true });
+
+        expectTypeOf(data).toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { skip: true });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const options = {
+          skip: true,
+        };
+
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { skip: options.skip });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
     });
 
     it("returns TData | undefined when using `skipToken` as options", () => {
@@ -10773,6 +12012,46 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(
+          maskedQuery,
+          options.skip ? skipToken : { variables: { id: "1" } }
+        );
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
+
+        expectTypeOf(data).toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
     });
 
     it("returns TData | undefined when using `skipToken` with undefined options", () => {
@@ -10796,6 +12075,46 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<VariablesCaseData | undefined>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(
+          maskedQuery,
+          options.skip ? skipToken : undefined
+        );
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, options.skip ? skipToken : undefined);
+
+        expectTypeOf(data).toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, options.skip ? skipToken : undefined);
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
     });
 
     it("returns DeepPartial<TData> | undefined when using `skipToken` as options with `returnPartialData`", () => {
@@ -10823,6 +12142,50 @@ describe("useSuspenseQuery", () => {
         DeepPartial<VariablesCaseData> | undefined
       >();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(
+          maskedQuery,
+          options.skip ? skipToken : { returnPartialData: true }
+        );
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData> | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, options.skip ? skipToken : { returnPartialData: true });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData> | undefined
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, options.skip ? skipToken : { returnPartialData: true });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData> | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
+        >();
+      }
     });
 
     it("returns TData when passing an option that does not affect TData", () => {
@@ -10848,6 +12211,37 @@ describe("useSuspenseQuery", () => {
       expectTypeOf(explicit).not.toEqualTypeOf<
         DeepPartial<VariablesCaseData>
       >();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          fetchPolicy: "no-cache",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, { fetchPolicy: "no-cache" });
+
+        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, { fetchPolicy: "no-cache" });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
     });
 
     it("handles combinations of options", () => {
@@ -10860,6 +12254,7 @@ describe("useSuspenseQuery", () => {
       };
 
       const { query } = useVariablesQueryCase();
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
 
       const { data: inferredPartialDataIgnore } = useSuspenseQuery(query, {
         returnPartialData: true,
@@ -10888,6 +12283,20 @@ describe("useSuspenseQuery", () => {
         explicitPartialDataIgnore
       ).not.toEqualTypeOf<VariablesCaseData>();
 
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          returnPartialData: true,
+          errorPolicy: "ignore",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData> | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
+        >();
+      }
+
       const { data: inferredPartialDataNone } = useSuspenseQuery(query, {
         returnPartialData: true,
         errorPolicy: "none",
@@ -10915,6 +12324,20 @@ describe("useSuspenseQuery", () => {
         explicitPartialDataNone
       ).not.toEqualTypeOf<VariablesCaseData>();
 
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          returnPartialData: true,
+          errorPolicy: "ignore",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData> | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
+        >();
+      }
+
       const { data: inferredSkipIgnore } = useSuspenseQuery(query, {
         skip: options.skip,
         errorPolicy: "ignore",
@@ -10940,6 +12363,18 @@ describe("useSuspenseQuery", () => {
       >();
       expectTypeOf(explicitSkipIgnore).not.toEqualTypeOf<VariablesCaseData>();
 
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          skip: options.skip,
+          errorPolicy: "ignore",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
+
       const { data: inferredSkipNone } = useSuspenseQuery(query, {
         skip: options.skip,
         errorPolicy: "none",
@@ -10962,6 +12397,18 @@ describe("useSuspenseQuery", () => {
         VariablesCaseData | undefined
       >();
       expectTypeOf(explicitSkipNone).not.toEqualTypeOf<VariablesCaseData>();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          skip: options.skip,
+          errorPolicy: "none",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
+        expectTypeOf(data).not.toEqualTypeOf<
+          UnmaskedVariablesCaseData | undefined
+        >();
+      }
 
       const { data: inferredPartialDataNoneSkip } = useSuspenseQuery(query, {
         skip: options.skip,
@@ -10991,6 +12438,21 @@ describe("useSuspenseQuery", () => {
       expectTypeOf(
         explicitPartialDataNoneSkip
       ).not.toEqualTypeOf<VariablesCaseData>();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          skip: options.skip,
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData> | undefined
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
+        >();
+      }
     });
 
     it("returns correct TData type when combined options that do not affect TData", () => {
@@ -11016,6 +12478,235 @@ describe("useSuspenseQuery", () => {
 
       expectTypeOf(explicit).toEqualTypeOf<DeepPartial<VariablesCaseData>>();
       expectTypeOf(explicit).not.toEqualTypeOf<VariablesCaseData>();
+
+      const { query: maskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { data } = useSuspenseQuery(maskedQuery, {
+          fetchPolicy: "no-cache",
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData>
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData>
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          MaskedVariablesCaseData,
+          VariablesCaseVariables
+        >(maskedQuery, {
+          fetchPolicy: "no-cache",
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData>
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData>
+        >();
+      }
+
+      {
+        const { data } = useSuspenseQuery<
+          Masked<MaskedVariablesCaseData>,
+          VariablesCaseVariables
+        >(maskedQuery, {
+          fetchPolicy: "no-cache",
+          returnPartialData: true,
+          errorPolicy: "none",
+        });
+
+        expectTypeOf(data).toEqualTypeOf<
+          DeepPartial<MaskedVariablesCaseData>
+        >();
+        expectTypeOf(data).not.toEqualTypeOf<
+          DeepPartial<UnmaskedVariablesCaseData>
+        >();
+      }
+    });
+
+    it("uses proper masked types for refetch", async () => {
+      const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { refetch } = useSuspenseQuery(query);
+
+        const result = await refetch();
+
+        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(
+          result.data
+        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { refetch } = useSuspenseQuery(unmaskedQuery);
+
+        const result = await refetch();
+
+        expectTypeOf(result.data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(result.data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
+    });
+
+    it("uses proper masked types for fetchMore", async () => {
+      const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { fetchMore } = useSuspenseQuery(query);
+
+        const result = await fetchMore({
+          updateQuery: (queryData, { fetchMoreResult }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(
+              fetchMoreResult
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              fetchMoreResult
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+
+        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(
+          result.data
+        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+      }
+
+      {
+        const { fetchMore } = useSuspenseQuery(unmaskedQuery);
+
+        const result = await fetchMore({
+          updateQuery: (queryData, { fetchMoreResult }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(
+              fetchMoreResult
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              fetchMoreResult
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+
+        expectTypeOf(result.data).toEqualTypeOf<UnmaskedVariablesCaseData>();
+        expectTypeOf(result.data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+      }
+    });
+
+    it("uses proper masked types for subscribeToMore", async () => {
+      type CharacterFragment = {
+        __typename: "Character";
+        name: string;
+      } & { " $fragmentName": "CharacterFragment" };
+
+      type Subscription = {
+        pushLetter: {
+          __typename: "Character";
+          id: number;
+        } & { " $fragmentRefs": { CharacterFragment: CharacterFragment } };
+      };
+
+      type UnmaskedSubscription = {
+        pushLetter: {
+          __typename: "Character";
+          id: number;
+          name: string;
+        };
+      };
+
+      const { query, unmaskedQuery } = useMaskedVariablesQueryCase();
+
+      {
+        const { subscribeToMore } = useSuspenseQuery(query);
+
+        const subscription: MaskedDocumentNode<Subscription, never> = gql`
+          subscription {
+            pushLetter {
+              id
+              ...CharacterFragment
+            }
+          }
+
+          fragment CharacterFragment on Character {
+            name
+          }
+        `;
+
+        subscribeToMore({
+          document: subscription,
+          updateQuery: (queryData, { subscriptionData }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(
+              subscriptionData.data
+            ).toEqualTypeOf<UnmaskedSubscription>();
+            expectTypeOf(
+              subscriptionData.data
+            ).not.toEqualTypeOf<Subscription>();
+
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+      }
+
+      {
+        const { subscribeToMore } = useSuspenseQuery(unmaskedQuery);
+
+        const subscription: TypedDocumentNode<Subscription, never> = gql`
+          subscription {
+            pushLetter {
+              id
+              ...CharacterFragment
+            }
+          }
+
+          fragment CharacterFragment on Character {
+            name
+          }
+        `;
+
+        subscribeToMore({
+          document: subscription,
+          updateQuery: (queryData, { subscriptionData }) => {
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              queryData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(
+              subscriptionData.data
+            ).toEqualTypeOf<UnmaskedSubscription>();
+            expectTypeOf(
+              subscriptionData.data
+            ).not.toEqualTypeOf<Subscription>();
+
+            return {} as UnmaskedVariablesCaseData;
+          },
+        });
+      }
     });
   });
 });

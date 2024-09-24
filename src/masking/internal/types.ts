@@ -1,12 +1,10 @@
-import type { DeepPrettify, Prettify } from "../../utilities/index.js";
+import type { Prettify, UnionToIntersection } from "../../utilities/index.js";
 import type { DataMasking } from "../types.js";
 
 /** @internal */
 export type Unmasked<TData> =
   TData extends object ?
-    DeepPrettify<
-      UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
-    >
+    UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
   : TData;
 
 /** @internal */
@@ -18,35 +16,27 @@ export type MaybeMasked<TData> =
 type UnwrapFragmentRefs<TData> =
   // Leave TData alone if it is Record<string, any> and not a specific shape
   string extends keyof NonNullable<TData> ? TData
-  : TData extends Array<infer U> ? Array<UnwrapFragmentRefs<U>>
   : " $fragmentRefs" extends keyof NonNullable<TData> ?
-    {
-      [K in Exclude<keyof TData, " $fragmentRefs">]: UnwrapFragmentRefs<
-        TData[K]
-      >;
-    } & UnwrapFragmentRefs<
-      Combine<KeyTuples<NonNullable<TData[" $fragmentRefs" & keyof TData]>>>
-    >
+    TData extends { " $fragmentRefs"?: infer FragmentRefs } ?
+      FragmentRefs extends object ?
+        Prettify<
+          {
+            [K in keyof TData as K extends " $fragmentRefs" ? never
+            : K]: UnwrapFragmentRefs<TData[K]>;
+          } & CombineFragmentRefs<FragmentRefs>
+        >
+      : never
+    : never
   : TData extends object ? { [K in keyof TData]: UnwrapFragmentRefs<TData[K]> }
   : TData;
+
+type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =
+  UnionToIntersection<
+    {
+      [K in keyof FragmentRefs]-?: RemoveFragmentName<FragmentRefs[K]>;
+    }[keyof FragmentRefs]
+  >;
 
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined
 type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
-
-type KeyTuples<T> =
-  T[keyof T] extends infer V ?
-    V extends any ?
-      keyof V extends infer K ?
-        K extends keyof V ?
-          K extends " $fragmentRefs" ? KeyTuples<NonNullable<V[K]>>
-          : K extends " $fragmentName" ? never
-          : [K, V[K]]
-        : never
-      : never
-    : never
-  : never;
-
-type Combine<Tuple extends [string, any]> = {
-  [P in Tuple as P[0]]: P[1];
-};

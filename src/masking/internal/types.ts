@@ -33,7 +33,9 @@ type UnwrapFragmentRefs<TData> =
 type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =
   UnionToIntersection<
     {
-      [K in keyof FragmentRefs]-?: RemoveFragmentName<FragmentRefs[K]>;
+      [K in keyof FragmentRefs]-?: UnwrapFragmentRefs<
+        RemoveFragmentName<FragmentRefs[K]>
+      >;
     }[keyof FragmentRefs]
   >;
 

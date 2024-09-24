@@ -79,23 +79,19 @@ describe.skip("Unmasked", () => {
       position: string;
     } & { " $fragmentName"?: "CareerFieldsFragment" };
 
-    expectTypeOf<Unmasked<UserFieldsFragment>>().toEqualTypeOf<{
+    expectTypeOf<Unmasked<UserFieldsFragment>>().branded.toEqualTypeOf<{
       __typename: "User";
       id: number;
       age: number;
       firstName: string;
       lastName: string;
-      jobs: Array<
-        {
-          __typename: "Job";
-          id: string;
-          title: string;
-        } & {
-          __typename: "Job";
-          job: string;
-          position: string;
-        }
-      >;
+      jobs: Array<{
+        __typename: "Job";
+        id: string;
+        title: string;
+        job: string;
+        position: string;
+      }>;
     }>();
   });
 

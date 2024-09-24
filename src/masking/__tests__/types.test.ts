@@ -50,9 +50,10 @@ describe.skip("Unmasked", () => {
       age: number;
       jobs: Array<
         {
+          __typename: "Job";
           id: string;
           title: string;
-        } & { " $fragmentRefs?": { JobFieldsFragment: JobFieldsFragment } }
+        } & { " $fragmentRefs"?: { JobFieldsFragment: JobFieldsFragment } }
       >;
     } & { " $fragmentName"?: "UserFieldsFragment" } & {
       " $fragmentRefs"?: {
@@ -67,14 +68,14 @@ describe.skip("Unmasked", () => {
     } & { " $fragmentName"?: "NameFieldsFragment" };
 
     type JobFieldsFragment = {
-      __typename: "User";
+      __typename: "Job";
       job: string;
     } & { " $fragmentName"?: "JobFieldsFragment" } & {
       " $fragmentRefs"?: { CareerFieldsFragment: CareerFieldsFragment };
     };
 
     type CareerFieldsFragment = {
-      __typename: "User";
+      __typename: "Job";
       position: string;
     } & { " $fragmentName"?: "CareerFieldsFragment" };
 
@@ -84,12 +85,17 @@ describe.skip("Unmasked", () => {
       age: number;
       firstName: string;
       lastName: string;
-      jobs: Array<{
-        id: string;
-        title: string;
-        job: string;
-        position: string;
-      }>;
+      jobs: Array<
+        {
+          __typename: "Job";
+          id: string;
+          title: string;
+        } & {
+          __typename: "Job";
+          job: string;
+          position: string;
+        }
+      >;
     }>();
   });
 

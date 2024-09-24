@@ -43,6 +43,7 @@ import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -10212,15 +10213,19 @@ describe("useQuery Hook", () => {
 
   describe("data masking", () => {
     it("masks queries when dataMasking is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10258,7 +10263,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10296,16 +10301,21 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(result?.previousData).toBeUndefined();
       }
     });
 
     it("does not mask query when dataMasking is `false`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: TypedDocumentNode<Query, never> = gql`
@@ -10379,15 +10389,20 @@ describe("useQuery Hook", () => {
           age: 30,
         },
       });
+      expect(snapshot.result?.previousData).toBeUndefined();
     });
 
     it("does not mask query by default", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
       const query: TypedDocumentNode<Query, never> = gql`
@@ -10460,18 +10475,23 @@ describe("useQuery Hook", () => {
           age: 30,
         },
       });
+      expect(snapshot.result?.previousData).toBeUndefined();
     });
 
     it("masks queries updated by the cache", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10509,7 +10529,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10542,6 +10562,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -10551,8 +10572,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User (updated)",
-            // @ts-ignore TODO: Determine how to handle cache writes with masked
-            // query type
             age: 35,
           },
         },
@@ -10568,19 +10587,26 @@ describe("useQuery Hook", () => {
             name: "Test User (updated)",
           },
         });
+        expect(snapshot.result?.previousData).toEqual({
+          currentUser: { __typename: "User", id: 1, name: "Test User" },
+        });
       }
     });
 
     it("does not rerender when updating field in named fragment", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10618,7 +10644,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10651,6 +10677,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -10660,8 +10687,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            // @ts-ignore TODO: Determine how to handle cache writes with masked
-            // query type
             age: 35,
           },
         },
@@ -10682,15 +10707,19 @@ describe("useQuery Hook", () => {
     it.each(["cache-first", "cache-only"] as FetchPolicy[])(
       "masks result from cache when using with %s fetch policy",
       async (fetchPolicy) => {
+        type UserFieldsFragment = {
+          age: number;
+        } & { " $fragmentName"?: "UserFieldsFragment" };
+
         interface Query {
           currentUser: {
             __typename: "User";
             id: number;
             name: string;
-          };
+          } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
         }
 
-        const query: TypedDocumentNode<Query, never> = gql`
+        const query: MaskedDocumentNode<Query, never> = gql`
           query MaskedQuery {
             currentUser {
               id
@@ -10733,7 +10762,6 @@ describe("useQuery Hook", () => {
               __typename: "User",
               id: 1,
               name: "Test User",
-              // @ts-expect-error TODO: Determine how to write this with masked types
               age: 30,
             },
           },
@@ -10741,7 +10769,7 @@ describe("useQuery Hook", () => {
 
         const Profiler = createProfiler({
           initialSnapshot: {
-            result: null as QueryResult<Query, never> | null,
+            result: null as QueryResult<Masked<Query>, never> | null,
           },
         });
 
@@ -10770,19 +10798,24 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
     );
 
     it("masks cache and network result when using cache-and-network fetch policy", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10826,7 +10859,6 @@ describe("useQuery Hook", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 34,
           },
         },
@@ -10834,7 +10866,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10864,6 +10896,7 @@ describe("useQuery Hook", () => {
             name: "Test User",
           },
         });
+        expect(snapshot.result?.previousData).toBeUndefined();
       }
 
       {
@@ -10876,19 +10909,30 @@ describe("useQuery Hook", () => {
             name: "Test User (server)",
           },
         });
+        expect(snapshot.result?.previousData).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
       }
     });
 
     it("masks partial cache data when returnPartialData is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -10925,21 +10969,25 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      client.writeQuery({
-        query,
-        data: {
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            // @ts-expect-error TODO: Determine how to write this with masked types
-            age: 34,
+      {
+        using _ = spyOnConsole("error");
+
+        client.writeQuery({
+          query,
+          data: {
+            // @ts-expect-error writing partial result
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              age: 34,
+            },
           },
-        },
-      });
+        });
+      }
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 
@@ -10984,15 +11032,19 @@ describe("useQuery Hook", () => {
     });
 
     it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -11032,7 +11084,7 @@ describe("useQuery Hook", () => {
 
       const Profiler = createProfiler({
         initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
+          result: null as QueryResult<Masked<Query>, never> | null,
         },
       });
 

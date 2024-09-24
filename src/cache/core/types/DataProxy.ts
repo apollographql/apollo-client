@@ -3,6 +3,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type { MissingFieldError } from "./common.js";
 import type { Reference } from "../../../utilities/index.js";
+import type { Unmasked } from "../../../masking/index.js";
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {
@@ -93,7 +94,7 @@ export namespace DataProxy {
     /**
      * The data you will be writing to the store.
      */
-    data: TData;
+    data: Unmasked<TData>;
     /**
      * Whether to notify query watchers (default: true).
      */
@@ -148,7 +149,7 @@ export interface DataProxy {
   readQuery<QueryType, TVariables = any>(
     options: DataProxy.ReadQueryOptions<QueryType, TVariables>,
     optimistic?: boolean
-  ): QueryType | null;
+  ): Unmasked<QueryType> | null;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there is more than
@@ -158,7 +159,7 @@ export interface DataProxy {
   readFragment<FragmentType, TVariables = any>(
     options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic?: boolean
-  ): FragmentType | null;
+  ): Unmasked<FragmentType> | null;
 
   /**
    * Writes a GraphQL query to the root query id.

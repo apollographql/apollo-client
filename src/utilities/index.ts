@@ -73,6 +73,7 @@ export type {
 } from "./graphql/transform.js";
 export {
   addTypenameToDocument,
+  addNonReactiveToNamedFragments,
   buildQueryFromSelectionSet,
   removeDirectivesFromDocument,
   removeConnectionDirectiveFromDocument,
@@ -107,6 +108,8 @@ export {
   wrapPromiseWithState,
 } from "./promises/decoration.js";
 
+export { preventUnhandledRejection } from "./promises/preventUnhandledRejection.js";
+
 export * from "./common/mergeDeep.js";
 export * from "./common/cloneDeep.js";
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
@@ -132,6 +135,9 @@ export * from "./types/IsStrictlyAny.js";
 export type { DeepOmit } from "./types/DeepOmit.js";
 export type { DeepPartial } from "./types/DeepPartial.js";
 export type { OnlyRequiredProperties } from "./types/OnlyRequiredProperties.js";
+export type { Prettify } from "./types/Prettify.js";
+export type { UnionToIntersection } from "./types/UnionToIntersection.js";
+export type { NoInfer } from "./types/NoInfer.js";
 
 export {
   AutoCleanedStrongCache,

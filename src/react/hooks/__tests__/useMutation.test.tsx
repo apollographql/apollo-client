@@ -33,6 +33,8 @@ import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { expectTypeOf } from "expect-type";
+import { Masked } from "../../../masking";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -3139,5 +3141,173 @@ describe.skip("Type Tests", () => {
         nonExistingVariable: "string",
       },
     });
+  });
+
+  test("uses any as masked and unmasked type when using plain DocumentNode", () => {
+    const mutation = gql`
+      mutation ($id: ID!) {
+        updateUser(id: $id) {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      optimisticResponse: { foo: "foo" },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<any>();
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toMatchTypeOf<any>();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toMatchTypeOf<any>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toMatchTypeOf<any>();
+      },
+    });
+
+    expectTypeOf(data).toMatchTypeOf<any>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<any>>>();
+  });
+
+  test("uses TData type when using plain TypedDocumentNode", () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: string;
+        age: number;
+      };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const mutation: TypedDocumentNode<Mutation, Variables> = gql`
+      mutation ($id: ID!) {
+        updateUser(id: $id) {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toMatchTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
+      },
+    });
+
+    expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+  });
+
+  test("uses masked/unmasked type when using Masked<TData>", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type Mutation = {
+      updateUser: {
+        __typename: "User";
+        id: string;
+      } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+    };
+
+    type UnmaskedMutation = {
+      updateUser: {
+        __typename: "User";
+        id: string;
+        age: number;
+      };
+    };
+
+    interface Variables {
+      id: string;
+    }
+
+    const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+      mutation ($id: ID!) {
+        updateUser(id: $id) {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<
+            UnmaskedMutation | null | undefined
+          >();
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toMatchTypeOf<
+          UnmaskedMutation | null | undefined
+        >();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toMatchTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toMatchTypeOf<
+          UnmaskedMutation | null | undefined
+        >();
+      },
+    });
+
+    expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
   });
 });

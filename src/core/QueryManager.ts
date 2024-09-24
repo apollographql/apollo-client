@@ -8,6 +8,7 @@ import { equal } from "@wry/equality";
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
+  addNonReactiveToNamedFragments,
   defaultCacheSizes,
   hasDirectives,
   isExecutionPatchIncrementalResult,
@@ -95,6 +96,7 @@ interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
+  nonReactiveQuery: DocumentNode;
   clientQuery: DocumentNode | null;
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
@@ -105,6 +107,7 @@ import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "./masking.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -234,7 +237,7 @@ export class QueryManager<TStore> {
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<
-    FetchResult<TData>
+    FetchResult<MaybeMasked<TData>>
   > {
     invariant(
       mutation,
@@ -318,7 +321,9 @@ export class QueryManager<TStore> {
           const storeResult: typeof result = { ...result };
 
           if (typeof refetchQueries === "function") {
-            refetchQueries = refetchQueries(storeResult);
+            refetchQueries = refetchQueries(
+              storeResult as FetchResult<Unmasked<TData>>
+            );
           }
 
           if (errorPolicy === "ignore" && graphQLResultHasError(storeResult)) {
@@ -357,8 +362,8 @@ export class QueryManager<TStore> {
               data: self.maskOperation({
                 document: mutation,
                 data: storeResult.data,
-              }),
-            } as FetchResult<TData>);
+              }) as any,
+            });
           }
         },
 
@@ -475,7 +480,7 @@ export class QueryManager<TStore> {
           if (complete && currentQueryResult) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: result,
+              mutationResult: result as FetchResult<Unmasked<TData>>,
               queryName: (document && getOperationName(document)) || void 0,
               queryVariables: variables!,
             });
@@ -551,7 +556,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache as TCache, result, {
+              update(cache as TCache, result as FetchResult<Unmasked<TData>>, {
                 context: mutation.context,
                 variables: mutation.variables,
               });
@@ -697,6 +702,7 @@ export class QueryManager<TStore> {
         hasClientExports: hasClientExports(document),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
+        nonReactiveQuery: addNonReactiveToNamedFragments(document),
         clientQuery: this.localState.clientQuery(document),
         serverQuery: removeDirectivesFromDocument(
           [
@@ -784,7 +790,7 @@ export class QueryManager<TStore> {
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     invariant(
       options.query,
       "query option is required. You must specify your GraphQL document " +
@@ -806,20 +812,16 @@ export class QueryManager<TStore> {
       "pollInterval option only supported on watchQuery."
     );
 
-    return this.fetchQuery<TData, TVars>(queryId, {
-      ...options,
-      query: this.transform(options.query),
-    })
-      .then((result) => {
-        if (result) {
-          result.data = this.maskOperation({
-            document: options.query,
-            data: result.data,
-          });
-        }
+    const query = this.transform(options.query);
 
-        return result;
-      })
+    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+      .then(
+        (result) =>
+          result && {
+            ...result,
+            data: this.maskOperation({ document: query, data: result.data }),
+          }
+      )
       .finally(() => this.stopQuery(queryId));
   }
 
@@ -1013,9 +1015,6 @@ export class QueryManager<TStore> {
 
     query = this.transform(query);
     variables = this.getVariables(query, variables);
-    const dataMasking: boolean | undefined = (options as any)[
-      Symbol.for("apollo.dataMasking")
-    ];
 
     const makeObservable = (variables: OperationVariables) =>
       this.getObservableFromLink<T>(query, context, variables, extensions).map(
@@ -1057,12 +1056,6 @@ export class QueryManager<TStore> {
           if (errorPolicy === "ignore") {
             delete result.errors;
           }
-
-          if (dataMasking !== false)
-            result.data = this.maskOperation({
-              document: query,
-              data: result.data,
-            });
 
           return result;
         }
@@ -1561,10 +1554,15 @@ export class QueryManager<TStore> {
     return results;
   }
 
-  public maskOperation<TData = unknown>(options: MaskOperationOptions<TData>) {
+  public maskOperation<TData = unknown>(
+    options: MaskOperationOptions<TData>
+  ): MaybeMasked<TData> {
     const { document, data } = options;
 
-    return this.dataMasking ? maskOperation(data, document, this.cache) : data;
+    return (
+      this.dataMasking ?
+        maskOperation(data, document, this.cache)
+      : data) as MaybeMasked<TData>;
   }
 
   public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {

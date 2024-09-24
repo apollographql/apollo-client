@@ -17,6 +17,7 @@ import {
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
+import type { Unmasked } from "../masking/index.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -419,7 +420,7 @@ export class QueryInfo {
           if (this.shouldWrite(result, options.variables)) {
             cache.writeQuery({
               query: document,
-              data: result.data as T,
+              data: result.data as Unmasked<T>,
               variables: options.variables,
               overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
             });

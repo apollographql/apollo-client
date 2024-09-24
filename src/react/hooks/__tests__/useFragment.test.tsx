@@ -40,6 +40,7 @@ import {
   spyOnConsole,
   useTrackRenders,
 } from "../../../testing/internal";
+import { FragmentType } from "../../../masking";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1465,7 +1466,7 @@ describe("useFragment", () => {
 
   it("does not rerender when fields with @nonreactive change", async () => {
     type Post = {
-      __typename: "User";
+      __typename: "Post";
       id: number;
       title: string;
       updatedAt: string;
@@ -1532,7 +1533,7 @@ describe("useFragment", () => {
 
   it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
     type Post = {
-      __typename: "User";
+      __typename: "Post";
       id: number;
       title: string;
       updatedAt: string;
@@ -2342,7 +2343,7 @@ describe.skip("Type Tests", () => {
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
     expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
-      from: string | StoreObject | Reference;
+      from: string | StoreObject | Reference | FragmentType<TData>;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;
       optimistic?: boolean;

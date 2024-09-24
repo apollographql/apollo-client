@@ -24,18 +24,23 @@ import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { invariant } from "../utilities/globals";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
 import { isSubscriptionOperation } from "../utilities";
+import { MaskedDocumentNode } from "../masking";
 
 describe("client.watchQuery", () => {
   test("masks queries when dataMasking is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -89,12 +94,16 @@ describe("client.watchQuery", () => {
   });
 
   test("does not mask query when dataMasking is `false`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -152,12 +161,16 @@ describe("client.watchQuery", () => {
   });
 
   test("does not mask query by default", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -214,15 +227,20 @@ describe("client.watchQuery", () => {
   });
 
   test("does not mask fragments marked with @unmask", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+        age: number;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -293,15 +311,20 @@ describe("client.watchQuery", () => {
       });
     });
 
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+        age: number;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -359,12 +382,16 @@ describe("client.watchQuery", () => {
   test("does not mask query when using a cache that does not support it", async () => {
     using _ = spyOnConsole("warn");
 
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -429,15 +456,19 @@ describe("client.watchQuery", () => {
   });
 
   test("masks queries updated by the cache", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -496,8 +527,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User (updated)",
-          // @ts-ignore TODO: Determine how to handle cache writes with masked
-          // query type
           age: 35,
         },
       },
@@ -517,15 +546,19 @@ describe("client.watchQuery", () => {
   });
 
   test("does not trigger update when updating field in named fragment", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -584,8 +617,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-ignore TODO: Determine how to handle cache writes with masked
-          // query type
           age: 35,
         },
       },
@@ -608,15 +639,19 @@ describe("client.watchQuery", () => {
   it.each(["cache-first", "cache-only"] as FetchPolicy[])(
     "masks result from cache when using with %s fetch policy",
     async (fetchPolicy) => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -659,7 +694,6 @@ describe("client.watchQuery", () => {
             __typename: "User",
             id: 1,
             name: "Test User",
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 30,
           },
         },
@@ -682,15 +716,19 @@ describe("client.watchQuery", () => {
   );
 
   test("masks cache and network result when using cache-and-network fetch policy", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -734,7 +772,6 @@ describe("client.watchQuery", () => {
           __typename: "User",
           id: 1,
           name: "Test User",
-          // @ts-expect-error TODO: Determine how to write this with masked types
           age: 34,
         },
       },
@@ -773,15 +810,19 @@ describe("client.watchQuery", () => {
   });
 
   test("masks partial cache data when returnPartialData is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -825,10 +866,10 @@ describe("client.watchQuery", () => {
       client.writeQuery({
         query,
         data: {
+          // @ts-expect-error writing partial data
           currentUser: {
             __typename: "User",
             id: 1,
-            // @ts-expect-error TODO: Determine how to write this with masked types
             age: 34,
           },
         },
@@ -867,15 +908,19 @@ describe("client.watchQuery", () => {
   });
 
   test("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -939,15 +984,19 @@ describe("client.watchQuery", () => {
   ] as FetchPolicy[])(
     "masks result returned from getCurrentResult when using %s fetchPolicy",
     async (fetchPolicy) => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
       interface Query {
         currentUser: {
           __typename: "User";
           id: number;
           name: string;
-        };
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: MaskedDocumentNode<Query, never> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -1016,16 +1065,21 @@ describe("client.watchQuery", () => {
   test("warns when accessing a unmasked field while using @unmask with mode: 'migrate'", async () => {
     using consoleSpy = spyOnConsole("warn");
 
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
+        /** @deprecated */
         age: number;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query UnmaskedQuery {
         currentUser {
           id
@@ -1090,25 +1144,25 @@ describe("client.watchQuery", () => {
   });
 
   test("reads fragment by passing parent object to `from`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    interface Fragment {
-      age: number;
-    }
-
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         age
       }
     `;
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1163,26 +1217,26 @@ describe("client.watchQuery", () => {
   test("warns when passing parent object to `from` when id is masked", async () => {
     using _ = spyOnConsole("warn");
 
+    type UserFieldsFragment = {
+      id: number;
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
-        id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    interface Fragment {
-      age: number;
-    }
-
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         id
         age
       }
     `;
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           name
@@ -1243,18 +1297,18 @@ describe("client.watchQuery", () => {
   test("warns when passing parent object to `from` that is non-normalized", async () => {
     using _ = spyOnConsole("warn");
 
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    interface Fragment {
-      age: number;
-    }
-
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: TypedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         age
       }
@@ -1320,16 +1374,20 @@ describe("client.watchQuery", () => {
   test("can lookup unmasked fragments from the fragment registry in queries", async () => {
     const fragments = createFragmentRegistry();
 
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
         age: number;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -1377,6 +1435,419 @@ describe("client.watchQuery", () => {
       });
     }
   });
+
+  test("masks result of refetch", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 31,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+
+    const result = await observable.refetch();
+
+    expect(result.data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+      },
+    });
+
+    expect(client.readQuery({ query })).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 31,
+      },
+    });
+
+    // Since we don't set notifyOnNetworkStatus to `true`, we don't expect to
+    // see another result since the masked data did not change
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
+
+  test("masks result of setVariables", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: MaskedDocumentNode<Query, Variables> = gql`
+      query UnmaskedQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 1,
+              name: "User 1",
+              age: 30,
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 2,
+              name: "User 2",
+              age: 31,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+        },
+      });
+    }
+
+    const result = await observable.setVariables({ id: 2 });
+
+    expect(result?.data).toEqual({
+      user: {
+        __typename: "User",
+        id: 2,
+        name: "User 2",
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 2,
+          name: "User 2",
+        },
+      });
+    }
+
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
+
+  test("masks result of setOptions", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: MaskedDocumentNode<Query, Variables> = gql`
+      query UnmaskedQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 1,
+              name: "User 1",
+              age: 30,
+            },
+          },
+        },
+      },
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            user: {
+              __typename: "User",
+              id: 2,
+              name: "User 2",
+              age: 31,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+        },
+      });
+    }
+
+    const result = await observable.setOptions({ variables: { id: 2 } });
+
+    expect(result?.data).toEqual({
+      user: {
+        __typename: "User",
+        id: 2,
+        name: "User 2",
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 2,
+          name: "User 2",
+        },
+      });
+    }
+
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
+
+  test("does not mask data passed to updateQuery", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      user: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface Variables {
+      id: number;
+    }
+
+    const query: MaskedDocumentNode<Query, Variables> = gql`
+      query UnmaskedQuery($id: ID!) {
+        user(id: $id) {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+          age: 30,
+        },
+      },
+      variables: { id: 1 },
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User 1",
+        },
+      });
+    }
+
+    const updateQuery: Parameters<typeof observable.updateQuery>[0] = jest.fn(
+      (previousResult) => {
+        return { user: { ...previousResult.user, name: "User (updated)" } };
+      }
+    );
+
+    observable.updateQuery(updateQuery);
+
+    expect(updateQuery).toHaveBeenCalledWith(
+      { user: { __typename: "User", id: 1, name: "User 1", age: 30 } },
+      { variables: { id: 1 } }
+    );
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "User (updated)",
+        },
+      });
+    }
+
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+  });
 });
 
 describe("client.watchFragment", () => {
@@ -1385,22 +1856,24 @@ describe("client.watchFragment", () => {
       __typename: "User";
       id: number;
       age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
     };
 
     type NameFieldsFragment = {
       __typename: "User";
       firstName: string;
       lastName: string;
-    };
+    } & { " $fragmentName"?: "NameFieldsFragment" };
 
-    const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
+    const nameFieldsFragment: MaskedDocumentNode<NameFieldsFragment> = gql`
       fragment NameFields on User {
         firstName
         lastName
       }
     `;
 
-    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment> = gql`
+    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment> = gql`
       fragment UserFields on User {
         id
         age
@@ -1422,7 +1895,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         age: 30,
-        // @ts-expect-error Need to determine types when writing data for masked fragment types
         firstName: "Test",
         lastName: "User",
       },
@@ -1463,15 +1935,15 @@ describe("client.watchFragment", () => {
       __typename: "User";
       id: number;
       age: number;
-      firstName: string;
-      lastName: string;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
     };
 
     type NameFieldsFragment = {
       __typename: "User";
       firstName: string;
       lastName: string;
-    };
+    } & { " $fragmentName"?: "NameFieldsFragment" };
 
     const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
       fragment NameFields on User {
@@ -1550,15 +2022,15 @@ describe("client.watchFragment", () => {
       __typename: "User";
       id: number;
       age: number;
-      firstName: string;
-      lastName: string;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { NameFieldsFragment: NameFieldsFragment };
     };
 
     type NameFieldsFragment = {
       __typename: "User";
       firstName: string;
       lastName: string;
-    };
+    } & { " $fragmentName"?: "NameFieldsFragment" };
 
     const nameFieldsFragment: TypedDocumentNode<NameFieldsFragment> = gql`
       fragment NameFields on User {
@@ -1632,14 +2104,21 @@ describe("client.watchFragment", () => {
   });
 
   test("does not mask watched fragments marked with @unmask", async () => {
-    interface Fragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName"?: "ProfileFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
       age: number;
-    }
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         id
         name
@@ -1688,13 +2167,20 @@ describe("client.watchFragment", () => {
   });
 
   test("masks watched fragments updated by the cache", async () => {
-    interface Fragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         id
         name
@@ -1718,7 +2204,6 @@ describe("client.watchFragment", () => {
         __typename: "User",
         id: 1,
         name: "Test User",
-        // @ts-expect-error Need to determine how to handle masked fragment types with writes
         age: 30,
       },
     });
@@ -1766,13 +2251,20 @@ describe("client.watchFragment", () => {
   });
 
   test("does not trigger update on watched fragment when updating field in named fragment", async () => {
-    interface Fragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         id
         name
@@ -1849,18 +2341,20 @@ describe("client.watchFragment", () => {
   });
 
   test("triggers update to child watched fragment when updating field in named fragment", async () => {
-    interface UserFieldsFragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    interface ProfileFieldsFragment {
-      __typename: "User";
-      age: number;
-    }
-
-    const profileFieldsFragment: TypedDocumentNode<
+    const profileFieldsFragment: MaskedDocumentNode<
       ProfileFieldsFragment,
       never
     > = gql`
@@ -1869,7 +2363,7 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> =
+    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
       gql`
         fragment UserFields on User {
           id
@@ -1970,18 +2464,21 @@ describe("client.watchFragment", () => {
   });
 
   test("does not trigger update to watched fragments when updating field in named fragment with @nonreactive", async () => {
-    interface UserFieldsFragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+      lastUpdatedAt: string;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       lastUpdatedAt: string;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    interface ProfileFieldsFragment {
-      __typename: "User";
-      lastUpdatedAt: string;
-    }
-
-    const profileFieldsFragment: TypedDocumentNode<
+    const profileFieldsFragment: MaskedDocumentNode<
       ProfileFieldsFragment,
       never
     > = gql`
@@ -1991,7 +2488,7 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> =
+    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
       gql`
         fragment UserFields on User {
           id
@@ -2087,18 +2584,21 @@ describe("client.watchFragment", () => {
   });
 
   test("does not trigger update to watched fragments when updating parent field with @nonreactive and child field", async () => {
-    interface UserFieldsFragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+      lastUpdatedAt: string;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       lastUpdatedAt: string;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    interface ProfileFieldsFragment {
-      __typename: "User";
-      lastUpdatedAt: string;
-    }
-
-    const profileFieldsFragment: TypedDocumentNode<
+    const profileFieldsFragment: MaskedDocumentNode<
       ProfileFieldsFragment,
       never
     > = gql`
@@ -2108,7 +2608,7 @@ describe("client.watchFragment", () => {
       }
     `;
 
-    const userFieldsFragment: TypedDocumentNode<UserFieldsFragment, never> =
+    const userFieldsFragment: MaskedDocumentNode<UserFieldsFragment, never> =
       gql`
         fragment UserFields on User {
           id
@@ -2213,14 +2713,23 @@ describe("client.watchFragment", () => {
   test("warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'", async () => {
     using consoleSpy = spyOnConsole("warn");
 
-    interface Fragment {
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+      name: string;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type UserFieldsFragment = {
       __typename: "User";
       id: number;
       name: string;
+      /** @deprecated */
       age: number;
-    }
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-    const fragment: TypedDocumentNode<Fragment, never> = gql`
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
       fragment UserFields on User {
         id
         name
@@ -2326,15 +2835,19 @@ describe("client.watchFragment", () => {
 
 describe("client.query", () => {
   test("masks data returned from client.query when dataMasking is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    const query: TypedDocumentNode<Query, never> = gql`
+    const query: MaskedDocumentNode<Query, never> = gql`
       query MaskedQuery {
         currentUser {
           id
@@ -2382,12 +2895,16 @@ describe("client.query", () => {
   });
 
   test("does not mask data returned from client.query when dataMasking is `false`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -2439,12 +2956,16 @@ describe("client.query", () => {
   });
 
   test("does not mask data returned from client.query by default", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Query {
       currentUser: {
         __typename: "User";
         id: number;
         name: string;
-      };
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
     const query: TypedDocumentNode<Query, never> = gql`
@@ -3300,15 +3821,21 @@ describe("observableQuery.subscribeToMore", () => {
 
 describe("client.mutate", () => {
   test("masks data returned from client.mutate when dataMasking is `true`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
       updateUser: {
         __typename: "User";
         id: number;
         name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -3356,11 +3883,17 @@ describe("client.mutate", () => {
   });
 
   test("does not mask data returned from client.mutate when dataMasking is `false`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
       updateUser: {
         __typename: "User";
         id: number;
         name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
       };
     }
 
@@ -3413,11 +3946,17 @@ describe("client.mutate", () => {
   });
 
   test("does not mask data returned from client.mutate by default", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
       updateUser: {
         __typename: "User";
         id: number;
         name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
       };
     }
 
@@ -3469,15 +4008,21 @@ describe("client.mutate", () => {
   });
 
   test("does not mask data passed to update function", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
       updateUser: {
         __typename: "User";
         id: number;
         name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -3535,15 +4080,21 @@ describe("client.mutate", () => {
   });
 
   test("handles errors returned when using errorPolicy `none`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
       updateUser: {
         __typename: "User";
         id: number;
         name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -3582,15 +4133,23 @@ describe("client.mutate", () => {
   });
 
   test("handles errors returned when using errorPolicy `all`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
-      updateUser: {
-        __typename: "User";
-        id: number;
-        name: string;
-      };
+      updateUser:
+        | ({
+            __typename: "User";
+            id: number;
+            name: string;
+          } & {
+            " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
+          })
+        | null;
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
       mutation MaskedMutation {
         updateUser {
           id
@@ -3630,15 +4189,21 @@ describe("client.mutate", () => {
   });
 
   test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
     interface Mutation {
       updateUser: {
         __typename: "User";
         id: number;
         name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
       };
     }
 
-    const mutation: TypedDocumentNode<Mutation, never> = gql`
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
       mutation MaskedMutation {
         updateUser {
           id

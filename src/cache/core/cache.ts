@@ -9,6 +9,7 @@ import type {
   StoreObject,
   Reference,
   DeepPartial,
+  NoInfer,
 } from "../../utilities/index.js";
 import {
   Observable,
@@ -30,6 +31,11 @@ import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
 import { invariant } from "../../utilities/globals/index.js";
 import { maskFragment } from "../../core/masking.js";
+import type {
+  FragmentType,
+  MaybeMasked,
+  Unmasked,
+} from "../../masking/index.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -52,7 +58,7 @@ export interface WatchFragmentOptions<TData, TVars> {
    *
    * @docGroup 1. Required options
    */
-  from: StoreObject | Reference | string;
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
   /**
    * Any variables that the GraphQL fragment may depend on.
    *
@@ -83,12 +89,12 @@ export interface WatchFragmentOptions<TData, TVars> {
  */
 export type WatchFragmentResult<TData> =
   | {
-      data: TData;
+      data: MaybeMasked<TData>;
       complete: true;
       missing?: never;
     }
   | {
-      data: DeepPartial<TData>;
+      data: DeepPartial<MaybeMasked<TData>>;
       complete: false;
       missing: MissingTree;
     };
@@ -100,7 +106,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   // core API
   public abstract read<TData = any, TVariables = any>(
     query: Cache.ReadOptions<TVariables, TData>
-  ): TData | null;
+  ): Unmasked<TData> | null;
   public abstract write<TData = any, TVariables = any>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
@@ -232,7 +238,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readQuery<QueryType, TVariables = any>(
     options: Cache.ReadQueryOptions<QueryType, TVariables>,
     optimistic = !!options.optimistic
-  ): QueryType | null {
+  ): Unmasked<QueryType> | null {
     return this.read({
       ...options,
       rootId: options.id || "ROOT_QUERY",
@@ -334,7 +340,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public readFragment<FragmentType, TVariables = any>(
     options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
     optimistic = !!options.optimistic
-  ): FragmentType | null {
+  ): Unmasked<FragmentType> | null {
     return this.read({
       ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),
@@ -374,8 +380,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public updateQuery<TData = any, TVariables = any>(
     options: Cache.UpdateQueryOptions<TData, TVariables>,
-    update: (data: TData | null) => TData | null | void
-  ): TData | null {
+    update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
+  ): Unmasked<TData> | null {
     return this.batch({
       update(cache) {
         const value = cache.readQuery<TData, TVariables>(options);
@@ -389,8 +395,8 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 
   public updateFragment<TData = any, TVariables = any>(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
-    update: (data: TData | null) => TData | null | void
-  ): TData | null {
+    update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
+  ): Unmasked<TData> | null {
     return this.batch({
       update(cache) {
         const value = cache.readFragment<TData, TVariables>(options);

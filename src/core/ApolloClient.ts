@@ -164,6 +164,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -453,7 +454,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public query<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<T>> {
+  >(
+    options: QueryOptions<TVariables, T>
+  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -488,7 +491,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<TData>> {
+  ): Promise<FetchResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
@@ -504,8 +507,18 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public subscribe<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>> {
-    return this.queryManager.startGraphQLSubscription<T>(options);
+  >(
+    options: SubscriptionOptions<TVariables, T>
+  ): Observable<FetchResult<MaybeMasked<T>>> {
+    return this.queryManager
+      .startGraphQLSubscription<T>(options)
+      .map((result) => ({
+        ...result,
+        data: this.queryManager.maskOperation({
+          document: options.query,
+          data: result.data,
+        }),
+      }));
   }
 
   /**
@@ -520,7 +533,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readQuery<T = any, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false
-  ): T | null {
+  ): Unmasked<T> | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
   }
 
@@ -570,7 +583,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readFragment<T = any, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
-  ): T | null {
+  ): Unmasked<T> | null {
     return this.cache.readFragment<T, TVariables>(options, optimistic);
   }
 

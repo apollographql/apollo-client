@@ -3,20 +3,24 @@ import gql from "graphql-tag";
 import {
   ApolloClient,
   ApolloError,
+  ApolloQueryResult,
   DefaultOptions,
+  ObservableQuery,
   QueryOptions,
   makeReference,
 } from "../core";
 import { Kind } from "graphql";
 
 import { Observable } from "../utilities";
-import { ApolloLink } from "../link/core";
+import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
 import { itAsync } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
+import { expectTypeOf } from "expect-type";
+import { Masked } from "../masking";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -2863,5 +2867,368 @@ describe("ApolloClient", () => {
         }
       }
     );
+  });
+
+  describe.skip("type tests", () => {
+    test("client.mutate uses any as masked and unmasked type when using plain DocumentNode", () => {
+      const mutation = gql`
+        mutation ($id: ID!) {
+          updateUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const promise = client.mutate({
+        mutation,
+        optimisticResponse: { foo: "foo" },
+        updateQueries: {
+          TestQuery: (_, { mutationResult }) => {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<any>();
+
+            return {};
+          },
+        },
+        refetchQueries(result) {
+          expectTypeOf(result.data).toMatchTypeOf<any>();
+
+          return "active";
+        },
+        update(_, result) {
+          expectTypeOf(result.data).toMatchTypeOf<any>();
+        },
+      });
+
+      expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<any>>>();
+    });
+
+    test("client.mutate uses TData type when using plain TypedDocumentNode", () => {
+      interface Mutation {
+        updateUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      }
+
+      interface Variables {
+        id: string;
+      }
+
+      const mutation: TypedDocumentNode<Mutation, Variables> = gql`
+        mutation ($id: ID!) {
+          updateUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const promise = client.mutate({
+        variables: { id: "1" },
+        mutation,
+        optimisticResponse: {
+          updateUser: { __typename: "User", id: "1", age: 30 },
+        },
+        updateQueries: {
+          TestQuery: (_, { mutationResult }) => {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              Mutation | null | undefined
+            >();
+
+            return {};
+          },
+        },
+        refetchQueries(result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+
+          return "active";
+        },
+        update(_, result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+        },
+      });
+
+      expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    });
+
+    test("client.mutate uses masked/unmasked type when using Masked<TData>", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
+      type Mutation = {
+        updateUser: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      type UnmaskedMutation = {
+        updateUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+
+      interface Variables {
+        id: string;
+      }
+
+      const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+        mutation ($id: ID!) {
+          updateUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const result = await client.mutate({
+        variables: { id: "1" },
+        mutation,
+        optimisticResponse: {
+          updateUser: { __typename: "User", id: "1", age: 30 },
+        },
+        updateQueries: {
+          TestQuery: (_, { mutationResult }) => {
+            expectTypeOf(mutationResult.data).toMatchTypeOf<
+              UnmaskedMutation | null | undefined
+            >();
+
+            return {};
+          },
+        },
+        refetchQueries(result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            UnmaskedMutation | null | undefined
+          >();
+
+          return "active";
+        },
+        update(_, result) {
+          expectTypeOf(result.data).toMatchTypeOf<
+            UnmaskedMutation | null | undefined
+          >();
+        },
+      });
+
+      expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
+    });
+
+    test("client.query uses correct masked/unmasked types", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
+      type Query = {
+        user: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      interface Variables {
+        id: string;
+      }
+
+      const query: TypedDocumentNode<Masked<Query>, Variables> = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const result = await client.query({ variables: { id: "1" }, query });
+
+      expectTypeOf(result.data).toMatchTypeOf<Query | null | undefined>();
+    });
+
+    test("client.watchQuery uses correct masked/unmasked types", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" };
+
+      type Query = {
+        user: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      type UnmaskedQuery = {
+        user: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+
+      type Subscription = {
+        updatedUser: {
+          __typename: "User";
+          id: string;
+        } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+      };
+
+      type UnmaskedSubscription = {
+        updatedUser: {
+          __typename: "User";
+          id: string;
+          age: number;
+        };
+      };
+
+      interface Variables {
+        id: string;
+      }
+
+      const query: TypedDocumentNode<Masked<Query>, Variables> = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const subscription: TypedDocumentNode<
+        Masked<Subscription>,
+        Variables
+      > = gql`
+        subscription ($id: ID!) {
+          updatedUser(id: $id) {
+            id
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+      const observableQuery = client.watchQuery({
+        query,
+        variables: { id: "1" },
+      });
+
+      expectTypeOf(observableQuery).toMatchTypeOf<
+        ObservableQuery<Query, Variables>
+      >();
+      expectTypeOf(observableQuery).not.toMatchTypeOf<
+        ObservableQuery<UnmaskedQuery, Variables>
+      >();
+
+      observableQuery.subscribe({
+        next: (result) => {
+          expectTypeOf(result.data).toMatchTypeOf<Query>();
+          expectTypeOf(result.data).not.toMatchTypeOf<UnmaskedQuery>();
+        },
+      });
+
+      expectTypeOf(observableQuery.getCurrentResult()).toMatchTypeOf<
+        ApolloQueryResult<Query>
+      >();
+      expectTypeOf(observableQuery.getCurrentResult()).not.toMatchTypeOf<
+        ApolloQueryResult<UnmaskedQuery>
+      >();
+
+      const fetchMoreResult = await observableQuery.fetchMore({
+        updateQuery: (previousData, { fetchMoreResult }) => {
+          expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+
+          expectTypeOf(fetchMoreResult).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).not.toMatchTypeOf<Query>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+
+      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(fetchMoreResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+
+      const refetchResult = await observableQuery.refetch();
+
+      expectTypeOf(refetchResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+
+      const setVariablesResult = await observableQuery.setVariables({
+        id: "2",
+      });
+
+      expectTypeOf(setVariablesResult?.data).toMatchTypeOf<Query | undefined>();
+      expectTypeOf(setVariablesResult?.data).not.toMatchTypeOf<
+        UnmaskedQuery | undefined
+      >();
+
+      const setOptionsResult = await observableQuery.setOptions({
+        variables: { id: "2" },
+      });
+
+      expectTypeOf(setOptionsResult.data).toMatchTypeOf<Query | undefined>();
+      expectTypeOf(setOptionsResult.data).not.toMatchTypeOf<
+        UnmaskedQuery | undefined
+      >();
+
+      observableQuery.updateQuery((previousData) => {
+        expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
+        expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+
+        return {} as UnmaskedQuery;
+      });
+
+      observableQuery.subscribeToMore({
+        document: subscription,
+        updateQuery(queryData, { subscriptionData }) {
+          expectTypeOf(queryData).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(queryData).not.toMatchTypeOf<Query>();
+
+          expectTypeOf(
+            subscriptionData.data
+          ).toMatchTypeOf<UnmaskedSubscription>();
+          expectTypeOf(subscriptionData.data).not.toMatchTypeOf<Subscription>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+    });
   });
 });

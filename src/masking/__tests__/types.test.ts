@@ -128,5 +128,6 @@ describe.skip("Unmasked", () => {
       Record<string, any>
     >();
     expectTypeOf<Unmasked<unknown>>().toEqualTypeOf<unknown>();
+    expectTypeOf<Unmasked<any>>().toEqualTypeOf<any>();
   });
 });

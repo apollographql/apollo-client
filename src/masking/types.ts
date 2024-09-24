@@ -1,4 +1,10 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type {
+  RemoveFragmentName,
+  RemoveMaskedMarker,
+  UnwrapFragmentRefs,
+} from "./internal/types.ts";
+import type { Prettify } from "../utilities/index.js";
 
 export interface DataMasking {}
 
@@ -17,3 +23,13 @@ export type FragmentType<TData> =
       { " $fragmentRefs"?: { [key in TKey]: TData } }
     : never
   : never;
+
+export type MaybeMasked<TData> =
+  TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
+  : DataMasking extends { enabled: true } ? TData
+  : Unmasked<TData>;
+
+export type Unmasked<TData> =
+  TData extends object ?
+    UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
+  : TData;

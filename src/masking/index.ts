@@ -1,2 +1,7 @@
-export type { FragmentType, Masked, MaskedDocumentNode } from "./types.js";
-export type { MaybeMasked, Unmasked } from "./internal/types.js";
+export type {
+  FragmentType,
+  Masked,
+  MaskedDocumentNode,
+  MaybeMasked,
+  Unmasked,
+} from "./types.js";

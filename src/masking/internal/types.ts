@@ -1,19 +1,6 @@
 import type { Prettify, UnionToIntersection } from "../../utilities/index.js";
-import type { DataMasking } from "../types.js";
 
-/** @internal */
-export type Unmasked<TData> =
-  TData extends object ?
-    UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
-  : TData;
-
-/** @internal */
-export type MaybeMasked<TData> =
-  TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
-  : DataMasking extends { enabled: true } ? TData
-  : Unmasked<TData>;
-
-type UnwrapFragmentRefs<TData> =
+export type UnwrapFragmentRefs<TData> =
   // Leave TData alone if it is Record<string, any> and not a specific shape
   string extends keyof NonNullable<TData> ? TData
   : " $fragmentRefs" extends keyof NonNullable<TData> ?
@@ -39,6 +26,7 @@ type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =
     }[keyof FragmentRefs]
   >;
 
-type RemoveMaskedMarker<T> = Omit<T, "__masked">;
+export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined
-type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
+export type RemoveFragmentName<T> =
+  T extends any ? Omit<T, " $fragmentName"> : T;

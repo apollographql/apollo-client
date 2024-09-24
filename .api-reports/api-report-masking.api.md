@@ -7,11 +7,12 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 // Warning: (ae-forgotten-export) The symbol "UnionToIntersection" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 type CombineFragmentRefs<FragmentRefs extends Record<string, any>> = UnionToIntersection<{
-    [K in keyof FragmentRefs]-?: RemoveFragmentName<FragmentRefs[K]>;
+    [K in keyof FragmentRefs]-?: UnwrapFragmentRefs<RemoveFragmentName<FragmentRefs[K]>>;
 }[keyof FragmentRefs]>;
 
 // @public (undocumented)
@@ -29,12 +30,12 @@ TData
     };
 } : never : never;
 
-// @public (undocumented)
+// @public
 export type Masked<TData> = TData & {
     __masked?: true;
 };
 
-// @public (undocumented)
+// @public
 export type MaskedDocumentNode<TData = {
     [key: string]: any;
 }, TVariables = {
@@ -45,7 +46,7 @@ export type MaskedDocumentNode<TData = {
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 //
-// @internal (undocumented)
+// @public
 export type MaybeMasked<TData> = TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
@@ -66,19 +67,17 @@ type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // @public (undocumented)
 type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
 
-// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
-//
-// @internal (undocumented)
+// @public
 export type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
 
 // Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
-    " $fragmentRefs"?: infer FragmentRefs;
-} ? FragmentRefs extends object ? Prettify<{
+    " $fragmentRefs"?: infer FragmentRefs extends object;
+} ? Prettify<{
     [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
-} & CombineFragmentRefs<FragmentRefs>> : never : never : TData extends object ? {
+} & CombineFragmentRefs<FragmentRefs>> : never : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
 } : TData;
 

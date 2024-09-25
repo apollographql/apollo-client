@@ -60,8 +60,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     modify<Entity extends Record<string, any> = Record<string, any>>(options: Cache_2.ModifyOptions<Entity>): boolean;
     // (undocumented)
     abstract performTransaction(transaction: Transaction<TSerialized>, optimisticId?: string | null): void;
-    // Warning: (ae-forgotten-export) The symbol "Unmasked" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     abstract read<TData = any, TVariables = any>(query: Cache_2.ReadOptions<TVariables, TData>): Unmasked<TData> | null;
     // (undocumented)
@@ -126,7 +124,6 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     mutate<TData = any, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>>(options: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
-    // Warning: (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
     query<T = any, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<MaybeMasked<T>>>;
     // (undocumented)
     queryDeduplication: boolean;
@@ -940,7 +937,7 @@ interface FragmentRegistryAPI {
 }
 
 // @public (undocumented)
-type FragmentType<TData> = [
+export type FragmentType<TData> = [
 TData
 ] extends [{
     " $fragmentName"?: infer TKey;
@@ -1340,6 +1337,18 @@ export function makeReference(id: string): Reference;
 // @public (undocumented)
 export function makeVar<T>(value: T): ReactiveVar<T>;
 
+// @public
+export type Masked<TData> = TData & {
+    __masked?: true;
+};
+
+// @public
+export type MaskedDocumentNode<TData = {
+    [key: string]: any;
+}, TVariables = {
+    [key: string]: any;
+}> = TypedDocumentNode<Masked<TData>, TVariables>;
+
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
     // (undocumented)
@@ -1366,7 +1375,7 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 //
 // @public
-type MaybeMasked<TData> = TData extends {
+export type MaybeMasked<TData> = TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
     enabled: true;
@@ -2324,7 +2333,7 @@ type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
 type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
 // @public
-type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
+export type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
 
 // Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
 //
@@ -2364,7 +2373,6 @@ export interface UriFunction {
 export interface WatchFragmentOptions<TData, TVars> {
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
     fragmentName?: string;
-    // Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
     from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
     optimistic?: boolean;
     variables?: TVars;

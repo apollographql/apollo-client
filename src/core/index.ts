@@ -68,6 +68,7 @@ export {
 
 /* Masking */
 export type {
+  DataMasking,
   FragmentType,
   Masked,
   MaskedDocumentNode,

@@ -481,7 +481,7 @@ export const createSignalIfSupported: () => {
 };
 
 // @public (undocumented)
-interface DataMasking {
+export interface DataMasking {
 }
 
 // @public (undocumented)
@@ -1372,7 +1372,6 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 //
 // @public
 export type MaybeMasked<TData> = TData extends {

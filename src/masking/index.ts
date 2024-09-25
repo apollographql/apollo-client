@@ -1,4 +1,5 @@
 export type {
+  DataMasking,
   FragmentType,
   Masked,
   MaskedDocumentNode,

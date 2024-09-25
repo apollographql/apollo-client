@@ -63,33 +63,40 @@ export type ExecutionPatchResult<
   | ExecutionPatchInitialResult<TData, TExtensions>
   | ExecutionPatchIncrementalResult<TData, TExtensions>;
 
-export interface GraphQLRequest<TVariables = Record<string, any>> {
+export interface GraphQLRequest<
+  TVariables = Record<string, any>,
+  TContext extends DefaultContext = DefaultContext,
+> {
   query: DocumentNode;
   variables?: TVariables;
   operationName?: string;
-  context?: DefaultContext;
+  context?: TContext;
   extensions?: Record<string, any>;
 }
 
-export interface Operation {
+export interface Operation<
+  OperationContext extends DefaultContext = DefaultContext,
+> {
   query: DocumentNode;
   variables: Record<string, any>;
   operationName: string;
   extensions: Record<string, any>;
   setContext: {
-    (context: Partial<DefaultContext>): void;
-    (
-      updateContext: (
-        previousContext: DefaultContext
-      ) => Partial<DefaultContext>
+    <TContext extends OperationContext = OperationContext>(
+      context: Partial<TContext>
+    ): void;
+    <TContext extends OperationContext = OperationContext>(
+      updateContext: (previousContext: TContext) => Partial<TContext>
     ): void;
   };
-  getContext: () => DefaultContext;
+  getContext: <
+    TContext extends OperationContext = OperationContext,
+  >() => TContext;
 }
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,
-  TContext = DefaultContext,
+  TContext extends DefaultContext = DefaultContext,
   TExtensions = Record<string, any>,
 > {
   // data might be undefined if errorPolicy was set to 'ignore'
@@ -101,7 +108,7 @@ export interface SingleExecutionResult<
 
 export type FetchResult<
   TData = Record<string, any>,
-  TContext = Record<string, any>,
+  TContext extends DefaultContext = DefaultContext,
   TExtensions = Record<string, any>,
 > =
   | SingleExecutionResult<TData, TContext, TExtensions>

@@ -51,7 +51,11 @@ export type ErrorPolicy = "none" | "ignore" | "all";
 /**
  * Query options.
  */
-export interface QueryOptions<TVariables = OperationVariables, TData = any> {
+export interface QueryOptions<
+  TVariables = OperationVariables,
+  TData = any,
+  TContext extends DefaultContext = DefaultContext,
+> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
@@ -62,7 +66,7 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: FetchPolicy;
@@ -97,6 +101,7 @@ export interface WatchQueryOptions<
 export interface SharedWatchQueryOptions<
   TVariables extends OperationVariables,
   TData,
+  TContext extends DefaultContext = DefaultContext,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: WatchQueryFetchPolicy;
@@ -123,7 +128,7 @@ export interface SharedWatchQueryOptions<
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
   pollInterval?: number;
@@ -154,12 +159,16 @@ export interface NextFetchPolicyContext<
   initialFetchPolicy: WatchQueryFetchPolicy;
 }
 
-export interface FetchMoreQueryOptions<TVariables, TData = any> {
+export interface FetchMoreQueryOptions<
+  TVariables,
+  TData = any,
+  TContext extends DefaultContext = DefaultContext,
+> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: Partial<TVariables>;
-  context?: DefaultContext;
+  context?: TContext;
 }
 
 export type UpdateQueryFn<
@@ -178,6 +187,7 @@ export type SubscribeToMoreOptions<
   TData = any,
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData,
+  TContext extends DefaultContext = DefaultContext,
 > = {
   document:
     | DocumentNode
@@ -185,12 +195,13 @@ export type SubscribeToMoreOptions<
   variables?: TSubscriptionVariables;
   updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
   onError?: (error: Error) => void;
-  context?: DefaultContext;
+  context?: TContext;
 };
 
 export interface SubscriptionOptions<
   TVariables = OperationVariables,
   TData = any,
+  TContext extends DefaultContext = DefaultContext,
 > {
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -205,7 +216,7 @@ export interface SubscriptionOptions<
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
 
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
   extensions?: Record<string, any>;

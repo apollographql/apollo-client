@@ -41,11 +41,12 @@ export type PreloadQueryFetchPolicy = Extract<
 
 export type PreloadQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
+  TContext extends DefaultContext = DefaultContext,
 > = {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */

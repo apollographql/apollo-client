@@ -115,7 +115,7 @@
     "@graphql-tools/merge": "9.0.4",
     "@graphql-tools/schema": "10.0.4",
     "@graphql-tools/utils": "10.5.0",
-    "@microsoft/api-extractor": "7.47.2",
+    "@microsoft/api-extractor": "7.47.9",
     "@rollup/plugin-node-resolve": "11.2.1",
     "@size-limit/esbuild-why": "11.1.4",
     "@size-limit/preset-small-lib": "11.1.4",

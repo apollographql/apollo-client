@@ -16,7 +16,7 @@ type CombineFragmentRefs<FragmentRefs extends Record<string, any>> = UnionToInte
 }[keyof FragmentRefs]>;
 
 // @public (undocumented)
-interface DataMasking {
+export interface DataMasking {
 }
 
 // @public (undocumented)
@@ -44,7 +44,6 @@ export type MaskedDocumentNode<TData = {
 
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 //
 // @public
 export type MaybeMasked<TData> = TData extends {

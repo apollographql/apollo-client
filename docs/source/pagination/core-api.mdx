@@ -61,7 +61,7 @@ return (
 }
 ```
 
-Here, we set the `offset` variable to `feed.length` to fetch items _after_ the last item in our cached list. The `variables` we provide here are merged with the `variables` provided for the original query, which means that variables _omitted_ here (such as `limit`) retain their original value (`10`) in the followup query.
+Here, we set the `offset` variable to `feed.length` to fetch items _after_ the last item in our cached list. The `variables` we provide here are shallow merged with the `variables` provided for the original query, which means that variables _omitted_ here (such as `limit`) retain their original value (`10`) in the followup query.
 
 In addition to `variables`, you can optionally provide an entirely different shape of `query` to execute. This can be useful when `fetchMore` needs to fetch only a single paginated field, but the original query contained unrelated fields.
 

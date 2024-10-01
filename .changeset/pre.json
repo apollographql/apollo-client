@@ -4,5 +4,7 @@
   "initialVersions": {
     "@apollo/client": "3.11.5"
   },
-  "changesets": []
+  "changesets": [
+    "nasty-camels-pay"
+  ]
 }

@@ -87,9 +87,8 @@ Prefetching is one of the easiest ways to make your application's UI feel a lot 
 We can accomplish this in only a few lines of code by calling `client.query` whenever the user hovers over a link. Let's see this in action in the `Feed` component in our example app [Pupstagram](https://codesandbox.io/s/r5qp83z0yq).
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 function Feed() {
   const { loading, error, data, client } = useQuery(GET_DOGS);
 
@@ -132,8 +131,6 @@ function Feed() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const Feed = () => (
@@ -172,7 +169,6 @@ const Feed = () => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 All we have to do is access the client in the render prop function and call `client.query` when the user hovers over the link. Once the user clicks on the link, the data will already be available in the Apollo cache, so the user won't see a loading state.
@@ -291,9 +287,8 @@ const client = new ApolloClient({
 A component for the second view that implements the two queries could look like this:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const QUERY_SERIES_DETAIL_VIEW = gql`
   query SeriesDetailData($seriesId: Int!) {
     oneSeries(id: $seriesId) {
@@ -357,8 +352,6 @@ function SeriesDetailView({ seriesId }) {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const QUERY_SERIES_DETAIL_VIEW = gql`
@@ -417,7 +410,6 @@ const SeriesDetailView = ({ seriesId }) => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 Unfortunately if the user would now visit the second view without ever visiting the first view this would result in two network requests (since the data for the first query is not in the store yet). By using a [`BatchedHttpLink`](/react/api/link/apollo-link-batch-http/) those two queries can be sent to the server in one network request.

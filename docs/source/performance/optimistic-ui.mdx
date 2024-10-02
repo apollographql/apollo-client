@@ -15,9 +15,8 @@ The main way to get GraphQL data into your UI components with Apollo is to use a
 Here's what this looks like in the code:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const UPDATE_COMMENT = gql`
   mutation UpdateComment($commentId: ID!, $commentContent: String!) {
     updateComment(commentId: $commentId, content: $commentContent) {
@@ -50,8 +49,6 @@ function CommentPageWithData() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const UPDATE_COMMENT = gql`
@@ -87,7 +84,6 @@ const CommentPageWithData = () => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 We select `id` and `__typename` because that's what our `dataIdFromObject` uses to determine a globally unique object ID. We need to make sure to provide the right values for those fields, so that Apollo knows what object we are referring to.
@@ -101,9 +97,8 @@ In that case we need to specify how to integrate the new data into existing quer
 Here is a concrete example from GitHunt, which inserts a comment into an existing list of comments.
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const SUBMIT_COMMENT_MUTATION = gql`
   mutation SubmitComment($repoFullName: String!, $commentContent: String!) {
     submitComment(
@@ -152,8 +147,6 @@ function CommentsPageWithMutations({ currentUser }) {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const SUBMIT_COMMENT_MUTATION = gql`
@@ -205,5 +198,4 @@ const CommentsPageWithMutations = ({ currentUser }) => (
 );
 ```
 
-</div>
 </MultiCodeBlock>

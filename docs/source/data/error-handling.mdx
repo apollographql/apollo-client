@@ -22,7 +22,6 @@ Much like `fetchPolicy`, `errorPolicy` allows you to control how GraphQL Errors 
 You can set `errorPolicy` on each request like so:
 
 <MultiCodeBlock>
-<div data-language="Hooks (JavaScript)">
 
 ```tsx
 const MY_QUERY = gql`
@@ -48,8 +47,7 @@ function ShowingSomeErrors() {
 }
 ```
 
-</div>
-<div data-language="js">
+
 
 ```jsx
 const MY_QUERY = gql`
@@ -77,7 +75,6 @@ const ShowingSomeErrors = () => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 Any errors reported will come under an `error` prop along side the data returned from the cache or server.

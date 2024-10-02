@@ -73,9 +73,8 @@ const resolvers = {
 Now, you’re ready to query your new field inside the `RocketDetails` component. Just add your new field to the query and specify the `@client` directive, and start using it in your UI.
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const GET_ROCKET_DETAILS = gql`
   query RocketDetails($rocketId: ID!) {
     rocket(id: $rocketId) {
@@ -95,9 +94,6 @@ export default function RocketDetails({ rocketId }) {
   );
 }
 ```
-
-</div>
-<div data-language="js">
 
 ```jsx
 const GET_ROCKET_DETAILS = gql`
@@ -123,7 +119,7 @@ export default function RocketDetails({ rocketId }) {
 }
 ```
 
-</div>
+
 </MultiCodeBlock>
 
 ## 4. Toggle on “real” data.

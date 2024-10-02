@@ -10,7 +10,6 @@ Data management shouldn't have to be so difficult! If you're wondering how to si
 With Apollo's declarative approach to data fetching, all of the logic for retrieving your data, tracking loading and error states, and updating your UI is encapsulated by the `useQuery` Hook. This encapsulation makes integrating query results into your presentational components a breeze! Let's see what this looks like in practice with React Apollo:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 function Feed() {
@@ -22,8 +21,7 @@ function Feed() {
 }
 ```
 
-</div>
-<div data-language="js">
+
 
 ```jsx
 const Feed = () => (
@@ -38,7 +36,6 @@ const Feed = () => (
 )
 ```
 
-</div>
 </MultiCodeBlock>
 
 Here we're using the `useQuery` Hook to fetch some dogs from our GraphQL server and display them in a list. `useQuery` leverages React's [Hooks API](https://reactjs.org/docs/hooks-intro.html) to bind a query to our component and render it based on the results of our query. Once our data comes back, our `<DogList />` component will update reactively with the data it needs.

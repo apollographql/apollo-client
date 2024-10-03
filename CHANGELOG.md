@@ -1,5 +1,33 @@
 # @apollo/client
 
+## 3.11.8
+
+### Patch Changes
+
+- [#12054](https://github.com/apollographql/apollo-client/pull/12054) [`35cf186`](https://github.com/apollographql/apollo-client/commit/35cf186ed9237e41735f150e0cbf4edd995ab0d9) Thanks [@phryneas](https://github.com/phryneas)! - Fixed a bug where incorrect object access in some Safari extensions could cause a crash.
+
+## 3.11.7
+
+### Patch Changes
+
+- [#12052](https://github.com/apollographql/apollo-client/pull/12052) [`e471cef`](https://github.com/apollographql/apollo-client/commit/e471cef875eadef04f8ee18ef431ee70e7b9bcab) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes a regression from where passing an invalid identifier to `from` in `useFragment` would result in the warning `TypeError: Cannot read properties of undefined (reading '__typename')`.
+
+## 3.11.6
+
+### Patch Changes
+
+- [#12049](https://github.com/apollographql/apollo-client/pull/12049) [`9c26892`](https://github.com/apollographql/apollo-client/commit/9c268927b1f8e5921b9440a53c9979a37f594e75) Thanks [@phryneas](https://github.com/phryneas) and [@maciesielka](https://github.com/maciesielka)! - Fix a bug where `useFragment` did not re-render as expected
+
+- [#12044](https://github.com/apollographql/apollo-client/pull/12044) [`04462a2`](https://github.com/apollographql/apollo-client/commit/04462a274ad39b392142385a2f052abbf3014749) Thanks [@DoctorJohn](https://github.com/DoctorJohn)! - Cache the `useSubscription` hook's `restart` function definition between re-renders.
+
+## 3.11.5
+
+### Patch Changes
+
+- [#12027](https://github.com/apollographql/apollo-client/pull/12027) [`eb3e21b`](https://github.com/apollographql/apollo-client/commit/eb3e21b9f7fa6a3161705c2c7270129c17b65095) Thanks [@JavaScriptBach](https://github.com/JavaScriptBach)! - Type `MutationResult.reset` as an arrow function
+
+- [#12020](https://github.com/apollographql/apollo-client/pull/12020) [`82d8cb4`](https://github.com/apollographql/apollo-client/commit/82d8cb4255be497748829f12eb25ac87c11ee5e4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Better conform to Rules of React by avoiding write of ref in render for `useFragment`.
+
 ## 3.11.4
 
 ### Patch Changes

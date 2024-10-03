@@ -229,7 +229,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     const diffOptions: Cache.DiffOptions<TData, TVars> = {
       ...otherOptions,
       returnPartialData: true,
-      id: typeof from === "string" ? from : this.identify(from),
+      id:
+        // While our TypeScript types do not allow for `undefined` as a valid
+        // `from`, its possible `useFragment` gives us an `undefined` since it
+        // calls` cache.identify` and provides that value to `from`. We are
+        // adding this fix here however to ensure those using plain JavaScript
+        // and using `cache.identify` themselves will avoid seeing the obscure
+        // warning.
+        typeof from === "undefined" || typeof from === "string" ?
+          from
+        : this.identify(from),
       query,
       optimistic,
     };

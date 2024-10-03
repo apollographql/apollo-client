@@ -1178,7 +1178,7 @@ export interface MutationResult<TData = any> {
     data?: TData | null;
     error?: ApolloError;
     loading: boolean;
-    reset(): void;
+    reset: () => void;
 }
 
 // Warning: (ae-forgotten-export) The symbol "MutationBaseOptions" needs to be exported by the entry point index.d.ts
@@ -2228,7 +2228,7 @@ export interface UseReadQueryResult<TData = unknown> {
 
 // @public
 export function useSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
-    restart(): void;
+    restart: () => void;
     loading: boolean;
     data?: TData | undefined;
     error?: ApolloError;

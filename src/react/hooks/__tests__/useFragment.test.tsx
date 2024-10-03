@@ -260,6 +260,45 @@ describe("useFragment", () => {
       "item 4",
     ]);
 
+    // set Item #2 back to its original value
+    act(() => {
+      cache.writeFragment({
+        fragment: ItemFragment,
+        data: {
+          __typename: "Item",
+          id: 2,
+          text: "Item #2",
+        },
+      });
+    });
+
+    await waitFor(() => {
+      expect(getItemTexts()).toEqual([
+        "Item #1",
+        "Item #2",
+        "Item #3 from cache.modify",
+        "Item #4 updated",
+        "Item #5",
+      ]);
+    });
+
+    expect(renders).toEqual([
+      "list",
+      "item 1",
+      "item 2",
+      "item 5",
+      "item 2",
+      "list",
+      "item 1",
+      "item 2",
+      "item 3",
+      "item 4",
+      "item 5",
+      "item 4",
+      // Only the second item should have re-rendered.
+      "item 2",
+    ]);
+
     expect(cache.extract()).toEqual({
       "Item:1": {
         __typename: "Item",
@@ -268,7 +307,7 @@ describe("useFragment", () => {
       "Item:2": {
         __typename: "Item",
         id: 2,
-        text: "Item #2 updated",
+        text: "Item #2",
       },
       "Item:3": {
         __typename: "Item",
@@ -1685,6 +1724,34 @@ describe("useFragment", () => {
         missing: "Dangling reference to missing Item:5 object",
       });
     });
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/12051
+  it("does not warn when the cache identifier is invalid", async () => {
+    using _ = spyOnConsole("warn");
+    const cache = new InMemoryCache();
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({
+        fragment: ItemFragment,
+        // Force a value that results in cache.identify === undefined
+        from: { __typename: "Item" },
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <MockedProvider cache={cache}>{children}</MockedProvider>
+      ),
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    const { data, complete } = await ProfiledHook.takeSnapshot();
+
+    // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+    expect(complete).toBe(true);
+    expect(data).toEqual({});
   });
 });
 

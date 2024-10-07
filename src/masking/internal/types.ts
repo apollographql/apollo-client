@@ -1,30 +1,34 @@
-import type { Prettify, UnionToIntersection } from "../../utilities/index.js";
-
 export type UnwrapFragmentRefs<TData> =
   // Leave TData alone if it is Record<string, any> and not a specific shape
   string extends keyof NonNullable<TData> ? TData
-  : " $fragmentRefs" extends keyof NonNullable<TData> ?
-    TData extends { " $fragmentRefs"?: infer FragmentRefs extends object } ?
-      Prettify<
-        {
-          [K in keyof TData as K extends " $fragmentRefs" ? never
-          : K]: UnwrapFragmentRefs<TData[K]>;
-        } & CombineFragmentRefs<FragmentRefs>
-      >
+  : keyof NonNullable<TData> extends never ? TData
+  : //: TData extends Array<infer U> ? Array<UnwrapFragmentRefs<U>>
+  TData extends { " $fragmentRefs"?: object | null } ?
+    Combine<KeyTuples<TData>> extends infer Flattened ?
+      { [K in keyof Flattened]: UnwrapFragmentRefs<Flattened[K]> }
     : never
   : TData extends object ? { [K in keyof TData]: UnwrapFragmentRefs<TData[K]> }
   : TData;
 
-type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =
-  UnionToIntersection<
-    {
-      [K in keyof FragmentRefs]-?: UnwrapFragmentRefs<
-        RemoveFragmentName<FragmentRefs[K]>
-      >;
-    }[keyof FragmentRefs]
-  >;
-
 export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
-// force distrubution when T is a union with | undefined
-export type RemoveFragmentName<T> =
-  T extends any ? Omit<T, " $fragmentName"> : T;
+
+type Values<T> = T extends object ? T[keyof T] : never;
+
+type KeyTuples<V> =
+  V extends object ?
+    keyof V extends infer K ?
+      K extends keyof V ?
+        K extends " $fragmentRefs" ? KeyTuples<Values<V[K]>>
+        : K extends " $fragmentName" ? never
+        : [K, V[K], {} extends Pick<V, K> ? true : false]
+      : never
+    : never
+  : never;
+
+type Combine<
+  Tuple extends [key: string | number | symbol, value: any, optional: boolean],
+> = {
+  [P in Tuple as P[2] extends true ? P[0] : never]?: P[1];
+} & {
+  [P in Tuple as P[2] extends false ? P[0] : never]: P[1];
+};

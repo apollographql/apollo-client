@@ -1,6 +1,5 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
-  RemoveFragmentName,
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
 } from "./internal/types.ts";
@@ -45,6 +44,4 @@ export type MaybeMasked<TData> =
  * Unmasks a type to provide its full result.
  */
 export type Unmasked<TData> =
-  TData extends object ?
-    UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
-  : TData;
+  TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<TData>> : TData;

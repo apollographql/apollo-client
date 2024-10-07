@@ -1,8 +1,13 @@
 import { Trie } from "@wry/trie";
-import type { ObservableQuery } from "../../../core/index.js";
+import type {
+  ObservableQuery,
+  WatchFragmentResult,
+} from "../../../core/index.js";
+import type { Observable } from "../../../utilities/index.js";
 import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
-import type { CacheKey } from "./types.js";
+import type { CacheKey, FragmentCacheKey } from "./types.js";
+import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
   /**
@@ -22,6 +27,10 @@ export class SuspenseCache {
   private queryRefs = new Trie<{ current?: InternalQueryReference }>(
     canUseWeakMap
   );
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
+    canUseWeakMap
+  );
+
   private options: SuspenseCacheOptions;
 
   constructor(options: SuspenseCacheOptions = Object.create(null)) {
@@ -39,6 +48,25 @@ export class SuspenseCache {
     if (!ref.current) {
       ref.current = new InternalQueryReference(createObservable(), {
         autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
+        onDispose: () => {
+          delete ref.current;
+        },
+      });
+    }
+
+    return ref.current;
+  }
+
+  getFragmentRef<TData>(
+    cacheKey: FragmentCacheKey,
+    createObservable: () => Observable<WatchFragmentResult<TData>>
+  ) {
+    const ref = this.fragmentRefs.lookupArray(cacheKey) as {
+      current?: FragmentReference<TData>;
+    };
+
+    if (!ref.current) {
+      ref.current = new FragmentReference(createObservable(), {
         onDispose: () => {
           delete ref.current;
         },

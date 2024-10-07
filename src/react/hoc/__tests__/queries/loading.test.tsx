@@ -13,7 +13,7 @@ import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { profile } from "../../../../testing/internal";
+import { profile } from "@testing-library/react-render-stream";
 
 describe("[queries] loading", () => {
   // networkStatus / loading

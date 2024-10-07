@@ -53,15 +53,17 @@ import {
 } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
-  Profiler,
   SimpleCaseData,
-  createProfiler,
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
-  useTrackRenders,
 } from "../../../testing/internal";
 
+import {
+  Profiler,
+  createProfiler,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

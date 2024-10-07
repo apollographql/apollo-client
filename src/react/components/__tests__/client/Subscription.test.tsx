@@ -8,7 +8,8 @@ import { ApolloProvider } from "../../../context";
 import { ApolloLink, DocumentNode, Operation } from "../../../../link/core";
 import { itAsync, MockSubscriptionLink } from "../../../../testing";
 import { Subscription } from "../../Subscription";
-import { profile, spyOnConsole } from "../../../../testing/internal";
+import { spyOnConsole } from "../../../../testing/internal";
+import { profile } from "@testing-library/react-render-stream";
 
 const results = [
   "Luke Skywalker",

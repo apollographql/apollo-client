@@ -14,12 +14,13 @@ import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
 import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
-import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
 import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
+import { profileHook } from "@testing-library/react-render-stream";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {

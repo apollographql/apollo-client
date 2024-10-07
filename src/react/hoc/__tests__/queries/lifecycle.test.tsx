@@ -10,7 +10,7 @@ import { mockSingleLink } from "../../../../testing";
 import { Query as QueryComponent } from "../../../components";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { profile } from "../../../../testing/internal";
+import { profile } from "@testing-library/react-render-stream";
 
 describe("[queries] lifecycle", () => {
   // lifecycle

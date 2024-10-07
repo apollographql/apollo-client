@@ -46,20 +46,22 @@ import {
 import { skipToken } from "../constants";
 import {
   PaginatedCaseData,
-  Profiler,
   SimpleCaseData,
   VariablesCaseData,
   VariablesCaseVariables,
-  createProfiler,
   renderWithClient,
   renderWithMocks,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
-  useTrackRenders,
 } from "../../../testing/internal";
 import { SubscribeToMoreFunction } from "../useSuspenseQuery";
+import {
+  Profiler,
+  createProfiler,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 afterEach(() => {
   jest.useRealTimers();

@@ -24,8 +24,8 @@ import {
 } from "../../../testing";
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
-import { profileHook } from "../../../testing/internal";
 import { InvariantError } from "../../../utilities/globals";
+import { profileHook } from "@testing-library/react-render-stream";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{

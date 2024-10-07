@@ -17,11 +17,9 @@ import {
 import {
   PaginatedCaseData,
   SimpleCaseData,
-  createProfiler,
   renderWithClient,
   setupPaginatedCase,
   setupSimpleCase,
-  useTrackRenders,
 } from "../../../testing/internal";
 import { useQueryRefHandlers } from "../useQueryRefHandlers";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
@@ -33,6 +31,10 @@ import { QueryRef } from "../../internal";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination, getMainDefinition } from "../../../utilities";
+import {
+  createProfiler,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

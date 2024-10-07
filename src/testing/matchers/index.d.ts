@@ -36,18 +36,6 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     ) => R
   : { error: "matcher needs to be called on an ApolloClient instance" };
 
-  toRerender: T extends (
-    Profiler<any, any> | ProfiledComponent<any, any> | ProfiledHook<any, any>
-  ) ?
-    (options?: NextRenderOptions) => Promise<R>
-  : { error: "matcher needs to be called on a ProfiledComponent instance" };
-
-  toRenderExactlyTimes: T extends (
-    Profiler<any, any> | ProfiledComponent<any, any> | ProfiledHook<any, any>
-  ) ?
-    (count: number, options?: NextRenderOptions) => Promise<R>
-  : { error: "matcher needs to be called on a ProfiledComponent instance" };
-
   toBeGarbageCollected: T extends WeakRef<any> ? () => Promise<R>
   : { error: "matcher needs to be called on a WeakRef instance" };
 }

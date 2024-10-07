@@ -31,10 +31,8 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import {
-  createProfiler,
   disableActWarnings,
   PaginatedCaseData,
-  profileHook,
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal";
@@ -42,6 +40,10 @@ import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
+import {
+  createProfiler,
+  profileHook,
+} from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
 

@@ -29,7 +29,8 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
+import { profile, profileHook } from "@testing-library/react-render-stream";
+import { spyOnConsole } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

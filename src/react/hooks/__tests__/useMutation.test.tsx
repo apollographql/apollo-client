@@ -31,7 +31,8 @@ import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
-import { profileHook, spyOnConsole } from "../../../testing/internal";
+import { spyOnConsole } from "../../../testing/internal";
+import { profileHook } from "@testing-library/react-render-stream";
 
 describe("useMutation Hook", () => {
   interface Todo {

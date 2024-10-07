@@ -54,12 +54,15 @@ import {
 import {
   PaginatedCaseData,
   PaginatedCaseVariables,
-  createProfiler,
-  profile,
   setupPaginatedCase,
   spyOnConsole,
-  useTrackRenders,
 } from "../../../testing/internal";
+
+import {
+  createProfiler,
+  profile,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,

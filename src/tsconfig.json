@@ -7,10 +7,22 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "lib": ["es2015", "esnext.asynciterable", "ES2021.WeakRef"],
-    "types": ["jest", "node", "./testing/matchers/index.d.ts"]
+    "lib": [
+      "es2015",
+      "esnext.asynciterable",
+      "ES2021.WeakRef"
+    ],
+    "types": [
+      "jest",
+      "node",
+      "./testing/matchers/index.d.ts",
+      "@testing-library/react-render-stream/jest"
+    ]
   },
   "extends": "../tsconfig.json",
-  "include": ["./**/*.ts", "./**/*.tsx"],
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx"
+  ],
   "exclude": []
 }

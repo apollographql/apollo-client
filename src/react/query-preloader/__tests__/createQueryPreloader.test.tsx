@@ -21,10 +21,8 @@ import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
   SimpleCaseData,
-  createProfiler,
   spyOnConsole,
   setupSimpleCase,
-  useTrackRenders,
   setupVariablesCase,
   renderWithClient,
   VariablesCaseData,
@@ -35,6 +33,10 @@ import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
 import userEvent from "@testing-library/user-event";
+import {
+  createProfiler,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

@@ -11,7 +11,7 @@ import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
 import { QueryResult } from "../../../types/types";
-import { profile } from "../../../../testing/internal";
+import { profile } from "@testing-library/react-render-stream";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {

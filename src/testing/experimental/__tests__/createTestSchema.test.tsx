@@ -6,12 +6,7 @@ import {
   gql,
 } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
-import {
-  Profiler,
-  createProfiler,
-  renderWithClient,
-  spyOnConsole,
-} from "../../internal/index.js";
+import { renderWithClient, spyOnConsole } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
@@ -24,6 +19,7 @@ import {
   ErrorBoundary as ReactErrorBoundary,
 } from "react-error-boundary";
 import { InvariantError } from "ts-invariant";
+import { Profiler, createProfiler } from "@testing-library/react-render-stream";
 
 const typeDefs = /* GraphQL */ `
   type User {

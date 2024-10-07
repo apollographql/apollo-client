@@ -17,8 +17,11 @@ import {
 import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
 import { invariant } from "../../../utilities/globals/invariantWrappers.js";
+import type { MaybeMasked } from "../../../masking/index.js";
 
-type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<TData>>;
+type QueryRefPromise<TData> = PromiseWithState<
+  ApolloQueryResult<MaybeMasked<TData>>
+>;
 
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
 
@@ -202,7 +205,7 @@ type ObservedOptions = Pick<
 >;
 
 export class InternalQueryReference<TData = unknown> {
-  public result!: ApolloQueryResult<TData>;
+  public result!: ApolloQueryResult<MaybeMasked<TData>>;
   public readonly key: QueryKey = {};
   public readonly observable: ObservableQuery<TData>;
 
@@ -212,7 +215,9 @@ export class InternalQueryReference<TData = unknown> {
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
-  private resolve: ((result: ApolloQueryResult<TData>) => void) | undefined;
+  private resolve:
+    | ((result: ApolloQueryResult<MaybeMasked<TData>>) => void)
+    | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
   private references = 0;
@@ -390,7 +395,7 @@ export class InternalQueryReference<TData = unknown> {
     // noop. overridable by options
   }
 
-  private handleNext(result: ApolloQueryResult<TData>) {
+  private handleNext(result: ApolloQueryResult<MaybeMasked<TData>>) {
     switch (this.promise.status) {
       case "pending": {
         // Maintain the last successful `data` value if the next result does not
@@ -440,7 +445,7 @@ export class InternalQueryReference<TData = unknown> {
         break;
       }
       default: {
-        this.promise = createRejectedPromise<ApolloQueryResult<TData>>(error);
+        this.promise = createRejectedPromise(error);
         this.deliver(this.promise);
       }
     }
@@ -450,7 +455,9 @@ export class InternalQueryReference<TData = unknown> {
     this.listeners.forEach((listener) => listener(promise));
   }
 
-  private initiateFetch(returnedPromise: Promise<ApolloQueryResult<TData>>) {
+  private initiateFetch(
+    returnedPromise: Promise<ApolloQueryResult<MaybeMasked<TData>>>
+  ) {
     this.promise = this.createPendingPromise();
     this.promise.catch(() => {});
 
@@ -520,7 +527,7 @@ export class InternalQueryReference<TData = unknown> {
 
   private createPendingPromise() {
     return wrapPromiseWithState(
-      new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+      new Promise<ApolloQueryResult<MaybeMasked<TData>>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
       })

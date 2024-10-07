@@ -29,6 +29,7 @@ import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
 } from "../../core/watchQueryOptions.js";
+import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
 /* QueryReference type */
 
@@ -67,7 +68,7 @@ export interface QueryFunctionOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: TData) => void;
+  onCompleted?: (data: MaybeMasked<TData>) => void;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 
@@ -102,19 +103,19 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
   updateQuery: <TVars extends OperationVariables = TVariables>(
     mapFn: (
-      previousQueryResult: TData,
+      previousQueryResult: Unmasked<TData>,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => TData
+    ) => Unmasked<TData>
   ) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>
-  ) => Promise<ApolloQueryResult<TData>>;
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
   /** @internal */
   reobserve: (
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ) => Promise<ApolloQueryResult<TData>>;
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
   variables: TVariables | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
@@ -124,14 +125,14 @@ export interface ObservableQueryFields<
   >(
     fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
       updateQuery?: (
-        previousQueryResult: TData,
+        previousQueryResult: Unmasked<TData>,
         options: {
-          fetchMoreResult: TFetchData;
+          fetchMoreResult: Unmasked<TFetchData>;
           variables: TFetchVars;
         }
-      ) => TData;
+      ) => Unmasked<TData>;
     }
-  ) => Promise<ApolloQueryResult<TFetchData>>;
+  ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
 }
 
 export interface QueryResult<
@@ -143,9 +144,9 @@ export interface QueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-  data: TData | undefined;
+  data: MaybeMasked<TData> | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
-  previousData?: TData;
+  previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
   /**
@@ -180,7 +181,7 @@ export interface LazyQueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: TData) => void;
+  onCompleted?: (data: MaybeMasked<TData>) => void;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 
@@ -351,7 +352,10 @@ export interface BaseMutationOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: TData, clientOptions?: BaseMutationOptions) => void;
+  onCompleted?: (
+    data: MaybeMasked<TData>,
+    clientOptions?: BaseMutationOptions
+  ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
@@ -370,7 +374,7 @@ export interface MutationFunctionOptions<
 
 export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-  data?: TData | null;
+  data?: MaybeMasked<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
   error?: ApolloError;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
@@ -390,7 +394,7 @@ export declare type MutationFunction<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-) => Promise<FetchResult<TData>>;
+) => Promise<FetchResult<MaybeMasked<TData>>>;
 
 export interface MutationHookOptions<
   TData = any,
@@ -418,7 +422,7 @@ export type MutationTuple<
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
-  ) => Promise<FetchResult<TData>>,
+  ) => Promise<FetchResult<MaybeMasked<TData>>>,
   result: MutationResult<TData>,
 ];
 
@@ -477,7 +481,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
-  data?: TData;
+  data?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
   error?: ApolloError;
   // This was added by the legacy useSubscription type, and is tested in unit
@@ -511,29 +515,4 @@ export interface SubscriptionCurrentObservable {
   subscription?: ObservableSubscription;
 }
 
-/**
-Helper type that allows using a type in a way that cannot be "widened" by inference on the value it is used on.
-
-This type was first suggested [in this Github discussion](https://github.com/microsoft/TypeScript/issues/14829#issuecomment-504042546).
-
-Example usage:
-```ts
-export function useQuery<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = Object.create(null),
-)
-```
-In this case, `TData` and `TVariables` should be inferred from `query`, but never widened from something in `options`.
-
-So, in this code example:
-```ts
-declare const typedNode: TypedDocumentNode<{ foo: string}, { bar: number }>
-const { variables } = useQuery(typedNode, { variables: { bar: 4, nonExistingVariable: "string" } });
-```
-Without the use of `NoInfer`, `variables` would now be of the type `{ bar: number, nonExistingVariable: "string" }`.
-With `NoInfer`, it will instead give an error on `nonExistingVariable`.
- */
-export type NoInfer<T> = [T][T extends any ? 0 : never];
+export type { NoInfer } from "../../utilities/index.js";

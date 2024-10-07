@@ -21,6 +21,7 @@ import {
   removeDirectivesFromDocument,
   checkDocument,
 } from "../../../utilities/index.js";
+import type { Unmasked } from "../../../masking/index.js";
 
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
@@ -36,16 +37,19 @@ export type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
 >;
 
 export interface MockedResponse<
+  // @ts-ignore
   out TData = Record<string, any>,
   out TVariables = Record<string, any>,
 > {
   request: GraphQLRequest<TVariables>;
   maxUsageCount?: number;
-  result?: FetchResult<TData> | ResultFunction<FetchResult<TData>, TVariables>;
+  result?:
+    | FetchResult<Unmasked<TData>>
+    | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
   error?: Error;
   delay?: number;
   variableMatcher?: VariableMatcher<TVariables>;
-  newData?: ResultFunction<FetchResult<TData>, TVariables>;
+  newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
 }
 
 export interface MockLinkOptions {
@@ -213,7 +217,7 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
   ): MockedResponse {
     const newMockedResponse = cloneDeep(mockedResponse);
     const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
-      [{ name: "connection" }, { name: "nonreactive" }],
+      [{ name: "connection" }, { name: "nonreactive" }, { name: "unmask" }],
       checkDocument(newMockedResponse.request.query)
     );
     invariant(queryWithoutClientOnlyDirectives, "query is required");

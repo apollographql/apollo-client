@@ -1,6 +1,7 @@
 import { DataProxy } from "./DataProxy.js";
 import type { AllFieldsModifier, Modifiers } from "./common.js";
 import type { ApolloCache } from "../cache.js";
+import type { Unmasked } from "../../../masking/index.js";
 
 export namespace Cache {
   export type WatchCallback<TData = any> = (
@@ -28,7 +29,7 @@ export namespace Cache {
     extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
       Omit<DataProxy.WriteOptions<TResult>, "data"> {
     dataId?: string;
-    result: TResult;
+    result: Unmasked<TResult>;
   }
 
   export interface DiffOptions<TData = any, TVariables = any>

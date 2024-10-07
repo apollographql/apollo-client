@@ -17,6 +17,7 @@ const entryPoints = [
   { dirs: ["link", "subscriptions"] },
   { dirs: ["link", "utils"] },
   { dirs: ["link", "ws"] },
+  { dirs: ["masking"] },
   { dirs: ["react"] },
   { dirs: ["react", "components"] },
   { dirs: ["react", "context"] },

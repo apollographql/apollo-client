@@ -12,6 +12,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type { NetworkStatus } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
+import type { MaybeMasked } from "../../masking/index.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -20,7 +21,7 @@ export interface UseReadQueryResult<TData = unknown> {
    * This value might be `undefined` if a query results in one or more errors
    * (depending on the query's `errorPolicy`).
    */
-  data: TData;
+  data: MaybeMasked<TData>;
   /**
    * If the query produces one or more errors, this object contains either an
    * array of `graphQLErrors` or a single `networkError`. Otherwise, this value

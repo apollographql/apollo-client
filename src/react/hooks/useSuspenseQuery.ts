@@ -26,13 +26,14 @@ import { canonicalStringify } from "../../cache/index.js";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
 import type { CacheKey, QueryKey } from "../internal/index.js";
+import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
   client: ApolloClient<any>;
-  data: TData;
+  data: MaybeMasked<TData>;
   error: ApolloError | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
@@ -43,14 +44,14 @@ export interface UseSuspenseQueryResult<
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
-      previousQueryResult: TData,
+      previousQueryResult: Unmasked<TData>,
       options: {
-        fetchMoreResult: TData;
+        fetchMoreResult: Unmasked<TData>;
         variables: TVariables;
       }
-    ) => TData;
+    ) => Unmasked<TData>;
   }
-) => Promise<ApolloQueryResult<TData>>;
+) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
 
 export type RefetchFunction<
   TData,

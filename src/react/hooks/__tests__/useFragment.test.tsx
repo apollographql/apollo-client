@@ -9,7 +9,11 @@ import {
 import userEvent from "@testing-library/user-event";
 import { act } from "@testing-library/react";
 
-import { UseFragmentOptions, useFragment } from "../useFragment";
+import {
+  UseFragmentOptions,
+  UseFragmentResult,
+  useFragment,
+} from "../useFragment";
 import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
@@ -29,7 +33,14 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
+import {
+  createProfiler,
+  profile,
+  profileHook,
+  spyOnConsole,
+  useTrackRenders,
+} from "../../../testing/internal";
+import { FragmentType } from "../../../masking";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1455,7 +1466,7 @@ describe("useFragment", () => {
 
   it("does not rerender when fields with @nonreactive change", async () => {
     type Post = {
-      __typename: "User";
+      __typename: "Post";
       id: number;
       title: string;
       updatedAt: string;
@@ -1522,7 +1533,7 @@ describe("useFragment", () => {
 
   it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
     type Post = {
-      __typename: "User";
+      __typename: "Post";
       id: number;
       title: string;
       updatedAt: string;
@@ -1595,6 +1606,46 @@ describe("useFragment", () => {
     });
 
     await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("warns when passing parent object to `from` when key fields are missing", async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Fragment {
+      age: number;
+    }
+
+    const fragment: TypedDocumentNode<Fragment, never> = gql`
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({ fragment, from: { __typename: "User" } })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+      "UserFields"
+    );
+
+    {
+      const { data, complete } = await ProfiledHook.takeSnapshot();
+
+      expect(data).toEqual({});
+      // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+      expect(complete).toBe(true);
+    }
   });
 
   describe("tests with incomplete data", () => {
@@ -1725,33 +1776,295 @@ describe("useFragment", () => {
       });
     });
   });
+});
 
-  // https://github.com/apollographql/apollo-client/issues/12051
-  it("does not warn when the cache identifier is invalid", async () => {
-    using _ = spyOnConsole("warn");
-    const cache = new InMemoryCache();
+describe("data masking", () => {
+  it("returns masked fragment when data masking is enabled", async () => {
+    type Post = {
+      __typename: "Post";
+      id: number;
+      title: string;
+    };
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        ...PostFields
+      }
+
+      fragment PostFields on Post {
+        updatedAt
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        // @ts-expect-error Need to determine how to work with masked types
+        updatedAt: "2024-01-01",
+      },
+    });
 
     const ProfiledHook = profileHook(() =>
       useFragment({
-        fragment: ItemFragment,
-        // Force a value that results in cache.identify === undefined
-        from: { __typename: "Item" },
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
       })
     );
 
     render(<ProfiledHook />, {
       wrapper: ({ children }) => (
-        <MockedProvider cache={cache}>{children}</MockedProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
-    expect(console.warn).not.toHaveBeenCalled();
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
 
-    const { data, complete } = await ProfiledHook.takeSnapshot();
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+        },
+      });
+    }
 
-    // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
-    expect(complete).toBe(true);
-    expect(data).toEqual({});
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("does not rerender for cache writes to masked fields", async () => {
+    type Post = {
+      __typename: "Post";
+      id: number;
+      title: string;
+    };
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    const fragment: TypedDocumentNode<Post> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        ...PostFields
+      }
+
+      fragment PostFields on Post {
+        updatedAt
+      }
+    `;
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        // @ts-expect-error Need to determine how to work with masked types
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const ProfiledHook = profileHook(() =>
+      useFragment({
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      })
+    );
+
+    render(<ProfiledHook />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+
+    {
+      const snapshot = await ProfiledHook.takeSnapshot();
+
+      expect(snapshot).toEqual({
+        complete: true,
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+        },
+      });
+    }
+
+    client.writeFragment({
+      fragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        // @ts-expect-error Need to determine how to work with masked types
+        updatedAt: "2024-02-01",
+      },
+    });
+
+    await expect(ProfiledHook).not.toRerender();
+  });
+
+  it("updates child fragments for cache updates to masked fields", async () => {
+    type ParentFragment = {
+      __typename: "Post";
+      id: number;
+      title: string;
+    };
+
+    type ChildFragment = {
+      __typename: "Post";
+      id: number;
+      title: string;
+    };
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    const childFragment: TypedDocumentNode<ChildFragment> = gql`
+      fragment PostFields on Post {
+        updatedAt
+      }
+    `;
+
+    const parentFragment: TypedDocumentNode<ParentFragment> = gql`
+      fragment PostFragment on Post {
+        id
+        title
+        ...PostFields
+      }
+
+      ${childFragment}
+    `;
+
+    client.writeFragment({
+      fragment: parentFragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        // @ts-expect-error Need to determine how to work with masked types
+        updatedAt: "2024-01-01",
+      },
+    });
+
+    const Profiler = createProfiler({
+      initialSnapshot: {
+        parent: null as UseFragmentResult<ParentFragment> | null,
+        child: null as UseFragmentResult<ChildFragment> | null,
+      },
+    });
+
+    function Parent() {
+      useTrackRenders();
+      const parent = useFragment({
+        fragment: parentFragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      });
+
+      Profiler.mergeSnapshot({ parent });
+
+      return parent.complete ? <Child parent={parent.data} /> : null;
+    }
+
+    function Child({ parent }: { parent: ParentFragment }) {
+      useTrackRenders();
+      const child = useFragment({ fragment: childFragment, from: parent });
+
+      Profiler.mergeSnapshot({ child });
+
+      return null;
+    }
+
+    render(<Parent />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>
+          <Profiler>{children}</Profiler>
+        </ApolloProvider>
+      ),
+    });
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([Parent, Child]);
+      expect(snapshot).toEqual({
+        parent: {
+          complete: true,
+          data: {
+            __typename: "Post",
+            id: 1,
+            title: "Blog post",
+          },
+        },
+        child: {
+          complete: true,
+          data: {
+            __typename: "Post",
+            updatedAt: "2024-01-01",
+          },
+        },
+      });
+    }
+
+    client.writeFragment({
+      fragment: parentFragment,
+      fragmentName: "PostFragment",
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+        // @ts-expect-error Need to determine how to work with masked types
+        updatedAt: "2024-02-01",
+      },
+    });
+
+    {
+      const { snapshot, renderedComponents } = await Profiler.takeRender();
+
+      expect(renderedComponents).toStrictEqual([Child]);
+      expect(snapshot).toEqual({
+        parent: {
+          complete: true,
+          data: {
+            __typename: "Post",
+            id: 1,
+            title: "Blog post",
+          },
+        },
+        child: {
+          complete: true,
+          data: {
+            __typename: "Post",
+            updatedAt: "2024-02-01",
+          },
+        },
+      });
+    }
+
+    await expect(Profiler).not.toRerender();
   });
 });
 
@@ -2030,7 +2343,7 @@ describe.skip("Type Tests", () => {
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
     expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
-      from: string | StoreObject | Reference;
+      from: string | StoreObject | Reference | FragmentType<TData>;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;
       optimistic?: boolean;

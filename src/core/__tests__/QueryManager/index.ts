@@ -224,7 +224,7 @@ describe("QueryManager", () => {
   } {
     const result = observableQuery.getCurrentResult();
     return {
-      data: result.data,
+      data: result.data as TData,
       partial: !!result.partial,
     };
   }

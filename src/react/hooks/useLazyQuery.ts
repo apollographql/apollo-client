@@ -248,7 +248,12 @@ function executeQuery<TData, TVariables extends OperationVariables>(
       },
       complete: () => {
         resolve(
-          toQueryResult(result, resultData.previousData, observable, client)
+          toQueryResult(
+            observable["maskResult"](result),
+            resultData.previousData,
+            observable,
+            client
+          )
         );
       },
     });

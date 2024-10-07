@@ -56,6 +56,7 @@ import {
 } from "../../utilities/index.js";
 import { wrapHook } from "./internal/index.js";
 import type { RenderPromises } from "../ssr/RenderPromises.js";
+import type { MaybeMasked } from "../../masking/index.js";
 
 const {
   prototype: { hasOwnProperty },
@@ -78,7 +79,7 @@ export interface InternalResult<TData, TVariables extends OperationVariables> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   current?: undefined | InternalQueryResult<TData, TVariables>;
-  previousData?: undefined | TData;
+  previousData?: undefined | MaybeMasked<TData>;
 }
 
 interface InternalState<TData, TVariables extends OperationVariables> {
@@ -97,7 +98,7 @@ interface Callbacks<TData> {
   // Defining these methods as no-ops on the prototype allows us to call
   // state.onCompleted and/or state.onError without worrying about whether a
   // callback was provided.
-  onCompleted(data: TData): void;
+  onCompleted(data: MaybeMasked<TData>): void;
   onError(error: ApolloError): void;
 }
 
@@ -331,7 +332,7 @@ function useObservableSubscriptionResult<
   partialRefetch: boolean | undefined,
   isSyncSSR: boolean,
   callbacks: {
-    onCompleted: (data: TData) => void;
+    onCompleted: (data: MaybeMasked<TData>) => void;
     onError: (error: ApolloError) => void;
   }
 ) {
@@ -435,7 +436,8 @@ function useObservableSubscriptionResult<
           ) {
             setResult(
               {
-                data: (previousResult && previousResult.data) as TData,
+                data: (previousResult &&
+                  previousResult.data) as MaybeMasked<TData>,
                 error: error as ApolloError,
                 loading: false,
                 networkStatus: NetworkStatus.error,
@@ -650,7 +652,7 @@ export function getObsQueryOptions<
 }
 
 function setResult<TData, TVariables extends OperationVariables>(
-  nextResult: ApolloQueryResult<TData>,
+  nextResult: ApolloQueryResult<MaybeMasked<TData>>,
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>,
@@ -684,7 +686,7 @@ function setResult<TData, TVariables extends OperationVariables>(
 }
 
 function handleErrorOrCompleted<TData>(
-  result: ApolloQueryResult<TData>,
+  result: ApolloQueryResult<MaybeMasked<TData>>,
   previousNetworkStatus: NetworkStatus | undefined,
   callbacks: Callbacks<TData>
 ) {
@@ -759,8 +761,8 @@ export function toApolloError<TData>(
 }
 
 export function toQueryResult<TData, TVariables extends OperationVariables>(
-  result: ApolloQueryResult<TData>,
-  previousData: TData | undefined,
+  result: ApolloQueryResult<MaybeMasked<TData>>,
+  previousData: MaybeMasked<TData> | undefined,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
@@ -781,10 +783,10 @@ function unsafeHandlePartialRefetch<
   TData,
   TVariables extends OperationVariables,
 >(
-  result: ApolloQueryResult<TData>,
+  result: ApolloQueryResult<MaybeMasked<TData>>,
   observable: ObservableQuery<TData, TVariables>,
   partialRefetch: boolean | undefined
-): ApolloQueryResult<TData> {
+): ApolloQueryResult<MaybeMasked<TData>> {
   // TODO: This code should be removed when the partialRefetch option is
   // removed. I was unable to get this hook to behave reasonably in certain
   // edge cases when this block was put in an effect.

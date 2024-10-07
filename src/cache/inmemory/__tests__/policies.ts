@@ -1191,7 +1191,7 @@ describe("type policies", function () {
         query: DocumentNode | TypedDocumentNode<TData, TVars>,
         variables?: TVars
       ) {
-        cache.writeQuery({ query, variables, data });
+        cache.writeQuery<typeof data>({ query, variables, data });
         expect(cache.readQuery({ query, variables })).toEqual(data);
       }
 

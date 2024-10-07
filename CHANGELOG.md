@@ -1,5 +1,42 @@
 # @apollo/client
 
+## 3.12.0-alpha.0
+
+### Minor Changes
+
+- [#12042](https://github.com/apollographql/apollo-client/pull/12042) [`1c0ecbf`](https://github.com/apollographql/apollo-client/commit/1c0ecbf3c0454056853dd3dcb493dfd5fa1a96b1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduces data masking into Apollo Client. Data masking allows components to access only the data they asked for through GraphQL fragments. This prevents coupling between components that might otherwise implicitly rely on fields not requested by the component. Data masking also provides the benefit that masked fields only rerender components that ask for the field.
+
+  To enable data masking in Apollo Client, set the `dataMasking` option to `true`.
+
+  ```ts
+  new ApolloClient({
+    dataMasking: true,
+    // ... other options
+  });
+  ```
+
+  You can selectively disable data masking using the `@unmask` directive. Apply this to any named fragment to receive all fields requested by the fragment.
+
+  ```graphql
+  query {
+    user {
+      id
+      ...UserFields @unmask
+    }
+  }
+  ```
+
+  To help with migration, use the `@unmask` migrate mode which will add warnings when accessing fields that would otherwise be masked.
+
+  ```graphql
+  query {
+    user {
+      id
+      ...UserFields @unmask(mode: "migrate")
+    }
+  }
+  ```
+
 ## 3.11.8
 
 ### Patch Changes

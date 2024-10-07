@@ -14,6 +14,7 @@ import type { ApolloClient, OperationVariables } from "../../core/index.js";
 import type { NoInfer } from "../types/types.js";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
+import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -24,7 +25,7 @@ export interface UseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | string;
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
@@ -40,12 +41,12 @@ export interface UseFragmentOptions<TData, TVars>
 
 export type UseFragmentResult<TData> =
   | {
-      data: TData;
+      data: MaybeMasked<TData>;
       complete: true;
       missing?: never;
     }
   | {
-      data: DeepPartial<TData>;
+      data: DeepPartial<MaybeMasked<TData>>;
       complete: false;
       missing?: MissingTree;
     };
@@ -63,7 +64,8 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 function _useFragment<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
-  const { cache } = useApolloClient(options.client);
+  const client = useApolloClient(options.client);
+  const { cache } = client;
   const { from, ...rest } = options;
 
   // We calculate the cache id seperately from `stableOptions` because we don't
@@ -81,19 +83,26 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   // get the correct diff on the next render given new diffOptions
   const diff = React.useMemo(() => {
     const { fragment, fragmentName, from, optimistic = true } = stableOptions;
+    const { cache } = client;
+    const diff = cache.diff<TData>({
+      ...stableOptions,
+      returnPartialData: true,
+      id: from,
+      query: cache["getFragmentDoc"](fragment, fragmentName),
+      optimistic,
+    });
 
     return {
-      result: diffToResult(
-        cache.diff<TData>({
-          ...stableOptions,
-          returnPartialData: true,
-          id: from,
-          query: cache["getFragmentDoc"](fragment, fragmentName),
-          optimistic,
-        })
-      ),
+      result: diffToResult({
+        ...diff,
+        result: client["queryManager"].maskFragment({
+          fragment,
+          fragmentName,
+          data: diff.result,
+        }),
+      }),
     };
-  }, [stableOptions, cache]);
+  }, [client, stableOptions]);
 
   // Used for both getSnapshot and getServerSnapshot
   const getSnapshot = React.useCallback(() => diff.result, [diff]);
@@ -102,7 +111,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscription = cache.watchFragment(stableOptions).subscribe({
+        const subscription = client.watchFragment(stableOptions).subscribe({
           next: (result) => {
             // Since `next` is called async by zen-observable, we want to avoid
             // unnecessarily rerendering this hook for the initial result
@@ -123,7 +132,7 @@ function _useFragment<TData = any, TVars = OperationVariables>(
           clearTimeout(lastTimeout);
         };
       },
-      [cache, stableOptions, diff]
+      [client, stableOptions, diff]
     ),
     getSnapshot,
     getSnapshot

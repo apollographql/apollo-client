@@ -158,7 +158,7 @@ export const createPersistedQueryLink = (
           defaultCacheSizes["PersistedQueryLink.persistedQueryHashes"]
       );
     }
-    let hash = hashesByQuery.get(query)!;
+    let hash = hashesByQuery.get(query);
     if (!hash) hashesByQuery.set(query, (hash = getHashPromise(query)));
     return hash;
   }

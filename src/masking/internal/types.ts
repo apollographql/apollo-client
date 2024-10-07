@@ -1,9 +1,7 @@
 export type UnwrapFragmentRefs<TData> =
   // Leave TData alone if it is Record<string, any> and not a specific shape
   string extends keyof NonNullable<TData> ? TData
-  : keyof NonNullable<TData> extends never ? TData
-  : //: TData extends Array<infer U> ? Array<UnwrapFragmentRefs<U>>
-  TData extends { " $fragmentRefs"?: object | null } ?
+  : TData extends { " $fragmentRefs"?: object | null } ?
     Combine<KeyTuples<TData>> extends infer Flattened ?
       { [K in keyof Flattened]: UnwrapFragmentRefs<Flattened[K]> }
     : never

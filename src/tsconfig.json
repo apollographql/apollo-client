@@ -7,7 +7,7 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "lib": ["es2015", "esnext.asynciterable", "ES2021.WeakRef"],
+    "lib": ["DOM", "es2015", "esnext.asynciterable", "ES2021.WeakRef"],
     "types": [
       "jest",
       "node",

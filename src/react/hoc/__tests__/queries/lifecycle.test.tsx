@@ -58,15 +58,14 @@ describe("[queries] lifecycle", () => {
       }
     );
 
-    const [stream, renderResult] = renderToRenderStream<DataValue<Data, Vars>>(
-      <Container first={1} />,
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-    const { rerender } = await renderResult;
+    const [stream, renderResultPromise] = renderToRenderStream<
+      DataValue<Data, Vars>
+    >(<Container first={1} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
+    const { rerender } = await renderResultPromise;
 
     {
       const { snapshot } = await stream.takeRender();

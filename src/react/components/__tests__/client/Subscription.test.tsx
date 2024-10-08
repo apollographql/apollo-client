@@ -435,12 +435,12 @@ describe("should update", () => {
         </Subscription>
       );
     }
-    const [stream, renderResult] = renderToRenderStream<any>(
+    const [stream, renderResultPromise] = renderToRenderStream<any>(
       <ApolloProvider client={client}>
         <Container />
       </ApolloProvider>
     );
-    const { rerender } = await renderResult;
+    const { rerender } = await renderResultPromise;
     {
       const {
         snapshot: { loading, data },
@@ -530,7 +530,7 @@ describe("should update", () => {
         </Subscription>
       );
     }
-    const [stream, renderResult] = renderToRenderStream<any>(
+    const [stream, renderResultPromise] = renderToRenderStream<any>(
       <Container subscription={subscription} />,
       {
         wrapper: ({ children }) => (
@@ -538,7 +538,7 @@ describe("should update", () => {
         ),
       }
     );
-    const { rerender } = await renderResult;
+    const { rerender } = await renderResultPromise;
 
     {
       const {
@@ -625,7 +625,7 @@ describe("should update", () => {
         </Subscription>
       );
     }
-    const [stream, renderResult] = renderToRenderStream<any>(
+    const [stream, renderResultPromise] = renderToRenderStream<any>(
       <Container variables={variablesLuke} />,
       {
         wrapper: ({ children }) => (
@@ -633,7 +633,7 @@ describe("should update", () => {
         ),
       }
     );
-    const { rerender } = await renderResult;
+    const { rerender } = await renderResultPromise;
 
     {
       const {

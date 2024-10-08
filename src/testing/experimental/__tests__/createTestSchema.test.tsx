@@ -19,7 +19,10 @@ import {
   ErrorBoundary as ReactErrorBoundary,
 } from "react-error-boundary";
 import { InvariantError } from "ts-invariant";
-import { Profiler, createProfiler } from "@testing-library/react-render-stream";
+import {
+  RenderStream,
+  createProfiler,
+} from "@testing-library/react-render-stream";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -101,7 +104,7 @@ function createErrorProfiler<TData = unknown>() {
 }
 
 function createTrackedErrorComponents<Snapshot extends { error: Error | null }>(
-  Profiler: Profiler<Snapshot>
+  Profiler: RenderStream<Snapshot>
 ) {
   function ErrorFallback({ error }: FallbackProps) {
     Profiler.mergeSnapshot({ error } as Partial<Snapshot>);

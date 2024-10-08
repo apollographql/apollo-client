@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import {
   ApolloClient,
   InMemoryCache,
@@ -17,7 +17,6 @@ import {
 import {
   PaginatedCaseData,
   SimpleCaseData,
-  renderWithClient,
   setupPaginatedCase,
   setupSimpleCase,
 } from "../../../testing/internal";

@@ -35,6 +35,7 @@ import {
   createProfiler,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { createClientWrapper } from "../../../testing/internal/renderHelpers";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
@@ -79,11 +80,9 @@ test("does not interfere with updates from useReadQuery", async () => {
     );
   }
 
-  const { rerender } = renderWithClient(<App />, {
-    client,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App />, {
+    wrapper: createClientWrapper(client),
   });
-
   {
     const { renderedComponents } = await Profiler.takeRender();
 
@@ -180,7 +179,7 @@ test("refetches and resuspends when calling refetch", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -304,7 +303,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await Profiler.takeRender();
@@ -430,7 +429,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await Profiler.takeRender();
@@ -552,7 +551,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await Profiler.takeRender();
@@ -690,7 +689,7 @@ test("`refetch` works with startTransition", async () => {
     );
   }
 
-  render(<App />, { wrapper: Profiler.Wrapper });
+  Profiler.render(<App />);
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -830,7 +829,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -965,7 +964,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1053,7 +1052,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await Profiler.takeRender();
@@ -1151,7 +1150,7 @@ test("resuspends when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1250,7 +1249,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1355,7 +1354,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   }
 
   const queryRef = preloadQuery(query);
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1460,7 +1459,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1566,7 +1565,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await Profiler.takeRender();
@@ -1682,7 +1681,7 @@ test("`fetchMore` works with startTransition", async () => {
 
   const queryRef = preloadQuery(query);
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1830,7 +1829,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2023,7 +2022,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();

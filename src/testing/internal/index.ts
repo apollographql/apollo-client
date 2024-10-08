@@ -18,4 +18,8 @@ export type {
   RenderWithClientOptions,
   RenderWithMocksOptions,
 } from "./renderHelpers.js";
-export { renderWithClient, renderWithMocks } from "./renderHelpers.js";
+export {
+  renderWithClient,
+  renderWithMocks,
+  createMockWrapper,
+} from "./renderHelpers.js";

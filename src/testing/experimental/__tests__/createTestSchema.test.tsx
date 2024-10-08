@@ -6,7 +6,7 @@ import {
   gql,
 } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
-import { renderWithClient, spyOnConsole } from "../../internal/index.js";
+import { spyOnConsole } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
@@ -23,6 +23,7 @@ import {
   RenderStream,
   createProfiler,
 } from "@testing-library/react-render-stream";
+import { createClientWrapper } from "../../internal/renderHelpers.js";
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -215,9 +216,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -303,9 +303,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -394,9 +393,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -484,9 +482,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -603,9 +600,8 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -726,9 +722,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -803,9 +798,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -957,9 +951,8 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -1099,9 +1092,8 @@ describe("schema proxy", () => {
       );
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
@@ -1209,9 +1201,8 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: Profiler.Wrapper,
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client),
     });
 
     // initial suspended render

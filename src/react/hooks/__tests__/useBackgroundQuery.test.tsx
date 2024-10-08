@@ -49,8 +49,7 @@ import {
   SimpleCaseData,
   VariablesCaseData,
   VariablesCaseVariables,
-  renderWithClient,
-  renderWithMocks,
+  createMockWrapper,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
@@ -62,6 +61,7 @@ import {
   createProfiler,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { createClientWrapper } from "../../../testing/internal/renderHelpers";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -147,7 +147,7 @@ it("fetches a simple query with minimal config", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -190,9 +190,8 @@ it("tears down the query on unmount", async () => {
     );
   }
 
-  const { unmount } = renderWithClient(<App />, {
-    client,
-    wrapper: Profiler.Wrapper,
+  const { unmount } = Profiler.render(<App />, {
+    wrapper: createClientWrapper(client),
   });
 
   // initial suspended render
@@ -317,7 +316,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -393,7 +392,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -500,9 +499,8 @@ it("does not recreate queryRef and execute a network request when rerendering us
     );
   }
 
-  const { rerender } = renderWithClient(<App />, {
-    client,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App />, {
+    wrapper: createClientWrapper(client),
   });
 
   const toggleButton = screen.getByText("Toggle");
@@ -599,13 +597,8 @@ it("does not recreate queryRef or execute a network request when rerendering use
     );
   }
 
-  renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => (
-      <Profiler.Wrapper>
-        <React.StrictMode>{children}</React.StrictMode>
-      </Profiler.Wrapper>
-    ),
+  Profiler.render(<App />, {
+    wrapper: createClientWrapper(client, React.StrictMode),
   });
 
   const incrementButton = screen.getByText("Increment");
@@ -648,9 +641,8 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery",
     return null;
   }
 
-  const { unmount } = renderWithClient(<App />, {
-    client,
-    wrapper: Profiler.Wrapper,
+  const { unmount } = Profiler.render(<App />, {
+    wrapper: createClientWrapper(client),
   });
 
   expect(client.getObservableQueries().size).toBe(1);
@@ -685,9 +677,8 @@ it("disposes of old queryRefs when changing variables before the queryRef is use
     return null;
   }
 
-  const { rerender } = renderWithClient(<App id="1" />, {
-    client,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App id="1" />, {
+    wrapper: createClientWrapper(client),
   });
 
   expect(client.getObservableQueries().size).toBe(1);
@@ -730,13 +721,8 @@ it("does not prematurely dispose of the queryRef when using strict mode", async 
     return null;
   }
 
-  renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => (
-      <React.StrictMode>
-        <Profiler.Wrapper>{children}</Profiler.Wrapper>
-      </React.StrictMode>
-    ),
+  Profiler.render(<App />, {
+    wrapper: createClientWrapper(client, React.StrictMode),
   });
 
   {
@@ -774,9 +760,8 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery e
     );
   }
 
-  const { unmount } = renderWithClient(<App />, {
-    client,
-    wrapper: Profiler.Wrapper,
+  const { unmount } = Profiler.render(<App />, {
+    wrapper: createClientWrapper(client),
   });
   const button = screen.getByText("Increment");
 
@@ -831,10 +816,7 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  renderWithClient(<App />, {
-    client: globalClient,
-    wrapper: Profiler.Wrapper,
-  });
+  Profiler.render(<App />, { wrapper: createClientWrapper(globalClient) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -890,7 +872,7 @@ it("passes context to the link", async () => {
     );
   }
 
-  renderWithMocks(<App />, { link, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ link }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -962,7 +944,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  renderWithMocks(<App />, { cache, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ cache }) });
 
   const {
     snapshot: { result },
@@ -1031,7 +1013,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  renderWithMocks(<App />, { cache, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ cache }) });
 
   const { snapshot } = await Profiler.takeRender();
   const result = snapshot.result!;
@@ -1076,7 +1058,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -1140,7 +1122,7 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const { snapshot, renderedComponents } = await Profiler.takeRender();
 
@@ -1197,7 +1179,7 @@ it("partial data is present in the cache so it is ignored and network request is
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1249,7 +1231,7 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1303,7 +1285,7 @@ it("fetches data from the network but does not update the cache when fetchPolicy
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1417,7 +1399,7 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1534,7 +1516,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -1638,7 +1620,7 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1710,9 +1692,8 @@ it("reacts to variables updates", async () => {
     );
   }
 
-  const { rerender } = renderWithMocks(<App id="1" />, {
-    mocks,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App id="1" />, {
+    wrapper: createMockWrapper({ mocks }),
   });
 
   {
@@ -1774,7 +1755,7 @@ it("does not suspend when `skip` is true", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   const { renderedComponents } = await Profiler.takeRender();
 
@@ -1801,7 +1782,7 @@ it("does not suspend when using `skipToken` in options", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   const { renderedComponents } = await Profiler.takeRender();
 
@@ -1833,7 +1814,7 @@ it("suspends when `skip` becomes `false` after it was `true`", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1885,7 +1866,7 @@ it("suspends when switching away from `skipToken` in options", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1937,7 +1918,7 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -1993,7 +1974,7 @@ it("renders skip result, does not suspend, and maintains `data` when switching b
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2074,7 +2055,7 @@ it("does not make network requests when `skip` is `true`", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial skipped result
   await Profiler.takeRender();
@@ -2161,7 +2142,7 @@ it("does not make network requests when `skipToken` is used", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial skipped result
   await Profiler.takeRender();
@@ -2248,13 +2229,8 @@ it("does not make network requests when `skipToken` is used in strict mode", asy
     );
   }
 
-  renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => (
-      <React.StrictMode>
-        <Profiler.Wrapper>{children}</Profiler.Wrapper>
-      </React.StrictMode>
-    ),
+  Profiler.render(<App />, {
+    wrapper: createClientWrapper(client, React.StrictMode),
   });
 
   // initial skipped result
@@ -2341,13 +2317,8 @@ it("does not make network requests when using `skip` option in strict mode", asy
     );
   }
 
-  renderWithClient(<App />, {
-    client,
-    wrapper: ({ children }) => (
-      <React.StrictMode>
-        <Profiler.Wrapper>{children}</Profiler.Wrapper>
-      </React.StrictMode>
-    ),
+  Profiler.render(<App />, {
+    wrapper: createClientWrapper(client, React.StrictMode),
   });
 
   // initial skipped result
@@ -2408,9 +2379,8 @@ it("result is referentially stable", async () => {
     );
   }
 
-  const { rerender } = renderWithMocks(<App />, {
-    mocks,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App />, {
+    wrapper: createMockWrapper({ mocks }),
   });
 
   {
@@ -2480,7 +2450,7 @@ it("`skip` option works with `startTransition`", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2559,7 +2529,7 @@ it("`skipToken` works with `startTransition`", async () => {
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2643,7 +2613,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   // initial render
   await Profiler.takeRender();
@@ -2726,7 +2696,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -2829,7 +2799,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  renderWithMocks(<App />, { cache, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createMockWrapper({ cache }) });
 
   {
     const { snapshot } = await Profiler.takeRender();
@@ -2944,7 +2914,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial suspended render
   await Profiler.takeRender();
@@ -3088,7 +3058,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial suspended render
   await Profiler.takeRender();
@@ -3191,7 +3161,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot } = await Profiler.takeRender();
@@ -3328,7 +3298,7 @@ it("properly handles changing options along with changing `variables`", async ()
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot } = await Profiler.takeRender();
@@ -3457,7 +3427,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -3523,10 +3493,8 @@ it('suspends and does not use partial data from other variables in the cache whe
     );
   }
 
-  const { rerender } = renderWithMocks(<App id="1" />, {
-    cache,
-    mocks,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App id="1" />, {
+    wrapper: createMockWrapper({ cache, mocks }),
   });
 
   {
@@ -3620,7 +3588,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -3687,7 +3655,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await Profiler.takeRender();
@@ -3787,7 +3755,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -3853,10 +3821,8 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { rerender } = renderWithMocks(<App id="1" />, {
-    cache,
-    mocks,
-    wrapper: Profiler.Wrapper,
+  const { rerender } = Profiler.render(<App id="1" />, {
+    wrapper: createMockWrapper({ cache, mocks }),
   });
 
   {
@@ -3970,7 +3936,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -4081,13 +4047,8 @@ it.each<SuspenseQueryHookFetchPolicy>([
       );
     }
 
-    renderWithClient(<App />, {
-      client,
-      wrapper: ({ children }) => (
-        <React.StrictMode>
-          <Profiler.Wrapper>{children}</Profiler.Wrapper>
-        </React.StrictMode>
-      ),
+    Profiler.render(<App />, {
+      wrapper: createClientWrapper(client, React.StrictMode),
     });
 
     {
@@ -4166,7 +4127,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4241,7 +4202,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4345,7 +4306,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4456,7 +4417,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4543,7 +4504,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4638,7 +4599,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4736,7 +4697,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -4873,7 +4834,7 @@ describe("refetch", () => {
       return null;
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5003,7 +4964,7 @@ describe("refetch", () => {
       return null;
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5123,7 +5084,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithMocks(<App />, { mocks, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5255,7 +5216,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5369,7 +5330,7 @@ describe("refetch", () => {
       );
     }
 
-    renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5447,7 +5408,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithMocks(<App />, { cache, link, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ cache, link }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5526,7 +5487,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithMocks(<App />, { link, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createMockWrapper({ link }) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5614,7 +5575,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5776,7 +5737,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -5989,7 +5950,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -6144,7 +6105,7 @@ describe("fetchMore", () => {
       );
     }
 
-    renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+    Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
     {
       const { renderedComponents } = await Profiler.takeRender();

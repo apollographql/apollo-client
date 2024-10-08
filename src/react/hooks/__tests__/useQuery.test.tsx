@@ -4545,11 +4545,9 @@ describe("useQuery Hook", () => {
       );
     }
 
-    render(<App />, {
+    Profiler.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>{children}</Profiler.Wrapper>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
@@ -4798,11 +4796,9 @@ describe("useQuery Hook", () => {
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    render(<App />, {
+    Profiler.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>{children}</Profiler.Wrapper>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
@@ -5022,11 +5018,9 @@ describe("useQuery Hook", () => {
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    render(<App />, {
+    Profiler.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>{children}</Profiler.Wrapper>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
@@ -5182,11 +5176,9 @@ describe("useQuery Hook", () => {
       return null;
     }
 
-    render(<App />, {
+    Profiler.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>{children}</Profiler.Wrapper>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
@@ -5343,11 +5335,9 @@ describe("useQuery Hook", () => {
       return <button onClick={() => mutate()}>Run mutation</button>;
     }
 
-    render(<App />, {
+    Profiler.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>{children}</Profiler.Wrapper>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 

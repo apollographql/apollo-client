@@ -24,11 +24,10 @@ import {
   spyOnConsole,
   setupSimpleCase,
   setupVariablesCase,
-  renderWithClient,
   VariablesCaseData,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { act, render, renderHook, screen } from "@testing-library/react";
+import { act, renderHook, screen } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
@@ -37,6 +36,7 @@ import {
   createProfiler,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { createClientWrapper } from "../../../testing/internal/renderHelpers";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({
@@ -90,11 +90,9 @@ function renderDefaultTestApp<TData>({
     );
   }
 
-  const utils = render(<App />, {
+  const utils = Profiler.render(<App />, {
     wrapper: ({ children }) => (
-      <ApolloProvider client={client}>
-        <Profiler.Wrapper>{children}</Profiler.Wrapper>
-      </ApolloProvider>
+      <ApolloProvider client={client}>{children}</ApolloProvider>
     ),
   });
 
@@ -295,7 +293,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -491,7 +489,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -749,7 +747,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -930,7 +928,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -1111,7 +1109,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
+  Profiler.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 

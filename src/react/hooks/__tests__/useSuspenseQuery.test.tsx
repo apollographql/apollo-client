@@ -10144,15 +10144,16 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler.Wrapper>
-        </ApolloProvider>
-      ),
-    });
+    Profiler.render(
+      <Suspense fallback={<SuspenseFallback />}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -10329,15 +10330,16 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler.Wrapper>
-        </ApolloProvider>
-      ),
-    });
+    Profiler.render(
+      <Suspense fallback={<SuspenseFallback />}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
       const { renderedComponents } = await Profiler.takeRender();
@@ -10508,15 +10510,16 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler.Wrapper>
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </Profiler.Wrapper>
-        </ApolloProvider>
-      ),
-    });
+    Profiler.render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // initial suspended render
     await Profiler.takeRender();

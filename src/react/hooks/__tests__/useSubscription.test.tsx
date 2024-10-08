@@ -1,5 +1,5 @@
 import React from "react";
-import { render, renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import {
@@ -20,7 +20,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
-import { profileHook } from "@testing-library/react-render-stream";
+import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1196,7 +1196,9 @@ followed by new in-flight setup", async () => {
   });
 
   describe("errorPolicy", () => {
-    function setup() {
+    function setup(
+      initialProps: SubscriptionHookOptions<{ totalLikes: number }, {}>
+    ) {
       const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
         subscription ($id: ID!) {
           totalLikes
@@ -1208,16 +1210,20 @@ followed by new in-flight setup", async () => {
         link,
         cache: new Cache(),
       });
-      const ProfiledHook = profileHook(
-        (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
-          useSubscription(subscription, options)
-      );
       const wrapper = ({ children }: { children: any }) => (
         <ApolloProvider client={client}>
           <ErrorBoundary onError={errorBoundaryOnError} fallback={<>error</>}>
             {children}
           </ErrorBoundary>
         </ApolloProvider>
+      );
+      const [stream] = renderHookToSnapshotStream(
+        (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
+          useSubscription(subscription, options),
+        {
+          initialProps,
+          wrapper,
+        }
       );
       const graphQlErrorResult: MockedSubscriptionResult = {
         result: {
@@ -1232,8 +1238,7 @@ followed by new in-flight setup", async () => {
         client,
         link,
         errorBoundaryOnError,
-        ProfiledHook,
-        wrapper,
+        stream,
         graphQlErrorResult,
         protocolErrorResult,
       };
@@ -1242,30 +1247,15 @@ followed by new in-flight setup", async () => {
       it.each([undefined, "none"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
         async (errorPolicy) => {
-          const {
-            ProfiledHook,
-            wrapper,
-            link,
-            graphQlErrorResult,
-            errorBoundaryOnError,
-          } = setup();
           const onData = jest.fn();
           const onError = jest.fn();
-          render(
-            <ProfiledHook
-              errorPolicy={errorPolicy}
-              onError={onError}
-              onData={onData}
-            />,
-            {
-              wrapper,
-            }
-          );
+          const { stream, link, graphQlErrorResult, errorBoundaryOnError } =
+            setup({ errorPolicy, onError, onData });
 
-          await ProfiledHook.takeSnapshot();
+          await stream.takeSnapshot();
           link.simulateResult(graphQlErrorResult);
           {
-            const snapshot = await ProfiledHook.takeSnapshot();
+            const snapshot = await stream.takeSnapshot();
             console.dir({ graphQlErrorResult, snapshot }, { depth: 5 });
             expect(snapshot).toStrictEqual({
               loading: false,
@@ -1290,26 +1280,15 @@ followed by new in-flight setup", async () => {
         }
       );
       it("`errorPolicy: 'all'`: returns `{ error, data }`, calls `onError`", async () => {
-        const {
-          ProfiledHook,
-          wrapper,
-          link,
-          graphQlErrorResult,
-          errorBoundaryOnError,
-        } = setup();
         const onData = jest.fn();
         const onError = jest.fn();
-        render(
-          <ProfiledHook errorPolicy="all" onError={onError} onData={onData} />,
-          {
-            wrapper,
-          }
-        );
+        const { stream, link, graphQlErrorResult, errorBoundaryOnError } =
+          setup({ errorPolicy: "all", onError, onData });
 
-        await ProfiledHook.takeSnapshot();
+        await stream.takeSnapshot();
         link.simulateResult(graphQlErrorResult);
         {
-          const snapshot = await ProfiledHook.takeSnapshot();
+          const snapshot = await stream.takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
             error: new ApolloError({
@@ -1335,30 +1314,19 @@ followed by new in-flight setup", async () => {
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
       it("`errorPolicy: 'ignore'`: returns `{ data }`, calls `onData`", async () => {
-        const {
-          ProfiledHook,
-          wrapper,
-          link,
-          graphQlErrorResult,
-          errorBoundaryOnError,
-        } = setup();
         const onData = jest.fn();
         const onError = jest.fn();
-        render(
-          <ProfiledHook
-            errorPolicy="ignore"
-            onError={onError}
-            onData={onData}
-          />,
-          {
-            wrapper,
-          }
-        );
+        const { stream, link, graphQlErrorResult, errorBoundaryOnError } =
+          setup({
+            errorPolicy: "ignore",
+            onError,
+            onData,
+          });
 
-        await ProfiledHook.takeSnapshot();
+        await stream.takeSnapshot();
         link.simulateResult(graphQlErrorResult);
         {
-          const snapshot = await ProfiledHook.takeSnapshot();
+          const snapshot = await stream.takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
             error: undefined,
@@ -1387,30 +1355,15 @@ followed by new in-flight setup", async () => {
       it.each([undefined, "none", "all", "ignore"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
         async (errorPolicy) => {
-          const {
-            ProfiledHook,
-            wrapper,
-            link,
-            protocolErrorResult,
-            errorBoundaryOnError,
-          } = setup();
           const onData = jest.fn();
           const onError = jest.fn();
-          render(
-            <ProfiledHook
-              errorPolicy={errorPolicy}
-              onError={onError}
-              onData={onData}
-            />,
-            {
-              wrapper,
-            }
-          );
+          const { stream, link, protocolErrorResult, errorBoundaryOnError } =
+            setup({ errorPolicy, onError, onData });
 
-          await ProfiledHook.takeSnapshot();
+          await stream.takeSnapshot();
           link.simulateResult(protocolErrorResult);
           {
-            const snapshot = await ProfiledHook.takeSnapshot();
+            const snapshot = await stream.takeSnapshot();
             expect(snapshot).toStrictEqual({
               loading: false,
               error: new ApolloError({
@@ -1439,7 +1392,12 @@ followed by new in-flight setup", async () => {
 });
 
 describe("`restart` callback", () => {
-  function setup() {
+  function setup(
+    initialProps: SubscriptionHookOptions<
+      { totalLikes: number },
+      { id: string }
+    >
+  ) {
     const subscription: TypedDocumentNode<
       { totalLikes: number },
       { id: string }
@@ -1457,22 +1415,26 @@ describe("`restart` callback", () => {
       link,
       cache: new Cache(),
     });
-    const ProfiledHook = profileHook(
+    const [stream, { rerender }] = renderHookToSnapshotStream(
       (
         options: SubscriptionHookOptions<{ totalLikes: number }, { id: string }>
-      ) => useSubscription(subscription, options)
+      ) => useSubscription(subscription, options),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+        initialProps,
+      }
     );
-    return { client, link, ProfiledHook, onSubscribe, onUnsubscribe };
+    return { client, link, stream, onSubscribe, onUnsubscribe, rerender };
   }
   it("can restart a running subscription", async () => {
-    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
-    render(<ProfiledHook variables={{ id: "1" }} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    const { link, stream, onSubscribe, onUnsubscribe } = setup({
+      variables: { id: "1" },
     });
+
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1483,7 +1445,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1 },
@@ -1492,14 +1454,14 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    ProfiledHook.getCurrentSnapshot().restart();
+    stream.getCurrentSnapshot().restart();
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1513,7 +1475,7 @@ describe("`restart` callback", () => {
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 2 },
@@ -1524,14 +1486,17 @@ describe("`restart` callback", () => {
     }
   });
   it("will use the most recently passed in options", async () => {
-    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
-    const { rerender } = render(<ProfiledHook variables={{ id: "1" }} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    const {
+      link,
+      stream: stream,
+      onSubscribe,
+      onUnsubscribe,
+      rerender,
+    } = setup({
+      variables: { id: "1" },
     });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1542,10 +1507,10 @@ describe("`restart` callback", () => {
     }
     // deliberately keeping a reference to a very old `restart` function
     // to show that the most recent options are used even with that
-    const restart = ProfiledHook.getCurrentSnapshot().restart;
+    const restart = stream.getCurrentSnapshot().restart;
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1 },
@@ -1554,17 +1519,17 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    rerender(<ProfiledHook variables={{ id: "2" }} />);
+    rerender({ variables: { id: "2" } });
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1575,7 +1540,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1000 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1000 },
@@ -1596,7 +1561,7 @@ describe("`restart` callback", () => {
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1607,7 +1572,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1005 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1005 },
@@ -1618,14 +1583,11 @@ describe("`restart` callback", () => {
     }
   });
   it("can restart a subscription that has completed", async () => {
-    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
-    render(<ProfiledHook variables={{ id: "1" }} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    const { link, stream, onSubscribe, onUnsubscribe } = setup({
+      variables: { id: "1" },
     });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1636,7 +1598,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1 } } }, true);
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1 },
@@ -1645,14 +1607,14 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    ProfiledHook.getCurrentSnapshot().restart();
+    stream.getCurrentSnapshot().restart();
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1666,7 +1628,7 @@ describe("`restart` callback", () => {
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 2 },
@@ -1677,14 +1639,16 @@ describe("`restart` callback", () => {
     }
   });
   it("can restart a subscription that has errored", async () => {
-    const { client, link, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
-    render(<ProfiledHook variables={{ id: "1" }} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    const {
+      link,
+      stream: stream,
+      onSubscribe,
+      onUnsubscribe,
+    } = setup({
+      variables: { id: "1" },
     });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1698,7 +1662,7 @@ describe("`restart` callback", () => {
       result: { errors: [error] },
     });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: undefined,
@@ -1707,14 +1671,14 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    ProfiledHook.getCurrentSnapshot().restart();
+    stream.getCurrentSnapshot().restart();
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1728,7 +1692,7 @@ describe("`restart` callback", () => {
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 2 },
@@ -1739,14 +1703,12 @@ describe("`restart` callback", () => {
     }
   });
   it("will not restart a subscription that has been `skip`ped", async () => {
-    const { client, ProfiledHook, onSubscribe, onUnsubscribe } = setup();
-    render(<ProfiledHook variables={{ id: "1" }} skip />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    const { stream, onSubscribe, onUnsubscribe } = setup({
+      variables: { id: "1" },
+      skip: true,
     });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: undefined,
@@ -1758,11 +1720,11 @@ describe("`restart` callback", () => {
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
 
-    expect(() => ProfiledHook.getCurrentSnapshot().restart()).toThrow(
+    expect(() => stream.getCurrentSnapshot().restart()).toThrow(
       new InvariantError("A subscription that is skipped cannot be restarted.")
     );
 
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
   });
@@ -1793,21 +1755,22 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
-    const ProfiledHook = profileHook(() =>
-      useSubscription(subscription, {
-        ignoreResults: true,
-        onData,
-        onError,
-        onComplete,
-      })
+    const [stream] = renderHookToSnapshotStream(
+      () =>
+        useSubscription(subscription, {
+          ignoreResults: true,
+          onData,
+          onError,
+          onComplete,
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
 
-    const snapshot = await ProfiledHook.takeSnapshot();
+    const snapshot = await stream.takeSnapshot();
     expect(snapshot).toStrictEqual({
       loading: false,
       error: undefined,
@@ -1850,7 +1813,7 @@ describe("ignoreResults", () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(stream).not.toRerender();
   });
 
   it("should not rerender when ignoreResults is true and an error occurs", async () => {
@@ -1865,21 +1828,22 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
-    const ProfiledHook = profileHook(() =>
-      useSubscription(subscription, {
-        ignoreResults: true,
-        onData,
-        onError,
-        onComplete,
-      })
+    const [stream] = renderHookToSnapshotStream(
+      () =>
+        useSubscription(subscription, {
+          ignoreResults: true,
+          onData,
+          onError,
+          onComplete,
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
 
-    const snapshot = await ProfiledHook.takeSnapshot();
+    const snapshot = await stream.takeSnapshot();
     expect(snapshot).toStrictEqual({
       loading: false,
       error: undefined,
@@ -1916,7 +1880,7 @@ describe("ignoreResults", () => {
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(stream).not.toRerender();
   });
 
   it("can switch from `ignoreResults: true` to `ignoreResults: false` and will start rerendering, without creating a new subscription", async () => {
@@ -1929,22 +1893,23 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const ProfiledHook = profileHook(
+    const [stream, { rerender }] = renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
           ignoreResults,
           onData,
-        })
+        }),
+      {
+        initialProps: { ignoreResults: true },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
-    const { rerender } = render(<ProfiledHook ignoreResults={true} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
     expect(subscriptionCreated).toHaveBeenCalledTimes(1);
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -1955,12 +1920,12 @@ describe("ignoreResults", () => {
       expect(onData).toHaveBeenCalledTimes(0);
     }
     link.simulateResult(results[0]);
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(1);
 
-    rerender(<ProfiledHook ignoreResults={false} />);
+    rerender({ ignoreResults: false });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -1975,7 +1940,7 @@ describe("ignoreResults", () => {
 
     link.simulateResult(results[1]);
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -1998,22 +1963,23 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const ProfiledHook = profileHook(
+    const [stream, { rerender }] = renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
           ignoreResults,
           onData,
-        })
+        }),
+      {
+        initialProps: { ignoreResults: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
-    const { rerender } = render(<ProfiledHook ignoreResults={false} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
     expect(subscriptionCreated).toHaveBeenCalledTimes(1);
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         error: undefined,
@@ -2025,7 +1991,7 @@ describe("ignoreResults", () => {
     }
     link.simulateResult(results[0]);
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -2035,11 +2001,11 @@ describe("ignoreResults", () => {
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
 
-    rerender(<ProfiledHook ignoreResults={true} />);
+    rerender({ ignoreResults: true });
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await stream.takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -2053,7 +2019,7 @@ describe("ignoreResults", () => {
     }
 
     link.simulateResult(results[1]);
-    await expect(ProfiledHook).not.toRerender({ timeout: 20 });
+    await expect(stream).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(2);
 
     // a second subscription should not have been started

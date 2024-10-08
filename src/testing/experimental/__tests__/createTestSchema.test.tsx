@@ -214,7 +214,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -302,7 +302,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -393,7 +393,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -483,7 +483,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -602,7 +602,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -725,7 +725,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -802,7 +802,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -956,7 +956,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -1098,7 +1098,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render
@@ -1208,7 +1208,7 @@ describe("schema proxy", () => {
 
     renderWithClient(<App />, {
       client,
-      wrapper: Profiler,
+      wrapper: Profiler.Wrapper,
     });
 
     // initial suspended render

@@ -93,7 +93,7 @@ function renderDefaultTestApp<TData>({
   const utils = render(<App />, {
     wrapper: ({ children }) => (
       <ApolloProvider client={client}>
-        <Profiler>{children}</Profiler>
+        <Profiler.Wrapper>{children}</Profiler.Wrapper>
       </ApolloProvider>
     ),
   });
@@ -295,7 +295,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -491,7 +491,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -749,7 +749,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -930,7 +930,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -1111,7 +1111,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderWithClient(<App />, { client, wrapper: Profiler.Wrapper });
 
   const toggleButton = screen.getByText("Toggle");
 

@@ -32,7 +32,7 @@ import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { spyOnConsole } from "../../../testing/internal";
-import { profileHook } from "@testing-library/react-render-stream";
+import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -751,26 +751,24 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const ProfiledHook = profileHook(() =>
-        useMutation<
-          { createTodo: Todo },
-          { priority: string; description: string }
-        >(CREATE_TODO_MUTATION)
+      const [stream] = renderHookToSnapshotStream(
+        () =>
+          useMutation<
+            { createTodo: Todo },
+            { priority: string; description: string }
+          >(CREATE_TODO_MUTATION),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
       );
 
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-      let createTodo: Awaited<ReturnType<typeof ProfiledHook.takeSnapshot>>[0];
-      let reset: Awaited<
-        ReturnType<typeof ProfiledHook.takeSnapshot>
-      >[1]["reset"];
+      let createTodo: Awaited<ReturnType<typeof stream.takeSnapshot>>[0];
+      let reset: Awaited<ReturnType<typeof stream.takeSnapshot>>[1]["reset"];
 
       {
-        const [mutate, result] = await ProfiledHook.takeSnapshot();
+        const [mutate, result] = await stream.takeSnapshot();
         createTodo = mutate;
         reset = result.reset;
         //initial value
@@ -787,7 +785,7 @@ describe("useMutation Hook", () => {
       });
 
       {
-        const [, result] = await ProfiledHook.takeSnapshot();
+        const [, result] = await stream.takeSnapshot();
         // started loading
         expect(result.data).toBe(undefined);
         expect(result.loading).toBe(true);
@@ -797,7 +795,7 @@ describe("useMutation Hook", () => {
       act(() => reset());
 
       {
-        const [, result] = await ProfiledHook.takeSnapshot();
+        const [, result] = await stream.takeSnapshot();
         // reset to initial value
         expect(result.data).toBe(undefined);
         expect(result.loading).toBe(false);
@@ -806,7 +804,7 @@ describe("useMutation Hook", () => {
 
       expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
 
-      await expect(ProfiledHook).not.toRerender();
+      await expect(stream).not.toRerender();
     });
   });
 

@@ -9,7 +9,7 @@ import { ApolloLink, DocumentNode, Operation } from "../../../../link/core";
 import { itAsync, MockSubscriptionLink } from "../../../../testing";
 import { Subscription } from "../../Subscription";
 import { spyOnConsole } from "../../../../testing/internal";
-import { profile } from "@testing-library/react-render-stream";
+import { renderToRenderStream } from "@testing-library/react-render-stream";
 
 const results = [
   "Luke Skywalker",
@@ -429,26 +429,22 @@ describe("should update", () => {
       return (
         <Subscription subscription={subscription}>
           {(r: any) => {
-            ProfiledContainer.replaceSnapshot(r);
+            stream.replaceSnapshot(r);
             return null;
           }}
         </Subscription>
       );
     }
-    const ProfiledContainer = profile<any>({
-      Component: Container,
-    });
-
-    const { rerender } = render(
+    const [stream, renderResult] = renderToRenderStream<any>(
       <ApolloProvider client={client}>
-        <ProfiledContainer />
+        <Container />
       </ApolloProvider>
     );
-
+    const { rerender } = await renderResult;
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -458,23 +454,23 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(results[0].result.data);
     }
 
-    await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
+    await expect(stream).not.toRerender({ timeout: 50 });
 
     rerender(
       <ApolloProvider client={client2}>
-        <ProfiledContainer />
+        <Container />
       </ApolloProvider>
     );
 
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -484,12 +480,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(results[1].result.data);
     }
 
-    await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
+    await expect(stream).not.toRerender({ timeout: 50 });
   });
 
   it("if the query changes", async () => {
@@ -528,29 +524,26 @@ describe("should update", () => {
       return (
         <Subscription subscription={subscription}>
           {(r: any) => {
-            ProfiledContainer.replaceSnapshot(r);
+            stream.replaceSnapshot(r);
             return null;
           }}
         </Subscription>
       );
     }
-    const ProfiledContainer = profile<any, { subscription: DocumentNode }>({
-      Component: Container,
-    });
-
-    const { rerender } = render(
-      <ProfiledContainer subscription={subscription} />,
+    const [stream, renderResult] = renderToRenderStream<any>(
+      <Container subscription={subscription} />,
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={mockClient}>{children}</ApolloProvider>
         ),
       }
     );
+    const { rerender } = await renderResult;
 
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -559,18 +552,18 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(results[0].result.data);
     }
 
-    await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
+    await expect(stream).not.toRerender({ timeout: 50 });
 
-    rerender(<ProfiledContainer subscription={subscriptionHero} />);
+    rerender(<Container subscription={subscriptionHero} />);
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -580,12 +573,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(heroResult.result.data);
     }
 
-    await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
+    await expect(stream).not.toRerender({ timeout: 50 });
   });
 
   it("if the variables change", async () => {
@@ -626,29 +619,26 @@ describe("should update", () => {
           variables={variables}
         >
           {(r: any) => {
-            ProfiledContainer.replaceSnapshot(r);
+            stream.replaceSnapshot(r);
             return null;
           }}
         </Subscription>
       );
     }
-    const ProfiledContainer = profile<any, { variables: any }>({
-      Component: Container,
-    });
-
-    const { rerender } = render(
-      <ProfiledContainer variables={variablesLuke} />,
+    const [stream, renderResult] = renderToRenderStream<any>(
+      <Container variables={variablesLuke} />,
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={mockClient}>{children}</ApolloProvider>
         ),
       }
     );
+    const { rerender } = await renderResult;
 
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -657,19 +647,19 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(dataLuke);
     }
 
-    await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
+    await expect(stream).not.toRerender({ timeout: 50 });
 
-    rerender(<ProfiledContainer variables={variablesHan} />);
+    rerender(<Container variables={variablesHan} />);
 
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -679,12 +669,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await ProfiledContainer.takeRender();
+      } = await stream.takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(dataHan);
     }
 
-    await expect(ProfiledContainer).not.toRerender({ timeout: 50 });
+    await expect(stream).not.toRerender({ timeout: 50 });
   });
 });
 

@@ -60,7 +60,7 @@ import {
 
 import {
   createProfiler,
-  profile,
+  renderToRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -366,7 +366,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      ProfiledApp.replaceSnapshot(result);
+      stream.replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -380,19 +380,15 @@ describe("useSuspenseQuery", () => {
       );
     };
 
-    const ProfiledApp = profile<
-      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
-    >({
-      Component: App,
-      snapshotDOM: true,
-    });
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
 
-    render(<ProfiledApp />, {
+    const [stream] = renderToRenderStream<
+      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
+    >(<App />, {
+      snapshotDOM: true,
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -400,13 +396,13 @@ describe("useSuspenseQuery", () => {
 
     {
       // ensure the hook suspends immediately
-      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      const { withinDOM, snapshot } = await stream.takeRender();
       expect(withinDOM().getByText("loading")).toBeInTheDocument();
       expect(snapshot).toBeUndefined();
     }
 
     {
-      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      const { withinDOM, snapshot } = await stream.takeRender();
       expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
       expect(withinDOM().getByText("Hello")).toBeInTheDocument();
       expect(snapshot).toMatchObject({
@@ -9714,12 +9710,10 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    const ProfiledApp = profile({
-      Component: App,
+    const [ProfiledApp] = renderToRenderStream(<App />, {
       snapshotDOM: true,
     });
 
-    render(<ProfiledApp />);
     {
       const { withinDOM } = await ProfiledApp.takeRender();
       expect(withinDOM().getByText("Loading")).toBeInTheDocument();
@@ -10153,9 +10147,9 @@ describe("useSuspenseQuery", () => {
     render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>
-          <Profiler>
+          <Profiler.Wrapper>
             <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
+          </Profiler.Wrapper>
         </ApolloProvider>
       ),
     });
@@ -10338,9 +10332,9 @@ describe("useSuspenseQuery", () => {
     render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>
-          <Profiler>
+          <Profiler.Wrapper>
             <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
+          </Profiler.Wrapper>
         </ApolloProvider>
       ),
     });
@@ -10517,9 +10511,9 @@ describe("useSuspenseQuery", () => {
     render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>
-          <Profiler>
+          <Profiler.Wrapper>
             <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </Profiler>
+          </Profiler.Wrapper>
         </ApolloProvider>
       ),
     });

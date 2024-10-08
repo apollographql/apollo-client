@@ -13,7 +13,7 @@ import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { profile } from "@testing-library/react-render-stream";
+import { renderToRenderStream } from "@testing-library/react-render-stream";
 
 describe("[queries] loading", () => {
   // networkStatus / loading
@@ -407,13 +407,17 @@ describe("[queries] loading", () => {
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
-          ProfiledContainer.replaceSnapshot(this.props.data!);
+          lastMountedStream.replaceSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const ProfiledContainer = profile<
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    );
+
+    const [stream1] = renderToRenderStream<
       DataValue<{
         allPeople: {
           people: {
@@ -421,43 +425,51 @@ describe("[queries] loading", () => {
           }[];
         };
       }>
-    >({
-      Component: Container,
+    >(<Container />, {
+      wrapper,
     });
-
-    const App = (
-      <ApolloProvider client={client}>
-        <ProfiledContainer />
-      </ApolloProvider>
-    );
-
-    render(App);
+    let lastMountedStream = stream1;
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await stream1.takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.allPeople).toBeUndefined();
     }
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await stream1.takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.allPeople?.people[0].name).toMatch(/Darth Skywalker - /);
     }
-    render(App);
+    const [stream2] = renderToRenderStream<
+      DataValue<{
+        allPeople: {
+          people: {
+            name: string;
+          }[];
+        };
+      }>
+    >(<Container />, {
+      wrapper,
+    });
+    lastMountedStream = stream2;
     // Loading after remount
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await stream2.takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.allPeople).toBeUndefined();
     }
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await stream2.takeRender();
       // Fetched data loading after remount
       expect(snapshot.loading).toBe(false);
       expect(snapshot.allPeople!.people[0].name).toMatch(/Darth Skywalker - /);
     }
 
-    await expect(ProfiledContainer).toRenderExactlyTimes(5, {
+    await expect(stream1).toRenderExactlyTimes(3, {
+      timeout: 100,
+    });
+
+    await expect(stream2).toRenderExactlyTimes(2, {
       timeout: 100,
     });
 

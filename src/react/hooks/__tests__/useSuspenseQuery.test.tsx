@@ -54,12 +54,15 @@ import {
 import {
   PaginatedCaseData,
   PaginatedCaseVariables,
-  createProfiler,
-  profile,
   setupPaginatedCase,
   spyOnConsole,
-  useTrackRenders,
 } from "../../../testing/internal";
+
+import {
+  createRenderStream,
+  renderToRenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -363,7 +366,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      ProfiledApp.replaceSnapshot(result);
+      replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -377,19 +380,15 @@ describe("useSuspenseQuery", () => {
       );
     };
 
-    const ProfiledApp = profile<
-      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
-    >({
-      Component: App,
-      snapshotDOM: true,
-    });
-
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new MockLink(mocks),
     });
 
-    render(<ProfiledApp />, {
+    const { takeRender, replaceSnapshot } = renderToRenderStream<
+      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
+    >(<App />, {
+      snapshotDOM: true,
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -397,13 +396,13 @@ describe("useSuspenseQuery", () => {
 
     {
       // ensure the hook suspends immediately
-      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      const { withinDOM, snapshot } = await takeRender();
       expect(withinDOM().getByText("loading")).toBeInTheDocument();
       expect(snapshot).toBeUndefined();
     }
 
     {
-      const { withinDOM, snapshot } = await ProfiledApp.takeRender();
+      const { withinDOM, snapshot } = await takeRender();
       expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
       expect(withinDOM().getByText("Hello")).toBeInTheDocument();
       expect(snapshot).toMatchObject({
@@ -9711,19 +9710,17 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    const ProfiledApp = profile({
-      Component: App,
+    const { takeRender } = renderToRenderStream(<App />, {
       snapshotDOM: true,
     });
 
-    render(<ProfiledApp />);
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().getByText("Loading")).toBeInTheDocument();
     }
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
 
       const todo = withinDOM().getByTestId("todo");
       expect(todo).toBeInTheDocument();
@@ -9740,7 +9737,7 @@ describe("useSuspenseQuery", () => {
     // until the todo is finished loading. Seeing the suspense fallback is an
     // indication that we are suspending the component too late in the process.
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
       const todo = withinDOM().getByTestId("todo");
 
       expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
@@ -9755,7 +9752,7 @@ describe("useSuspenseQuery", () => {
     // Eventually we should see the updated todo content once its done
     // suspending.
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
       const todo = withinDOM().getByTestId("todo");
       expect(todo).toHaveTextContent("Take out trash (completed)");
     }
@@ -10103,7 +10100,7 @@ describe("useSuspenseQuery", () => {
       link,
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<
           PaginatedCaseData,
@@ -10126,7 +10123,7 @@ describe("useSuspenseQuery", () => {
       });
       const { data, fetchMore } = result;
 
-      Profiler.mergeSnapshot({ result });
+      renderStream.mergeSnapshot({ result });
 
       return (
         <button
@@ -10147,24 +10144,25 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback={<SuspenseFallback />}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { renderedComponents } = await Profiler.takeRender();
+      const { renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([SuspenseFallback]);
     }
 
     {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
       expect(snapshot.result?.data).toEqual({
@@ -10178,7 +10176,7 @@ describe("useSuspenseQuery", () => {
     await act(() => user.click(screen.getByText("Fetch next")));
 
     {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
       expect(screen.getByText("Fetch next")).toBeDisabled();
@@ -10191,7 +10189,7 @@ describe("useSuspenseQuery", () => {
     }
 
     {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
       expect(snapshot.result?.data).toEqual({
@@ -10205,7 +10203,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   // https://github.com/apollographql/apollo-client/issues/11708
@@ -10270,7 +10268,7 @@ describe("useSuspenseQuery", () => {
       },
     ];
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         isPending: false,
         result: null as Pick<
@@ -10314,7 +10312,7 @@ describe("useSuspenseQuery", () => {
         }
       );
 
-      Profiler.mergeSnapshot({
+      renderStream.mergeSnapshot({
         isPending,
         result: { data, error, networkStatus },
       });
@@ -10332,24 +10330,25 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback={<SuspenseFallback />}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { renderedComponents } = await Profiler.takeRender();
+      const { renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([SuspenseFallback]);
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot).toEqual({
         isPending: false,
@@ -10373,7 +10372,7 @@ describe("useSuspenseQuery", () => {
     await act(() => user.click(screen.getByText("Load more")));
 
     {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
       expect(snapshot).toEqual({
@@ -10396,7 +10395,7 @@ describe("useSuspenseQuery", () => {
     }
 
     {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
       expect(snapshot).toEqual({
@@ -10424,7 +10423,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   // https://github.com/apollographql/apollo-client/issues/11642
@@ -10477,7 +10476,7 @@ describe("useSuspenseQuery", () => {
       link,
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<
           PaginatedCaseData,
@@ -10493,7 +10492,7 @@ describe("useSuspenseQuery", () => {
       });
       const { data, fetchMore } = result;
 
-      Profiler.mergeSnapshot({ result });
+      renderStream.mergeSnapshot({ result });
 
       return (
         <button
@@ -10511,21 +10510,22 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // initial suspended render
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot, renderedComponents } = await Profiler.takeRender();
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([App]);
       expect(snapshot.result?.data).toEqual({
@@ -10537,10 +10537,10 @@ describe("useSuspenseQuery", () => {
     }
 
     await act(() => user.click(screen.getByText("Fetch next")));
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         letters: [
@@ -10553,10 +10553,10 @@ describe("useSuspenseQuery", () => {
     }
 
     await act(() => user.click(screen.getByText("Fetch next")));
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         letters: [
@@ -10568,7 +10568,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   describe.skip("type tests", () => {

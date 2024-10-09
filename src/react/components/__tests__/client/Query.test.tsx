@@ -11,7 +11,7 @@ import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
 import { QueryResult } from "../../../types/types";
-import { profile } from "../../../../testing/internal";
+import { renderToRenderStream } from "@testing-library/react-render-stream";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -1493,30 +1493,26 @@ describe("Query component", () => {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
           {(r: any) => {
-            ProfiledContainer.replaceSnapshot(r);
+            replaceSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>
       );
     }
 
-    const ProfiledContainer = profile<QueryResult>({
-      Component: Container,
-    });
-
-    render(
+    const { takeRender, replaceSnapshot } = renderToRenderStream<QueryResult>(
       <ApolloProvider client={client}>
-        <ProfiledContainer />
+        <Container />
       </ApolloProvider>
     );
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.data.allPeople).toEqual(data.allPeople);
       // First result is loaded, run a refetch to get the second result
@@ -1527,13 +1523,13 @@ describe("Query component", () => {
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       // Waiting for the second result to load
       expect(snapshot.loading).toBe(true);
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.error).toBeTruthy();
       // The error arrived, run a refetch to get the third result
@@ -1544,13 +1540,13 @@ describe("Query component", () => {
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.error).toBeFalsy();
     }
 
     {
-      const { snapshot } = await ProfiledContainer.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.error).toBeFalsy();
       expect(snapshot.data.allPeople).toEqual(dataTwo.allPeople);

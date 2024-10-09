@@ -10,7 +10,7 @@ import { mockSingleLink } from "../../../../testing";
 import { Query as QueryComponent } from "../../../components";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { profile } from "../../../../testing/internal";
+import { renderToRenderStream } from "@testing-library/react-render-stream";
 
 describe("[queries] lifecycle", () => {
   // lifecycle
@@ -52,46 +52,44 @@ describe("[queries] lifecycle", () => {
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         render() {
-          ProfiledApp.replaceSnapshot(this.props.data!);
+          replaceSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const ProfiledApp = profile<DataValue<Data, Vars>, Vars>({
-      Component: Container,
-    });
-
-    const { rerender } = render(<ProfiledApp first={1} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeRender, replaceSnapshot, renderResultPromise } =
+      renderToRenderStream<DataValue<Data, Vars>>(<Container first={1} />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+    const { rerender } = await renderResultPromise;
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(true);
       expect(snapshot!.allPeople).toBe(undefined);
     }
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(false);
       expect(snapshot!.variables).toEqual(variables1);
       expect(snapshot!.allPeople).toEqual(data1.allPeople);
     }
 
-    rerender(<ProfiledApp first={2} />);
+    rerender(<Container first={2} />);
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(true);
       expect(snapshot!.variables).toEqual(variables2);
       expect(snapshot!.allPeople).toBe(undefined);
     }
 
     {
-      const { snapshot } = await ProfiledApp.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(false);
       expect(snapshot!.variables).toEqual(variables2);
       expect(snapshot!.allPeople).toEqual(data2.allPeople);

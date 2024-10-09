@@ -366,7 +366,7 @@ describe("useSuspenseQuery", () => {
 
     const Component = () => {
       const result = useSuspenseQuery(query);
-      stream.replaceSnapshot(result);
+      replaceSnapshot(result);
       return <div>{result.data.greeting}</div>;
     };
 
@@ -385,7 +385,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const [stream] = renderToRenderStream<
+    const { takeRender, replaceSnapshot } = renderToRenderStream<
       UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
     >(<App />, {
       snapshotDOM: true,
@@ -396,13 +396,13 @@ describe("useSuspenseQuery", () => {
 
     {
       // ensure the hook suspends immediately
-      const { withinDOM, snapshot } = await stream.takeRender();
+      const { withinDOM, snapshot } = await takeRender();
       expect(withinDOM().getByText("loading")).toBeInTheDocument();
       expect(snapshot).toBeUndefined();
     }
 
     {
-      const { withinDOM, snapshot } = await stream.takeRender();
+      const { withinDOM, snapshot } = await takeRender();
       expect(withinDOM().queryByText("loading")).not.toBeInTheDocument();
       expect(withinDOM().getByText("Hello")).toBeInTheDocument();
       expect(snapshot).toMatchObject({
@@ -9710,17 +9710,17 @@ describe("useSuspenseQuery", () => {
       );
     }
 
-    const [ProfiledApp] = renderToRenderStream(<App />, {
+    const { takeRender } = renderToRenderStream(<App />, {
       snapshotDOM: true,
     });
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().getByText("Loading")).toBeInTheDocument();
     }
 
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
 
       const todo = withinDOM().getByTestId("todo");
       expect(todo).toBeInTheDocument();
@@ -9737,7 +9737,7 @@ describe("useSuspenseQuery", () => {
     // until the todo is finished loading. Seeing the suspense fallback is an
     // indication that we are suspending the component too late in the process.
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
       const todo = withinDOM().getByTestId("todo");
 
       expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
@@ -9752,7 +9752,7 @@ describe("useSuspenseQuery", () => {
     // Eventually we should see the updated todo content once its done
     // suspending.
     {
-      const { withinDOM } = await ProfiledApp.takeRender();
+      const { withinDOM } = await takeRender();
       const todo = withinDOM().getByTestId("todo");
       expect(todo).toHaveTextContent("Take out trash (completed)");
     }

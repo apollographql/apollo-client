@@ -1425,7 +1425,7 @@ describe("useFragment", () => {
       data: { __typename: "User", id: 2, name: "Charlie" },
     });
 
-    const [stream, { rerender }] = renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
       ({ id }: { id: number }) =>
         useFragment({ fragment, from: { __typename: "User", id } }),
       {
@@ -1437,7 +1437,7 @@ describe("useFragment", () => {
     );
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1448,7 +1448,7 @@ describe("useFragment", () => {
     rerender({ id: 2 });
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1456,7 +1456,7 @@ describe("useFragment", () => {
       });
     }
 
-    await expect(stream).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("does not rerender when fields with @nonreactive change", async () => {
@@ -1489,7 +1489,7 @@ describe("useFragment", () => {
       },
     });
 
-    const [stream] = renderHookToSnapshotStream(
+    const { takeSnapshot } = renderHookToSnapshotStream(
       () => useFragment({ fragment, from: { __typename: "Post", id: 1 } }),
       {
         wrapper: ({ children }) => (
@@ -1499,7 +1499,7 @@ describe("useFragment", () => {
     );
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1522,7 +1522,7 @@ describe("useFragment", () => {
       },
     });
 
-    await expect(stream).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
@@ -1560,7 +1560,7 @@ describe("useFragment", () => {
       },
     });
 
-    const [stream] = renderHookToSnapshotStream(
+    const { takeSnapshot } = renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment,
@@ -1575,7 +1575,7 @@ describe("useFragment", () => {
     );
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1599,7 +1599,7 @@ describe("useFragment", () => {
       },
     });
 
-    await expect(stream).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   describe("tests with incomplete data", () => {
@@ -1736,7 +1736,7 @@ describe("useFragment", () => {
     using _ = spyOnConsole("warn");
     const cache = new InMemoryCache();
 
-    const [stream] = renderHookToSnapshotStream(
+    const { takeSnapshot } = renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment: ItemFragment,
@@ -1752,7 +1752,7 @@ describe("useFragment", () => {
 
     expect(console.warn).not.toHaveBeenCalled();
 
-    const { data, complete } = await stream.takeSnapshot();
+    const { data, complete } = await takeSnapshot();
 
     // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
     expect(complete).toBe(true);
@@ -1796,23 +1796,26 @@ describe("has the same timing as `useQuery`", () => {
         from: initialItem,
       });
 
-      stream.replaceSnapshot({ queryData, fragmentData });
+      replaceSnapshot({ queryData, fragmentData });
 
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
-    const [stream] = renderToRenderStream(<Component />, {
-      initialSnapshot: {
-        queryData: undefined as any,
-        fragmentData: undefined as any,
-      },
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeRender, replaceSnapshot } = renderToRenderStream(
+      <Component />,
+      {
+        initialSnapshot: {
+          queryData: undefined as any,
+          fragmentData: undefined as any,
+        },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.queryData).toBe(undefined);
       expect(snapshot.fragmentData).toStrictEqual({});
     }
@@ -1822,7 +1825,7 @@ describe("has the same timing as `useQuery`", () => {
     observer.complete();
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.queryData).toStrictEqual({ item: initialItem });
       expect(snapshot.fragmentData).toStrictEqual(initialItem);
     }
@@ -1830,7 +1833,7 @@ describe("has the same timing as `useQuery`", () => {
     cache.writeQuery({ query, data: { item: updatedItem } });
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.queryData).toStrictEqual({ item: updatedItem });
       expect(snapshot.fragmentData).toStrictEqual(updatedItem);
     }
@@ -1879,7 +1882,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    const [stream] = renderToRenderStream(<Parent />, {
+    const { takeRender } = renderToRenderStream(<Parent />, {
       snapshotDOM: true,
       onRender() {
         const parent = screen.getByTestId("parent");
@@ -1897,7 +1900,7 @@ describe("has the same timing as `useQuery`", () => {
     });
 
     {
-      const { withinDOM } = await stream.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
     }
 
@@ -1906,11 +1909,11 @@ describe("has the same timing as `useQuery`", () => {
     });
 
     {
-      const { withinDOM } = await stream.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
     }
 
-    await expect(stream).toRenderExactlyTimes(2);
+    await expect(takeRender).toRenderExactlyTimes(2);
   });
 
   /**
@@ -1970,7 +1973,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
-    const [stream] = renderToRenderStream(<Parent />, {
+    const { takeRender } = renderToRenderStream(<Parent />, {
       onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
@@ -1987,7 +1990,7 @@ describe("has the same timing as `useQuery`", () => {
     });
 
     {
-      const { withinDOM } = await stream.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
     }
 
@@ -1999,11 +2002,11 @@ describe("has the same timing as `useQuery`", () => {
     );
 
     {
-      const { withinDOM } = await stream.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
     }
 
-    await expect(stream).toRenderExactlyTimes(3);
+    await expect(takeRender).toRenderExactlyTimes(3);
   });
 });
 

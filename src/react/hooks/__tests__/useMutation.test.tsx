@@ -751,7 +751,7 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot } = renderHookToSnapshotStream(
         () =>
           useMutation<
             { createTodo: Todo },
@@ -764,11 +764,11 @@ describe("useMutation Hook", () => {
         }
       );
 
-      let createTodo: Awaited<ReturnType<typeof stream.takeSnapshot>>[0];
-      let reset: Awaited<ReturnType<typeof stream.takeSnapshot>>[1]["reset"];
+      let createTodo: Awaited<ReturnType<typeof takeSnapshot>>[0];
+      let reset: Awaited<ReturnType<typeof takeSnapshot>>[1]["reset"];
 
       {
-        const [mutate, result] = await stream.takeSnapshot();
+        const [mutate, result] = await takeSnapshot();
         createTodo = mutate;
         reset = result.reset;
         //initial value
@@ -785,7 +785,7 @@ describe("useMutation Hook", () => {
       });
 
       {
-        const [, result] = await stream.takeSnapshot();
+        const [, result] = await takeSnapshot();
         // started loading
         expect(result.data).toBe(undefined);
         expect(result.loading).toBe(true);
@@ -795,7 +795,7 @@ describe("useMutation Hook", () => {
       act(() => reset());
 
       {
-        const [, result] = await stream.takeSnapshot();
+        const [, result] = await takeSnapshot();
         // reset to initial value
         expect(result.data).toBe(undefined);
         expect(result.loading).toBe(false);
@@ -804,7 +804,7 @@ describe("useMutation Hook", () => {
 
       expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
 
-      await expect(stream).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

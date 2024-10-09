@@ -792,7 +792,7 @@ describe("useQuery Hook", () => {
         link,
         cache: new InMemoryCache(),
       });
-      const [ProfiledHook, { rerender }] = renderHookToSnapshotStream(
+      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
         () => [useQuery(query1, { fetchPolicy: "no-cache" }), useQuery(query2)],
         {
           wrapper: ({ children }) => (
@@ -802,7 +802,7 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(true);
         expect(result0.data).toStrictEqual(undefined);
         expect(result1.loading).toBe(true);
@@ -810,7 +810,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
         expect(result0.data).toStrictEqual(allPeopleData);
         expect(result1.loading).toBe(true);
@@ -818,7 +818,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
         expect(result0.data).toStrictEqual(allPeopleData);
         expect(result1.loading).toBe(false);
@@ -827,13 +827,13 @@ describe("useQuery Hook", () => {
 
       rerender({});
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
         expect(result0.data).toStrictEqual(allPeopleData);
         expect(result1.loading).toBe(false);
         expect(result1.data).toStrictEqual(allThingsData);
       }
-      await expect(ProfiledHook).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("changing queries", async () => {
@@ -1697,7 +1697,7 @@ describe("useQuery Hook", () => {
       ];
 
       const cache = new InMemoryCache();
-      const [stream, { rerender }] = renderHookToSnapshotStream(
+      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
         ({ skip }: { skip?: boolean }) =>
           useQuery(query, { pollInterval: 10, skip }),
         {
@@ -1709,40 +1709,40 @@ describe("useQuery Hook", () => {
         }
       );
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
       rerender({ skip: true });
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual(undefined);
       }
 
-      await expect(stream).not.toRerender({ timeout: 100 });
+      await expect(takeSnapshot).not.toRerender({ timeout: 100 });
 
       rerender({ skip: false });
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 2" });
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 3" });
       }
@@ -1828,19 +1828,19 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const [stream, { unmount }] = renderHookToSnapshotStream(
+      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
         () => useQuery(query, { pollInterval: 20 }),
         { wrapper }
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
         expect(requestSpy).toHaveBeenCalled();
@@ -1910,7 +1910,7 @@ describe("useQuery Hook", () => {
         cache,
       });
 
-      const [stream, { unmount }] = renderHookToSnapshotStream(
+      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             pollInterval: 10,
@@ -1924,14 +1924,14 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(true);
         expect(snapshot.data).toBeUndefined();
       }
 
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 1" });
@@ -1941,7 +1941,7 @@ describe("useQuery Hook", () => {
       await wait(10);
 
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 2" });
@@ -1950,7 +1950,7 @@ describe("useQuery Hook", () => {
 
       unmount();
 
-      await expect(stream).not.toRerender({ timeout: 50 });
+      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
 
       // TODO rarely seeing 3 here (also old `useQuery` implementation)
       expect(requestSpy).toHaveBeenCalledTimes(2);
@@ -2066,7 +2066,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ link, cache });
 
-      const [stream, { unmount }] = renderHookToSnapshotStream(
+      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             pollInterval: 10,
@@ -2082,14 +2082,14 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(true);
         expect(snapshot.data).toBeUndefined();
       }
 
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 1" });
@@ -2099,7 +2099,7 @@ describe("useQuery Hook", () => {
       await wait(10);
 
       {
-        const snapshot = await stream.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 2" });
@@ -2108,7 +2108,7 @@ describe("useQuery Hook", () => {
 
       unmount();
 
-      await expect(stream).not.toRerender({ timeout: 50 });
+      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
       // TODO rarely seeing 3 here investigate further
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
@@ -3548,20 +3548,20 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper }
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toBe(undefined);
         expect(result.error).toBeInstanceOf(ApolloError);
@@ -3569,16 +3569,16 @@ describe("useQuery Hook", () => {
       }
 
       const catchFn = jest.fn();
-      stream.getCurrentSnapshot().refetch().catch(catchFn);
+      getCurrentSnapshot().refetch().catch(catchFn);
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toBe(undefined);
         expect(result.error).toBeInstanceOf(ApolloError);
@@ -3691,49 +3691,49 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper }
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toBe(undefined);
         expect(result.error).toBeInstanceOf(ApolloError);
         expect(result.error!.message).toBe("same error");
       }
-      stream.getCurrentSnapshot().refetch();
+      getCurrentSnapshot().refetch();
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world" });
         expect(result.error).toBe(undefined);
       }
       const catchFn = jest.fn();
-      stream.getCurrentSnapshot().refetch().catch(catchFn);
+      getCurrentSnapshot().refetch().catch(catchFn);
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toEqual({ hello: "world" });
         expect(result.error).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         // TODO: Is this correct behavior here?
         expect(result.data).toEqual({ hello: "world" });
@@ -4081,7 +4081,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
         {
@@ -4092,13 +4092,13 @@ describe("useQuery Hook", () => {
       );
 
       // loading
-      await stream.takeSnapshot();
+      await takeSnapshot();
       // finished loading
-      await stream.takeSnapshot();
+      await takeSnapshot();
 
       expect(fetches).toStrictEqual([{ variables: { limit: 2 } }]);
 
-      const { fetchMore } = stream.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
 
       await act(() =>
         fetchMore({
@@ -4118,7 +4118,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             notifyOnNetworkStatusChange: true,
@@ -4133,7 +4133,7 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const { loading, networkStatus, data } = await stream.takeSnapshot();
+        const { loading, networkStatus, data } = await takeSnapshot();
 
         expect(loading).toBe(true);
         expect(networkStatus).toBe(NetworkStatus.loading);
@@ -4141,7 +4141,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const { loading, networkStatus, data } = await stream.takeSnapshot();
+        const { loading, networkStatus, data } = await takeSnapshot();
 
         expect(loading).toBe(false);
         expect(networkStatus).toBe(NetworkStatus.ready);
@@ -4154,7 +4154,7 @@ describe("useQuery Hook", () => {
       }
 
       let fetchMorePromise!: Promise<ApolloQueryResult<PaginatedCaseData>>;
-      const { fetchMore } = stream.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
 
       act(() => {
         fetchMorePromise = fetchMore({
@@ -4166,7 +4166,7 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { loading, networkStatus, data } = await stream.takeSnapshot();
+        const { loading, networkStatus, data } = await takeSnapshot();
 
         expect(loading).toBe(true);
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
@@ -4180,7 +4180,7 @@ describe("useQuery Hook", () => {
 
       {
         const { loading, networkStatus, data, observable } =
-          await stream.takeSnapshot();
+          await takeSnapshot();
 
         expect(loading).toBe(false);
         expect(networkStatus).toBe(NetworkStatus.ready);
@@ -4215,7 +4215,7 @@ describe("useQuery Hook", () => {
         networkStatus: NetworkStatus.ready,
       });
 
-      await expect(stream).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
 
       act(() => {
         fetchMorePromise = fetchMore({
@@ -4225,7 +4225,7 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { data, loading, networkStatus } = await stream.takeSnapshot();
+        const { data, loading, networkStatus } = await takeSnapshot();
 
         expect(loading).toBe(true);
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
@@ -4241,7 +4241,7 @@ describe("useQuery Hook", () => {
 
       {
         const { data, loading, networkStatus, observable } =
-          await stream.takeSnapshot();
+          await takeSnapshot();
 
         expect(loading).toBe(false);
         expect(networkStatus).toBe(NetworkStatus.ready);
@@ -4271,7 +4271,7 @@ describe("useQuery Hook", () => {
         networkStatus: NetworkStatus.ready,
       });
 
-      await expect(stream).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("throws when using fetchMore without updateQuery for no-cache queries", async () => {
@@ -4279,7 +4279,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
         {
@@ -4290,11 +4290,11 @@ describe("useQuery Hook", () => {
       );
 
       // loading
-      await stream.takeSnapshot();
+      await takeSnapshot();
       // finished loading
-      await stream.takeSnapshot();
+      await takeSnapshot();
 
-      const { fetchMore } = stream.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
 
       expect(() => fetchMore({ variables: { offset: 2 } })).toThrow(
         new InvariantError(
@@ -4320,7 +4320,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
         {
@@ -4331,12 +4331,12 @@ describe("useQuery Hook", () => {
       );
 
       // initial loading
-      await stream.takeSnapshot();
+      await takeSnapshot();
 
       // Initial result
-      await stream.takeSnapshot();
+      await takeSnapshot();
 
-      const { fetchMore } = stream.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
       await act(() =>
         fetchMore({
           variables: { offset: 2 },
@@ -5448,7 +5448,7 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             variables: { id: 1 },
@@ -5457,23 +5457,23 @@ describe("useQuery Hook", () => {
         { wrapper }
       );
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
-      stream.getCurrentSnapshot().refetch({ id: 2 });
+      getCurrentSnapshot().refetch({ id: 2 });
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 2" });
       }
@@ -5504,7 +5504,7 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             notifyOnNetworkStatusChange: true,
@@ -5519,41 +5519,41 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      stream.getCurrentSnapshot().refetch();
+      getCurrentSnapshot().refetch();
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.error).toBeInstanceOf(ApolloError);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      stream.getCurrentSnapshot().refetch();
+      getCurrentSnapshot().refetch();
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 2" });
@@ -5813,7 +5813,7 @@ describe("useQuery Hook", () => {
             {children}
           </MockedProvider>
         );
-        const [stream] = renderHookToSnapshotStream(
+        const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
           () =>
             useQuery(query, {
               variables: { min: 0, max: 12 },
@@ -5824,14 +5824,14 @@ describe("useQuery Hook", () => {
         );
 
         {
-          const result = await stream.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(true);
           expect(result.error).toBe(undefined);
           expect(result.data).toBe(undefined);
           expect(typeof result.refetch).toBe("function");
         }
         {
-          const result = await stream.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(false);
           expect(result.error).toBeUndefined();
           expect(result.data).toEqual({ primes: [2, 3, 5, 7, 11] });
@@ -5839,10 +5839,10 @@ describe("useQuery Hook", () => {
         }
 
         const thenFn = jest.fn();
-        stream.getCurrentSnapshot().refetch({ min: 12, max: 30 }).then(thenFn);
+        getCurrentSnapshot().refetch({ min: 12, max: 30 }).then(thenFn);
 
         {
-          const result = await stream.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(true);
           expect(result.error).toBe(undefined);
           expect(result.data).toEqual({
@@ -5855,7 +5855,7 @@ describe("useQuery Hook", () => {
         }
 
         {
-          const result = await stream.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(false);
           expect(result.error).toBe(undefined);
           expect(result.data).toEqual({ primes: [13, 17, 19, 23, 29] });
@@ -6313,7 +6313,7 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
-      const [ProfiledHook] = renderHookToSnapshotStream(
+      const { takeSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             onCompleted,
@@ -6330,36 +6330,36 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual(undefined);
         expect(result.loading).toBe(true);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 1" });
         expect(result.loading).toBe(false);
         expect(onCompleted).toHaveBeenCalledTimes(1);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 1" });
         expect(result.loading).toBe(true);
         expect(onCompleted).toHaveBeenCalledTimes(1);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 2" });
         expect(result.loading).toBe(false);
         expect(onCompleted).toHaveBeenCalledTimes(2);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 2" });
         expect(result.loading).toBe(true);
         expect(onCompleted).toHaveBeenCalledTimes(2);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 3" });
         expect(result.loading).toBe(false);
         expect(onCompleted).toHaveBeenCalledTimes(3);
@@ -6608,7 +6608,7 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
         () => ({
           mutation: useMutation(mutation, {
             optimisticResponse: { addCar: carData },
@@ -6649,12 +6649,12 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const { query } = await stream.takeSnapshot();
+        const { query } = await takeSnapshot();
         expect(query.loading).toBe(true);
       }
-      const mutate = stream.getCurrentSnapshot().mutation[0];
+      const mutate = getCurrentSnapshot().mutation[0];
       {
-        const { query } = await stream.takeSnapshot();
+        const { query } = await takeSnapshot();
         expect(query.loading).toBe(false);
         expect(query.loading).toBe(false);
         expect(query.data).toEqual(carsData);
@@ -6666,13 +6666,13 @@ describe("useQuery Hook", () => {
         // The mutation ran and is loading the result. The query stays at not
         // loading as nothing has changed for the query, but optimistic data is
         // rendered.
-        let { query, mutation } = await stream.takeSnapshot();
+        let { query, mutation } = await takeSnapshot();
 
         while (!mutation[1].loading) {
           // useMutation seems to sometimes have an extra render
           // before it enters `loading` state - this test doesn't test
           // that part of that hook so we just work around it
-          ({ query, mutation } = await stream.takeSnapshot());
+          ({ query, mutation } = await takeSnapshot());
         }
         expect(mutation[1].loading).toBe(true);
         expect(query.loading).toBe(false);
@@ -6681,7 +6681,7 @@ describe("useQuery Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(0);
       {
-        const { query, mutation } = await stream.takeSnapshot();
+        const { query, mutation } = await takeSnapshot();
         // The mutation ran and is loading the result. The query stays at
         // not loading as nothing has changed for the query.
         expect(mutation[1].loading).toBe(true);
@@ -6689,7 +6689,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const { query, mutation } = await stream.takeSnapshot();
+        const { query, mutation } = await takeSnapshot();
         // The mutation has completely finished, leaving the query with access to
         // the original cache data.
         expect(mutation[1].loading).toBe(false);
@@ -6872,7 +6872,7 @@ describe("useQuery Hook", () => {
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot } = renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             partialRefetch: true,
@@ -6882,7 +6882,7 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
@@ -6890,7 +6890,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.networkStatus).toBe(NetworkStatus.refetch);
         expect(result.loading).toBe(true);
         expect(result.error).toBe(undefined);
@@ -6905,7 +6905,7 @@ describe("useQuery Hook", () => {
       expect(calls[0][0]).toMatch("Missing field");
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world" });
@@ -7838,20 +7838,20 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot } = renderHookToSnapshotStream(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper }
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.previousData).toBe(undefined);
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual(data1);
         expect(result.previousData).toBe(undefined);
@@ -7860,14 +7860,14 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toEqual(data1);
         expect(result.previousData).toEqual(data1);
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual(data2);
         expect(result.previousData).toEqual(data1);
@@ -8298,7 +8298,7 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const [stream, { rerender }] = renderHookToSnapshotStream(
+      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
         ({ gender }: { gender: string }) =>
           useQuery(query, {
             variables: { gender },
@@ -8308,13 +8308,13 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toBe(NetworkStatus.loading);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.data).toEqual({
@@ -8325,14 +8325,14 @@ describe("useQuery Hook", () => {
       rerender({ gender: "female" });
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toBe(NetworkStatus.setVariables);
         expect(result.data).toBe(undefined);
       }
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.data).toEqual({
@@ -8345,13 +8345,13 @@ describe("useQuery Hook", () => {
       rerender({ gender: "nonbinary" });
 
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toBe(NetworkStatus.setVariables);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await stream.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.data).toEqual({
@@ -10090,7 +10090,7 @@ describe("useQuery Hook", () => {
       link,
       cache: new InMemoryCache(),
     });
-    const [stream] = renderHookToSnapshotStream(() => useQuery(query), {
+    const { takeSnapshot } = renderHookToSnapshotStream(() => useQuery(query), {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -10098,7 +10098,7 @@ describe("useQuery Hook", () => {
 
     expect(requests).toBe(1);
     {
-      const result = await stream.takeSnapshot();
+      const result = await takeSnapshot();
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
     }
@@ -10106,7 +10106,7 @@ describe("useQuery Hook", () => {
     client.clearStore();
 
     {
-      const result = await stream.takeSnapshot();
+      const result = await takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(
@@ -10119,7 +10119,7 @@ describe("useQuery Hook", () => {
     }
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 50 });
     expect(requests).toBe(1);
   });
 
@@ -10148,7 +10148,7 @@ describe("useQuery Hook", () => {
       },
     ];
 
-    const [stream] = renderHookToSnapshotStream(
+    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
       () => useQuery(query, { notifyOnNetworkStatusChange: true }),
       {
         wrapper: ({ children }) => (
@@ -10158,7 +10158,7 @@ describe("useQuery Hook", () => {
     );
 
     {
-      const { loading, data, error } = await stream.takeSnapshot();
+      const { loading, data, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -10166,21 +10166,20 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { loading, data, error } = await stream.takeSnapshot();
+      const { loading, data, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toBeUndefined();
       expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
     }
 
-    const { refetch } = stream.getCurrentSnapshot();
+    const { refetch } = getCurrentSnapshot();
 
     refetch().catch(() => {});
     refetch().catch(() => {});
 
     {
-      const { loading, networkStatus, data, error } =
-        await stream.takeSnapshot();
+      const { loading, networkStatus, data, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -10189,8 +10188,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { loading, networkStatus, data, error } =
-        await stream.takeSnapshot();
+      const { loading, networkStatus, data, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toBeUndefined();
@@ -10198,7 +10196,7 @@ describe("useQuery Hook", () => {
       expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
     }
 
-    await expect(stream).not.toRerender({ timeout: 200 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 200 });
   });
 });
 

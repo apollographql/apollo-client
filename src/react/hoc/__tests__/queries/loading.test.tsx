@@ -13,7 +13,10 @@ import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { renderToRenderStream } from "@testing-library/react-render-stream";
+import {
+  createProfiler,
+  renderToRenderStream,
+} from "@testing-library/react-render-stream";
 
 describe("[queries] loading", () => {
   // networkStatus / loading
@@ -407,7 +410,7 @@ describe("[queries] loading", () => {
     })(
       class extends React.Component<ChildProps<{}, Data>> {
         render() {
-          lastMountedStream.replaceSnapshot(this.props.data!);
+          replaceSnapshot(this.props.data!);
           return null;
         }
       }
@@ -417,7 +420,7 @@ describe("[queries] loading", () => {
       <ApolloProvider client={client}>{children}</ApolloProvider>
     );
 
-    const [stream1] = renderToRenderStream<
+    const { takeRender, replaceSnapshot, render } = createProfiler<
       DataValue<{
         allPeople: {
           people: {
@@ -425,51 +428,39 @@ describe("[queries] loading", () => {
           }[];
         };
       }>
-    >(<Container />, {
+    >();
+
+    render(<Container />, {
       wrapper,
     });
-    let lastMountedStream = stream1;
 
     {
-      const { snapshot } = await stream1.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.allPeople).toBeUndefined();
     }
     {
-      const { snapshot } = await stream1.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.allPeople?.people[0].name).toMatch(/Darth Skywalker - /);
     }
-    const [stream2] = renderToRenderStream<
-      DataValue<{
-        allPeople: {
-          people: {
-            name: string;
-          }[];
-        };
-      }>
-    >(<Container />, {
+    render(<Container />, {
       wrapper,
     });
-    lastMountedStream = stream2;
     // Loading after remount
     {
-      const { snapshot } = await stream2.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.allPeople).toBeUndefined();
     }
     {
-      const { snapshot } = await stream2.takeRender();
+      const { snapshot } = await takeRender();
       // Fetched data loading after remount
       expect(snapshot.loading).toBe(false);
       expect(snapshot.allPeople!.people[0].name).toMatch(/Darth Skywalker - /);
     }
 
-    await expect(stream1).toRenderExactlyTimes(3, {
-      timeout: 100,
-    });
-
-    await expect(stream2).toRenderExactlyTimes(2, {
+    await expect(takeRender).toRenderExactlyTimes(5, {
       timeout: 100,
     });
 

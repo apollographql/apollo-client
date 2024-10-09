@@ -429,22 +429,23 @@ describe("should update", () => {
       return (
         <Subscription subscription={subscription}>
           {(r: any) => {
-            stream.replaceSnapshot(r);
+            replaceSnapshot(r);
             return null;
           }}
         </Subscription>
       );
     }
-    const [stream, renderResultPromise] = renderToRenderStream<any>(
-      <ApolloProvider client={client}>
-        <Container />
-      </ApolloProvider>
-    );
+    const { takeRender, replaceSnapshot, renderResultPromise } =
+      renderToRenderStream<any>(
+        <ApolloProvider client={client}>
+          <Container />
+        </ApolloProvider>
+      );
     const { rerender } = await renderResultPromise;
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -454,12 +455,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(results[0].result.data);
     }
 
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeRender).not.toRerender({ timeout: 50 });
 
     rerender(
       <ApolloProvider client={client2}>
@@ -470,7 +471,7 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -480,12 +481,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(results[1].result.data);
     }
 
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeRender).not.toRerender({ timeout: 50 });
   });
 
   it("if the query changes", async () => {
@@ -524,26 +525,24 @@ describe("should update", () => {
       return (
         <Subscription subscription={subscription}>
           {(r: any) => {
-            stream.replaceSnapshot(r);
+            replaceSnapshot(r);
             return null;
           }}
         </Subscription>
       );
     }
-    const [stream, renderResultPromise] = renderToRenderStream<any>(
-      <Container subscription={subscription} />,
-      {
+    const { takeRender, replaceSnapshot, renderResultPromise } =
+      renderToRenderStream<any>(<Container subscription={subscription} />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={mockClient}>{children}</ApolloProvider>
         ),
-      }
-    );
+      });
     const { rerender } = await renderResultPromise;
 
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -552,18 +551,18 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(results[0].result.data);
     }
 
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeRender).not.toRerender({ timeout: 50 });
 
     rerender(<Container subscription={subscriptionHero} />);
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -573,12 +572,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(heroResult.result.data);
     }
 
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeRender).not.toRerender({ timeout: 50 });
   });
 
   it("if the variables change", async () => {
@@ -619,26 +618,24 @@ describe("should update", () => {
           variables={variables}
         >
           {(r: any) => {
-            stream.replaceSnapshot(r);
+            replaceSnapshot(r);
             return null;
           }}
         </Subscription>
       );
     }
-    const [stream, renderResultPromise] = renderToRenderStream<any>(
-      <Container variables={variablesLuke} />,
-      {
+    const { takeRender, renderResultPromise, replaceSnapshot } =
+      renderToRenderStream<any>(<Container variables={variablesLuke} />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={mockClient}>{children}</ApolloProvider>
         ),
-      }
-    );
+      });
     const { rerender } = await renderResultPromise;
 
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -647,19 +644,19 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(dataLuke);
     }
 
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeRender).not.toRerender({ timeout: 50 });
 
     rerender(<Container variables={variablesHan} />);
 
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeTruthy();
       expect(data).toBeUndefined();
     }
@@ -669,12 +666,12 @@ describe("should update", () => {
     {
       const {
         snapshot: { loading, data },
-      } = await stream.takeRender();
+      } = await takeRender();
       expect(loading).toBeFalsy();
       expect(data).toEqual(dataHan);
     }
 
-    await expect(stream).not.toRerender({ timeout: 50 });
+    await expect(takeRender).not.toRerender({ timeout: 50 });
   });
 });
 

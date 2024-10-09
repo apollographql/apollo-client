@@ -52,29 +52,28 @@ describe("[queries] lifecycle", () => {
     })(
       class extends React.Component<ChildProps<Vars, Data, Vars>> {
         render() {
-          stream.replaceSnapshot(this.props.data!);
+          replaceSnapshot(this.props.data!);
           return null;
         }
       }
     );
 
-    const [stream, renderResultPromise] = renderToRenderStream<
-      DataValue<Data, Vars>
-    >(<Container first={1} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeRender, replaceSnapshot, renderResultPromise } =
+      renderToRenderStream<DataValue<Data, Vars>>(<Container first={1} />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
     const { rerender } = await renderResultPromise;
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(true);
       expect(snapshot!.allPeople).toBe(undefined);
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(false);
       expect(snapshot!.variables).toEqual(variables1);
       expect(snapshot!.allPeople).toEqual(data1.allPeople);
@@ -83,14 +82,14 @@ describe("[queries] lifecycle", () => {
     rerender(<Container first={2} />);
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(true);
       expect(snapshot!.variables).toEqual(variables2);
       expect(snapshot!.allPeople).toBe(undefined);
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot!.loading).toBe(false);
       expect(snapshot!.variables).toEqual(variables2);
       expect(snapshot!.allPeople).toEqual(data2.allPeople);

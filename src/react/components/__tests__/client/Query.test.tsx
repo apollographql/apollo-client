@@ -1493,26 +1493,26 @@ describe("Query component", () => {
       return (
         <AllPeopleQuery2 query={query} notifyOnNetworkStatusChange={true}>
           {(r: any) => {
-            stream.replaceSnapshot(r);
+            replaceSnapshot(r);
             return null;
           }}
         </AllPeopleQuery2>
       );
     }
 
-    const [stream] = renderToRenderStream<QueryResult>(
+    const { takeRender, replaceSnapshot } = renderToRenderStream<QueryResult>(
       <ApolloProvider client={client}>
         <Container />
       </ApolloProvider>
     );
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.data.allPeople).toEqual(data.allPeople);
       // First result is loaded, run a refetch to get the second result
@@ -1523,13 +1523,13 @@ describe("Query component", () => {
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       // Waiting for the second result to load
       expect(snapshot.loading).toBe(true);
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.error).toBeTruthy();
       // The error arrived, run a refetch to get the third result
@@ -1540,13 +1540,13 @@ describe("Query component", () => {
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(true);
       expect(snapshot.error).toBeFalsy();
     }
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.loading).toBe(false);
       expect(snapshot.error).toBeFalsy();
       expect(snapshot.data.allPeople).toEqual(dataTwo.allPeople);

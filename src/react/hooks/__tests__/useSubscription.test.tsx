@@ -1217,7 +1217,7 @@ followed by new in-flight setup", async () => {
           </ErrorBoundary>
         </ApolloProvider>
       );
-      const [stream] = renderHookToSnapshotStream(
+      const { takeSnapshot } = renderHookToSnapshotStream(
         (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
           useSubscription(subscription, options),
         {
@@ -1238,7 +1238,7 @@ followed by new in-flight setup", async () => {
         client,
         link,
         errorBoundaryOnError,
-        stream,
+        takeSnapshot,
         graphQlErrorResult,
         protocolErrorResult,
       };
@@ -1249,13 +1249,17 @@ followed by new in-flight setup", async () => {
         async (errorPolicy) => {
           const onData = jest.fn();
           const onError = jest.fn();
-          const { stream, link, graphQlErrorResult, errorBoundaryOnError } =
-            setup({ errorPolicy, onError, onData });
+          const {
+            takeSnapshot,
+            link,
+            graphQlErrorResult,
+            errorBoundaryOnError,
+          } = setup({ errorPolicy, onError, onData });
 
-          await stream.takeSnapshot();
+          await takeSnapshot();
           link.simulateResult(graphQlErrorResult);
           {
-            const snapshot = await stream.takeSnapshot();
+            const snapshot = await takeSnapshot();
             console.dir({ graphQlErrorResult, snapshot }, { depth: 5 });
             expect(snapshot).toStrictEqual({
               loading: false,
@@ -1282,13 +1286,13 @@ followed by new in-flight setup", async () => {
       it("`errorPolicy: 'all'`: returns `{ error, data }`, calls `onError`", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
-        const { stream, link, graphQlErrorResult, errorBoundaryOnError } =
+        const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           setup({ errorPolicy: "all", onError, onData });
 
-        await stream.takeSnapshot();
+        await takeSnapshot();
         link.simulateResult(graphQlErrorResult);
         {
-          const snapshot = await stream.takeSnapshot();
+          const snapshot = await takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
             error: new ApolloError({
@@ -1316,17 +1320,17 @@ followed by new in-flight setup", async () => {
       it("`errorPolicy: 'ignore'`: returns `{ data }`, calls `onData`", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
-        const { stream, link, graphQlErrorResult, errorBoundaryOnError } =
+        const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           setup({
             errorPolicy: "ignore",
             onError,
             onData,
           });
 
-        await stream.takeSnapshot();
+        await takeSnapshot();
         link.simulateResult(graphQlErrorResult);
         {
-          const snapshot = await stream.takeSnapshot();
+          const snapshot = await takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
             error: undefined,
@@ -1357,13 +1361,17 @@ followed by new in-flight setup", async () => {
         async (errorPolicy) => {
           const onData = jest.fn();
           const onError = jest.fn();
-          const { stream, link, protocolErrorResult, errorBoundaryOnError } =
-            setup({ errorPolicy, onError, onData });
+          const {
+            takeSnapshot,
+            link,
+            protocolErrorResult,
+            errorBoundaryOnError,
+          } = setup({ errorPolicy, onError, onData });
 
-          await stream.takeSnapshot();
+          await takeSnapshot();
           link.simulateResult(protocolErrorResult);
           {
-            const snapshot = await stream.takeSnapshot();
+            const snapshot = await takeSnapshot();
             expect(snapshot).toStrictEqual({
               loading: false,
               error: new ApolloError({
@@ -1415,26 +1423,44 @@ describe("`restart` callback", () => {
       link,
       cache: new Cache(),
     });
-    const [stream, { rerender }] = renderHookToSnapshotStream(
-      (
-        options: SubscriptionHookOptions<{ totalLikes: number }, { id: string }>
-      ) => useSubscription(subscription, options),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-        initialProps,
-      }
-    );
-    return { client, link, stream, onSubscribe, onUnsubscribe, rerender };
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      renderHookToSnapshotStream(
+        (
+          options: SubscriptionHookOptions<
+            { totalLikes: number },
+            { id: string }
+          >
+        ) => useSubscription(subscription, options),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+          initialProps,
+        }
+      );
+    return {
+      client,
+      link,
+      takeSnapshot,
+      getCurrentSnapshot,
+      onSubscribe,
+      onUnsubscribe,
+      rerender,
+    };
   }
   it("can restart a running subscription", async () => {
-    const { link, stream, onSubscribe, onUnsubscribe } = setup({
+    const {
+      link,
+      takeSnapshot,
+      getCurrentSnapshot,
+      onSubscribe,
+      onUnsubscribe,
+    } = setup({
       variables: { id: "1" },
     });
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1445,7 +1471,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1 },
@@ -1454,14 +1480,14 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    stream.getCurrentSnapshot().restart();
+    getCurrentSnapshot().restart();
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1475,7 +1501,7 @@ describe("`restart` callback", () => {
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 2 },
@@ -1488,7 +1514,8 @@ describe("`restart` callback", () => {
   it("will use the most recently passed in options", async () => {
     const {
       link,
-      stream: stream,
+      takeSnapshot,
+      getCurrentSnapshot,
       onSubscribe,
       onUnsubscribe,
       rerender,
@@ -1496,7 +1523,7 @@ describe("`restart` callback", () => {
       variables: { id: "1" },
     });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1507,10 +1534,10 @@ describe("`restart` callback", () => {
     }
     // deliberately keeping a reference to a very old `restart` function
     // to show that the most recent options are used even with that
-    const restart = stream.getCurrentSnapshot().restart;
+    const restart = getCurrentSnapshot().restart;
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1 },
@@ -1519,7 +1546,7 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
@@ -1529,7 +1556,7 @@ describe("`restart` callback", () => {
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1540,7 +1567,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1000 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1000 },
@@ -1561,7 +1588,7 @@ describe("`restart` callback", () => {
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1572,7 +1599,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1005 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1005 },
@@ -1583,11 +1610,17 @@ describe("`restart` callback", () => {
     }
   });
   it("can restart a subscription that has completed", async () => {
-    const { link, stream, onSubscribe, onUnsubscribe } = setup({
+    const {
+      link,
+      takeSnapshot,
+      getCurrentSnapshot,
+      onSubscribe,
+      onUnsubscribe,
+    } = setup({
       variables: { id: "1" },
     });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1598,7 +1631,7 @@ describe("`restart` callback", () => {
     }
     link.simulateResult({ result: { data: { totalLikes: 1 } } }, true);
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 1 },
@@ -1607,14 +1640,14 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    stream.getCurrentSnapshot().restart();
+    getCurrentSnapshot().restart();
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1628,7 +1661,7 @@ describe("`restart` callback", () => {
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 2 },
@@ -1641,14 +1674,15 @@ describe("`restart` callback", () => {
   it("can restart a subscription that has errored", async () => {
     const {
       link,
-      stream: stream,
+      takeSnapshot,
+      getCurrentSnapshot,
       onSubscribe,
       onUnsubscribe,
     } = setup({
       variables: { id: "1" },
     });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1662,7 +1696,7 @@ describe("`restart` callback", () => {
       result: { errors: [error] },
     });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: undefined,
@@ -1671,14 +1705,14 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    stream.getCurrentSnapshot().restart();
+    getCurrentSnapshot().restart();
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         data: undefined,
@@ -1692,7 +1726,7 @@ describe("`restart` callback", () => {
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: { totalLikes: 2 },
@@ -1703,12 +1737,13 @@ describe("`restart` callback", () => {
     }
   });
   it("will not restart a subscription that has been `skip`ped", async () => {
-    const { stream, onSubscribe, onUnsubscribe } = setup({
-      variables: { id: "1" },
-      skip: true,
-    });
+    const { takeSnapshot, getCurrentSnapshot, onSubscribe, onUnsubscribe } =
+      setup({
+        variables: { id: "1" },
+        skip: true,
+      });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         data: undefined,
@@ -1720,11 +1755,11 @@ describe("`restart` callback", () => {
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
 
-    expect(() => stream.getCurrentSnapshot().restart()).toThrow(
+    expect(() => getCurrentSnapshot().restart()).toThrow(
       new InvariantError("A subscription that is skipped cannot be restarted.")
     );
 
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
   });
@@ -1755,7 +1790,7 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
-    const [stream] = renderHookToSnapshotStream(
+    const { takeSnapshot } = renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           ignoreResults: true,
@@ -1770,7 +1805,7 @@ describe("ignoreResults", () => {
       }
     );
 
-    const snapshot = await stream.takeSnapshot();
+    const snapshot = await takeSnapshot();
     expect(snapshot).toStrictEqual({
       loading: false,
       error: undefined,
@@ -1813,7 +1848,7 @@ describe("ignoreResults", () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    await expect(stream).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should not rerender when ignoreResults is true and an error occurs", async () => {
@@ -1828,7 +1863,7 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
-    const [stream] = renderHookToSnapshotStream(
+    const { takeSnapshot } = renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           ignoreResults: true,
@@ -1843,7 +1878,7 @@ describe("ignoreResults", () => {
       }
     );
 
-    const snapshot = await stream.takeSnapshot();
+    const snapshot = await takeSnapshot();
     expect(snapshot).toStrictEqual({
       loading: false,
       error: undefined,
@@ -1880,7 +1915,7 @@ describe("ignoreResults", () => {
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
-    await expect(stream).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("can switch from `ignoreResults: true` to `ignoreResults: false` and will start rerendering, without creating a new subscription", async () => {
@@ -1893,7 +1928,7 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const [stream, { rerender }] = renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
           ignoreResults,
@@ -1909,7 +1944,7 @@ describe("ignoreResults", () => {
     expect(subscriptionCreated).toHaveBeenCalledTimes(1);
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -1920,12 +1955,12 @@ describe("ignoreResults", () => {
       expect(onData).toHaveBeenCalledTimes(0);
     }
     link.simulateResult(results[0]);
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(1);
 
     rerender({ ignoreResults: false });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -1940,7 +1975,7 @@ describe("ignoreResults", () => {
 
     link.simulateResult(results[1]);
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -1963,7 +1998,7 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const [stream, { rerender }] = renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
           ignoreResults,
@@ -1979,7 +2014,7 @@ describe("ignoreResults", () => {
     expect(subscriptionCreated).toHaveBeenCalledTimes(1);
 
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: true,
         error: undefined,
@@ -1991,7 +2026,7 @@ describe("ignoreResults", () => {
     }
     link.simulateResult(results[0]);
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -2001,11 +2036,11 @@ describe("ignoreResults", () => {
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
 
     rerender({ ignoreResults: true });
     {
-      const snapshot = await stream.takeSnapshot();
+      const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
         loading: false,
         error: undefined,
@@ -2019,7 +2054,7 @@ describe("ignoreResults", () => {
     }
 
     link.simulateResult(results[1]);
-    await expect(stream).not.toRerender({ timeout: 20 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(2);
 
     // a second subscription should not have been started

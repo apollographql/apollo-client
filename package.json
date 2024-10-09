@@ -93,7 +93,7 @@
   },
   "dependencies": {
     "@graphql-typed-document-node/core": "^3.1.1",
-    "@testing-library/react-render-stream": "https://pkg.pr.new/phryneas/react-render-stream-testing-library/@testing-library/react-render-stream@a32bedc",
+    "@testing-library/react-render-stream": "https://pkg.pr.new/phryneas/react-render-stream-testing-library/@testing-library/react-render-stream@2bf91c1",
     "@wry/caches": "^1.0.0",
     "@wry/equality": "^0.5.6",
     "@wry/trie": "^0.5.0",

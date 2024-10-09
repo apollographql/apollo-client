@@ -4,12 +4,7 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
-import {
-  NextRenderOptions,
-  Profiler,
-  ProfiledComponent,
-  ProfiledHook,
-} from "../internal/index.js";
+import { NextRenderOptions } from "../internal/index.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**

@@ -41,7 +41,7 @@ import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
 import {
-  createProfiler,
+  createRenderStream,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 
@@ -4486,7 +4486,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
@@ -4526,7 +4526,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return (
         <>
@@ -4545,14 +4545,14 @@ describe("useQuery Hook", () => {
       );
     }
 
-    Profiler.render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4569,7 +4569,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4591,7 +4591,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4611,7 +4611,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4648,7 +4648,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Reload 1st query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4665,7 +4665,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4699,7 +4699,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("rerenders errored query for full cache write", async () => {
@@ -4745,7 +4745,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
@@ -4791,19 +4791,19 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    Profiler.render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4820,7 +4820,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4842,7 +4842,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4862,7 +4862,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       // We don't see the update from the cache for one more render cycle, hence
       // why this is still showing the error result even though the result from
@@ -4892,7 +4892,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -4921,7 +4921,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("does not rerender or refetch queries with errors for partial cache writes with returnPartialData: true", async () => {
@@ -4967,7 +4967,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
@@ -5013,19 +5013,19 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    Profiler.render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5042,7 +5042,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5064,7 +5064,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5084,7 +5084,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5109,7 +5109,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("delivers the full network response when a merge function returns an incomplete result", async () => {
@@ -5126,7 +5126,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult | null,
       },
@@ -5171,19 +5171,19 @@ describe("useQuery Hook", () => {
     function App() {
       const useQueryResult = useQuery(query);
 
-      Profiler.replaceSnapshot({ useQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult });
 
       return null;
     }
 
-    Profiler.render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5193,7 +5193,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5212,7 +5212,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("triggers a network request and rerenders with the new result when a mutation causes a partial cache update due to an incomplete merge function result", async () => {
@@ -5245,7 +5245,7 @@ describe("useQuery Hook", () => {
 
     const user = userEvent.setup();
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult | null,
       },
@@ -5330,19 +5330,19 @@ describe("useQuery Hook", () => {
       const useQueryResult = useQuery(query);
       const [mutate] = useMutation(mutation);
 
-      Profiler.replaceSnapshot({ useQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult });
 
       return <button onClick={() => mutate()}>Run mutation</button>;
     }
 
-    Profiler.render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5352,7 +5352,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5372,10 +5372,10 @@ describe("useQuery Hook", () => {
     }
 
     await act(() => user.click(screen.getByText("Run mutation")));
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5395,7 +5395,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5418,7 +5418,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   describe("Refetching", () => {

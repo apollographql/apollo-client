@@ -10208,6 +10208,52 @@ describe("useQuery Hook", () => {
 
     await expect(ProfiledHook).not.toRerender({ timeout: 200 });
   });
+
+  it.only("only refetch active queries", async () => {
+    const query1 = gql`
+      {
+        hello
+      }
+    `;
+    const query2 = gql`
+      {
+        user {
+          id
+          name
+        }
+      }
+    `;
+    const client = new ApolloClient({
+      link: new ApolloLink(() =>
+        Observable.of(
+          { data: { hello: "world" } },
+          { data: { user: { id: "1", name: "Alice" } } }
+        )
+      ),
+      cache: new InMemoryCache(),
+    });
+
+    const wrapper = ({ children }: any) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    );
+
+    const { unmount, rerender } = renderHook(() => useQuery(query1), {
+      wrapper,
+    });
+    rerender();
+    expect(client.getObservableQueries().size).toBe(1);
+    unmount();
+
+    await new Promise((resolve) => setTimeout(resolve));
+    expect(client.getObservableQueries().size).toBe(0);
+
+    renderHook(() => useQuery(query2), { wrapper });
+
+    expect(client.getObservableQueries().size).toBe(1);
+    const refetched = await client.reFetchObservableQueries();
+    expect(refetched).toHaveLength(1);
+    expect(refetched[0].data).toEqual({ user: { id: "1", name: "Alice" } });
+  });
 });
 
 describe.skip("Type Tests", () => {

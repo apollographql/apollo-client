@@ -287,11 +287,17 @@ export class QueryInfo {
   }
 
   private shouldNotify() {
-    if (!this.dirty || !this.listeners.size) {
+    if (
+      !this.dirty ||
+      !this.listeners.size ||
+      // It's possible that the query is no longer being watched, but the
+      // ObservableQuery is still active/pending cleanup. In this case, we should not notify.
+      !this.observableQuery?.hasObservers()
+    ) {
       return false;
     }
 
-    if (isNetworkRequestInFlight(this.networkStatus) && this.observableQuery) {
+    if (isNetworkRequestInFlight(this.networkStatus)) {
       const { fetchPolicy } = this.observableQuery.options;
       if (fetchPolicy !== "cache-only" && fetchPolicy !== "cache-and-network") {
         return false;

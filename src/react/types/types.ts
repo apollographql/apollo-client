@@ -51,13 +51,14 @@ export type CommonOptions<TOptions> = TOptions & {
 export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = any,
+  TContext extends DefaultContext = DefaultContext,
 > extends SharedWatchQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
   ssr?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
 }
 
 export interface QueryFunctionOptions<
@@ -202,11 +203,12 @@ export type SuspenseQueryHookFetchPolicy = Extract<
 export interface SuspenseQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
+  TContext extends DefaultContext = DefaultContext,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
@@ -274,13 +276,15 @@ export type LoadableQueryHookFetchPolicy = Extract<
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
-export interface LoadableQueryHookOptions {
+export interface LoadableQueryHookOptions<
+  TContext extends DefaultContext = DefaultContext,
+> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
@@ -296,11 +300,14 @@ export interface LoadableQueryHookOptions {
 /**
  * @deprecated This type will be removed in the next major version of Apollo Client
  */
-export interface QueryLazyOptions<TVariables> {
+export interface QueryLazyOptions<
+  TVariables,
+  TContext extends DefaultContext = DefaultContext,
+> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
 }
 
 /**
@@ -437,6 +444,7 @@ export interface OnSubscriptionDataOptions<TData = any> {
 export interface BaseSubscriptionOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
+  TContext extends DefaultContext = DefaultContext,
 > {
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
   variables?: TVariables;
@@ -453,7 +461,7 @@ export interface BaseSubscriptionOptions<
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
   skip?: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+  context?: TContext;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#extensions:member} */
   extensions?: Record<string, any>;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onComplete:member} */

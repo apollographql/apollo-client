@@ -880,10 +880,7 @@ export class QueryManager<TStore> {
           options: { fetchPolicy },
         } = oq;
 
-        if (
-          fetchPolicy === "standby" ||
-          (include === "active" && !oq.hasObservers())
-        ) {
+        if (fetchPolicy === "standby" || !oq.hasObservers()) {
           return;
         }
 

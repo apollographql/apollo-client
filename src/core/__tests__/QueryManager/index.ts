@@ -4712,6 +4712,51 @@ describe("QueryManager", () => {
           .then(resolve, reject);
       }
     );
+
+    itAsync(
+      "will not update inactive query on `resetStore` nor on `refetchQueries`",
+      (resolve, reject) => {
+        const testQuery = gql`
+          query TestQuery {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const link = new (class extends ApolloLink {
+          public request() {
+            reject(new Error("Query was not supposed to be called"));
+            return null;
+          }
+        })();
+
+        const queryManager = new QueryManager(
+          getDefaultOptionsForQueryManagerTests({
+            link,
+            cache: new InMemoryCache({ addTypename: false }),
+          })
+        );
+        const oq = queryManager.watchQuery({
+          query: testQuery,
+          fetchPolicy: "cache-and-network",
+        });
+        // Recreate state where an observable query is dirty but has no observers in the query manager
+        // @ts-expect-error -- Accessing private field for testing
+        oq.queryInfo.dirty = true;
+
+        resetStore(queryManager).then((q) => {
+          expect(q).toHaveLength(0);
+          expect(oq.hasObservers()).toBe(false);
+          resolve();
+        });
+
+        const refetched = queryManager.refetchQueries({
+          include: ["TestQuery"],
+        });
+        expect(refetched.size).toBe(0);
+      }
+    );
   });
 
   describe("loading state", () => {
@@ -4889,46 +4934,6 @@ describe("QueryManager", () => {
           error: (error) => reject(error),
         });
     });
-
-    itAsync(
-      "will not update inactive query on `resetStore`",
-      (resolve, reject) => {
-        const testQuery = gql`
-          query {
-            author {
-              firstName
-              lastName
-            }
-          }
-        `;
-        const link = new (class extends ApolloLink {
-          public request() {
-            reject(new Error("Query was not supposed to be called"));
-            return null;
-          }
-        })();
-
-        const queryManager = new QueryManager(
-          getDefaultOptionsForQueryManagerTests({
-            link,
-            cache: new InMemoryCache({ addTypename: false }),
-          })
-        );
-        const oq = queryManager.watchQuery({
-          query: testQuery,
-          fetchPolicy: "cache-and-network",
-        });
-        // Recreate state where an observable query is dirty but has no observers in the query manager
-        // @ts-expect-error -- Accessing private field for testing
-        oq.queryInfo.dirty = true;
-
-        resetStore(queryManager).then((q) => {
-          expect(q).toHaveLength(0);
-          expect(oq.hasObservers()).toBe(false);
-          resolve();
-        });
-      }
-    );
 
     itAsync(
       "will be true when partial data may be returned",

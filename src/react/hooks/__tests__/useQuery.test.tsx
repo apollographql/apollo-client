@@ -10209,7 +10209,7 @@ describe("useQuery Hook", () => {
     await expect(ProfiledHook).not.toRerender({ timeout: 200 });
   });
 
-  it.only("only refetch active queries", async () => {
+  it("only refetch active queries", async () => {
     const query1 = gql`
       {
         hello

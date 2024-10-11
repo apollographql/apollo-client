@@ -7,12 +7,7 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "lib": [
-      "DOM",
-      "es2015",
-      "esnext.asynciterable",
-      "ES2021.WeakRef"
-    ],
+    "lib": ["DOM", "es2015", "esnext.asynciterable", "ES2021.WeakRef"],
     "types": [
       "jest",
       "node",
@@ -21,9 +16,6 @@
     ]
   },
   "extends": "../tsconfig.json",
-  "include": [
-    "./**/*.ts",
-    "./**/*.tsx"
-  ],
+  "include": ["./**/*.ts", "./**/*.tsx"],
   "exclude": []
 }

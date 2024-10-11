@@ -5,6 +5,7 @@ import type {
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
 import { NextRenderOptions } from "../internal/index.js";
+import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -37,6 +38,8 @@ interface ApolloCustomMatchers<R = void, T = {}> {
 
 declare global {
   namespace jest {
-    interface Matchers<R = void, T = {}> extends ApolloCustomMatchers<R, T> {}
+    interface Matchers<R = void, T = {}>
+      extends ApolloCustomMatchers<R, T>,
+        RenderStreamMatchers<R, T> {}
   }
 }

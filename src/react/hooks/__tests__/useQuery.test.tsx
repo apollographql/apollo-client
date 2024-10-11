@@ -1701,6 +1701,7 @@ describe("useQuery Hook", () => {
         ({ skip }: { skip?: boolean }) =>
           useQuery(query, { pollInterval: 10, skip }),
         {
+          initialProps: {},
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks} cache={cache}>
               {children}

@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-09-23**
+**Last updated: 2024-10-07**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,8 +17,8 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - October 21, 2024
-_Release candidate - October 24, 2024_
+#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - November 11, 2024
+_Release candidate - November 4, 2024_
 
 - Data masking
 
@@ -26,7 +26,7 @@ _Release candidate - October 24, 2024_
 
 - Leaner client (under alternate entry point)
 - Better types for `useQuery`/`useMutation`/`useSubscription`
-- Introduce a suspenseful `useFragment` that will suspend when the data is not yet loaded
+- Introduce `useSuspenseFragment` that will suspend when the data is not yet loaded (experimental)
 
 #### 4.0
 
@@ -36,7 +36,6 @@ _Release candidate - October 24, 2024_
 
 - New documentation
 - Subscription support (waiting for MSW WebSocket support to land)
-- Better TypeScript support
 
 ### VSCode Extension
 

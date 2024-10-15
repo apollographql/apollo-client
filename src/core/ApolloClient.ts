@@ -415,6 +415,17 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     T = any,
     TVariables extends OperationVariables = OperationVariables,
   >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+    const { observable, register } = this.createQuery(options);
+    register();
+    return observable;
+  }
+
+  public createQuery<
+    T = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >(
+    options: WatchQueryOptions<TVariables, T>
+  ): { observable: ObservableQuery<T, TVariables>; register: () => void } {
     if (this.defaultOptions.watchQuery) {
       options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
@@ -428,7 +439,16 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       options = { ...options, fetchPolicy: "cache-first" };
     }
 
-    return this.queryManager.watchQuery<T, TVariables>(options);
+    const { observable, queryInfo } = this.queryManager.createQuery<
+      T,
+      TVariables
+    >(options);
+    return {
+      observable,
+      register: () => {
+        this.queryManager.registerObservableQuery(observable, queryInfo);
+      },
+    };
   }
 
   /**

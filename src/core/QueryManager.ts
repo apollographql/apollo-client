@@ -720,10 +720,16 @@ export class QueryManager<TStore> {
     };
   }
 
-  public watchQuery<
+  /**
+   * Create a query, but do not associate it with the QueryManager.
+   * This allows to throw away the query if it ends up not being needed
+   */
+  public createQuery<
     T,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+  >(
+    options: WatchQueryOptions<TVariables, T>
+  ): { observable: ObservableQuery<T, TVariables>; queryInfo: QueryInfo } {
     const query = this.transform(options.query);
 
     // assign variable default values if supplied
@@ -746,8 +752,6 @@ export class QueryManager<TStore> {
     });
     observable["lastQuery"] = query;
 
-    this.queries.set(observable.queryId, queryInfo);
-
     // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query
     queryInfo.init({
@@ -756,6 +760,25 @@ export class QueryManager<TStore> {
       variables: observable.variables,
     });
 
+    return { observable, queryInfo };
+  }
+
+  /**
+   * Register an ObservableQuery with the QueryManager created previously with createQuery.
+   */
+  public registerObservableQuery(
+    observable: ObservableQuery<any, any>,
+    queryInfo: QueryInfo
+  ): void {
+    this.queries.set(observable.queryId, queryInfo);
+  }
+
+  public watchQuery<
+    T,
+    TVariables extends OperationVariables = OperationVariables,
+  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+    const { observable, queryInfo } = this.createQuery(options);
+    this.registerObservableQuery(observable, queryInfo);
     return observable;
   }
 

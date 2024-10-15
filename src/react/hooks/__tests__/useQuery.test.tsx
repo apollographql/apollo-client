@@ -1541,7 +1541,7 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
-        expect(obsQueries.size).toBe(2);
+        expect(obsQueries.size).toBe(1);
 
         const activeSet = new Set<typeof result.current.observable>();
         const inactiveSet = new Set<typeof result.current.observable>();
@@ -10247,7 +10247,11 @@ describe("useQuery Hook", () => {
 
       function Query({ query }: { query: DocumentNode }) {
         const { data } = useQuery(query, { fetchPolicy: "cache-and-network" });
-        return data?.user ? <div>{data.user.name}: {data.user.count}</div> : null;
+        return data?.user ?
+            <div>
+              {data.user.name}: {data.user.count}
+            </div>
+          : null;
       }
 
       function Component({ query }: { query: DocumentNode }) {
@@ -10259,7 +10263,7 @@ describe("useQuery Hook", () => {
       }
 
       const { unmount } = render(<Component query={query1} />);
-      await screen.findAllByText('Alice: 1')
+      await screen.findAllByText("Alice: 1");
       expect(client.getObservableQueries("all").size).toBe(1);
       unmount();
 

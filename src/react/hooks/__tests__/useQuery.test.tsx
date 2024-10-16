@@ -1,7 +1,7 @@
 import React, { Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
 import gql from "graphql-tag";
-import { act } from "@testing-library/react";
+import { act, configure } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
@@ -1542,7 +1542,7 @@ describe("useQuery Hook", () => {
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
-        expect(obsQueries.size).toBe(2);
+        expect(obsQueries.size).toBe(1);
 
         const activeSet = new Set<typeof result.current.observable>();
         const inactiveSet = new Set<typeof result.current.observable>();
@@ -10198,6 +10198,79 @@ describe("useQuery Hook", () => {
     }
 
     await expect(takeSnapshot).not.toRerender({ timeout: 200 });
+  });
+
+  describe("strict mode", () => {
+    // Using StrictMode to ensure useQuery `states` are pure
+    beforeAll(() => {
+      configure({ reactStrictMode: true });
+    });
+    afterAll(() => {
+      configure({ reactStrictMode: false });
+    });
+    it("only refetch active queries", async () => {
+      const query1 = gql`
+        {
+          user {
+            id
+            name
+            count
+          }
+        }
+      `;
+      const query2 = gql`
+        {
+          user {
+            id
+            name
+          }
+        }
+      `;
+      let count = 0;
+      let replyData = (): object => ({
+        data: { user: { id: "1", name: "Alice", count: ++count } },
+      });
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        link: new ApolloLink(() => Observable.of(replyData())),
+        cache,
+      });
+
+      function Query({ query }: { query: DocumentNode }) {
+        const { data } = useQuery(query, { fetchPolicy: "cache-and-network" });
+        return data?.user ?
+            <div>
+              {data.user.name}: {data.user.count}
+            </div>
+          : null;
+      }
+
+      function Component({ query }: { query: DocumentNode }) {
+        return (
+          <ApolloProvider client={client}>
+            <Query query={query} />
+          </ApolloProvider>
+        );
+      }
+
+      const { unmount } = render(<Component query={query1} />);
+      await screen.findAllByText("Alice: 1");
+      expect(client.getObservableQueries("all").size).toBe(1);
+      unmount();
+
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(client.getObservableQueries("all").size).toBe(0);
+
+      replyData = () => ({ data: { user: { id: "1", name: "Alice" } } });
+      render(<Component query={query2} />, {});
+
+      expect(client.getObservableQueries("all").size).toBe(1);
+      await act(async () => {
+        const refetched = await client.reFetchObservableQueries();
+        expect(refetched).toHaveLength(1);
+        expect(refetched[0].data).toEqual({ user: { id: "1", name: "Alice" } });
+      });
+    });
   });
 });
 

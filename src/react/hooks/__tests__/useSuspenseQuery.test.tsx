@@ -3645,9 +3645,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
     await waitFor(() => expect(client.getObservableQueries().size).toBe(0));
@@ -4342,7 +4340,7 @@ describe("useSuspenseQuery", () => {
 
     expect(todo).toHaveTextContent("Clean room");
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     expect(screen.getByText("Loading")).toBeInTheDocument();
 
@@ -4547,10 +4545,7 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       });
     });
-
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(renders.errorCount).toBe(1);
@@ -4612,9 +4607,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await act(async () => {
-      await result.current.refetch();
-    });
+    await act(() => result.current.refetch());
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
@@ -4677,10 +4670,7 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       });
     });
-
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4796,9 +4786,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
-      result.current.fetchMore({ variables: { offset: 2 } });
-    });
+    result.current.fetchMore({ variables: { offset: 2 } });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4873,7 +4861,7 @@ describe("useSuspenseQuery", () => {
 
     expect(letters).toHaveTextContent("AB");
 
-    await act(() => user.click(screen.getByText("Fetch more")));
+    await user.click(screen.getByText("Fetch more"));
 
     expect(screen.getByText("Loading")).toBeInTheDocument();
 
@@ -4950,13 +4938,11 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
-      result.current.fetchMore({
-        variables: { offset: 2 },
-        updateQuery: (prev, { fetchMoreResult }) => ({
-          letters: prev.letters.concat(fetchMoreResult.letters),
-        }),
-      });
+    result.current.fetchMore({
+      variables: { offset: 2 },
+      updateQuery: (prev, { fetchMoreResult }) => ({
+        letters: prev.letters.concat(fetchMoreResult.letters),
+      }),
     });
 
     await waitFor(() => {
@@ -5006,9 +4992,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
-      result.current.fetchMore({ variables: { offset: 2 } });
-    });
+    result.current.fetchMore({ variables: { offset: 2 } });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -5090,9 +5074,7 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
-    });
+    result.current.refetch({ min: 12, max: 30 });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -5166,9 +5148,7 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
-    });
+    result.current.refetch({ min: 12, max: 30 });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -5241,9 +5221,7 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
-    });
+    result.current.refetch({ min: 12, max: 30 });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -5798,11 +5776,11 @@ describe("useSuspenseQuery", () => {
     expect(todo).toHaveTextContent("Clean room");
 
     // skip false -> true
-    await act(() => user.click(screen.getByText("Toggle skip")));
+    await user.click(screen.getByText("Toggle skip"));
     expect(todo).toHaveTextContent("Clean room");
 
     // skip true -> false
-    await act(() => user.click(screen.getByText("Toggle skip")));
+    await user.click(screen.getByText("Toggle skip"));
 
     expect(screen.getByText("Loading")).toBeInTheDocument();
 
@@ -5897,7 +5875,7 @@ describe("useSuspenseQuery", () => {
     expect(screen.queryByTestId("todo")).not.toBeInTheDocument();
 
     const button = screen.getByText("Fetch to-do 1");
-    await act(() => user.click(button));
+    await user.click(button);
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
     // component to suspend.
@@ -5997,7 +5975,7 @@ describe("useSuspenseQuery", () => {
     expect(screen.queryByTestId("todo")).not.toBeInTheDocument();
 
     const button = screen.getByText("Fetch to-do 1");
-    await act(() => user.click(button));
+    await user.click(button);
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
     // component to suspend.
@@ -6043,9 +6021,7 @@ describe("useSuspenseQuery", () => {
 
     rerender({ errorPolicy: "all" });
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -6116,9 +6092,7 @@ describe("useSuspenseQuery", () => {
 
     rerender({ context: { phase: "rerender" } });
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -6289,9 +6263,7 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
-    });
+    result.current.refetch({ min: 12, max: 30 });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -6311,9 +6283,7 @@ describe("useSuspenseQuery", () => {
 
     rerender({ refetchWritePolicy: "overwrite" });
 
-    act(() => {
-      result.current.refetch({ min: 30, max: 50 });
-    });
+    result.current.refetch({ min: 30, max: 50 });
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -6528,9 +6498,7 @@ describe("useSuspenseQuery", () => {
 
     const cacheKey = cache.identify({ __typename: "Character", id: "1" })!;
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(result.current.data).toEqual({
@@ -6681,9 +6649,7 @@ describe("useSuspenseQuery", () => {
 
     rerender({ errorPolicy: "all", variables: { id: "1" } });
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     const expectedError = new ApolloError({
       graphQLErrors: [new GraphQLError("oops")],
@@ -6755,9 +6721,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -6767,9 +6731,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
-      result.current.refetch();
-    });
+    result.current.refetch();
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -8055,9 +8017,7 @@ describe("useSuspenseQuery", () => {
     });
 
     let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
-    act(() => {
-      fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
-    });
+    fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
 
     link.simulateResult({
       result: {
@@ -8337,10 +8297,8 @@ describe("useSuspenseQuery", () => {
       });
 
       let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
-      act(() => {
-        fetchMorePromise = result.current.fetchMore({
-          variables: { offset: 1 },
-        });
+      fetchMorePromise = result.current.fetchMore({
+        variables: { offset: 1 },
       });
 
       link.simulateResult({
@@ -9589,7 +9547,7 @@ describe("useSuspenseQuery", () => {
 
     expect(await screen.findByTestId("result")).toBeInTheDocument();
 
-    await act(() => user.type(input, "ab"));
+    await user.type(input, "ab");
 
     await waitFor(
       () => {
@@ -9600,7 +9558,7 @@ describe("useSuspenseQuery", () => {
       }
     );
 
-    await act(() => user.type(input, "c"));
+    await user.type(input, "c");
 
     // useDeferredValue will try rerendering the component with the new value
     // in the background. If it suspends with the new value, React will show the
@@ -9730,7 +9688,7 @@ describe("useSuspenseQuery", () => {
       expect(todo).toHaveTextContent("Clean room");
     }
 
-    await act(() => user.click(screen.getByText("Refresh")));
+    await user.click(screen.getByText("Refresh"));
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -9856,7 +9814,7 @@ describe("useSuspenseQuery", () => {
 
     expect(todo).toHaveTextContent("Clean room");
 
-    await act(() => user.click(button));
+    await user.click(button);
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -10011,7 +9969,7 @@ describe("useSuspenseQuery", () => {
 
     expect(todo1).toBeInTheDocument();
 
-    await act(() => user.click(button));
+    await user.click(button);
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -10175,7 +10133,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    await user.click(screen.getByText("Fetch next"));
 
     {
       const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -10370,7 +10328,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Load more")));
+    await user.click(screen.getByText("Load more"));
 
     {
       const { snapshot, renderedComponents } = await Profiler.takeRender();
@@ -10536,7 +10494,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    await user.click(screen.getByText("Fetch next"));
     await Profiler.takeRender();
 
     {
@@ -10552,7 +10510,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    await user.click(screen.getByText("Fetch next"));
     await Profiler.takeRender();
 
     {

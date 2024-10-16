@@ -186,18 +186,23 @@ function useInternalState<
     const ssrObservable = renderPromises?.getSSRObservable(
       makeWatchQueryOptions()
     );
-    const obsQueryInfo =
+    let { observable, register } =
       ssrObservable ?
         { observable: ssrObservable, register: () => {} }
       : client.createQuery(
           getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
         );
+    if (renderPromises && !ssrObservable) {
+      // In SSR, useEffects are not called, so we need to register the observable now
+      register();
+      register = () => {};
+    }
 
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable: obsQueryInfo.observable,
-      registerObservableQuery: obsQueryInfo.register,
+      observable,
+      registerObservableQuery: register,
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.

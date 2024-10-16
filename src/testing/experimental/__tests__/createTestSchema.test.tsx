@@ -6,7 +6,7 @@ import {
   gql,
 } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
-import { spyOnConsole } from "../../internal/index.js";
+import { spyOnConsole, createClientWrapper } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
@@ -23,7 +23,6 @@ import {
   RenderStream,
   createRenderStream,
 } from "@testing-library/react-render-stream";
-import { createClientWrapper } from "../../internal/renderHelpers.js";
 
 const typeDefs = /* GraphQL */ `
   type User {

@@ -20,6 +20,7 @@ import { expectTypeOf } from "expect-type";
 import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
+  createClientWrapper,
   SimpleCaseData,
   spyOnConsole,
   setupSimpleCase,
@@ -36,7 +37,6 @@ import {
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { createClientWrapper } from "../../../testing/internal/renderHelpers";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

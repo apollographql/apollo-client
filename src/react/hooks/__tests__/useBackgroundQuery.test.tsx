@@ -50,6 +50,7 @@ import {
   VariablesCaseData,
   VariablesCaseVariables,
   createMockWrapper,
+  createClientWrapper,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
@@ -61,7 +62,6 @@ import {
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { createClientWrapper } from "../../../testing/internal/renderHelpers";
 
 afterEach(() => {
   jest.useRealTimers();

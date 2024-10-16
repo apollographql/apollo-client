@@ -15,6 +15,7 @@ import {
   MockedResponse,
 } from "../../../testing";
 import {
+  createClientWrapper,
   PaginatedCaseData,
   SimpleCaseData,
   setupPaginatedCase,
@@ -34,7 +35,6 @@ import {
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { createClientWrapper } from "../../../testing/internal/renderHelpers";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

@@ -40,19 +40,13 @@ export function renderWithClient<
   ui: ReactElement,
   {
     client,
-    wrapper: Wrapper = React.Fragment,
+    wrapper,
     ...renderOptions
   }: RenderWithClientOptions<Q, Container, BaseElement>
 ) {
   return render(ui, {
     ...renderOptions,
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Wrapper>{children}</Wrapper>
-        </ApolloProvider>
-      );
-    },
+    wrapper: createClientWrapper(client, wrapper),
   });
 }
 

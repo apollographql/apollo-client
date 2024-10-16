@@ -31,9 +31,8 @@ The `useMutation` [React hook](https://reactjs.org/docs/hooks-intro.html) is the
 Let's look at an example. First, we'll create a GraphQL mutation named `ADD_TODO`, which represents adding an item to a to-do list. Remember to wrap GraphQL strings in the `gql` function to parse them into query documents:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx title="index.js"
+```jsx title="index.js(hooks)"
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/react-hooks';
 
@@ -48,8 +47,6 @@ const ADD_TODO = gql`
 
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx title="index.js"
 import gql from 'graphql-tag';
@@ -65,16 +62,14 @@ const ADD_TODO = gql`
 `;
 ```
 
-</div>
 </MultiCodeBlock>
 
 Next, we'll create a component named `AddTodo` that represents the submission form for the to-do list. Inside it, we'll pass our
 `ADD_TODO` mutation to the `useMutation` hook:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx title="index.js"
+```jsx title="index.js(hooks)"
 function AddTodo() {
   let input;
   const [addTodo, { data }] = useMutation(ADD_TODO);
@@ -100,8 +95,6 @@ function AddTodo() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx title="index.js"
 const AddTodo = () => {
@@ -132,7 +125,6 @@ const AddTodo = () => {
 };
 ```
 
-</div>
 </MultiCodeBlock>
 
 ### Calling the mutate function
@@ -173,9 +165,9 @@ Let's look at an example that enables us to modify the value of any existing
 item in our to-do list:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+
+```jsx title="(hooks)"
 const UPDATE_TODO = gql`
   mutation UpdateTodo($id: String!, $type: String!) {
     updateTodo(id: $id, type: $type) {
@@ -219,8 +211,6 @@ function Todos() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const UPDATE_TODO = gql`
@@ -271,7 +261,6 @@ const Todos = () => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 If you execute the `UPDATE_TODO` mutation using this component, the mutation
@@ -294,9 +283,8 @@ cached version of the to-do list.
 The following sample illustrates defining an update function in a call to `useMutation`:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title="(hooks)"
 const GET_TODOS = gql`
   query GetTodos {
     todos
@@ -339,8 +327,6 @@ function AddTodo() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const GET_TODOS = gql`
@@ -386,7 +372,6 @@ const AddTodo = () => {
 };
 ```
 
-</div>
 </MultiCodeBlock>
 
 As shown, the update function is passed a `cache` object that represents
@@ -422,9 +407,9 @@ state of a mutation.
 Let's revisit the `Todos` component from [Updating a single existing entity](#updating-a-single-existing-entity):
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+
+```jsx title="(hooks)"
 function Todos() {
   const { loading: queryLoading, error: queryError, data } = useQuery(
     GET_TODOS,
@@ -467,8 +452,6 @@ function Todos() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const Todos = () => (
@@ -512,7 +495,7 @@ const Todos = () => (
 );
 ```
 
-</div>
+
 </MultiCodeBlock>
 
 As shown above, we can destructure the `loading` and `error` properties from

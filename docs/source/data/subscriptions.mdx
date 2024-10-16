@@ -126,9 +126,8 @@ Now, queries and mutations will go over HTTP as normal, but subscriptions will b
 The easiest way to bring live data to your UI is by using React Apollo's `useSubscription` Hook. This lets you render the stream of data from your service directly within your render function of your component! One thing to note, subscriptions are just listeners, they don't request any data when first connected, but only open up a connection to get new data. Binding live data to your UI is as easy as this:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const COMMENTS_SUBSCRIPTION = gql`
   subscription onCommentAdded($repoFullName: String!) {
     commentAdded(repoFullName: $repoFullName) {
@@ -147,8 +146,6 @@ function DontReadTheComments({ repoFullName }) {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const COMMENTS_SUBSCRIPTION = gql`
@@ -172,7 +169,6 @@ const DontReadTheComments = ({ repoFullName }) => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 ## useSubscription API overview
@@ -207,9 +203,8 @@ With `subscribeToMore`, you can easily do the latter.
 Here is a regular query:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -230,8 +225,6 @@ function CommentsPageWithData({ params }) {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -255,7 +248,6 @@ const CommentsPageWithData = ({ params }) => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 Now, let's add the subscription.
@@ -265,9 +257,8 @@ Add a function called `subscribeToNewComments` that will subscribe using `subscr
 Note that the `updateQuery` callback must return an object of the same shape as the initial query data, otherwise the new data won't be merged. Here the new comment is pushed in the `comments` list of the `entry`:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 const COMMENT_QUERY = gql`
   query Comment($repoName: String!) {
     entry(repoFullName: $repoName) {
@@ -318,8 +309,6 @@ function CommentsPageWithData({ params }) {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 const COMMENT_QUERY = gql`
@@ -372,7 +361,6 @@ const CommentsPageWithData = ({ params }) => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 and start the actual subscription by calling the `subscribeToNewComments` function with the subscription variables:

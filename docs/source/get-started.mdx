@@ -93,7 +93,6 @@ First, pass your GraphQL query wrapped in the `gql` function into the `useQuery`
 Let's create an `ExchangeRates` component in `index.js` to see the `useQuery` hook in action!
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
 ```jsx
 import React from 'react';
@@ -125,8 +124,7 @@ function ExchangeRates() {
 }
 ```
 
-</div>
-<div data-language="js">
+
 
 ```jsx
 import { Query } from '@apollo/react-components';
@@ -161,7 +159,7 @@ const ExchangeRates = () => (
 );
 ```
 
-</div>
+
 </MultiCodeBlock>
 
 Congrats, you just made your first `useQuery` based component! 🎉 If you render your `ExchangeRates` component within your `App` component from the previous example, you'll first see a loading indicator and then data on the page once it's ready. Apollo Client automatically caches this data when it comes back from the server, so you won't see a loading indicator if you run the same query twice.
@@ -197,8 +195,8 @@ Here are the options you can pass to the `ApolloClient` exported from `apollo-bo
 | `uri`            | string                                                                                                                       | A string representing your GraphQL server endpoint. Defaults to `/graphql`.                                                                                                                                                                                                                                                                       |
 | `fetchOptions`   | Object                                                                                                                       | Any options you would like to pass to fetch (credentials, headers, etc). These options are static, so they don't change on each request.                                                                                                                                                                                                          |
 | `request`        | (operation: Operation) => Promise &lt;void&gt;                                                                               | This function is called on each request. It takes a GraphQL operation and can return a promise. To dynamically set `fetchOptions`, you can add them to the context of the operation with `operation.setContext({ headers })`. Any options set here will take precedence over `fetchOptions`. Useful for authentication.                           |
-| `onError`        | (errorObj: { graphQLErrors: GraphQLError[], networkError: Error, response?: ExecutionResult, operation: Operation }) => void | We include a default error handler to log out your errors to the console. If you would like to handle your errors differently, specify this function.                                                                                                                                                                                             |
-| `clientState`    | { resolvers?: Object, defaults?: Object, typeDefs?: string \| Array &lt;string&gt; }                                         | An object representing your local state configuration. This is useful if you would like to use the Apollo cache for [local state management](./data/local-state/).                                                                                                                                                                           |
+| `onError`        | `(errorObj: { graphQLErrors: GraphQLError[], networkError: Error, response?: ExecutionResult, operation: Operation }) => void` | We include a default error handler to log out your errors to the console. If you would like to handle your errors differently, specify this function.                                                                                                                                                                                             |
+| `clientState`    | `{ resolvers?: Object, defaults?: Object, typeDefs?: string \| Array &lt;string&gt; }`                                         | An object representing your local state configuration. This is useful if you would like to use the Apollo cache for [local state management](./data/local-state/).                                                                                                                                                                           |
 | `cacheRedirects` | Object                                                                                                                       | A map of functions to redirect a query to another entry in the cache before a request takes place. This is useful if you have a list of items and want to use the data from the list query on a detail page where you're querying an individual item. More on that [here](./performance/performance). |
 | `credentials`    | string                                                                                                                       | Is set to `same-origin` by default. This option can be used to indicate whether the user agent should send cookies with requests. See [Request.credentials](https://developer.mozilla.org/en-US/docs/Web/API/Request/credentials) for more details.                                                                                    |
 | `headers`        | Object                                                                                                                       | Header key/value pairs to pass along with the request.                                                                                                                                                                                                                                                                                            |

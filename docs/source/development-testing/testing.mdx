@@ -18,9 +18,8 @@ This guide will explain step-by-step how to test React Apollo code. The followin
 Consider the component below, which makes a basic query, and displays its results:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 import React from 'react';
 import gql from 'graphql-tag';
 import { useQuery } from '@apollo/react-hooks';
@@ -52,8 +51,6 @@ export function Dog({ name }) {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 import React from 'react';
@@ -87,7 +84,6 @@ export const Dog = ({ name }) => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 Given this component, let's try to render it inside a test, just to make sure there are no render errors:
@@ -298,9 +294,8 @@ const dogMock = {
 Consider this component that calls a mutation:
 
 <MultiCodeBlock>
-<div data-language="hooks-js">
 
-```jsx
+```jsx title=hooks
 export const DELETE_DOG_MUTATION = gql`
   mutation deleteDog($name: String!) {
     deleteDog(name: $name) {
@@ -326,8 +321,6 @@ export function DeleteButton() {
 }
 ```
 
-</div>
-<div data-language="js">
 
 ```jsx
 export const DELETE_DOG_MUTATION = gql`
@@ -357,7 +350,6 @@ export const DeleteButton = () => (
 );
 ```
 
-</div>
 </MultiCodeBlock>
 
 Testing an initial render for this component looks identical to testing our `useQuery` based component.

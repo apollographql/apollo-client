@@ -22,4 +22,5 @@ export {
   renderWithClient,
   renderWithMocks,
   createMockWrapper,
+  createClientWrapper,
 } from "./renderHelpers.js";

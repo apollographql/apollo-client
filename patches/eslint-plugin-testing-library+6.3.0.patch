@@ -1,0 +1,13 @@
+diff --git a/node_modules/eslint-plugin-testing-library/dist/rules/render-result-naming-convention.js b/node_modules/eslint-plugin-testing-library/dist/rules/render-result-naming-convention.js
+index d1bf177..b72688f 100644
+--- a/node_modules/eslint-plugin-testing-library/dist/rules/render-result-naming-convention.js
++++ b/node_modules/eslint-plugin-testing-library/dist/rules/render-result-naming-convention.js
+@@ -5,7 +5,7 @@ const utils_1 = require("@typescript-eslint/utils");
+ const create_testing_library_rule_1 = require("../create-testing-library-rule");
+ const node_utils_1 = require("../node-utils");
+ exports.RULE_NAME = 'render-result-naming-convention';
+-const ALLOWED_VAR_NAMES = ['view', 'utils'];
++const ALLOWED_VAR_NAMES = ['view', 'utils', 'renderStream'];
+ const ALLOWED_VAR_NAMES_TEXT = ALLOWED_VAR_NAMES.map((name) => `\`${name}\``)
+     .join(', ')
+     .replace(/, ([^,]*)$/, ', or $1');

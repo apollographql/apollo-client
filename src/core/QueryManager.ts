@@ -282,6 +282,7 @@ export class QueryManager<TStore> {
           {
             ...context,
             optimisticResponse: isOptimistic ? optimisticResponse : void 0,
+            mutationId,
           },
           variables,
           {},

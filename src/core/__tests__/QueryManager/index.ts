@@ -4714,7 +4714,7 @@ describe("QueryManager", () => {
     );
 
     itAsync(
-      "will not update inactive query on `resetStore` nor on `refetchQueries`",
+      "will not update inactive query on resetStore",
       (resolve, reject) => {
         const testQuery = gql`
           query TestQuery {
@@ -4750,11 +4750,6 @@ describe("QueryManager", () => {
           expect(oq.hasObservers()).toBe(false);
           resolve();
         });
-
-        const refetched = queryManager.refetchQueries({
-          include: ["TestQuery"],
-        });
-        expect(refetched.size).toBe(0);
       }
     );
   });

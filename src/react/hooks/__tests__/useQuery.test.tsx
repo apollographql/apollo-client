@@ -1,7 +1,7 @@
 import React, { Fragment, ReactNode, useEffect, useRef, useState } from "react";
 import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
 import gql from "graphql-tag";
-import { act, configure } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {

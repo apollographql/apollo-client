@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-Fixed issue causing inactive queries to be executed when clearing, resetting the store or refetching queries by DocumentNode or operation name.
+Fixed issue under StrictMode causing queries created with useQuery to be potentially refetched after unmounting.

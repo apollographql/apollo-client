@@ -9,6 +9,6 @@
     "graphql": "^16.0.0"
   },
   "devDependencies": {
-    "mocha": "10.7.0"
+    "mocha": "10.7.3"
   }
 }

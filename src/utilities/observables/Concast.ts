@@ -1,9 +1,5 @@
-import type {
-  Observer,
-  ObservableSubscription,
-  Subscriber,
-} from "./Observable.js";
-import { Observable } from "./Observable.js";
+import type { PartialObserver, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import { iterateObserversSafely } from "./iteration.js";
 import { fixObservableSubclass } from "./subclassing.js";
 
@@ -52,17 +48,17 @@ export class Concast<T> extends Observable<T> {
   // Active observers receiving broadcast messages. Thanks to this.latest,
   // we can assume all observers in this Set have received the same most
   // recent message, though possibly at different times in the past.
-  private observers = new Set<Observer<T>>();
+  private observers = new Set<PartialObserver<T>>();
 
   // This property starts off undefined to indicate the initial
   // subscription has not yet begun, then points to each source
   // subscription in turn, and finally becomes null after the sources have
   // been exhausted. After that, it stays null.
-  private sub?: ObservableSubscription | null;
+  private sub?: Subscription | null;
 
   // Not only can the individual elements of the iterable be promises, but
   // also the iterable itself can be wrapped in a promise.
-  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>> | Subscriber<T>) {
+  constructor(sources: MaybeAsync<ConcastSourcesIterable<T>>) {
     super((observer) => {
       this.addObserver(observer);
       return () => this.removeObserver(observer);
@@ -109,7 +105,7 @@ export class Concast<T> extends Observable<T> {
     this.handlers.complete();
   }
 
-  private deliverLastMessage(observer: Observer<T>) {
+  private deliverLastMessage(observer: PartialObserver<T>) {
     if (this.latest) {
       const nextOrError = this.latest[0];
       const method = observer[nextOrError];
@@ -125,7 +121,7 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  public addObserver(observer: Observer<T>) {
+  public addObserver(observer: PartialObserver<T>) {
     if (!this.observers.has(observer)) {
       // Immediately deliver the most recent message, so we can always
       // be sure all observers have the latest information.
@@ -134,7 +130,7 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  public removeObserver(observer: Observer<T>) {
+  public removeObserver(observer: PartialObserver<T>) {
     if (this.observers.delete(observer) && this.observers.size < 1) {
       // In case there are still any listeners in this.nextResultListeners, and
       // no error or completion has been broadcast yet, make sure those

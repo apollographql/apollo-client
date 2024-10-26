@@ -12,13 +12,13 @@ import type {
   NoInfer,
 } from "../../utilities/index.js";
 import {
-  Observable,
   cacheSizes,
   defaultCacheSizes,
   getFragmentDefinition,
   getFragmentQueryDocument,
   mergeDeepArray,
 } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
 import { WeakCache } from "@wry/caches";

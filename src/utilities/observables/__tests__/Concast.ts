@@ -1,15 +1,16 @@
 import { itAsync } from "../../../testing/core";
 import { Observable, Observer } from "../Observable";
 import { Concast, ConcastSourcesIterable } from "../Concast";
+import { of } from "rxjs";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
   itAsync("can concatenate other observables", (resolve, reject) => {
     const concast = new Concast([
-      Observable.of(1, 2, 3),
-      Promise.resolve(Observable.of(4, 5)),
-      Observable.of(6, 7, 8, 9),
-      Promise.resolve().then(() => Observable.of(10)),
-      Observable.of(11),
+      of(1, 2, 3),
+      Promise.resolve(of(4, 5)),
+      of(6, 7, 8, 9),
+      Promise.resolve().then(() => of(10)),
+      of(11),
     ]);
 
     const results: number[] = [];
@@ -75,7 +76,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     (resolve, reject) => {
       const concast = new Concast([
         new Promise((resolve) => setTimeout(resolve, 100)).then(() =>
-          Observable.of(1, 2, 3)
+          of(1, 2, 3)
         ),
       ]);
 
@@ -126,23 +127,23 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     let resolve7Promise: undefined | (() => void);
 
     const concast = new Concast([
-      Observable.of(1, 2),
+      of(1, 2),
 
       new Promise((resolve) => setTimeout(resolve, 10)).then(() => {
         enqueueListener();
-        return Observable.of(3, 4);
+        return of(3, 4);
       }),
 
-      Observable.of(5, 6),
+      of(5, 6),
 
       new Promise<void>((resolve) => {
         resolve7Promise = resolve;
       }).then(() => {
         enqueueListener();
-        return Observable.of(7);
+        return of(7);
       }),
 
-      Observable.of(8, 9),
+      of(8, 9),
     ]);
 
     function enqueueListener() {
@@ -193,14 +194,14 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     const observers: Observer<any>[] = [{ next() {} }];
     const observerRefs = observers.map((observer) => new WeakRef(observer));
 
-    const concast = new Concast<number>([Observable.of(1, 2), promise]);
+    const concast = new Concast<number>([of(1, 2), promise]);
 
     concast.subscribe(observers[0]);
     delete observers[0];
 
     expect(concast["observers"].size).toBe(1);
 
-    resolve(Observable.of(3, 4));
+    resolve(of(3, 4));
 
     await expect(concast.promise).resolves.toBe(4);
 
@@ -216,10 +217,10 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     const subscribingObserverRef = new WeakRef(subscribingObserver);
 
     const concast = new Concast<number>([
-      Observable.of(1, 2),
+      of(1, 2),
       promise,
       // just to ensure this also works if the cancelling source is not the last source
-      Observable.of(3, 5),
+      of(3, 5),
     ]);
 
     concast.subscribe(subscribingObserver);
@@ -244,11 +245,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       sourceObserver = o;
     });
 
-    const concast = new Concast<number>([
-      Observable.of(1, 2),
-      sourceObservable,
-      Observable.of(3, 5),
-    ]);
+    const concast = new Concast<number>([of(1, 2), sourceObservable, of(3, 5)]);
 
     concast.subscribe(subscribingObserver);
 
@@ -262,7 +259,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
   });
 
   it("after subscribing to an already-resolved concast, the reference is freed up again", async () => {
-    const concast = new Concast<number>([Observable.of(1, 2)]);
+    const concast = new Concast<number>([of(1, 2)]);
     await expect(concast.promise).resolves.toBe(2);
     await Promise.resolve();
 

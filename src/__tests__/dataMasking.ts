@@ -10,7 +10,6 @@ import {
   FetchPolicy,
   gql,
   InMemoryCache,
-  Observable,
   Reference,
   TypedDocumentNode,
 } from "../core";
@@ -25,6 +24,7 @@ import { invariant } from "../utilities/globals";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
 import { isSubscriptionOperation } from "../utilities";
 import { MaskedDocumentNode } from "../masking";
+import { of } from "rxjs";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';
@@ -1478,7 +1478,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache({ fragments }),
       link: new ApolloLink(() => {
-        return Observable.of({
+        return of({
           data: {
             currentUser: {
               __typename: "User",

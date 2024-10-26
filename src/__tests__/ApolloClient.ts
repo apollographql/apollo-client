@@ -21,6 +21,7 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
 import { expectTypeOf } from "expect-type";
 import { Masked } from "../masking";
+import { of } from "rxjs";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -1156,7 +1157,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return Observable.of({ data });
+        return of({ data });
       });
       function newClient() {
         return new ApolloClient({
@@ -2818,7 +2819,7 @@ describe("ApolloClient", () => {
           )
           .mockImplementationOnce(() => {
             setTimeout(refetchQueries);
-            return Observable.of();
+            return of();
           });
 
         const client = new ApolloClient({

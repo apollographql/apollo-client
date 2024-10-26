@@ -1,5 +1,6 @@
 import { Observable } from "../Observable";
 import { Concast } from "../Concast";
+import { of } from "rxjs";
 
 function toArrayPromise<T>(observable: Observable<T>): Promise<T[]> {
   return new Promise<T[]>((resolve, reject) => {
@@ -18,7 +19,7 @@ function toArrayPromise<T>(observable: Observable<T>): Promise<T[]> {
 
 describe("Observable subclassing", () => {
   it("Symbol.species is defined for Concast subclass", () => {
-    const concast = new Concast([Observable.of(1, 2, 3), Observable.of(4, 5)]);
+    const concast = new Concast([of(1, 2, 3), of(4, 5)]);
     expect(concast).toBeInstanceOf(Concast);
 
     const mapped = concast.map((n) => n * 2);

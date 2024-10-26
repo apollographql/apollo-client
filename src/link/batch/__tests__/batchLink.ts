@@ -11,6 +11,7 @@ import {
   BatchHandler,
   BatchableRequest,
 } from "../batchLink";
+import { of } from "rxjs";
 
 interface MockedResponse {
   request: GraphQLRequest;
@@ -776,9 +777,7 @@ describe("BatchLink", () => {
   `;
 
   it("does not need any constructor arguments", () => {
-    expect(
-      () => new BatchLink({ batchHandler: () => Observable.of() })
-    ).not.toThrow();
+    expect(() => new BatchLink({ batchHandler: () => of() })).not.toThrow();
   });
 
   itAsync("passes forward on", (resolve, reject) => {
@@ -822,9 +821,9 @@ describe("BatchLink", () => {
         forward![0]!(operation[0]).map((r) => [r]),
     });
     const link_one_op = new BatchLink({
-      batchHandler: (operation) => Observable.of(),
+      batchHandler: (operation) => of(),
     });
-    const link_no_op = new BatchLink({ batchHandler: () => Observable.of() });
+    const link_no_op = new BatchLink({ batchHandler: () => of() });
     const _warn = console.warn;
     console.warn = (...args: any) => {
       calls++;
@@ -857,7 +856,7 @@ describe("BatchLink", () => {
       } catch (e) {
         reject(e);
       }
-      return Observable.of(operation.variables.count);
+      return of(operation.variables.count);
     });
 
     let runBatchSize = () => {
@@ -944,7 +943,7 @@ describe("BatchLink", () => {
           batchMax: 0,
           batchHandler,
         }),
-        () => Observable.of(42) as any,
+        () => of(42) as any,
       ]);
 
       execute(
@@ -998,7 +997,7 @@ describe("BatchLink", () => {
     "throws an error when more requests than results",
     (resolve, reject) => {
       const result = [{ data: {} }];
-      const batchHandler = jest.fn((op) => Observable.of(result));
+      const batchHandler = jest.fn((op) => of(result));
 
       const link = ApolloLink.from([
         new BatchLink({
@@ -1040,7 +1039,7 @@ describe("BatchLink", () => {
           } catch (e) {
             reject(e);
           }
-          return Observable.of(result);
+          return of(result);
         });
         let key = true;
         const batchKey = () => {

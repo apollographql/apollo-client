@@ -36,6 +36,7 @@ import { resetStore } from "./QueryManager";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { of } from "rxjs";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
@@ -1565,7 +1566,7 @@ describe("ObservableQuery", () => {
 
       let count = 0;
 
-      let linkObservable = Observable.of({
+      let linkObservable = of({
         data: {
           name: "Ben",
         },

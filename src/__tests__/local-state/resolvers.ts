@@ -12,11 +12,12 @@ import {
 } from "../../core";
 
 import { InMemoryCache, isReference } from "../../cache";
-import { Observable, Observer } from "../../utilities";
+import { Observer } from "../../utilities";
 import { ApolloLink } from "../../link/core";
 import { itAsync } from "../../testing";
 import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
 import wrap from "../../testing/core/wrap";
+import { of } from "rxjs";
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
@@ -795,7 +796,7 @@ describe("Resolving field aliases", () => {
       const link = new ApolloLink(() =>
         // Each link is responsible for implementing their own aliasing so it
         // returns baz not bar
-        Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+        of({ data: { baz: { foo: true, __typename: "Baz" } } })
       );
 
       const client = new ApolloClient({
@@ -873,7 +874,7 @@ describe("Resolving field aliases", () => {
       `;
 
       const link = new ApolloLink(() =>
-        Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+        of({ data: { baz: { foo: true, __typename: "Baz" } } })
       );
 
       const client = new ApolloClient({
@@ -963,7 +964,7 @@ describe("Resolving field aliases", () => {
       `;
 
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: {
             launch: {
               id: 1,
@@ -1086,7 +1087,7 @@ describe("Force local resolvers", () => {
       `;
 
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: {
             author: {
               name: "John Smith",
@@ -1300,7 +1301,7 @@ describe("Async resolvers", () => {
       };
 
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: {
             member: {
               name: testMember.name,

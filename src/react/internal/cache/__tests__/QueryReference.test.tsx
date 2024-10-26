@@ -1,9 +1,5 @@
-import {
-  ApolloClient,
-  ApolloLink,
-  InMemoryCache,
-  Observable,
-} from "../../../../core";
+import { of } from "rxjs";
+import { ApolloClient, ApolloLink, InMemoryCache } from "../../../../core";
 import { setupSimpleCase } from "../../../../testing/internal";
 import {
   InternalQueryReference,
@@ -21,7 +17,7 @@ test("kicks off request immediately when created", async () => {
     cache: new InMemoryCache(),
     link: new ApolloLink((operation) => {
       fetchCount++;
-      return Observable.of({ data: { greeting: "Hello" } });
+      return of({ data: { greeting: "Hello" } });
     }),
   });
 

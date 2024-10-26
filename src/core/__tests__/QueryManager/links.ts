@@ -2,10 +2,7 @@
 import gql from "graphql-tag";
 import { print } from "graphql";
 
-import {
-  Observable,
-  ObservableSubscription,
-} from "../../../utilities/observables/Observable";
+import { ObservableSubscription } from "../../../utilities/observables/Observable";
 import { ApolloLink } from "../../../link/core";
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
 
@@ -16,6 +13,7 @@ import { itAsync, MockSubscriptionLink } from "../../../testing/core";
 import { QueryManager } from "../../QueryManager";
 import { NextLink, Operation, Reference } from "../../../core";
 import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
+import { map, of } from "rxjs";
 
 describe("Link interactions", () => {
   itAsync(
@@ -349,7 +347,7 @@ describe("Link interactions", () => {
       const { getCacheKey } = operation.getContext();
       expect(getCacheKey).toBeDefined();
       expect(getCacheKey({ id: 1, __typename: "Book" })).toEqual("Book:1");
-      return Observable.of({ data: bookData });
+      return of({ data: bookData });
     });
 
     const queryManager = new QueryManager(
@@ -421,7 +419,7 @@ describe("Link interactions", () => {
     const link = new ApolloLink((operation) => {
       result.current = operation;
 
-      return Observable.of({
+      return of({
         data: {
           books: [
             { id: 1, title: "Woo", __typename: "Book" },

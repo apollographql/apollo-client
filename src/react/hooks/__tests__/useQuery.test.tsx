@@ -46,6 +46,7 @@ import {
   createRenderStream,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+import { of } from "rxjs";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -700,7 +701,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -6944,7 +6945,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(() => Observable.of({ data: {} })),
+        link: new ApolloLink(() => of({ data: {} })),
         resolvers: {
           ClientData: {
             titleLength(data) {
@@ -7135,7 +7136,7 @@ describe("useQuery Hook", () => {
 
     it("should tear down the query if `skip` is `true`", async () => {
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -7206,11 +7207,7 @@ describe("useQuery Hook", () => {
           hello
         }
       `;
-      const link = new ApolloLink(() =>
-        Observable.of({
-          data: { hello: "world" },
-        })
-      );
+      const link = new ApolloLink(() => of({ data: { hello: "world" } }));
 
       const requestSpy = jest.spyOn(link, "request");
       const client = new ApolloClient({
@@ -7260,11 +7257,7 @@ describe("useQuery Hook", () => {
         }
       `;
       let linkCount = 0;
-      const link = new ApolloLink(() =>
-        Observable.of({
-          data: { hello: ++linkCount },
-        })
-      );
+      const link = new ApolloLink(() => of({ data: { hello: ++linkCount } }));
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),

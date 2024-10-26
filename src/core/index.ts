@@ -80,17 +80,16 @@ export type {
 
 export type {
   DocumentTransformCacheKey,
-  Observer,
-  ObservableSubscription,
   Reference,
   StoreObject,
 } from "../utilities/index.js";
 export {
   DocumentTransform,
-  Observable,
   isReference,
   makeReference,
 } from "../utilities/index.js";
+export type { Observer, PartialObserver, Subscription } from "rxjs";
+export { Observable } from "rxjs";
 
 /* Supporting */
 

@@ -3,11 +3,8 @@ import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type {
-  Concast,
-  Observer,
-  ObservableSubscription,
-} from "../utilities/index.js";
+import type { Concast } from "../utilities/index.js";
+import type { PartialObserver, Subscription } from "rxjs";
 import {
   cloneDeep,
   compact,
@@ -92,9 +89,9 @@ export class ObservableQuery<
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
   private observers = new Set<
-    Observer<ApolloQueryResult<MaybeMasked<TData>>>
+    PartialObserver<ApolloQueryResult<MaybeMasked<TData>>>
   >();
-  private subscriptions = new Set<ObservableSubscription>();
+  private subscriptions = new Set<Subscription>();
 
   private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
@@ -105,7 +102,7 @@ export class ObservableQuery<
   // When this.concast is defined, this.observer is the Observer currently
   // subscribed to that Concast.
   private concast?: Concast<ApolloQueryResult<TData>>;
-  private observer?: Observer<ApolloQueryResult<TData>>;
+  private observer?: PartialObserver<ApolloQueryResult<TData>>;
 
   private pollingInfo?: {
     interval: number;
@@ -121,43 +118,45 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
-      // Zen Observable has its own error function, so in order to log correctly
-      // we need to provide a custom error callback.
-      try {
-        var subObserver = (observer as any)._subscription._observer;
-        if (subObserver && !subObserver.error) {
-          subObserver.error = defaultSubscriptionObserverErrorCallback;
+    super(
+      (observer: PartialObserver<ApolloQueryResult<MaybeMasked<TData>>>) => {
+        // Zen Observable has its own error function, so in order to log correctly
+        // we need to provide a custom error callback.
+        try {
+          var subObserver = (observer as any)._subscription._observer;
+          if (subObserver && !subObserver.error) {
+            subObserver.error = defaultSubscriptionObserverErrorCallback;
+          }
+        } catch {}
+
+        const first = !this.observers.size;
+        this.observers.add(observer);
+
+        // Deliver most recent error or result.
+        const last = this.last;
+        if (last && last.error) {
+          observer.error && observer.error(last.error);
+        } else if (last && last.result) {
+          observer.next && observer.next(this.maskResult(last.result));
         }
-      } catch {}
 
-      const first = !this.observers.size;
-      this.observers.add(observer);
-
-      // Deliver most recent error or result.
-      const last = this.last;
-      if (last && last.error) {
-        observer.error && observer.error(last.error);
-      } else if (last && last.result) {
-        observer.next && observer.next(this.maskResult(last.result));
-      }
-
-      // Initiate observation of this query if it hasn't been reported to
-      // the QueryManager yet.
-      if (first) {
-        // Blindly catching here prevents unhandled promise rejections,
-        // and is safe because the ObservableQuery handles this error with
-        // this.observer.error, so we're not just swallowing the error by
-        // ignoring it here.
-        this.reobserve().catch(() => {});
-      }
-
-      return () => {
-        if (this.observers.delete(observer) && !this.observers.size) {
-          this.tearDownQuery();
+        // Initiate observation of this query if it hasn't been reported to
+        // the QueryManager yet.
+        if (first) {
+          // Blindly catching here prevents unhandled promise rejections,
+          // and is safe because the ObservableQuery handles this error with
+          // this.observer.error, so we're not just swallowing the error by
+          // ignoring it here.
+          this.reobserve().catch(() => {});
         }
-      };
-    });
+
+        return () => {
+          if (this.observers.delete(observer) && !this.observers.size) {
+            this.tearDownQuery();
+          }
+        };
+      }
+    );
 
     // related classes
     this.queryInfo = queryInfo;
@@ -206,7 +205,7 @@ export class ObservableQuery<
       // TODO: this code doesn’t actually make sense insofar as the observer
       // will never exist in this.observers due how zen-observable wraps observables.
       // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
-      const observer: Observer<ApolloQueryResult<MaybeMasked<TData>>> = {
+      const observer: PartialObserver<ApolloQueryResult<MaybeMasked<TData>>> = {
         next: (result) => {
           resolve(result);
 
@@ -985,7 +984,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const variables = options.variables && { ...options.variables };
     const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
-    const observer: Observer<ApolloQueryResult<TData>> = {
+    const observer: PartialObserver<ApolloQueryResult<TData>> = {
       next: (result) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
@@ -1037,11 +1036,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void,
     onError?: (error: any) => void,
     onComplete?: () => void
-  ): ObservableSubscription;
+  ): Subscription;
 
   public resubscribeAfterError(
-    observer: Observer<ApolloQueryResult<TData>>
-  ): ObservableSubscription;
+    observer: PartialObserver<ApolloQueryResult<TData>>
+  ): Subscription;
 
   public resubscribeAfterError(...args: [any, any?, any?]) {
     // If `lastError` is set in the current when the subscription is re-created,

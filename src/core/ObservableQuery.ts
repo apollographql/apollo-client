@@ -12,12 +12,12 @@ import {
   cloneDeep,
   compact,
   getOperationDefinition,
-  Observable,
   iterateObserversSafely,
   fixObservableSubclass,
   getQueryDefinition,
   preventUnhandledRejection,
 } from "../utilities/index.js";
+import { Observable } from "rxjs";
 import { ApolloError, isApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {

@@ -110,6 +110,7 @@ import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
 import { maskFragment, maskOperation } from "./masking.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import { of } from "rxjs";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -1182,7 +1183,7 @@ export class QueryManager<TStore> {
         ]);
       }
     } else {
-      observable = new Concast([Observable.of({ data: {} } as FetchResult<T>)]);
+      observable = new Concast([of({ data: {} } as FetchResult<T>)]);
       context = this.prepareContext(context);
     }
 
@@ -1645,7 +1646,7 @@ export class QueryManager<TStore> {
       }
 
       const fromData = (data: TData | undefined) =>
-        Observable.of({
+        of({
           data,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,

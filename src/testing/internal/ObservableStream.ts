@@ -1,4 +1,4 @@
-import type { Observable } from "../../utilities/index.js";
+import type { Observable } from "rxjs";
 import { ReadableStream } from "node:stream/web";
 
 export interface TakeOptions {

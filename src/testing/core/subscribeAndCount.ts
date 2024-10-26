@@ -1,14 +1,11 @@
-import type {
-  ObservableSubscription,
-  Observable,
-} from "../../utilities/index.js";
+import type { Observable, Subscription } from "rxjs";
 import { asyncMap } from "../../utilities/index.js";
 
 export default function subscribeAndCount<TResult>(
   reject: (reason: any) => any,
   observable: Observable<TResult>,
   cb: (handleCount: number, result: TResult) => any
-): ObservableSubscription {
+): Subscription {
   // Use a Promise queue to prevent callbacks from being run out of order.
   let queue = Promise.resolve();
   let handleCount = 0;

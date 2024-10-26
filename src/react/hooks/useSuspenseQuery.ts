@@ -149,6 +149,14 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: SkipToken
+): UseSuspenseQueryResult<undefined, TVariables>;
+
+export function useSuspenseQuery<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
     | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {

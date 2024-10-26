@@ -1,5 +1,5 @@
-import type { Observer } from "./Observable.js";
-import { Observable } from "./Observable.js";
+import type { PartialObserver } from "rxjs";
+import { Observable } from "rxjs";
 
 // Like Observable.prototype.map, except that the mapping function can
 // optionally return a Promise (or be async).
@@ -41,7 +41,7 @@ export function asyncMap<V, R>(
       };
     }
 
-    const handler: Observer<V> = {
+    const handler: PartialObserver<V> = {
       next: makeCallback(mapFn, "next"),
       error: makeCallback(catchFn, "error"),
       complete() {

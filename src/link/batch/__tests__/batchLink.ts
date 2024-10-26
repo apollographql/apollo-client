@@ -11,7 +11,7 @@ import {
   BatchHandler,
   BatchableRequest,
 } from "../batchLink";
-import { of } from "rxjs";
+import { map, of } from "rxjs";
 
 interface MockedResponse {
   request: GraphQLRequest;
@@ -792,7 +792,7 @@ describe("BatchLink", () => {
           } catch (e) {
             reject(e);
           }
-          return forward![0]!(operation[0]).map((result) => [result]);
+          return forward![0]!(operation[0]).pipe(map((result) => [result]));
         },
       }),
       new ApolloLink((operation) => {
@@ -818,7 +818,7 @@ describe("BatchLink", () => {
     let calls = 0;
     const link_full = new BatchLink({
       batchHandler: (operation, forward) =>
-        forward![0]!(operation[0]).map((r) => [r]),
+        forward![0]!(operation[0]).pipe(map((r) => [r])),
     });
     const link_one_op = new BatchLink({
       batchHandler: (operation) => of(),
@@ -870,7 +870,9 @@ describe("BatchLink", () => {
         } catch (e) {
           reject(e);
         }
-        const observables = forward.map((f: any, i: any) => f(operation[i]));
+        const observables = forward.pipe(
+          map((f: any, i: any) => f(operation[i]))
+        );
         return new Observable((observer) => {
           const data: any[] = [];
           observables.forEach((obs: any) =>
@@ -934,7 +936,7 @@ describe("BatchLink", () => {
           reject(e);
         }
 
-        return forward[0](operation[0]).map((d: any) => [d]);
+        return forward[0](operation[0]).pipe(map((d: any) => [d]));
       });
 
       const link = ApolloLink.from([

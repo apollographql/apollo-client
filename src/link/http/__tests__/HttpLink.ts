@@ -20,6 +20,7 @@ import { ServerParseError } from "../parseAndCheckHttpResponse";
 import { FetchResult, ServerError } from "../../..";
 import { voidFetchDuringEachTest } from "./helpers";
 import { itAsync } from "../../../testing";
+import { map } from "rxjs";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -693,15 +694,17 @@ describe("HttpLink", () => {
           operation.setContext({
             headers: { authorization: "1234" },
           });
-          return forward(operation).map((result) => {
-            const { headers } = operation.getContext();
-            try {
-              expect(headers).toBeDefined();
-            } catch (e) {
-              reject(e);
-            }
-            return result;
-          });
+          return forward(operation).pipe(
+            map((result) => {
+              const { headers } = operation.getContext();
+              try {
+                expect(headers).toBeDefined();
+              } catch (e) {
+                reject(e);
+              }
+              return result;
+            })
+          );
         });
         const link = middleware.concat(createHttpLink({ uri: "data" }));
 

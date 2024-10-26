@@ -40,17 +40,19 @@ describe("Link interactions", () => {
       const evictionLink = (operation: Operation, forward: NextLink) => {
         const { cache } = operation.getContext();
         expect(cache).toBeDefined();
-        return forward(operation).map((result) => {
-          setTimeout(() => {
-            const cacheResult = cache.read({ query });
-            expect(cacheResult).toEqual(initialData);
-            expect(cacheResult).toEqual(result.data);
-            if (count === 1) {
-              resolve();
-            }
-          }, 10);
-          return result;
-        });
+        return forward(operation).pipe(
+          map((result) => {
+            setTimeout(() => {
+              const cacheResult = cache.read({ query });
+              expect(cacheResult).toEqual(initialData);
+              expect(cacheResult).toEqual(result.data);
+              if (count === 1) {
+                resolve();
+              }
+            }, 10);
+            return result;
+          })
+        );
       };
 
       const mockLink = new MockSubscriptionLink();

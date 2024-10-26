@@ -12,6 +12,7 @@ import {
 import { BatchHttpLink } from "../batchHttpLink";
 import { itAsync } from "../../../testing";
 import { FetchResult } from "../../core";
+import { map } from "rxjs";
 
 const sampleQuery = gql`
   query SampleQuery {
@@ -592,15 +593,17 @@ describe("SharedHttpTest", () => {
       operation.setContext({
         headers: { authorization: "1234" },
       });
-      return forward(operation).map((result) => {
-        const { headers } = operation.getContext();
-        try {
-          expect(headers).toBeDefined();
-        } catch (e) {
-          reject(e);
-        }
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          const { headers } = operation.getContext();
+          try {
+            expect(headers).toBeDefined();
+          } catch (e) {
+            reject(e);
+          }
+          return result;
+        })
+      );
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
 

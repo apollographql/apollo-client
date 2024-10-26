@@ -14,11 +14,11 @@ export class ObservableStream<T> {
   constructor(observable: Observable<T>) {
     this.reader = new ReadableStream<ObservableEvent<T>>({
       start(controller) {
-        observable.subscribe(
-          (value) => controller.enqueue({ type: "next", value }),
-          (error) => controller.enqueue({ type: "error", error }),
-          () => controller.enqueue({ type: "complete" })
-        );
+        observable.subscribe({
+          next: (value) => controller.enqueue({ type: "next", value }),
+          error: (error) => controller.enqueue({ type: "error", error }),
+          complete: () => controller.enqueue({ type: "complete" }),
+        });
       },
     }).getReader();
   }

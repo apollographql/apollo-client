@@ -19,10 +19,7 @@ import {
 import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
-import type {
-  ObservableSubscription,
-  ConcastSourcesArray,
-} from "../utilities/index.js";
+import type { ConcastSourcesArray } from "../utilities/index.js";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -30,7 +27,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  Observable,
   asyncMap,
   isNonEmptyArray,
   Concast,
@@ -39,6 +35,8 @@ import {
   isNonNullObject,
   DocumentTransform,
 } from "../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
 import {
   ApolloError,
@@ -1079,7 +1077,7 @@ export class QueryManager<TStore> {
         .then(makeObservable);
 
       return new Observable<FetchResult<T>>((observer) => {
-        let sub: ObservableSubscription | null = null;
+        let sub: Subscription | null = null;
         observablePromise.then(
           (observable) => (sub = observable.subscribe(observer)),
           observer.error

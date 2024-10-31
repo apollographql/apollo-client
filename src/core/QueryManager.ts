@@ -1585,6 +1585,7 @@ export class QueryManager<TStore> {
         return fromData(void 0);
       }
 
+      console.log("return from data", { data });
       return fromData(data);
     };
 
@@ -1613,19 +1614,19 @@ export class QueryManager<TStore> {
       typeof oldNetworkStatus === "number" &&
       oldNetworkStatus !== networkStatus &&
       isNetworkRequestInFlight(networkStatus);
-
+    console.log({ fetchPolicy });
     switch (fetchPolicy) {
       default:
       case "cache-first": {
         const diff = readCache();
-
+        console.log("cache first", { diff });
         if (diff.complete) {
           return {
             fromLink: false,
             sources: [resultsFromCache(diff, queryInfo.markReady())],
           };
         }
-
+        console.log({ returnPartialData, shouldNotify });
         if (returnPartialData || shouldNotify) {
           return {
             fromLink: true,

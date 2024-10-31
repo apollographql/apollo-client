@@ -323,6 +323,7 @@ export class ObservableQuery<
     newResult: ApolloQueryResult<TData>,
     variables?: TVariables
   ) {
+    console.log({ lastResult: this.last, newResult });
     if (!this.last) {
       return true;
     }
@@ -331,6 +332,12 @@ export class ObservableQuery<
       this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective ?
         !equalByQuery(this.query, this.last.result, newResult, this.variables)
       : !equal(this.last.result, newResult);
+
+    console.log({
+      resultIsDifferent,
+      variablesAreDifferent:
+        variables && !equal(this.last.variables, variables),
+    });
 
     return (
       resultIsDifferent || (variables && !equal(this.last.variables, variables))
@@ -969,6 +976,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       next: (result) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
+          console.log("report result");
           this.reportResult(result, variables);
         }
       },
@@ -1055,11 +1063,25 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ) {
     const lastError = this.getLastError();
     const isDifferent = this.isDifferentFromLastResult(result, variables);
+    console.log({ isDifferent });
     // Update the last result even when isDifferentFromLastResult returns false,
     // because the query may be using the @nonreactive directive, and we want to
     // save the the latest version of any nonreactive subtrees (in case
     // getCurrentResult is called), even though we skip broadcasting changes.
-    if (lastError || !result.partial || this.options.returnPartialData) {
+    console.log({
+      result,
+      lastError,
+      partial: !result.partial,
+      returnPartialData: this.options.returnPartialData,
+    });
+    const resultDataKeys: string[] | undefined =
+      result && result.data && Object.keys(result.data);
+    if (
+      lastError ||
+      !result.partial ||
+      this.options.returnPartialData ||
+      resultDataKeys?.length === 0
+    ) {
       this.updateLastResult(result, variables);
     }
     if (lastError || isDifferent) {

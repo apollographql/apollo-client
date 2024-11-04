@@ -124,7 +124,7 @@ describe("GraphQL Subscriptions", () => {
           resolve();
         }
       },
-    }) as any;
+    });
 
     // Subscribe again. Should also receive the same result.
     // tslint:disable-next-line
@@ -136,7 +136,7 @@ describe("GraphQL Subscriptions", () => {
           resolve();
         }
       },
-    }) as any;
+    });
 
     link.simulateResult(results[0]);
   });

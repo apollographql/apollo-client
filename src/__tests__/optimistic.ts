@@ -16,11 +16,8 @@ import { QueryManager } from "../core/QueryManager";
 
 import { Cache, InMemoryCache } from "../cache";
 
-import {
-  Observable,
-  ObservableSubscription as Subscription,
-  addTypenameToDocument,
-} from "../utilities";
+import { addTypenameToDocument } from "../utilities";
+import { Observable, Subscription } from "rxjs";
 
 import { itAsync, mockSingleLink } from "../testing";
 

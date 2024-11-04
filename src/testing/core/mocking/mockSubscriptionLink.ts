@@ -1,4 +1,4 @@
-import { Observable } from "../../../utilities/index.js";
+import { Observable } from "rxjs";
 import type { FetchResult, Operation } from "../../../link/core/index.js";
 import { ApolloLink } from "../../../link/core/index.js";
 

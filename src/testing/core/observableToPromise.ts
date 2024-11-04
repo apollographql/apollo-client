@@ -1,5 +1,5 @@
 import type { ObservableQuery, ApolloQueryResult } from "../../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
+import type { Subscription } from "rxjs";
 
 export interface Options {
   /**
@@ -31,8 +31,8 @@ export type ResultCallback = (result: ApolloQueryResult<any>) => any;
 export function observableToPromiseAndSubscription(
   { observable, shouldResolve = true, wait = -1, errorCallbacks = [] }: Options,
   ...cbs: ResultCallback[]
-): { promise: Promise<any[]>; subscription: ObservableSubscription } {
-  let subscription: ObservableSubscription = null as never;
+): { promise: Promise<any[]>; subscription: Subscription } {
+  let subscription: Subscription = null as never;
   const promise = new Promise<any[]>((resolve, reject) => {
     let errorIndex = 0;
     let cbIndex = 0;

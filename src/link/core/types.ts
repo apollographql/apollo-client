@@ -3,7 +3,7 @@ import type { DocumentNode } from "graphql";
 import type { DefaultContext } from "../../core/index.js";
 export type { DocumentNode };
 
-import type { Observable } from "../../utilities/index.js";
+import type { Observable } from "rxjs";
 
 export type Path = ReadonlyArray<string | number>;
 

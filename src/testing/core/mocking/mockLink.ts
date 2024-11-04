@@ -10,7 +10,6 @@ import type {
 import { ApolloLink } from "../../../link/core/index.js";
 
 import {
-  Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
   cloneDeep,
@@ -21,6 +20,7 @@ import {
   removeDirectivesFromDocument,
   checkDocument,
 } from "../../../utilities/index.js";
+import { Observable } from "rxjs";
 import type { Unmasked } from "../../../masking/index.js";
 
 /** @internal */

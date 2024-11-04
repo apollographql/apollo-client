@@ -2,10 +2,7 @@ import type * as ReactTypes from "react";
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type {
-  Observable,
-  ObservableSubscription,
-} from "../../utilities/index.js";
+import type { Observable, Subscription } from "rxjs";
 import type { FetchResult } from "../../link/core/index.js";
 import type { ApolloError } from "../../errors/index.js";
 import type {
@@ -512,7 +509,7 @@ export interface SubscriptionDataOptions<
 
 export interface SubscriptionCurrentObservable {
   query?: Observable<any>;
-  subscription?: ObservableSubscription;
+  subscription?: Subscription;
 }
 
 export type { NoInfer } from "../../utilities/index.js";

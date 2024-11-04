@@ -1,6 +1,6 @@
 import type { FetchResult, NextLink, Operation } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import { of } from "rxjs";
 
 export type BatchHandler = (
@@ -24,7 +24,7 @@ type QueuedRequest = BatchableRequest & {
 // Batches are primarily a Set<QueuedRequest>, but may have other optional
 // properties, such as batch.subscription.
 type RequestBatch = Set<QueuedRequest> & {
-  subscription?: ObservableSubscription;
+  subscription?: Subscription;
 };
 
 // QueryBatcher doesn't fire requests immediately. Requests that were enqueued within

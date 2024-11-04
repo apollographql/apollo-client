@@ -1,4 +1,4 @@
-import { Observable } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 
 export function fromError<T>(errorValue: any): Observable<T> {
   return new Observable<T>((observer) => {

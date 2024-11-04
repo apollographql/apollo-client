@@ -1,4 +1,4 @@
-import { Observable } from "./Observable.js";
+import { Observable } from "rxjs";
 import { canUseSymbol } from "../common/canUse.js";
 
 // Generic implementations of Observable.prototype methods like map and

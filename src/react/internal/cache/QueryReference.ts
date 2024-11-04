@@ -504,7 +504,7 @@ export class InternalQueryReference<TData = unknown> {
           (result) => !equal(result.data, {}) && !equal(result, this.result)
         )
       )
-      .subscribe(this.handleNext, this.handleError);
+      .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
   private setResult() {

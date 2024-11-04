@@ -7,6 +7,7 @@ import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
 import type { DocumentTransform } from "../utilities/index.js";
 import type { Observable } from "rxjs";
+import { map } from "rxjs";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";
@@ -512,9 +513,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   ): Observable<FetchResult<MaybeMasked<T>>> {
     const id = this.queryManager.generateQueryId();
 
-    return this.queryManager
-      .startGraphQLSubscription<T>(options)
-      .map((result) => ({
+    return this.queryManager.startGraphQLSubscription<T>(options).pipe(
+      map((result) => ({
         ...result,
         data: this.queryManager.maskOperation({
           document: options.query,
@@ -522,7 +522,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           fetchPolicy: options.fetchPolicy,
           id,
         }),
-      }));
+      }))
+    );
   }
 
   /**

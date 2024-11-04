@@ -36,7 +36,7 @@ import {
   DocumentTransform,
 } from "../utilities/index.js";
 import type { Subscription } from "rxjs";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
 import {
   ApolloError,
@@ -1027,8 +1027,8 @@ export class QueryManager<TStore> {
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(query, context, variables, extensions).map(
-        (result) => {
+      this.getObservableFromLink<T>(query, context, variables, extensions).pipe(
+        map((result) => {
           if (fetchPolicy !== "no-cache") {
             // the subscription interface should handle not sending us results we no longer subscribe to.
             // XXX I don't think we ever send in an object with errors, but we might in the future...
@@ -1068,7 +1068,7 @@ export class QueryManager<TStore> {
           }
 
           return result;
-        }
+        })
       );
 
     if (this.getDocumentInfo(query).hasClientExports) {

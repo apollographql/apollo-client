@@ -21,7 +21,7 @@ describe("Observable subclassing", () => {
     const concast = new Concast([of(1, 2, 3), of(4, 5)]);
     expect(concast).toBeInstanceOf(Concast);
 
-    const mapped = concast.map((n) => n * 2);
+    const mapped = concast.pipe(map((n) => n * 2));
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(Concast);
 

@@ -929,9 +929,11 @@ describe("ApolloClient", () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
         (operation, forward) =>
-          forward(operation).map((data) => ({
-            data: { count: data.data!.count + 1 },
-          }))
+          forward(operation).pipe(
+            map((data) => ({
+              data: { count: data.data!.count + 1 },
+            }))
+          )
       ).concat(() => of({ data: { count: 1 } }));
 
       testLinkResults({

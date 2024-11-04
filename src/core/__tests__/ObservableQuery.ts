@@ -3274,17 +3274,19 @@ describe("ObservableQuery", () => {
     expect(observable).toBeInstanceOf(Observable);
     expect(observable).toBeInstanceOf(ObservableQuery);
 
-    const mapped = observable.map((result) => {
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        data: dataOne,
-      });
-      return {
-        ...result,
-        data: { mapped: true },
-      };
-    });
+    const mapped = observable.pipe(
+      map((result) => {
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataOne,
+        });
+        return {
+          ...result,
+          data: { mapped: true },
+        };
+      })
+    );
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(ObservableQuery);
 

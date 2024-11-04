@@ -6,10 +6,7 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from "../../../core/index.js";
-import type {
-  ObservableSubscription,
-  PromiseWithState,
-} from "../../../utilities/index.js";
+import type { PromiseWithState } from "../../../utilities/index.js";
 import {
   createFulfilledPromise,
   createRejectedPromise,
@@ -18,6 +15,8 @@ import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "../../../utilities/index.js";
 import { invariant } from "../../../utilities/globals/invariantWrappers.js";
 import type { MaybeMasked } from "../../../masking/index.js";
+import { filter } from "rxjs";
+import type { Subscription } from "rxjs";
 
 type QueryRefPromise<TData> = PromiseWithState<
   ApolloQueryResult<MaybeMasked<TData>>
@@ -211,7 +210,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise!: QueryRefPromise<TData>;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
@@ -500,8 +499,10 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscribeToQuery() {
     this.subscription = this.observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
+      .pipe(
+        filter(
+          (result) => !equal(result.data, {}) && !equal(result, this.result)
+        )
       )
       .subscribe(this.handleNext, this.handleError);
   }

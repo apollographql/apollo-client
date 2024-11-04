@@ -73,7 +73,7 @@ export class Concast<T> extends Observable<T> {
     // function, recover by creating an Observable from that subscriber and
     // using it as the source.
     if (typeof sources === "function") {
-      sources = [new Observable(sources)];
+      sources = [new Observable<T>(sources)];
     }
 
     if (isPromiseLike(sources)) {

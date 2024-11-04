@@ -8,11 +8,8 @@ import {
   TypedDocumentNode,
 } from "../core";
 
-import {
-  Observable,
-  offsetLimitPagination,
-  concatPagination,
-} from "../utilities";
+import { offsetLimitPagination, concatPagination } from "../utilities";
+import { Observable } from "rxjs";
 
 import {
   ApolloCache,

@@ -12,7 +12,7 @@ import {
   NetworkStatus,
   TypedDocumentNode,
 } from "../../../core";
-import { Observable } from "../../../utilities";
+import { Observable } from "rxjs";
 import { ApolloProvider } from "../../../react";
 import {
   MockedProvider,

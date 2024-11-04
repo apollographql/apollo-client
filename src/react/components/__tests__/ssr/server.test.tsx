@@ -15,7 +15,7 @@ import { ApolloClient } from "../../../../core";
 import { InMemoryCache as Cache } from "../../../../cache";
 import { ApolloProvider } from "../../../context";
 import { ApolloLink } from "../../../../link/core";
-import { Observable } from "../../../../utilities";
+import { Observable } from "rxjs";
 import { renderToStringWithData } from "../../../ssr";
 import { Query } from "../../Query";
 

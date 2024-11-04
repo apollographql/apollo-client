@@ -6,10 +6,10 @@ import {
   ApolloLink,
   InMemoryCache,
   gql,
-  Observable,
   TypedDocumentNode,
   ObservableQuery,
 } from "../core";
+import { Observable } from "rxjs";
 
 describe("client.refetchQueries", () => {
   itAsync("is public and callable", (resolve, reject) => {

@@ -4,11 +4,7 @@ import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
-import {
-  Observable,
-  ObservableSubscription,
-  Observer,
-} from "../../../utilities/observables/Observable";
+import { Observable, Subscription, Observer } from "rxjs";
 import { BatchHttpLink } from "../batchHttpLink";
 import { itAsync } from "../../../testing";
 import { FetchResult } from "../../core";
@@ -273,7 +269,7 @@ const createHttpLink = (httpArgs?: any) => {
   return new BatchHttpLink(args);
 };
 
-const subscriptions = new Set<ObservableSubscription>();
+const subscriptions = new Set<Subscription>();
 
 describe("SharedHttpTest", () => {
   const data = { data: { hello: "world" } };

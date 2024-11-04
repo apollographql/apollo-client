@@ -12,7 +12,7 @@ import {
 } from "../../core";
 
 import { InMemoryCache, isReference } from "../../cache";
-import { Observer } from "../../utilities";
+import { PartialObserver } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { itAsync } from "../../testing";
 import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
@@ -42,7 +42,7 @@ const assertWithObserver = ({
   error?: Error;
   serverResult?: ExecutionResult;
   delay?: number;
-  observer: Observer<ApolloQueryResult<any>>;
+  observer: PartialObserver<ApolloQueryResult<any>>;
 }) => {
   const queryManager = mockQueryManager({
     request: { query: serverQuery || query, variables },

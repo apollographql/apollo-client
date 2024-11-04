@@ -13,12 +13,12 @@ import { QueryManager } from "../QueryManager";
 
 import {
   DocumentTransform,
-  Observable,
   removeDirectivesFromDocument,
 } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache, NormalizedCacheObject } from "../../cache";
 import { ApolloError } from "../../errors";
+import { Observable, map } from "rxjs";
 
 import {
   MockLink,

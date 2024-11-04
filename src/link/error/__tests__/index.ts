@@ -3,7 +3,7 @@ import gql from "graphql-tag";
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
 import { ServerError, throwServerError } from "../../utils/throwServerError";
-import { Observable } from "../../../utilities/observables/Observable";
+import { Observable } from "rxjs";
 import { onError, ErrorLink } from "../";
 import { itAsync } from "../../../testing";
 import { of } from "rxjs";

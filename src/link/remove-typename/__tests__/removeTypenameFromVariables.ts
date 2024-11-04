@@ -3,7 +3,7 @@ import {
   removeTypenameFromVariables,
 } from "../removeTypenameFromVariables";
 import { ApolloLink, Operation } from "../../core";
-import { Observable, gql } from "../../../core";
+import { gql } from "../../../core";
 import { createOperation, toPromise } from "../../utils";
 import { of } from "rxjs";
 

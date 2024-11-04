@@ -5,10 +5,7 @@ import { GraphQLError } from "graphql";
 import { ApolloClient, FetchResult } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloLink } from "../link/core";
-import {
-  Observable,
-  ObservableSubscription as Subscription,
-} from "../utilities";
+import { Observable, Subscription } from "rxjs";
 import { MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 

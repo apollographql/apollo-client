@@ -18,7 +18,7 @@ import {
 } from "../../../testing";
 import { expectTypeOf } from "expect-type";
 import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
-import { DeepPartial, Observable } from "../../../utilities";
+import { DeepPartial } from "../../../utilities";
 import {
   createClientWrapper,
   SimpleCaseData,
@@ -27,6 +27,7 @@ import {
   setupVariablesCase,
   VariablesCaseData,
 } from "../../../testing/internal";
+import { Observable } from "rxjs";
 import { ApolloProvider } from "../../context";
 import { act, renderHook, screen } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";

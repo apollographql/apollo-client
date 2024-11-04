@@ -3,14 +3,13 @@ import gql from "graphql-tag";
 import { ApolloClient, NetworkStatus } from "../../core";
 import { ApolloLink } from "../../link/core";
 import { InMemoryCache } from "../../cache";
-import { Observable } from "../../utilities";
 import { itAsync, mockSingleLink } from "../../testing";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { WatchQueryFetchPolicy, WatchQueryOptions } from "../watchQueryOptions";
 import { ApolloQueryResult } from "../types";
 import { ObservableQuery } from "../ObservableQuery";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
-import { map } from "rxjs";
+import { Observable, map } from "rxjs";
 
 const query = gql`
   query {

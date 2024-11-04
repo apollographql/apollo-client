@@ -10,7 +10,7 @@ import gql from "graphql-tag";
 // core
 import { QueryManager } from "../../QueryManager";
 import { ObservableQuery } from "../../ObservableQuery";
-import { ObservableSubscription } from "../../../utilities";
+import { Subscription } from "rxjs";
 import { itAsync } from "../../../testing";
 import { InMemoryCache } from "../../../cache";
 
@@ -57,7 +57,7 @@ describe("Subscription lifecycles", () => {
 
       const observableQueries: Array<{
         observableQuery: ObservableQuery;
-        subscription: ObservableSubscription;
+        subscription: Subscription;
       }> = [];
 
       const resubscribe = () => {

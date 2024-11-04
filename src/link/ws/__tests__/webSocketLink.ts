@@ -2,7 +2,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 import { ExecutionResult } from "graphql";
 import gql from "graphql-tag";
 
-import { Observable } from "../../../utilities";
+import { Observable } from "rxjs";
 import { execute } from "../../core";
 import { WebSocketLink } from "..";
 import { itAsync } from "../../../testing";

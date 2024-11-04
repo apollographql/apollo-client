@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 
 import { ApolloLink } from "../../core";
-import { Observable } from "../../../utilities/observables/Observable";
+import { Observable } from "rxjs";
 import { execute } from "../../core/execute";
 import { setContext } from "../index";
 import { itAsync } from "../../../testing";

@@ -1,15 +1,12 @@
 // externals
-import { from } from "rxjs";
+import { from, PartialObserver } from "rxjs";
 import { map } from "rxjs/operators";
 import { assign } from "lodash";
 import gql from "graphql-tag";
 import { DocumentNode, GraphQLError } from "graphql";
 import { setVerbosity } from "ts-invariant";
 
-import {
-  Observable,
-  Observer,
-} from "../../../utilities/observables/Observable";
+import { Observable } from "rxjs";
 import { ApolloLink, GraphQLRequest, FetchResult } from "../../../link/core";
 import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
 import {
@@ -123,7 +120,7 @@ describe("QueryManager", () => {
     error?: Error;
     result?: FetchResult;
     delay?: number;
-    observer: Observer<ApolloQueryResult<any>>;
+    observer: PartialObserver<ApolloQueryResult<any>>;
   }) => {
     const queryManager = mockQueryManager({
       request: { query, variables },
@@ -2454,7 +2451,7 @@ describe("QueryManager", () => {
       cache,
       link: new ApolloLink(
         (operation) =>
-          new Observable((observer: Observer<FetchResult>) => {
+          new Observable((observer) => {
             switch (operation.operationName) {
               case "A":
                 observer.next!({ data: { info: { a: "ay" } } });
@@ -2570,7 +2567,7 @@ describe("QueryManager", () => {
       cache,
       link: new ApolloLink(
         () =>
-          new Observable((observer: Observer<FetchResult>) => {
+          new Observable((observer) => {
             observer.next!({ data: { info: { c: "see" } } });
             observer.complete!();
           })

@@ -11,7 +11,7 @@ import {
 } from "../core";
 import { Kind } from "graphql";
 
-import { Observable } from "../utilities";
+import { Observable } from "rxjs";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";

@@ -12,7 +12,7 @@ import {
   GraphQLString,
 } from "graphql";
 
-import { Observable } from "../../utilities";
+import { Observable } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { Operation } from "../../link/core";
 import { ApolloClient } from "../../core";

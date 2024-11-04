@@ -22,11 +22,10 @@ import {
 
 import {
   DocumentTransform,
-  Observable,
-  ObservableSubscription,
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "../utilities";
+import { Observable, Subscription } from "rxjs";
 import { ApolloLink } from "../link/core";
 import {
   createFragmentRegistry,
@@ -3262,7 +3261,7 @@ describe("@connection", () => {
       const client = new ApolloClient({ cache });
 
       const obsQueries = new Set<ObservableQuery<any>>();
-      const subs = new Set<ObservableSubscription>();
+      const subs = new Set<Subscription>();
       function watch(
         query: DocumentNode,
         fetchPolicy: WatchQueryFetchPolicy = "cache-first"
@@ -3452,7 +3451,7 @@ describe("@connection", () => {
       const client = new ApolloClient({ cache });
 
       const obsQueries = new Set<ObservableQuery<any>>();
-      const subs = new Set<ObservableSubscription>();
+      const subs = new Set<Subscription>();
       function watch(
         query: DocumentNode,
         fetchPolicy: WatchQueryFetchPolicy = "cache-first"

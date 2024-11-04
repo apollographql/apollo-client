@@ -1,6 +1,6 @@
 import { itAsync } from "../../../testing/core";
-import { Observable, Observer } from "../Observable";
 import { Concast, ConcastSourcesIterable } from "../Concast";
+import { Observable, PartialObserver } from "rxjs";
 import { of } from "rxjs";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
@@ -191,7 +191,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
 
   it("resolving all sources of a concast frees all observer references on `this.observers`", async () => {
     const { promise, resolve } = deferred<Observable<number>>();
-    const observers: Observer<any>[] = [{ next() {} }];
+    const observers: PartialObserver<any>[] = [{ next() {} }];
     const observerRefs = observers.map((observer) => new WeakRef(observer));
 
     const concast = new Concast<number>([of(1, 2), promise]);
@@ -210,7 +210,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
 
   it("rejecting a source-wrapping promise of a concast frees all observer references on `this.observers`", async () => {
     const { promise, reject } = deferred<Observable<number>>();
-    let subscribingObserver: Observer<any> | undefined = {
+    let subscribingObserver: PartialObserver<any> | undefined = {
       next() {},
       error() {},
     };
@@ -234,13 +234,13 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
   });
 
   it("rejecting a source of a concast frees all observer references on `this.observers`", async () => {
-    let subscribingObserver: Observer<any> | undefined = {
+    let subscribingObserver: PartialObserver<any> | undefined = {
       next() {},
       error() {},
     };
     const subscribingObserverRef = new WeakRef(subscribingObserver);
 
-    let sourceObserver!: Observer<number>;
+    let sourceObserver!: PartialObserver<number>;
     const sourceObservable = new Observable<number>((o) => {
       sourceObserver = o;
     });
@@ -263,7 +263,10 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     await expect(concast.promise).resolves.toBe(2);
     await Promise.resolve();
 
-    let sourceObserver: Observer<any> | undefined = { next() {}, error() {} };
+    let sourceObserver: PartialObserver<any> | undefined = {
+      next() {},
+      error() {},
+    };
     const sourceObserverRef = new WeakRef(sourceObserver);
 
     concast.subscribe(sourceObserver);
@@ -277,7 +280,7 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
     await expect(concast.promise).rejects.toBe("error");
     await Promise.resolve();
 
-    let sourceObserver: Observer<any> | undefined = { next() {}, error() {} };
+    let sourceObserver: PartialObserver<any> | undefined = { next() {}, error() {} };
     const sourceObserverRef = new WeakRef(sourceObserver);
 
     concast.subscribe(sourceObserver);

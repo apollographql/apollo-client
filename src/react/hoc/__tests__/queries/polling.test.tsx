@@ -7,7 +7,7 @@ import { ApolloClient, ApolloLink } from "../../../../core";
 import { ApolloProvider } from "../../../context";
 import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
-import { Observable } from "../../../../utilities";
+import { Observable } from "rxjs";
 import { graphql } from "../../graphql";
 import { ChildProps } from "../../types";
 

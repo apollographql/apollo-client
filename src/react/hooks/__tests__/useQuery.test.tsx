@@ -17,7 +17,8 @@ import {
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { Observable, Reference, concatPagination } from "../../../utilities";
+import { Reference, concatPagination } from "../../../utilities";
+import { Observable } from "rxjs";
 import { ApolloLink } from "../../../link/core";
 import {
   MockLink,

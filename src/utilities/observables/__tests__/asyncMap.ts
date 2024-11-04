@@ -1,4 +1,4 @@
-import { Observable } from "../Observable";
+import { Observable } from "rxjs";
 import { asyncMap } from "../asyncMap";
 import { itAsync } from "../../../testing";
 import { ObservableStream } from "../../../testing/internal";

@@ -3,7 +3,7 @@ import waitFor from "wait-for-observables";
 
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
-import { Observable } from "../../../utilities/observables/Observable";
+import { Observable } from "rxjs";
 import { fromError } from "../../utils/fromError";
 import { RetryLink } from "../retryLink";
 import { of } from "rxjs";

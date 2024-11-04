@@ -3,7 +3,7 @@ import { print } from "graphql";
 
 import { ApolloLink, execute } from "../../core";
 import { Operation, FetchResult, GraphQLRequest } from "../../core/types";
-import { Observable } from "../../../utilities";
+import { Observable } from "rxjs";
 import { itAsync } from "../../../testing";
 import {
   BatchLink,

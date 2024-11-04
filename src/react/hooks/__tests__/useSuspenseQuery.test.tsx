@@ -10596,7 +10596,6 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    const user = userEvent.setup();
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
@@ -10630,24 +10629,10 @@ describe("useSuspenseQuery", () => {
       const result = useSuspenseQuery(query, {
         variables: { offset: 0, limit: 2 },
       });
-      const { data, fetchMore } = result;
 
       renderStream.mergeSnapshot({ result });
 
-      return (
-        <button
-          onClick={() =>
-            fetchMore({
-              variables: {
-                offset: data.letters.length,
-                limit: data.letters.length + 1,
-              },
-            })
-          }
-        >
-          Fetch next
-        </button>
-      );
+      return null;
     }
 
     renderStream.render(
@@ -10681,7 +10666,10 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    const { snapshot } = renderStream.getCurrentRender();
+    await act(() =>
+      snapshot.result!.fetchMore({ variables: { offset: 2 } }).catch(() => {})
+    );
 
     {
       const { renderedComponents } = await renderStream.takeRender();

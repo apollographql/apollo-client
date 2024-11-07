@@ -1876,19 +1876,21 @@ test("masks result when dataMasking is `true`", async () => {
 
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
-  const { Profiler } = renderDefaultTestApp<Masked<MaskedVariablesCaseData>>({
+  const { renderStream } = renderDefaultTestApp<
+    Masked<MaskedVariablesCaseData>
+  >({
     client,
     queryRef,
   });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1911,19 +1913,19 @@ test("does not mask result when dataMasking is `false`", async () => {
 
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
-  const { Profiler } = renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = renderDefaultTestApp<MaskedVariablesCaseData>({
     client,
     queryRef,
   });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1945,19 +1947,19 @@ test("does not mask results by default", async () => {
 
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
-  const { Profiler } = renderDefaultTestApp<MaskedVariablesCaseData>({
+  const { renderStream } = renderDefaultTestApp<MaskedVariablesCaseData>({
     client,
     queryRef,
   });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {

@@ -10796,7 +10796,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
@@ -10805,26 +10805,27 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query);
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback={<div>Loading...</div>}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // loading
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
       const { result } = snapshot;
 
       expect(result?.data).toEqual({
@@ -10886,7 +10887,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Query, never> | null,
       },
@@ -10895,25 +10896,26 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query);
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // loading
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result?.data).toEqual({
       currentUser: {
@@ -10973,7 +10975,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Query, never> | null,
       },
@@ -10982,25 +10984,26 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query);
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // loading
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result?.data).toEqual({
       currentUser: {
@@ -11061,7 +11064,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
@@ -11070,26 +11073,27 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query);
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // loading
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11117,7 +11121,7 @@ describe("useSuspenseQuery", () => {
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11178,7 +11182,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
@@ -11187,26 +11191,27 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query);
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // loading
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11231,7 +11236,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
 
     expect(client.readQuery({ query })).toEqual({
       currentUser: {
@@ -11304,7 +11309,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
@@ -11313,22 +11318,23 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query, { fetchPolicy: "cache-first" });
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result?.data).toEqual({
       currentUser: {
@@ -11401,7 +11407,7 @@ describe("useSuspenseQuery", () => {
       },
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
       },
@@ -11412,23 +11418,24 @@ describe("useSuspenseQuery", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11440,7 +11447,7 @@ describe("useSuspenseQuery", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11517,7 +11524,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<
           DeepPartial<Masked<Query>>,
@@ -11529,23 +11536,24 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query, { returnPartialData: true });
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11556,7 +11564,7 @@ describe("useSuspenseQuery", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -11619,7 +11627,7 @@ describe("useSuspenseQuery", () => {
       link: new MockLink(mocks),
     });
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         result: null as UseSuspenseQueryResult<
           Masked<Query> | undefined,
@@ -11631,26 +11639,27 @@ describe("useSuspenseQuery", () => {
     function App() {
       const result = useSuspenseQuery(query, { errorPolicy: "all" });
 
-      Profiler.replaceSnapshot({ result });
+      renderStream.replaceSnapshot({ result });
 
       return null;
     }
 
-    render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback="Loading">{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      ),
-    });
+    renderStream.render(
+      <Suspense fallback="Loading">
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     // loading
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
       const { result } = snapshot;
 
       expect(result?.data).toEqual({

@@ -10252,7 +10252,7 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Masked<Query>, never> | null,
         },
@@ -10261,27 +10261,25 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query);
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.loading).toBe(true);
       }
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
         const { result } = snapshot;
 
         expect(result?.loading).toBe(false);
@@ -10345,7 +10343,7 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Query, never> | null,
         },
@@ -10354,23 +10352,21 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query);
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       // loading
-      await Profiler.takeRender();
+      await renderStream.takeRender();
 
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -10431,7 +10427,7 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Query, never> | null,
         },
@@ -10440,23 +10436,21 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query);
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       // loading
-      await Profiler.takeRender();
+      await renderStream.takeRender();
 
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.result?.data).toEqual({
         currentUser: {
@@ -10518,7 +10512,7 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Masked<Query>, never> | null,
         },
@@ -10527,24 +10521,22 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query);
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       // loading
-      await Profiler.takeRender();
+      await renderStream.takeRender();
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -10569,7 +10561,7 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -10633,7 +10625,7 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Masked<Query>, never> | null,
         },
@@ -10642,24 +10634,22 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query);
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       // loading
-      await Profiler.takeRender();
+      await renderStream.takeRender();
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -10683,7 +10673,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await expect(Profiler).not.toRerender();
+      await expect(renderStream).not.toRerender();
 
       expect(client.readQuery({ query })).toEqual({
         currentUser: {
@@ -10758,7 +10748,7 @@ describe("useQuery Hook", () => {
           },
         });
 
-        const Profiler = createProfiler({
+        const renderStream = createRenderStream({
           initialSnapshot: {
             result: null as QueryResult<Masked<Query>, never> | null,
           },
@@ -10767,20 +10757,18 @@ describe("useQuery Hook", () => {
         function App() {
           const result = useQuery(query, { fetchPolicy });
 
-          Profiler.replaceSnapshot({ result });
+          renderStream.replaceSnapshot({ result });
 
           return null;
         }
 
-        render(<App />, {
+        renderStream.render(<App />, {
           wrapper: ({ children }) => (
-            <ApolloProvider client={client}>
-              <Profiler>{children}</Profiler>
-            </ApolloProvider>
+            <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         });
 
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -10855,7 +10843,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Masked<Query>, never> | null,
         },
@@ -10864,21 +10852,19 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query, { fetchPolicy: "cache-and-network" });
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -10891,7 +10877,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -10976,7 +10962,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Masked<Query>, never> | null,
         },
@@ -10985,21 +10971,19 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query, { returnPartialData: true });
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -11010,7 +10994,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
 
         expect(snapshot.result?.data).toEqual({
           currentUser: {
@@ -11073,7 +11057,7 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const Profiler = createProfiler({
+      const renderStream = createRenderStream({
         initialSnapshot: {
           result: null as QueryResult<Masked<Query>, never> | null,
         },
@@ -11082,24 +11066,22 @@ describe("useQuery Hook", () => {
       function App() {
         const result = useQuery(query, { errorPolicy: "all" });
 
-        Profiler.replaceSnapshot({ result });
+        renderStream.replaceSnapshot({ result });
 
         return null;
       }
 
-      render(<App />, {
+      renderStream.render(<App />, {
         wrapper: ({ children }) => (
-          <ApolloProvider client={client}>
-            <Profiler>{children}</Profiler>
-          </ApolloProvider>
+          <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
 
       // loading
-      await Profiler.takeRender();
+      await renderStream.takeRender();
 
       {
-        const { snapshot } = await Profiler.takeRender();
+        const { snapshot } = await renderStream.takeRender();
         const { result } = snapshot;
 
         expect(result?.data).toEqual({

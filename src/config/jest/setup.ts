@@ -1,4 +1,8 @@
 import gql from "graphql-tag";
+import { TextEncoder, TextDecoder } from "util";
+global.TextEncoder ??= TextEncoder;
+// @ts-ignore
+global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
 import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";

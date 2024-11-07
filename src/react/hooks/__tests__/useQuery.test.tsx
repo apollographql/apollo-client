@@ -32,10 +32,8 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import {
-  createProfiler,
   disableActWarnings,
   PaginatedCaseData,
-  profileHook,
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal";
@@ -44,6 +42,10 @@ import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
 import { Masked, MaskedDocumentNode } from "../../../masking";
+import {
+  createRenderStream,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -792,18 +794,17 @@ describe("useQuery Hook", () => {
         link,
         cache: new InMemoryCache(),
       });
-      const ProfiledHook = profileHook(() => [
-        useQuery(query1, { fetchPolicy: "no-cache" }),
-        useQuery(query2),
-      ]);
-      const { rerender } = render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+        () => [useQuery(query1, { fetchPolicy: "no-cache" }), useQuery(query2)],
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(true);
         expect(result0.data).toStrictEqual(undefined);
         expect(result1.loading).toBe(true);
@@ -811,7 +812,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
         expect(result0.data).toStrictEqual(allPeopleData);
         expect(result1.loading).toBe(true);
@@ -819,22 +820,22 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
         expect(result0.data).toStrictEqual(allPeopleData);
         expect(result1.loading).toBe(false);
         expect(result1.data).toStrictEqual(allThingsData);
       }
 
-      rerender(<ProfiledHook />);
+      rerender({});
       {
-        const [result0, result1] = await ProfiledHook.takeSnapshot();
+        const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
         expect(result0.data).toStrictEqual(allPeopleData);
         expect(result1.loading).toBe(false);
         expect(result1.data).toStrictEqual(allThingsData);
       }
-      await expect(ProfiledHook).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("changing queries", async () => {
@@ -1698,51 +1699,53 @@ describe("useQuery Hook", () => {
       ];
 
       const cache = new InMemoryCache();
-      const ProfiledUseQuery = profileHook(({ skip }: { skip?: boolean }) =>
-        useQuery(query, { pollInterval: 10, skip })
+      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+        ({ skip }: { skip?: boolean }) =>
+          useQuery(query, { pollInterval: 10, skip }),
+        {
+          initialProps: {},
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        }
       );
-      const { rerender } = render(<ProfiledUseQuery />, {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks} cache={cache}>
-            {children}
-          </MockedProvider>
-        ),
-      });
       {
-        const result = await ProfiledUseQuery.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await ProfiledUseQuery.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      rerender(<ProfiledUseQuery skip />);
+      rerender({ skip: true });
       {
-        const snapshot = await ProfiledUseQuery.takeSnapshot();
+        const snapshot = await takeSnapshot();
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual(undefined);
       }
 
-      await expect(ProfiledUseQuery).not.toRerender({ timeout: 100 });
+      await expect(takeSnapshot).not.toRerender({ timeout: 100 });
 
-      rerender(<ProfiledUseQuery skip={false} />);
+      rerender({ skip: false });
       {
-        const result = await ProfiledUseQuery.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
       {
-        const result = await ProfiledUseQuery.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 2" });
       }
 
       {
-        const result = await ProfiledUseQuery.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 3" });
       }
@@ -1828,20 +1831,19 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { pollInterval: 20 })
+      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
+        () => useQuery(query, { pollInterval: 20 }),
+        { wrapper }
       );
 
-      const { unmount } = render(<ProfiledHook />, { wrapper });
-
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
         expect(requestSpy).toHaveBeenCalled();
@@ -1905,31 +1907,34 @@ describe("useQuery Hook", () => {
       const onErrorFn = jest.fn();
       link.setOnError(onErrorFn);
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { pollInterval: 10, fetchPolicy: "cache-and-network" })
-      );
-
       const client = new ApolloClient({
         queryDeduplication: false,
         link,
         cache,
       });
 
-      const { unmount } = render(<ProfiledHook />, {
-        wrapper: ({ children }: any) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            pollInterval: 10,
+            fetchPolicy: "cache-and-network",
+          }),
+        {
+          wrapper: ({ children }: any) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(true);
         expect(snapshot.data).toBeUndefined();
       }
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 1" });
@@ -1939,7 +1944,7 @@ describe("useQuery Hook", () => {
       await wait(10);
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 2" });
@@ -1948,7 +1953,7 @@ describe("useQuery Hook", () => {
 
       unmount();
 
-      await expect(ProfiledHook).not.toRerender({ timeout: 50 });
+      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
 
       // TODO rarely seeing 3 here (also old `useQuery` implementation)
       expect(requestSpy).toHaveBeenCalledTimes(2);
@@ -2062,29 +2067,32 @@ describe("useQuery Hook", () => {
       const onErrorFn = jest.fn();
       link.setOnError(onErrorFn);
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { pollInterval: 10, fetchPolicy: "cache-and-network" })
-      );
-
       const client = new ApolloClient({ link, cache });
 
-      const { unmount } = render(<ProfiledHook />, {
-        wrapper: ({ children }: any) => (
-          <React.StrictMode>
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          </React.StrictMode>
-        ),
-      });
+      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            pollInterval: 10,
+            fetchPolicy: "cache-and-network",
+          }),
+        {
+          wrapper: ({ children }: any) => (
+            <React.StrictMode>
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            </React.StrictMode>
+          ),
+        }
+      );
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(true);
         expect(snapshot.data).toBeUndefined();
       }
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 1" });
@@ -2094,7 +2102,7 @@ describe("useQuery Hook", () => {
       await wait(10);
 
       {
-        const snapshot = await ProfiledHook.takeSnapshot();
+        const snapshot = await takeSnapshot();
 
         expect(snapshot.loading).toBe(false);
         expect(snapshot.data).toEqual({ hello: "world 2" });
@@ -2103,7 +2111,7 @@ describe("useQuery Hook", () => {
 
       unmount();
 
-      await expect(ProfiledHook).not.toRerender({ timeout: 50 });
+      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
       // TODO rarely seeing 3 here investigate further
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
@@ -3543,20 +3551,20 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { notifyOnNetworkStatusChange: true })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+        { wrapper }
       );
-      render(<ProfiledHook />, { wrapper });
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toBe(undefined);
         expect(result.error).toBeInstanceOf(ApolloError);
@@ -3564,16 +3572,16 @@ describe("useQuery Hook", () => {
       }
 
       const catchFn = jest.fn();
-      ProfiledHook.getCurrentSnapshot().refetch().catch(catchFn);
+      getCurrentSnapshot().refetch().catch(catchFn);
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toBe(undefined);
         expect(result.error).toBeInstanceOf(ApolloError);
@@ -3686,49 +3694,49 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { notifyOnNetworkStatusChange: true })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+        { wrapper }
       );
-      render(<ProfiledHook />, { wrapper });
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toBe(undefined);
         expect(result.error).toBeInstanceOf(ApolloError);
         expect(result.error!.message).toBe("same error");
       }
-      ProfiledHook.getCurrentSnapshot().refetch();
+      getCurrentSnapshot().refetch();
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world" });
         expect(result.error).toBe(undefined);
       }
       const catchFn = jest.fn();
-      ProfiledHook.getCurrentSnapshot().refetch().catch(catchFn);
+      getCurrentSnapshot().refetch().catch(catchFn);
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toEqual({ hello: "world" });
         expect(result.error).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         // TODO: Is this correct behavior here?
         expect(result.data).toEqual({ hello: "world" });
@@ -4076,24 +4084,24 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
       );
 
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
-
       // loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
       // finished loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       expect(fetches).toStrictEqual([{ variables: { limit: 2 } }]);
 
-      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
 
       await act(() =>
         fetchMore({
@@ -4113,23 +4121,22 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, {
-          notifyOnNetworkStatusChange: true,
-          fetchPolicy: "no-cache",
-          variables: { limit: 2 },
-        })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            notifyOnNetworkStatusChange: true,
+            fetchPolicy: "no-cache",
+            variables: { limit: 2 },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
       );
 
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
-
       {
-        const { loading, networkStatus, data } =
-          await ProfiledHook.takeSnapshot();
+        const { loading, networkStatus, data } = await takeSnapshot();
 
         expect(loading).toBe(true);
         expect(networkStatus).toBe(NetworkStatus.loading);
@@ -4137,8 +4144,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const { loading, networkStatus, data } =
-          await ProfiledHook.takeSnapshot();
+        const { loading, networkStatus, data } = await takeSnapshot();
 
         expect(loading).toBe(false);
         expect(networkStatus).toBe(NetworkStatus.ready);
@@ -4151,7 +4157,7 @@ describe("useQuery Hook", () => {
       }
 
       let fetchMorePromise!: Promise<ApolloQueryResult<PaginatedCaseData>>;
-      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
 
       act(() => {
         fetchMorePromise = fetchMore({
@@ -4163,8 +4169,7 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { loading, networkStatus, data } =
-          await ProfiledHook.takeSnapshot();
+        const { loading, networkStatus, data } = await takeSnapshot();
 
         expect(loading).toBe(true);
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
@@ -4178,7 +4183,7 @@ describe("useQuery Hook", () => {
 
       {
         const { loading, networkStatus, data, observable } =
-          await ProfiledHook.takeSnapshot();
+          await takeSnapshot();
 
         expect(loading).toBe(false);
         expect(networkStatus).toBe(NetworkStatus.ready);
@@ -4213,7 +4218,7 @@ describe("useQuery Hook", () => {
         networkStatus: NetworkStatus.ready,
       });
 
-      await expect(ProfiledHook).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
 
       act(() => {
         fetchMorePromise = fetchMore({
@@ -4223,8 +4228,7 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { data, loading, networkStatus } =
-          await ProfiledHook.takeSnapshot();
+        const { data, loading, networkStatus } = await takeSnapshot();
 
         expect(loading).toBe(true);
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
@@ -4240,7 +4244,7 @@ describe("useQuery Hook", () => {
 
       {
         const { data, loading, networkStatus, observable } =
-          await ProfiledHook.takeSnapshot();
+          await takeSnapshot();
 
         expect(loading).toBe(false);
         expect(networkStatus).toBe(NetworkStatus.ready);
@@ -4270,7 +4274,7 @@ describe("useQuery Hook", () => {
         networkStatus: NetworkStatus.ready,
       });
 
-      await expect(ProfiledHook).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("throws when using fetchMore without updateQuery for no-cache queries", async () => {
@@ -4278,22 +4282,22 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
       );
 
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
-
       // loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
       // finished loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
 
       expect(() => fetchMore({ variables: { offset: 2 } })).toThrow(
         new InvariantError(
@@ -4319,23 +4323,23 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
       );
 
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
-
       // initial loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       // Initial result
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const { fetchMore } = ProfiledHook.getCurrentSnapshot();
+      const { fetchMore } = getCurrentSnapshot();
       await act(() =>
         fetchMore({
           variables: { offset: 2 },
@@ -4485,7 +4489,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
@@ -4525,7 +4529,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return (
         <>
@@ -4544,16 +4548,14 @@ describe("useQuery Hook", () => {
       );
     }
 
-    render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4570,7 +4572,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4592,7 +4594,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4612,7 +4614,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4649,7 +4651,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Reload 1st query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4666,7 +4668,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4700,7 +4702,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("rerenders errored query for full cache write", async () => {
@@ -4746,7 +4748,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
@@ -4792,21 +4794,19 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4823,7 +4823,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4845,7 +4845,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -4865,7 +4865,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       // We don't see the update from the cache for one more render cycle, hence
       // why this is still showing the error result even though the result from
@@ -4895,7 +4895,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -4924,7 +4924,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("does not rerender or refetch queries with errors for partial cache writes with returnPartialData: true", async () => {
@@ -4970,7 +4970,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
@@ -5016,21 +5016,19 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      Profiler.replaceSnapshot({ useQueryResult, useLazyQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5047,7 +5045,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5069,7 +5067,7 @@ describe("useQuery Hook", () => {
     await act(() => user.click(screen.getByText("Run 2nd query")));
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5089,7 +5087,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5114,7 +5112,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("delivers the full network response when a merge function returns an incomplete result", async () => {
@@ -5131,7 +5129,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult | null,
       },
@@ -5176,21 +5174,19 @@ describe("useQuery Hook", () => {
     function App() {
       const useQueryResult = useQuery(query);
 
-      Profiler.replaceSnapshot({ useQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult });
 
       return null;
     }
 
-    render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5200,7 +5196,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5219,7 +5215,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   it("triggers a network request and rerenders with the new result when a mutation causes a partial cache update due to an incomplete merge function result", async () => {
@@ -5252,7 +5248,7 @@ describe("useQuery Hook", () => {
 
     const user = userEvent.setup();
 
-    const Profiler = createProfiler({
+    const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult | null,
       },
@@ -5337,21 +5333,19 @@ describe("useQuery Hook", () => {
       const useQueryResult = useQuery(query);
       const [mutate] = useMutation(mutation);
 
-      Profiler.replaceSnapshot({ useQueryResult });
+      renderStream.replaceSnapshot({ useQueryResult });
 
       return <button onClick={() => mutate()}>Run mutation</button>;
     }
 
-    render(<App />, {
+    renderStream.render(<App />, {
       wrapper: ({ children }) => (
-        <ApolloProvider client={client}>
-          <Profiler>{children}</Profiler>
-        </ApolloProvider>
+        <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: undefined,
@@ -5361,7 +5355,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5381,10 +5375,10 @@ describe("useQuery Hook", () => {
     }
 
     await act(() => user.click(screen.getByText("Run mutation")));
-    await Profiler.takeRender();
+    await renderStream.takeRender();
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5404,7 +5398,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { snapshot } = await Profiler.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.useQueryResult).toMatchObject({
         data: {
@@ -5427,7 +5421,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await expect(Profiler).not.toRerender();
+    await expect(renderStream).not.toRerender();
   });
 
   describe("Refetching", () => {
@@ -5457,32 +5451,32 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, {
-          variables: { id: 1 },
-          notifyOnNetworkStatusChange: true,
-        })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            variables: { id: 1 },
+            notifyOnNetworkStatusChange: true,
+          }),
+        { wrapper }
       );
-
-      render(<ProfiledHook />, { wrapper });
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
-      ProfiledHook.getCurrentSnapshot().refetch({ id: 2 });
+      getCurrentSnapshot().refetch({ id: 2 });
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 2" });
       }
@@ -5513,56 +5507,56 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, {
-          notifyOnNetworkStatusChange: true,
-        })
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            notifyOnNetworkStatusChange: true,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        }
       );
 
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks} cache={cache}>
-            {children}
-          </MockedProvider>
-        ),
-      });
-
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      ProfiledHook.getCurrentSnapshot().refetch();
+      getCurrentSnapshot().refetch();
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.error).toBeInstanceOf(ApolloError);
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      ProfiledHook.getCurrentSnapshot().refetch();
+      getCurrentSnapshot().refetch();
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 1" });
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.error).toBe(undefined);
         expect(result.data).toEqual({ hello: "world 2" });
@@ -5822,25 +5816,25 @@ describe("useQuery Hook", () => {
             {children}
           </MockedProvider>
         );
-        const ProfiledHook = profileHook(() =>
-          useQuery(query, {
-            variables: { min: 0, max: 12 },
-            notifyOnNetworkStatusChange: true,
-            // Intentionally not passing refetchWritePolicy.
-          })
+        const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              variables: { min: 0, max: 12 },
+              notifyOnNetworkStatusChange: true,
+              // Intentionally not passing refetchWritePolicy.
+            }),
+          { wrapper }
         );
 
-        render(<ProfiledHook />, { wrapper });
-
         {
-          const result = await ProfiledHook.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(true);
           expect(result.error).toBe(undefined);
           expect(result.data).toBe(undefined);
           expect(typeof result.refetch).toBe("function");
         }
         {
-          const result = await ProfiledHook.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(false);
           expect(result.error).toBeUndefined();
           expect(result.data).toEqual({ primes: [2, 3, 5, 7, 11] });
@@ -5848,12 +5842,10 @@ describe("useQuery Hook", () => {
         }
 
         const thenFn = jest.fn();
-        ProfiledHook.getCurrentSnapshot()
-          .refetch({ min: 12, max: 30 })
-          .then(thenFn);
+        getCurrentSnapshot().refetch({ min: 12, max: 30 }).then(thenFn);
 
         {
-          const result = await ProfiledHook.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(true);
           expect(result.error).toBe(undefined);
           expect(result.data).toEqual({
@@ -5866,7 +5858,7 @@ describe("useQuery Hook", () => {
         }
 
         {
-          const result = await ProfiledHook.takeSnapshot();
+          const result = await takeSnapshot();
           expect(result.loading).toBe(false);
           expect(result.error).toBe(undefined);
           expect(result.data).toEqual({ primes: [13, 17, 19, 23, 29] });
@@ -6324,52 +6316,53 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, {
-          onCompleted,
-          notifyOnNetworkStatusChange: true,
-          pollInterval: 110,
-        })
+      const { takeSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            onCompleted,
+            notifyOnNetworkStatusChange: true,
+            pollInterval: 110,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks} cache={cache}>
+              {children}
+            </MockedProvider>
+          ),
+        }
       );
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks} cache={cache}>
-            {children}
-          </MockedProvider>
-        ),
-      });
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual(undefined);
         expect(result.loading).toBe(true);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 1" });
         expect(result.loading).toBe(false);
         expect(onCompleted).toHaveBeenCalledTimes(1);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 1" });
         expect(result.loading).toBe(true);
         expect(onCompleted).toHaveBeenCalledTimes(1);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 2" });
         expect(result.loading).toBe(false);
         expect(onCompleted).toHaveBeenCalledTimes(2);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 2" });
         expect(result.loading).toBe(true);
         expect(onCompleted).toHaveBeenCalledTimes(2);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.data).toEqual({ hello: "world 3" });
         expect(result.loading).toBe(false);
         expect(onCompleted).toHaveBeenCalledTimes(3);
@@ -6618,51 +6611,53 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const ProfiledHook = profileHook(() => ({
-        mutation: useMutation(mutation, {
-          optimisticResponse: { addCar: carData },
-          update(cache, { data }) {
-            cache.modify({
-              fields: {
-                cars(existing, { readField }) {
-                  const newCarRef = cache.writeFragment({
-                    data: data!.addCar,
-                    fragment: gql`
-                      fragment NewCar on Car {
-                        id
-                        make
-                        model
-                      }
-                    `,
-                  });
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => ({
+          mutation: useMutation(mutation, {
+            optimisticResponse: { addCar: carData },
+            update(cache, { data }) {
+              cache.modify({
+                fields: {
+                  cars(existing, { readField }) {
+                    const newCarRef = cache.writeFragment({
+                      data: data!.addCar,
+                      fragment: gql`
+                        fragment NewCar on Car {
+                          id
+                          make
+                          model
+                        }
+                      `,
+                    });
 
-                  if (
-                    existing.some(
-                      (ref: Reference) =>
-                        readField("id", ref) === data!.addCar.id
-                    )
-                  ) {
-                    return existing;
-                  }
+                    if (
+                      existing.some(
+                        (ref: Reference) =>
+                          readField("id", ref) === data!.addCar.id
+                      )
+                    ) {
+                      return existing;
+                    }
 
-                  return [...existing, newCarRef];
+                    return [...existing, newCarRef];
+                  },
                 },
-              },
-            });
-          },
-          onError,
+              });
+            },
+            onError,
+          }),
+          query: useQuery(query),
         }),
-        query: useQuery(query),
-      }));
-      render(<ProfiledHook />, { wrapper });
+        { wrapper }
+      );
 
       {
-        const { query } = await ProfiledHook.takeSnapshot();
+        const { query } = await takeSnapshot();
         expect(query.loading).toBe(true);
       }
-      const mutate = ProfiledHook.getCurrentSnapshot().mutation[0];
+      const mutate = getCurrentSnapshot().mutation[0];
       {
-        const { query } = await ProfiledHook.takeSnapshot();
+        const { query } = await takeSnapshot();
         expect(query.loading).toBe(false);
         expect(query.loading).toBe(false);
         expect(query.data).toEqual(carsData);
@@ -6674,13 +6669,13 @@ describe("useQuery Hook", () => {
         // The mutation ran and is loading the result. The query stays at not
         // loading as nothing has changed for the query, but optimistic data is
         // rendered.
-        let { query, mutation } = await ProfiledHook.takeSnapshot();
+        let { query, mutation } = await takeSnapshot();
 
         while (!mutation[1].loading) {
           // useMutation seems to sometimes have an extra render
           // before it enters `loading` state - this test doesn't test
           // that part of that hook so we just work around it
-          ({ query, mutation } = await ProfiledHook.takeSnapshot());
+          ({ query, mutation } = await takeSnapshot());
         }
         expect(mutation[1].loading).toBe(true);
         expect(query.loading).toBe(false);
@@ -6689,7 +6684,7 @@ describe("useQuery Hook", () => {
 
       expect(onError).toHaveBeenCalledTimes(0);
       {
-        const { query, mutation } = await ProfiledHook.takeSnapshot();
+        const { query, mutation } = await takeSnapshot();
         // The mutation ran and is loading the result. The query stays at
         // not loading as nothing has changed for the query.
         expect(mutation[1].loading).toBe(true);
@@ -6697,7 +6692,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const { query, mutation } = await ProfiledHook.takeSnapshot();
+        const { query, mutation } = await takeSnapshot();
         // The mutation has completely finished, leaving the query with access to
         // the original cache data.
         expect(mutation[1].loading).toBe(false);
@@ -6880,17 +6875,17 @@ describe("useQuery Hook", () => {
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, {
-          partialRefetch: true,
-          notifyOnNetworkStatusChange: true,
-        })
+      const { takeSnapshot } = renderHookToSnapshotStream(
+        () =>
+          useQuery(query, {
+            partialRefetch: true,
+            notifyOnNetworkStatusChange: true,
+          }),
+        { wrapper }
       );
 
-      render(<ProfiledHook />, { wrapper });
-
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.error).toBe(undefined);
@@ -6898,7 +6893,7 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.networkStatus).toBe(NetworkStatus.refetch);
         expect(result.loading).toBe(true);
         expect(result.error).toBe(undefined);
@@ -6913,7 +6908,7 @@ describe("useQuery Hook", () => {
       expect(calls[0][0]).toMatch("Missing field");
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world" });
@@ -7846,21 +7841,20 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const ProfiledHook = profileHook(() =>
-        useQuery(query, { notifyOnNetworkStatusChange: true })
+      const { takeSnapshot } = renderHookToSnapshotStream(
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+        { wrapper }
       );
 
-      render(<ProfiledHook />, { wrapper });
-
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toBe(undefined);
         expect(result.previousData).toBe(undefined);
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual(data1);
         expect(result.previousData).toBe(undefined);
@@ -7869,14 +7863,14 @@ describe("useQuery Hook", () => {
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.data).toEqual(data1);
         expect(result.previousData).toEqual(data1);
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.data).toEqual(data2);
         expect(result.previousData).toEqual(data1);
@@ -8307,22 +8301,23 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const ProfiledHook = profileHook(({ gender }: { gender: string }) =>
-        useQuery(query, {
-          variables: { gender },
-          fetchPolicy: "network-only",
-        })
+      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+        ({ gender }: { gender: string }) =>
+          useQuery(query, {
+            variables: { gender },
+            fetchPolicy: "network-only",
+          }),
+        { wrapper, initialProps: { gender: "all" } }
       );
-      const { rerender } = render(<ProfiledHook gender="all" />, { wrapper });
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toBe(NetworkStatus.loading);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.data).toEqual({
@@ -8330,17 +8325,17 @@ describe("useQuery Hook", () => {
         });
       }
 
-      rerender(<ProfiledHook gender="female" />);
+      rerender({ gender: "female" });
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toBe(NetworkStatus.setVariables);
         expect(result.data).toBe(undefined);
       }
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.data).toEqual({
@@ -8350,16 +8345,16 @@ describe("useQuery Hook", () => {
         });
       }
 
-      rerender(<ProfiledHook gender="nonbinary" />);
+      rerender({ gender: "nonbinary" });
 
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toBe(NetworkStatus.setVariables);
         expect(result.data).toBe(undefined);
       }
       {
-        const result = await ProfiledHook.takeSnapshot();
+        const result = await takeSnapshot();
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(result.data).toEqual({
@@ -10098,8 +10093,7 @@ describe("useQuery Hook", () => {
       link,
       cache: new InMemoryCache(),
     });
-    const ProfiledHook = profileHook(() => useQuery(query));
-    render(<ProfiledHook />, {
+    const { takeSnapshot } = renderHookToSnapshotStream(() => useQuery(query), {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -10107,7 +10101,7 @@ describe("useQuery Hook", () => {
 
     expect(requests).toBe(1);
     {
-      const result = await ProfiledHook.takeSnapshot();
+      const result = await takeSnapshot();
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
     }
@@ -10115,7 +10109,7 @@ describe("useQuery Hook", () => {
     client.clearStore();
 
     {
-      const result = await ProfiledHook.takeSnapshot();
+      const result = await takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toBeUndefined();
       expect(result.error).toEqual(
@@ -10128,7 +10122,7 @@ describe("useQuery Hook", () => {
     }
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
-    await expect(ProfiledHook).not.toRerender({ timeout: 50 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 50 });
     expect(requests).toBe(1);
   });
 
@@ -10157,18 +10151,17 @@ describe("useQuery Hook", () => {
       },
     ];
 
-    const ProfiledHook = profileHook(() =>
-      useQuery(query, { notifyOnNetworkStatusChange: true })
+    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+      () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
     );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
-
     {
-      const { loading, data, error } = await ProfiledHook.takeSnapshot();
+      const { loading, data, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -10176,21 +10169,20 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { loading, data, error } = await ProfiledHook.takeSnapshot();
+      const { loading, data, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toBeUndefined();
       expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
     }
 
-    const { refetch } = ProfiledHook.getCurrentSnapshot();
+    const { refetch } = getCurrentSnapshot();
 
     refetch().catch(() => {});
     refetch().catch(() => {});
 
     {
-      const { loading, networkStatus, data, error } =
-        await ProfiledHook.takeSnapshot();
+      const { loading, networkStatus, data, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -10199,8 +10191,7 @@ describe("useQuery Hook", () => {
     }
 
     {
-      const { loading, networkStatus, data, error } =
-        await ProfiledHook.takeSnapshot();
+      const { loading, networkStatus, data, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toBeUndefined();
@@ -10208,7 +10199,7 @@ describe("useQuery Hook", () => {
       expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
     }
 
-    await expect(ProfiledHook).not.toRerender({ timeout: 200 });
+    await expect(takeSnapshot).not.toRerender({ timeout: 200 });
   });
 
   describe("data masking", () => {

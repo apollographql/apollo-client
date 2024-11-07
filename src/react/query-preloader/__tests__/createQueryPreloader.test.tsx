@@ -20,17 +20,15 @@ import { expectTypeOf } from "expect-type";
 import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
 import { DeepPartial, Observable } from "../../../utilities";
 import {
+  createClientWrapper,
   SimpleCaseData,
-  createProfiler,
   spyOnConsole,
   setupSimpleCase,
-  useTrackRenders,
   setupVariablesCase,
-  renderWithClient,
   VariablesCaseData,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { act, render, renderHook, screen } from "@testing-library/react";
+import { act, renderHook, screen } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
@@ -40,6 +38,10 @@ import {
   setupMaskedVariablesCase,
 } from "../../../testing/internal/scenarios";
 import { Masked } from "../../../masking";
+import {
+  createRenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({
@@ -55,7 +57,7 @@ function renderDefaultTestApp<TData>({
   client: ApolloClient<any>;
   queryRef: QueryRef<TData>;
 }) {
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<TData> | null,
       error: null as Error | null,
@@ -64,7 +66,7 @@ function renderDefaultTestApp<TData>({
 
   function ReadQueryHook() {
     useTrackRenders({ name: "ReadQueryHook" });
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -76,7 +78,7 @@ function renderDefaultTestApp<TData>({
 
   function ErrorFallback({ error }: { error: Error }) {
     useTrackRenders({ name: "ErrorFallback" });
-    Profiler.mergeSnapshot({ error });
+    renderStream.mergeSnapshot({ error });
 
     return null;
   }
@@ -93,11 +95,9 @@ function renderDefaultTestApp<TData>({
     );
   }
 
-  const utils = render(<App />, {
+  const utils = renderStream.render(<App />, {
     wrapper: ({ children }) => (
-      <ApolloProvider client={client}>
-        <Profiler>{children}</Profiler>
-      </ApolloProvider>
+      <ApolloProvider client={client}>{children}</ApolloProvider>
     ),
   });
 
@@ -105,7 +105,7 @@ function renderDefaultTestApp<TData>({
     return utils.rerender(<App />);
   }
 
-  return { ...utils, rerender, Profiler };
+  return { ...utils, rerender, renderStream };
 }
 
 test("loads a query and suspends when passed to useReadQuery", async () => {
@@ -115,16 +115,16 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
 
   const queryRef = preloadQuery(query);
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -143,16 +143,16 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
     variables: { id: "1" },
   });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -261,7 +261,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     });
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -293,20 +293,20 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 1" },
@@ -320,7 +320,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
@@ -330,7 +330,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
   {
-    const { renderedComponents, snapshot } = await Profiler.takeRender();
+    const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -347,7 +347,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   // Ensure we can get cache updates again after remounting
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello (cached)" },
@@ -358,7 +358,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -374,7 +374,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   // Ensure we read the newest cache result changed while this queryRef was
   // disposed
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "While you were away" },
@@ -387,7 +387,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -412,13 +412,13 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   expect(queryRef).not.toBeDisposed();
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 2" },
@@ -427,7 +427,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("useReadQuery handles auto-resubscribe with returnPartialData", async () => {
@@ -454,7 +454,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     });
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<DeepPartial<VariablesCaseData>> | null,
     },
@@ -489,20 +489,20 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -518,7 +518,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
@@ -528,7 +528,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
   {
-    const { renderedComponents, snapshot } = await Profiler.takeRender();
+    const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -557,7 +557,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
 
   // Ensure we can get cache updates again after remounting
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -574,7 +574,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -600,7 +600,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   // Ensure we read the newest cache result changed while this queryRef was
   // disposed
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -619,7 +619,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -645,7 +645,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   expect(queryRef).not.toBeDisposed();
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -656,7 +656,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -669,7 +669,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   // Ensure that remounting without data in the cache will fetch and suspend
@@ -681,13 +681,13 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   expect(fetchCount).toBe(3);
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -698,7 +698,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("useReadQuery handles auto-resubscribe on network-only fetch policy", async () => {
@@ -715,7 +715,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     });
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -747,20 +747,20 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 1" },
@@ -774,7 +774,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
@@ -784,7 +784,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
   {
-    const { renderedComponents, snapshot } = await Profiler.takeRender();
+    const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -801,7 +801,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
   // Ensure we can get cache updates again after remounting
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello (cached)" },
@@ -812,7 +812,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -828,7 +828,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   // Ensure we read the newest cache result changed while this queryRef was
   // disposed
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "While you were away" },
@@ -841,7 +841,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -864,13 +864,13 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   expect(queryRef).not.toBeDisposed();
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 2" },
@@ -879,7 +879,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", async () => {
@@ -896,7 +896,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     });
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -928,20 +928,20 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 1" },
@@ -955,7 +955,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
@@ -965,7 +965,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
   {
-    const { renderedComponents, snapshot } = await Profiler.takeRender();
+    const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -982,7 +982,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
   // Ensure we can get cache updates again after remounting
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello (cached)" },
@@ -993,7 +993,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -1009,7 +1009,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   // Ensure we read the newest cache result changed while this queryRef was
   // disposed
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "While you were away" },
@@ -1022,7 +1022,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -1045,13 +1045,13 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   expect(queryRef).not.toBeDisposed();
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 2" },
@@ -1060,7 +1060,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () => {
@@ -1077,7 +1077,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     });
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -1109,20 +1109,20 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 1" },
@@ -1136,7 +1136,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
   await wait(0);
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
@@ -1146,7 +1146,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   // Ensure we aren't refetching the data by checking we still render the same
   // result
   {
-    const { renderedComponents, snapshot } = await Profiler.takeRender();
+    const { renderedComponents, snapshot } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1162,11 +1162,11 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   // Ensure caches writes for the query are ignored by the hook
   client.writeQuery({ query, data: { greeting: "Hello (cached)" } });
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -1180,7 +1180,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   // Ensure we continue to read the same value
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello 1" },
@@ -1193,7 +1193,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
 
   // unmount ReadQueryHook
   await act(() => user.click(toggleButton));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
   await wait(0);
 
   expect(queryRef).toBeDisposed();
@@ -1218,7 +1218,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   // Ensure we are still rendering the same result and haven't refetched
   // anything based on missing cache data
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -1228,7 +1228,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("reacts to cache updates", async () => {
@@ -1238,16 +1238,16 @@ test("reacts to cache updates", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -1262,7 +1262,7 @@ test("reacts to cache updates", async () => {
   });
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello (updated)" },
@@ -1283,16 +1283,16 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
     fetchPolicy: "network-only",
   });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -1312,16 +1312,16 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
     fetchPolicy: "no-cache",
   });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -1344,10 +1344,10 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     fetchPolicy: "cache-and-network",
   });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1358,7 +1358,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1378,10 +1378,10 @@ test("returns cached data when all data is present in the cache", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1391,7 +1391,7 @@ test("returns cached data when all data is present in the cache", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("suspends and ignores partial data in the cache", async () => {
@@ -1422,16 +1422,16 @@ test("suspends and ignores partial data in the cache", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1441,7 +1441,7 @@ test("suspends and ignores partial data in the cache", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("throws when error is returned", async () => {
@@ -1457,16 +1457,16 @@ test("throws when error is returned", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
     expect(snapshot.error).toEqual(
@@ -1488,16 +1488,16 @@ test("returns error when error policy is 'all'", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { errorPolicy: "all" });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1522,16 +1522,16 @@ test("discards error when error policy is 'ignore'", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1572,12 +1572,12 @@ test("passes context to the link", async () => {
     context: { valueA: "A", valueB: "B" },
   });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: { context: { valueA: "A", valueB: "B" } },
@@ -1638,10 +1638,10 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     returnPartialData: true,
   });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1652,7 +1652,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1710,9 +1710,9 @@ test('enables canonical results when canonizeResults is "true"', async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { canonizeResults: true });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result?.data.results);
   const values = Array.from(resultSet).map((item) => item.value);
 
@@ -1768,9 +1768,9 @@ test("can disable canonical results when the cache's canonizeResults setting is 
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { canonizeResults: false });
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result!.data.results);
   const values = Array.from(resultSet).map((item) => item.value);
 
@@ -1803,10 +1803,10 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { Profiler } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = renderDefaultTestApp({ client, queryRef });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
   }
@@ -1819,7 +1819,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
@@ -1848,7 +1848,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   );
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({

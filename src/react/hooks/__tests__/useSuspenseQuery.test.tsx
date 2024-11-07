@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/render-result-naming-convention */
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import {
   act,
@@ -8,7 +9,7 @@ import {
   RenderHookOptions,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ErrorBoundary } from "react-error-boundary";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
 import { equal } from "@wry/equality";
@@ -10566,6 +10567,125 @@ describe("useSuspenseQuery", () => {
           { __typename: "Letter", letter: "D", position: 4 },
         ],
       });
+    }
+
+    await expect(renderStream).not.toRerender();
+  });
+
+  // https://github.com/apollographql/apollo-client/issues/12103
+  it("does not get stuck pending when `fetchMore` rejects with an error", async () => {
+    using _ = spyOnConsole("error");
+    const { query, data } = setupPaginatedCase();
+
+    const link = new ApolloLink((operation) => {
+      const { offset = 0, limit = 2 } = operation.variables;
+      const letters = data.slice(offset, offset + limit);
+
+      return new Observable((observer) => {
+        setTimeout(() => {
+          if (offset === 2) {
+            observer.next({
+              data: null,
+              errors: [{ message: "Could not fetch letters" }],
+            });
+          } else {
+            observer.next({ data: { letters } });
+          }
+          observer.complete();
+        }, 10);
+      });
+    });
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const renderStream = createRenderStream({
+      initialSnapshot: {
+        result: null as UseSuspenseQueryResult<
+          PaginatedCaseData,
+          PaginatedCaseVariables
+        > | null,
+        error: null as ApolloError | null,
+      },
+    });
+
+    function SuspenseFallback() {
+      useTrackRenders();
+
+      return <div>Loading...</div>;
+    }
+
+    function ErrorFallback({ error }: FallbackProps) {
+      useTrackRenders();
+      renderStream.mergeSnapshot({ error });
+
+      return <div>Error</div>;
+    }
+
+    function App() {
+      useTrackRenders();
+      const result = useSuspenseQuery(query, {
+        variables: { offset: 0, limit: 2 },
+      });
+
+      renderStream.mergeSnapshot({ result });
+
+      return null;
+    }
+
+    renderStream.render(
+      <Suspense fallback={<SuspenseFallback />}>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <App />
+        </ErrorBoundary>
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { renderedComponents } = await renderStream.takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+      expect(renderedComponents).toStrictEqual([App]);
+      expect(snapshot.result?.data).toEqual({
+        letters: [
+          { __typename: "Letter", letter: "A", position: 1 },
+          { __typename: "Letter", letter: "B", position: 2 },
+        ],
+      });
+    }
+
+    const { snapshot } = renderStream.getCurrentRender();
+    await act(() =>
+      snapshot.result!.fetchMore({ variables: { offset: 2 } }).catch(() => {})
+    );
+
+    {
+      const { renderedComponents } = await renderStream.takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    {
+      const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+      expect(renderedComponents).toStrictEqual([ErrorFallback]);
+      expect(snapshot.error).toEqual(
+        new ApolloError({
+          graphQLErrors: [{ message: "Could not fetch letters" }],
+        })
+      );
     }
 
     await expect(renderStream).not.toRerender();

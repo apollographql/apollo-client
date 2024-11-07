@@ -2087,16 +2087,17 @@ describe("data masking", () => {
       link,
     });
 
-    const ProfiledHook = profileHook(() => useSubscription(subscription));
-
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -2117,7 +2118,7 @@ describe("data masking", () => {
     });
 
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toEqual({
@@ -2129,7 +2130,7 @@ describe("data masking", () => {
       expect(error).toBeUndefined();
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   test("does not mask data returned from subscriptions when dataMasking is `false`", async () => {
@@ -2154,16 +2155,17 @@ describe("data masking", () => {
       link,
     });
 
-    const ProfiledHook = profileHook(() => useSubscription(subscription));
-
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -2184,7 +2186,7 @@ describe("data masking", () => {
     });
 
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toEqual({
@@ -2198,7 +2200,7 @@ describe("data masking", () => {
       expect(error).toBeUndefined();
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   test("masks data passed to onData callback when dataMasking is `true`", async () => {
@@ -2224,18 +2226,17 @@ describe("data masking", () => {
     });
 
     const onData = jest.fn();
-    const ProfiledHook = profileHook(() =>
-      useSubscription(subscription, { onData })
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onData }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -2256,7 +2257,7 @@ describe("data masking", () => {
     });
 
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toEqual({
@@ -2279,7 +2280,7 @@ describe("data masking", () => {
       });
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   test("uses unmasked data when using the @unmask directive", async () => {
@@ -2305,18 +2306,17 @@ describe("data masking", () => {
     });
 
     const onData = jest.fn();
-    const ProfiledHook = profileHook(() =>
-      useSubscription(subscription, { onData })
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onData }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(true);
       expect(data).toBeUndefined();
@@ -2337,7 +2337,7 @@ describe("data masking", () => {
     });
 
     {
-      const { data, loading, error } = await ProfiledHook.takeSnapshot();
+      const { data, loading, error } = await takeSnapshot();
 
       expect(loading).toBe(false);
       expect(data).toEqual({
@@ -2369,7 +2369,7 @@ describe("data masking", () => {
       });
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 });
 

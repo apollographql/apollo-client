@@ -2244,7 +2244,7 @@ describe("maskFragment", () => {
 
   test("warns when accessing unmasked fields when using `@unmask` directive with mode 'migrate'", () => {
     using _ = spyOnConsole("warn");
-    const query = gql`
+    const fragment = gql`
       fragment UnmaskedFragment on User {
         id
         name
@@ -2265,7 +2265,7 @@ describe("maskFragment", () => {
           age: 30,
         },
       }),
-      query,
+      fragment,
       new InMemoryCache(),
       "UnmaskedFragment"
     );

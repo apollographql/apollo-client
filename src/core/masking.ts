@@ -11,6 +11,7 @@ import {
 import type { FragmentMap } from "../utilities/index.js";
 import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
+import { equal } from "@wry/equality";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
@@ -107,6 +108,13 @@ export function maskFragment<TData = unknown>(
 
   if (data == null) {
     // Maintain the original `null` or `undefined` value
+    return data;
+  }
+
+  if (equal(data, {})) {
+    // Return early and skip the masking algorithm if we don't have any data
+    // yet. This can happen when cache.diff returns an empty object which is
+    // used from watchFragment.
     return data;
   }
 

@@ -1849,7 +1849,7 @@ describe("client.watchQuery", () => {
     );
   });
 
-  it("masks deferred fragments", async () => {
+  test("masks deferred fragments", async () => {
     type GreetingFragment = {
       recipient: {
         name: string;
@@ -1936,7 +1936,7 @@ describe("client.watchQuery", () => {
     });
   });
 
-  it("masks deferred fragments within inline fragments", async () => {
+  test("masks deferred fragments within inline fragments", async () => {
     type GreetingFragment = {
       recipient: {
         name: string;
@@ -2035,7 +2035,7 @@ describe("client.watchQuery", () => {
     });
   });
 
-  it("does not mask deferred fragments marked with @unmask", async () => {
+  test("does not mask deferred fragments marked with @unmask", async () => {
     type GreetingFragment = {
       recipient: {
         name: string;
@@ -2136,7 +2136,7 @@ describe("client.watchQuery", () => {
     });
   });
 
-  it("handles deferred fragments with a mix of masked and unmasked", async () => {
+  test("handles deferred fragments with a mix of masked and unmasked", async () => {
     type GreetingFragment = {
       recipient: {
         name: string;

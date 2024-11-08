@@ -2258,12 +2258,10 @@ describe("maskFragment", () => {
 
     const data = maskFragment(
       deepFreeze({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
       }),
       fragment,
       new InMemoryCache(),

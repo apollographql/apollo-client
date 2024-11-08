@@ -12,6 +12,7 @@ import type { FragmentMap } from "../utilities/index.js";
 import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
 import { equal } from "@wry/equality";
+import { Slot } from "optimism";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
@@ -20,6 +21,10 @@ interface MaskingContext {
   cache: ApolloCache<unknown>;
   disableWarnings?: boolean;
 }
+
+// Contextual slot that allows us to disable accessor warnings on fields when in
+// migrate mode.
+export const disableWarningsSlot = new Slot<boolean>();
 
 export function maskOperation<TData = unknown>(
   data: TData,
@@ -60,9 +65,7 @@ export function maskOperation<TData = unknown>(
   );
 
   if (Object.isFrozen(data)) {
-    context.disableWarnings = true;
-    maybeDeepFreeze(masked);
-    context.disableWarnings = false;
+    disableWarningsSlot.withValue(true, maybeDeepFreeze, [masked]);
   }
 
   return changed ? masked : data;
@@ -132,9 +135,7 @@ export function maskFragment<TData = unknown>(
   );
 
   if (Object.isFrozen(data)) {
-    context.disableWarnings = true;
-    maybeDeepFreeze(masked);
-    context.disableWarnings = false;
+    disableWarningsSlot.withValue(true, maybeDeepFreeze, [masked]);
   }
 
   return changed ? masked : data;
@@ -388,7 +389,7 @@ function addAccessorWarning(
   }
 
   let getValue = () => {
-    if (context.disableWarnings) {
+    if (disableWarningsSlot.getValue()) {
       return value;
     }
 

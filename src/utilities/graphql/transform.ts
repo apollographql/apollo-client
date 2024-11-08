@@ -722,6 +722,14 @@ export function addNonReactiveToNamedFragments(document: DocumentNode) {
 
   return visit(document, {
     FragmentSpread: (node) => {
+      // Do not add `@nonreactive` if the fragment is marked with `@unmask`
+      // since we want to react to changes in this fragment.
+      if (
+        node.directives?.some((directive) => directive.name.value === "unmask")
+      ) {
+        return;
+      }
+
       return {
         ...node,
         directives: [

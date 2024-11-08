@@ -2875,15 +2875,16 @@ describe("data masking", () => {
       link: new MockLink(mocks),
     });
 
-    const ProfiledHook = profileHook(() => useMutation(mutation));
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useMutation(mutation),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
-    const [mutate, result] = await ProfiledHook.takeSnapshot();
+    const [mutate, result] = await takeSnapshot();
 
     expect(result.loading).toBe(false);
     expect(result.data).toBeUndefined();
@@ -2895,7 +2896,7 @@ describe("data masking", () => {
     });
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
+      const [, result] = await takeSnapshot();
 
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
@@ -2903,7 +2904,7 @@ describe("data masking", () => {
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
+      const [, result] = await takeSnapshot();
 
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({
@@ -2929,7 +2930,7 @@ describe("data masking", () => {
       expect(errors).toBeUndefined();
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   test("does not mask data returned from useMutation when dataMasking is `false`", async () => {
@@ -2978,15 +2979,16 @@ describe("data masking", () => {
       link: new MockLink(mocks),
     });
 
-    const ProfiledHook = profileHook(() => useMutation(mutation));
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useMutation(mutation),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
-    const [mutate, result] = await ProfiledHook.takeSnapshot();
+    const [mutate, result] = await takeSnapshot();
 
     expect(result.loading).toBe(false);
     expect(result.data).toBeUndefined();
@@ -2998,7 +3000,7 @@ describe("data masking", () => {
     });
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
+      const [, result] = await takeSnapshot();
 
       expect(result.loading).toBe(true);
       expect(result.data).toBeUndefined();
@@ -3006,7 +3008,7 @@ describe("data masking", () => {
     }
 
     {
-      const [, result] = await ProfiledHook.takeSnapshot();
+      const [, result] = await takeSnapshot();
 
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({
@@ -3034,7 +3036,7 @@ describe("data masking", () => {
       expect(errors).toBeUndefined();
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   test("passes masked data to onCompleted, does not pass masked data to update", async () => {
@@ -3086,17 +3088,16 @@ describe("data masking", () => {
 
     const update = jest.fn();
     const onCompleted = jest.fn();
-    const ProfiledHook = profileHook(() =>
-      useMutation(mutation, { onCompleted, update })
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useMutation(mutation, { onCompleted, update }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
-    const [mutate] = await ProfiledHook.takeSnapshot();
+    const [mutate] = await takeSnapshot();
 
     await act(() => mutate());
 

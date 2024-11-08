@@ -2051,18 +2051,19 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const ProfiledHook = profileHook(() => useLazyQuery(query));
-
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useLazyQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       // initial render
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const [execute] = getCurrentSnapshot();
       const result = await execute();
 
       expect(result.data).toEqual({
@@ -2074,10 +2075,10 @@ describe("useLazyQuery Hook", () => {
       });
 
       // Loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       {
-        const [, { data }] = await ProfiledHook.takeSnapshot();
+        const [, { data }] = await takeSnapshot();
 
         expect(data).toEqual({
           currentUser: {
@@ -2139,18 +2140,19 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const ProfiledHook = profileHook(() => useLazyQuery(query));
-
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useLazyQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       // initial render
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const [execute] = getCurrentSnapshot();
       const result = await execute();
 
       expect(result.data).toEqual({
@@ -2163,10 +2165,10 @@ describe("useLazyQuery Hook", () => {
       });
 
       // Loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       {
-        const [, { data }] = await ProfiledHook.takeSnapshot();
+        const [, { data }] = await takeSnapshot();
 
         expect(data).toEqual({
           currentUser: {
@@ -2228,18 +2230,19 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const ProfiledHook = profileHook(() => useLazyQuery(query));
-
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useLazyQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       // initial render
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const [execute] = getCurrentSnapshot();
       const result = await execute();
 
       expect(result.data).toEqual({
@@ -2252,10 +2255,10 @@ describe("useLazyQuery Hook", () => {
       });
 
       // Loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       {
-        const [, { data }] = await ProfiledHook.takeSnapshot();
+        const [, { data }] = await takeSnapshot();
 
         expect(data).toEqual({
           currentUser: {
@@ -2318,25 +2321,26 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const ProfiledHook = profileHook(() => useLazyQuery(query));
-
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useLazyQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       // initial render
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const [execute] = getCurrentSnapshot();
       execute();
 
       // Loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       {
-        const [, { data }] = await ProfiledHook.takeSnapshot();
+        const [, { data }] = await takeSnapshot();
 
         expect(data).toEqual({
           currentUser: {
@@ -2360,7 +2364,7 @@ describe("useLazyQuery Hook", () => {
       });
 
       {
-        const [, { data, previousData }] = await ProfiledHook.takeSnapshot();
+        const [, { data, previousData }] = await takeSnapshot();
 
         expect(data).toEqual({
           currentUser: {
@@ -2425,25 +2429,26 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const ProfiledHook = profileHook(() => useLazyQuery(query));
-
-      render(<ProfiledHook />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
+        () => useLazyQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
       // initial render
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
-      const [execute] = ProfiledHook.getCurrentSnapshot();
+      const [execute] = getCurrentSnapshot();
       execute();
 
       // Loading
-      await ProfiledHook.takeSnapshot();
+      await takeSnapshot();
 
       {
-        const [, { data }] = await ProfiledHook.takeSnapshot();
+        const [, { data }] = await takeSnapshot();
 
         expect(data).toEqual({
           currentUser: {
@@ -2466,7 +2471,7 @@ describe("useLazyQuery Hook", () => {
         },
       });
 
-      await expect(ProfiledHook).not.toRerender();
+      await expect(takeSnapshot).not.toRerender();
 
       expect(client.readQuery({ query })).toEqual({
         currentUser: {

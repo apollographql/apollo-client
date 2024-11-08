@@ -4141,9 +4141,9 @@ it("masks queries when dataMasking is `true`", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4156,13 +4156,15 @@ it("masks queries when dataMasking is `true`", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, {
+    wrapper: createClientWrapper(client),
+  });
 
   // loading
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4227,9 +4229,9 @@ it("does not mask query when dataMasking is `false`", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4242,12 +4244,12 @@ it("does not mask query when dataMasking is `false`", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: {
@@ -4311,9 +4313,9 @@ it("does not mask query by default", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Query>();
+  const renderStream = createDefaultProfiler<Query>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4326,12 +4328,12 @@ it("does not mask query by default", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: {
@@ -4396,9 +4398,9 @@ it("masks queries updated by the cache", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4411,13 +4413,13 @@ it("masks queries updated by the cache", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4447,7 +4449,7 @@ it("masks queries updated by the cache", async () => {
   });
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4512,9 +4514,9 @@ it("does not rerender when updating field in named fragment", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4527,13 +4529,15 @@ it("does not rerender when updating field in named fragment", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, {
+    wrapper: createClientWrapper(client),
+  });
 
   // loading
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4562,7 +4566,7 @@ it("does not rerender when updating field in named fragment", async () => {
     },
   });
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 
   expect(client.readQuery({ query })).toEqual({
     currentUser: {
@@ -4635,9 +4639,9 @@ it("masks result from cache when using with cache-first fetch policy", async () 
     },
   });
 
-  const Profiler = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4652,9 +4656,9 @@ it("masks result from cache when using with cache-first fetch policy", async () 
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
-  const { snapshot } = await Profiler.takeRender();
+  const { snapshot } = await renderStream.takeRender();
 
   expect(snapshot.result).toEqual({
     data: {
@@ -4731,9 +4735,9 @@ it("masks cache and network result when using cache-and-network fetch policy", a
     },
   });
 
-  const Profiler = createDefaultProfiler<Masked<Query>>();
+  const renderStream = createDefaultProfiler<Masked<Query>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4748,10 +4752,10 @@ it("masks cache and network result when using cache-and-network fetch policy", a
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4767,7 +4771,7 @@ it("masks cache and network result when using cache-and-network fetch policy", a
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4848,9 +4852,9 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     });
   }
 
-  const Profiler = createDefaultProfiler<DeepPartial<Masked<Query>>>();
+  const renderStream = createDefaultProfiler<DeepPartial<Masked<Query>>>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4863,10 +4867,10 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4881,7 +4885,7 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -4948,9 +4952,9 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     link: new MockLink(mocks),
   });
 
-  const Profiler = createDefaultProfiler<Masked<Query> | undefined>();
+  const renderStream = createDefaultProfiler<Masked<Query> | undefined>();
   const { SuspenseFallback, ReadQueryHook } =
-    createDefaultTrackedComponents(Profiler);
+    createDefaultTrackedComponents(renderStream);
 
   function App() {
     useTrackRenders();
@@ -4963,13 +4967,13 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {

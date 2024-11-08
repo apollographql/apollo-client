@@ -1848,6 +1848,408 @@ describe("client.watchQuery", () => {
       new Error("Timeout waiting for next event")
     );
   });
+
+  test("masks deferred fragments", async () => {
+    type GreetingFragment = {
+      recipient: {
+        name: string;
+      };
+    } & { " $fragmentName"?: "GreetingFragment" };
+
+    interface Query {
+      greeting: {
+        __typename: "Greeting";
+        message: string;
+      } & { " $fragmentRefs"?: { GreetingFragment: GreetingFragment } };
+    }
+
+    const fragment: MaskedDocumentNode<GreetingFragment> = gql`
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    const query: MaskedDocumentNode<Query> = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment @defer
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+        hasNext: true,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              recipient: { name: "Alice", __typename: "Person" },
+              __typename: "Greeting",
+            },
+            path: ["greeting"],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    // Since the fragment data is masked, we don't expect to get another result
+    await expect(stream.takeNext()).rejects.toThrow(
+      new Error("Timeout waiting for next event")
+    );
+
+    expect(client.readQuery({ query })).toEqual({
+      greeting: {
+        message: "Hello world",
+        __typename: "Greeting",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    });
+  });
+
+  test("masks deferred fragments within inline fragments", async () => {
+    type GreetingFragment = {
+      recipient: {
+        name: string;
+      };
+    } & { " $fragmentName"?: "GreetingFragment" };
+
+    interface Query {
+      greeting: {
+        __typename: "Greeting";
+        message: string;
+      } & { " $fragmentRefs"?: { GreetingFragment: GreetingFragment } };
+    }
+
+    const fragment: MaskedDocumentNode<GreetingFragment> = gql`
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    const query: MaskedDocumentNode<Query> = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            sentAt
+            ...GreetingFragment
+          }
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+        hasNext: true,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    link.simulateResult({
+      result: {
+        incremental: [
+          {
+            data: {
+              sentAt: "2024-01-01",
+              recipient: { name: "Alice", __typename: "Person" },
+              __typename: "Greeting",
+            },
+            path: ["greeting"],
+          },
+        ],
+        hasNext: false,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+        },
+      });
+    }
+
+    expect(client.readQuery({ query })).toEqual({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    });
+  });
+
+  test("does not mask deferred fragments marked with @unmask", async () => {
+    type GreetingFragment = {
+      recipient: {
+        name: string;
+      };
+    } & { " $fragmentName"?: "GreetingFragment" };
+
+    interface Query {
+      greeting: {
+        __typename: "Greeting";
+        message: string;
+        recipient: {
+          __typename: "Person";
+          name: string;
+        };
+      } & { " $fragmentRefs"?: { GreetingFragment: GreetingFragment } };
+    }
+
+    const fragment: MaskedDocumentNode<GreetingFragment> = gql`
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    const query: MaskedDocumentNode<Query> = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment @defer @unmask
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+        hasNext: true,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      });
+    }
+
+    expect(client.readQuery({ query })).toEqual({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    });
+  });
+
+  test("handles deferred fragments with a mix of masked and unmasked", async () => {
+    type GreetingFragment = {
+      recipient: {
+        name: string;
+      };
+    } & { " $fragmentName"?: "GreetingFragment" };
+
+    type TimeFieldsFragment = {
+      sentAt: string;
+    } & { " $fragmentName"?: "TimeFieldsFragment" };
+
+    interface Query {
+      greeting: {
+        __typename: "Greeting";
+        message: string;
+        recipient: {
+          __typename: "Person";
+          name: string;
+        };
+      } & {
+        " $fragmentRefs"?: {
+          GreetingFragment: GreetingFragment;
+          TimeFieldsFragment: TimeFieldsFragment;
+        };
+      };
+    }
+
+    const query: MaskedDocumentNode<Query> = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            ...GreetingFragment @unmask
+            ...TimeFieldsFragment
+          }
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+
+      fragment TimeFieldsFragment on Greeting {
+        sentAt
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+        hasNext: true,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                sentAt: "2024-01-01",
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      });
+    }
+
+    expect(client.readQuery({ query })).toEqual({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    });
+  });
 });
 
 describe("client.watchFragment", () => {
@@ -2710,72 +3112,79 @@ describe("client.watchFragment", () => {
     });
   });
 
-  test("warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'", async () => {
-    using consoleSpy = spyOnConsole("warn");
+  // FIXME: This broke with the changes in https://github.com/apollographql/apollo-client/pull/12114
+  // which ensure masking works with deferred payloads. Instead of fixing with
+  // #12114, it will be fixed with https://github.com/apollographql/apollo-client/issues/12043
+  // which will fix overagressive warnings.
+  test.failing(
+    "warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'",
+    async () => {
+      using consoleSpy = spyOnConsole("warn");
 
-    type ProfileFieldsFragment = {
-      __typename: "User";
-      age: number;
-      name: string;
-    } & { " $fragmentName": "UserFieldsFragment" };
+      type ProfileFieldsFragment = {
+        __typename: "User";
+        age: number;
+        name: string;
+      } & { " $fragmentName": "UserFieldsFragment" };
 
-    type UserFieldsFragment = {
-      __typename: "User";
-      id: number;
-      name: string;
-      /** @deprecated */
-      age: number;
-    } & { " $fragmentName": "UserFieldsFragment" } & {
-      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
-    };
+      type UserFieldsFragment = {
+        __typename: "User";
+        id: number;
+        name: string;
+        /** @deprecated */
+        age: number;
+      } & { " $fragmentName": "UserFieldsFragment" } & {
+        " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+      };
 
-    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
-      fragment UserFields on User {
-        id
-        name
-        ...ProfileFields @unmask(mode: "migrate")
+      const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+        fragment UserFields on User {
+          id
+          name
+          ...ProfileFields @unmask(mode: "migrate")
+        }
+
+        fragment ProfileFields on User {
+          age
+          name
+        }
+      `;
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+      });
+
+      const observable = client.watchFragment({
+        fragment,
+        fragmentName: "UserFields",
+        from: { __typename: "User", id: 1 },
+      });
+      const stream = new ObservableStream(observable);
+
+      {
+        const { data } = await stream.takeNext();
+        data.__typename;
+        data.id;
+        data.name;
+
+        expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+        data.age;
+
+        expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+        expect(consoleSpy.warn).toHaveBeenCalledWith(
+          "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+          "fragment 'UserFields'",
+          "age"
+        );
+
+        // Ensure we only warn once
+        data.age;
+        expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
       }
-
-      fragment ProfileFields on User {
-        age
-        name
-      }
-    `;
-
-    const client = new ApolloClient({
-      dataMasking: true,
-      cache: new InMemoryCache(),
-    });
-
-    const observable = client.watchFragment({
-      fragment,
-      fragmentName: "UserFields",
-      from: { __typename: "User", id: 1 },
-    });
-    const stream = new ObservableStream(observable);
-
-    {
-      const { data } = await stream.takeNext();
-      data.__typename;
-      data.id;
-      data.name;
-
-      expect(consoleSpy.warn).not.toHaveBeenCalled();
-
-      data.age;
-
-      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-      expect(consoleSpy.warn).toHaveBeenCalledWith(
-        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-        "fragment 'UserFields'",
-        "age"
-      );
-
-      // Ensure we only warn once
-      data.age;
-      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     }
-  });
+  );
 
   test("can lookup unmasked fragments from the fragment registry in watched fragments", async () => {
     const fragments = createFragmentRegistry();

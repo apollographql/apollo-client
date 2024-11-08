@@ -169,7 +169,11 @@ function maskSelectionSet(
 
           memo[keyName] = data[keyName];
 
-          if (childSelectionSet && data[keyName] !== null) {
+          if (memo[keyName] === void 0) {
+            delete memo[keyName];
+          }
+
+          if (keyName in memo && childSelectionSet && data[keyName] !== null) {
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
@@ -261,7 +265,7 @@ function maskSelectionSet(
     [Object.create(null), false]
   );
 
-  if ("__typename" in data && !("__typename" in result[0])) {
+  if (data && "__typename" in data && !("__typename" in result[0])) {
     result[0].__typename = data.__typename;
   }
 

@@ -2268,6 +2268,12 @@ describe("maskFragment", () => {
       "UnmaskedFragment"
     );
 
+    data.__typename;
+    data.id;
+    data.name;
+
+    expect(console.warn).not.toHaveBeenCalled();
+
     data.age;
 
     expect(console.warn).toHaveBeenCalledTimes(1);

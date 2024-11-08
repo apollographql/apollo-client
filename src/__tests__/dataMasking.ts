@@ -2034,6 +2034,222 @@ describe("client.watchQuery", () => {
       },
     });
   });
+
+  it("does not mask deferred fragments marked with @unmask", async () => {
+    type GreetingFragment = {
+      recipient: {
+        name: string;
+      };
+    } & { " $fragmentName"?: "GreetingFragment" };
+
+    interface Query {
+      greeting: {
+        __typename: "Greeting";
+        message: string;
+        recipient: {
+          __typename: "Person";
+          name: string;
+        };
+      } & { " $fragmentRefs"?: { GreetingFragment: GreetingFragment } };
+    }
+
+    const fragment: MaskedDocumentNode<GreetingFragment> = gql`
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    const query: MaskedDocumentNode<Query> = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment @defer @unmask
+        }
+      }
+
+      ${fragment}
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+        hasNext: true,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      });
+    }
+
+    expect(client.readQuery({ query })).toEqual({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    });
+  });
+
+  it("handles deferred fragments with a mix of masked and unmasked", async () => {
+    type GreetingFragment = {
+      recipient: {
+        name: string;
+      };
+    } & { " $fragmentName"?: "GreetingFragment" };
+
+    type TimeFieldsFragment = {
+      sentAt: string;
+    } & { " $fragmentName"?: "TimeFieldsFragment" };
+
+    interface Query {
+      greeting: {
+        __typename: "Greeting";
+        message: string;
+        recipient: {
+          __typename: "Person";
+          name: string;
+        };
+      } & {
+        " $fragmentRefs"?: {
+          GreetingFragment: GreetingFragment;
+          TimeFieldsFragment: TimeFieldsFragment;
+        };
+      };
+    }
+
+    const query: MaskedDocumentNode<Query> = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            ...GreetingFragment @unmask
+            ...TimeFieldsFragment
+          }
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+
+      fragment TimeFieldsFragment on Greeting {
+        sentAt
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.watchQuery({ query, variables: { id: 1 } });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: { greeting: { message: "Hello world", __typename: "Greeting" } },
+        hasNext: true,
+      },
+    });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    link.simulateResult(
+      {
+        result: {
+          incremental: [
+            {
+              data: {
+                sentAt: "2024-01-01",
+                recipient: { name: "Alice", __typename: "Person" },
+                __typename: "Greeting",
+              },
+              path: ["greeting"],
+            },
+          ],
+          hasNext: false,
+        },
+      },
+      true
+    );
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "Person", name: "Alice" },
+        },
+      });
+    }
+
+    expect(client.readQuery({ query })).toEqual({
+      greeting: {
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+        recipient: { __typename: "Person", name: "Alice" },
+      },
+    });
+  });
 });
 
 describe("client.watchFragment", () => {

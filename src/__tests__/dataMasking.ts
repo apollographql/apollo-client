@@ -1143,6 +1143,73 @@ describe("client.watchQuery", () => {
     }
   });
 
+  // https://github.com/apollographql/apollo-client/issues/12043
+  test("does not warn when passing @unmask(mode: 'migrate') object to cache.identify", async () => {
+    using consoleSpy = spyOnConsole("warn");
+
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        /** @deprecated */
+        age: number;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask(mode: "migrate")
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        name
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 34,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    const { data } = await stream.takeNext();
+
+    const id = client.cache.identify(data.currentUser);
+
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
+    expect(id).toEqual("User:1");
+  });
+
   test("reads fragment by passing parent object to `from`", async () => {
     type UserFieldsFragment = {
       age: number;

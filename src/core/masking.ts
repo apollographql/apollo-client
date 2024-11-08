@@ -378,6 +378,11 @@ function addAccessorWarning(
   path: string,
   context: MaskingContext
 ) {
+  // In order to preserve the original shape of the data as much as possible, we
+  // want to skip adding a property with warning to the final result when the
+  // value is missing, otherwise our final result will contain additional
+  // properties that our original result did not have. This could happen with a
+  // deferred payload for example.
   if (value === void 0) {
     return;
   }

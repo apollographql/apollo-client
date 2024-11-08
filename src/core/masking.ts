@@ -370,6 +370,10 @@ function addAccessorWarning(
   path: string,
   context: MaskingContext
 ) {
+  if (value === void 0) {
+    return;
+  }
+
   let getValue = () => {
     if (context.disableWarnings) {
       return value;

@@ -9,7 +9,7 @@ import type { Prettify } from "../utilities/index.js";
 export interface DataMasking {}
 
 /**
- * Marks a type as masked. This is used by MaybeMasked<T> when determining
+ * Marks a type as masked. This is used by `MaybeMasked` when determining
  * whether to use the masked or unmasked type.
  */
 export type Masked<TData> = TData & {
@@ -18,7 +18,7 @@ export type Masked<TData> = TData & {
 
 /**
  * Marks a type as masked. This is a shortcut for
- * TypedDocumentNode<Masked<TData>, TVariables>
+ * `TypedDocumentNode<Masked<TData>, TVariables>`
  */
 export type MaskedDocumentNode<
   TData = { [key: string]: any },

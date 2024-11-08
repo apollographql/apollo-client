@@ -3149,6 +3149,18 @@ describe("client.watchFragment", () => {
       cache: new InMemoryCache(),
     });
 
+    client.writeFragment({
+      id: client.cache.identify({ __typename: "User", id: 1 }),
+      fragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        name: "Test User",
+      },
+    });
+
     const observable = client.watchFragment({
       fragment,
       fragmentName: "UserFields",

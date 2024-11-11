@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.11.10
+
+### Patch Changes
+
+- [#12093](https://github.com/apollographql/apollo-client/pull/12093) [`1765668`](https://github.com/apollographql/apollo-client/commit/1765668b7d495ef8a581f697bf9e4b7460455f13) Thanks [@mgmolisani](https://github.com/mgmolisani)! - Fixed a bug when evaluating the devtools flag with the new syntax `devtools.enabled` that could result to `true` when explicitly set to `false`.
+
 ## 3.11.9
 
 ### Patch Changes

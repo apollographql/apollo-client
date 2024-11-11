@@ -2244,7 +2244,7 @@ describe("maskFragment", () => {
 
   test("warns when accessing unmasked fields when using `@unmask` directive with mode 'migrate'", () => {
     using _ = spyOnConsole("warn");
-    const query = gql`
+    const fragment = gql`
       fragment UnmaskedFragment on User {
         id
         name
@@ -2258,17 +2258,21 @@ describe("maskFragment", () => {
 
     const data = maskFragment(
       deepFreeze({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
       }),
-      query,
+      fragment,
       new InMemoryCache(),
       "UnmaskedFragment"
     );
+
+    data.__typename;
+    data.id;
+    data.name;
+
+    expect(console.warn).not.toHaveBeenCalled();
 
     data.age;
 

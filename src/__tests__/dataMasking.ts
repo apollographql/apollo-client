@@ -1143,6 +1143,73 @@ describe("client.watchQuery", () => {
     }
   });
 
+  // https://github.com/apollographql/apollo-client/issues/12043
+  test("does not warn when passing @unmask(mode: 'migrate') object to cache.identify", async () => {
+    using consoleSpy = spyOnConsole("warn");
+
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        /** @deprecated */
+        age: number;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask(mode: "migrate")
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        name
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 34,
+            },
+          },
+        },
+        delay: 20,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    const { data } = await stream.takeNext();
+
+    const id = client.cache.identify(data.currentUser);
+
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
+    expect(id).toEqual("User:1");
+  });
+
   test("reads fragment by passing parent object to `from`", async () => {
     type UserFieldsFragment = {
       age: number;
@@ -3112,79 +3179,84 @@ describe("client.watchFragment", () => {
     });
   });
 
-  // FIXME: This broke with the changes in https://github.com/apollographql/apollo-client/pull/12114
-  // which ensure masking works with deferred payloads. Instead of fixing with
-  // #12114, it will be fixed with https://github.com/apollographql/apollo-client/issues/12043
-  // which will fix overagressive warnings.
-  test.failing(
-    "warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'",
-    async () => {
-      using consoleSpy = spyOnConsole("warn");
+  test("warns when accessing an unmasked field on a watched fragment while using @unmask with mode: 'migrate'", async () => {
+    using consoleSpy = spyOnConsole("warn");
 
-      type ProfileFieldsFragment = {
-        __typename: "User";
-        age: number;
-        name: string;
-      } & { " $fragmentName": "UserFieldsFragment" };
+    type ProfileFieldsFragment = {
+      __typename: "User";
+      age: number;
+      name: string;
+    } & { " $fragmentName": "UserFieldsFragment" };
 
-      type UserFieldsFragment = {
-        __typename: "User";
-        id: number;
-        name: string;
-        /** @deprecated */
-        age: number;
-      } & { " $fragmentName": "UserFieldsFragment" } & {
-        " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
-      };
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      name: string;
+      /** @deprecated */
+      age: number;
+    } & { " $fragmentName": "UserFieldsFragment" } & {
+      " $fragmentRefs": { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
 
-      const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
-        fragment UserFields on User {
-          id
-          name
-          ...ProfileFields @unmask(mode: "migrate")
-        }
-
-        fragment ProfileFields on User {
-          age
-          name
-        }
-      `;
-
-      const client = new ApolloClient({
-        dataMasking: true,
-        cache: new InMemoryCache(),
-      });
-
-      const observable = client.watchFragment({
-        fragment,
-        fragmentName: "UserFields",
-        from: { __typename: "User", id: 1 },
-      });
-      const stream = new ObservableStream(observable);
-
-      {
-        const { data } = await stream.takeNext();
-        data.__typename;
-        data.id;
-        data.name;
-
-        expect(consoleSpy.warn).not.toHaveBeenCalled();
-
-        data.age;
-
-        expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-        expect(consoleSpy.warn).toHaveBeenCalledWith(
-          "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-          "fragment 'UserFields'",
-          "age"
-        );
-
-        // Ensure we only warn once
-        data.age;
-        expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+    const fragment: MaskedDocumentNode<UserFieldsFragment, never> = gql`
+      fragment UserFields on User {
+        id
+        name
+        ...ProfileFields @unmask(mode: "migrate")
       }
+
+      fragment ProfileFields on User {
+        age
+        name
+      }
+    `;
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+    });
+
+    client.writeFragment({
+      id: client.cache.identify({ __typename: "User", id: 1 }),
+      fragment,
+      fragmentName: "UserFields",
+      data: {
+        __typename: "User",
+        id: 1,
+        age: 30,
+        name: "Test User",
+      },
+    });
+
+    const observable = client.watchFragment({
+      fragment,
+      fragmentName: "UserFields",
+      from: { __typename: "User", id: 1 },
+    });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+      data.__typename;
+      data.id;
+      data.name;
+
+      expect(consoleSpy.warn).not.toHaveBeenCalled();
+
+      data.age;
+
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.warn).toHaveBeenCalledWith(
+        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+        "fragment 'UserFields'",
+        "age"
+      );
+
+      // Ensure we only warn once
+      data.age;
+      expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     }
-  );
+  });
 
   test("can lookup unmasked fragments from the fragment registry in watched fragments", async () => {
     const fragments = createFragmentRegistry();

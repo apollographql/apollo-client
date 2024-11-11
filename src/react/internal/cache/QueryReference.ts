@@ -486,7 +486,7 @@ export class InternalQueryReference<TData = unknown> {
           }
         });
       })
-      .catch(() => {});
+      .catch((error) => this.reject?.(error));
 
     return returnedPromise;
   }

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.11.9
+
+### Patch Changes
+
+- [#12110](https://github.com/apollographql/apollo-client/pull/12110) [`a3f95c6`](https://github.com/apollographql/apollo-client/commit/a3f95c6f7623060bbf68b418b0ab268fabc0c9b6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where errors returned from a `fetchMore` call from a Suspense hook would cause a Suspense boundary to be shown indefinitely.
+
 ## 3.11.8
 
 ### Patch Changes

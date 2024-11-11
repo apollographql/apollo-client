@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-10-07**
+**Last updated: 2024-11-04**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,8 +17,8 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - November 11, 2024
-_Release candidate - November 4, 2024_
+#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - November 18, 2024
+_Release candidate - November 11, 2024_
 
 - Data masking
 
@@ -44,12 +44,13 @@ _Release candidate - November 4, 2024_
 
 ### GraphQL Tag
 
-_no work in progress_
+- Started 3.0 milestone planning
 
 ### Apollo Client DevTools
 
 - Ongoing work with fixing error messages shown in devtools
 - Add a memory panel to monitor Apollo Client devtools internal caches
+- Connectors debugger
 
 ### Apollo Client NextJS
 

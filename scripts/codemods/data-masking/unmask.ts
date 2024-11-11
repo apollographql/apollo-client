@@ -6,8 +6,9 @@ const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
 
-  source.find(j.TaggedTemplateExpression).replaceWith((path) => {
-    if (path.value.tag.type === "Identifier" && path.value.tag.name === "gql") {
+  source
+    .find(j.TaggedTemplateExpression, { tag: { name: "gql" } })
+    .replaceWith((path) => {
       path.value.quasi.quasis = path.value.quasi.quasis.map((quasi) => {
         const queryString = quasi.value.cooked || quasi.value.raw;
         const document = parseGraphQL(queryString);
@@ -36,10 +37,9 @@ const transform: Transform = function transform(file, api) {
 
         return quasi;
       });
-    }
 
-    return path.value;
-  });
+      return path.value;
+    });
 
   return source.toSource();
 

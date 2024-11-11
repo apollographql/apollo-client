@@ -392,17 +392,18 @@ export class Policies {
 
     const policy = typename && this.getTypePolicy(typename);
     let keyFn = (policy && policy.keyFn) || this.config.dataIdFromObject;
-    while (keyFn) {
-      const specifierOrId = disableWarningsSlot.withValue(true, () => {
-        return keyFn!({ ...object, ...storeObject }, context);
-      });
-      if (isArray(specifierOrId)) {
-        keyFn = keyFieldsFnFromSpecifier(specifierOrId);
-      } else {
-        id = specifierOrId;
-        break;
+
+    disableWarningsSlot.withValue(true, () => {
+      while (keyFn) {
+        const specifierOrId = keyFn({ ...object, ...storeObject }, context);
+        if (isArray(specifierOrId)) {
+          keyFn = keyFieldsFnFromSpecifier(specifierOrId);
+        } else {
+          id = specifierOrId;
+          break;
+        }
       }
-    }
+    });
 
     id = id ? String(id) : void 0;
     return context.keyObject ? [id, context.keyObject] : [id];

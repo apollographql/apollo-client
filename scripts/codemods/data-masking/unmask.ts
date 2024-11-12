@@ -31,7 +31,7 @@ const transform: Transform = function transform(file, api) {
             queryString.match(TRAILING_WHITESPACE)?.at(0) ?? "";
           const spaces = whitespaceBefore.match(INDENTATION)?.at(0) ?? "";
 
-          const str = print(transform(document));
+          const str = print(addUnmaskDirective(document));
           const final =
             whitespaceBefore +
             str
@@ -60,7 +60,7 @@ const transform: Transform = function transform(file, api) {
     }
   }
 
-  function transform(document: DocumentNode) {
+  function addUnmaskDirective(document: DocumentNode) {
     return visit(document, {
       FragmentSpread: (node) => {
         if (

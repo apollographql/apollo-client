@@ -10,37 +10,42 @@ const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
 
-  source
-    .find(j.TaggedTemplateExpression, { tag: { name: "gql" } })
-    .forEach((taggedTemplateExpressionPath) => {
-      j(taggedTemplateExpressionPath)
-        .find(j.TemplateElement)
-        .replaceWith((templateElementPath) => {
-          const templateElement = templateElementPath.value;
-          const queryString =
-            templateElement.value.cooked || templateElement.value.raw;
-          const document = parseDocument(queryString);
-
-          if (document === null) {
-            return templateElement;
-          }
-
-          const query = applyWhitespaceFrom(
-            queryString,
-            print(addUnmaskDirective(document))
-          );
-
-          return j.templateElement(
-            {
-              raw: String.raw({ raw: [query] }),
-              cooked: query,
-            },
-            templateElement.tail
-          );
-        });
-    });
+  addUnmaskToTaggedTemplate("gql");
+  addUnmaskToTaggedTemplate("graphql");
 
   return source.toSource();
+
+  function addUnmaskToTaggedTemplate(name: string) {
+    source
+      .find(j.TaggedTemplateExpression, { tag: { name } })
+      .forEach((taggedTemplateExpressionPath) => {
+        j(taggedTemplateExpressionPath)
+          .find(j.TemplateElement)
+          .replaceWith((templateElementPath) => {
+            const templateElement = templateElementPath.value;
+            const queryString =
+              templateElement.value.cooked || templateElement.value.raw;
+            const document = parseDocument(queryString);
+
+            if (document === null) {
+              return templateElement;
+            }
+
+            const query = applyWhitespaceFrom(
+              queryString,
+              print(addUnmaskDirective(document))
+            );
+
+            return j.templateElement(
+              {
+                raw: String.raw({ raw: [query] }),
+                cooked: query,
+              },
+              templateElement.tail
+            );
+          });
+      });
+  }
 };
 
 function parseDocument(source: string) {

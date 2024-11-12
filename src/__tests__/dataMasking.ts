@@ -26,6 +26,9 @@ import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
 import { isSubscriptionOperation } from "../utilities";
 import { MaskedDocumentNode } from "../masking";
 
+const NO_CACHE_WARNING =
+  'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.';
+
 describe("client.watchQuery", () => {
   test("masks queries when dataMasking is `true`", async () => {
     type UserFieldsFragment = {
@@ -2384,9 +2387,7 @@ describe("client.watchQuery", () => {
     }
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.'
-    );
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
   });
 
   test("does not warn on no-cache queries when data masking is disabled", async () => {
@@ -2600,9 +2601,7 @@ describe("client.watchQuery", () => {
     }
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.'
-    );
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
   });
 });
 

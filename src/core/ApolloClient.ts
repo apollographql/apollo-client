@@ -264,7 +264,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.typeDefs = typeDefs;
     this.devtoolsConfig = {
       ...devtools,
-      enabled: devtools?.enabled || connectToDevTools,
+      enabled: devtools?.enabled ?? connectToDevTools,
     };
 
     if (this.devtoolsConfig.enabled === undefined) {

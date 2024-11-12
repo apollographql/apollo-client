@@ -366,6 +366,7 @@ export class QueryManager<TStore> {
               data: self.maskOperation({
                 document: mutation,
                 data: storeResult.data,
+                fetchPolicy,
               }) as any,
             });
           }

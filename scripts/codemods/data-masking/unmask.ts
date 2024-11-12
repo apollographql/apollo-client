@@ -2,9 +2,8 @@ import type { Collection, Transform, TemplateLiteral } from "jscodeshift";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { Kind, parse, visit, print } from "graphql";
 
-const LEADING_WHITESPACE = /^[\\n\s]*/;
-const TRAILING_WHITESPACE = /[\\n\s]*$/;
-const INDENTATION = /[\\t ]+/;
+const LEADING_WHITESPACE = /^[\s\t]*(?=[\S\n])/;
+const TRAILING_WHITESPACE = /(?<=[\S\n])[\s\t]*$/;
 
 const DEFAULT_TAGS = ["gql", "graphql"];
 
@@ -61,7 +60,7 @@ const transform: Transform = function transform(file, api, options) {
         return templateElement;
       }
 
-      const query = applyWhitespaceFrom(
+      const query = applyWhitepaceFromOriginalQuery(
         queryString,
         print(addUnmaskDirective(document, mode))
       );
@@ -85,19 +84,31 @@ function parseDocument(source: string) {
   }
 }
 
-function applyWhitespaceFrom(source: string, target: string) {
-  const leadingWhitespace = source.match(LEADING_WHITESPACE)?.at(0) ?? "";
-  const trailingWhitespace = source.match(TRAILING_WHITESPACE)?.at(0) ?? "";
-  const indentation = leadingWhitespace.match(INDENTATION)?.at(0) ?? "";
+function applyWhitepaceFromOriginalQuery(source: string, printed: string) {
+  let firstNonWhitespaceLineNumber: number | null = null;
+  const printedLines = printed.split("\n");
 
-  return (
-    leadingWhitespace +
-    target
-      .split("\n")
-      .map((line, idx) => (idx === 0 ? line : indentation + line))
-      .join("\n") +
-    trailingWhitespace
-  );
+  return source
+    .split("\n")
+    .map((line, idx) => {
+      if (line.match(/^\s*$/)) {
+        return line;
+      }
+
+      if (firstNonWhitespaceLineNumber === null) {
+        firstNonWhitespaceLineNumber = idx;
+      }
+
+      const leading = getMatch(line, LEADING_WHITESPACE);
+      const trailing = getMatch(line, TRAILING_WHITESPACE);
+
+      const printedLine = printedLines[idx - firstNonWhitespaceLineNumber];
+      const printedLeading = getMatch(printedLine, LEADING_WHITESPACE);
+      const totalWhitespace = leading.length - printedLeading.length;
+
+      return leading.slice(0, totalWhitespace) + printedLine + trailing;
+    })
+    .join("\n");
 }
 
 function addUnmaskDirective(document: DocumentNode, mode: string | undefined) {
@@ -131,6 +142,10 @@ function addUnmaskDirective(document: DocumentNode, mode: string | undefined) {
       };
     },
   });
+}
+
+function getMatch(str: string, match: RegExp) {
+  return str.match(match)?.at(0) ?? "";
 }
 
 export default transform;

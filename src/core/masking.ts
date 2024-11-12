@@ -9,12 +9,7 @@ import {
   maybeDeepFreeze,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
-import type {
-  ApolloCache,
-  DocumentNode,
-  TypedDocumentNode,
-  WatchQueryFetchPolicy,
-} from "./index.js";
+import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
 import { invariant } from "../utilities/globals/index.js";
 import { equal } from "@wry/equality";
 import { Slot } from "optimism";

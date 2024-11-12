@@ -8,37 +8,40 @@ const transform: Transform = function transform(file, api) {
 
   source
     .find(j.TaggedTemplateExpression, { tag: { name: "gql" } })
-    .replaceWith((path) => {
-      path.value.quasi.quasis = path.value.quasi.quasis.map((quasi) => {
-        const queryString = quasi.value.cooked || quasi.value.raw;
-        const document = parseGraphQL(queryString);
+    .forEach((taggedTemplateExpressionPath) => {
+      j(taggedTemplateExpressionPath)
+        .find(j.TemplateElement)
+        .replaceWith((templateElementPath) => {
+          const templateElement = templateElementPath.value;
+          const queryString =
+            templateElement.value.cooked || templateElement.value.raw;
+          const document = parseGraphQL(queryString);
 
-        if (document === null) {
-          return quasi;
-        }
+          if (document === null) {
+            return templateElementPath.value;
+          }
 
-        const whitespaceBefore = queryString.match(/^[\\n\s]*/)?.[0] ?? "";
-        const whitespaceAfter = queryString.match(/[\\n\s]*$/)?.[0] ?? "";
-        const spaces = whitespaceBefore.match(/[\\t ]+/)?.[0] ?? "";
+          const whitespaceBefore = queryString.match(/^[\\n\s]*/)?.[0] ?? "";
+          const whitespaceAfter = queryString.match(/[\\n\s]*$/)?.[0] ?? "";
+          const spaces = whitespaceBefore.match(/[\\t ]+/)?.[0] ?? "";
 
-        const str = print(transform(document));
-        const final =
-          whitespaceBefore +
-          str
-            .split("\n")
-            .map((line, idx) => (idx === 0 ? line : spaces + line))
-            .join("\n") +
-          whitespaceAfter;
+          const str = print(transform(document));
+          const final =
+            whitespaceBefore +
+            str
+              .split("\n")
+              .map((line, idx) => (idx === 0 ? line : spaces + line))
+              .join("\n") +
+            whitespaceAfter;
 
-        quasi.value = {
-          cooked: final,
-          raw: final,
-        };
-
-        return quasi;
-      });
-
-      return path.value;
+          return j.templateElement(
+            {
+              raw: String.raw({ raw: [final] }),
+              cooked: final,
+            },
+            templateElement.tail
+          );
+        });
     });
 
   return source.toSource();

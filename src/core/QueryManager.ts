@@ -823,7 +823,12 @@ export class QueryManager<TStore> {
         (result) =>
           result && {
             ...result,
-            data: this.maskOperation({ document: query, data: result.data }),
+            data: this.maskOperation({
+              document: query,
+              data: result.data,
+              fetchPolicy: options.fetchPolicy,
+              queryId,
+            }),
           }
       )
       .finally(() => this.stopQuery(queryId));

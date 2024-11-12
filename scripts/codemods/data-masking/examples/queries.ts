@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
-import type { TypedDocoumentNode } from "@apollo/client";
+import type { TypedDocumentNode } from "@apollo/client";
 
-export const ProfileFieldsFragment: TypedDocoumentNode<{
+export const ProfileFieldsFragment: TypedDocumentNode<{
   profile: { id: string; avatarUrl: string };
 }> = gql`
   fragment ProfileFields on User {

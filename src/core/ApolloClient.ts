@@ -517,6 +517,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         data: this.queryManager.maskOperation({
           document: options.query,
           data: result.data,
+          fetchPolicy: options.fetchPolicy,
         }),
       }));
   }

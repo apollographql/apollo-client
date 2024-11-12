@@ -6,15 +6,19 @@ const LEADING_WHITESPACE = /^[\\n\s]*/;
 const TRAILING_WHITESPACE = /[\\n\s]*$/;
 const INDENTATION = /[\\t ]+/;
 
-const transform: Transform = function transform(file, api) {
+const DEFAULT_TAGS = ["gql", "graphql"];
+
+const transform: Transform = function transform(file, api, options) {
   const j = api.jscodeshift;
   const source = j(file.source);
 
-  addUnmaskToTaggedTemplate("gql");
-  addUnmaskToTaggedTemplate("graphql");
+  const { tag = DEFAULT_TAGS } = options;
+  const tagNames = Array.isArray(tag) ? tag : [tag];
 
-  addUnmaskToFunctionCall("gql");
-  addUnmaskToFunctionCall("graphql");
+  tagNames.forEach((tagName) => {
+    addUnmaskToTaggedTemplate(tagName);
+    addUnmaskToFunctionCall(tagName);
+  });
 
   return source.toSource();
 

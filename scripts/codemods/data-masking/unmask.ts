@@ -12,7 +12,14 @@ const transform: Transform = function transform(file, api, options) {
   const j = api.jscodeshift;
   const source = j(file.source);
 
-  const { tag = DEFAULT_TAGS } = options;
+  const { tag = DEFAULT_TAGS, mode } = options;
+
+  if (mode && mode !== "migrate") {
+    console.warn(
+      `The option --mode '${mode}' is not supported. Please use --mode 'migrate' to enable migrate mode for the @ummask directive.`
+    );
+  }
+
   const tagNames = Array.isArray(tag) ? tag : [tag];
 
   tagNames.forEach((tagName) => {

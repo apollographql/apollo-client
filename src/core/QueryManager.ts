@@ -13,6 +13,7 @@ import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
+  isFullyUnmaskedQuery,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -137,8 +138,6 @@ export interface QueryManagerOptions<TStore> {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
 }
-
-const noCacheWarningsByQueryId = new Set<string>();
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -1559,6 +1558,8 @@ export class QueryManager<TStore> {
     return results;
   }
 
+  private noCacheWarningsByQueryId = new Set<string>();
+
   public maskOperation<TData = unknown>(
     options: MaskOperationOptions<TData>
   ): MaybeMasked<TData> {
@@ -1570,10 +1571,11 @@ export class QueryManager<TStore> {
       if (
         this.dataMasking &&
         fetchPolicy === "no-cache" &&
-        (!queryId || !noCacheWarningsByQueryId.has(queryId))
+        !isFullyUnmaskedQuery(document) &&
+        (!queryId || !this.noCacheWarningsByQueryId.has(queryId))
       ) {
         if (queryId) {
-          noCacheWarningsByQueryId.add(queryId);
+          this.noCacheWarningsByQueryId.add(queryId);
         }
 
         invariant.warn(

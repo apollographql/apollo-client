@@ -5,7 +5,7 @@
 Provide a codemod that applies `@unmask` to all named fragments for all operations and fragments. To use the codemod, run the following command:
 
 ```
-npx jscodeshift -t node_modules/@apollo/client/scripts/codemods/data-masking/unmask.ts --extensions tsx path/to/app/
+npx jscodeshift -t node_modules/@apollo/client/scripts/codemods/data-masking/unmask.ts --extensions tsx --parser tsx path/to/app/
 ```
 
 To customize the tag used to search for GraphQL operations, use the `--tag` option. By default the codemod looks for `gql` and `graphql` tags.

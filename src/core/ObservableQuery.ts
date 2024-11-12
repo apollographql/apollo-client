@@ -1140,6 +1140,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           data: this.queryManager.maskOperation({
             document: this.query,
             data: result.data,
+            fetchPolicy: this.options.fetchPolicy,
+            queryId: this.queryId,
           }),
         }
       : result;

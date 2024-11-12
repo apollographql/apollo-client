@@ -51,6 +51,7 @@ import type {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
+  WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
@@ -118,6 +119,8 @@ interface MaskFragmentOptions<TData> {
 interface MaskOperationOptions<TData> {
   document: DocumentNode;
   data: TData;
+  queryId?: string;
+  fetchPolicy?: WatchQueryFetchPolicy;
 }
 
 export interface QueryManagerOptions<TStore> {
@@ -134,6 +137,8 @@ export interface QueryManagerOptions<TStore> {
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
 }
+
+const noCacheWarningsByQueryId = new Set<string>();
 
 export class QueryManager<TStore> {
   public cache: ApolloCache<TStore>;
@@ -1558,6 +1563,24 @@ export class QueryManager<TStore> {
     options: MaskOperationOptions<TData>
   ): MaybeMasked<TData> {
     const { document, data } = options;
+
+    if (__DEV__) {
+      const { fetchPolicy, queryId } = options;
+
+      if (
+        this.dataMasking &&
+        fetchPolicy === "no-cache" &&
+        (!queryId || !noCacheWarningsByQueryId.has(queryId))
+      ) {
+        if (queryId) {
+          noCacheWarningsByQueryId.add(queryId);
+        }
+
+        invariant.warn(
+          'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.'
+        );
+      }
+    }
 
     return (
       this.dataMasking ?

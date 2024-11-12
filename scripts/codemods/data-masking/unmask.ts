@@ -2,6 +2,10 @@ import type { Transform } from "jscodeshift";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { Kind, parse, visit, print } from "graphql";
 
+const LEADING_WHITESPACE = /^[\\n\s]*/;
+const TRAILING_WHITESPACE = /[\\n\s]*$/;
+const INDENTATION = /[\\t ]+/;
+
 const transform: Transform = function transform(file, api) {
   const j = api.jscodeshift;
   const source = j(file.source);
@@ -15,15 +19,17 @@ const transform: Transform = function transform(file, api) {
           const templateElement = templateElementPath.value;
           const queryString =
             templateElement.value.cooked || templateElement.value.raw;
-          const document = parseGraphQL(queryString);
+          const document = parseDocument(queryString);
 
           if (document === null) {
-            return templateElementPath.value;
+            return templateElement;
           }
 
-          const whitespaceBefore = queryString.match(/^[\\n\s]*/)?.[0] ?? "";
-          const whitespaceAfter = queryString.match(/[\\n\s]*$/)?.[0] ?? "";
-          const spaces = whitespaceBefore.match(/[\\t ]+/)?.[0] ?? "";
+          const whitespaceBefore =
+            queryString.match(LEADING_WHITESPACE)?.at(0) ?? "";
+          const whitespaceAfter =
+            queryString.match(TRAILING_WHITESPACE)?.at(0) ?? "";
+          const spaces = whitespaceBefore.match(INDENTATION)?.at(0) ?? "";
 
           const str = print(transform(document));
           const final =
@@ -46,7 +52,7 @@ const transform: Transform = function transform(file, api) {
 
   return source.toSource();
 
-  function parseGraphQL(source: string) {
+  function parseDocument(source: string) {
     try {
       return parse(source);
     } catch (e) {

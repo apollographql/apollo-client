@@ -2317,6 +2317,293 @@ describe("client.watchQuery", () => {
       },
     });
   });
+
+  test("warns and returns masked result when used with no-cache fetch policy", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+    }
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.'
+    );
+  });
+
+  test("does not warn on no-cache queries when data masking is disabled", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("does not warn on no-cache queries when all fragments use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("warns on no-cache queries when at least one fragment does not use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const query: MaskedDocumentNode<Query, never> = gql`
+      query MaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        ...ProfileFields
+      }
+
+      fragment ProfileFields on User {
+        username
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+              username: "testuser",
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const observable = client.watchQuery({ query, fetchPolicy: "no-cache" });
+    const stream = new ObservableStream(observable);
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+    }
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.'
+    );
+  });
 });
 
 describe("client.watchFragment", () => {

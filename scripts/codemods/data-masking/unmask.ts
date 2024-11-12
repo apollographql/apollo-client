@@ -13,16 +13,19 @@ const transform: Transform = function transform(file, api) {
   addUnmaskToTaggedTemplate("gql");
   addUnmaskToTaggedTemplate("graphql");
 
-  source
-    .find(j.CallExpression, { callee: { name: "graphql" } })
-    .forEach((p) => {
+  addUnmaskToFunctionCall("gql");
+  addUnmaskToFunctionCall("graphql");
+
+  return source.toSource();
+
+  function addUnmaskToFunctionCall(name: string) {
+    source.find(j.CallExpression, { callee: { name } }).forEach((p) => {
       const firstArg = p.value.arguments[0];
       if (firstArg.type === "TemplateLiteral") {
         addUnmaskToTemplateLiteral(j(p));
       }
     });
-
-  return source.toSource();
+  }
 
   function addUnmaskToTaggedTemplate(name: string) {
     source

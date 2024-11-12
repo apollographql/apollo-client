@@ -61,7 +61,7 @@ const transform: Transform = function transform(file, api, options) {
 
       const query = applyWhitespaceFrom(
         queryString,
-        print(addUnmaskDirective(document))
+        print(addUnmaskDirective(document, mode))
       );
 
       return j.templateElement(
@@ -98,7 +98,7 @@ function applyWhitespaceFrom(source: string, target: string) {
   );
 }
 
-function addUnmaskDirective(document: DocumentNode) {
+function addUnmaskDirective(document: DocumentNode, mode: string | undefined) {
   return visit(document, {
     FragmentSpread: (node) => {
       if (
@@ -114,6 +114,16 @@ function addUnmaskDirective(document: DocumentNode) {
           {
             kind: Kind.DIRECTIVE,
             name: { kind: Kind.NAME, value: "unmask" },
+            arguments:
+              mode === "migrate" ?
+                [
+                  {
+                    kind: Kind.ARGUMENT,
+                    name: { kind: Kind.NAME, value: "mode" },
+                    value: { kind: Kind.STRING, value: "migrate" },
+                  },
+                ]
+              : undefined,
           } satisfies DirectiveNode,
         ],
       };

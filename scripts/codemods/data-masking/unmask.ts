@@ -1,4 +1,4 @@
-import type { Transform } from "jscodeshift";
+import type { Collection, Transform, TemplateLiteral } from "jscodeshift";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { Kind, parse, visit, print } from "graphql";
 
@@ -13,38 +13,51 @@ const transform: Transform = function transform(file, api) {
   addUnmaskToTaggedTemplate("gql");
   addUnmaskToTaggedTemplate("graphql");
 
+  source
+    .find(j.CallExpression, { callee: { name: "graphql" } })
+    .forEach((p) => {
+      const firstArg = p.value.arguments[0];
+      if (firstArg.type === "TemplateLiteral") {
+        addUnmaskToTemplateLiteral(j(p));
+      }
+    });
+
   return source.toSource();
 
   function addUnmaskToTaggedTemplate(name: string) {
     source
       .find(j.TaggedTemplateExpression, { tag: { name } })
       .forEach((taggedTemplateExpressionPath) => {
-        j(taggedTemplateExpressionPath)
-          .find(j.TemplateElement)
-          .replaceWith((templateElementPath) => {
-            const templateElement = templateElementPath.value;
-            const queryString =
-              templateElement.value.cooked || templateElement.value.raw;
-            const document = parseDocument(queryString);
-
-            if (document === null) {
-              return templateElement;
-            }
-
-            const query = applyWhitespaceFrom(
-              queryString,
-              print(addUnmaskDirective(document))
-            );
-
-            return j.templateElement(
-              {
-                raw: String.raw({ raw: [query] }),
-                cooked: query,
-              },
-              templateElement.tail
-            );
-          });
+        addUnmaskToTemplateLiteral(
+          j(taggedTemplateExpressionPath).find(j.TemplateLiteral)
+        );
       });
+  }
+
+  function addUnmaskToTemplateLiteral(template: Collection<TemplateLiteral>) {
+    template.find(j.TemplateElement).replaceWith((templateElementPath) => {
+      const templateElement = templateElementPath.value;
+      const queryString =
+        templateElement.value.cooked || templateElement.value.raw;
+      const document = parseDocument(queryString);
+
+      if (document === null) {
+        return templateElement;
+      }
+
+      const query = applyWhitespaceFrom(
+        queryString,
+        print(addUnmaskDirective(document))
+      );
+
+      return j.templateElement(
+        {
+          raw: String.raw({ raw: [query] }),
+          cooked: query,
+        },
+        templateElement.tail
+      );
+    });
   }
 };
 

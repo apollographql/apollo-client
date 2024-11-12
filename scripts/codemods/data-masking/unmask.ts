@@ -25,25 +25,15 @@ const transform: Transform = function transform(file, api) {
             return templateElement;
           }
 
-          const whitespaceBefore =
-            queryString.match(LEADING_WHITESPACE)?.at(0) ?? "";
-          const whitespaceAfter =
-            queryString.match(TRAILING_WHITESPACE)?.at(0) ?? "";
-          const spaces = whitespaceBefore.match(INDENTATION)?.at(0) ?? "";
-
-          const str = print(addUnmaskDirective(document));
-          const final =
-            whitespaceBefore +
-            str
-              .split("\n")
-              .map((line, idx) => (idx === 0 ? line : spaces + line))
-              .join("\n") +
-            whitespaceAfter;
+          const query = applyWhitespaceFrom(
+            queryString,
+            print(addUnmaskDirective(document))
+          );
 
           return j.templateElement(
             {
-              raw: String.raw({ raw: [final] }),
-              cooked: final,
+              raw: String.raw({ raw: [query] }),
+              cooked: query,
             },
             templateElement.tail
           );
@@ -59,6 +49,21 @@ function parseDocument(source: string) {
   } catch (e) {
     return null;
   }
+}
+
+function applyWhitespaceFrom(source: string, target: string) {
+  const leadingWhitespace = source.match(LEADING_WHITESPACE)?.at(0) ?? "";
+  const trailingWhitespace = source.match(TRAILING_WHITESPACE)?.at(0) ?? "";
+  const indentation = leadingWhitespace.match(INDENTATION)?.at(0) ?? "";
+
+  return (
+    leadingWhitespace +
+    target
+      .split("\n")
+      .map((line, idx) => (idx === 0 ? line : indentation + line))
+      .join("\n") +
+    trailingWhitespace
+  );
 }
 
 function addUnmaskDirective(document: DocumentNode) {

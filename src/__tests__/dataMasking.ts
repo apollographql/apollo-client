@@ -5407,6 +5407,216 @@ describe("client.mutate", () => {
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
   });
+
+  test("does not warn on no-cache queries when data masking is disabled", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
+      };
+    }
+
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data } = await client.mutate({ mutation, fetchPolicy: "no-cache" });
+
+    expect(data).toEqual({
+      updateUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("does not warn on no-cache queries when all fragments use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
+      };
+    }
+
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields @unmask
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data } = await client.mutate({ mutation, fetchPolicy: "no-cache" });
+
+    expect(data).toEqual({
+      updateUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("warns on no-cache queries when at least one fragment does not use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: { ProfileFieldsFragment: ProfileFieldsFragment };
+    };
+    type ProfileFieldsFragment = {
+      username: number;
+    } & { " $fragmentName"?: "ProfileFieldsFragment" };
+
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & {
+        " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment };
+      };
+    }
+
+    const mutation: MaskedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields @unmask
+        }
+      }
+
+      fragment UserFields on User {
+        age
+        ...ProfileFieldsFragment
+      }
+
+      fragment ProfileFieldsFragment on User {
+        username
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+              username: "testuser",
+            },
+          },
+        },
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    const { data } = await client.mutate({ mutation, fetchPolicy: "no-cache" });
+
+    expect(data).toEqual({
+      updateUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+      },
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+  });
 });
 
 class TestCache extends ApolloCache<unknown> {

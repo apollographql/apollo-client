@@ -51,39 +51,37 @@ const transform: Transform = function transform(file, api) {
     });
 
   return source.toSource();
-
-  function parseDocument(source: string) {
-    try {
-      return parse(source);
-    } catch (e) {
-      return null;
-    }
-  }
-
-  function addUnmaskDirective(document: DocumentNode) {
-    return visit(document, {
-      FragmentSpread: (node) => {
-        if (
-          node.directives?.some(
-            (directive) => directive.name.value === "unmask"
-          )
-        ) {
-          return;
-        }
-
-        return {
-          ...node,
-          directives: [
-            ...(node.directives || []),
-            {
-              kind: Kind.DIRECTIVE,
-              name: { kind: Kind.NAME, value: "unmask" },
-            } satisfies DirectiveNode,
-          ],
-        };
-      },
-    });
-  }
 };
+
+function parseDocument(source: string) {
+  try {
+    return parse(source);
+  } catch (e) {
+    return null;
+  }
+}
+
+function addUnmaskDirective(document: DocumentNode) {
+  return visit(document, {
+    FragmentSpread: (node) => {
+      if (
+        node.directives?.some((directive) => directive.name.value === "unmask")
+      ) {
+        return;
+      }
+
+      return {
+        ...node,
+        directives: [
+          ...(node.directives || []),
+          {
+            kind: Kind.DIRECTIVE,
+            name: { kind: Kind.NAME, value: "unmask" },
+          } satisfies DirectiveNode,
+        ],
+      };
+    },
+  });
+}
 
 export default transform;

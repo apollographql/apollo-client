@@ -30,12 +30,14 @@ const transform: Transform = function transform(file, api, options) {
   return source.toSource();
 
   function addUnmaskToFunctionCall(name: string) {
-    source.find(j.CallExpression, { callee: { name } }).forEach((p) => {
-      const firstArg = p.value.arguments[0];
-      if (firstArg.type === "TemplateLiteral") {
-        addUnmaskToTemplateLiteral(j(p));
-      }
-    });
+    source
+      .find(j.CallExpression, {
+        callee: { name },
+        arguments: [{ type: "TemplateLiteral" }],
+      })
+      .forEach((p) => {
+        addUnmaskToTemplateLiteral(j(p.value.arguments[0]));
+      });
   }
 
   function addUnmaskToTaggedTemplate(name: string) {

@@ -1,6 +1,7 @@
 import type { Collection, Transform, TemplateLiteral } from "jscodeshift";
 import type { DirectiveNode, DocumentNode } from "graphql";
 import { Kind, parse, visit, print } from "graphql";
+import path from "node:path";
 
 const LEADING_WHITESPACE = /^[\s\t]*(?=[\S\n])/;
 const TRAILING_WHITESPACE = /(?<=[\S\n])[\s\t]*$/;
@@ -8,9 +9,6 @@ const TRAILING_WHITESPACE = /(?<=[\S\n])[\s\t]*$/;
 const DEFAULT_TAGS = ["gql", "graphql"];
 
 const transform: Transform = function transform(file, api, options) {
-  const j = api.jscodeshift;
-  const source = j(file.source);
-
   const { tag = DEFAULT_TAGS, mode } = options;
 
   if (mode && mode !== "migrate") {
@@ -18,6 +16,15 @@ const transform: Transform = function transform(file, api, options) {
       `The option --mode '${mode}' is not supported. Please use --mode 'migrate' to enable migrate mode for the @ummask directive.`
     );
   }
+
+  const extname = path.extname(file.path);
+
+  if (extname === ".graphql" || extname === ".gql") {
+    return transformGraphQLFile(file.source, mode);
+  }
+
+  const j = api.jscodeshift;
+  const source = j(file.source);
 
   const tagNames = Array.isArray(tag) ? tag : [tag];
 
@@ -146,6 +153,10 @@ function addUnmaskDirective(document: DocumentNode, mode: string | undefined) {
 
 function getMatch(str: string, match: RegExp) {
   return str.match(match)?.at(0) ?? "";
+}
+
+function transformGraphQLFile(source: string, mode: string) {
+  return print(addUnmaskDirective(parse(source), mode));
 }
 
 export default transform;

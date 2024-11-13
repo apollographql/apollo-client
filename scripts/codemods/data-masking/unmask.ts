@@ -75,7 +75,7 @@ const transform: Transform = function transform(file, api, options) {
 
       const query = applyWhitepaceFromOriginalQuery(
         queryString,
-        print(modifiedDocument)
+        modifiedDocument
       );
 
       return j.templateElement(
@@ -97,14 +97,26 @@ function parseDocument(source: string) {
   }
 }
 
-function applyWhitepaceFromOriginalQuery(source: string, printed: string) {
-  let firstNonWhitespaceLineNumber: number | null = null;
+function applyWhitepaceFromOriginalQuery(
+  source: string,
+  document: DocumentNode
+) {
+  let firstNonWhitespaceLineNumber: number | null =
+    document.loc?.source.locationOffset.line ?? null;
+  let printedOffset = 0;
+  const printed = print(document);
   const printedLines = printed.split("\n");
 
   return source
     .split("\n")
     .map((line, idx) => {
       if (line.match(/^\s*$/)) {
+        if (
+          firstNonWhitespaceLineNumber !== null &&
+          idx > firstNonWhitespaceLineNumber
+        ) {
+          printedOffset++;
+        }
         return line;
       }
 
@@ -115,7 +127,8 @@ function applyWhitepaceFromOriginalQuery(source: string, printed: string) {
       const leading = getMatch(line, LEADING_WHITESPACE);
       const trailing = getMatch(line, TRAILING_WHITESPACE);
 
-      const printedLine = printedLines[idx - firstNonWhitespaceLineNumber];
+      const printedLine =
+        printedLines[idx - printedOffset - firstNonWhitespaceLineNumber];
       const printedLeading = getMatch(printedLine, LEADING_WHITESPACE);
       const totalWhitespace = leading.length - printedLeading.length;
 

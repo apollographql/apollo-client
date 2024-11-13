@@ -5,6 +5,7 @@
     "@apollo/client": "3.11.5"
   },
   "changesets": [
+    "cold-apes-bow",
     "early-bobcats-eat",
     "flat-beans-knock",
     "kind-toys-tie",

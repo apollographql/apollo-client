@@ -465,6 +465,7 @@ Array [
   "isExecutionPatchInitialResult",
   "isExecutionPatchResult",
   "isField",
+  "isFullyUnmaskedQuery",
   "isInlineFragment",
   "isMutationOperation",
   "isNonEmptyArray",

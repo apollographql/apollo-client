@@ -27,7 +27,7 @@ import { isSubscriptionOperation } from "../utilities";
 import { MaskedDocumentNode } from "../masking";
 
 const NO_CACHE_WARNING =
-  'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.';
+  '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';
 
 describe("client.watchQuery", () => {
   test("masks queries when dataMasking is `true`", async () => {
@@ -2387,7 +2387,7 @@ describe("client.watchQuery", () => {
     }
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
   });
 
   test("does not warn on no-cache queries when data masking is disabled", async () => {
@@ -2601,7 +2601,7 @@ describe("client.watchQuery", () => {
     }
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
   });
 });
 
@@ -3971,7 +3971,7 @@ describe("client.query", () => {
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
   });
 
   test("does not warn on no-cache queries when data masking is disabled", async () => {
@@ -4170,7 +4170,7 @@ describe("client.query", () => {
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING, "MaskedQuery");
   });
 });
 
@@ -4516,7 +4516,10 @@ describe("client.subscribe", () => {
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(
+      NO_CACHE_WARNING,
+      "NewCommentSubscription"
+    );
   });
 
   test("does not warn on no-cache queries when data masking is disabled", async () => {
@@ -4694,7 +4697,10 @@ describe("client.subscribe", () => {
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(
+      NO_CACHE_WARNING,
+      "NewCommentSubscription"
+    );
   });
 });
 
@@ -5583,7 +5589,10 @@ describe("client.mutate", () => {
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(
+      NO_CACHE_WARNING,
+      "MaskedMutation"
+    );
   });
 
   test("does not warn on no-cache queries when data masking is disabled", async () => {
@@ -5793,7 +5802,10 @@ describe("client.mutate", () => {
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+    expect(console.warn).toHaveBeenCalledWith(
+      NO_CACHE_WARNING,
+      "MaskedMutation"
+    );
   });
 });
 

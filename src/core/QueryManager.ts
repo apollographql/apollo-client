@@ -1585,7 +1585,11 @@ export class QueryManager<TStore> {
         }
 
         invariant.warn(
-          'Fragments masked by data masking when using fetch policy "no-cache" cannot be read by `watchFragment` or `useFragment`. Please add `@unmask` to the fragment to read the fragment data.'
+          '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
+          getOperationName(document) ??
+            `Unnamed ${
+              getOperationDefinition(document)?.operation ?? "operation"
+            }`
         );
       }
     }

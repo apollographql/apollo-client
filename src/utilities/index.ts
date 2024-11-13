@@ -23,6 +23,7 @@ export {
   createFragmentMap,
   getFragmentQueryDocument,
   getFragmentFromSelection,
+  isFullyUnmaskedOperation,
 } from "./graphql/fragments.js";
 
 export {

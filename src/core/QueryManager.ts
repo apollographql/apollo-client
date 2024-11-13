@@ -13,6 +13,7 @@ import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
+  isFullyUnmaskedOperation,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -51,6 +52,7 @@ import type {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
+  WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
@@ -118,6 +120,8 @@ interface MaskFragmentOptions<TData> {
 interface MaskOperationOptions<TData> {
   document: DocumentNode;
   data: TData;
+  id: string;
+  fetchPolicy?: WatchQueryFetchPolicy;
 }
 
 export interface QueryManagerOptions<TStore> {
@@ -362,6 +366,8 @@ export class QueryManager<TStore> {
               data: self.maskOperation({
                 document: mutation,
                 data: storeResult.data,
+                fetchPolicy,
+                id: mutationId,
               }) as any,
             });
           }
@@ -819,7 +825,12 @@ export class QueryManager<TStore> {
         (result) =>
           result && {
             ...result,
-            data: this.maskOperation({ document: query, data: result.data }),
+            data: this.maskOperation({
+              document: query,
+              data: result.data,
+              fetchPolicy: options.fetchPolicy,
+              id: queryId,
+            }),
           }
       )
       .finally(() => this.stopQuery(queryId));
@@ -1554,10 +1565,33 @@ export class QueryManager<TStore> {
     return results;
   }
 
+  private noCacheWarningsByQueryId = new Set<string>();
+
   public maskOperation<TData = unknown>(
     options: MaskOperationOptions<TData>
   ): MaybeMasked<TData> {
     const { document, data } = options;
+
+    if (__DEV__) {
+      const { fetchPolicy, id } = options;
+      const operationType = getOperationDefinition(document)?.operation;
+      const operationId = (operationType?.[0] ?? "o") + id;
+
+      if (
+        this.dataMasking &&
+        fetchPolicy === "no-cache" &&
+        !isFullyUnmaskedOperation(document) &&
+        !this.noCacheWarningsByQueryId.has(operationId)
+      ) {
+        this.noCacheWarningsByQueryId.add(operationId);
+
+        invariant.warn(
+          '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
+          getOperationName(document) ??
+            `Unnamed ${operationType ?? "operation"}`
+        );
+      }
+    }
 
     return (
       this.dataMasking ?

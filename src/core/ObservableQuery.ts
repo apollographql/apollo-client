@@ -1141,7 +1141,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             document: this.query,
             data: result.data,
             fetchPolicy: this.options.fetchPolicy,
-            queryId: this.queryId,
+            id: this.queryId,
           }),
         }
       : result;

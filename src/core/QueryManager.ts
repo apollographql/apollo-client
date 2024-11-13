@@ -120,7 +120,7 @@ interface MaskFragmentOptions<TData> {
 interface MaskOperationOptions<TData> {
   document: DocumentNode;
   data: TData;
-  queryId?: string;
+  id?: string;
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
@@ -828,7 +828,7 @@ export class QueryManager<TStore> {
               document: query,
               data: result.data,
               fetchPolicy: options.fetchPolicy,
-              queryId,
+              id: queryId,
             }),
           }
       )
@@ -1572,16 +1572,16 @@ export class QueryManager<TStore> {
     const { document, data } = options;
 
     if (__DEV__) {
-      const { fetchPolicy, queryId } = options;
+      const { fetchPolicy, id } = options;
 
       if (
         this.dataMasking &&
         fetchPolicy === "no-cache" &&
         !isFullyUnmaskedOperation(document) &&
-        (!queryId || !this.noCacheWarningsByQueryId.has(queryId))
+        (!id || !this.noCacheWarningsByQueryId.has(id))
       ) {
-        if (queryId) {
-          this.noCacheWarningsByQueryId.add(queryId);
+        if (id) {
+          this.noCacheWarningsByQueryId.add(id);
         }
 
         invariant.warn(

@@ -5,6 +5,10 @@
     "@apollo/client": "3.11.5"
   },
   "changesets": [
-    "nasty-camels-pay"
+    "early-bobcats-eat",
+    "flat-beans-knock",
+    "kind-toys-tie",
+    "nasty-camels-pay",
+    "nervous-owls-hear"
   ]
 }

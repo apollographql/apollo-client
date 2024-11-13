@@ -150,14 +150,9 @@ export function isFullyUnmaskedOperation(document: DocumentNode) {
 
   visit(document, {
     FragmentSpread: (node) => {
-      if (!node.directives) {
-        isUnmasked = false;
-        return BREAK;
-      }
-
-      isUnmasked &&= node.directives.some(
-        (directive) => directive.name.value === "unmask"
-      );
+      isUnmasked =
+        !!node.directives &&
+        node.directives.some((directive) => directive.name.value === "unmask");
 
       if (!isUnmasked) {
         return BREAK;

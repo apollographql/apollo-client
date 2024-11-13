@@ -145,7 +145,7 @@ export function getFragmentFromSelection(
   }
 }
 
-export function isFullyUnmaskedQuery(document: DocumentNode) {
+export function isFullyUnmaskedOperation(document: DocumentNode) {
   let isUnmasked = true;
 
   visit(document, {

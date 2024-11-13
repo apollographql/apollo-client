@@ -13,7 +13,7 @@ import {
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
-  isFullyUnmaskedQuery,
+  isFullyUnmaskedOperation,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -1577,7 +1577,7 @@ export class QueryManager<TStore> {
       if (
         this.dataMasking &&
         fetchPolicy === "no-cache" &&
-        !isFullyUnmaskedQuery(document) &&
+        !isFullyUnmaskedOperation(document) &&
         (!queryId || !this.noCacheWarningsByQueryId.has(queryId))
       ) {
         if (queryId) {

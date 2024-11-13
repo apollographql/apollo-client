@@ -67,9 +67,15 @@ const transform: Transform = function transform(file, api, options) {
         return templateElement;
       }
 
+      const modifiedDocument = addUnmaskDirective(document, mode);
+
+      if (modifiedDocument === document) {
+        return templateElement;
+      }
+
       const query = applyWhitepaceFromOriginalQuery(
         queryString,
-        print(addUnmaskDirective(document, mode))
+        print(modifiedDocument)
       );
 
       return j.templateElement(

@@ -4518,6 +4518,184 @@ describe("client.subscribe", () => {
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
   });
+
+  test("does not warn on no-cache queries when data masking is disabled", async () => {
+    using _ = spyOnConsole("warn");
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      fetchPolicy: "no-cache",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: "Test User",
+      },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("does not warn on no-cache queries when all fragments use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields @unmask
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      fetchPolicy: "no-cache",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: "Test User",
+      },
+    });
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
+  test("warns on no-cache queries when at least one fragment does not use `@unmask`", async () => {
+    using _ = spyOnConsole("warn");
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields @unmask
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author {
+          ...AuthorFields
+        }
+      }
+
+      fragment AuthorFields on User {
+        name
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link,
+    });
+
+    const observable = client.subscribe({
+      query: subscription,
+      fetchPolicy: "no-cache",
+    });
+    const stream = new ObservableStream(observable);
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: { __typename: "User", name: "Test User" },
+          },
+        },
+      },
+    });
+
+    const { data } = await stream.takeNext();
+
+    expect(data).toEqual({
+      addedComment: {
+        __typename: "Comment",
+        id: 1,
+        comment: "Test comment",
+        author: { __typename: "User" },
+      },
+    });
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(NO_CACHE_WARNING);
+  });
 });
 
 describe("observableQuery.subscribeToMore", () => {

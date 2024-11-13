@@ -1,5 +1,27 @@
 # @apollo/client
 
+## 3.11.11-rc.0
+
+### Patch Changes
+
+- [#12116](https://github.com/apollographql/apollo-client/pull/12116) [`8ae6e4e`](https://github.com/apollographql/apollo-client/commit/8ae6e4e5cec296c3910fdffb0ce51a0f5f06c5d3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent field accessor warnings when using `@unmask(mode: "migrate")` on objects that are passed into `cache.identify`.
+
+- [#12120](https://github.com/apollographql/apollo-client/pull/12120) [`6a98e76`](https://github.com/apollographql/apollo-client/commit/6a98e76af5c800a91a748c498611b55c33e02c68) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Provide a codemod that applies `@unmask` to all named fragments for all operations and fragments. To use the codemod, run the following command:
+
+  ```
+  npx jscodeshift -t node_modules/@apollo/client/scripts/codemods/data-masking/unmask.ts --extensions tsx --parser tsx path/to/app/
+  ```
+
+  To customize the tag used to search for GraphQL operations, use the `--tag` option. By default the codemod looks for `gql` and `graphql` tags.
+
+  To apply the directive in migrate mode in order to receive runtime warnings on potentially masked fields, use the `--mode migrate` option.
+
+  For more information on the options that can be used with `jscodeshift`, check out the [`jscodeshift` documentation](https://github.com/facebook/jscodeshift).
+
+- [#12123](https://github.com/apollographql/apollo-client/pull/12123) [`8422a30`](https://github.com/apollographql/apollo-client/commit/8422a305eff861fc8f953731e92c860f555bd99a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using data masking with "no-cache" operations.
+
+- [#12114](https://github.com/apollographql/apollo-client/pull/12114) [`1d4ce00`](https://github.com/apollographql/apollo-client/commit/1d4ce0034395147445165022f7d23f42ff638d8a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix error when combining `@unmask` and `@defer` directives on a fragment spread when data masking is enabled.
+
 ## 3.12.0-alpha.0
 
 ### Minor Changes

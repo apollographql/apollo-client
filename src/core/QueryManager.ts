@@ -120,7 +120,7 @@ interface MaskFragmentOptions<TData> {
 interface MaskOperationOptions<TData> {
   document: DocumentNode;
   data: TData;
-  id?: string;
+  id: string;
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
@@ -367,6 +367,7 @@ export class QueryManager<TStore> {
                 document: mutation,
                 data: storeResult.data,
                 fetchPolicy,
+                id: `m${mutationId}`,
               }) as any,
             });
           }

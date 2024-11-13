@@ -510,6 +510,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   >(
     options: SubscriptionOptions<TVariables, T>
   ): Observable<FetchResult<MaybeMasked<T>>> {
+    const id = `s${this.queryManager.generateQueryId()}`;
+
     return this.queryManager
       .startGraphQLSubscription<T>(options)
       .map((result) => ({
@@ -518,6 +520,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           document: options.query,
           data: result.data,
           fetchPolicy: options.fetchPolicy,
+          id,
         }),
       }));
   }

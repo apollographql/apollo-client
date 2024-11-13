@@ -4506,14 +4506,40 @@ describe("client.subscribe", () => {
       },
     });
 
-    const { data } = await stream.takeNext();
+    {
+      const { data } = await stream.takeNext();
 
-    expect(data).toEqual({
-      addedComment: {
-        __typename: "Comment",
-        id: 1,
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 1,
+        },
+      });
+    }
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 2,
+            comment: "Test comment 2",
+            author: "Test User",
+          },
+        },
       },
     });
+
+    {
+      const { data } = await stream.takeNext();
+
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 2,
+        },
+      });
+    }
 
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(

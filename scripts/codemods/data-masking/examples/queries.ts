@@ -23,6 +23,7 @@ export const GetCurrentUser = gql`
   query GetCurrentUser {
     currentUser {
       id
+      # This is a test to see if comments are maintained
       ...CurrentUserFields
     }
   }

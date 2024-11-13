@@ -18,7 +18,7 @@
 
   For more information on the options that can be used with `jscodeshift`, check out the [`jscodeshift` documentation](https://github.com/facebook/jscodeshift).
 
-- [#12123](https://github.com/apollographql/apollo-client/pull/12123) [`8422a30`](https://github.com/apollographql/apollo-client/commit/8422a305eff861fc8f953731e92c860f555bd99a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using data masking with "no-cache" operations.
+- [#12121](https://github.com/apollographql/apollo-client/pull/12121) [`1085a95`](https://github.com/apollographql/apollo-client/commit/1085a95e4430da35d19033613e73f315a0aede9e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using data masking with "no-cache" operations.
 
 - [#12114](https://github.com/apollographql/apollo-client/pull/12114) [`1d4ce00`](https://github.com/apollographql/apollo-client/commit/1d4ce0034395147445165022f7d23f42ff638d8a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix error when combining `@unmask` and `@defer` directives on a fragment spread when data masking is enabled.
 

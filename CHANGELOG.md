@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.12.0-rc.0
+
+### Minor Changes
+
+- [#12124](https://github.com/apollographql/apollo-client/pull/12124) [`ab0a1b5`](https://github.com/apollographql/apollo-client/commit/ab0a1b587233410bddb0f9d180f0d5019c035af2) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Promote to 3.12.0-rc.0
+
 ## 3.12.0-alpha.0
 
 ### Minor Changes

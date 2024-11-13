@@ -367,7 +367,7 @@ export class QueryManager<TStore> {
                 document: mutation,
                 data: storeResult.data,
                 fetchPolicy,
-                id: `m${mutationId}`,
+                id: mutationId,
               }) as any,
             });
           }
@@ -1574,23 +1574,21 @@ export class QueryManager<TStore> {
 
     if (__DEV__) {
       const { fetchPolicy, id } = options;
+      const operationType = getOperationDefinition(document)?.operation;
+      const operationId = (operationType?.[0] ?? "o") + id;
 
       if (
         this.dataMasking &&
         fetchPolicy === "no-cache" &&
         !isFullyUnmaskedOperation(document) &&
-        (!id || !this.noCacheWarningsByQueryId.has(id))
+        !this.noCacheWarningsByQueryId.has(operationId)
       ) {
-        if (id) {
-          this.noCacheWarningsByQueryId.add(id);
-        }
+        this.noCacheWarningsByQueryId.add(operationId);
 
         invariant.warn(
           '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
           getOperationName(document) ??
-            `Unnamed ${
-              getOperationDefinition(document)?.operation ?? "operation"
-            }`
+            `Unnamed ${operationType ?? "operation"}`
         );
       }
     }

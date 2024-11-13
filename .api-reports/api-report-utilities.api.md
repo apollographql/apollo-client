@@ -1481,7 +1481,7 @@ export function isExecutionPatchResult<T>(value: FetchResult<T>): value is Execu
 export function isField(selection: SelectionNode): selection is FieldNode;
 
 // @public (undocumented)
-export function isFullyUnmaskedQuery(document: DocumentNode): boolean;
+export function isFullyUnmaskedOperation(document: DocumentNode): boolean;
 
 // @public (undocumented)
 export function isInlineFragment(selection: SelectionNode): selection is InlineFragmentNode;

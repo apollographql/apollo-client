@@ -21,9 +21,8 @@ const CurrentUserFieldsFragment = gql`
 
 export const GetCurrentUser = gql`
   query GetCurrentUser {
-    currentUser { # eslint-disable-next-line
+    currentUser {
       id
-      # This is a test to see if comments are maintained
       ...CurrentUserFields
     }
   }

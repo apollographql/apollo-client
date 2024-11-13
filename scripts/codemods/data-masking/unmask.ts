@@ -102,9 +102,7 @@ function applyIndentationFromOriginalQuery(
   document: DocumentNode
 ) {
   const lines = source.split("\n");
-  const locationOffset =
-    document.loc?.source.locationOffset.line ??
-    lines.findIndex((line) => /\S/.test(line));
+  const locationOffset = document.loc!.source.locationOffset.line;
 
   const leadingWhitespace = getMatch(source, /^[\s]*(?=\S)/);
   const trailingWhitespace = getMatch(source, TRAILING_WHITESPACE);

@@ -1646,6 +1646,40 @@ describe("useFragment", () => {
     }
   });
 
+  it("allows `null` as valid `from` value without warning", async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Fragment {
+      age: number;
+    }
+
+    const fragment: TypedDocumentNode<Fragment, never> = gql`
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useFragment({ fragment, from: null }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { data, complete } = await takeSnapshot();
+
+      expect(data).toEqual({});
+      expect(complete).toBe(false);
+    }
+
+    expect(console.warn).not.toHaveBeenCalled();
+  });
+
   describe("tests with incomplete data", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
     const ItemFragment = gql`
@@ -2327,7 +2361,7 @@ describe.skip("Type Tests", () => {
 
   test("UseFragmentOptions interface shape", <TData, TVars>() => {
     expectTypeOf<UseFragmentOptions<TData, TVars>>().branded.toEqualTypeOf<{
-      from: string | StoreObject | Reference | FragmentType<TData>;
+      from: string | StoreObject | Reference | FragmentType<TData> | null;
       fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
       fragmentName?: string;
       optimistic?: boolean;

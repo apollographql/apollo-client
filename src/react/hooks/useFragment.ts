@@ -25,7 +25,7 @@ export interface UseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string;
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
@@ -73,7 +73,10 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   // `stableOptions` and retrigger our subscription. If the cache identifier
   // stays the same between renders, we want to reuse the existing subscription.
   const id = React.useMemo(
-    () => (typeof from === "string" ? from : cache.identify(from)),
+    () =>
+      typeof from === "string" ? from
+      : from === null ? null
+      : cache.identify(from),
     [cache, from]
   );
 
@@ -83,6 +86,16 @@ function _useFragment<TData = any, TVars = OperationVariables>(
   // get the correct diff on the next render given new diffOptions
   const diff = React.useMemo(() => {
     const { fragment, fragmentName, from, optimistic = true } = stableOptions;
+
+    if (from === null) {
+      return {
+        result: diffToResult({
+          result: {} as TData,
+          complete: false,
+        }),
+      };
+    }
+
     const { cache } = client;
     const diff = cache.diff<TData>({
       ...stableOptions,
@@ -111,24 +124,28 @@ function _useFragment<TData = any, TVars = OperationVariables>(
     React.useCallback(
       (forceUpdate) => {
         let lastTimeout = 0;
-        const subscription = client.watchFragment(stableOptions).subscribe({
-          next: (result) => {
-            // Since `next` is called async by zen-observable, we want to avoid
-            // unnecessarily rerendering this hook for the initial result
-            // emitted from watchFragment which should be equal to
-            // `diff.result`.
-            if (equal(result, diff.result)) return;
-            diff.result = result;
-            // If we get another update before we've re-rendered, bail out of
-            // the update and try again. This ensures that the relative timing
-            // between useQuery and useFragment stays roughly the same as
-            // fixed in https://github.com/apollographql/apollo-client/pull/11083
-            clearTimeout(lastTimeout);
-            lastTimeout = setTimeout(forceUpdate) as any;
-          },
-        });
+
+        const subscription =
+          stableOptions.from === null ?
+            null
+          : client.watchFragment(stableOptions).subscribe({
+              next: (result) => {
+                // Since `next` is called async by zen-observable, we want to avoid
+                // unnecessarily rerendering this hook for the initial result
+                // emitted from watchFragment which should be equal to
+                // `diff.result`.
+                if (equal(result, diff.result)) return;
+                diff.result = result;
+                // If we get another update before we've re-rendered, bail out of
+                // the update and try again. This ensures that the relative timing
+                // between useQuery and useFragment stays roughly the same as
+                // fixed in https://github.com/apollographql/apollo-client/pull/11083
+                clearTimeout(lastTimeout);
+                lastTimeout = setTimeout(forceUpdate) as any;
+              },
+            });
         return () => {
-          subscription.unsubscribe();
+          subscription?.unsubscribe();
           clearTimeout(lastTimeout);
         };
       },

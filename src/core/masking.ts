@@ -333,6 +333,13 @@ function addFieldAccessorWarnings(
         return memo;
       }
       case Kind.INLINE_FRAGMENT: {
+        if (
+          selection.typeCondition &&
+          !context.cache.fragmentMatches!(selection, (data as any).__typename)
+        ) {
+          return memo;
+        }
+
         return addFieldAccessorWarnings(
           memo,
           data,

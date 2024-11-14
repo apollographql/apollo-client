@@ -1651,6 +1651,72 @@ describe("maskOperation", () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
+  // https://github.com/apollographql/apollo-client/issues/12127
+  test('handles interface types when using @unmask(mode: "migrate")', async () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query PlaybackStateSubscriberQuery {
+        playbackState {
+          __typename
+          ...PlaybackStateFragment @unmask(mode: "migrate")
+        }
+      }
+
+      fragment PlaybackStateFragment on PlaybackState {
+        item {
+          __typename
+          id
+
+          ... on Track {
+            album {
+              __typename
+              id
+            }
+          }
+
+          ... on Episode {
+            show {
+              __typename
+              id
+            }
+          }
+        }
+      }
+    `;
+
+    const data = maskOperation(
+      {
+        playbackState: {
+          __typename: "PlaybackState",
+          item: {
+            __typename: "Track",
+            id: "1",
+            album: {
+              __typename: "Album",
+              id: "2",
+            },
+          },
+        },
+      },
+      query,
+      new InMemoryCache()
+    );
+
+    expect(data).toEqual({
+      playbackState: {
+        __typename: "PlaybackState",
+        item: {
+          __typename: "Track",
+          id: "1",
+          album: {
+            __typename: "Album",
+            id: "2",
+          },
+        },
+      },
+    });
+  });
+
   test("masks fragments in subscription documents", () => {
     const subscription = gql`
       subscription {

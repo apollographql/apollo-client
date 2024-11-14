@@ -1680,6 +1680,61 @@ describe("useFragment", () => {
     expect(console.warn).not.toHaveBeenCalled();
   });
 
+  it("properly handles changing from null to valid from value", async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Fragment {
+      __typename: "User";
+      id: string;
+      age: number;
+    }
+
+    const fragment: TypedDocumentNode<Fragment, never> = gql`
+      fragment UserFields on User {
+        __typename
+        id
+        age
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    client.writeFragment({
+      fragment,
+      data: {
+        __typename: "User",
+        id: "1",
+        age: 30,
+      },
+    });
+
+    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+      ({ from }) => useFragment({ fragment, from }),
+      {
+        initialProps: { from: null as UseFragmentOptions<any, never>["from"] },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { data, complete } = await takeSnapshot();
+
+      expect(data).toEqual({});
+      expect(complete).toBe(false);
+    }
+
+    rerender({ from: { __typename: "User", id: "1" } });
+
+    {
+      const { data, complete } = await takeSnapshot();
+
+      expect(data).toEqual({ __typename: "User", id: "1", age: 30 });
+      expect(complete).toBe(true);
+    }
+  });
+
   describe("tests with incomplete data", () => {
     let cache: InMemoryCache, wrapper: React.FunctionComponent;
     const ItemFragment = gql`

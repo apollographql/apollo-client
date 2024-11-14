@@ -2138,7 +2138,7 @@ interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoIn
     // Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
     // (undocumented)
     optimistic?: boolean;
 }

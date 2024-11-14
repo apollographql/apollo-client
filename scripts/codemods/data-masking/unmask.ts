@@ -67,9 +67,15 @@ const transform: Transform = function transform(file, api, options) {
         return templateElement;
       }
 
-      const query = applyWhitepaceFromOriginalQuery(
+      const modifiedDocument = addUnmaskDirective(document, mode);
+
+      if (modifiedDocument === document) {
+        return templateElement;
+      }
+
+      const query = applyIndentationFromOriginalQuery(
         queryString,
-        print(addUnmaskDirective(document, mode))
+        modifiedDocument
       );
 
       return j.templateElement(
@@ -91,31 +97,29 @@ function parseDocument(source: string) {
   }
 }
 
-function applyWhitepaceFromOriginalQuery(source: string, printed: string) {
-  let firstNonWhitespaceLineNumber: number | null = null;
-  const printedLines = printed.split("\n");
+function applyIndentationFromOriginalQuery(
+  source: string,
+  document: DocumentNode
+) {
+  const lines = source.split("\n");
+  const locationOffset = document.loc!.source.locationOffset.line;
 
-  return source
-    .split("\n")
-    .map((line, idx) => {
-      if (line.match(/^\s*$/)) {
-        return line;
-      }
+  const leadingWhitespace = getMatch(source, /^[\s]*(?=\S)/);
+  const trailingWhitespace = getMatch(source, TRAILING_WHITESPACE);
+  const indentation = getMatch(lines[locationOffset], LEADING_WHITESPACE);
 
-      if (firstNonWhitespaceLineNumber === null) {
-        firstNonWhitespaceLineNumber = idx;
-      }
-
-      const leading = getMatch(line, LEADING_WHITESPACE);
-      const trailing = getMatch(line, TRAILING_WHITESPACE);
-
-      const printedLine = printedLines[idx - firstNonWhitespaceLineNumber];
-      const printedLeading = getMatch(printedLine, LEADING_WHITESPACE);
-      const totalWhitespace = leading.length - printedLeading.length;
-
-      return leading.slice(0, totalWhitespace) + printedLine + trailing;
-    })
-    .join("\n");
+  return (
+    leadingWhitespace +
+    print(document)
+      .split("\n")
+      .map((line, idx) => {
+        // `leadingWhitespace` will contain the whitespace needed for the
+        // first line so we can skip adding it
+        return idx === 0 ? line : indentation + line;
+      })
+      .join("\n") +
+    trailingWhitespace
+  );
 }
 
 function addUnmaskDirective(document: DocumentNode, mode: string | undefined) {

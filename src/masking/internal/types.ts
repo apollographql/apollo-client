@@ -4,16 +4,21 @@ export type UnwrapFragmentRefs<TData> =
   // Leave TData alone if it is Record<string, any> and not a specific shape
   string extends keyof NonNullable<TData> ? TData
   : " $fragmentRefs" extends keyof NonNullable<TData> ?
-    TData extends { " $fragmentRefs"?: infer FragmentRefs extends object } ?
-      Prettify<
-        {
-          [K in keyof TData as K extends " $fragmentRefs" ? never
-          : K]: UnwrapFragmentRefs<TData[K]>;
-        } & CombineFragmentRefs<FragmentRefs>
-      >
-    : never
+    null extends TData ?
+      ExtractFragmentRefs<TData> | null
+    : ExtractFragmentRefs<TData>
   : TData extends object ? { [K in keyof TData]: UnwrapFragmentRefs<TData[K]> }
   : TData;
+
+type ExtractFragmentRefs<TData> =
+  TData extends { " $fragmentRefs"?: infer FragmentRefs extends object } ?
+    Prettify<
+      {
+        [K in keyof TData as K extends " $fragmentRefs" ? never
+        : K]: UnwrapFragmentRefs<TData[K]>;
+      } & CombineFragmentRefs<FragmentRefs>
+    >
+  : never;
 
 type CombineFragmentRefs<FragmentRefs extends Record<string, any>> =
   UnionToIntersection<

@@ -19,16 +19,6 @@ type CombineFragmentRefs<FragmentRefs extends Record<string, any>> = UnionToInte
 export interface DataMasking {
 }
 
-// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type ExtractFragmentRefs<TData> = TData extends {
-    " $fragmentRefs"?: infer FragmentRefs extends object;
-} ? Prettify<{
-    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
-} & CombineFragmentRefs<FragmentRefs>> : never;
-
 // @public (undocumented)
 export type FragmentType<TData> = [
 TData
@@ -52,6 +42,7 @@ export type MaskedDocumentNode<TData = {
     [key: string]: any;
 }> = TypedDocumentNode<Masked<TData>, TVariables>;
 
+// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -78,12 +69,16 @@ type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (
 // @public
 export type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
 
-// Warning: (ae-forgotten-export) The symbol "ExtractFragmentRefs" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? null extends TData ? ExtractFragmentRefs<TData> | null : ExtractFragmentRefs<TData> : TData extends object ? {
+type UnwrapFragmentRefs<TData> = TData extends any ? string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
+    " $fragmentRefs"?: infer FragmentRefs extends object;
+} ? Prettify<{
+    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
+} & CombineFragmentRefs<FragmentRefs>> : never : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
-} : TData;
+} : TData : never;
 
 // (No @packageDocumentation comment for this package)
 

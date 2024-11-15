@@ -5,11 +5,17 @@
     "@apollo/client": "3.11.5"
   },
   "changesets": [
+    "brown-readers-smash",
     "cold-apes-bow",
     "early-bobcats-eat",
     "flat-beans-knock",
+    "gorgeous-zebras-confess",
     "kind-toys-tie",
+    "long-zoos-ring",
     "nasty-camels-pay",
-    "nervous-owls-hear"
+    "nervous-owls-hear",
+    "nice-countries-share",
+    "slimy-points-end",
+    "small-bears-confess"
   ]
 }

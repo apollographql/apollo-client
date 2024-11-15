@@ -314,7 +314,8 @@ function addFieldAccessorWarnings(
 
         if (childSelectionSet) {
           value = addFieldAccessorWarnings(
-            memo[keyName] || Object.create(null),
+            memo[keyName] ||
+              (Array.isArray(data[keyName]) ? [] : Object.create(null)),
             data[keyName] as Record<string, unknown>,
             childSelectionSet,
             `${path}.${keyName}`,

@@ -108,6 +108,14 @@ describe.skip("Unmasked", () => {
             title: string;
           } & { " $fragmentRefs"?: { JobFieldsFragment: JobFieldsFragment } })
         | null;
+      jobs: Array<
+        | ({
+            __typename: "Job";
+            id: string;
+            title: string;
+          } & { " $fragmentRefs"?: { JobFieldsFragment: JobFieldsFragment } })
+        | null
+      >;
     } & { " $fragmentName"?: "UserFieldsFragment" } & {
       " $fragmentRefs"?: {
         NameFieldsFragment: NameFieldsFragment;
@@ -145,6 +153,13 @@ describe.skip("Unmasked", () => {
         job: string;
         position: string;
       } | null;
+      jobs: Array<{
+        __typename: "Job";
+        id: string;
+        title: string;
+        job: string;
+        position: string;
+      } | null>;
     }>();
   });
 

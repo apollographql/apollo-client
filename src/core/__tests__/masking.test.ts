@@ -1717,6 +1717,101 @@ describe("maskOperation", () => {
     });
   });
 
+  test('handles overlapping types when subtype has accessor warnings with @unmask(mode: "migrate")', async () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query PlaylistQuery {
+        playlist {
+          ...PlaylistFragment @unmask(mode: "migrate")
+          id
+          name
+          album {
+            id
+            __typename
+          }
+          artist {
+            id
+            __typename
+          }
+          __typename
+
+          ...PlaylistTitleCell @unmask(mode: "migrate")
+        }
+      }
+
+      fragment PlaylistFragment on Playlist {
+        album {
+          id
+          images {
+            url
+            __typename
+          }
+          __typename
+        }
+      }
+
+      fragment PlaylistTitleCell on Playlist {
+        id
+        album {
+          id
+          images {
+            url
+            __typename
+          }
+          __typename
+        }
+      }
+    `;
+
+    const data = maskOperation(
+      {
+        playlist: {
+          id: "1",
+          name: "Playlist",
+          album: {
+            id: "2RSIoPew2TOy41ASHpzOx3",
+            __typename: "Album",
+            images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+          },
+          artist: {
+            id: "2",
+            __typename: "Artist",
+            images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+          },
+        },
+      },
+      query,
+      new InMemoryCache()
+    );
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    expect(data).toEqual({
+      playlist: {
+        id: "1",
+        name: "Playlist",
+        album: {
+          id: "2RSIoPew2TOy41ASHpzOx3",
+          __typename: "Album",
+          images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+        },
+        artist: {
+          id: "2",
+          __typename: "Artist",
+          images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+        },
+      },
+    });
+
+    data.playlist.album;
+    data.playlist.album.id;
+    data.playlist.album.__typename;
+    expect(console.warn).not.toHaveBeenCalled();
+
+    data.playlist.album.images;
+    expect(console.warn).toHaveBeenCalledTimes(1);
+  });
+
   test("masks fragments in subscription documents", () => {
     const subscription = gql`
       subscription {

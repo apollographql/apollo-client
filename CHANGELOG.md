@@ -1,5 +1,23 @@
 # @apollo/client
 
+## 3.12.0-rc.1
+
+### Minor Changes
+
+- [#12131](https://github.com/apollographql/apollo-client/pull/12131) [`21c3f08`](https://github.com/apollographql/apollo-client/commit/21c3f083013445707b7b50ae6390318bc568d0f5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `null` as a valid `from` value in `useFragment`.
+
+### Patch Changes
+
+- [#12126](https://github.com/apollographql/apollo-client/pull/12126) [`d10d702`](https://github.com/apollographql/apollo-client/commit/d10d702ee9bd4d1d1dee2551821140f2c49d5c0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Maintain the existing document if its unchanged by the codemod and move to more naive whitespace formatting
+
+- [#12134](https://github.com/apollographql/apollo-client/pull/12134) [`cfaf4ef`](https://github.com/apollographql/apollo-client/commit/cfaf4efc6dea56ae46a5b5199d8ed9414b0f17d8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where data went missing when an unmasked fragment in migrate mode selected fields that the parent did not.
+
+- [#12130](https://github.com/apollographql/apollo-client/pull/12130) [`1e7d009`](https://github.com/apollographql/apollo-client/commit/1e7d009e4a52949dab0065f3219dfe148837531e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix error thrown when applying unmask migrate mode warnings on interface types with selection sets that contain inline fragment conditions.
+
+- [#12126](https://github.com/apollographql/apollo-client/pull/12126) [`d10d702`](https://github.com/apollographql/apollo-client/commit/d10d702ee9bd4d1d1dee2551821140f2c49d5c0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure documents unchanged by the codemod are left untouched.
+
+- [#12133](https://github.com/apollographql/apollo-client/pull/12133) [`a6ece37`](https://github.com/apollographql/apollo-client/commit/a6ece375119ce12c19749471c55b0059843a7217) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `null` is retained in nullable types when unmasking a type with the `Unmasked` helper type.
+
 ## 3.12.0-rc.0
 
 ### Patch Changes

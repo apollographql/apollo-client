@@ -1826,13 +1826,13 @@ type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMar
 // Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
+type UnwrapFragmentRefs<TData> = TData extends any ? string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
     " $fragmentRefs"?: infer FragmentRefs extends object;
 } ? Prettify<{
     [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
 } & CombineFragmentRefs<FragmentRefs>> : never : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
-} : TData;
+} : TData : never;
 
 // @public (undocumented)
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];

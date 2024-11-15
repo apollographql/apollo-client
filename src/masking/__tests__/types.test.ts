@@ -96,6 +96,73 @@ describe.skip("Unmasked", () => {
     }>();
   });
 
+  test("unmasks deeply nested nullable fragments", () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      id: number;
+      age: number;
+      career:
+        | ({
+            __typename: "Job";
+            id: string;
+            title: string;
+          } & { " $fragmentRefs"?: { JobFieldsFragment: JobFieldsFragment } })
+        | null;
+      jobs: Array<
+        | ({
+            __typename: "Job";
+            id: string;
+            title: string;
+          } & { " $fragmentRefs"?: { JobFieldsFragment: JobFieldsFragment } })
+        | null
+      >;
+    } & { " $fragmentName"?: "UserFieldsFragment" } & {
+      " $fragmentRefs"?: {
+        NameFieldsFragment: NameFieldsFragment;
+      };
+    };
+
+    type NameFieldsFragment = {
+      __typename: "User";
+      firstName: string;
+      lastName: string;
+    } & { " $fragmentName"?: "NameFieldsFragment" };
+
+    type JobFieldsFragment = {
+      __typename: "Job";
+      job: string;
+    } & { " $fragmentName"?: "JobFieldsFragment" } & {
+      " $fragmentRefs"?: { CareerFieldsFragment: CareerFieldsFragment };
+    };
+
+    type CareerFieldsFragment = {
+      __typename: "Job";
+      position: string;
+    } & { " $fragmentName"?: "CareerFieldsFragment" };
+
+    expectTypeOf<Unmasked<UserFieldsFragment>>().toEqualTypeOf<{
+      __typename: "User";
+      id: number;
+      age: number;
+      firstName: string;
+      lastName: string;
+      career: {
+        __typename: "Job";
+        id: string;
+        title: string;
+        job: string;
+        position: string;
+      } | null;
+      jobs: Array<{
+        __typename: "Job";
+        id: string;
+        title: string;
+        job: string;
+        position: string;
+      } | null>;
+    }>();
+  });
+
   test("unmasks DeepPartial types", () => {
     type UserFieldsFragment = {
       __typename: "User";

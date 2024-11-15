@@ -306,7 +306,7 @@ function addFieldAccessorWarnings(
         const keyName = resultKeyNameFromField(selection);
         const childSelectionSet = selection.selectionSet;
 
-        if (keyName in memo) {
+        if (keyName in memo && !childSelectionSet) {
           return memo;
         }
 

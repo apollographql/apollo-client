@@ -2924,7 +2924,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(options: Us
 export interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer_2<TData>, NoInfer_2<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
     client?: ApolloClient<any>;
     // (undocumented)
-    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string;
+    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
     // (undocumented)
     optimistic?: boolean;
 }

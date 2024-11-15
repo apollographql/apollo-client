@@ -1718,7 +1718,7 @@ describe("maskOperation", () => {
   });
 
   test('handles overlapping types when subtype has accessor warnings with @unmask(mode: "migrate")', async () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
     const query = gql`
       query PlaylistQuery {
         playlist {
@@ -1727,10 +1727,18 @@ describe("maskOperation", () => {
           name
           album {
             id
+            tracks {
+              id
+              __typename
+            }
             __typename
           }
           artist {
             id
+            topTracks {
+              id
+              __typename
+            }
             __typename
           }
           __typename
@@ -1746,6 +1754,11 @@ describe("maskOperation", () => {
             url
             __typename
           }
+          tracks {
+            id
+            name
+            __typename
+          }
           __typename
         }
       }
@@ -1755,6 +1768,11 @@ describe("maskOperation", () => {
           id
           images {
             url
+            __typename
+          }
+          topTracks {
+            id
+            name
             __typename
           }
           __typename
@@ -1771,11 +1789,13 @@ describe("maskOperation", () => {
             id: "2RSIoPew2TOy41ASHpzOx3",
             __typename: "Album",
             images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+            tracks: [{ id: "1", name: "Track 1", __typename: "Track" }],
           },
           artist: {
             id: "2",
             __typename: "Artist",
             images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+            topTracks: [{ id: "2", name: "Track 2", __typename: "Track" }],
           },
         },
       },
@@ -1783,24 +1803,9 @@ describe("maskOperation", () => {
       new InMemoryCache()
     );
 
-    expect(console.warn).not.toHaveBeenCalled();
+    expect(consoleSpy.warn).not.toHaveBeenCalled();
 
-    expect(data).toEqual({
-      playlist: {
-        id: "1",
-        name: "Playlist",
-        album: {
-          id: "2RSIoPew2TOy41ASHpzOx3",
-          __typename: "Album",
-          images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
-        },
-        artist: {
-          id: "2",
-          __typename: "Artist",
-          images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
-        },
-      },
-    });
+    consoleSpy.warn.mockClear();
 
     data.playlist.album;
     data.playlist.album.id;
@@ -1813,6 +1818,25 @@ describe("maskOperation", () => {
     data.playlist.album.images;
     data.playlist.artist.images;
     expect(console.warn).toHaveBeenCalledTimes(2);
+
+    expect(data).toEqual({
+      playlist: {
+        id: "1",
+        name: "Playlist",
+        album: {
+          id: "2RSIoPew2TOy41ASHpzOx3",
+          __typename: "Album",
+          images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+          tracks: [{ id: "1", name: "Track 1", __typename: "Track" }],
+        },
+        artist: {
+          id: "2",
+          __typename: "Artist",
+          images: [{ url: "https://i.scdn.co/image/1", __typename: "Image" }],
+          topTracks: [{ id: "2", name: "Track 2", __typename: "Track" }],
+        },
+      },
+    });
   });
 
   test("masks fragments in subscription documents", () => {

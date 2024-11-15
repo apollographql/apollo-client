@@ -7,6 +7,7 @@ import {
   getFragmentMaskMode,
   getOperationDefinition,
   maybeDeepFreeze,
+  isNonNullObject,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
@@ -173,34 +174,45 @@ function maskSelectionSet(
     ([memo, changed], selection) => {
       switch (selection.kind) {
         case Kind.FIELD: {
-          const keyName = resultKeyNameFromField(selection);
-          const childSelectionSet = selection.selectionSet;
+          disableWarningsSlot.withValue(true, () => {
+            const keyName = resultKeyNameFromField(selection);
+            const childSelectionSet = selection.selectionSet;
 
-          memo[keyName] = data[keyName];
+            const maybeValueWithWarning = memo[keyName];
+            memo[keyName] = data[keyName];
 
-          if (memo[keyName] === void 0) {
-            delete memo[keyName];
-          }
-
-          if (keyName in memo && childSelectionSet && data[keyName] !== null) {
-            const [masked, childChanged] = maskSelectionSet(
-              data[keyName],
-              childSelectionSet,
-              context,
-              __DEV__ ? `${path || ""}.${keyName}` : void 0
-            );
+            if (memo[keyName] === void 0) {
+              delete memo[keyName];
+            }
 
             if (
-              childChanged ||
-              // This check prevents cases where masked fields may accidentally be
-              // returned as part of this object when the fragment also selects
-              // additional fields from the same child selection.
-              Object.keys(masked).length !== Object.keys(data[keyName]).length
+              keyName in memo &&
+              childSelectionSet &&
+              data[keyName] !== null
             ) {
-              memo[keyName] = masked;
-              changed = true;
+              const [masked, childChanged] = maskSelectionSet(
+                data[keyName],
+                childSelectionSet,
+                context,
+                __DEV__ ? `${path || ""}.${keyName}` : void 0
+              );
+
+              if (
+                childChanged ||
+                // This check prevents cases where masked fields may accidentally be
+                // returned as part of this object when the fragment also selects
+                // additional fields from the same child selection.
+                Object.keys(masked).length !== Object.keys(data[keyName]).length
+              ) {
+                delete memo[keyName];
+                memo[keyName] =
+                  maybeValueWithWarning ?
+                    backfillFieldsWithWarnings(masked, maybeValueWithWarning)
+                  : masked;
+                changed = true;
+              }
             }
-          }
+          });
 
           return [memo, changed];
         }
@@ -434,4 +446,53 @@ function warnOnImproperCacheImplementation() {
       "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
     );
   }
+}
+
+function backfillFieldsWithWarnings(
+  source: Record<string, unknown>,
+  unmasked: Record<string, unknown>
+): any {
+  if (Array.isArray(source)) {
+    if (Array.isArray(unmasked)) {
+      return source.map((s, idx) =>
+        backfillFieldsWithWarnings(s, unmasked[idx])
+      );
+    }
+
+    return source;
+  }
+
+  const keys = new Set([...Object.keys(source), ...Object.keys(unmasked)]);
+  const returnValue: Record<string, unknown> = {};
+  const { hasOwnProperty } = Object.prototype;
+
+  if (isNonNullObject(source) && isNonNullObject(unmasked)) {
+    Array.from(keys).forEach((key) => {
+      if (hasOwnProperty.call(source, key)) {
+        if (isNonNullObject(source[key]) && isNonNullObject(unmasked[key])) {
+          returnValue[key] = backfillFieldsWithWarnings(
+            source[key],
+            unmasked[key]
+          );
+        } else {
+          returnValue[key] = source[key];
+        }
+
+        return;
+      }
+
+      const descriptor = Object.getOwnPropertyDescriptor(unmasked, key);
+
+      Object.defineProperty(returnValue, key, {
+        get: descriptor?.get,
+        set: descriptor?.set,
+        enumerable: true,
+        configurable: true,
+      });
+    });
+  } else {
+    return source;
+  }
+
+  return returnValue;
 }

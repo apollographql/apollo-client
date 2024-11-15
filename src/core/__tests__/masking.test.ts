@@ -1751,8 +1751,7 @@ describe("maskOperation", () => {
       }
 
       fragment PlaylistTitleCell on Playlist {
-        id
-        album {
+        artist {
           id
           images {
             url
@@ -1806,10 +1805,14 @@ describe("maskOperation", () => {
     data.playlist.album;
     data.playlist.album.id;
     data.playlist.album.__typename;
+    data.playlist.artist;
+    data.playlist.artist.id;
+    data.playlist.artist.__typename;
     expect(console.warn).not.toHaveBeenCalled();
 
     data.playlist.album.images;
-    expect(console.warn).toHaveBeenCalledTimes(1);
+    data.playlist.artist.images;
+    expect(console.warn).toHaveBeenCalledTimes(2);
   });
 
   test("masks fragments in subscription documents", () => {

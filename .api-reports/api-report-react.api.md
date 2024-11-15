@@ -799,6 +799,16 @@ interface ExecutionPatchResultBase {
     hasNext?: boolean;
 }
 
+// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type ExtractFragmentRefs<TData> = TData extends {
+    " $fragmentRefs"?: infer FragmentRefs extends object;
+} ? Prettify<{
+    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
+} & CombineFragmentRefs<FragmentRefs>> : never;
+
 // Warning: (ae-forgotten-export) The symbol "FetchMoreQueryOptions" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -1119,7 +1129,6 @@ interface MaskOperationOptions<TData> {
 // @public (undocumented)
 type MaybeAsync<T> = T | PromiseLike<T>;
 
-// Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 //
@@ -2134,14 +2143,10 @@ type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends
 // @public
 type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
 
-// Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ExtractFragmentRefs" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
-    " $fragmentRefs"?: infer FragmentRefs extends object;
-} ? Prettify<{
-    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
-} & CombineFragmentRefs<FragmentRefs>> : never : TData extends object ? {
+type UnwrapFragmentRefs<TData> = string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? null extends TData ? ExtractFragmentRefs<TData> | null : ExtractFragmentRefs<TData> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
 } : TData;
 

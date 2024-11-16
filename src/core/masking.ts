@@ -251,21 +251,6 @@ function maskSelectionSet(
             return [memo, true];
           }
 
-          // if (__DEV__) {
-          //   if (mode === "migrate") {
-          //     return [
-          //       addFieldAccessorWarnings(
-          //         memo,
-          //         data,
-          //         fragment.selectionSet,
-          //         path || "",
-          //         context
-          //       ),
-          //       true,
-          //     ];
-          //   }
-          // }
-
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             fragment.selectionSet,
@@ -289,112 +274,6 @@ function maskSelectionSet(
 
   return result;
 }
-
-// function addFieldAccessorWarnings(
-//   memo: Record<string, unknown>,
-//   data: Record<string, unknown>,
-//   selectionSetNode: SelectionSetNode,
-//   path: string,
-//   context: MaskingContext
-// ) {
-//   if (Array.isArray(data)) {
-//     return data.map((item, index): unknown => {
-//       return addFieldAccessorWarnings(
-//         memo[index] || Object.create(null),
-//         item,
-//         selectionSetNode,
-//         `${path}[${index}]`,
-//         context
-//       );
-//     });
-//   }
-//
-//   return selectionSetNode.selections
-//     .concat()
-//     .sort(sortFragmentsLast)
-//     .reduce<any>((memo, selection) => {
-//       switch (selection.kind) {
-//         case Kind.FIELD: {
-//           const keyName = resultKeyNameFromField(selection);
-//           const childSelectionSet = selection.selectionSet;
-//
-//           if (keyName in memo && !childSelectionSet) {
-//             return memo;
-//           }
-//
-//           let value = data[keyName];
-//
-//           if (childSelectionSet) {
-//             value = addFieldAccessorWarnings(
-//               memo[keyName] ||
-//                 (Array.isArray(data[keyName]) ? [] : Object.create(null)),
-//               data[keyName] as Record<string, unknown>,
-//               childSelectionSet,
-//               `${path}.${keyName}`,
-//               context
-//             );
-//           }
-//
-//           if (__DEV__) {
-//             if (keyName in memo) {
-//               memo[keyName] = value;
-//             } else {
-//               addAccessorWarning(memo, value, keyName, path, context);
-//             }
-//           }
-//
-//           if (!__DEV__) {
-//             memo[keyName] = data[keyName];
-//           }
-//
-//           return memo;
-//         }
-//         case Kind.INLINE_FRAGMENT: {
-//           if (
-//             selection.typeCondition &&
-//             !context.cache.fragmentMatches!(selection, (data as any).__typename)
-//           ) {
-//             return memo;
-//           }
-//
-//           return addFieldAccessorWarnings(
-//             memo,
-//             data,
-//             selection.selectionSet,
-//             path,
-//             context
-//           );
-//         }
-//         case Kind.FRAGMENT_SPREAD: {
-//           const fragment = context.fragmentMap[selection.name.value];
-//           const mode = getFragmentMaskMode(selection);
-//
-//           if (mode === "mask") {
-//             return memo;
-//           }
-//
-//           if (mode === "unmask") {
-//             const [fragmentData] = maskSelectionSet(
-//               data,
-//               fragment.selectionSet,
-//               context,
-//               path
-//             );
-//
-//             return Object.assign(memo, fragmentData);
-//           }
-//
-//           return addFieldAccessorWarnings(
-//             memo,
-//             data,
-//             fragment.selectionSet,
-//             path,
-//             context
-//           );
-//         }
-//       }
-//     }, memo);
-// }
 
 function addAccessorWarning(
   data: Record<string, any>,
@@ -450,14 +329,6 @@ function warnOnImproperCacheImplementation() {
       "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
     );
   }
-}
-
-function sortFragmentsLast(a: SelectionNode, b: SelectionNode) {
-  if (a.kind === b.kind) {
-    return 0;
-  }
-
-  return a.kind === Kind.FRAGMENT_SPREAD ? 1 : -1;
 }
 
 function assignWithAccessors(target: object, source: object) {

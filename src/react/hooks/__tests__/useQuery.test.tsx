@@ -1089,23 +1089,34 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      function Data({ id }: { id: string }) {
+      const user = userEvent.setup();
+
+      function App() {
+        const [id, setId] = useState("1");
         const result = useQuery(query, { variables: { id } });
+        const { refetch } = result;
+
         renderStream.replaceSnapshot(result);
 
-        return null;
+        return (
+          <>
+            <button
+              onClick={() => {
+                setId("2");
+                refetch({ id: "2" });
+              }}
+            >
+              Change ID
+            </button>
+          </>
+        );
       }
 
-      function App({ id }: { id: string }) {
-        return <Data key={id} id={id} />;
-      }
-
-      const renderStream = renderToRenderStream<QueryResult>(<App id="1" />, {
+      const renderStream = renderToRenderStream<QueryResult>(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       });
-      const { rerender } = await renderStream.renderResultPromise;
 
       {
         const { snapshot } = await renderStream.takeRender();
@@ -1127,7 +1138,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      rerender(<App id="2" />);
+      await act(() => user.click(screen.getByText("Change ID")));
 
       {
         const { snapshot } = await renderStream.takeRender();

@@ -173,125 +173,112 @@ function maskSelectionSet(
     return [changed ? masked : data, changed];
   }
 
-  const result = selectionSet.selections
-    .concat()
-    .sort(sortFragmentsLast)
-    .reduce<[any, boolean]>(
-      ([memo, changed], selection) => {
-        switch (selection.kind) {
-          case Kind.FIELD: {
-            const keyName = resultKeyNameFromField(selection);
-            const childSelectionSet = selection.selectionSet;
+  const result = selectionSet.selections.reduce<[any, boolean]>(
+    ([memo, changed], selection) => {
+      switch (selection.kind) {
+        case Kind.FIELD: {
+          const keyName = resultKeyNameFromField(selection);
+          const childSelectionSet = selection.selectionSet;
 
-            memo[keyName] = data[keyName];
+          memo[keyName] = data[keyName];
 
-            if (memo[keyName] === void 0) {
+          if (memo[keyName] === void 0) {
+            delete memo[keyName];
+          }
+
+          if (__DEV__) {
+            if (context.addWarnings) {
               delete memo[keyName];
+              addAccessorWarning(memo, data[keyName], keyName, path!, context);
+              changed = true;
             }
+          }
 
-            if (__DEV__) {
-              if (context.addWarnings) {
-                delete memo[keyName];
-                addAccessorWarning(
-                  memo,
-                  data[keyName],
-                  keyName,
-                  path!,
-                  context
-                );
-                changed = true;
-              }
-            }
+          if (keyName in memo && childSelectionSet && data[keyName] !== null) {
+            const [masked, childChanged] = maskSelectionSet(
+              data[keyName],
+              childSelectionSet,
+              context,
+              __DEV__ ? `${path || ""}.${keyName}` : void 0
+            );
 
             if (
-              keyName in memo &&
-              childSelectionSet &&
-              data[keyName] !== null
+              childChanged ||
+              // This check prevents cases where masked fields may accidentally be
+              // returned as part of this object when the fragment also selects
+              // additional fields from the same child selection.
+              Object.keys(masked).length !== Object.keys(data[keyName]).length
             ) {
-              const [masked, childChanged] = maskSelectionSet(
-                data[keyName],
-                childSelectionSet,
-                context,
-                __DEV__ ? `${path || ""}.${keyName}` : void 0
-              );
-
-              if (
-                childChanged ||
-                // This check prevents cases where masked fields may accidentally be
-                // returned as part of this object when the fragment also selects
-                // additional fields from the same child selection.
-                Object.keys(masked).length !== Object.keys(data[keyName]).length
-              ) {
-                memo[keyName] = masked;
-                changed = true;
-              }
+              memo[keyName] = masked;
+              changed = true;
             }
+          }
 
+          return [memo, changed];
+        }
+        case Kind.INLINE_FRAGMENT: {
+          if (
+            selection.typeCondition &&
+            !context.cache.fragmentMatches!(selection, data.__typename)
+          ) {
             return [memo, changed];
           }
-          case Kind.INLINE_FRAGMENT: {
-            if (
-              selection.typeCondition &&
-              !context.cache.fragmentMatches!(selection, data.__typename)
-            ) {
-              return [memo, changed];
-            }
 
-            const [fragmentData, childChanged] = maskSelectionSet(
-              data,
-              selection.selectionSet,
-              context,
-              path
-            );
+          const [fragmentData, childChanged] = maskSelectionSet(
+            data,
+            selection.selectionSet,
+            context,
+            path
+          );
 
-            return [Object.assign(memo, fragmentData), changed || childChanged];
-          }
-          case Kind.FRAGMENT_SPREAD: {
-            const fragmentName = selection.name.value;
-            let fragment: FragmentDefinitionNode | null =
-              context.fragmentMap[fragmentName] ||
-              (context.fragmentMap[fragmentName] =
-                context.cache.lookupFragment(fragmentName)!);
-            invariant(
-              fragment,
-              "Could not find fragment with name '%s'.",
-              fragmentName
-            );
-
-            const mode = getFragmentMaskMode(selection);
-
-            if (mode === "mask") {
-              return [memo, true];
-            }
-
-            // if (__DEV__) {
-            //   if (mode === "migrate") {
-            //     return [
-            //       addFieldAccessorWarnings(
-            //         memo,
-            //         data,
-            //         fragment.selectionSet,
-            //         path || "",
-            //         context
-            //       ),
-            //       true,
-            //     ];
-            //   }
-            // }
-
-            const [fragmentData, changed] = maskSelectionSet(
-              data,
-              fragment.selectionSet,
-              { ...context, addWarnings: mode === "migrate" },
-              path
-            );
-
-            return [assignWithAccessors(memo, fragmentData), changed];
-          }
+          return [Object.assign(memo, fragmentData), changed || childChanged];
         }
-      },
-      [Object.create(null), false]
-    );
+        case Kind.FRAGMENT_SPREAD: {
+          const fragmentName = selection.name.value;
+          let fragment: FragmentDefinitionNode | null =
+            context.fragmentMap[fragmentName] ||
+            (context.fragmentMap[fragmentName] =
+              context.cache.lookupFragment(fragmentName)!);
+          invariant(
+            fragment,
+            "Could not find fragment with name '%s'.",
+            fragmentName
+          );
+
+          const mode = getFragmentMaskMode(selection);
+
+          if (mode === "mask") {
+            return [memo, true];
+          }
+
+          // if (__DEV__) {
+          //   if (mode === "migrate") {
+          //     return [
+          //       addFieldAccessorWarnings(
+          //         memo,
+          //         data,
+          //         fragment.selectionSet,
+          //         path || "",
+          //         context
+          //       ),
+          //       true,
+          //     ];
+          //   }
+          // }
+
+          const [fragmentData, changed] = maskSelectionSet(
+            data,
+            fragment.selectionSet,
+            { ...context, addWarnings: mode === "migrate" },
+            path
+          );
+
+          return [assignWithAccessors(memo, fragmentData), changed];
+        }
+      }
+    },
+    [Object.create(null), false]
+  );
 
   if (data && "__typename" in data && !("__typename" in result[0])) {
     result[0].__typename = data.__typename;

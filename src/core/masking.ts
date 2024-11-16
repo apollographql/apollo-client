@@ -266,14 +266,17 @@ function maskSelectionSet(
           //   }
           // }
 
-          const [fragmentData, changed] = maskSelectionSet(
+          const [fragmentData, childChanged] = maskSelectionSet(
             data,
             fragment.selectionSet,
             { ...context, addWarnings: mode === "migrate" },
-            path
+            path || ""
           );
 
-          return [assignWithAccessors(memo, fragmentData), changed];
+          return [
+            assignWithAccessors(memo, fragmentData),
+            changed || childChanged,
+          ];
         }
       }
     },

@@ -229,13 +229,7 @@ function maskSelectionSet(
               path
             );
 
-            return [
-              {
-                ...memo,
-                ...fragmentData,
-              },
-              changed || childChanged,
-            ];
+            return [Object.assign(memo, fragmentData), changed || childChanged];
           }
           case Kind.FRAGMENT_SPREAD: {
             const fragmentName = selection.name.value;
@@ -277,7 +271,7 @@ function maskSelectionSet(
               path
             );
 
-            return [{ ...memo, ...fragmentData }, changed];
+            return [Object.assign(memo, fragmentData), changed];
           }
         }
       },

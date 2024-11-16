@@ -43,6 +43,7 @@ import { InvariantError } from "../../../utilities/globals";
 import {
   createRenderStream,
   renderHookToSnapshotStream,
+  renderToRenderStream,
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -1043,6 +1044,110 @@ describe("useQuery Hook", () => {
         { interval: 1 }
       );
       expect(result.current.data).toEqual({ hello: "from link" });
+    });
+
+    it.only("can unmount and remount with new variables and properly fetch", async () => {
+      const query = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+      const mocks: MockedResponse[] = [
+        {
+          request: { query, variables: { id: "1" } },
+          result: {
+            data: {
+              user: {
+                __typename: "User",
+                id: "1",
+                name: "User 1",
+              },
+            },
+          },
+          delay: 10,
+        },
+        {
+          request: { query, variables: { id: "2" } },
+          result: {
+            data: {
+              user: {
+                __typename: "User",
+                id: "2",
+                name: "User 2",
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      function Data({ id }: { id: string }) {
+        const result = useQuery(query, { variables: { id } });
+        renderStream.replaceSnapshot(result);
+
+        return null;
+      }
+
+      function App({ id }: { id: string }) {
+        return <Data key={id} id={id} />;
+      }
+
+      const renderStream = renderToRenderStream<QueryResult>(<App id="1" />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+      const { rerender } = await renderStream.renderResultPromise;
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.loading).toBe(true);
+        expect(snapshot.data).toBeUndefined();
+      }
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual({
+          user: {
+            __typename: "User",
+            id: "1",
+            name: "User 1",
+          },
+        });
+      }
+
+      rerender(<App id="2" />);
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.loading).toBe(true);
+        expect(snapshot.data).toBeUndefined();
+      }
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.loading).toBe(false);
+        expect(snapshot.data).toEqual({
+          user: {
+            __typename: "User",
+            id: "2",
+            name: "User 2",
+          },
+        });
+      }
     });
   });
 

@@ -628,6 +628,231 @@ describe("maskOperation", () => {
     });
   });
 
+  test("can handle fragment spreads in inline fragments with mix masked and @unmask", () => {
+    const query = gql`
+      query {
+        user {
+          id
+          ... {
+            ...UserFields
+            ...ProfileFields @unmask
+          }
+        }
+      }
+
+      fragment UserFields on User {
+        name
+      }
+
+      fragment ProfileFields on User {
+        username
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          username: "testuser",
+        },
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        id: 1,
+        username: "testuser",
+      },
+    });
+  });
+
+  test("can handle overlapping fragment spreads in inline fragments with mix masked and @unmask", () => {
+    const query = gql`
+      query {
+        user {
+          id
+          ... {
+            ...UserFields
+            ...ProfileFields @unmask
+          }
+        }
+      }
+
+      fragment UserFields on User {
+        username
+        name
+      }
+
+      fragment ProfileFields on User {
+        username
+        email
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        user: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          username: "testuser",
+          email: "testuser@example.com",
+        },
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        id: 1,
+        username: "testuser",
+        email: "testuser@example.com",
+      },
+    });
+  });
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing(
+    'can handle fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")',
+    () => {
+      using _ = spyOnConsole("warn");
+
+      const query = gql`
+        query GetUser {
+          user {
+            id
+            ... @defer {
+              ...UserFields
+              ...ProfileFields @unmask(mode: "migrate")
+            }
+          }
+        }
+
+        fragment UserFields on User {
+          name
+        }
+
+        fragment ProfileFields on User {
+          username
+        }
+      `;
+
+      const data = maskOperation(
+        deepFreeze({
+          user: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            username: "testuser",
+          },
+        }),
+        query,
+        new InMemoryCache()
+      );
+
+      data.user.__typename;
+      data.user.id;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
+      data.user.username;
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(console.warn).toHaveBeenCalledWith(
+        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+        "query 'GetUser'",
+        "user.username"
+      );
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          username: "testuser",
+        },
+      });
+    }
+  );
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing(
+    'can handle overlapping fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")',
+    () => {
+      using _ = spyOnConsole("warn");
+      const query = gql`
+        query {
+          user {
+            id
+            ... {
+              ...UserFields
+              ...ProfileFields @unmask(mode: "migrate")
+            }
+          }
+        }
+
+        fragment UserFields on User {
+          username
+          name
+        }
+
+        fragment ProfileFields on User {
+          username
+          email
+        }
+      `;
+
+      const data = maskOperation(
+        deepFreeze({
+          user: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            username: "testuser",
+            email: "testuser@example.com",
+          },
+        }),
+        query,
+        new InMemoryCache()
+      );
+
+      data.user.__typename;
+      data.user.id;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
+      data.user.username;
+      data.user.email;
+
+      expect(console.warn).toHaveBeenCalledTimes(2);
+      expect(console.warn).toHaveBeenCalledWith(
+        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+        "query 'GetUser'",
+        "user.username"
+      );
+      expect(console.warn).toHaveBeenCalledWith(
+        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+        "query 'GetUser'",
+        "user.email"
+      );
+
+      expect(data).toEqual({
+        user: {
+          __typename: "User",
+          id: 1,
+          username: "testuser",
+          email: "testuser@example.com",
+        },
+      });
+    }
+  );
+
   test("handles field aliases", () => {
     const query = gql`
       query {

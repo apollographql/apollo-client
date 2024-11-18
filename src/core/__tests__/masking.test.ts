@@ -780,7 +780,7 @@ describe("maskOperation", () => {
   test('can handle overlapping fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")', () => {
     using _ = spyOnConsole("warn");
     const query = gql`
-      query {
+      query GetUser {
         user {
           id
           ... {

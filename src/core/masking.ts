@@ -24,6 +24,10 @@ interface MaskingContext {
   fragmentMap: FragmentMap;
   cache: ApolloCache<unknown>;
   mutableTargets: WeakMap<any, any>;
+  migration: {
+    unmasked: WeakMap<any, Set<string>>;
+    migrated: WeakMap<any, Map<string, string>>;
+  };
 }
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
@@ -61,13 +65,23 @@ export function maskOperation<TData = unknown>(
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
     mutableTargets: new WeakMap(),
+    migration: {
+      unmasked: new Map(),
+      migrated: new Map(),
+    },
   };
 
   const [masked, changed] = maskSelectionSet(
     data,
     definition.selectionSet,
-    context
+    context,
+    undefined,
+    false
   );
+
+  if (__DEV__) {
+    addMigrationWarnings(context, masked);
+  }
 
   if (Object.isFrozen(data)) {
     disableWarningsSlot.withValue(true, maybeDeepFreeze, [masked]);
@@ -132,13 +146,23 @@ export function maskFragment<TData = unknown>(
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
     mutableTargets: new WeakMap(),
+    migration: {
+      unmasked: new WeakMap(),
+      migrated: new WeakMap(),
+    },
   };
 
   const [masked, changed] = maskSelectionSet(
     data,
     fragment.selectionSet,
-    context
+    context,
+    undefined,
+    false
   );
+
+  if (__DEV__) {
+    addMigrationWarnings(context, masked);
+  }
 
   if (Object.isFrozen(data)) {
     disableWarningsSlot.withValue(true, maybeDeepFreeze, [masked]);
@@ -164,7 +188,8 @@ function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   context: MaskingContext,
-  path?: string | undefined
+  path: string | undefined,
+  migration: boolean
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -180,7 +205,8 @@ function maskSelectionSet(
         item,
         selectionSet,
         context,
-        __DEV__ ? `${path || ""}[${index}]` : void 0
+        __DEV__ ? `${path || ""}[${index}]` : void 0,
+        migration
       );
       changed ||= itemChanged;
 
@@ -206,7 +232,8 @@ function maskSelectionSet(
                 data[keyName],
                 childSelectionSet,
                 context,
-                __DEV__ ? `${path || ""}.${keyName}` : void 0
+                __DEV__ ? `${path || ""}.${keyName}` : void 0,
+                migration
               );
 
               if (childChanged) {
@@ -217,6 +244,25 @@ function maskSelectionSet(
 
             if (newValue !== void 0) {
               memo[keyName] = newValue;
+              if (__DEV__ && context.migration) {
+                if (migration) {
+                  if (!context.migration.migrated.has(memo)) {
+                    context.migration.migrated.set(memo, new Map());
+                  }
+                  context.migration.migrated.get(memo)!.set(keyName, path);
+                  console.log(
+                    "migrated:",
+                    memo,
+                    keyName,
+                    `${path || ""}.${keyName}`
+                  );
+                } else {
+                  if (!context.migration.unmasked.has(memo)) {
+                    context.migration.unmasked.set(memo, new Set());
+                  }
+                  context.migration.unmasked.get(memo)!.add(keyName);
+                }
+              }
             }
 
             return [memo, changed];
@@ -233,7 +279,8 @@ function maskSelectionSet(
               data,
               selection.selectionSet,
               context,
-              path
+              path,
+              migration
             );
             return [memo, changed || childChanged];
           }
@@ -259,10 +306,11 @@ function maskSelectionSet(
               data,
               fragment.selectionSet,
               context,
-              path
+              path,
+              mode === "migrate"
             );
 
-            return [memo, changed];
+            return [memo, changed || mode === "migrate"];
           }
         }
       },
@@ -285,6 +333,25 @@ function maskSelectionSet(
   changed ||= Object.keys(target).length !== Object.keys(data).length;
 
   return [changed ? target : data, changed];
+}
+
+function addMigrationWarnings(context: MaskingContext, masked: any) {
+  JSON.stringify(masked, function (this: any, key, value) {
+    const u = context.migration["unmasked"].get(this);
+    const m = context.migration["migrated"].get(this);
+    console.log({
+      t: this,
+      key,
+      value,
+      m,
+      mv: m && m.has(key),
+      u,
+      uv: u && u.has(key),
+    });
+    if (!m || !m.has(key) || (u && u.has(key))) return value;
+    addAccessorWarning(this, value, key, m.get(key)!, context);
+    return value;
+  });
 }
 
 function addAccessorWarning(

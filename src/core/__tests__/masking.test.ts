@@ -4,7 +4,7 @@ import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { InvariantError } from "../../utilities/globals/index.js";
 import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
 
-describe.only("maskOperation", () => {
+describe("maskOperation", () => {
   test("throws when passing document with no operation to maskOperation", () => {
     const document = gql`
       fragment Foo on Bar {
@@ -1608,7 +1608,7 @@ describe.only("maskOperation", () => {
     );
   });
 
-  test.failing("masks child fragments of @unmask(mode: 'migrate')", () => {
+  test("masks child fragments of @unmask(mode: 'migrate')", () => {
     using _ = spyOnConsole("warn");
 
     const query = gql`

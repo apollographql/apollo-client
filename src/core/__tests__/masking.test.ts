@@ -2059,6 +2059,126 @@ describe("maskOperation", () => {
       });
     }
   });
+
+  test("unmasks partial deferred data with @unmask", () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            sentAt
+            ...GreetingFragment @unmask
+          }
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskOperation(
+        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+            recipient: { __typename: "__Person", name: "Alice" },
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+          recipient: { __typename: "__Person", name: "Alice" },
+        },
+      });
+    }
+  });
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing(
+    'unmasks partial deferred data with warnings with @unmask(mode: "migrate")',
+    () => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ... @defer {
+              sentAt
+              ...GreetingFragment @unmask(mode: "migrate")
+            }
+          }
+        }
+
+        fragment GreetingFragment on Greeting {
+          recipient {
+            name
+          }
+        }
+      `;
+
+      {
+        const data = maskOperation(
+          { greeting: { message: "Hello world", __typename: "Greeting" } },
+          query,
+          new InMemoryCache()
+        );
+
+        expect(data).toEqual({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        });
+      }
+
+      {
+        const data = maskOperation(
+          {
+            greeting: {
+              message: "Hello world",
+              __typename: "Greeting",
+              recipient: { __typename: "__Person", name: "Alice" },
+            },
+          },
+          query,
+          new InMemoryCache()
+        );
+
+        data.greeting.message;
+        data.greeting.__typename;
+
+        expect(console.warn).not.toHaveBeenCalled();
+
+        data.greeting.recipient;
+        expect(console.warn).toHaveBeenCalledTimes(1);
+
+        expect(data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+            recipient: { __typename: "__Person", name: "Alice" },
+          },
+        });
+      }
+    }
+  );
 });
 
 describe("maskFragment", () => {

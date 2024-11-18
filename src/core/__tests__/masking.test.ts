@@ -2056,7 +2056,7 @@ describe("maskOperation", () => {
     `;
 
     const data = maskOperation(
-      {
+      deepFreeze({
         playlist: {
           id: "1",
           name: "Playlist",
@@ -2073,7 +2073,7 @@ describe("maskOperation", () => {
             topTracks: [{ id: "2", name: "Track 2", __typename: "Track" }],
           },
         },
-      },
+      }),
       query,
       new InMemoryCache()
     );

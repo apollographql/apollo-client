@@ -1,9 +1,5 @@
 import { Kind } from "graphql";
-import type {
-  FragmentDefinitionNode,
-  SelectionNode,
-  SelectionSetNode,
-} from "graphql";
+import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import {
   createFragmentMap,
   resultKeyNameFromField,

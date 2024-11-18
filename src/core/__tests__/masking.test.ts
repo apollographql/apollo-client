@@ -1668,6 +1668,56 @@ describe("maskOperation", () => {
     );
   });
 
+  test("masks child fragments of @unmask", () => {
+    using _ = spyOnConsole("warn");
+
+    const query = gql`
+      query UnmaskedQuery {
+        currentUser {
+          id
+          name
+          ...UserFields @unmask
+        }
+      }
+      fragment UserFields on User {
+        age
+        ...UserSubfields
+        ...UserSubfields2 @unmask
+      }
+      fragment UserSubfields on User {
+        username
+      }
+      fragment UserSubfields2 on User {
+        email
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+          username: "testuser",
+          email: "test@example.com",
+        },
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(data).toEqual({
+      currentUser: {
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        email: "test@example.com",
+      },
+    });
+  });
+
   test("warns when accessing unmasked fields with complex selections with mode: 'migrate'", () => {
     using _ = spyOnConsole("warn");
     const query = gql`
@@ -3444,6 +3494,52 @@ describe("maskFragment", () => {
       "fragment 'UnmaskedUser'",
       "age"
     );
+  });
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing("masks child fragments of @unmask", () => {
+    using _ = spyOnConsole("warn");
+
+    const fragment = gql`
+      fragment UnmaskedUser on User {
+        id
+        name
+        ...UserFields @unmask
+      }
+      fragment UserFields on User {
+        age
+        ...UserSubfields
+        ...UserSubfields2 @unmask
+      }
+      fragment UserSubfields on User {
+        username
+      }
+      fragment UserSubfields2 on User {
+        email
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        __typename: "User",
+        id: 1,
+        name: "Test User",
+        age: 30,
+        username: "testuser",
+        email: "test@example.com",
+      }),
+      fragment,
+      new InMemoryCache(),
+      "UnmaskedUser"
+    );
+
+    expect(data).toEqual({
+      __typename: "User",
+      id: 1,
+      name: "Test User",
+      age: 30,
+      email: "test@example.com",
+    });
   });
 
   test("masks partial data", () => {

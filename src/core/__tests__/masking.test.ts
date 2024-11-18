@@ -3622,4 +3622,119 @@ describe("maskFragment", () => {
       }
     }
   );
+
+  test("masks results with primitive arrays", () => {
+    const fragment = gql`
+      fragment ListingFragment on Listing {
+        id
+        reviews
+        ...ListingFields
+      }
+
+      fragment ListingFields on Listing {
+        amenities
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        __typename: "Listing",
+        id: "1",
+        reviews: [5, 5, 3, 4],
+        amenities: ["pool", "hot tub", "backyard"],
+      }),
+      fragment,
+      new InMemoryCache(),
+      "ListingFragment"
+    );
+
+    expect(data).toEqual({
+      __typename: "Listing",
+      id: "1",
+      reviews: [5, 5, 3, 4],
+    });
+  });
+
+  test("unmasks results with primitive arrays with @unmask", () => {
+    const fragment = gql`
+      fragment ListingFragment on Listing {
+        id
+        reviews
+        ...ListingFields @unmask
+      }
+
+      fragment ListingFields on Listing {
+        amenities
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        __typename: "Listing",
+        id: "1",
+        reviews: [5, 5, 3, 4],
+        amenities: ["pool", "hot tub", "backyard"],
+      }),
+      fragment,
+      new InMemoryCache(),
+      "ListingFragment"
+    );
+
+    expect(data).toEqual({
+      __typename: "Listing",
+      id: "1",
+      reviews: [5, 5, 3, 4],
+      amenities: ["pool", "hot tub", "backyard"],
+    });
+  });
+
+  test('unmasks results with warnings with primitive arrays with @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
+
+    const fragment = gql`
+      fragment ListingFragment on Listing {
+        id
+        reviews
+        ...ListingFields @unmask(mode: "migrate")
+      }
+
+      fragment ListingFields on Listing {
+        amenities
+      }
+    `;
+
+    const data = maskFragment(
+      deepFreeze({
+        __typename: "Listing",
+        id: "1",
+        reviews: [5, 5, 3, 4],
+        amenities: ["pool", "hot tub", "backyard"],
+      }),
+      fragment,
+      new InMemoryCache(),
+      "ListingFragment"
+    );
+
+    data.__typename;
+    data.id;
+    data.reviews;
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    data.amenities;
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "fragment 'ListingFragment'",
+      "amenities"
+    );
+
+    expect(data).toEqual({
+      __typename: "Listing",
+      id: "1",
+      reviews: [5, 5, 3, 4],
+      amenities: ["pool", "hot tub", "backyard"],
+    });
+  });
 });

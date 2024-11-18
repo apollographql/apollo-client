@@ -2248,7 +2248,7 @@ describe("maskOperation", () => {
     }
   );
 
-  test("ensures partial deferred data can be masked", () => {
+  test("masks partial deferred data", () => {
     const query = gql`
       query {
         greeting {

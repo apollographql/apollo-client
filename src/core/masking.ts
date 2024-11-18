@@ -176,21 +176,9 @@ function maskSelectionSet(
           const keyName = resultKeyNameFromField(selection);
           const childSelectionSet = selection.selectionSet;
 
-          memo[keyName] = data[keyName];
+          let value = data[keyName];
 
-          if (memo[keyName] === void 0) {
-            delete memo[keyName];
-          }
-
-          if (__DEV__) {
-            if (context.addWarnings) {
-              delete memo[keyName];
-              addAccessorWarning(memo, data[keyName], keyName, path!, context);
-              changed = true;
-            }
-          }
-
-          if (keyName in memo && childSelectionSet && data[keyName] !== null) {
+          if (keyName in data && childSelectionSet && value !== null) {
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
@@ -205,7 +193,18 @@ function maskSelectionSet(
               // additional fields from the same child selection.
               Object.keys(masked).length !== Object.keys(data[keyName]).length
             ) {
-              memo[keyName] = masked;
+              value = masked;
+              changed = true;
+            }
+          }
+
+          if (value !== void 0) {
+            memo[keyName] = value;
+          }
+
+          if (__DEV__) {
+            if (context.addWarnings) {
+              addAccessorWarning(memo, value, keyName, path!, context);
               changed = true;
             }
           }

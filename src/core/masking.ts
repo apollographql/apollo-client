@@ -214,101 +214,98 @@ function maskSelectionSet(
     return [changed ? target : data, changed];
   }
 
-  let [target, changed] = selectionSet.selections
-    .concat()
-    .sort(sortFragmentsLast)
-    .reduce<[any, boolean]>(
-      ([memo, changed], selection) => {
-        switch (selection.kind) {
-          case Kind.FIELD: {
-            const keyName = resultKeyNameFromField(selection);
-            const childSelectionSet = selection.selectionSet;
+  let [target, changed] = selectionSet.selections.reduce<[any, boolean]>(
+    ([memo, changed], selection) => {
+      switch (selection.kind) {
+        case Kind.FIELD: {
+          const keyName = resultKeyNameFromField(selection);
+          const childSelectionSet = selection.selectionSet;
 
-            let newValue = memo[keyName] || data[keyName];
-            if (childSelectionSet && data[keyName] !== null) {
-              const [masked, childChanged] = maskSelectionSet(
-                data[keyName],
-                childSelectionSet,
-                context,
-                __DEV__ ? `${path || ""}.${keyName}` : void 0,
-                migration
-              );
-
-              if (childChanged) {
-                newValue = masked;
-                changed = true;
-              }
-            }
-
-            if (newValue !== void 0) {
-              memo[keyName] = newValue;
-            }
-            if (__DEV__) {
-              const m = context.migration;
-              if (!m.has(memo)) {
-                m.set(memo, {
-                  path: path || "",
-                  unmasked: new Set(),
-                  migrated: new Set(),
-                });
-              }
-              m.get(memo)![migration ? "migrated" : "unmasked"].add(keyName);
-            }
-            // we later want to add acessor warnings to the final result
-            // so we need a new object to add the accessor warning to
-            changed ||= migration;
-
-            return [memo, changed];
-          }
-          case Kind.INLINE_FRAGMENT: {
-            if (
-              selection.typeCondition &&
-              !context.cache.fragmentMatches!(selection, data.__typename)
-            ) {
-              return [memo, changed];
-            }
-
-            const [, childChanged] = maskSelectionSet(
-              data,
-              selection.selectionSet,
+          let newValue = memo[keyName] || data[keyName];
+          if (childSelectionSet && data[keyName] !== null) {
+            const [masked, childChanged] = maskSelectionSet(
+              data[keyName],
+              childSelectionSet,
               context,
-              path,
+              __DEV__ ? `${path || ""}.${keyName}` : void 0,
               migration
             );
-            return [memo, changed || childChanged];
-          }
-          case Kind.FRAGMENT_SPREAD: {
-            const fragmentName = selection.name.value;
-            let fragment: FragmentDefinitionNode | null =
-              context.fragmentMap[fragmentName] ||
-              (context.fragmentMap[fragmentName] =
-                context.cache.lookupFragment(fragmentName)!);
-            invariant(
-              fragment,
-              "Could not find fragment with name '%s'.",
-              fragmentName
-            );
 
-            const mode = getFragmentMaskMode(selection);
-
-            if (mode === "mask") {
-              return [memo, true];
+            if (childChanged) {
+              newValue = masked;
+              changed = true;
             }
+          }
 
-            const [, changed] = maskSelectionSet(
-              data,
-              fragment.selectionSet,
-              context,
-              path,
-              mode === "migrate"
-            );
+          if (newValue !== void 0) {
+            memo[keyName] = newValue;
+          }
+          if (__DEV__) {
+            const m = context.migration;
+            if (!m.has(memo)) {
+              m.set(memo, {
+                path: path || "",
+                unmasked: new Set(),
+                migrated: new Set(),
+              });
+            }
+            m.get(memo)![migration ? "migrated" : "unmasked"].add(keyName);
+          }
+          // we later want to add acessor warnings to the final result
+          // so we need a new object to add the accessor warning to
+          changed ||= migration;
 
+          return [memo, changed];
+        }
+        case Kind.INLINE_FRAGMENT: {
+          if (
+            selection.typeCondition &&
+            !context.cache.fragmentMatches!(selection, data.__typename)
+          ) {
             return [memo, changed];
           }
+
+          const [, childChanged] = maskSelectionSet(
+            data,
+            selection.selectionSet,
+            context,
+            path,
+            migration
+          );
+          return [memo, changed || childChanged];
         }
-      },
-      [getMutableTarget(data, context), false]
-    );
+        case Kind.FRAGMENT_SPREAD: {
+          const fragmentName = selection.name.value;
+          let fragment: FragmentDefinitionNode | null =
+            context.fragmentMap[fragmentName] ||
+            (context.fragmentMap[fragmentName] =
+              context.cache.lookupFragment(fragmentName)!);
+          invariant(
+            fragment,
+            "Could not find fragment with name '%s'.",
+            fragmentName
+          );
+
+          const mode = getFragmentMaskMode(selection);
+
+          if (mode === "mask") {
+            return [memo, true];
+          }
+
+          const [, changed] = maskSelectionSet(
+            data,
+            fragment.selectionSet,
+            context,
+            path,
+            mode === "migrate"
+          );
+
+          return [memo, changed];
+        }
+      }
+    },
+    [getMutableTarget(data, context), false]
+  );
 
   if (data && "__typename" in data && !("__typename" in target)) {
     target.__typename = data.__typename;
@@ -388,12 +385,4 @@ function warnOnImproperCacheImplementation() {
       "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
     );
   }
-}
-
-function sortFragmentsLast(a: SelectionNode, b: SelectionNode) {
-  if (a.kind === b.kind) {
-    return 0;
-  }
-
-  return a.kind === Kind.FRAGMENT_SPREAD ? 1 : -1;
 }

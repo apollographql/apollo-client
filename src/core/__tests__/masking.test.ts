@@ -718,140 +718,132 @@ describe("maskOperation", () => {
     });
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing(
-    'can handle fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")',
-    () => {
-      using _ = spyOnConsole("warn");
+  test('can handle fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
 
-      const query = gql`
-        query GetUser {
-          user {
-            id
-            ... @defer {
-              ...UserFields
-              ...ProfileFields @unmask(mode: "migrate")
-            }
+    const query = gql`
+      query GetUser {
+        user {
+          id
+          ... @defer {
+            ...UserFields
+            ...ProfileFields @unmask(mode: "migrate")
           }
         }
+      }
 
-        fragment UserFields on User {
-          name
-        }
+      fragment UserFields on User {
+        name
+      }
 
-        fragment ProfileFields on User {
-          username
-        }
-      `;
+      fragment ProfileFields on User {
+        username
+      }
+    `;
 
-      const data = maskOperation(
-        deepFreeze({
-          user: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
-            username: "testuser",
-          },
-        }),
-        query,
-        new InMemoryCache()
-      );
-
-      data.user.__typename;
-      data.user.id;
-
-      expect(console.warn).not.toHaveBeenCalled();
-
-      data.user.username;
-
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(console.warn).toHaveBeenCalledWith(
-        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-        "query 'GetUser'",
-        "user.username"
-      );
-
-      expect(data).toEqual({
+    const data = maskOperation(
+      deepFreeze({
         user: {
           __typename: "User",
           id: 1,
+          name: "Test User",
           username: "testuser",
         },
-      });
-    }
-  );
+      }),
+      query,
+      new InMemoryCache()
+    );
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing(
-    'can handle overlapping fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")',
-    () => {
-      using _ = spyOnConsole("warn");
-      const query = gql`
-        query {
-          user {
-            id
-            ... {
-              ...UserFields
-              ...ProfileFields @unmask(mode: "migrate")
-            }
+    data.user.__typename;
+    data.user.id;
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    data.user.username;
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'GetUser'",
+      "user.username"
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        id: 1,
+        username: "testuser",
+      },
+    });
+  });
+
+  test('can handle overlapping fragment spreads in inline fragments with mix masked and @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
+    const query = gql`
+      query {
+        user {
+          id
+          ... {
+            ...UserFields
+            ...ProfileFields @unmask(mode: "migrate")
           }
         }
+      }
 
-        fragment UserFields on User {
-          username
-          name
-        }
+      fragment UserFields on User {
+        username
+        name
+      }
 
-        fragment ProfileFields on User {
-          username
-          email
-        }
-      `;
+      fragment ProfileFields on User {
+        username
+        email
+      }
+    `;
 
-      const data = maskOperation(
-        deepFreeze({
-          user: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
-            username: "testuser",
-            email: "testuser@example.com",
-          },
-        }),
-        query,
-        new InMemoryCache()
-      );
-
-      data.user.__typename;
-      data.user.id;
-
-      expect(console.warn).not.toHaveBeenCalled();
-
-      data.user.username;
-      data.user.email;
-
-      expect(console.warn).toHaveBeenCalledTimes(2);
-      expect(console.warn).toHaveBeenCalledWith(
-        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-        "query 'GetUser'",
-        "user.username"
-      );
-      expect(console.warn).toHaveBeenCalledWith(
-        "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-        "query 'GetUser'",
-        "user.email"
-      );
-
-      expect(data).toEqual({
+    const data = maskOperation(
+      deepFreeze({
         user: {
           __typename: "User",
           id: 1,
+          name: "Test User",
           username: "testuser",
           email: "testuser@example.com",
         },
-      });
-    }
-  );
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    data.user.__typename;
+    data.user.id;
+
+    expect(console.warn).not.toHaveBeenCalled();
+
+    data.user.username;
+    data.user.email;
+
+    expect(console.warn).toHaveBeenCalledTimes(2);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'GetUser'",
+      "user.username"
+    );
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'GetUser'",
+      "user.email"
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        id: 1,
+        username: "testuser",
+        email: "testuser@example.com",
+      },
+    });
+  });
 
   test("handles field aliases", () => {
     const query = gql`
@@ -2432,104 +2424,100 @@ describe("maskOperation", () => {
     }
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing(
-    'unmasks partial data with warnings with @unmask(mode: "migrate")',
-    () => {
-      using _ = spyOnConsole("warn");
+  test('unmasks partial data with warnings with @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
 
-      const query = gql`
-        query {
-          greeting {
-            message
-            ...GreetingFragment @unmask(mode: "migrate")
-          }
+    const query = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment @unmask(mode: "migrate")
         }
-
-        fragment GreetingFragment on Greeting {
-          sentAt
-          recipient {
-            name
-          }
-        }
-      `;
-
-      {
-        const data = maskOperation(
-          deepFreeze({
-            greeting: { message: "Hello world", __typename: "Greeting" },
-          }),
-          query,
-          new InMemoryCache()
-        );
-
-        expect(data).toEqual({
-          greeting: { message: "Hello world", __typename: "Greeting" },
-        });
       }
 
-      {
-        const data = maskOperation(
-          deepFreeze({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              sentAt: "2024-01-01",
-            },
-          }),
-          query,
-          new InMemoryCache()
-        );
+      fragment GreetingFragment on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
 
-        data.greeting.__typename;
-        data.greeting.message;
+    {
+      const data = maskOperation(
+        deepFreeze({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        }),
+        query,
+        new InMemoryCache()
+      );
 
-        expect(console.warn).not.toHaveBeenCalled();
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
 
-        data.greeting.sentAt;
-        expect(console.warn).toHaveBeenCalledTimes(1);
-
-        expect(data).toEqual({
+    {
+      const data = maskOperation(
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
           },
-        });
-      }
+        }),
+        query,
+        new InMemoryCache()
+      );
 
-      {
-        const data = maskOperation(
-          deepFreeze({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "__Person" },
-            },
-          }),
-          query,
-          new InMemoryCache()
-        );
+      data.greeting.__typename;
+      data.greeting.message;
 
-        data.greeting.__typename;
-        data.greeting.message;
+      expect(console.warn).not.toHaveBeenCalled();
 
-        expect(console.warn).not.toHaveBeenCalled();
+      data.greeting.sentAt;
+      expect(console.warn).toHaveBeenCalledTimes(1);
 
-        data.greeting.recipient;
-        data.greeting.recipient.__typename;
-        expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+        },
+      });
+    }
 
-        expect(data).toEqual({
+    {
+      const data = maskOperation(
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "__Person" },
           },
-        });
-      }
+        }),
+        query,
+        new InMemoryCache()
+      );
+
+      data.greeting.__typename;
+      data.greeting.message;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
+      data.greeting.recipient;
+      data.greeting.recipient.__typename;
+      expect(console.warn).toHaveBeenCalledTimes(1);
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "__Person" },
+        },
+      });
     }
-  );
+  });
 
   test("masks partial deferred data", () => {
     const query = gql`
@@ -2646,80 +2634,76 @@ describe("maskOperation", () => {
     }
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing(
-    'unmasks partial deferred data with warnings with @unmask(mode: "migrate")',
-    () => {
-      using _ = spyOnConsole("warn");
+  test('unmasks partial deferred data with warnings with @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
 
-      const query = gql`
-        query {
-          greeting {
-            message
-            ... @defer {
-              sentAt
-              ...GreetingFragment @unmask(mode: "migrate")
-            }
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            sentAt
+            ...GreetingFragment @unmask(mode: "migrate")
           }
         }
-
-        fragment GreetingFragment on Greeting {
-          recipient {
-            name
-          }
-        }
-      `;
-
-      {
-        const data = maskOperation(
-          deepFreeze({
-            greeting: { message: "Hello world", __typename: "Greeting" },
-          }),
-          query,
-          new InMemoryCache()
-        );
-
-        expect(data).toEqual({
-          greeting: { message: "Hello world", __typename: "Greeting" },
-        });
       }
 
-      {
-        const data = maskOperation(
-          deepFreeze({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              sentAt: "2024-01-01",
-              recipient: { __typename: "__Person", name: "Alice" },
-            },
-          }),
-          query,
-          new InMemoryCache()
-        );
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
 
-        data.greeting.message;
-        data.greeting.sentAt;
-        data.greeting.__typename;
+    {
+      const data = maskOperation(
+        deepFreeze({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        }),
+        query,
+        new InMemoryCache()
+      );
 
-        expect(console.warn).not.toHaveBeenCalled();
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
 
-        data.greeting.recipient;
-        data.greeting.recipient.__typename;
-        data.greeting.recipient.name;
-        expect(console.warn).toHaveBeenCalledTimes(3);
-
-        expect(data).toEqual({
+    {
+      const data = maskOperation(
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
           },
-        });
-      }
+        }),
+        query,
+        new InMemoryCache()
+      );
+
+      data.greeting.message;
+      data.greeting.sentAt;
+      data.greeting.__typename;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
+      data.greeting.recipient;
+      data.greeting.recipient.__typename;
+      data.greeting.recipient.name;
+      expect(console.warn).toHaveBeenCalledTimes(3);
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+          recipient: { __typename: "__Person", name: "Alice" },
+        },
+      });
     }
-  );
+  });
 
   test("masks results with primitive arrays", () => {
     const query = gql`
@@ -3496,8 +3480,7 @@ describe("maskFragment", () => {
     );
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing("masks child fragments of @unmask", () => {
+  test("masks child fragments of @unmask", () => {
     using _ = spyOnConsole("warn");
 
     const fragment = gql`
@@ -3676,96 +3659,92 @@ describe("maskFragment", () => {
     }
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing(
-    'unmasks partial data with warnings with @unmask(mode: "migrate")',
-    () => {
-      using _ = spyOnConsole("warn");
+  test('unmasks partial data with warnings with @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
 
-      const fragment = gql`
-        fragment GreetingFields on Greeting {
-          message
-          ...AdditionalFields @unmask(mode: "migrate")
-        }
-
-        fragment AdditionalFields on Greeting {
-          sentAt
-          recipient {
-            name
-          }
-        }
-      `;
-
-      {
-        const data = maskFragment(
-          deepFreeze({ message: "Hello world", __typename: "Greeting" }),
-          fragment,
-          new InMemoryCache(),
-          "GreetingFields"
-        );
-
-        expect(data).toEqual({
-          message: "Hello world",
-          __typename: "Greeting",
-        });
+    const fragment = gql`
+      fragment GreetingFields on Greeting {
+        message
+        ...AdditionalFields @unmask(mode: "migrate")
       }
 
-      {
-        const data = maskFragment(
-          deepFreeze({
-            __typename: "Greeting",
-            message: "Hello world",
-            sentAt: "2024-01-01",
-          }),
-          fragment,
-          new InMemoryCache(),
-          "GreetingFields"
-        );
+      fragment AdditionalFields on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
 
-        data.__typename;
-        data.message;
+    {
+      const data = maskFragment(
+        deepFreeze({ message: "Hello world", __typename: "Greeting" }),
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
 
-        expect(console.warn).not.toHaveBeenCalled();
+      expect(data).toEqual({
+        message: "Hello world",
+        __typename: "Greeting",
+      });
+    }
 
-        data.sentAt;
-        expect(console.warn).toHaveBeenCalledTimes(1);
-
-        expect(data).toEqual({
+    {
+      const data = maskFragment(
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
-        });
-      }
+        }),
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
 
-      {
-        const data = maskFragment(
-          deepFreeze({
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "__Person" },
-          }),
-          fragment,
-          new InMemoryCache(),
-          "GreetingFields"
-        );
+      data.__typename;
+      data.message;
 
-        data.__typename;
-        data.message;
+      expect(console.warn).not.toHaveBeenCalled();
 
-        expect(console.warn).not.toHaveBeenCalled();
+      data.sentAt;
+      expect(console.warn).toHaveBeenCalledTimes(1);
 
-        data.recipient;
-        data.recipient.__typename;
-        expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+      });
+    }
 
-        expect(data).toEqual({
+    {
+      const data = maskFragment(
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "__Person" },
-        });
-      }
+        }),
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      data.__typename;
+      data.message;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
+      data.recipient;
+      data.recipient.__typename;
+      expect(console.warn).toHaveBeenCalledTimes(1);
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "__Person" },
+      });
     }
-  );
+  });
 
   test("masks partial deferred data", () => {
     const fragment = gql`
@@ -3872,75 +3851,71 @@ describe("maskFragment", () => {
     }
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing(
-    'unmasks partial deferred data with warnings with @unmask(mode: "migrate")',
-    () => {
-      using _ = spyOnConsole("warn");
+  test('unmasks partial deferred data with warnings with @unmask(mode: "migrate")', () => {
+    using _ = spyOnConsole("warn");
 
-      const fragment = gql`
-        fragment GreetingFields on Greeting {
-          message
-          ... @defer {
-            sentAt
-            ...AdditionalFields @unmask(mode: "migrate")
-          }
+    const fragment = gql`
+      fragment GreetingFields on Greeting {
+        message
+        ... @defer {
+          sentAt
+          ...AdditionalFields @unmask(mode: "migrate")
         }
-
-        fragment AdditionalFields on Greeting {
-          recipient {
-            name
-          }
-        }
-      `;
-
-      {
-        const data = maskFragment(
-          deepFreeze({ message: "Hello world", __typename: "Greeting" }),
-          fragment,
-          new InMemoryCache(),
-          "GreetingFields"
-        );
-
-        expect(data).toEqual({
-          message: "Hello world",
-          __typename: "Greeting",
-        });
       }
 
-      {
-        const data = maskFragment(
-          deepFreeze({
-            __typename: "Greeting",
-            message: "Hello world",
-            sentAt: "2024-01-01",
-            recipient: { __typename: "__Person", name: "Alice" },
-          }),
-          fragment,
-          new InMemoryCache(),
-          "GreetingFields"
-        );
+      fragment AdditionalFields on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
 
-        data.message;
-        data.sentAt;
-        data.__typename;
+    {
+      const data = maskFragment(
+        deepFreeze({ message: "Hello world", __typename: "Greeting" }),
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
 
-        expect(console.warn).not.toHaveBeenCalled();
+      expect(data).toEqual({
+        message: "Hello world",
+        __typename: "Greeting",
+      });
+    }
 
-        data.recipient;
-        data.recipient.__typename;
-        data.recipient.name;
-        expect(console.warn).toHaveBeenCalledTimes(3);
-
-        expect(data).toEqual({
+    {
+      const data = maskFragment(
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
           recipient: { __typename: "__Person", name: "Alice" },
-        });
-      }
+        }),
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      data.message;
+      data.sentAt;
+      data.__typename;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
+      data.recipient;
+      data.recipient.__typename;
+      data.recipient.name;
+      expect(console.warn).toHaveBeenCalledTimes(3);
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+        recipient: { __typename: "__Person", name: "Alice" },
+      });
     }
-  );
+  });
 
   test("masks results with primitive arrays", () => {
     const fragment = gql`

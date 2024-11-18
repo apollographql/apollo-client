@@ -3,7 +3,12 @@ export type {
   MockLinkOptions,
   ResultFunction,
 } from "./mocking/mockLink.js";
-export { MockLink, mockSingleLink } from "./mocking/mockLink.js";
+export {
+  MockLink,
+  mockSingleLink,
+  requestToKey,
+  normalizeMockedResponse,
+} from "./mocking/mockLink.js";
 export {
   MockSubscriptionLink,
   mockObservableLink,

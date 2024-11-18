@@ -52,7 +52,10 @@ export interface MockLinkOptions {
   showWarnings?: boolean;
 }
 
-function requestToKey(request: GraphQLRequest, addTypename: Boolean): string {
+export function requestToKey(
+  request: GraphQLRequest,
+  addTypename: Boolean
+): string {
   const queryString =
     request.query &&
     print(addTypename ? addTypenameToDocument(request.query) : request.query);
@@ -83,8 +86,7 @@ export class MockLink extends ApolloLink {
   }
 
   public addMockedResponse(mockedResponse: MockedResponse) {
-    const normalizedMockedResponse =
-      this.normalizeMockedResponse(mockedResponse);
+    const normalizedMockedResponse = normalizeMockedResponse(mockedResponse);
     const key = requestToKey(
       normalizedMockedResponse.request,
       this.addTypename
@@ -207,52 +209,52 @@ ${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
       };
     });
   }
+}
 
-  private normalizeMockedResponse(
-    mockedResponse: MockedResponse
-  ): MockedResponse {
-    const newMockedResponse = cloneDeep(mockedResponse);
-    const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
-      [{ name: "connection" }, { name: "nonreactive" }],
-      checkDocument(newMockedResponse.request.query)
-    );
-    invariant(queryWithoutClientOnlyDirectives, "query is required");
-    newMockedResponse.request.query = queryWithoutClientOnlyDirectives!;
-    const query = removeClientSetsFromDocument(newMockedResponse.request.query);
-    if (query) {
-      newMockedResponse.request.query = query;
-    }
-
-    mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
-    invariant(
-      mockedResponse.maxUsageCount > 0,
-      `Mock response maxUsageCount must be greater than 0, %s given`,
-      mockedResponse.maxUsageCount
-    );
-
-    this.normalizeVariableMatching(newMockedResponse);
-    return newMockedResponse;
+export function normalizeMockedResponse(
+  mockedResponse: MockedResponse
+): MockedResponse {
+  const newMockedResponse = cloneDeep(mockedResponse);
+  const queryWithoutClientOnlyDirectives = removeDirectivesFromDocument(
+    [{ name: "connection" }, { name: "nonreactive" }],
+    checkDocument(newMockedResponse.request.query)
+  );
+  invariant(queryWithoutClientOnlyDirectives, "query is required");
+  newMockedResponse.request.query = queryWithoutClientOnlyDirectives!;
+  const query = removeClientSetsFromDocument(newMockedResponse.request.query);
+  if (query) {
+    newMockedResponse.request.query = query;
   }
 
-  private normalizeVariableMatching(mockedResponse: MockedResponse) {
-    const request = mockedResponse.request;
-    if (mockedResponse.variableMatcher && request.variables) {
-      throw new Error(
-        "Mocked response should contain either variableMatcher or request.variables"
-      );
-    }
+  mockedResponse.maxUsageCount = mockedResponse.maxUsageCount ?? 1;
+  invariant(
+    mockedResponse.maxUsageCount > 0,
+    `Mock response maxUsageCount must be greater than 0, %s given`,
+    mockedResponse.maxUsageCount
+  );
 
-    if (!mockedResponse.variableMatcher) {
-      request.variables = {
-        ...getDefaultValues(getOperationDefinition(request.query)),
-        ...request.variables,
-      };
-      mockedResponse.variableMatcher = (vars) => {
-        const requestVariables = vars || {};
-        const mockedResponseVariables = request.variables || {};
-        return equal(requestVariables, mockedResponseVariables);
-      };
-    }
+  normalizeVariableMatching(newMockedResponse);
+  return newMockedResponse;
+}
+
+function normalizeVariableMatching(mockedResponse: MockedResponse) {
+  const request = mockedResponse.request;
+  if (mockedResponse.variableMatcher && request.variables) {
+    throw new Error(
+      "Mocked response should contain either variableMatcher or request.variables"
+    );
+  }
+
+  if (!mockedResponse.variableMatcher) {
+    request.variables = {
+      ...getDefaultValues(getOperationDefinition(request.query)),
+      ...request.variables,
+    };
+    mockedResponse.variableMatcher = (vars) => {
+      const requestVariables = vars || {};
+      const mockedResponseVariables = request.variables || {};
+      return equal(requestVariables, mockedResponseVariables);
+    };
   }
 }
 

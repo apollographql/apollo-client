@@ -200,19 +200,8 @@ function maskSelectionSet(
             const keyName = resultKeyNameFromField(selection);
             const childSelectionSet = selection.selectionSet;
 
-            if (!(keyName in memo)) {
-              memo[keyName] = data[keyName];
-            }
-
-            if (memo[keyName] === void 0) {
-              delete memo[keyName];
-            }
-
-            if (
-              keyName in memo &&
-              childSelectionSet &&
-              data[keyName] !== null
-            ) {
+            let newValue = memo[keyName] || data[keyName];
+            if (childSelectionSet && data[keyName] !== null) {
               const [masked, childChanged] = maskSelectionSet(
                 data[keyName],
                 childSelectionSet,
@@ -221,9 +210,13 @@ function maskSelectionSet(
               );
 
               if (childChanged) {
-                memo[keyName] = masked;
+                newValue = masked;
                 changed = true;
               }
+            }
+
+            if (newValue !== void 0) {
+              memo[keyName] = newValue;
             }
 
             return [memo, changed];

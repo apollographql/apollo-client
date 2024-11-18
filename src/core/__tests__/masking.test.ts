@@ -2042,8 +2042,9 @@ describe("maskOperation", () => {
       const data = maskOperation(
         {
           greeting: {
-            message: "Hello world",
             __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
           },
         },
@@ -2053,8 +2054,9 @@ describe("maskOperation", () => {
 
       expect(data).toEqual({
         greeting: {
-          message: "Hello world",
           __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
         },
       });
     }
@@ -2095,8 +2097,9 @@ describe("maskOperation", () => {
       const data = maskOperation(
         {
           greeting: {
-            message: "Hello world",
             __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
           },
         },
@@ -2106,8 +2109,9 @@ describe("maskOperation", () => {
 
       expect(data).toEqual({
         greeting: {
-          message: "Hello world",
           __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
           recipient: { __typename: "__Person", name: "Alice" },
         },
       });
@@ -2152,8 +2156,9 @@ describe("maskOperation", () => {
         const data = maskOperation(
           {
             greeting: {
-              message: "Hello world",
               __typename: "Greeting",
+              message: "Hello world",
+              sentAt: "2024-01-01",
               recipient: { __typename: "__Person", name: "Alice" },
             },
           },
@@ -2162,17 +2167,21 @@ describe("maskOperation", () => {
         );
 
         data.greeting.message;
+        data.greeting.sentAt;
         data.greeting.__typename;
 
         expect(console.warn).not.toHaveBeenCalled();
 
         data.greeting.recipient;
-        expect(console.warn).toHaveBeenCalledTimes(1);
+        data.greeting.recipient.__typename;
+        data.greeting.recipient.name;
+        expect(console.warn).toHaveBeenCalledTimes(3);
 
         expect(data).toEqual({
           greeting: {
-            message: "Hello world",
             __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
           },
         });

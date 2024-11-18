@@ -3496,8 +3496,7 @@ describe("maskFragment", () => {
     );
   });
 
-  // TODO: Remove .failing when refactoring migrate mode
-  test.failing("masks child fragments of @unmask", () => {
+  test("masks child fragments of @unmask", () => {
     using _ = spyOnConsole("warn");
 
     const fragment = gql`

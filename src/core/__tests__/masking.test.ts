@@ -3074,4 +3074,406 @@ describe("maskFragment", () => {
       "age"
     );
   });
+
+  test("masks partial data", () => {
+    const fragment = gql`
+      fragment GreetingFields on Greeting {
+        message
+        ...AdditionalFields
+      }
+
+      fragment AdditionalFields on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskFragment(
+        { message: "Hello world", __typename: "Greeting" },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        message: "Hello world",
+        __typename: "Greeting",
+      });
+    }
+
+    {
+      const data = maskFragment(
+        {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+        },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+      });
+    }
+
+    {
+      const data = maskFragment(
+        {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "__Person" },
+        },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+      });
+    }
+  });
+
+  test("unmasks partial data with @unmask", () => {
+    const fragment = gql`
+      fragment GreetingFields on Greeting {
+        message
+        ...AdditionalFields @unmask
+      }
+
+      fragment AdditionalFields on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskFragment(
+        { message: "Hello world", __typename: "Greeting" },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        message: "Hello world",
+        __typename: "Greeting",
+      });
+    }
+
+    {
+      const data = maskFragment(
+        {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+        },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+      });
+    }
+
+    {
+      const data = maskFragment(
+        {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "__Person" },
+        },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        recipient: { __typename: "__Person" },
+      });
+    }
+  });
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing(
+    'unmasks partial data with warnings with @unmask(mode: "migrate")',
+    () => {
+      using _ = spyOnConsole("warn");
+
+      const fragment = gql`
+        fragment GreetingFields on Greeting {
+          message
+          ...AdditionalFields @unmask(mode: "migrate")
+        }
+
+        fragment AdditionalFields on Greeting {
+          sentAt
+          recipient {
+            name
+          }
+        }
+      `;
+
+      {
+        const data = maskFragment(
+          { message: "Hello world", __typename: "Greeting" },
+          fragment,
+          new InMemoryCache(),
+          "GreetingFields"
+        );
+
+        expect(data).toEqual({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        });
+      }
+
+      {
+        const data = maskFragment(
+          {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+          },
+          fragment,
+          new InMemoryCache(),
+          "GreetingFields"
+        );
+
+        data.__typename;
+        data.message;
+
+        expect(console.warn).not.toHaveBeenCalled();
+
+        data.sentAt;
+        expect(console.warn).toHaveBeenCalledTimes(1);
+
+        expect(data).toEqual({
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+        });
+      }
+
+      {
+        const data = maskFragment(
+          {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "__Person" },
+          },
+          fragment,
+          new InMemoryCache(),
+          "GreetingFields"
+        );
+
+        data.__typename;
+        data.message;
+
+        expect(console.warn).not.toHaveBeenCalled();
+
+        data.recipient;
+        data.recipient.__typename;
+        expect(console.warn).toHaveBeenCalledTimes(1);
+
+        expect(data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "__Person" },
+          },
+        });
+      }
+    }
+  );
+
+  test("masks partial deferred data", () => {
+    const fragment = gql`
+      fragment GreetingFields on Greeting {
+        message
+        ... @defer {
+          sentAt
+          ...AdditionalFields
+        }
+      }
+
+      fragment AdditionalFields on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskFragment(
+        { message: "Hello world", __typename: "Greeting" },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        message: "Hello world",
+        __typename: "Greeting",
+      });
+    }
+
+    {
+      const data = maskFragment(
+        {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+          recipient: { __typename: "__Person", name: "Alice" },
+        },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+      });
+    }
+  });
+
+  test("unmasks partial deferred data with @unmask", () => {
+    const fragment = gql`
+      fragment GreetingFields on Greeting {
+        message
+        ... @defer {
+          sentAt
+          ...AdditionalFields @unmask
+        }
+      }
+
+      fragment AdditionalFields on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskFragment(
+        { message: "Hello world", __typename: "Greeting" },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        message: "Hello world",
+        __typename: "Greeting",
+      });
+    }
+
+    {
+      const data = maskFragment(
+        {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+          recipient: { __typename: "__Person", name: "Alice" },
+        },
+        fragment,
+        new InMemoryCache(),
+        "GreetingFields"
+      );
+
+      expect(data).toEqual({
+        __typename: "Greeting",
+        message: "Hello world",
+        sentAt: "2024-01-01",
+        recipient: { __typename: "__Person", name: "Alice" },
+      });
+    }
+  });
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing(
+    'unmasks partial deferred data with warnings with @unmask(mode: "migrate")',
+    () => {
+      using _ = spyOnConsole("warn");
+
+      const fragment = gql`
+        fragment GreetingFields on Greeting {
+          message
+          ... @defer {
+            sentAt
+            ...AdditionalFields @unmask(mode: "migrate")
+          }
+        }
+
+        fragment AdditionalFields on Greeting {
+          recipient {
+            name
+          }
+        }
+      `;
+
+      {
+        const data = maskFragment(
+          { message: "Hello world", __typename: "Greeting" },
+          fragment,
+          new InMemoryCache(),
+          "GreetingFields"
+        );
+
+        expect(data).toEqual({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        });
+      }
+
+      {
+        const data = maskFragment(
+          {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+            recipient: { __typename: "__Person", name: "Alice" },
+          },
+          fragment,
+          new InMemoryCache(),
+          "GreetingFields"
+        );
+
+        data.message;
+        data.sentAt;
+        data.__typename;
+
+        expect(console.warn).not.toHaveBeenCalled();
+
+        data.recipient;
+        data.recipient.__typename;
+        data.recipient.name;
+        expect(console.warn).toHaveBeenCalledTimes(3);
+
+        expect(data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+            recipient: { __typename: "__Person", name: "Alice" },
+          },
+        });
+      }
+    }
+  );
 });

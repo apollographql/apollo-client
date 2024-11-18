@@ -2026,7 +2026,9 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        deepFreeze({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2038,13 +2040,13 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        {
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
           },
-        },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2059,13 +2061,13 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        {
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "__Person" },
           },
-        },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2098,7 +2100,9 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        deepFreeze({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2110,13 +2114,13 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        {
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
           },
-        },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2132,13 +2136,13 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        {
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "__Person" },
           },
-        },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2177,7 +2181,9 @@ describe("maskOperation", () => {
 
       {
         const data = maskOperation(
-          { greeting: { message: "Hello world", __typename: "Greeting" } },
+          deepFreeze({
+            greeting: { message: "Hello world", __typename: "Greeting" },
+          }),
           query,
           new InMemoryCache()
         );
@@ -2189,13 +2195,13 @@ describe("maskOperation", () => {
 
       {
         const data = maskOperation(
-          {
+          deepFreeze({
             greeting: {
               __typename: "Greeting",
               message: "Hello world",
               sentAt: "2024-01-01",
             },
-          },
+          }),
           query,
           new InMemoryCache()
         );
@@ -2219,13 +2225,13 @@ describe("maskOperation", () => {
 
       {
         const data = maskOperation(
-          {
+          deepFreeze({
             greeting: {
               __typename: "Greeting",
               message: "Hello world",
               recipient: { __typename: "__Person" },
             },
-          },
+          }),
           query,
           new InMemoryCache()
         );
@@ -2271,7 +2277,9 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        deepFreeze({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2283,14 +2291,14 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        {
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
           },
-        },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2326,7 +2334,9 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        deepFreeze({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2338,14 +2348,14 @@ describe("maskOperation", () => {
 
     {
       const data = maskOperation(
-        {
+        deepFreeze({
           greeting: {
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
           },
-        },
+        }),
         query,
         new InMemoryCache()
       );
@@ -2387,7 +2397,9 @@ describe("maskOperation", () => {
 
       {
         const data = maskOperation(
-          { greeting: { message: "Hello world", __typename: "Greeting" } },
+          deepFreeze({
+            greeting: { message: "Hello world", __typename: "Greeting" },
+          }),
           query,
           new InMemoryCache()
         );
@@ -2399,14 +2411,14 @@ describe("maskOperation", () => {
 
       {
         const data = maskOperation(
-          {
+          deepFreeze({
             greeting: {
               __typename: "Greeting",
               message: "Hello world",
               sentAt: "2024-01-01",
               recipient: { __typename: "__Person", name: "Alice" },
             },
-          },
+          }),
           query,
           new InMemoryCache()
         );
@@ -3096,7 +3108,7 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        { message: "Hello world", __typename: "Greeting" },
+        deepFreeze({ message: "Hello world", __typename: "Greeting" }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3110,11 +3122,11 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        {
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
-        },
+        }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3128,11 +3140,11 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        {
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "__Person" },
-        },
+        }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3162,7 +3174,7 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        { message: "Hello world", __typename: "Greeting" },
+        deepFreeze({ message: "Hello world", __typename: "Greeting" }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3176,11 +3188,11 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        {
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
-        },
+        }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3195,11 +3207,11 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        {
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           recipient: { __typename: "__Person" },
-        },
+        }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3235,7 +3247,7 @@ describe("maskFragment", () => {
 
       {
         const data = maskFragment(
-          { message: "Hello world", __typename: "Greeting" },
+          deepFreeze({ message: "Hello world", __typename: "Greeting" }),
           fragment,
           new InMemoryCache(),
           "GreetingFields"
@@ -3248,11 +3260,11 @@ describe("maskFragment", () => {
 
       {
         const data = maskFragment(
-          {
+          deepFreeze({
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
-          },
+          }),
           fragment,
           new InMemoryCache(),
           "GreetingFields"
@@ -3275,11 +3287,11 @@ describe("maskFragment", () => {
 
       {
         const data = maskFragment(
-          {
+          deepFreeze({
             __typename: "Greeting",
             message: "Hello world",
             recipient: { __typename: "__Person" },
-          },
+          }),
           fragment,
           new InMemoryCache(),
           "GreetingFields"
@@ -3324,7 +3336,7 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        { message: "Hello world", __typename: "Greeting" },
+        deepFreeze({ message: "Hello world", __typename: "Greeting" }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3338,12 +3350,12 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        {
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
           recipient: { __typename: "__Person", name: "Alice" },
-        },
+        }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3376,7 +3388,7 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        { message: "Hello world", __typename: "Greeting" },
+        deepFreeze({ message: "Hello world", __typename: "Greeting" }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3390,12 +3402,12 @@ describe("maskFragment", () => {
 
     {
       const data = maskFragment(
-        {
+        deepFreeze({
           __typename: "Greeting",
           message: "Hello world",
           sentAt: "2024-01-01",
           recipient: { __typename: "__Person", name: "Alice" },
-        },
+        }),
         fragment,
         new InMemoryCache(),
         "GreetingFields"
@@ -3434,7 +3446,7 @@ describe("maskFragment", () => {
 
       {
         const data = maskFragment(
-          { message: "Hello world", __typename: "Greeting" },
+          deepFreeze({ message: "Hello world", __typename: "Greeting" }),
           fragment,
           new InMemoryCache(),
           "GreetingFields"
@@ -3447,12 +3459,12 @@ describe("maskFragment", () => {
 
       {
         const data = maskFragment(
-          {
+          deepFreeze({
             __typename: "Greeting",
             message: "Hello world",
             sentAt: "2024-01-01",
             recipient: { __typename: "__Person", name: "Alice" },
-          },
+          }),
           fragment,
           new InMemoryCache(),
           "GreetingFields"

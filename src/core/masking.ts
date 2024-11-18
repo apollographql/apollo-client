@@ -23,11 +23,15 @@ interface MaskingContext {
   operationName: string | undefined;
   fragmentMap: FragmentMap;
   cache: ApolloCache<unknown>;
-  mutableTargets: WeakMap<any, any>;
-  migration: {
-    unmasked: WeakMap<any, Set<string>>;
-    migrated: WeakMap<any, Map<string, string>>;
-  };
+  mutableTargets: Map<any, any>;
+  migration: Map<
+    any,
+    {
+      path: string;
+      unmasked: Set<string>;
+      migrated: Set<string>;
+    }
+  >;
 }
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
@@ -64,11 +68,8 @@ export function maskOperation<TData = unknown>(
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new WeakMap(),
-    migration: {
-      unmasked: new Map(),
-      migrated: new Map(),
-    },
+    mutableTargets: new Map(),
+    migration: new Map(),
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -145,11 +146,8 @@ export function maskFragment<TData = unknown>(
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new WeakMap(),
-    migration: {
-      unmasked: new WeakMap(),
-      migrated: new WeakMap(),
-    },
+    mutableTargets: new Map(),
+    migration: new Map(),
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -244,26 +242,21 @@ function maskSelectionSet(
 
             if (newValue !== void 0) {
               memo[keyName] = newValue;
-              if (__DEV__ && context.migration) {
-                if (migration) {
-                  if (!context.migration.migrated.has(memo)) {
-                    context.migration.migrated.set(memo, new Map());
-                  }
-                  context.migration.migrated.get(memo)!.set(keyName, path);
-                  console.log(
-                    "migrated:",
-                    memo,
-                    keyName,
-                    `${path || ""}.${keyName}`
-                  );
-                } else {
-                  if (!context.migration.unmasked.has(memo)) {
-                    context.migration.unmasked.set(memo, new Set());
-                  }
-                  context.migration.unmasked.get(memo)!.add(keyName);
-                }
-              }
             }
+            if (__DEV__) {
+              const m = context.migration;
+              if (!m.has(memo)) {
+                m.set(memo, {
+                  path: path || "",
+                  unmasked: new Set(),
+                  migrated: new Set(),
+                });
+              }
+              m.get(memo)![migration ? "migrated" : "unmasked"].add(keyName);
+            }
+            // we later want to add acessor warnings to the final result
+            // so we need a new object to add the accessor warning to
+            changed ||= migration;
 
             return [memo, changed];
           }
@@ -310,7 +303,7 @@ function maskSelectionSet(
               mode === "migrate"
             );
 
-            return [memo, changed || mode === "migrate"];
+            return [memo, changed];
           }
         }
       },
@@ -320,12 +313,6 @@ function maskSelectionSet(
   if (data && "__typename" in data && !("__typename" in target)) {
     target.__typename = data.__typename;
   }
-
-  // console.log(
-  //   "markSelectionSet on %s changed: %s",
-  //   path || "<root>",
-  //   changed || Object.keys(target).length !== Object.keys(data).length
-  // );
 
   // This check prevents cases where masked fields may accidentally be
   // returned as part of this object when the fragment also selects
@@ -337,19 +324,10 @@ function maskSelectionSet(
 
 function addMigrationWarnings(context: MaskingContext, masked: any) {
   JSON.stringify(masked, function (this: any, key, value) {
-    const u = context.migration["unmasked"].get(this);
-    const m = context.migration["migrated"].get(this);
-    console.log({
-      t: this,
-      key,
-      value,
-      m,
-      mv: m && m.has(key),
-      u,
-      uv: u && u.has(key),
-    });
-    if (!m || !m.has(key) || (u && u.has(key))) return value;
-    addAccessorWarning(this, value, key, m.get(key)!, context);
+    const obj = context.migration.get(this);
+    if (obj && obj.migrated.has(key) && !obj.unmasked.has(key)) {
+      addAccessorWarning(this, value, key, obj.path, context);
+    }
     return value;
   });
 }
@@ -359,6 +337,8 @@ function addAccessorWarning(
   value: any,
   fieldName: string,
   path: string,
+  // TODO: this is effectively a memory leak, we need to be more granular here,
+  // passing all required values individually instead of one big object
   context: MaskingContext
 ) {
   // In order to preserve the original shape of the data as much as possible, we

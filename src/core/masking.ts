@@ -194,7 +194,6 @@ function maskSelectionSet(
     const target = getMutableTarget(data, context);
     for (const [index, item] of Array.from(data.entries())) {
       if (item === null) {
-        // what about other primitives - what about an array of Int?
         target[index] = null;
         continue;
       }

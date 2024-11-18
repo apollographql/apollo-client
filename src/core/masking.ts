@@ -331,15 +331,9 @@ function warnOnImproperCacheImplementation() {
 }
 
 function assignWithAccessors(target: object, source: object) {
-  const descriptors = Object.keys(source).reduce((descriptors, key) => {
+  return Object.keys(source).reduce((memo, key) => {
     const descriptor = Object.getOwnPropertyDescriptor(source, key);
 
-    if (descriptor) {
-      descriptors[key] = descriptor;
-    }
-
-    return descriptors;
-  }, {} as PropertyDescriptorMap);
-
-  return Object.defineProperties(target, descriptors);
+    return descriptor ? Object.defineProperty(target, key, descriptor) : memo;
+  }, target);
 }

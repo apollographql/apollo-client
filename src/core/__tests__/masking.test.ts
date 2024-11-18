@@ -2157,6 +2157,8 @@ describe("maskOperation", () => {
   test.failing(
     'unmasks partial data with warnings with @unmask(mode: "migrate")',
     () => {
+      using _ = spyOnConsole("warn");
+
       const query = gql`
         query {
           greeting {
@@ -2363,6 +2365,8 @@ describe("maskOperation", () => {
   test.failing(
     'unmasks partial deferred data with warnings with @unmask(mode: "migrate")',
     () => {
+      using _ = spyOnConsole("warn");
+
       const query = gql`
         query {
           greeting {

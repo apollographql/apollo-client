@@ -3705,7 +3705,8 @@ describe("maskFragment", () => {
         );
 
         expect(data).toEqual({
-          greeting: { message: "Hello world", __typename: "Greeting" },
+          message: "Hello world",
+          __typename: "Greeting",
         });
       }
 
@@ -3758,11 +3759,9 @@ describe("maskFragment", () => {
         expect(console.warn).toHaveBeenCalledTimes(1);
 
         expect(data).toEqual({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            recipient: { __typename: "__Person" },
-          },
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "__Person" },
         });
       }
     }
@@ -3904,7 +3903,8 @@ describe("maskFragment", () => {
         );
 
         expect(data).toEqual({
-          greeting: { message: "Hello world", __typename: "Greeting" },
+          message: "Hello world",
+          __typename: "Greeting",
         });
       }
 
@@ -3933,12 +3933,10 @@ describe("maskFragment", () => {
         expect(console.warn).toHaveBeenCalledTimes(3);
 
         expect(data).toEqual({
-          greeting: {
-            __typename: "Greeting",
-            message: "Hello world",
-            sentAt: "2024-01-01",
-            recipient: { __typename: "__Person", name: "Alice" },
-          },
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+          recipient: { __typename: "__Person", name: "Alice" },
         });
       }
     }

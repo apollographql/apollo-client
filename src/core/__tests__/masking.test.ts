@@ -2007,6 +2007,247 @@ describe("maskOperation", () => {
     );
   });
 
+  test("masks partial data", () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskOperation(
+        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "__Person" },
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      });
+    }
+  });
+
+  test("unmasks partial data with @unmask", () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment @unmask
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskOperation(
+        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          sentAt: "2024-01-01",
+        },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "__Person" },
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+          recipient: { __typename: "__Person" },
+        },
+      });
+    }
+  });
+
+  // TODO: Remove .failing when refactoring migrate mode
+  test.failing(
+    'unmasks partial data with warnings with @unmask(mode: "migrate")',
+    () => {
+      const query = gql`
+        query {
+          greeting {
+            message
+            ...GreetingFragment @unmask(mode: "migrate")
+          }
+        }
+
+        fragment GreetingFragment on Greeting {
+          sentAt
+          recipient {
+            name
+          }
+        }
+      `;
+
+      {
+        const data = maskOperation(
+          { greeting: { message: "Hello world", __typename: "Greeting" } },
+          query,
+          new InMemoryCache()
+        );
+
+        expect(data).toEqual({
+          greeting: { message: "Hello world", __typename: "Greeting" },
+        });
+      }
+
+      {
+        const data = maskOperation(
+          {
+            greeting: {
+              __typename: "Greeting",
+              message: "Hello world",
+              sentAt: "2024-01-01",
+            },
+          },
+          query,
+          new InMemoryCache()
+        );
+
+        data.greeting.__typename;
+        data.greeting.message;
+
+        expect(console.warn).not.toHaveBeenCalled();
+
+        data.greeting.sentAt;
+        expect(console.warn).toHaveBeenCalledTimes(1);
+
+        expect(data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+          },
+        });
+      }
+
+      {
+        const data = maskOperation(
+          {
+            greeting: {
+              __typename: "Greeting",
+              message: "Hello world",
+              recipient: { __typename: "__Person" },
+            },
+          },
+          query,
+          new InMemoryCache()
+        );
+
+        data.greeting.__typename;
+        data.greeting.message;
+
+        expect(console.warn).not.toHaveBeenCalled();
+
+        data.greeting.recipient;
+        data.greeting.recipient.__typename;
+        expect(console.warn).toHaveBeenCalledTimes(1);
+
+        expect(data).toEqual({
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "__Person" },
+          },
+        });
+      }
+    }
+  );
+
   test("ensures partial deferred data can be masked", () => {
     const query = gql`
       query {
@@ -2188,6 +2429,78 @@ describe("maskOperation", () => {
       }
     }
   );
+
+  test("masks partial data", () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ...GreetingFragment
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        sentAt
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskOperation(
+        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            sentAt: "2024-01-01",
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "__Person" },
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          __typename: "Greeting",
+          message: "Hello world",
+        },
+      });
+    }
+  });
 });
 
 describe("maskFragment", () => {

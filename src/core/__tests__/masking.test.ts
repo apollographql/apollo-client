@@ -2006,6 +2006,59 @@ describe("maskOperation", () => {
       "updateUser.name"
     );
   });
+
+  test("ensures partial deferred data can be masked", () => {
+    const query = gql`
+      query {
+        greeting {
+          message
+          ... @defer {
+            sentAt
+            ...GreetingFragment
+          }
+        }
+      }
+
+      fragment GreetingFragment on Greeting {
+        recipient {
+          name
+        }
+      }
+    `;
+
+    {
+      const data = maskOperation(
+        { greeting: { message: "Hello world", __typename: "Greeting" } },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      });
+    }
+
+    {
+      const data = maskOperation(
+        {
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+            recipient: { __typename: "__Person", name: "Alice" },
+          },
+        },
+        query,
+        new InMemoryCache()
+      );
+
+      expect(data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+    }
+  });
 });
 
 describe("maskFragment", () => {

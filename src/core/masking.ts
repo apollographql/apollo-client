@@ -20,6 +20,7 @@ interface MaskingContext {
   fragmentMap: FragmentMap;
   cache: ApolloCache<unknown>;
   mutableTargets: Map<any, any>;
+  knownChanged: Set<any>;
   migration: Map<
     any,
     {
@@ -65,6 +66,7 @@ export function maskOperation<TData = unknown>(
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
     mutableTargets: new Map(),
+    knownChanged: new Set(),
     migration: new Map(),
   };
 
@@ -143,6 +145,7 @@ export function maskFragment<TData = unknown>(
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
     mutableTargets: new Map(),
+    knownChanged: new Set(),
     migration: new Map(),
   };
 
@@ -310,6 +313,15 @@ function maskSelectionSet(
   // returned as part of this object when the fragment also selects
   // additional fields from the same child selection.
   changed ||= Object.keys(memo).length !== Object.keys(data).length;
+
+  // If the object has been changed in another subtree, but not in this,
+  // we still have to return "changed" as true, as otherwise a call parent
+  // would use original data instead of the masked one.
+  if (changed) {
+    context.knownChanged.add(memo);
+  } else {
+    changed ||= context.knownChanged.has(memo);
+  }
 
   return [changed ? memo : data, changed];
 }

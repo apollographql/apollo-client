@@ -1985,7 +1985,7 @@ describe("maskOperation", () => {
   });
 
   test('handles overlapping types when subtype has accessor warnings with @unmask(mode: "migrate")', async () => {
-    using consoleSpy = spyOnConsole("warn");
+    using _ = spyOnConsole("warn");
     const query = gql`
       query PlaylistQuery {
         playlist {
@@ -2070,9 +2070,7 @@ describe("maskOperation", () => {
       new InMemoryCache()
     );
 
-    expect(consoleSpy.warn).not.toHaveBeenCalled();
-
-    consoleSpy.warn.mockClear();
+    expect(console.warn).not.toHaveBeenCalled();
 
     data.playlist.album;
     data.playlist.album.id;
@@ -2080,11 +2078,35 @@ describe("maskOperation", () => {
     data.playlist.artist;
     data.playlist.artist.id;
     data.playlist.artist.__typename;
+
     expect(console.warn).not.toHaveBeenCalled();
 
     data.playlist.album.images;
+    data.playlist.album.tracks[0].name;
     data.playlist.artist.images;
-    expect(console.warn).toHaveBeenCalledTimes(2);
+    data.playlist.artist.topTracks[0].name;
+
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'PlaylistQuery'",
+      "playlist.album.images"
+    );
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'PlaylistQuery'",
+      "playlist.album.tracks[0].name"
+    );
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'PlaylistQuery'",
+      "playlist.artist.images"
+    );
+    expect(console.warn).toHaveBeenCalledWith(
+      "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
+      "query 'PlaylistQuery'",
+      "playlist.artist.topTracks[0].name"
+    );
+    expect(console.warn).toHaveBeenCalledTimes(4);
 
     expect(data).toEqual({
       playlist: {

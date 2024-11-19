@@ -2425,7 +2425,7 @@ describe("maskOperation", () => {
   });
 
   test('unmasks partial data with warnings with @unmask(mode: "migrate")', () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     const query = gql`
       query {
@@ -2452,10 +2452,17 @@ describe("maskOperation", () => {
         new InMemoryCache()
       );
 
+      data.greeting.__typename;
+      data.greeting.message;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
       expect(data).toEqual({
         greeting: { message: "Hello world", __typename: "Greeting" },
       });
     }
+
+    consoleSpy.warn.mockClear();
 
     {
       const data = maskOperation(
@@ -2486,6 +2493,8 @@ describe("maskOperation", () => {
         },
       });
     }
+
+    consoleSpy.warn.mockClear();
 
     {
       const data = maskOperation(
@@ -2635,7 +2644,7 @@ describe("maskOperation", () => {
   });
 
   test('unmasks partial deferred data with warnings with @unmask(mode: "migrate")', () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     const query = gql`
       query {
@@ -2664,10 +2673,17 @@ describe("maskOperation", () => {
         new InMemoryCache()
       );
 
+      data.greeting.message;
+      data.greeting.__typename;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
       expect(data).toEqual({
         greeting: { message: "Hello world", __typename: "Greeting" },
       });
     }
+
+    consoleSpy.warn.mockClear();
 
     {
       const data = maskOperation(
@@ -2690,9 +2706,8 @@ describe("maskOperation", () => {
       expect(console.warn).not.toHaveBeenCalled();
 
       data.greeting.recipient;
-      data.greeting.recipient.__typename;
       data.greeting.recipient.name;
-      expect(console.warn).toHaveBeenCalledTimes(3);
+      expect(console.warn).toHaveBeenCalledTimes(2);
 
       expect(data).toEqual({
         greeting: {
@@ -3660,7 +3675,7 @@ describe("maskFragment", () => {
   });
 
   test('unmasks partial data with warnings with @unmask(mode: "migrate")', () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     const fragment = gql`
       fragment GreetingFields on Greeting {
@@ -3684,11 +3699,18 @@ describe("maskFragment", () => {
         "GreetingFields"
       );
 
+      data.message;
+      data.__typename;
+
+      expect(console.warn).not.toHaveBeenCalled();
+
       expect(data).toEqual({
         message: "Hello world",
         __typename: "Greeting",
       });
     }
+
+    consoleSpy.warn.mockClear();
 
     {
       const data = maskFragment(
@@ -3717,6 +3739,8 @@ describe("maskFragment", () => {
       });
     }
 
+    consoleSpy.warn.mockClear();
+
     {
       const data = maskFragment(
         deepFreeze({
@@ -3735,6 +3759,7 @@ describe("maskFragment", () => {
       expect(console.warn).not.toHaveBeenCalled();
 
       data.recipient;
+      // We do not warn on access to __typename
       data.recipient.__typename;
       expect(console.warn).toHaveBeenCalledTimes(1);
 
@@ -3852,7 +3877,7 @@ describe("maskFragment", () => {
   });
 
   test('unmasks partial deferred data with warnings with @unmask(mode: "migrate")', () => {
-    using _ = spyOnConsole("warn");
+    using consoleSpy = spyOnConsole("warn");
 
     const fragment = gql`
       fragment GreetingFields on Greeting {
@@ -3884,6 +3909,8 @@ describe("maskFragment", () => {
       });
     }
 
+    consoleSpy.warn.mockClear();
+
     {
       const data = maskFragment(
         deepFreeze({
@@ -3904,9 +3931,10 @@ describe("maskFragment", () => {
       expect(console.warn).not.toHaveBeenCalled();
 
       data.recipient;
-      data.recipient.__typename;
       data.recipient.name;
-      expect(console.warn).toHaveBeenCalledTimes(3);
+      // We do not warn on access to __typename
+      data.recipient.__typename;
+      expect(console.warn).toHaveBeenCalledTimes(2);
 
       expect(data).toEqual({
         __typename: "Greeting",

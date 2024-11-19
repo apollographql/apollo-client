@@ -214,7 +214,7 @@ export interface SubscriptionOptions<
 export interface MutationBaseOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
@@ -255,7 +255,7 @@ export interface MutationBaseOptions<
 export interface MutationOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
@@ -264,7 +264,7 @@ export interface MutationOptions<
 export interface MutationSharedOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */

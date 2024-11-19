@@ -52,7 +52,7 @@ class ApolloLink {
 // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type ContextSetter = (operation: GraphQLRequest, prevContext: DefaultContext) => Promise<DefaultContext> | DefaultContext;
+export type ContextSetter = (operation: GraphQLRequest, prevContext: DefaultContext) => Promise<Partial<DefaultContext>> | Partial<DefaultContext>;
 
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {
@@ -168,7 +168,7 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 export function setContext(setter: ContextSetter): ApolloLink;
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = Partial<DefaultContext>, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)

@@ -7,7 +7,7 @@ import type { DefaultContext } from "../../core/index.js";
 export type ContextSetter = (
   operation: GraphQLRequest,
   prevContext: DefaultContext
-) => Promise<DefaultContext> | DefaultContext;
+) => Promise<Partial<DefaultContext>> | Partial<DefaultContext>;
 
 export function setContext(setter: ContextSetter): ApolloLink {
   return new ApolloLink((operation: Operation, forward: NextLink) => {

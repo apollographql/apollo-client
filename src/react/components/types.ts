@@ -31,7 +31,7 @@ export interface QueryComponentOptions<
 export interface MutationComponentOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;

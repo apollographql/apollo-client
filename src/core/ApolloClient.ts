@@ -474,7 +474,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public mutate<
     TData = any,
     TVariables extends OperationVariables = OperationVariables,
-    TContext extends Record<string, any> = DefaultContext,
+    TContext extends Record<string, any> = Partial<DefaultContext>,
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>

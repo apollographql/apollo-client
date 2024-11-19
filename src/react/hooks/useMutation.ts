@@ -72,7 +72,7 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
 export function useMutation<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,

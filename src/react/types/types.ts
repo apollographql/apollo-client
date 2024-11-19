@@ -343,7 +343,7 @@ export type RefetchQueriesFunction = (
 export interface BaseMutationOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
@@ -361,7 +361,7 @@ export interface BaseMutationOptions<
 export interface MutationFunctionOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
@@ -386,7 +386,7 @@ export interface MutationResult<TData = any> {
 export declare type MutationFunction<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
@@ -395,14 +395,14 @@ export declare type MutationFunction<
 export interface MutationHookOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
 
 export interface MutationDataOptions<
   TData = any,
   TVariables = OperationVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -411,7 +411,7 @@ export interface MutationDataOptions<
 export type MutationTuple<
   TData,
   TVariables,
-  TContext = DefaultContext,
+  TContext = Partial<DefaultContext>,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = [
   mutate: (

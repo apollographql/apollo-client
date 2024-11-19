@@ -329,10 +329,19 @@ function warnOnImproperCacheImplementation() {
   }
 }
 
-function assignWithAccessors(target: object, source: object) {
+function assignWithAccessors(
+  target: Record<string, any>,
+  source: Record<string, any>
+) {
   return Object.keys(source).reduce((memo, key) => {
     const descriptor = Object.getOwnPropertyDescriptor(source, key);
 
-    return descriptor ? Object.defineProperty(target, key, descriptor) : memo;
+    if (descriptor) {
+      Object.defineProperty(memo, key, descriptor);
+    } else {
+      memo[key] = source[key];
+    }
+
+    return memo;
   }, target);
 }

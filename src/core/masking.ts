@@ -206,13 +206,13 @@ function maskSelectionSet(
   for (const selection of selectionSet.selections) {
     let value: any;
 
-    if (selection.kind === Kind.FIELD) {
-      // we later want to add acessor warnings to the final result
-      // so we need a new object to add the accessor warning to
-      if (migration) {
-        knownChanged.add(memo);
-      }
+    // we later want to add acessor warnings to the final result
+    // so we need a new object to add the accessor warning to
+    if (migration) {
+      knownChanged.add(memo);
+    }
 
+    if (selection.kind === Kind.FIELD) {
       const keyName = resultKeyNameFromField(selection);
       const childSelectionSet = selection.selectionSet;
 

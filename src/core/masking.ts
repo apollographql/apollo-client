@@ -330,30 +330,36 @@ function addMigrationWarnings(context: MaskingContext, masked: any) {
   JSON.stringify(masked, function (this: any, key, value) {
     const obj = context.migration.get(this);
     if (obj && obj.migrated.has(key) && !obj.unmasked.has(key)) {
-      addAccessorWarning(this, value, key, obj.path, context);
+      // In order to preserve the original shape of the data as much as possible, we
+      // want to skip adding a property with warning to the final result when the
+      // value is missing, otherwise our final result will contain additional
+      // properties that our original result did not have. This could happen with a
+      // deferred payload for example.
+      if (value !== void 0) {
+        Object.defineProperty(
+          this,
+          key,
+          getAccessorWarningDescriptor(
+            value,
+            key,
+            obj.path,
+            context.operationName,
+            context.operationType
+          )
+        );
+      }
     }
     return value;
   });
 }
 
-function addAccessorWarning(
-  data: Record<string, any>,
+function getAccessorWarningDescriptor(
   value: any,
   fieldName: string,
   path: string,
-  // TODO: this is effectively a memory leak, we need to be more granular here,
-  // passing all required values individually instead of one big object
-  context: MaskingContext
-) {
-  // In order to preserve the original shape of the data as much as possible, we
-  // want to skip adding a property with warning to the final result when the
-  // value is missing, otherwise our final result will contain additional
-  // properties that our original result did not have. This could happen with a
-  // deferred payload for example.
-  if (value === void 0) {
-    return;
-  }
-
+  operationName: string | undefined,
+  operationType: string
+): PropertyDescriptor {
   let getValue = () => {
     if (disableWarningsSlot.getValue()) {
       return value;
@@ -361,9 +367,9 @@ function addAccessorWarning(
 
     invariant.warn(
       "Accessing unmasked field on %s at path '%s'. This field will not be available when masking is enabled. Please read the field from the fragment instead.",
-      context.operationName ?
-        `${context.operationType} '${context.operationName}'`
-      : `anonymous ${context.operationType}`,
+      operationName ?
+        `${operationType} '${operationName}'`
+      : `anonymous ${operationType}`,
       `${path}.${fieldName}`.replace(/^\./, "")
     );
 
@@ -372,16 +378,17 @@ function addAccessorWarning(
     return value;
   };
 
-  Object.defineProperty(data, fieldName, {
+  return {
     get() {
       return getValue();
     },
-    set(value) {
+    set(v) {
+      value = v;
       getValue = () => value;
     },
     enumerable: true,
     configurable: true,
-  });
+  };
 }
 
 let issuedWarning = false;

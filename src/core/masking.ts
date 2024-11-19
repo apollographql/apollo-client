@@ -57,25 +57,13 @@ export function maskOperation<TData = unknown>(
     return data;
   }
 
-  return disableWarningsSlot.withValue(true, () => {
-    const masked = maskSelectionSet(
-      data,
-      definition.selectionSet,
-      {
-        operationType: definition.operation,
-        operationName: definition.name?.value,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-        cache,
-        mutableTargets: new MapImpl(),
-        knownChanged: new SetImpl(),
-      },
-      false
-    );
-
-    if (Object.isFrozen(data)) {
-      maybeDeepFreeze(masked);
-    }
-    return masked;
+  return maskDefinition(data, definition.selectionSet, {
+    operationType: definition.operation,
+    operationName: definition.name?.value,
+    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+    cache,
+    mutableTargets: new MapImpl(),
+    knownChanged: new SetImpl(),
   });
 }
 
@@ -129,20 +117,23 @@ export function maskFragment<TData = unknown>(
     return data;
   }
 
+  return maskDefinition(data, fragment.selectionSet, {
+    operationType: "fragment",
+    operationName: fragment.name.value,
+    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+    cache,
+    mutableTargets: new MapImpl(),
+    knownChanged: new SetImpl(),
+  });
+}
+
+function maskDefinition(
+  data: Record<string, any>,
+  selectionSet: SelectionSetNode,
+  context: MaskingContext
+) {
   return disableWarningsSlot.withValue(true, () => {
-    const masked = maskSelectionSet(
-      data,
-      fragment.selectionSet,
-      {
-        operationType: "fragment",
-        operationName: fragment.name.value,
-        fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-        cache,
-        mutableTargets: new MapImpl(),
-        knownChanged: new SetImpl(),
-      },
-      false
-    );
+    const masked = maskSelectionSet(data, selectionSet, context, false);
 
     if (Object.isFrozen(data)) {
       maybeDeepFreeze(masked);

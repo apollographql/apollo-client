@@ -286,7 +286,7 @@ function maskSelectionSet(
 
     if (selection.kind === Kind.FRAGMENT_SPREAD) {
       const fragmentName = selection.name.value;
-      let fragment: FragmentDefinitionNode | null =
+      const fragment: FragmentDefinitionNode | null =
         context.fragmentMap[fragmentName] ||
         (context.fragmentMap[fragmentName] =
           context.cache.lookupFragment(fragmentName)!);

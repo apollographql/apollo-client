@@ -157,14 +157,14 @@ export function maskFragment<TData = unknown>(
 
 function getMutableTarget(
   data: Record<string, any>,
-  context: MaskingContext
+  mutableTargets: WeakMap<any, any>
 ): typeof data {
-  if (context.mutableTargets.has(data)) {
-    return context.mutableTargets.get(data);
+  if (mutableTargets.has(data)) {
+    return mutableTargets.get(data);
   }
 
   const mutableTarget = Array.isArray(data) ? [] : Object.create(null);
-  context.mutableTargets.set(data, mutableTarget);
+  mutableTargets.set(data, mutableTarget);
   return mutableTarget;
 }
 
@@ -177,7 +177,7 @@ function maskSelectionSet(
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
-    const target = getMutableTarget(data, context);
+    const target = getMutableTarget(data, context.mutableTargets);
     for (const [index, item] of Array.from(data.entries())) {
       if (item === null) {
         target[index] = null;
@@ -200,7 +200,7 @@ function maskSelectionSet(
   }
 
   let changed = false;
-  const memo = getMutableTarget(data, context);
+  const memo = getMutableTarget(data, context.mutableTargets);
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD: {

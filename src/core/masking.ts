@@ -175,8 +175,9 @@ function maskSelectionSet(
   migration: boolean,
   path?: string | undefined
 ): [data: any, changed: boolean] {
+  const { knownChanged } = context;
+
   if (Array.isArray(data)) {
-    let changed = false;
     const target = getMutableTarget(data, context.mutableTargets);
     for (const [index, item] of Array.from(data.entries())) {
       if (item === null) {
@@ -184,19 +185,21 @@ function maskSelectionSet(
         continue;
       }
 
-      const [masked, itemChanged] = maskSelectionSet(
+      const [masked] = maskSelectionSet(
         item,
         selectionSet,
         context,
         migration,
         __DEV__ ? `${path || ""}[${index}]` : void 0
       );
-      changed ||= itemChanged;
+      if (knownChanged.has(masked)) {
+        knownChanged.add(target);
+      }
 
       target[index] = masked;
     }
 
-    return [changed ? target : data, changed];
+    return [knownChanged.has(target) ? target : data, true];
   }
 
   let changed = false;

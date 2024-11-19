@@ -216,6 +216,11 @@ function maskSelectionSet(
         const childSelectionSet = selection.selectionSet;
 
         let newValue = memo[keyName] || data[keyName];
+
+        if (newValue === void 0) {
+          break;
+        }
+
         if (keyName in data && childSelectionSet && newValue !== null) {
           const masked = maskSelectionSet(
             data[keyName],
@@ -231,35 +236,33 @@ function maskSelectionSet(
           }
         }
 
-        if (newValue !== void 0) {
-          if (!__DEV__) {
-            memo[keyName] = newValue;
-          }
-          if (__DEV__) {
-            if (
-              migration &&
-              keyName !== "__typename" &&
-              // either the field is not present in the memo object
-              // or it has a `get` descriptor, not a `value` descriptor
-              // => it is a warning accessor and we can overwrite it
-              // with another accessor
-              !Object.getOwnPropertyDescriptor(memo, keyName)?.value
-            ) {
-              Object.defineProperty(
-                memo,
+        if (!__DEV__) {
+          memo[keyName] = newValue;
+        }
+        if (__DEV__) {
+          if (
+            migration &&
+            keyName !== "__typename" &&
+            // either the field is not present in the memo object
+            // or it has a `get` descriptor, not a `value` descriptor
+            // => it is a warning accessor and we can overwrite it
+            // with another accessor
+            !Object.getOwnPropertyDescriptor(memo, keyName)?.value
+          ) {
+            Object.defineProperty(
+              memo,
+              keyName,
+              getAccessorWarningDescriptor(
                 keyName,
-                getAccessorWarningDescriptor(
-                  keyName,
-                  newValue,
-                  path || "",
-                  context.operationName,
-                  context.operationType
-                )
-              );
-            } else {
-              delete memo[keyName];
-              memo[keyName] = newValue;
-            }
+                newValue,
+                path || "",
+                context.operationName,
+                context.operationType
+              )
+            );
+          } else {
+            delete memo[keyName];
+            memo[keyName] = newValue;
           }
         }
 

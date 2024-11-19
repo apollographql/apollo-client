@@ -334,14 +334,14 @@ function assignWithAccessors(
   source: Record<string, any>
 ) {
   return Object.keys(source).reduce((memo, key) => {
-    const descriptor = Object.getOwnPropertyDescriptor(source, key);
+    const descriptor =
+      Object.getOwnPropertyDescriptor(source, key) ??
+      ({
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      } satisfies PropertyDescriptor);
 
-    if (descriptor) {
-      Object.defineProperty(memo, key, descriptor);
-    } else {
-      memo[key] = source[key];
-    }
-
-    return memo;
+    return Object.defineProperty(memo, key, descriptor);
   }, target);
 }

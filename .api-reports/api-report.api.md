@@ -2514,7 +2514,7 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
 }
 
 // @public (undocumented)
-export interface SingleExecutionResult<TData = Record<string, any>, TContext = Partial<DefaultContext>, TExtensions = Record<string, any>> {
+export interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)

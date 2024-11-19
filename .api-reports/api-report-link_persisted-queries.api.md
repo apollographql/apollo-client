@@ -263,7 +263,7 @@ type ServerParseError = Error & {
 type SHA256Function = (...args: any[]) => string | PromiseLike<string>;
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = Partial<DefaultContext>, TExtensions = Record<string, any>> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)

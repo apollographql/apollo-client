@@ -168,7 +168,7 @@ type RequestHandler = (operation: Operation, forward: NextLink) => Observable<Fe
 export function setContext(setter: ContextSetter): ApolloLink;
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = Partial<DefaultContext>, TExtensions = Record<string, any>> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)

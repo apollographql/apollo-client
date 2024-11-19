@@ -1894,7 +1894,7 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
 }
 
 // @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = Partial<Context>, TExtensions = Record<string, any>> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)

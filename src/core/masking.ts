@@ -204,121 +204,116 @@ function maskSelectionSet(
 
   const memo = getMutableTarget(data, context.mutableTargets);
   for (const selection of selectionSet.selections) {
-    switch (selection.kind) {
-      case Kind.FIELD: {
-        // we later want to add acessor warnings to the final result
-        // so we need a new object to add the accessor warning to
-        if (migration) {
-          knownChanged.add(memo);
-        }
-
-        const keyName = resultKeyNameFromField(selection);
-        const childSelectionSet = selection.selectionSet;
-
-        let value = memo[keyName] || data[keyName];
-
-        if (value === void 0) {
-          break;
-        }
-
-        if (childSelectionSet && value !== null) {
-          const masked = maskSelectionSet(
-            data[keyName],
-            childSelectionSet,
-            context,
-            migration,
-            __DEV__ ? `${path || ""}.${keyName}` : void 0
-          );
-
-          if (knownChanged.has(masked)) {
-            value = masked;
-            knownChanged.add(memo);
-          }
-        }
-
-        if (!__DEV__) {
-          memo[keyName] = value;
-        }
-        if (__DEV__) {
-          if (
-            migration &&
-            keyName !== "__typename" &&
-            // either the field is not present in the memo object
-            // or it has a `get` descriptor, not a `value` descriptor
-            // => it is a warning accessor and we can overwrite it
-            // with another accessor
-            !Object.getOwnPropertyDescriptor(memo, keyName)?.value
-          ) {
-            Object.defineProperty(
-              memo,
-              keyName,
-              getAccessorWarningDescriptor(
-                keyName,
-                value,
-                path || "",
-                context.operationName,
-                context.operationType
-              )
-            );
-          } else {
-            delete memo[keyName];
-            memo[keyName] = value;
-          }
-        }
-
-        break;
+    if (selection.kind === Kind.FIELD) {
+      // we later want to add acessor warnings to the final result
+      // so we need a new object to add the accessor warning to
+      if (migration) {
+        knownChanged.add(memo);
       }
-      case Kind.INLINE_FRAGMENT: {
-        if (
-          selection.typeCondition &&
-          !context.cache.fragmentMatches!(selection, data.__typename)
-        ) {
-          break;
-        }
 
-        const fragmentData = maskSelectionSet(
-          data,
-          selection.selectionSet,
+      const keyName = resultKeyNameFromField(selection);
+      const childSelectionSet = selection.selectionSet;
+
+      let value = memo[keyName] || data[keyName];
+
+      if (value === void 0) {
+        continue;
+      }
+
+      if (childSelectionSet && value !== null) {
+        const masked = maskSelectionSet(
+          data[keyName],
+          childSelectionSet,
           context,
           migration,
-          path
+          __DEV__ ? `${path || ""}.${keyName}` : void 0
         );
-        if (knownChanged.has(fragmentData)) {
+
+        if (knownChanged.has(masked)) {
+          value = masked;
           knownChanged.add(memo);
         }
-        break;
       }
-      case Kind.FRAGMENT_SPREAD: {
-        const fragmentName = selection.name.value;
-        let fragment: FragmentDefinitionNode | null =
-          context.fragmentMap[fragmentName] ||
-          (context.fragmentMap[fragmentName] =
-            context.cache.lookupFragment(fragmentName)!);
-        invariant(
-          fragment,
-          "Could not find fragment with name '%s'.",
-          fragmentName
-        );
 
-        const mode = getFragmentMaskMode(selection);
-
-        if (mode === "mask") {
-          break;
+      if (!__DEV__) {
+        memo[keyName] = value;
+      }
+      if (__DEV__) {
+        if (
+          migration &&
+          keyName !== "__typename" &&
+          // either the field is not present in the memo object
+          // or it has a `get` descriptor, not a `value` descriptor
+          // => it is a warning accessor and we can overwrite it
+          // with another accessor
+          !Object.getOwnPropertyDescriptor(memo, keyName)?.value
+        ) {
+          Object.defineProperty(
+            memo,
+            keyName,
+            getAccessorWarningDescriptor(
+              keyName,
+              value,
+              path || "",
+              context.operationName,
+              context.operationType
+            )
+          );
+        } else {
+          delete memo[keyName];
+          memo[keyName] = value;
         }
+      }
+    }
 
-        const fragmentData = maskSelectionSet(
-          data,
-          fragment.selectionSet,
-          context,
-          mode === "migrate",
-          path
-        );
+    if (selection.kind === Kind.INLINE_FRAGMENT) {
+      if (
+        selection.typeCondition &&
+        !context.cache.fragmentMatches!(selection, data.__typename)
+      ) {
+        continue;
+      }
 
-        if (knownChanged.has(fragmentData)) {
-          knownChanged.add(memo);
-        }
+      const fragmentData = maskSelectionSet(
+        data,
+        selection.selectionSet,
+        context,
+        migration,
+        path
+      );
+      if (knownChanged.has(fragmentData)) {
+        knownChanged.add(memo);
+      }
+    }
 
-        break;
+    if (selection.kind === Kind.FRAGMENT_SPREAD) {
+      const fragmentName = selection.name.value;
+      let fragment: FragmentDefinitionNode | null =
+        context.fragmentMap[fragmentName] ||
+        (context.fragmentMap[fragmentName] =
+          context.cache.lookupFragment(fragmentName)!);
+      invariant(
+        fragment,
+        "Could not find fragment with name '%s'.",
+        fragmentName
+      );
+
+      const mode = getFragmentMaskMode(selection);
+
+      if (mode === "mask") {
+        continue;
+      }
+
+      const fragmentData = maskSelectionSet(
+        data,
+        fragment.selectionSet,
+        context,
+        mode === "migrate",
+        path
+      );
+
+      if (knownChanged.has(fragmentData)) {
+        knownChanged.add(memo);
       }
     }
   }

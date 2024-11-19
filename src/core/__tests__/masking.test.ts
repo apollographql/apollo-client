@@ -2075,9 +2075,13 @@ describe("maskOperation", () => {
     data.playlist.album;
     data.playlist.album.id;
     data.playlist.album.__typename;
+    data.playlist.album.tracks[0].id;
+    data.playlist.album.tracks[0].__typename;
     data.playlist.artist;
     data.playlist.artist.id;
     data.playlist.artist.__typename;
+    data.playlist.artist.topTracks[0].id;
+    data.playlist.artist.topTracks[0].__typename;
 
     expect(console.warn).not.toHaveBeenCalled();
 

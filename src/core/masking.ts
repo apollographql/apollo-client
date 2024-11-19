@@ -209,109 +209,109 @@ function maskSelectionSet(
     return [changed ? target : data, changed];
   }
 
-  let [target, changed] = selectionSet.selections.reduce<[any, boolean]>(
-    ([memo, changed], selection) => {
-      switch (selection.kind) {
-        case Kind.FIELD: {
-          const keyName = resultKeyNameFromField(selection);
-          const childSelectionSet = selection.selectionSet;
+  let changed = false;
+  const memo = getMutableTarget(data, context);
+  for (const selection of selectionSet.selections) {
+    switch (selection.kind) {
+      case Kind.FIELD: {
+        const keyName = resultKeyNameFromField(selection);
+        const childSelectionSet = selection.selectionSet;
 
-          let newValue = memo[keyName] || data[keyName];
-          if (keyName in data && childSelectionSet && data[keyName] !== null) {
-            const [masked, childChanged] = maskSelectionSet(
-              data[keyName],
-              childSelectionSet,
-              context,
-              __DEV__ ? `${path || ""}.${keyName}` : void 0,
-              migration
-            );
-
-            if (childChanged) {
-              newValue = masked;
-              changed = true;
-            }
-          }
-
-          if (newValue !== void 0) {
-            memo[keyName] = newValue;
-          }
-          if (__DEV__) {
-            const m = context.migration;
-            if (!m.has(memo)) {
-              m.set(memo, {
-                path: path || "",
-                unmasked: new Set(),
-                migrated: new Set(),
-              });
-            }
-            m.get(memo)![migration ? "migrated" : "unmasked"].add(keyName);
-          }
-          // we later want to add acessor warnings to the final result
-          // so we need a new object to add the accessor warning to
-          changed ||= migration;
-
-          return [memo, changed];
-        }
-        case Kind.INLINE_FRAGMENT: {
-          if (
-            selection.typeCondition &&
-            !context.cache.fragmentMatches!(selection, data.__typename)
-          ) {
-            return [memo, changed];
-          }
-
-          const [, childChanged] = maskSelectionSet(
-            data,
-            selection.selectionSet,
+        let newValue = memo[keyName] || data[keyName];
+        if (keyName in data && childSelectionSet && data[keyName] !== null) {
+          const [masked, childChanged] = maskSelectionSet(
+            data[keyName],
+            childSelectionSet,
             context,
-            path,
+            __DEV__ ? `${path || ""}.${keyName}` : void 0,
             migration
           );
-          return [memo, changed || childChanged];
-        }
-        case Kind.FRAGMENT_SPREAD: {
-          const fragmentName = selection.name.value;
-          let fragment: FragmentDefinitionNode | null =
-            context.fragmentMap[fragmentName] ||
-            (context.fragmentMap[fragmentName] =
-              context.cache.lookupFragment(fragmentName)!);
-          invariant(
-            fragment,
-            "Could not find fragment with name '%s'.",
-            fragmentName
-          );
 
-          const mode = getFragmentMaskMode(selection);
-
-          if (mode === "mask") {
-            return [memo, true];
+          if (childChanged) {
+            newValue = masked;
+            changed = true;
           }
-
-          const [, changed] = maskSelectionSet(
-            data,
-            fragment.selectionSet,
-            context,
-            path,
-            mode === "migrate"
-          );
-
-          return [memo, changed];
         }
-      }
-    },
-    [getMutableTarget(data, context), false]
-  );
 
-  if (data && "__typename" in data && !("__typename" in target)) {
-    target.__typename = data.__typename;
+        if (newValue !== void 0) {
+          memo[keyName] = newValue;
+        }
+        if (__DEV__) {
+          const m = context.migration;
+          if (!m.has(memo)) {
+            m.set(memo, {
+              path: path || "",
+              unmasked: new Set(),
+              migrated: new Set(),
+            });
+          }
+          m.get(memo)![migration ? "migrated" : "unmasked"].add(keyName);
+        }
+        // we later want to add acessor warnings to the final result
+        // so we need a new object to add the accessor warning to
+        changed ||= migration;
+        break;
+      }
+      case Kind.INLINE_FRAGMENT: {
+        if (
+          selection.typeCondition &&
+          !context.cache.fragmentMatches!(selection, data.__typename)
+        ) {
+          break;
+        }
+
+        const [, childChanged] = maskSelectionSet(
+          data,
+          selection.selectionSet,
+          context,
+          path,
+          migration
+        );
+        changed ||= childChanged;
+        break;
+      }
+      case Kind.FRAGMENT_SPREAD: {
+        const fragmentName = selection.name.value;
+        let fragment: FragmentDefinitionNode | null =
+          context.fragmentMap[fragmentName] ||
+          (context.fragmentMap[fragmentName] =
+            context.cache.lookupFragment(fragmentName)!);
+        invariant(
+          fragment,
+          "Could not find fragment with name '%s'.",
+          fragmentName
+        );
+
+        const mode = getFragmentMaskMode(selection);
+
+        if (mode === "mask") {
+          break;
+        }
+
+        const [, selectionChanged] = maskSelectionSet(
+          data,
+          fragment.selectionSet,
+          context,
+          path,
+          mode === "migrate"
+        );
+
+        changed ||= selectionChanged;
+        break;
+      }
+    }
+  }
+
+  if (data && "__typename" in data && !("__typename" in memo)) {
+    memo.__typename = data.__typename;
   }
 
   // This check prevents cases where masked fields may accidentally be
   // returned as part of this object when the fragment also selects
   // additional fields from the same child selection.
-  changed ||= Object.keys(target).length !== Object.keys(data).length;
+  changed ||= Object.keys(memo).length !== Object.keys(data).length;
 
-  return [changed ? target : data, changed];
+  return [changed ? memo : data, changed];
 }
 
 function addMigrationWarnings(context: MaskingContext, masked: any) {

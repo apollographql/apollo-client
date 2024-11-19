@@ -57,20 +57,18 @@ export function maskOperation<TData = unknown>(
     return data;
   }
 
-  const context: MaskingContext = {
-    operationType: definition.operation,
-    operationName: definition.name?.value,
-    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
-  };
-
   return disableWarningsSlot.withValue(true, () => {
     const masked = maskSelectionSet(
       data,
       definition.selectionSet,
-      context,
+      {
+        operationType: definition.operation,
+        operationName: definition.name?.value,
+        fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+        cache,
+        mutableTargets: new MapImpl(),
+        knownChanged: new SetImpl(),
+      },
       false
     );
 
@@ -131,20 +129,18 @@ export function maskFragment<TData = unknown>(
     return data;
   }
 
-  const context: MaskingContext = {
-    operationType: "fragment",
-    operationName: fragment.name.value,
-    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
-  };
-
   return disableWarningsSlot.withValue(true, () => {
     const masked = maskSelectionSet(
       data,
       fragment.selectionSet,
-      context,
+      {
+        operationType: "fragment",
+        operationName: fragment.name.value,
+        fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
+        cache,
+        mutableTargets: new MapImpl(),
+        knownChanged: new SetImpl(),
+      },
       false
     );
 

@@ -20,6 +20,7 @@ interface MaskingContext {
   fragmentMap: FragmentMap;
   cache: ApolloCache<unknown>;
   addWarnings?: boolean;
+  initialValue?: Record<string, any>;
 }
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
@@ -158,7 +159,7 @@ function maskSelectionSet(
       const [masked, itemChanged] = maskSelectionSet(
         item,
         selectionSet,
-        context,
+        { ...context, initialValue: void 0 },
         __DEV__ ? `${path || ""}[${index}]` : void 0
       );
       changed ||= itemChanged;
@@ -182,7 +183,13 @@ function maskSelectionSet(
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,
-              context,
+              {
+                ...context,
+                initialValue: disableWarningsSlot.withValue(
+                  true,
+                  () => memo[keyName]
+                ),
+              },
               __DEV__ ? `${path || ""}.${keyName}` : void 0
             );
 
@@ -199,14 +206,14 @@ function maskSelectionSet(
           }
 
           if (value !== void 0) {
-            memo[keyName] = value;
-          }
-
-          if (__DEV__) {
-            if (context.addWarnings) {
-              addAccessorWarning(memo, value, keyName, path!, context);
-              changed = true;
+            if (__DEV__) {
+              if (context.addWarnings && !(keyName in memo)) {
+                addAccessorWarning(memo, value, keyName, path!, context);
+                return [memo, true];
+              }
             }
+
+            memo[keyName] = value;
           }
 
           return [memo, changed];
@@ -222,7 +229,7 @@ function maskSelectionSet(
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             selection.selectionSet,
-            context,
+            { ...context, initialValue: memo },
             path
           );
 
@@ -252,7 +259,7 @@ function maskSelectionSet(
           const [fragmentData, childChanged] = maskSelectionSet(
             data,
             fragment.selectionSet,
-            { ...context, addWarnings: mode === "migrate" },
+            { ...context, initialValue: memo, addWarnings: mode === "migrate" },
             path || ""
           );
 
@@ -263,7 +270,7 @@ function maskSelectionSet(
         }
       }
     },
-    [Object.create(null), false]
+    [context.initialValue || Object.create(null), false]
   );
 
   if (data && "__typename" in data && !("__typename" in result[0])) {

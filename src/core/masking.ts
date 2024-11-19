@@ -267,19 +267,18 @@ function maskSelectionSet(
       }
     }
 
-    if (selection.kind === Kind.INLINE_FRAGMENT) {
-      if (
-        !selection.typeCondition ||
-        context.cache.fragmentMatches!(selection, data.__typename)
-      ) {
-        value = maskSelectionSet(
-          data,
-          selection.selectionSet,
-          context,
-          migration,
-          path
-        );
-      }
+    if (
+      selection.kind === Kind.INLINE_FRAGMENT &&
+      (!selection.typeCondition ||
+        context.cache.fragmentMatches!(selection, data.__typename))
+    ) {
+      value = maskSelectionSet(
+        data,
+        selection.selectionSet,
+        context,
+        migration,
+        path
+      );
     }
 
     if (selection.kind === Kind.FRAGMENT_SPREAD) {

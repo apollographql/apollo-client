@@ -71,7 +71,6 @@ export function maskOperation<TData = unknown>(
       data,
       definition.selectionSet,
       context,
-      undefined,
       false
     );
 
@@ -148,7 +147,6 @@ export function maskFragment<TData = unknown>(
       data,
       fragment.selectionSet,
       context,
-      undefined,
       false
     );
 
@@ -178,8 +176,8 @@ function maskSelectionSet(
   data: any,
   selectionSet: SelectionSetNode,
   context: MaskingContext,
-  path: string | undefined,
-  migration: boolean
+  migration: boolean,
+  path?: string | undefined
 ): [data: any, changed: boolean] {
   if (Array.isArray(data)) {
     let changed = false;
@@ -194,8 +192,8 @@ function maskSelectionSet(
         item,
         selectionSet,
         context,
-        __DEV__ ? `${path || ""}[${index}]` : void 0,
-        migration
+        migration,
+        __DEV__ ? `${path || ""}[${index}]` : void 0
       );
       changed ||= itemChanged;
 
@@ -219,8 +217,8 @@ function maskSelectionSet(
             data[keyName],
             childSelectionSet,
             context,
-            __DEV__ ? `${path || ""}.${keyName}` : void 0,
-            migration
+            migration,
+            __DEV__ ? `${path || ""}.${keyName}` : void 0
           );
 
           if (childChanged) {
@@ -277,8 +275,8 @@ function maskSelectionSet(
           data,
           selection.selectionSet,
           context,
-          path,
-          migration
+          migration,
+          path
         );
         changed ||= childChanged;
         break;
@@ -305,8 +303,8 @@ function maskSelectionSet(
           data,
           fragment.selectionSet,
           context,
-          path,
-          mode === "migrate"
+          mode === "migrate",
+          path
         );
 
         changed ||= selectionChanged;

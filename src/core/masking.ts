@@ -23,14 +23,6 @@ interface MaskingContext {
   cache: ApolloCache<unknown>;
   mutableTargets: WeakMap<any, any>;
   knownChanged: WeakSet<any>;
-  migration: WeakMap<
-    any,
-    {
-      path: string;
-      unmasked: Set<string>;
-      migrated: Set<string>;
-    }
-  >;
 }
 
 const MapImpl = canUseWeakMap ? WeakMap : Map;
@@ -72,24 +64,22 @@ export function maskOperation<TData = unknown>(
     cache,
     mutableTargets: new MapImpl(),
     knownChanged: new SetImpl(),
-    migration: new MapImpl(),
   };
 
-  const [masked, changed] = maskSelectionSet(
-    data,
-    definition.selectionSet,
-    context,
-    undefined,
-    false
-  );
+  const [masked, changed] = disableWarningsSlot.withValue(true, () => {
+    const maskedTuple = maskSelectionSet(
+      data,
+      definition.selectionSet,
+      context,
+      undefined,
+      false
+    );
 
-  if (__DEV__) {
-    addMigrationWarnings(context, masked);
-  }
-
-  if (Object.isFrozen(data)) {
-    disableWarningsSlot.withValue(true, maybeDeepFreeze, [masked]);
-  }
+    if (Object.isFrozen(data)) {
+      maybeDeepFreeze(maskedTuple[0]);
+    }
+    return maskedTuple;
+  });
 
   return changed ? masked : data;
 }
@@ -151,24 +141,22 @@ export function maskFragment<TData = unknown>(
     cache,
     mutableTargets: new MapImpl(),
     knownChanged: new SetImpl(),
-    migration: new MapImpl(),
   };
 
-  const [masked, changed] = maskSelectionSet(
-    data,
-    fragment.selectionSet,
-    context,
-    undefined,
-    false
-  );
+  const [masked, changed] = disableWarningsSlot.withValue(true, () => {
+    const maskedTuple = maskSelectionSet(
+      data,
+      fragment.selectionSet,
+      context,
+      undefined,
+      false
+    );
 
-  if (__DEV__) {
-    addMigrationWarnings(context, masked);
-  }
-
-  if (Object.isFrozen(data)) {
-    disableWarningsSlot.withValue(true, maybeDeepFreeze, [masked]);
-  }
+    if (Object.isFrozen(data)) {
+      maybeDeepFreeze(maskedTuple[0]);
+    }
+    return maskedTuple;
+  });
 
   return changed ? masked : data;
 }
@@ -242,18 +230,35 @@ function maskSelectionSet(
         }
 
         if (newValue !== void 0) {
-          memo[keyName] = newValue;
-        }
-        if (__DEV__) {
-          const m = context.migration;
-          if (!m.has(memo)) {
-            m.set(memo, {
-              path: path || "",
-              unmasked: new Set(),
-              migrated: new Set(),
-            });
+          if (!__DEV__) {
+            memo[keyName] = newValue;
           }
-          m.get(memo)![migration ? "migrated" : "unmasked"].add(keyName);
+          if (__DEV__) {
+            if (
+              migration &&
+              keyName !== "__typename" &&
+              // either the field is not present in the memo object
+              // or it has a `get` descriptor, not a `value` descriptor
+              // => it is a warning accessor and we can overwrite it
+              // with another accessor
+              !Object.getOwnPropertyDescriptor(memo, keyName)?.value
+            ) {
+              Object.defineProperty(
+                memo,
+                keyName,
+                getAccessorWarningDescriptor(
+                  newValue,
+                  keyName,
+                  path || "",
+                  context.operationName,
+                  context.operationType
+                )
+              );
+            } else {
+              delete memo[keyName];
+              memo[keyName] = newValue;
+            }
+          }
         }
         // we later want to add acessor warnings to the final result
         // so we need a new object to add the accessor warning to
@@ -329,33 +334,6 @@ function maskSelectionSet(
   }
 
   return [changed ? memo : data, changed];
-}
-
-function addMigrationWarnings(context: MaskingContext, masked: any) {
-  JSON.stringify(masked, function (this: any, key, value) {
-    const obj = context.migration.get(this);
-    if (obj && obj.migrated.has(key) && !obj.unmasked.has(key)) {
-      // In order to preserve the original shape of the data as much as possible, we
-      // want to skip adding a property with warning to the final result when the
-      // value is missing, otherwise our final result will contain additional
-      // properties that our original result did not have. This could happen with a
-      // deferred payload for example.
-      if (value !== void 0) {
-        Object.defineProperty(
-          this,
-          key,
-          getAccessorWarningDescriptor(
-            value,
-            key,
-            obj.path,
-            context.operationName,
-            context.operationType
-          )
-        );
-      }
-    }
-    return value;
-  });
 }
 
 function getAccessorWarningDescriptor(

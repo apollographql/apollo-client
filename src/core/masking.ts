@@ -323,7 +323,7 @@ function maskSelectionSet(
     }
   }
 
-  if (data && "__typename" in data && !("__typename" in memo)) {
+  if ("__typename" in data && !("__typename" in memo)) {
     memo.__typename = data.__typename;
   }
 

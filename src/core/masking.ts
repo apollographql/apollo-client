@@ -245,8 +245,8 @@ function maskSelectionSet(
                 memo,
                 keyName,
                 getAccessorWarningDescriptor(
-                  newValue,
                   keyName,
+                  newValue,
                   path || "",
                   context.operationName,
                   context.operationType
@@ -335,8 +335,8 @@ function maskSelectionSet(
 }
 
 function getAccessorWarningDescriptor(
-  value: any,
   fieldName: string,
+  value: any,
   path: string,
   operationName: string | undefined,
   operationType: string

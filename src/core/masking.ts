@@ -215,13 +215,13 @@ function maskSelectionSet(
         const keyName = resultKeyNameFromField(selection);
         const childSelectionSet = selection.selectionSet;
 
-        let newValue = memo[keyName] || data[keyName];
+        let value = memo[keyName] || data[keyName];
 
-        if (newValue === void 0) {
+        if (value === void 0) {
           break;
         }
 
-        if (childSelectionSet && newValue !== null) {
+        if (childSelectionSet && value !== null) {
           const masked = maskSelectionSet(
             data[keyName],
             childSelectionSet,
@@ -231,13 +231,13 @@ function maskSelectionSet(
           );
 
           if (knownChanged.has(masked)) {
-            newValue = masked;
+            value = masked;
             knownChanged.add(memo);
           }
         }
 
         if (!__DEV__) {
-          memo[keyName] = newValue;
+          memo[keyName] = value;
         }
         if (__DEV__) {
           if (
@@ -254,7 +254,7 @@ function maskSelectionSet(
               keyName,
               getAccessorWarningDescriptor(
                 keyName,
-                newValue,
+                value,
                 path || "",
                 context.operationName,
                 context.operationType
@@ -262,7 +262,7 @@ function maskSelectionSet(
             );
           } else {
             delete memo[keyName];
-            memo[keyName] = newValue;
+            memo[keyName] = value;
           }
         }
 

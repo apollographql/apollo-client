@@ -217,7 +217,7 @@ function maskSelectionSet(
           const childSelectionSet = selection.selectionSet;
 
           let newValue = memo[keyName] || data[keyName];
-          if (childSelectionSet && data[keyName] !== null) {
+          if (keyName in data && childSelectionSet && data[keyName] !== null) {
             const [masked, childChanged] = maskSelectionSet(
               data[keyName],
               childSelectionSet,

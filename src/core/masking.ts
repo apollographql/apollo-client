@@ -67,7 +67,7 @@ export function maskOperation<TData = unknown>(
   };
 
   return disableWarningsSlot.withValue(true, () => {
-    const [masked] = maskSelectionSet(
+    const masked = maskSelectionSet(
       data,
       definition.selectionSet,
       context,
@@ -141,7 +141,7 @@ export function maskFragment<TData = unknown>(
   };
 
   return disableWarningsSlot.withValue(true, () => {
-    const [masked] = maskSelectionSet(
+    const masked = maskSelectionSet(
       data,
       fragment.selectionSet,
       context,
@@ -174,7 +174,7 @@ function maskSelectionSet(
   context: MaskingContext,
   migration: boolean,
   path?: string | undefined
-): [data: any] {
+): typeof data {
   const { knownChanged } = context;
 
   if (Array.isArray(data)) {
@@ -185,7 +185,7 @@ function maskSelectionSet(
         continue;
       }
 
-      const [masked] = maskSelectionSet(
+      const masked = maskSelectionSet(
         item,
         selectionSet,
         context,
@@ -199,7 +199,7 @@ function maskSelectionSet(
       target[index] = masked;
     }
 
-    return [knownChanged.has(target) ? target : data];
+    return knownChanged.has(target) ? target : data;
   }
 
   const memo = getMutableTarget(data, context.mutableTargets);
@@ -211,7 +211,7 @@ function maskSelectionSet(
 
         let newValue = memo[keyName] || data[keyName];
         if (keyName in data && childSelectionSet && data[keyName] !== null) {
-          const [masked] = maskSelectionSet(
+          const masked = maskSelectionSet(
             data[keyName],
             childSelectionSet,
             context,
@@ -272,7 +272,7 @@ function maskSelectionSet(
           break;
         }
 
-        const [fragmentData] = maskSelectionSet(
+        const fragmentData = maskSelectionSet(
           data,
           selection.selectionSet,
           context,
@@ -302,7 +302,7 @@ function maskSelectionSet(
           break;
         }
 
-        const [fragmentData] = maskSelectionSet(
+        const fragmentData = maskSelectionSet(
           data,
           fragment.selectionSet,
           context,
@@ -330,7 +330,7 @@ function maskSelectionSet(
     knownChanged.add(memo);
   }
 
-  return [knownChanged.has(memo) ? memo : data];
+  return knownChanged.has(memo) ? memo : data;
 }
 
 function getAccessorWarningDescriptor(

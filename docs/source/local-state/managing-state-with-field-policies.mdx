@@ -118,17 +118,17 @@ That's it! The `@client` directive tells Apollo Client that `isInCart` is a loca
 >
 > ```js {6-9}
 > const GET_PRODUCT_DETAILS = gql`
-  query ProductDetails($productId: ID!) {
-    product(id: $productId) {
-      name
-      price
-      purchaseStatus @client {
-        isInCart
-        isOnWishlist
-      }
-    }
-  }
-`;
+>  query ProductDetails($productId: ID!) {
+>    product(id: $productId) {
+>      name
+>      price
+>      purchaseStatus @client {
+>        isInCart
+>        isOnWishlist
+>      }
+>    }
+>  }
+>`;
 > ```
 >
 > </ExpansionPanel>

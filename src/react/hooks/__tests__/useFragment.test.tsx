@@ -1,3 +1,4 @@
+/* eslint-disable testing-library/render-result-naming-convention */
 import * as React from "react";
 import {
   render,
@@ -29,7 +30,11 @@ import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { profile, profileHook, spyOnConsole } from "../../../testing/internal";
+import {
+  renderHookToSnapshotStream,
+  renderToRenderStream,
+} from "@testing-library/react-render-stream";
+import { spyOnConsole } from "../../../testing/internal";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {
@@ -1420,18 +1425,19 @@ describe("useFragment", () => {
       data: { __typename: "User", id: 2, name: "Charlie" },
     });
 
-    const ProfiledHook = profileHook(({ id }: { id: number }) =>
-      useFragment({ fragment, from: { __typename: "User", id } })
+    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+      ({ id }: { id: number }) =>
+        useFragment({ fragment, from: { __typename: "User", id } }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+        initialProps: { id: 1 },
+      }
     );
 
-    const { rerender } = render(<ProfiledHook id={1} />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1439,10 +1445,10 @@ describe("useFragment", () => {
       });
     }
 
-    rerender(<ProfiledHook id={2} />);
+    rerender({ id: 2 });
 
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1450,7 +1456,7 @@ describe("useFragment", () => {
       });
     }
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("does not rerender when fields with @nonreactive change", async () => {
@@ -1483,18 +1489,17 @@ describe("useFragment", () => {
       },
     });
 
-    const ProfiledHook = profileHook(() =>
-      useFragment({ fragment, from: { __typename: "Post", id: 1 } })
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () => useFragment({ fragment, from: { __typename: "Post", id: 1 } }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1517,7 +1522,7 @@ describe("useFragment", () => {
       },
     });
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
@@ -1555,22 +1560,22 @@ describe("useFragment", () => {
       },
     });
 
-    const ProfiledHook = profileHook(() =>
-      useFragment({
-        fragment,
-        fragmentName: "PostFragment",
-        from: { __typename: "Post", id: 1 },
-      })
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () =>
+        useFragment({
+          fragment,
+          fragmentName: "PostFragment",
+          from: { __typename: "Post", id: 1 },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
 
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
     {
-      const snapshot = await ProfiledHook.takeSnapshot();
+      const snapshot = await takeSnapshot();
 
       expect(snapshot).toEqual({
         complete: true,
@@ -1594,7 +1599,7 @@ describe("useFragment", () => {
       },
     });
 
-    await expect(ProfiledHook).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   describe("tests with incomplete data", () => {
@@ -1731,23 +1736,23 @@ describe("useFragment", () => {
     using _ = spyOnConsole("warn");
     const cache = new InMemoryCache();
 
-    const ProfiledHook = profileHook(() =>
-      useFragment({
-        fragment: ItemFragment,
-        // Force a value that results in cache.identify === undefined
-        from: { __typename: "Item" },
-      })
+    const { takeSnapshot } = renderHookToSnapshotStream(
+      () =>
+        useFragment({
+          fragment: ItemFragment,
+          // Force a value that results in cache.identify === undefined
+          from: { __typename: "Item" },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider cache={cache}>{children}</MockedProvider>
+        ),
+      }
     );
-
-    render(<ProfiledHook />, {
-      wrapper: ({ children }) => (
-        <MockedProvider cache={cache}>{children}</MockedProvider>
-      ),
-    });
 
     expect(console.warn).not.toHaveBeenCalled();
 
-    const { data, complete } = await ProfiledHook.takeSnapshot();
+    const { data, complete } = await takeSnapshot();
 
     // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
     expect(complete).toBe(true);
@@ -1791,27 +1796,26 @@ describe("has the same timing as `useQuery`", () => {
         from: initialItem,
       });
 
-      ProfiledComponent.replaceSnapshot({ queryData, fragmentData });
+      replaceSnapshot({ queryData, fragmentData });
 
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
-    const ProfiledComponent = profile({
-      Component,
-      initialSnapshot: {
-        queryData: undefined as any,
-        fragmentData: undefined as any,
-      },
-    });
-
-    render(<ProfiledComponent />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    const { takeRender, replaceSnapshot } = renderToRenderStream(
+      <Component />,
+      {
+        initialSnapshot: {
+          queryData: undefined as any,
+          fragmentData: undefined as any,
+        },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { snapshot } = await ProfiledComponent.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.queryData).toBe(undefined);
       expect(snapshot.fragmentData).toStrictEqual({});
     }
@@ -1821,7 +1825,7 @@ describe("has the same timing as `useQuery`", () => {
     observer.complete();
 
     {
-      const { snapshot } = await ProfiledComponent.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.queryData).toStrictEqual({ item: initialItem });
       expect(snapshot.fragmentData).toStrictEqual(initialItem);
     }
@@ -1829,7 +1833,7 @@ describe("has the same timing as `useQuery`", () => {
     cache.writeQuery({ query, data: { item: updatedItem } });
 
     {
-      const { snapshot } = await ProfiledComponent.takeRender();
+      const { snapshot } = await takeRender();
       expect(snapshot.queryData).toStrictEqual({ item: updatedItem });
       expect(snapshot.fragmentData).toStrictEqual(updatedItem);
     }
@@ -1878,8 +1882,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    const ProfiledParent = profile({
-      Component: Parent,
+    const { takeRender } = renderToRenderStream(<Parent />, {
       snapshotDOM: true,
       onRender() {
         const parent = screen.getByTestId("parent");
@@ -1891,16 +1894,13 @@ describe("has the same timing as `useQuery`", () => {
           within(children).queryAllByText(/Item #2/).length
         );
       },
-    });
-
-    render(<ProfiledParent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { withinDOM } = await ProfiledParent.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
     }
 
@@ -1909,11 +1909,11 @@ describe("has the same timing as `useQuery`", () => {
     });
 
     {
-      const { withinDOM } = await ProfiledParent.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
     }
 
-    await expect(ProfiledParent).toRenderExactlyTimes(2);
+    await expect(takeRender).toRenderExactlyTimes(2);
   });
 
   /**
@@ -1973,8 +1973,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
-    const ProfiledParent = profile({
-      Component: Parent,
+    const { takeRender } = renderToRenderStream(<Parent />, {
       onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
@@ -1985,16 +1984,13 @@ describe("has the same timing as `useQuery`", () => {
           within(children).queryAllByText(/Item #2/).length
         );
       },
-    });
-
-    render(<ProfiledParent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
     });
 
     {
-      const { withinDOM } = await ProfiledParent.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
     }
 
@@ -2006,11 +2002,11 @@ describe("has the same timing as `useQuery`", () => {
     );
 
     {
-      const { withinDOM } = await ProfiledParent.takeRender();
+      const { withinDOM } = await takeRender();
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(0);
     }
 
-    await expect(ProfiledParent).toRenderExactlyTimes(3);
+    await expect(takeRender).toRenderExactlyTimes(3);
   });
 });
 

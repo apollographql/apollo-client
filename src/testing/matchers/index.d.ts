@@ -4,12 +4,8 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
-import {
-  NextRenderOptions,
-  Profiler,
-  ProfiledComponent,
-  ProfiledHook,
-} from "../internal/index.js";
+import { NextRenderOptions } from "../internal/index.js";
+import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -36,24 +32,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     ) => R
   : { error: "matcher needs to be called on an ApolloClient instance" };
 
-  toRerender: T extends (
-    Profiler<any, any> | ProfiledComponent<any, any> | ProfiledHook<any, any>
-  ) ?
-    (options?: NextRenderOptions) => Promise<R>
-  : { error: "matcher needs to be called on a ProfiledComponent instance" };
-
-  toRenderExactlyTimes: T extends (
-    Profiler<any, any> | ProfiledComponent<any, any> | ProfiledHook<any, any>
-  ) ?
-    (count: number, options?: NextRenderOptions) => Promise<R>
-  : { error: "matcher needs to be called on a ProfiledComponent instance" };
-
   toBeGarbageCollected: T extends WeakRef<any> ? () => Promise<R>
   : { error: "matcher needs to be called on a WeakRef instance" };
 }
 
 declare global {
   namespace jest {
-    interface Matchers<R = void, T = {}> extends ApolloCustomMatchers<R, T> {}
+    interface Matchers<R = void, T = {}>
+      extends ApolloCustomMatchers<R, T>,
+        RenderStreamMatchers<R, T> {}
   }
 }

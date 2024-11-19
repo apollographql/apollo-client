@@ -1,5 +1,5 @@
 import React from "react";
-import { act, render, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import {
   ApolloClient,
   InMemoryCache,
@@ -15,13 +15,11 @@ import {
   MockedResponse,
 } from "../../../testing";
 import {
+  createClientWrapper,
   PaginatedCaseData,
   SimpleCaseData,
-  createProfiler,
-  renderWithClient,
   setupPaginatedCase,
   setupSimpleCase,
-  useTrackRenders,
 } from "../../../testing/internal";
 import { useQueryRefHandlers } from "../useQueryRefHandlers";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
@@ -33,6 +31,10 @@ import { QueryRef } from "../../internal";
 import { useBackgroundQuery } from "../useBackgroundQuery";
 import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination, getMainDefinition } from "../../../utilities";
+import {
+  createRenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
@@ -42,7 +44,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -58,7 +60,7 @@ test("does not interfere with updates from useReadQuery", async () => {
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -77,16 +79,17 @@ test("does not interfere with updates from useReadQuery", async () => {
     );
   }
 
-  const { rerender } = renderWithClient(<App />, { client, wrapper: Profiler });
-
+  const { rerender } = renderStream.render(<App />, {
+    wrapper: createClientWrapper(client),
+  });
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -98,7 +101,7 @@ test("does not interfere with updates from useReadQuery", async () => {
   client.writeQuery({ query, data: { greeting: "Hello again" } });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -111,7 +114,7 @@ test("does not interfere with updates from useReadQuery", async () => {
   rerender(<App />);
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -141,7 +144,7 @@ test("refetches and resuspends when calling refetch", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -156,7 +159,7 @@ test("refetches and resuspends when calling refetch", async () => {
   }
 
   function ReadQueryHook() {
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -175,16 +178,16 @@ test("refetches and resuspends when calling refetch", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -196,13 +199,13 @@ test("refetches and resuspends when calling refetch", async () => {
   await act(() => user.click(screen.getByText("Refetch")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello again" },
@@ -262,7 +265,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     cache,
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
     },
@@ -280,7 +283,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   }
 
   function ReadQueryHook() {
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -299,13 +302,13 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11] },
@@ -316,10 +319,10 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
@@ -335,7 +338,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     ]);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test('honors refetchWritePolicy set to "overwrite"', async () => {
@@ -388,7 +391,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     cache,
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
     },
@@ -406,7 +409,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   }
 
   function ReadQueryHook() {
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -425,13 +428,13 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11] },
@@ -442,10 +445,10 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [13, 17, 19, 23, 29] },
@@ -458,7 +461,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     ]);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test('defaults refetchWritePolicy to "overwrite"', async () => {
@@ -511,7 +514,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     cache,
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
     },
@@ -528,7 +531,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   }
 
   function ReadQueryHook() {
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -547,13 +550,13 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [2, 3, 5, 7, 11] },
@@ -564,10 +567,10 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   }
 
   await act(() => user.click(screen.getByText("Refetch")));
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { primes: [13, 17, 19, 23, 29] },
@@ -580,7 +583,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     ]);
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("`refetch` works with startTransition", async () => {
@@ -629,7 +632,7 @@ test("`refetch` works with startTransition", async () => {
     cache: new InMemoryCache(),
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
       result: null as UseReadQueryResult<Data> | null,
@@ -644,7 +647,7 @@ test("`refetch` works with startTransition", async () => {
     const { refetch } = useQueryRefHandlers(queryRef);
     const [isPending, startTransition] = React.useTransition();
 
-    Profiler.mergeSnapshot({ isPending });
+    renderStream.mergeSnapshot({ isPending });
 
     return (
       <>
@@ -675,7 +678,7 @@ test("`refetch` works with startTransition", async () => {
     const result = useReadQuery(queryRef);
     const { todo } = result.data;
 
-    Profiler.mergeSnapshot({ result });
+    renderStream.mergeSnapshot({ result });
 
     return (
       <div data-testid="todo">
@@ -685,16 +688,16 @@ test("`refetch` works with startTransition", async () => {
     );
   }
 
-  render(<App />, { wrapper: Profiler });
+  renderStream.render(<App />);
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot).toEqual({
       isPending: false,
@@ -710,7 +713,7 @@ test("`refetch` works with startTransition", async () => {
   await act(() => user.click(button));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, Todo]);
     expect(snapshot).toEqual({
@@ -724,7 +727,7 @@ test("`refetch` works with startTransition", async () => {
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, Todo]);
     expect(snapshot).toEqual({
@@ -737,7 +740,7 @@ test("`refetch` works with startTransition", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("`refetch` works with startTransition from useBackgroundQuery and usePreloadedQueryHandlers", async () => {
@@ -764,7 +767,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     link: new MockLink(mocks),
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
       usePreloadedQueryHandlersIsPending: false,
@@ -782,7 +785,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     const [isPending, startTransition] = React.useTransition();
     const { refetch } = useQueryRefHandlers(queryRef);
 
-    Profiler.mergeSnapshot({
+    renderStream.mergeSnapshot({
       usePreloadedQueryHandlersIsPending: isPending,
       result: useReadQuery(queryRef),
     });
@@ -805,7 +808,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     const [isPending, startTransition] = React.useTransition();
     const [queryRef, { refetch }] = useBackgroundQuery(query);
 
-    Profiler.mergeSnapshot({ useBackgroundQueryIsPending: isPending });
+    renderStream.mergeSnapshot({ useBackgroundQueryIsPending: isPending });
 
     return (
       <>
@@ -825,16 +828,16 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -846,7 +849,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
   await act(() => user.click(screen.getByText("Refetch from parent")));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -861,7 +864,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -878,7 +881,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
   await act(() => user.click(screen.getByText("Refetch from child")));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -893,7 +896,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -907,7 +910,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("refetches from queryRefs produced by useBackgroundQuery", async () => {
@@ -929,7 +932,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -942,7 +945,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
 
   function ReadQueryHook({ queryRef }: { queryRef: QueryRef<SimpleCaseData> }) {
     const { refetch } = useQueryRefHandlers(queryRef);
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return <button onClick={() => refetch()}>Refetch</button>;
   }
@@ -960,16 +963,16 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -981,13 +984,13 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   await act(() => user.click(screen.getByText("Refetch")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello again" },
@@ -1016,7 +1019,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     link: new MockLink(mocks),
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
@@ -1029,7 +1032,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
 
   function ReadQueryHook({ queryRef }: { queryRef: QueryRef<SimpleCaseData> }) {
     const { refetch } = useQueryRefHandlers(queryRef);
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return <button onClick={() => refetch()}>Refetch</button>;
   }
@@ -1048,21 +1051,21 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
@@ -1074,13 +1077,13 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
   await act(() => user.click(screen.getByText("Refetch")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello again" },
@@ -1109,7 +1112,7 @@ test("resuspends when calling `fetchMore`", async () => {
   });
   const preloadQuery = createQueryPreloader(client);
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
     },
@@ -1122,7 +1125,7 @@ test("resuspends when calling `fetchMore`", async () => {
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -1146,16 +1149,16 @@ test("resuspends when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1172,13 +1175,13 @@ test("resuspends when calling `fetchMore`", async () => {
   await act(() => user.click(screen.getByText("Load next")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1201,7 +1204,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
     },
@@ -1214,7 +1217,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -1245,16 +1248,16 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1271,13 +1274,13 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   await act(() => user.click(screen.getByText("Load next")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1313,7 +1316,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   });
   const preloadQuery = createQueryPreloader(client);
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
     },
@@ -1326,7 +1329,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -1350,16 +1353,16 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   }
 
   const queryRef = preloadQuery(query);
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1376,13 +1379,13 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   await act(() => user.click(screen.getByText("Load next")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1416,7 +1419,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     link,
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
     },
@@ -1435,7 +1438,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     useTrackRenders();
     const { fetchMore } = useQueryRefHandlers(queryRef);
 
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return (
       <button onClick={() => fetchMore({ variables: { limit: 2, offset: 2 } })}>
@@ -1455,16 +1458,16 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1481,13 +1484,13 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   await act(() => user.click(screen.getByText("Load next")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1519,7 +1522,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     link,
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
     },
@@ -1538,7 +1541,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     useTrackRenders();
     const { fetchMore } = useQueryRefHandlers(queryRef);
 
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return (
       <button onClick={() => fetchMore({ variables: { limit: 2, offset: 2 } })}>
@@ -1561,21 +1564,21 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
-  await Profiler.takeRender();
+  await renderStream.takeRender();
 
   await act(() => user.click(screen.getByText("Load query")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1592,13 +1595,13 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   await act(() => user.click(screen.getByText("Load next")));
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1631,7 +1634,7 @@ test("`fetchMore` works with startTransition", async () => {
   });
   const preloadQuery = createQueryPreloader(client);
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1645,7 +1648,7 @@ test("`fetchMore` works with startTransition", async () => {
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -1655,7 +1658,7 @@ test("`fetchMore` works with startTransition", async () => {
     const [isPending, startTransition] = React.useTransition();
     const { fetchMore } = useQueryRefHandlers(queryRef);
 
-    Profiler.mergeSnapshot({ isPending });
+    renderStream.mergeSnapshot({ isPending });
 
     return (
       <>
@@ -1677,16 +1680,16 @@ test("`fetchMore` works with startTransition", async () => {
 
   const queryRef = preloadQuery(query);
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1703,7 +1706,7 @@ test("`fetchMore` works with startTransition", async () => {
   await act(() => user.click(screen.getByText("Load next")));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -1722,7 +1725,7 @@ test("`fetchMore` works with startTransition", async () => {
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -1740,7 +1743,7 @@ test("`fetchMore` works with startTransition", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("`fetchMore` works with startTransition from useBackgroundQuery and useQueryRefHandlers", async () => {
@@ -1760,7 +1763,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     link,
   });
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
       useQueryRefHandlersIsPending: false,
@@ -1782,7 +1785,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     const [isPending, startTransition] = React.useTransition();
     const { fetchMore } = useQueryRefHandlers(queryRef);
 
-    Profiler.mergeSnapshot({
+    renderStream.mergeSnapshot({
       useQueryRefHandlersIsPending: isPending,
       result: useReadQuery(queryRef),
     });
@@ -1805,7 +1808,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     const [isPending, startTransition] = React.useTransition();
     const [queryRef, { fetchMore }] = useBackgroundQuery(query);
 
-    Profiler.mergeSnapshot({ useBackgroundQueryIsPending: isPending });
+    renderStream.mergeSnapshot({ useBackgroundQueryIsPending: isPending });
 
     return (
       <>
@@ -1825,16 +1828,16 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot } = await Profiler.takeRender();
+    const { snapshot } = await renderStream.takeRender();
 
     expect(snapshot.result).toEqual({
       data: {
@@ -1851,7 +1854,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   await act(() => user.click(screen.getByText("Paginate from parent")));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -1871,7 +1874,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -1893,7 +1896,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   await act(() => user.click(screen.getByText("Paginate from child")));
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -1913,7 +1916,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot).toEqual({
@@ -1932,7 +1935,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(renderStream).not.toRerender();
 });
 
 test("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
@@ -1980,7 +1983,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const Profiler = createProfiler({
+  const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
         SimpleCaseData,
@@ -1997,7 +2000,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
 
   function ReadQueryHook() {
     useTrackRenders();
-    Profiler.mergeSnapshot({ result: useReadQuery(queryRef) });
+    renderStream.mergeSnapshot({ result: useReadQuery(queryRef) });
 
     return null;
   }
@@ -2009,7 +2012,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     // useReadQuery
     const { subscribeToMore } = useQueryRefHandlers(queryRef);
 
-    Profiler.mergeSnapshot({ subscribeToMore });
+    renderStream.mergeSnapshot({ subscribeToMore });
 
     return (
       <Suspense fallback={<SuspenseFallback />}>
@@ -2018,16 +2021,16 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     );
   }
 
-  renderWithClient(<App />, { client, wrapper: Profiler });
+  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([App, SuspenseFallback]);
   }
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({
@@ -2044,7 +2047,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     return { greeting: data.greetingUpdated };
   });
 
-  const { snapshot } = Profiler.getCurrentRender();
+  const { snapshot } = renderStream.getCurrentRender();
 
   snapshot.subscribeToMore!({ document: subscription, updateQuery });
 
@@ -2057,7 +2060,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
 
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
     expect(snapshot.result).toEqual({

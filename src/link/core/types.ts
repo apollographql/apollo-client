@@ -89,7 +89,7 @@ export interface Operation {
 
 export interface SingleExecutionResult<
   TData = Record<string, any>,
-  TContext = Partial<DefaultContext>,
+  TContext = DefaultContext,
   TExtensions = Record<string, any>,
 > {
   // data might be undefined if errorPolicy was set to 'ignore'

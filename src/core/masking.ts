@@ -354,9 +354,8 @@ function getAccessorWarningDescriptor(
     get() {
       return getValue();
     },
-    set(v) {
-      value = v;
-      getValue = () => value;
+    set(newValue) {
+      getValue = () => newValue;
     },
     enumerable: true,
     configurable: true,

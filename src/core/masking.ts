@@ -7,6 +7,8 @@ import {
   getFragmentMaskMode,
   getOperationDefinition,
   maybeDeepFreeze,
+  canUseWeakMap,
+  canUseWeakSet,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
 import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
@@ -19,9 +21,9 @@ interface MaskingContext {
   operationName: string | undefined;
   fragmentMap: FragmentMap;
   cache: ApolloCache<unknown>;
-  mutableTargets: Map<any, any>;
-  knownChanged: Set<any>;
-  migration: Map<
+  mutableTargets: WeakMap<any, any>;
+  knownChanged: WeakSet<any>;
+  migration: WeakMap<
     any,
     {
       path: string;
@@ -30,6 +32,9 @@ interface MaskingContext {
     }
   >;
 }
+
+const MapImpl = canUseWeakMap ? WeakMap : Map;
+const SetImpl = canUseWeakSet ? WeakSet : Set;
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
 // migrate mode.
@@ -65,9 +70,9 @@ export function maskOperation<TData = unknown>(
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new Map(),
-    knownChanged: new Set(),
-    migration: new Map(),
+    mutableTargets: new MapImpl(),
+    knownChanged: new SetImpl(),
+    migration: new MapImpl(),
   };
 
   const [masked, changed] = maskSelectionSet(
@@ -144,9 +149,9 @@ export function maskFragment<TData = unknown>(
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new Map(),
-    knownChanged: new Set(),
-    migration: new Map(),
+    mutableTargets: new MapImpl(),
+    knownChanged: new SetImpl(),
+    migration: new MapImpl(),
   };
 
   const [masked, changed] = maskSelectionSet(

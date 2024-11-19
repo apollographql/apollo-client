@@ -204,6 +204,8 @@ function maskSelectionSet(
 
   const memo = getMutableTarget(data, context.mutableTargets);
   for (const selection of selectionSet.selections) {
+    let value: any;
+
     if (selection.kind === Kind.FIELD) {
       // we later want to add acessor warnings to the final result
       // so we need a new object to add the accessor warning to
@@ -214,7 +216,7 @@ function maskSelectionSet(
       const keyName = resultKeyNameFromField(selection);
       const childSelectionSet = selection.selectionSet;
 
-      let value = memo[keyName] || data[keyName];
+      value = memo[keyName] || data[keyName];
 
       if (value === void 0) {
         continue;
@@ -231,7 +233,6 @@ function maskSelectionSet(
 
         if (knownChanged.has(masked)) {
           value = masked;
-          knownChanged.add(memo);
         }
       }
 
@@ -274,16 +275,13 @@ function maskSelectionSet(
         continue;
       }
 
-      const fragmentData = maskSelectionSet(
+      value = maskSelectionSet(
         data,
         selection.selectionSet,
         context,
         migration,
         path
       );
-      if (knownChanged.has(fragmentData)) {
-        knownChanged.add(memo);
-      }
     }
 
     if (selection.kind === Kind.FRAGMENT_SPREAD) {
@@ -304,17 +302,17 @@ function maskSelectionSet(
         continue;
       }
 
-      const fragmentData = maskSelectionSet(
+      value = maskSelectionSet(
         data,
         fragment.selectionSet,
         context,
         mode === "migrate",
         path
       );
+    }
 
-      if (knownChanged.has(fragmentData)) {
-        knownChanged.add(memo);
-      }
+    if (knownChanged.has(value)) {
+      knownChanged.add(memo);
     }
   }
 

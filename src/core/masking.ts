@@ -174,7 +174,7 @@ function maskSelectionSet(
   context: MaskingContext,
   migration: boolean,
   path?: string | undefined
-): [data: any, changed: boolean] {
+): [data: any] {
   const { knownChanged } = context;
 
   if (Array.isArray(data)) {
@@ -199,10 +199,9 @@ function maskSelectionSet(
       target[index] = masked;
     }
 
-    return [knownChanged.has(target) ? target : data, true];
+    return [knownChanged.has(target) ? target : data];
   }
 
-  let changed = false;
   const memo = getMutableTarget(data, context.mutableTargets);
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
@@ -212,7 +211,7 @@ function maskSelectionSet(
 
         let newValue = memo[keyName] || data[keyName];
         if (keyName in data && childSelectionSet && data[keyName] !== null) {
-          const [masked, childChanged] = maskSelectionSet(
+          const [masked] = maskSelectionSet(
             data[keyName],
             childSelectionSet,
             context,
@@ -220,9 +219,9 @@ function maskSelectionSet(
             __DEV__ ? `${path || ""}.${keyName}` : void 0
           );
 
-          if (childChanged) {
+          if (knownChanged.has(masked)) {
             newValue = masked;
-            changed = true;
+            knownChanged.add(memo);
           }
         }
 
@@ -257,9 +256,12 @@ function maskSelectionSet(
             }
           }
         }
+
         // we later want to add acessor warnings to the final result
         // so we need a new object to add the accessor warning to
-        changed ||= migration;
+        if (migration) {
+          knownChanged.add(memo);
+        }
         break;
       }
       case Kind.INLINE_FRAGMENT: {
@@ -270,14 +272,16 @@ function maskSelectionSet(
           break;
         }
 
-        const [, childChanged] = maskSelectionSet(
+        const [fragmentData] = maskSelectionSet(
           data,
           selection.selectionSet,
           context,
           migration,
           path
         );
-        changed ||= childChanged;
+        if (knownChanged.has(fragmentData)) {
+          knownChanged.add(memo);
+        }
         break;
       }
       case Kind.FRAGMENT_SPREAD: {
@@ -298,7 +302,7 @@ function maskSelectionSet(
           break;
         }
 
-        const [, selectionChanged] = maskSelectionSet(
+        const [fragmentData] = maskSelectionSet(
           data,
           fragment.selectionSet,
           context,
@@ -306,7 +310,10 @@ function maskSelectionSet(
           path
         );
 
-        changed ||= selectionChanged;
+        if (knownChanged.has(fragmentData)) {
+          knownChanged.add(memo);
+        }
+
         break;
       }
     }
@@ -319,18 +326,11 @@ function maskSelectionSet(
   // This check prevents cases where masked fields may accidentally be
   // returned as part of this object when the fragment also selects
   // additional fields from the same child selection.
-  changed ||= Object.keys(memo).length !== Object.keys(data).length;
-
-  // If the object has been changed in another subtree, but not in this,
-  // we still have to return "changed" as true, as otherwise a call parent
-  // would use original data instead of the masked one.
-  if (changed) {
-    context.knownChanged.add(memo);
-  } else {
-    changed ||= context.knownChanged.has(memo);
+  if (Object.keys(memo).length !== Object.keys(data).length) {
+    knownChanged.add(memo);
   }
 
-  return [changed ? memo : data, changed];
+  return [knownChanged.has(memo) ? memo : data];
 }
 
 function getAccessorWarningDescriptor(

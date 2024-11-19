@@ -347,6 +347,7 @@ function assignWithAccessors(
         writable: true,
         configurable: true,
         enumerable: true,
+        value: source[key],
       } satisfies PropertyDescriptor);
 
     return Object.defineProperty(memo, key, descriptor);

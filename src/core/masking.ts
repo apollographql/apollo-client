@@ -206,6 +206,12 @@ function maskSelectionSet(
   for (const selection of selectionSet.selections) {
     switch (selection.kind) {
       case Kind.FIELD: {
+        // we later want to add acessor warnings to the final result
+        // so we need a new object to add the accessor warning to
+        if (migration) {
+          knownChanged.add(memo);
+        }
+
         const keyName = resultKeyNameFromField(selection);
         const childSelectionSet = selection.selectionSet;
 
@@ -257,11 +263,6 @@ function maskSelectionSet(
           }
         }
 
-        // we later want to add acessor warnings to the final result
-        // so we need a new object to add the accessor warning to
-        if (migration) {
-          knownChanged.add(memo);
-        }
         break;
       }
       case Kind.INLINE_FRAGMENT: {

@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.12.0-rc.2
+
+### Patch Changes
+
+- [#12139](https://github.com/apollographql/apollo-client/pull/12139) [`5a53e15`](https://github.com/apollographql/apollo-client/commit/5a53e15e713e5eb2ebc9216615ea1a845fad2685) Thanks [@phryneas](https://github.com/phryneas)! - Fix issue where masked data would sometimes get returned when the field was part of a child fragment from a fragment unmasked by the parent query.
+
+- [#12139](https://github.com/apollographql/apollo-client/pull/12139) [`5a53e15`](https://github.com/apollographql/apollo-client/commit/5a53e15e713e5eb2ebc9216615ea1a845fad2685) Thanks [@phryneas](https://github.com/phryneas)! - Fix issue where the warning emitted by `@unmask(mode: "migrate")` would trigger unnecessarily when the fragment was used alongside a masked fragment inside an inline fragment.
+
+- [#12139](https://github.com/apollographql/apollo-client/pull/12139) [`5a53e15`](https://github.com/apollographql/apollo-client/commit/5a53e15e713e5eb2ebc9216615ea1a845fad2685) Thanks [@phryneas](https://github.com/phryneas)! - Fix issue that threw errors when masking partial data with `@unmask(mode: "migrate")`.
+
 ## 3.12.0-rc.1
 
 ### Minor Changes

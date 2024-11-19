@@ -298,17 +298,15 @@ function maskSelectionSet(
 
       const mode = getFragmentMaskMode(selection);
 
-      if (mode === "mask") {
-        continue;
+      if (mode !== "mask") {
+        value = maskSelectionSet(
+          data,
+          fragment.selectionSet,
+          context,
+          mode === "migrate",
+          path
+        );
       }
-
-      value = maskSelectionSet(
-        data,
-        fragment.selectionSet,
-        context,
-        mode === "migrate",
-        path
-      );
     }
 
     if (knownChanged.has(value)) {

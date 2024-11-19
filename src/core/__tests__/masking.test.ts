@@ -211,6 +211,107 @@ describe("maskOperation", () => {
     });
   });
 
+  test("masks fragments from nested objects when query gets fields from same object", () => {
+    const query = gql`
+      query {
+        user {
+          ...FragmentA @unmask
+          ...FragmentB
+          ...FragmentC @unmask
+        }
+      }
+
+      fragment FragmentA on User {
+        this {
+          is {
+            very {
+              deeply {
+                nested {
+                  a
+                }
+              }
+            }
+          }
+        }
+      }
+      fragment FragmentB on User {
+        this {
+          is {
+            very {
+              deeply {
+                nested {
+                  b
+                }
+              }
+            }
+          }
+        }
+      }
+      fragment FragmentC on User {
+        this {
+          is {
+            very {
+              deeply {
+                nested {
+                  c
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const data = maskOperation(
+      deepFreeze({
+        user: {
+          __typename: "User",
+          this: {
+            is: [
+              {
+                very: {
+                  deeply: [
+                    {
+                      nested: {
+                        a: 1,
+                        b: 2,
+                        c: 3,
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      }),
+      query,
+      new InMemoryCache()
+    );
+
+    expect(data).toEqual({
+      user: {
+        __typename: "User",
+        this: {
+          is: [
+            {
+              very: {
+                deeply: [
+                  {
+                    nested: {
+                      a: 1,
+                      c: 3,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    });
+  });
+
   test("handles nulls in child selection sets", () => {
     const query = gql`
       query {

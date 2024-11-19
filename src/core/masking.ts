@@ -221,7 +221,7 @@ function maskSelectionSet(
           break;
         }
 
-        if (keyName in data && childSelectionSet && newValue !== null) {
+        if (childSelectionSet && newValue !== null) {
           const masked = maskSelectionSet(
             data[keyName],
             childSelectionSet,

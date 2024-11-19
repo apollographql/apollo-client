@@ -66,8 +66,8 @@ export function maskOperation<TData = unknown>(
     knownChanged: new SetImpl(),
   };
 
-  const [masked, changed] = disableWarningsSlot.withValue(true, () => {
-    const maskedTuple = maskSelectionSet(
+  return disableWarningsSlot.withValue(true, () => {
+    const [masked] = maskSelectionSet(
       data,
       definition.selectionSet,
       context,
@@ -75,12 +75,10 @@ export function maskOperation<TData = unknown>(
     );
 
     if (Object.isFrozen(data)) {
-      maybeDeepFreeze(maskedTuple[0]);
+      maybeDeepFreeze(masked);
     }
-    return maskedTuple;
+    return masked;
   });
-
-  return changed ? masked : data;
 }
 
 export function maskFragment<TData = unknown>(
@@ -142,8 +140,8 @@ export function maskFragment<TData = unknown>(
     knownChanged: new SetImpl(),
   };
 
-  const [masked, changed] = disableWarningsSlot.withValue(true, () => {
-    const maskedTuple = maskSelectionSet(
+  return disableWarningsSlot.withValue(true, () => {
+    const [masked] = maskSelectionSet(
       data,
       fragment.selectionSet,
       context,
@@ -151,12 +149,10 @@ export function maskFragment<TData = unknown>(
     );
 
     if (Object.isFrozen(data)) {
-      maybeDeepFreeze(maskedTuple[0]);
+      maybeDeepFreeze(masked);
     }
-    return maskedTuple;
+    return masked;
   });
-
-  return changed ? masked : data;
 }
 
 function getMutableTarget(

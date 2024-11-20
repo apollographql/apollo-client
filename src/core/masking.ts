@@ -163,12 +163,12 @@ function maskSelectionSet(
   path?: string | undefined
 ): typeof data {
   const { knownChanged } = context;
+  const memo = getMutableTarget(data, context.mutableTargets);
 
   if (Array.isArray(data)) {
-    const target = getMutableTarget(data, context.mutableTargets);
     for (const [index, item] of Array.from(data.entries())) {
       if (item === null) {
-        target[index] = null;
+        memo[index] = null;
         continue;
       }
 
@@ -180,16 +180,15 @@ function maskSelectionSet(
         __DEV__ ? `${path || ""}[${index}]` : void 0
       );
       if (knownChanged.has(masked)) {
-        knownChanged.add(target);
+        knownChanged.add(memo);
       }
 
-      target[index] = masked;
+      memo[index] = masked;
     }
 
-    return knownChanged.has(target) ? target : data;
+    return knownChanged.has(memo) ? memo : data;
   }
 
-  const memo = getMutableTarget(data, context.mutableTargets);
   for (const selection of selectionSet.selections) {
     let value: any;
 

@@ -46,5 +46,17 @@ export type MaybeMasked<TData> =
  */
 export type Unmasked<TData> =
   TData extends object ?
-    UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
+    FastForwardUnmask<RemoveMaskedMarker<RemoveFragmentName<TData>>>
   : TData;
+
+/**
+ * This type will skip going through the unmasking algorithm until it reaches
+ * the first fragment reference.
+ * This is useful for types that are not code-generated.
+ */
+type FastForwardUnmask<T> =
+  T extends Record<string, any> ?
+    T extends { " $fragmentRefs"?: any } ?
+      UnwrapFragmentRefs<T>
+    : { [K in keyof T]: FastForwardUnmask<T[K]> }
+  : T;

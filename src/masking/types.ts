@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
+  ContainsFragmentsRefs,
   RemoveFragmentName,
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
@@ -39,15 +40,8 @@ export type FragmentType<TData> =
 export type MaybeMasked<TData> =
   TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
   : DataMasking extends { enabled: true } ? TData
-  : true extends RecContainsFragments<TData> ? Unmasked<TData>
+  : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData>
   : TData;
-
-type RecContainsFragments<T> =
-  T extends object ?
-    " $fragmentRefs" extends keyof T ?
-      true
-    : RecContainsFragments<T[keyof T]>
-  : false;
 
 /**
  * Unmasks a type to provide its full result.

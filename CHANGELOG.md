@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.12.0-rc.3
+
+### Patch Changes
+
+- [#12150](https://github.com/apollographql/apollo-client/pull/12150) [`9ed1e1e`](https://github.com/apollographql/apollo-client/commit/9ed1e1ef02b28445614fed4f5c141a289ac32d66) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue when using `Unmasked` with older versions of TypeScript when used with array fields.
+
+- [#12152](https://github.com/apollographql/apollo-client/pull/12152) [`78137ec`](https://github.com/apollographql/apollo-client/commit/78137eccba90b80dd29bd8e1423b49ebe51ef8df) Thanks [@phryneas](https://github.com/phryneas)! - Add a helper that will skip the TS unmasking alorithm when no fragments are present on type level
+
 ## 3.12.0-rc.2
 
 ### Patch Changes

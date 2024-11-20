@@ -469,6 +469,9 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export const concat: typeof ApolloLink.concat;
 
 // @public (undocumented)
+type ContainsFragmentsRefs<TData> = TData extends object ? " $fragmentRefs" extends keyof TData ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+
+// @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
 
 // @public @deprecated (undocumented)
@@ -1376,13 +1379,14 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
 export type MaybeMasked<TData> = TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
     enabled: true;
-} ? TData : Unmasked<TData>;
+} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData;
 
 // @public (undocumented)
 export interface MergeInfo {

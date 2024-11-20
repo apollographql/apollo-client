@@ -2145,7 +2145,7 @@ type UnwrapFragmentRefs<TData> = TData extends any ? string extends keyof NonNul
     " $fragmentRefs"?: infer FragmentRefs extends object;
 } ? Prettify<{
     [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
-} & CombineFragmentRefs<FragmentRefs>> : never : TData extends object ? {
+} & CombineFragmentRefs<FragmentRefs>> : never : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
 } : TData : never;
 

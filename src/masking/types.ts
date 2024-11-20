@@ -44,7 +44,7 @@ export type MaybeMasked<TData> =
 
 type RecContainsFragments<T> =
   T extends object ?
-    keyof T extends " $fragmentRefs" ?
+    " $fragmentRefs" extends keyof T ?
       true
     : RecContainsFragments<T[keyof T]>
   : false;

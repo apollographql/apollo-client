@@ -13,6 +13,7 @@ export type UnwrapFragmentRefs<TData> =
           } & CombineFragmentRefs<FragmentRefs>
         >
       : never
+    : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>>
     : TData extends object ?
       { [K in keyof TData]: UnwrapFragmentRefs<TData[K]> }
     : TData

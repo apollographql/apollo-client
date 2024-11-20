@@ -514,6 +514,9 @@ class Concast<T> extends Observable<T> {
 // @public (undocumented)
 type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
+// @public (undocumented)
+type ContainsFragmentsRefs<TData> = TData extends object ? " $fragmentRefs" extends keyof TData ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+
 // Warning: (ae-forgotten-export) The symbol "PreloadQueryFunction" needs to be exported by the entry point index.d.ts
 //
 // @public
@@ -1081,13 +1084,14 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
 type MaybeMasked<TData> = TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
     enabled: true;
-} ? TData : Unmasked<TData>;
+} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData;
 
 // @public (undocumented)
 class MissingFieldError extends Error {

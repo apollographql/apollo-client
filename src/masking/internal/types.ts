@@ -31,3 +31,10 @@ export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined
 export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;
+
+export type ContainsFragmentsRefs<TData> =
+  TData extends object ?
+    " $fragmentRefs" extends keyof TData ?
+      true
+    : ContainsFragmentsRefs<TData[keyof TData]>
+  : false;

@@ -2053,41 +2053,30 @@ describe("ObservableQuery", () => {
 
       {
         const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
 
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toEqual(NetworkStatus.ready);
         expect(result.data).toEqual(dataOneWithTypename);
-
-        expect(current.loading).toBe(false);
-        expect(current.networkStatus).toEqual(NetworkStatus.ready);
-        expect(current.data).toEqual(dataOneWithTypename);
+        expect(observable.getCurrentResult()).toEqual(result);
       }
 
       observable.refetch();
 
       {
         const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
 
         expect(result.loading).toBe(true);
         expect(result.networkStatus).toEqual(NetworkStatus.refetch);
-
-        expect(current.loading).toBe(true);
-        expect(current.networkStatus).toEqual(NetworkStatus.refetch);
+        expect(observable.getCurrentResult()).toEqual(result);
       }
 
       {
         const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
 
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toEqual(NetworkStatus.ready);
         expect(result.data).toEqual(dataTwoWithTypename);
-
-        expect(current.loading).toBe(false);
-        expect(current.networkStatus).toEqual(NetworkStatus.ready);
-        expect(current.data).toEqual(dataTwoWithTypename);
+        expect(observable.getCurrentResult()).toEqual(result);
       }
 
       await expect(stream).not.toEmitValue();
@@ -2916,18 +2905,13 @@ describe("ObservableQuery", () => {
 
         {
           const result = await stream.takeNext();
-          const current = observable.getCurrentResult();
 
           expect(result).toEqual({
             data: dataOne,
             loading: false,
             networkStatus: 7,
           });
-          expect(current).toEqual({
-            data: dataOne,
-            loading: false,
-            networkStatus: 7,
-          });
+          expect(observable.getCurrentResult()).toEqual(result);
         }
 
         queryManager.mutate({
@@ -2938,17 +2922,15 @@ describe("ObservableQuery", () => {
 
         {
           const result = await stream.takeNext();
-          const current = observable.getCurrentResult();
 
-          expect(current).toEqual(result);
+          expect(observable.getCurrentResult()).toEqual(result);
           expect(result.data.people_one).toEqual(optimisticResponse);
         }
 
         {
           const result = await stream.takeNext();
-          const current = observable.getCurrentResult();
 
-          expect(current).toEqual(result);
+          expect(observable.getCurrentResult()).toEqual(result);
           expect(result.data.people_one).toEqual(mutationData);
         }
 

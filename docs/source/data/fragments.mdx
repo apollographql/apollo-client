@@ -241,61 +241,60 @@ We then import our shared fragment registry into our component file and register
 
 ## Colocating fragments
 
-The tree-like structure of a GraphQL response resembles the hierarchy of a frontend's rendered components. Because of this similarity, you can use fragments to split query logic up _between_ components, so that each component requests exactly the fields that it uses. This helps you make your component logic more succinct.
+The tree-like structure of a GraphQL response resembles the hierarchy of a frontend's rendered components. Because of this similarity, you can use fragments to split query logic up _between_ components, so that each component requests exactly the fields that it uses. This helps make your component logic more succinct by combining multiple UI components into a single data fetch.
 
 Consider the following view hierarchy for an app:
 
 ```
 FeedPage
-└── Feed
-    └── FeedEntry
-        ├── EntryInfo
-        └── VoteButtons
+└── FeedEntry
+    ├── EntryInfo
+    └── VoteButtons
 ```
 
 In this app, the `FeedPage` component executes a query to fetch a list of `FeedEntry` objects. The `EntryInfo` and `VoteButtons` subcomponents need specific fields from the enclosing `FeedEntry` object.
 
 ### Creating colocated fragments
 
-A colocated fragment is just like any other fragment, except it's attached to a particular component that uses the fragment's fields. For example, the `VoteButtons` child component of `FeedPage` might use the fields `score` and `vote { choice }` from the `FeedEntry` object:
+A colocated fragment is just like any other fragment, except it's defined in the same file as a particular component that uses the fragment's fields. For example, the `VoteButtons` child component of `FeedPage` might use the fields `score` and `vote { choice }` from the `FeedEntry` object:
 
 ```js title="VoteButtons.jsx"
-VoteButtons.fragments = {
-  entry: gql`
-    fragment VoteButtonsFragment on FeedEntry {
-      score
-      vote {
-        choice
-      }
+export const VoteButtonsFragment = gql`
+  fragment VoteButtonsFragment on FeedEntry {
+    score
+    vote {
+      choice
     }
-  `,
-};
+  }
+`
 ```
 
 After you define a fragment in a child component, the _parent_ component can refer to it in its _own_ colocated fragments, like so:
 
 ```js title="FeedEntry.jsx"
-FeedEntry.fragments = {
-  entry: gql`
-    fragment FeedEntryFragment on FeedEntry {
-      commentCount
-      repository {
-        full_name
-        html_url
-        owner {
-          avatar_url
-        }
+export const FeedEntryFragment = gql`
+  fragment FeedEntryFragment on FeedEntry {
+    commentCount
+    repository {
+      full_name
+      html_url
+      owner {
+        avatar_url
       }
-      ...VoteButtonsFragment
-      ...EntryInfoFragment
     }
-    ${VoteButtons.fragments.entry}
-    ${EntryInfo.fragments.entry}
-  `,
-};
+    ...VoteButtonsFragment
+    ...EntryInfoFragment
+  }
+  ${VoteButtonsFragment}
+  ${EntryInfoFragment}
+`
 ```
 
-There's nothing special about the naming of `VoteButtons.fragments.entry` or `EntryInfo.fragments.entry`. Any naming convention works as long as you can retrieve a component's fragments given the component.
+<Tip>
+To prevent coupling with deeply nested components, we recommend parent components only add fragments defined by their directly-rendered children. In this example, our `FeedPage` should not use the `EntryInfoFragment` or `VoteButtonsFragment` directly. Instead the `FeedPage` uses the `FeedEntryFragment` fragment colocated with the `FeedEntry` component to combine the `VoteButtonsFragment` and `EntryInfoFragment` fragments into its own fragment.
+</Tip>
+
+There's nothing special about the naming of `VoteButtonsFragment` or `EntryInfoFragment`. We recommend prefixing the fragment name with the component name to make it easily identifiable when combined with other fragments, however any naming convention works as long as you can retrieve a component's fragments given the component.
 
 ### Importing fragments when using Webpack
 

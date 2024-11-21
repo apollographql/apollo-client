@@ -310,15 +310,12 @@ This makes the contents of `someFragment.graphql` available to the current file.
 
 You can define fragments on [unions and interfaces](https://graphql.com/learn/interfaces-and-unions/).
 
-Here's an example of a query that includes three in-line fragments:
+Here's an example of a query that includes a shared field and two in-line fragments:
 
 ```graphql
 query AllCharacters {
-  all_characters {
-
-    ... on Character {
-      name
-    }
+  allCharacters {
+    name
 
     ... on Jedi {
       side
@@ -331,9 +328,9 @@ query AllCharacters {
 }
 ```
 
-The `all_characters` query above returns a list of `Character` objects. The `Character` type is an interface that both the `Jedi` and `Droid` types implement. Each item in the list includes a `side` field if it's an object of type `Jedi`, and it includes a `model` field if it's of type `Droid`.
+The `AllCharacters` query above returns a list of `Character` objects. The `Character` type is an interface type that both the `Jedi` and `Droid` types implement. Each item in the list includes a `side` field if it's an object of type `Jedi`, and it includes a `model` field if it's of type `Droid`. Both `Jedi` and `Droid` objects include a `name` field.
 
-**However**, for this query to work, your client needs to understand the polymorphic relationship between the `Character` interface and the types that implement it. To inform the client about these relationships, you can pass a `possibleTypes` option when you initialize your `InMemoryCache`.
+**However**, for this query to work, the client needs to understand the polymorphic relationship between the `Character` interface and the types that implement it. To inform the client about these relationships, you must pass a `possibleTypes` option when you initialize your `InMemoryCache` instance.
 
 ### Defining `possibleTypes` manually
 

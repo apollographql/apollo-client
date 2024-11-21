@@ -3,6 +3,12 @@ import { attest, bench } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 import { DeepPartial } from "../../utilities";
 
+import { setup } from "@ark/attest";
+
+setup({
+  updateSnapshots: !process.env.CI,
+});
+
 function test(name: string, fn: (name: string) => void) {
   fn(name + ": ");
 }
@@ -226,39 +232,72 @@ test("unmasks DeepPartial types", (prefix) => {
 });
 
 test("Unmasked handles odd types", (prefix) => {
-  bench(prefix + "empty type", () => {
+  bench(prefix + "empty type instantiations", () => {
     attest<{}, Unmasked<{}>>();
   }).types([181, "instantiations"]);
 
-  bench(prefix + "generic record type", () => {
+  bench(prefix + "empty type functionality", () => {
+    expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
+  });
+
+  bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, Unmasked<Record<string, any>>>();
   }).types([170, "instantiations"]);
 
-  bench(prefix + "unknown", () => {
+  bench(prefix + "generic record type functionality", () => {
+    expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
+      Record<string, any>
+    >();
+  });
+
+  bench(prefix + "unknown instantiations", () => {
     attest<unknown, Unmasked<unknown>>();
   }).types([43, "instantiations"]);
 
-  bench(prefix + "any", () => {
+  bench(prefix + "unknown functionality", () => {
+    expectTypeOf<Unmasked<unknown>>().toBeUnknown();
+  });
+
+  bench(prefix + "any instantiations", () => {
     attest<any, Unmasked<any>>();
   }).types([170, "instantiations"]);
+
+  bench(prefix + "any functionality", () => {
+    expectTypeOf<Unmasked<any>>().toBeAny();
+  });
 });
 
 test("MaybeMasked handles odd types", (prefix) => {
-  bench(prefix + "empty type", () => {
+  bench(prefix + "empty type instantiations", () => {
     attest<{}, MaybeMasked<{}>>();
   }).types([104, "instantiations"]);
 
-  bench(prefix + "generic record type", () => {
+  bench(prefix + "empty type functionality", () => {
+    expectTypeOf<MaybeMasked<{}>>().toEqualTypeOf<{}>();
+  });
+
+  bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, MaybeMasked<Record<string, any>>>();
   }).types([121, "instantiations"]);
+  bench(prefix + "generic record type functionality", () => {
+    expectTypeOf<MaybeMasked<Record<string, any>>>().toEqualTypeOf<
+      Record<string, any>
+    >();
+  });
 
-  bench(prefix + "unknown", () => {
+  bench(prefix + "unknown instantiations", () => {
     attest<unknown, MaybeMasked<unknown>>();
   }).types([62, "instantiations"]);
+  bench(prefix + "unknown functionality", () => {
+    expectTypeOf<MaybeMasked<unknown>>().toBeUnknown();
+  });
 
-  bench(prefix + "any", () => {
+  bench(prefix + "any instantiations", () => {
     attest<any, MaybeMasked<any>>();
   }).types([55, "instantiations"]);
+  bench(prefix + "any functionality", () => {
+    expectTypeOf<MaybeMasked<any>>().toBeAny();
+  });
 });
 
 test("distributed members on MaybeMasked", (prefix) => {

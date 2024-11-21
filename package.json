@@ -50,6 +50,7 @@
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
     "inline-inherit-doc": "ts-node-script config/inlineInheritDoc.ts",
     "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.js",
+    "test:type-benches": "cd src; find -name '*.bench.ts' | xargs -n1 tsx",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",
     "test:watch": "jest --config ./config/jest.config.js --watch",
@@ -109,6 +110,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "0.15.3",
+    "@ark/attest": "^0.28.0",
     "@babel/parser": "7.25.0",
     "@changesets/changelog-github": "0.5.0",
     "@changesets/cli": "2.27.7",
@@ -188,6 +190,7 @@
     "ts-jest-resolver": "2.0.1",
     "ts-morph": "22.0.0",
     "ts-node": "10.9.2",
+    "tsx": "^4.19.2",
     "typedoc": "0.25.0",
     "typescript": "5.5.3",
     "wait-for-observables": "1.0.3",

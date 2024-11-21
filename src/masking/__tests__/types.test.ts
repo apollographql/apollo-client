@@ -1,5 +1,5 @@
 import { expectTypeOf } from "expect-type";
-import type { Unmasked } from "../index";
+import { MaybeMasked, type Unmasked } from "../index";
 import { DeepPartial } from "../../utilities";
 
 describe.skip("Unmasked", () => {
@@ -196,5 +196,27 @@ describe.skip("Unmasked", () => {
     >();
     expectTypeOf<Unmasked<unknown>>().toEqualTypeOf<unknown>();
     expectTypeOf<Unmasked<any>>().toEqualTypeOf<any>();
+  });
+
+  test("edge case: MaybeMasked<any>", () => {
+    expectTypeOf<MaybeMasked<any>>().toBeAny();
+  });
+
+  test("edge case: distributed members on MaybeMasked", () => {
+    function unresolvedGeneric<T>() {
+      let value = {} as MaybeMasked<T | null | undefined>;
+      let expected = {} as MaybeMasked<T> | null | undefined;
+
+      value = expected;
+      expected = value;
+    }
+
+    function unresolvedGenerics<T, V>() {
+      let value = {} as MaybeMasked<T | V>;
+      let expected = {} as MaybeMasked<T> | MaybeMasked<V>;
+
+      value = expected;
+      expected = value;
+    }
   });
 });

@@ -152,9 +152,7 @@ describe("ObservableQuery", () => {
 
         observable.stopPolling();
 
-        await expect(stream.take()).rejects.toEqual(
-          new Error("Timeout waiting for next event")
-        );
+        await expect(stream).not.toEmitValue();
       });
 
       it("stops polling if goes from something -> 0", async () => {
@@ -189,9 +187,7 @@ describe("ObservableQuery", () => {
 
         observable.setOptions({ query, pollInterval: 0 });
 
-        await expect(stream.take()).rejects.toEqual(
-          new Error("Timeout waiting for next event")
-        );
+        await expect(stream).not.toEmitValue();
       });
 
       it("can change from x>0 to y>0", async () => {
@@ -235,9 +231,7 @@ describe("ObservableQuery", () => {
 
         observable.stopPolling();
 
-        await expect(stream.take()).rejects.toEqual(
-          new Error("Timeout waiting for next event")
-        );
+        await expect(stream).not.toEmitValue();
       });
     });
 
@@ -307,9 +301,7 @@ describe("ObservableQuery", () => {
         expect(data).toEqual(data2);
       }
 
-      await expect(stream.take()).rejects.toEqual(
-        new Error("Timeout waiting for next event")
-      );
+      await expect(stream).not.toEmitValue();
     });
 
     itAsync("rerenders when refetch is called", (resolve, reject) => {

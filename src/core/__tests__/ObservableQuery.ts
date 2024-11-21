@@ -25,7 +25,6 @@ import {
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
-  subscribeAndCount,
   tick,
   wait,
 } from "../../testing";
@@ -3204,83 +3203,78 @@ describe("ObservableQuery", () => {
     });
   });
 
-  itAsync(
-    "QueryInfo does not notify for !== but deep-equal results",
-    (resolve, reject) => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { data: dataOne },
-      });
+  it("QueryInfo does not notify for !== but deep-equal results", async () => {
+    const queryManager = mockQueryManager({
+      request: { query, variables },
+      result: { data: dataOne },
+    });
 
-      const observable = queryManager.watchQuery({
-        query,
-        variables,
-        // If we let the cache return canonical results, it will be harder to
-        // write this test, because any two results that are deeply equal will
-        // also be !==, making the choice of equality test in queryInfo.setDiff
-        // less visible/important.
-        canonizeResults: false,
-      });
+    const observable = queryManager.watchQuery({
+      query,
+      variables,
+      // If we let the cache return canonical results, it will be harder to
+      // write this test, because any two results that are deeply equal will
+      // also be !==, making the choice of equality test in queryInfo.setDiff
+      // less visible/important.
+      canonizeResults: false,
+    });
 
-      const queryInfo = observable["queryInfo"];
-      const cache = queryInfo["cache"];
-      const setDiffSpy = jest.spyOn(queryInfo, "setDiff");
-      const notifySpy = jest.spyOn(queryInfo, "notify");
+    const queryInfo = observable["queryInfo"];
+    const cache = queryInfo["cache"];
+    const setDiffSpy = jest.spyOn(queryInfo, "setDiff");
+    const notifySpy = jest.spyOn(queryInfo, "notify");
 
-      subscribeAndCount(reject, observable, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: dataOne,
-          });
+    const stream = new ObservableStream(observable);
 
-          let invalidateCount = 0;
-          let onWatchUpdatedCount = 0;
+    const result = await stream.takeNext();
 
-          cache.batch({
-            optimistic: true,
-            update(cache) {
-              cache.modify({
-                fields: {
-                  people_one(value, { INVALIDATE }) {
-                    expect(value).toEqual(dataOne.people_one);
-                    ++invalidateCount;
-                    return INVALIDATE;
-                  },
-                },
-              });
+    expect(result).toEqual({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: dataOne,
+    });
+
+    let invalidateCount = 0;
+    let onWatchUpdatedCount = 0;
+
+    cache.batch({
+      optimistic: true,
+      update(cache) {
+        cache.modify({
+          fields: {
+            people_one(value, { INVALIDATE }) {
+              expect(value).toEqual(dataOne.people_one);
+              ++invalidateCount;
+              return INVALIDATE;
             },
-            // Verify that the cache.modify operation did trigger a cache broadcast.
-            onWatchUpdated(watch, diff) {
-              expect(watch.watcher).toBe(queryInfo);
-              expect(diff).toEqual({
-                complete: true,
-                result: {
-                  people_one: {
-                    name: "Luke Skywalker",
-                  },
-                },
-              });
-              ++onWatchUpdatedCount;
+          },
+        });
+      },
+      // Verify that the cache.modify operation did trigger a cache broadcast.
+      onWatchUpdated(watch, diff) {
+        expect(watch.watcher).toBe(queryInfo);
+        expect(diff).toEqual({
+          complete: true,
+          result: {
+            people_one: {
+              name: "Luke Skywalker",
             },
-          });
+          },
+        });
+        ++onWatchUpdatedCount;
+      },
+    });
 
-          new Promise((resolve) => setTimeout(resolve, 100))
-            .then(() => {
-              expect(setDiffSpy).toHaveBeenCalledTimes(1);
-              expect(notifySpy).not.toHaveBeenCalled();
-              expect(invalidateCount).toBe(1);
-              expect(onWatchUpdatedCount).toBe(1);
-              queryManager.stop();
-            })
-            .then(resolve, reject);
-        } else {
-          reject("too many results");
-        }
-      });
-    }
-  );
+    await wait(100);
+
+    expect(setDiffSpy).toHaveBeenCalledTimes(1);
+    expect(notifySpy).not.toHaveBeenCalled();
+    expect(invalidateCount).toBe(1);
+    expect(onWatchUpdatedCount).toBe(1);
+    queryManager.stop();
+
+    await expect(stream).not.toEmitValue();
+  });
 
   itAsync("ObservableQuery#map respects Symbol.species", (resolve, reject) => {
     const observable = mockWatchQuery({

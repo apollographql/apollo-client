@@ -450,7 +450,7 @@ const ItemFragment = gql`
 `;
 ```
 
-We can first use the `useQuery` hook to retrieve a list of items with `id`s as well as any fields selected on the named `ItemFragment` fragment by spreading `ItemFragment` inside of `list` in `ListQuery`.
+We can first use the `useQuery` hook to retrieve a list of items with `id`s as well as any fields selected on the named `ItemFragment` fragment by including `ItemFragment` in the `list` field in the `GetItemList` query.
 
 ```jsx
 const listQuery = gql`
@@ -469,32 +469,90 @@ function List() {
   return (
     <ol>
       {data?.list.map(item => (
-        <Item key={item.id} id={item.id}/>
+        <Item key={item.id} item={item}/>
       ))}
     </ol>
   );
 }
 ```
 
-> **Note:** Instead of interpolating fragments within each query document, we can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with our `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
+<Note>
+Instead of interpolating fragments within each query document, you can use Apollo Client's `createFragmentRegistry` method to pre-register named fragments with `InMemoryCache`. This allows Apollo Client to include the definitions for registered fragments in the document sent over the network before the request is sent. For more information, see [Registering named fragments using `createFragmentRegistry`](#registering-named-fragments-using-createfragmentregistry).
+</Note>
 
 We can then use `useFragment` from within the `<Item>` component to create a live binding for each item by providing the `fragment` document, `fragmentName` and object reference via `from`.
 
-```jsx
+<MultiCodeBlock>
+
+```tsx
 function Item(props: { id: number }) {
   const { complete, data } = useFragment({
     fragment: ItemFragment,
     fragmentName: "ItemFragment",
     from: {
       __typename: "Item",
-      id: props.id,
-    },
+      id: props.id
+    }
   });
 
   return <li>{complete ? data.text : "incomplete"}</li>;
 }
 ```
 
-> `useFragment` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
+```jsx
+function Item(props) {
+  const { complete, data } = useFragment({
+    fragment: ItemFragment,
+    fragmentName: "ItemFragment",
+    from: {
+      __typename: "Item",
+      id: props.id
+    }
+  });
 
-[See the API reference for more details.](../api/react/hooks#usefragment)
+  return <li>{complete ? data.text : "incomplete"}</li>;
+}
+```
+
+</MultiCodeBlock>
+
+<Note>
+You may omit the `fragmentName` option when your fragment definition only includes a single fragment.
+</Note>
+
+You may instead prefer to pass the whole `item` as a prop to the `Item` component. This makes the `from` option more concise.
+
+<MultiCodeBlock>
+
+```tsx
+function Item(props: { item: { __typename: 'Item', id: number }}) {
+  const { complete, data } = useFragment({
+    fragment: ItemFragment,
+    fragmentName: "ItemFragment",
+    from: item
+  });
+
+  return <li>{complete ? data.text : "incomplete"}</li>;
+}
+```
+
+```jsx
+function Item(props) {
+  const { complete, data } = useFragment({
+    fragment: ItemFragment,
+    fragmentName: "ItemFragment",
+    from: item
+  });
+
+  return <li>{complete ? data.text : "incomplete"}</li>;
+}
+```
+
+</MultiCodeBlock>
+
+
+<Note>
+`useFragment` can be used in combination with the `@nonreactive` directive in cases where list items should react to individual cache updates without rerendering the entire list. For more information, see the [`@nonreactive` docs](/react/data/directives#nonreactive).
+</Note>
+
+See the [API reference](../api/react/hooks#usefragment) for more details on the supported options.

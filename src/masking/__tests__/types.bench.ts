@@ -13,6 +13,17 @@ function test(name: string, fn: (name: string) => void) {
   fn(name + ": ");
 }
 
+type UnrelatedType = {
+  __typename: "Unrelated";
+} & { " $fragmentName"?: "Unrelated" } & {
+  " $fragmentRefs"?: {
+    Unrelated: {
+      __unrelated: boolean;
+    };
+  };
+};
+type _TypeCacheWarmup = Unmasked<UnrelatedType> | MaybeMasked<UnrelatedType>;
+
 test("unmasks deeply nested fragments", (prefix) => {
   type UserFieldsFragment = {
     __typename: "User";
@@ -47,7 +58,7 @@ test("unmasks deeply nested fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([128, "instantiations"]);
+  }).types([51, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -102,7 +113,7 @@ test("unmasks deeply nested fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([128, "instantiations"]);
+  }).types([51, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -170,7 +181,7 @@ test("unmasks deeply nested nullable fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([128, "instantiations"]);
+  }).types([51, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -218,7 +229,7 @@ test("unmasks DeepPartial types", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([128, "instantiations"]);
+  }).types([51, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<DeepPartial<UserFieldsFragment>>>().toEqualTypeOf<{
@@ -234,7 +245,7 @@ test("unmasks DeepPartial types", (prefix) => {
 test("Unmasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, Unmasked<{}>>();
-  }).types([181, "instantiations"]);
+  }).types([92, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
@@ -242,7 +253,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, Unmasked<Record<string, any>>>();
-  }).types([170, "instantiations"]);
+  }).types([89, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
@@ -260,7 +271,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "any instantiations", () => {
     attest<any, Unmasked<any>>();
-  }).types([170, "instantiations"]);
+  }).types([93, "instantiations"]);
 
   bench(prefix + "any functionality", () => {
     expectTypeOf<Unmasked<any>>().toBeAny();
@@ -270,7 +281,7 @@ test("Unmasked handles odd types", (prefix) => {
 test("MaybeMasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, MaybeMasked<{}>>();
-  }).types([104, "instantiations"]);
+  }).types([76, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<MaybeMasked<{}>>().toEqualTypeOf<{}>();
@@ -278,7 +289,7 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, MaybeMasked<Record<string, any>>>();
-  }).types([121, "instantiations"]);
+  }).types([89, "instantiations"]);
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<MaybeMasked<Record<string, any>>>().toEqualTypeOf<
       Record<string, any>
@@ -287,14 +298,14 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, MaybeMasked<unknown>>();
-  }).types([62, "instantiations"]);
+  }).types([52, "instantiations"]);
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<MaybeMasked<unknown>>().toBeUnknown();
   });
 
   bench(prefix + "any instantiations", () => {
     attest<any, MaybeMasked<any>>();
-  }).types([55, "instantiations"]);
+  }).types([49, "instantiations"]);
   bench(prefix + "any functionality", () => {
     expectTypeOf<MaybeMasked<any>>().toBeAny();
   });
@@ -307,12 +318,12 @@ test("distributed members on MaybeMasked", (prefix) => {
         [MaybeMasked<T> | null | undefined],
         [MaybeMasked<T | null | undefined>]
       >();
-    }).types([61, "instantiations"]);
+    }).types([55, "instantiations"]);
   })();
 
   (function unresolvedGenerics<T, V>() {
     bench(prefix + "two unresolved generics distribute", () => {
       attest<[MaybeMasked<T> | MaybeMasked<V>], [MaybeMasked<T | V>]>();
-    }).types([67, "instantiations"]);
+    }).types([61, "instantiations"]);
   })();
 });

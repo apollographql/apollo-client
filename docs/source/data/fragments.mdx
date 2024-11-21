@@ -354,7 +354,7 @@ If your schema includes only a few unions and interfaces, you can probably speci
 
 ### Generating `possibleTypes` automatically
 
-The following example script translates a GraphQL introspection query into a `possibleTypes` configuration object:
+The following script translates a GraphQL introspection query into a `possibleTypes` configuration object:
 
 ```js
 const fetch = require('cross-fetch');
@@ -399,6 +399,20 @@ fetch(`${YOUR_API_HOST}/graphql`, {
     });
   });
 ```
+
+You can then `import` the generated `possibleTypes` JSON module into the file where you create your `InMemoryCache`:
+
+```ts
+import possibleTypes from './path/to/possibleTypes.json';
+
+const cache = new InMemoryCache({
+  possibleTypes,
+});
+```
+
+### Generating `possibleTypes` with GraphQL Codegen
+
+[GraphQL Codegen](https://the-guild.dev/graphql/codegen) has the ability to generate `possibleTypes` for you using the [`fragment-matcher` plugin](https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher). Follow the guide in the [fragment matcher plugin docs](https://the-guild.dev/graphql/codegen/plugins/other/fragment-matcher) to configure GraphQL Codegen to write a JSON file that contains `possibleTypes`.
 
 You can then `import` the generated `possibleTypes` JSON module into the file where you create your `InMemoryCache`:
 

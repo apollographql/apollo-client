@@ -3,7 +3,7 @@ title: Fragments
 description: Share fields between operations
 ---
 
-A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) is a piece of logic that can be shared between multiple queries and mutations.
+A [GraphQL fragment](http://graphql.org/learn/queries/#fragments) is a piece of logic that can be shared between multiple queries and mutations. Fragments are especially useful when used as [colocated fragments](#colocating-fragments) with components to define their data requirements.
 
 Here's the declaration of a `NameParts` fragment that can be used with any `Person` object:
 

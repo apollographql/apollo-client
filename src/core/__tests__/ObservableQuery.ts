@@ -304,7 +304,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitValue();
     });
 
-    itAsync("rerenders when refetch is called", (resolve, reject) => {
+    it("rerenders when refetch is called", async () => {
       // This query and variables are copied from react-apollo
       const query = gql`
         query people($first: Int) {
@@ -344,81 +344,101 @@ describe("ObservableQuery", () => {
         notifyOnNetworkStatusChange: true,
       });
 
-      subscribeAndCount(reject, observable, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.loading).toEqual(false);
-          expect(result.data).toEqual(data);
-          return observable.refetch();
-        } else if (handleCount === 2) {
-          expect(result.loading).toEqual(true);
-          expect(result.networkStatus).toEqual(NetworkStatus.refetch);
-        } else if (handleCount === 3) {
-          expect(result.loading).toEqual(false);
-          expect(result.data).toEqual(data2);
-          resolve();
-        }
-      });
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result.loading).toEqual(false);
+        expect(result.data).toEqual(data);
+      }
+
+      observable.refetch();
+
+      {
+        const { loading, networkStatus } = await stream.takeNext();
+
+        expect(loading).toEqual(true);
+        expect(networkStatus).toEqual(NetworkStatus.refetch);
+      }
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result.loading).toEqual(false);
+        expect(result.data).toEqual(data2);
+      }
+
+      await expect(stream).not.toEmitValue();
     });
 
-    itAsync(
-      "rerenders with new variables then shows correct data for previous variables",
-      (resolve, reject) => {
-        // This query and variables are copied from react-apollo
-        const query = gql`
-          query people($first: Int) {
-            allPeople(first: $first) {
-              people {
-                name
-              }
+    it("rerenders with new variables then shows correct data for previous variables", async () => {
+      // This query and variables are copied from react-apollo
+      const query = gql`
+        query people($first: Int) {
+          allPeople(first: $first) {
+            people {
+              name
             }
           }
-        `;
+        }
+      `;
 
-        const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
-        const variables = { first: 0 };
+      const data = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
+      const variables = { first: 0 };
 
-        const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
-        const variables2 = { first: 1 };
+      const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
+      const variables2 = { first: 1 };
 
-        const observable: ObservableQuery<any> = mockWatchQuery(
-          {
-            request: {
-              query,
-              variables,
-            },
-            result: { data },
+      const observable: ObservableQuery<any> = mockWatchQuery(
+        {
+          request: {
+            query,
+            variables,
           },
-          {
-            request: {
-              query,
-              variables: variables2,
-            },
-            result: { data: data2 },
-          }
-        );
+          result: { data },
+        },
+        {
+          request: {
+            query,
+            variables: variables2,
+          },
+          result: { data: data2 },
+        }
+      );
 
-        subscribeAndCount(reject, observable, async (handleCount, result) => {
-          if (handleCount === 1) {
-            expect(result.data).toEqual(data);
-            expect(result.loading).toBe(false);
-            await observable.setOptions({
-              variables: variables2,
-              notifyOnNetworkStatusChange: true,
-            });
-          } else if (handleCount === 2) {
-            expect(result.loading).toBe(true);
-            expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-          } else if (handleCount === 3) {
-            expect(result.loading).toBe(false);
-            expect(result.data).toEqual(data2);
-            // go back to first set of variables
-            const current = await observable.reobserve({ variables });
-            expect(current.data).toEqual(data);
-            resolve();
-          }
-        });
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result.data).toEqual(data);
+        expect(result.loading).toBe(false);
       }
-    );
+
+      await observable.setOptions({
+        variables: variables2,
+        notifyOnNetworkStatusChange: true,
+      });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result.loading).toBe(true);
+        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
+      }
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result.loading).toBe(false);
+        expect(result.data).toEqual(data2);
+      }
+
+      // go back to first set of variables
+      const current = await observable.reobserve({ variables });
+      expect(current.data).toEqual(data);
+    });
 
     // TODO: Something isn't quite right with this test. It's failing but not
     // for the right reasons.

@@ -112,80 +112,89 @@ describe("ObservableQuery", () => {
 
   describe("setOptions", () => {
     describe("to change pollInterval", () => {
-      itAsync(
-        "starts polling if goes from 0 -> something",
-        (resolve, reject) => {
-          const manager = mockQueryManager(
-            {
-              request: { query, variables },
-              result: { data: dataOne },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
-            }
-          );
+      it("starts polling if goes from 0 -> something", async () => {
+        const manager = mockQueryManager(
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          }
+        );
 
-          const observable = manager.watchQuery({
-            query,
-            variables,
-            notifyOnNetworkStatusChange: false,
-          });
+        const observable = manager.watchQuery({
+          query,
+          variables,
+          notifyOnNetworkStatusChange: false,
+        });
 
-          subscribeAndCount(reject, observable, (handleCount, result) => {
-            if (handleCount === 1) {
-              expect(result.data).toEqual(dataOne);
-              observable.setOptions({ query, pollInterval: 10 });
-            } else if (handleCount === 2) {
-              expect(result.data).toEqual(dataTwo);
-              observable.stopPolling();
-              resolve();
-            }
-          });
+        const stream = new ObservableStream(observable);
+
+        {
+          const { data } = await stream.takeNext();
+
+          expect(data).toEqual(dataOne);
         }
-      );
 
-      itAsync(
-        "stops polling if goes from something -> 0",
-        (resolve, reject) => {
-          const manager = mockQueryManager(
-            {
-              request: { query, variables },
-              result: { data: dataOne },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
-            },
-            {
-              request: { query, variables },
-              result: { data: dataTwo },
-            }
-          );
+        observable.setOptions({ query, pollInterval: 10 });
 
-          const observable = manager.watchQuery({
-            query,
-            variables,
-            pollInterval: 10,
-          });
+        {
+          const { data } = await stream.takeNext();
 
-          subscribeAndCount(reject, observable, (handleCount, result) => {
-            if (handleCount === 1) {
-              expect(result.data).toEqual(dataOne);
-              observable.setOptions({ query, pollInterval: 0 });
-              setTimeout(resolve, 5);
-            } else if (handleCount === 2) {
-              reject(new Error("Should not get more than one result"));
-            }
-          });
+          expect(data).toEqual(dataTwo);
         }
-      );
 
-      itAsync("can change from x>0 to y>0", (resolve, reject) => {
+        observable.stopPolling();
+
+        await expect(stream.take()).rejects.toEqual(
+          new Error("Timeout waiting for next event")
+        );
+      });
+
+      it("stops polling if goes from something -> 0", async () => {
+        const manager = mockQueryManager(
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          }
+        );
+
+        const observable = manager.watchQuery({
+          query,
+          variables,
+          pollInterval: 10,
+        });
+
+        const stream = new ObservableStream(observable);
+
+        {
+          const { data } = await stream.takeNext();
+
+          expect(data).toEqual(dataOne);
+        }
+
+        observable.setOptions({ query, pollInterval: 0 });
+
+        await expect(stream.take()).rejects.toEqual(
+          new Error("Timeout waiting for next event")
+        );
+      });
+
+      it("can change from x>0 to y>0", async () => {
         const manager = mockQueryManager(
           {
             request: { query, variables },
@@ -208,20 +217,31 @@ describe("ObservableQuery", () => {
           notifyOnNetworkStatusChange: false,
         });
 
-        subscribeAndCount(reject, observable, (handleCount, result) => {
-          if (handleCount === 1) {
-            expect(result.data).toEqual(dataOne);
-            observable.setOptions({ query, pollInterval: 10 });
-          } else if (handleCount === 2) {
-            expect(result.data).toEqual(dataTwo);
-            observable.stopPolling();
-            resolve();
-          }
-        });
+        const stream = new ObservableStream(observable);
+
+        {
+          const { data } = await stream.takeNext();
+
+          expect(data).toEqual(dataOne);
+        }
+
+        observable.setOptions({ query, pollInterval: 10 });
+
+        {
+          const { data } = await stream.takeNext();
+
+          expect(data).toEqual(dataTwo);
+        }
+
+        observable.stopPolling();
+
+        await expect(stream.take()).rejects.toEqual(
+          new Error("Timeout waiting for next event")
+        );
       });
     });
 
-    itAsync("does not break refetch", (resolve, reject) => {
+    it("does not break refetch", async () => {
       // This query and variables are copied from react-apollo
       const queryWithVars = gql`
         query people($first: Int) {
@@ -262,20 +282,34 @@ describe("ObservableQuery", () => {
         notifyOnNetworkStatusChange: true,
       });
 
-      subscribeAndCount(reject, observable, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toEqual(data);
-          expect(result.loading).toBe(false);
-          return observable.refetch(variables2);
-        } else if (handleCount === 2) {
-          expect(result.loading).toBe(true);
-          expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-        } else if (handleCount === 3) {
-          expect(result.loading).toBe(false);
-          expect(result.data).toEqual(data2);
-          resolve();
-        }
-      });
+      const stream = new ObservableStream(observable);
+
+      {
+        const { data, loading } = await stream.takeNext();
+
+        expect(data).toEqual(data);
+        expect(loading).toBe(false);
+      }
+
+      observable.refetch(variables2);
+
+      {
+        const { loading, networkStatus } = await stream.takeNext();
+
+        expect(loading).toBe(true);
+        expect(networkStatus).toBe(NetworkStatus.setVariables);
+      }
+
+      {
+        const { data, loading } = await stream.takeNext();
+
+        expect(loading).toBe(false);
+        expect(data).toEqual(data2);
+      }
+
+      await expect(stream.take()).rejects.toEqual(
+        new Error("Timeout waiting for next event")
+      );
     });
 
     itAsync("rerenders when refetch is called", (resolve, reject) => {

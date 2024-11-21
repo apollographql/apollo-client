@@ -4,8 +4,9 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
-import { NextRenderOptions } from "../internal/index.js";
+import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
+import { TakeOptions } from "../internal/ObservableStream.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -34,6 +35,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
 
   toBeGarbageCollected: T extends WeakRef<any> ? () => Promise<R>
   : { error: "matcher needs to be called on a WeakRef instance" };
+
+  toEmitValue: T extends ObservableStream<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
 }
 
 declare global {

@@ -94,9 +94,11 @@ export const GET_POST_DETAILS = gql`
 * We add our fragment definition to the `GET_POST_DETAILS` `gql` template literal via a placeholder (`${COMMENT_FRAGMENT}`)
 * We include the `CommentFragment` fragment in our query with standard `...` notation.
 
+<MinVersion version="3.7.0">
 ## Registering named fragments using `createFragmentRegistry`
+</MinVersion>
 
-Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCache` so that they can be referred to by name in any query or `InMemoryCache` operation (such as `cache.readFragment`, `cache.readQuery` and `cache.watch`) without needing to interpolate their declarations.
+Starting in Apollo Client 3.7, fragments can be registered with your `InMemoryCache` instance so that they can be referred to by name in any query or `InMemoryCache` operation (such as `cache.readFragment`, `cache.readQuery` and `cache.watch`) without needing to interpolate their declarations.
 
 Let's look at an example in React.
 
@@ -191,6 +193,51 @@ function ToDoList() {
   );
 }
 ```
+
+### Lazily registering named fragments
+
+Fragments do not all need to be defined up-front when the cache is created. Instead, you can register named fragments lazily with the fragment registery. This is especially useful when combined with [colocated fragments](#colocating-fragments) whose fragment definitions are defined in component files. Let's look at an example:
+
+```tsx title="fragmentRegistry.js"
+export const { fragmentRegistry } = createFragmentRegistry();
+```
+
+```tsx title="index.js"
+import { fragmentRegistry } from "./fragmentRegistry";
+
+const client = new ApolloClient({
+  uri: "http://localhost:4000/graphql",
+  cache: new InMemoryCache({
+    fragments: fragmentRegistry,
+  })
+});
+```
+
+We create a separate file that creates and exports our fragment registry. This gives us a way to access our shared fragment registry across our application. We use this shared fragment registry with our `InMemoryCache` instance.
+
+```tsx title="TodoItem.js"
+import { gql } from "@apollo/client";
+import { fragmentRegistry } from "./fragmentRegistry";
+
+// Register the fragment outside the component to ensure it is registered when this module is loaded.
+const ItemFragment = gql`
+  fragment ItemFragment on Item {
+    # ...
+  }
+`
+
+fragmentRegistry.register(ItemFragment);
+
+function TodoItem() {
+  // ...
+}
+```
+
+We then import our shared fragment registry into our component file and register our fragment definition.
+
+<Caution>
+  You need to register fragment definitions with the fragment registry before executing operations that use them. This can be problematic when lazy loading component files because the application might not register the fragment definition with the registery until after the query begins executing. Move the fragment definition to a shared file that isn't lazy-loaded.
+</Caution>
 
 ## Colocating fragments
 

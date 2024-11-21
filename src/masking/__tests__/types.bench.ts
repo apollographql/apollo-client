@@ -327,3 +327,70 @@ test("distributed members on MaybeMasked", (prefix) => {
     }).types([61, "instantiations"]);
   })();
 });
+
+test("deals with overlapping array from parent fragment", (prefix) => {
+  {
+    type Source = {
+      __typename: "Track";
+      id: number;
+      artists: Array<{
+        __typename: "Artist";
+        id: number;
+        " $fragmentRefs"?: {
+          ArtistFragment: ArtistFragment;
+        };
+      }>;
+      " $fragmentRefs"?: {
+        NestedTrackFragment: NestedTrackFragment;
+      };
+    };
+
+    type ArtistFragment = {
+      " $fragmentName"?: "Fragment__Artist";
+      __typename: "Artist";
+      birthdate: string;
+    };
+
+    type NestedTrackFragment = {
+      " $fragmentName"?: "Fragment__Track";
+      __typename: "Track";
+      artists: Array<{
+        __typename: "Artist";
+        lastname: string;
+      }>;
+    };
+
+    bench(prefix + "instantiations", () => {
+      return {} as Unmasked<Source>;
+    }).types([51, "instantiations"]);
+
+    bench(prefix + "functionality", () => {
+      // TODO: this is the wrong behaviour
+      expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{
+        id: number;
+        __typename: "Track";
+        artists: Array<{
+          __typename: "Artist";
+          id: number;
+          birthdate: string;
+        }> &
+          Array<{
+            __typename: "Artist";
+            lastname: string;
+          }>;
+      }>();
+
+      // @ts-expect-error TODO: this is the expected behaviour
+      expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{
+        __typename: "Track";
+        id: number;
+        artists: Array<{
+          __typename: "Artist";
+          id: number;
+          birthdate: string;
+          lastname: string;
+        }>;
+      }>();
+    });
+  }
+});

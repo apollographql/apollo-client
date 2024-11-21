@@ -16,7 +16,7 @@ export const toEmitValue: MatcherFunction<[options?: TakeOptions]> =
           return (
             hint +
             "\n\nExpected stream not to emit a value but it did." +
-            "\n\nReceived:\n\n" +
+            "\n\nReceived:\n" +
             this.utils.printReceived(value)
           );
         },

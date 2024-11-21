@@ -440,46 +440,38 @@ describe("ObservableQuery", () => {
       expect(current.data).toEqual(data);
     });
 
-    // TODO: Something isn't quite right with this test. It's failing but not
-    // for the right reasons.
-    itAsync.skip(
-      "if query is refetched, and an error is returned, no other observer callbacks will be called",
-      (resolve) => {
-        const observable: ObservableQuery<any> = mockWatchQuery(
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables },
-            result: { errors: [error] },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          }
-        );
+    it("if query is refetched, and an error is returned, no other observer callbacks will be called", async () => {
+      const observable = mockWatchQuery(
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+        {
+          request: { query, variables },
+          result: { errors: [error] },
+        },
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        }
+      );
 
-        let handleCount = 0;
-        observable.subscribe({
-          next: (result) => {
-            handleCount++;
-            if (handleCount === 1) {
-              expect(result.data).toEqual(dataOne);
-              observable.refetch();
-            } else if (handleCount === 3) {
-              throw new Error("next shouldn't fire after an error");
-            }
-          },
-          error: () => {
-            handleCount++;
-            expect(handleCount).toBe(2);
-            observable.refetch();
-            setTimeout(resolve, 25);
-          },
-        });
+      const stream = new ObservableStream(observable);
+
+      {
+        const { data } = await stream.takeNext();
+
+        expect(data).toEqual(dataOne);
       }
-    );
+
+      observable.refetch();
+
+      await stream.takeError();
+
+      observable.refetch();
+
+      await expect(stream).not.toEmitValue();
+    });
 
     itAsync(
       "does a network request if fetchPolicy becomes networkOnly",

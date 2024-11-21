@@ -21,7 +21,6 @@ import { InMemoryCache, NormalizedCacheObject } from "../../cache";
 import { ApolloError } from "../../errors";
 
 import {
-  itAsync,
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
@@ -2939,105 +2938,99 @@ describe("ObservableQuery", () => {
   });
 
   describe("assumeImmutableResults", () => {
-    itAsync(
-      "should prevent costly (but safe) cloneDeep calls",
-      async (resolve) => {
-        const queryOptions = {
-          query: gql`
-            query {
-              value
-            }
-          `,
-          pollInterval: 20,
-        };
-
-        function check({
-          assumeImmutableResults = true,
-          assertFrozenResults = false,
-        }) {
-          const cache = new InMemoryCache();
-          const client = new ApolloClient({
-            link: mockSingleLink(
-              { request: queryOptions, result: { data: { value: 1 } } },
-              { request: queryOptions, result: { data: { value: 2 } } },
-              { request: queryOptions, result: { data: { value: 3 } } }
-            ).setOnError((error) => {
-              throw error;
-            }),
-            assumeImmutableResults,
-            cache,
-          });
-
-          const observable = client.watchQuery(queryOptions);
-          const values: any[] = [];
-
-          return new Promise<any[]>((resolve, reject) => {
-            observable.subscribe({
-              next({ data }) {
-                values.push(data.value);
-                if (assertFrozenResults) {
-                  try {
-                    data.value = "oyez";
-                  } catch (error) {
-                    reject(error);
-                  }
-                } else {
-                  data = {
-                    ...data,
-                    value: "oyez",
-                  };
-                }
-                client.writeQuery({
-                  query: queryOptions.query,
-                  data,
-                });
-              },
-              error(err) {
-                expect(err.message).toMatch(/No more mocked responses/);
-                resolve(values);
-              },
-            });
-          });
-        }
-
-        async function checkThrows(assumeImmutableResults: boolean) {
-          try {
-            await check({
-              assumeImmutableResults,
-              // No matter what value we provide for assumeImmutableResults, if we
-              // tell the InMemoryCache to deep-freeze its results, destructive
-              // modifications of the result objects will become fatal. Once you
-              // start enforcing immutability in this way, you might as well pass
-              // assumeImmutableResults: true, to prevent calling cloneDeep.
-              assertFrozenResults: true,
-            });
-            throw new Error("not reached");
-          } catch (error) {
-            expect(error).toBeInstanceOf(TypeError);
-            expect((error as Error).message).toMatch(
-              /Cannot assign to read only property 'value'/
-            );
+    it("should prevent costly (but safe) cloneDeep calls", async () => {
+      const queryOptions = {
+        query: gql`
+          query {
+            value
           }
-        }
-        await checkThrows(true);
-        await checkThrows(false);
+        `,
+        pollInterval: 20,
+      };
 
-        resolve();
+      function check({
+        assumeImmutableResults = true,
+        assertFrozenResults = false,
+      }) {
+        const cache = new InMemoryCache();
+        const client = new ApolloClient({
+          link: mockSingleLink(
+            { request: queryOptions, result: { data: { value: 1 } } },
+            { request: queryOptions, result: { data: { value: 2 } } },
+            { request: queryOptions, result: { data: { value: 3 } } }
+          ).setOnError((error) => {
+            throw error;
+          }),
+          assumeImmutableResults,
+          cache,
+        });
+
+        const observable = client.watchQuery(queryOptions);
+        const values: any[] = [];
+
+        return new Promise<any[]>((resolve, reject) => {
+          observable.subscribe({
+            next({ data }) {
+              values.push(data.value);
+              if (assertFrozenResults) {
+                try {
+                  data.value = "oyez";
+                } catch (error) {
+                  reject(error);
+                }
+              } else {
+                data = {
+                  ...data,
+                  value: "oyez",
+                };
+              }
+              client.writeQuery({
+                query: queryOptions.query,
+                data,
+              });
+            },
+            error(err) {
+              expect(err.message).toMatch(/No more mocked responses/);
+              resolve(values);
+            },
+          });
+        });
       }
-    );
+
+      async function checkThrows(assumeImmutableResults: boolean) {
+        try {
+          await check({
+            assumeImmutableResults,
+            // No matter what value we provide for assumeImmutableResults, if we
+            // tell the InMemoryCache to deep-freeze its results, destructive
+            // modifications of the result objects will become fatal. Once you
+            // start enforcing immutability in this way, you might as well pass
+            // assumeImmutableResults: true, to prevent calling cloneDeep.
+            assertFrozenResults: true,
+          });
+          throw new Error("not reached");
+        } catch (error) {
+          expect(error).toBeInstanceOf(TypeError);
+          expect((error as Error).message).toMatch(
+            /Cannot assign to read only property 'value'/
+          );
+        }
+      }
+      await checkThrows(true);
+      await checkThrows(false);
+    });
   });
 
   describe("resetQueryStoreErrors", () => {
-    itAsync(
-      "should remove any GraphQLError's stored in the query store",
-      (resolve) => {
-        const graphQLError = new GraphQLError("oh no!");
+    it("should remove any GraphQLError's stored in the query store", async () => {
+      const graphQLError = new GraphQLError("oh no!");
 
-        const observable: ObservableQuery<any> = mockWatchQuery({
-          request: { query, variables },
-          result: { errors: [graphQLError] },
-        });
+      const observable = mockWatchQuery({
+        request: { query, variables },
+        result: { errors: [graphQLError] },
+      });
 
+      await new Promise<void>((resolve) => {
         observable.subscribe({
           error() {
             const { queryManager } = observable as any;
@@ -3050,31 +3043,27 @@ describe("ObservableQuery", () => {
             resolve();
           },
         });
-      }
-    );
+      });
+    });
 
-    itAsync(
-      "should remove network error's stored in the query store",
-      (resolve) => {
-        const networkError = new Error("oh no!");
+    it("should remove network error's stored in the query store", async () => {
+      const networkError = new Error("oh no!");
 
-        const observable: ObservableQuery<any> = mockWatchQuery({
-          request: { query, variables },
-          result: { data: dataOne },
-        });
+      const observable = mockWatchQuery({
+        request: { query, variables },
+        result: { data: dataOne },
+      });
 
-        observable.subscribe({
-          next() {
-            const { queryManager } = observable as any;
-            const queryInfo = queryManager["queries"].get(observable.queryId);
-            queryInfo.networkError = networkError;
-            observable.resetQueryStoreErrors();
-            expect(queryInfo.networkError).toBeUndefined();
-            resolve();
-          },
-        });
-      }
-    );
+      const stream = new ObservableStream(observable);
+
+      await stream.takeNext();
+
+      const { queryManager } = observable as any;
+      const queryInfo = queryManager["queries"].get(observable.queryId);
+      queryInfo.networkError = networkError;
+      observable.resetQueryStoreErrors();
+      expect(queryInfo.networkError).toBeUndefined();
+    });
   });
 
   describe(".query computed property", () => {
@@ -3276,7 +3265,7 @@ describe("ObservableQuery", () => {
     await expect(stream).not.toEmitValue();
   });
 
-  itAsync("ObservableQuery#map respects Symbol.species", (resolve, reject) => {
+  it("ObservableQuery#map respects Symbol.species", async () => {
     const observable = mockWatchQuery({
       request: { query, variables },
       result: { data: dataOne },
@@ -3298,22 +3287,24 @@ describe("ObservableQuery", () => {
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(ObservableQuery);
 
-    const sub = mapped.subscribe({
-      next(result) {
-        sub.unsubscribe();
-        try {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: { mapped: true },
-          });
-        } catch (error) {
-          reject(error);
-          return;
-        }
-        resolve();
-      },
-      error: reject,
+    await new Promise<void>((resolve, reject) => {
+      const sub = mapped.subscribe({
+        next(result) {
+          sub.unsubscribe();
+          try {
+            expect(result).toEqual({
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              data: { mapped: true },
+            });
+          } catch (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        },
+        error: reject,
+      });
     });
   });
 });

@@ -45,15 +45,15 @@ If we later _change_ which fields are included in the `NameParts` fragment, we a
 
 ## Example usage
 
-Let's say we have a blog application that executes several GraphQL operations related to comments (submitting a comment, fetching a post's comments, etc.). These operations probably _all_ include certain fields of a `Comment` type.
+Let's say we have a blog application that executes several GraphQL operations related to comments (submitting a comment, fetching a post's comments, etc.). Our application likely has a `Comment` component that is responsible for rendering comment data.
 
-To specify this core set of fields, we can define a fragment on the `Comment` type, like so:
+We can define a fragment on the `Comment` type to define the `Comment` component's data requirements, like so:
 
-```js title="fragments.js"
+```js title="Comment.js"
 import { gql } from '@apollo/client';
 
-export const CORE_COMMENT_FIELDS = gql`
-  fragment CoreCommentFields on Comment {
+export const COMMENT_FRAGMENT = gql`
+  fragment CommentFragment on Comment {
     id
     postedBy {
       username
@@ -65,23 +65,23 @@ export const CORE_COMMENT_FIELDS = gql`
 `;
 ```
 
-> You can declare fragments in any file of your application. The example above `export`s the fragment from a `fragments.js` file.
+> The example above `export`s the fragment from the `Comment.js` component file. You can declare fragments in any file of your application, though we recommend this approach of [colocating fragments](#colocating-fragments) with your components.
 
-We can then include the `CoreCommentFields` fragment in a GraphQL operation like so:
+We can then include the `CommentFragment` fragment in a GraphQL operation like so:
 
 ```jsx {2,5,12} title="PostDetails.jsx"
 import { gql } from '@apollo/client';
-import { CORE_COMMENT_FIELDS } from './fragments';
+import { COMMENT_FRAGMENT } from './Comment';
 
 export const GET_POST_DETAILS = gql`
-  ${CORE_COMMENT_FIELDS}
+  ${COMMENT_FRAGMENT}
   query CommentsForPost($postId: ID!) {
     post(postId: $postId) {
       title
       body
       author
       comments {
-        ...CoreCommentFields
+        ...CommentFragment
       }
     }
   }
@@ -90,9 +90,9 @@ export const GET_POST_DETAILS = gql`
 // ...PostDetails component definition...
 ```
 
-* We first `import` `CORE_COMMENT_FIELDS` because it's declared in another file.
-* We add our fragment definition to the `GET_POST_DETAILS` `gql` template literal via a placeholder (`${CORE_COMMENT_FIELDS}`)
-* We include the `CoreCommentFields` fragment in our query with standard `...` notation.
+* We first `import` `COMMENT_FRAGMENT` because it's declared in another file.
+* We add our fragment definition to the `GET_POST_DETAILS` `gql` template literal via a placeholder (`${COMMENT_FRAGMENT}`)
+* We include the `CommentFragment` fragment in our query with standard `...` notation.
 
 ## Registering named fragments using `createFragmentRegistry`
 

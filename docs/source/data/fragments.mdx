@@ -198,11 +198,11 @@ function ToDoList() {
 
 Fragments do not all need to be defined up-front when the cache is created. Instead, you can register named fragments lazily with the fragment registery. This is especially useful when combined with [colocated fragments](#colocating-fragments) whose fragment definitions are defined in component files. Let's look at an example:
 
-```tsx title="fragmentRegistry.js"
+```js title="fragmentRegistry.js"
 export const { fragmentRegistry } = createFragmentRegistry();
 ```
 
-```tsx title="index.js"
+```js title="index.js"
 import { fragmentRegistry } from "./fragmentRegistry";
 
 const client = new ApolloClient({
@@ -215,7 +215,7 @@ const client = new ApolloClient({
 
 We create a separate file that creates and exports our fragment registry. This gives us a way to access our shared fragment registry across our application. We use this shared fragment registry with our `InMemoryCache` instance.
 
-```tsx title="TodoItem.js"
+```jsx title="TodoItem.jsx"
 import { gql } from "@apollo/client";
 import { fragmentRegistry } from "./fragmentRegistry";
 
@@ -338,7 +338,7 @@ Use the `possibleTypes` option to the `InMemoryCache` constructor to specify sup
 
 Here's an example `possibleTypes` declaration:
 
-```ts
+```js
 const cache = new InMemoryCache({
   possibleTypes: {
     Character: ["Jedi", "Droid"],

@@ -50,7 +50,7 @@
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
     "inline-inherit-doc": "ts-node-script config/inlineInheritDoc.ts",
     "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.js",
-    "test:type-benches": "cd src; find -name '*.bench.ts' | xargs -n1 tsx",
+    "test:type-benches": "find src -name '*.bench.ts' | xargs -n1 tsx",
     "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",
     "test:watch": "jest --config ./config/jest.config.js --watch",

@@ -1,7 +1,7 @@
 import type { Observable } from "../../utilities/index.js";
 import { ReadableStream } from "node:stream/web";
 
-interface TakeOptions {
+export interface TakeOptions {
   timeout?: number;
 }
 type ObservableEvent<T> =

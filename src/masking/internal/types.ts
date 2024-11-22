@@ -72,14 +72,18 @@ type CombineByTypeName<T extends { __typename?: string }> = {
   : never;
 }[NonNullable<T["__typename"]>];
 
-type MergeUnions<TUnion> = MergeUnionsAcc<TUnion, takeOneFromUnion<TUnion>, {}>;
+type MergeUnions<TUnion> = MergeUnionsAcc<
+  TUnion,
+  takeOneFromUnion<TUnion>,
+  never
+>;
 
 type MergeUnionsAcc<TUnion, Curr, Merged> =
   [Curr] extends [never] ? Merged
   : MergeUnionsAcc<
       Exclude<TUnion, Curr>,
       takeOneFromUnion<Exclude<TUnion, Curr>>,
-      MergeByTypeName<Curr, Merged>
+      [Merged] extends [never] ? Curr : MergeObjects<Curr, Merged>
     >;
 type unionToIntersection<T> =
   (T extends unknown ? (x: T) => unknown : never) extends (
@@ -95,26 +99,18 @@ type takeOneFromUnion<T> =
     U
   : never;
 
-type MergeByTypeName<T, U> =
-  // both have a __typename
-  [T, U] extends [{ __typename?: infer TName }, { __typename?: infer UName }] ?
-    [TName, UName] extends [UName, TName] ?
-      MergeObjects<T, U>
-    : T | U
-  : // only one has a __typename
-  "__typename" extends keyof T | keyof U ? T | U
-  : // no __typename
-    MergeObjects<T, U>;
-
 type MergeObjects<T, U> = Prettify<
   {
     [k in keyof T]: k extends keyof U ?
-      [T[k], U[k]] extends [object, object] ?
-        T[k] extends unknown[] ?
-          U[k] extends unknown[] ?
-            MergeUnions<T[k][number] | U[k][number]>[]
+      [NonNullable<T[k]>, NonNullable<U[k]>] extends (
+        [infer TK extends object, infer UK extends object]
+      ) ?
+        TK extends unknown[] ?
+          UK extends unknown[] ?
+            | CombineIntersection<TK[number] | UK[number]>[]
+            | Extract<T[k] | U[k], undefined | null>
           : T[k]
-        : MergeUnions<T[k] | U[k]>
+        : CombineIntersection<TK | UK> | Extract<T[k] | U[k], undefined | null>
       : T[k]
     : T[k];
   } & Pick<U, Exclude<keyof U, keyof T>>

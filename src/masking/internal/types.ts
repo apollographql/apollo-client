@@ -1,4 +1,4 @@
-import type { Prettify, UnionToIntersection } from "../../utilities/index.js";
+import type { Prettify } from "../../utilities/index.js";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -78,11 +78,18 @@ type MergeUnions<TUnion> = MergeUnionsAcc<
   never
 >;
 
+type DistributedRequiredExclude<T, U> =
+  T extends any ?
+    Required<T> extends Required<U> ?
+      never
+    : T
+  : T;
+
 type MergeUnionsAcc<TUnion, Curr, Merged> =
   [Curr] extends [never] ? Merged
   : MergeUnionsAcc<
-      Exclude<TUnion, Curr>,
-      takeOneFromUnion<Exclude<TUnion, Curr>>,
+      DistributedRequiredExclude<TUnion, Curr>,
+      takeOneFromUnion<DistributedRequiredExclude<TUnion, Curr>>,
       [Merged] extends [never] ? Curr : MergeObjects<Curr, Merged>
     >;
 type unionToIntersection<T> =
@@ -115,26 +122,6 @@ type MergeObjects<T, U> = Prettify<
     : T[k];
   } & Pick<U, Exclude<keyof U, keyof T>>
 >;
-
-type UserFieldsFragment = {
-  __typename: "User";
-  id: number;
-  age: number;
-} & { " $fragmentName"?: "UserFiedsFragment" };
-
-type NameFieldsFragment = {
-  __typename: "User";
-  firstName: string;
-  lastName: string;
-} & { " $fragmentName"?: "NameFieldsFragment" };
-
-type FooF = {
-  __typename: "Foo";
-  firstName: string;
-  lastName: string;
-} & { " $fragmentName"?: "NameFieldsFragment" };
-
-type T = MergeUnions<UserFieldsFragment | NameFieldsFragment | FooF>;
 
 export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined

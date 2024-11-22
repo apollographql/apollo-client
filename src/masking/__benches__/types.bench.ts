@@ -365,22 +365,6 @@ test("deals with overlapping array from parent fragment", (prefix) => {
     }).types([51, "instantiations"]);
 
     bench(prefix + "functionality", () => {
-      // TODO: this is the wrong behaviour
-      expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{
-        id: number;
-        __typename: "Track";
-        artists: Array<{
-          __typename: "Artist";
-          id: number;
-          birthdate: string;
-        }> &
-          Array<{
-            __typename: "Artist";
-            lastname: string;
-          }>;
-      }>();
-
-      // @ts-expect-error TODO: this is the expected behaviour
       expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{
         __typename: "Track";
         id: number;

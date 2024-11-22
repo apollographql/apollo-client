@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
   ContainsFragmentsRefs,
+  IsAny,
   RemoveFragmentName,
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
@@ -48,12 +49,11 @@ export type MaybeMasked<TData> =
     : TData
   : never;
 
-type IsAny<T> = 0 extends 1 & T ? true : false;
-
 /**
  * Unmasks a type to provide its full result.
  */
 export type Unmasked<TData> =
-  TData extends object ?
+  true extends IsAny<TData> ? TData
+  : TData extends object ?
     UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
   : TData;

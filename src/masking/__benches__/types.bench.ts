@@ -22,6 +22,7 @@ type UnrelatedType = {
     };
   };
 };
+// @ts-ignore
 type _TypeCacheWarmup = Unmasked<UnrelatedType> | MaybeMasked<UnrelatedType>;
 
 test("unmasks deeply nested fragments", (prefix) => {

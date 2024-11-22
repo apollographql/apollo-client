@@ -552,13 +552,25 @@ export function checkDocument(doc: DocumentNode): DocumentNode;
 // @public
 export function cloneDeep<T>(value: T): T;
 
-// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
-type CombineFragmentRefs<FragmentRefs extends Record<string, any>> = UnionToIntersection<{
-    [K in keyof FragmentRefs]-?: UnwrapFragmentRefs<RemoveFragmentName<FragmentRefs[K]>>;
-}[keyof FragmentRefs]>;
+// @public
+type CombineByTypeName<T extends {
+    __typename?: string;
+}> = {
+    [TypeName in NonNullable<T["__typename"]>]: Extract<T, {
+        __typename?: TypeName;
+    }> extends infer SubSelection ? Prettify<MergeUnions<SubSelection>> : never;
+}[NonNullable<T["__typename"]>];
+
+// Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
+//
+// @public
+type CombineIntersection<T> = Exclude<T, {
+    __typename?: string;
+}> | CombineByTypeName<Extract<T, {
+    __typename?: string;
+}>>;
 
 // @public
 export function compact<TArgs extends any[]>(...objects: TArgs): TupleToIntersection<TArgs>;
@@ -827,6 +839,9 @@ export type Directives = {
         [argName: string]: any;
     };
 };
+
+// @public (undocumented)
+type DistributedRequiredExclude<T, U> = T extends any ? Required<T> extends Required<U> ? Required<U> extends Required<T> ? never : T : T : T;
 
 // @public (undocumented)
 export class DocumentTransform {
@@ -1460,6 +1475,9 @@ interface InvalidateModifier {
 // @public (undocumented)
 const _invalidateModifier: unique symbol;
 
+// @public (undocumented)
+type IsAny<T> = 0 extends 1 & T ? true : false;
+
 // Warning: (ae-forgotten-export) The symbol "ApolloPayloadResult" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
@@ -1665,16 +1683,17 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 // @public (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;
 
+// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
-type MaybeMasked<TData> = TData extends {
+type MaybeMasked<TData> = TData extends any ? true extends IsAny<TData> ? TData : TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
     enabled: true;
-} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData;
+} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never;
 
 // @public (undocumented)
 export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;
@@ -1695,6 +1714,19 @@ interface MergeInfo {
     typename: string | undefined;
 }
 
+// Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type MergeObjects<T, U> = Prettify<{
+    [k in keyof T]: k extends keyof U ? [
+    NonNullable<T[k]>,
+    NonNullable<U[k]>
+    ] extends ([
+    infer TK extends object,
+    infer UK extends object
+    ]) ? TK extends unknown[] ? UK extends unknown[] ? CombineIntersection<TK[number] | UK[number]>[] | Extract<T[k] | U[k], undefined | null> : T[k] : CombineIntersection<TK | UK> | Extract<T[k] | U[k], undefined | null> : T[k] : T[k];
+} & Pick<U, Exclude<keyof U, keyof T>>>;
+
 // @public (undocumented)
 type MergeObjectsFunction = <T extends StoreObject | Reference>(existing: T, incoming: T) => T;
 
@@ -1712,6 +1744,22 @@ interface MergeTree {
     // (undocumented)
     map: Map<string | number, MergeTree>;
 }
+
+// Warning: (ae-forgotten-export) The symbol "MergeUnionsAcc" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "takeOneFromUnion" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type MergeUnions<TUnion> = MergeUnionsAcc<TUnion, takeOneFromUnion<TUnion>, never>;
+
+// Warning: (ae-forgotten-export) The symbol "DistributedRequiredExclude" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "MergeObjects" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type MergeUnionsAcc<TUnion, Curr, Merged> = [
+Curr
+] extends [never] ? Merged : MergeUnionsAcc<DistributedRequiredExclude<TUnion, Curr>, takeOneFromUnion<DistributedRequiredExclude<TUnion, Curr>>, [
+Merged
+] extends [never] ? Curr : MergeObjects<Curr, Merged>>;
 
 // @public (undocumented)
 class MissingFieldError extends Error {
@@ -2613,6 +2661,11 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
     variables?: TVariables;
 }
 
+// Warning: (ae-forgotten-export) The symbol "unionToIntersection" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never> extends ((x: infer U) => 0) ? U : never;
+
 // @public (undocumented)
 type TExistingRelay<TNode> = Readonly<{
     edges: TRelayEdge<TNode>[];
@@ -2697,19 +2750,21 @@ type UnionForAny<T> = T extends never ? "a" : 1;
 export type UnionToIntersection<U> = (U extends any ? (x: U) => void : never) extends (x: infer I) => void ? I : never;
 
 // @public (undocumented)
+type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
+
+// @public (undocumented)
 type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
-// @public
-type Unmasked<TData> = TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
-
-// Warning: (ae-forgotten-export) The symbol "CombineFragmentRefs" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
 //
+// @public
+type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
+
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = TData extends any ? string extends keyof NonNullable<TData> ? TData : " $fragmentRefs" extends keyof NonNullable<TData> ? TData extends {
-    " $fragmentRefs"?: infer FragmentRefs extends object;
-} ? Prettify<{
-    [K in keyof TData as K extends " $fragmentRefs" ? never : K]: UnwrapFragmentRefs<TData[K]>;
-} & CombineFragmentRefs<FragmentRefs>> : never : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>> : TData extends object ? {
+type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
+    " $fragmentRefs"?: infer FragmentRefs;
+} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
 } : TData : never;
 

@@ -56,7 +56,7 @@ type CombineWithArrays<T> = UnionToIntersection<
         : {
             [K in AllKeys]:
               | Array<
-                  | CombineWithArrays<NonNullable<ArrayValues<Sub[K]>>>
+                  | CombineIntersection<NonNullable<ArrayValues<Sub[K]>>>
                   | Extract<ArrayValues<Sub[K]>, null | undefined>
                 >
               | Extract<Sub[K], null | undefined>;

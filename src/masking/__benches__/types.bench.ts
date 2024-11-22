@@ -333,13 +333,13 @@ test("deals with overlapping array from parent fragment", (prefix) => {
     type Source = {
       __typename: "Track";
       id: number;
-      artists: Array<{
+      artists?: Array<{
         __typename: "Artist";
         id: number;
         " $fragmentRefs"?: {
           ArtistFragment: ArtistFragment;
         };
-      }>;
+      }> | null;
       " $fragmentRefs"?: {
         NestedTrackFragment: NestedTrackFragment;
       };
@@ -354,10 +354,10 @@ test("deals with overlapping array from parent fragment", (prefix) => {
     type NestedTrackFragment = {
       " $fragmentName"?: "Fragment__Track";
       __typename: "Track";
-      artists: Array<{
+      artists?: Array<{
         __typename: "Artist";
         lastname: string;
-      }>;
+      }> | null;
     };
 
     bench(prefix + "instantiations", () => {
@@ -368,12 +368,15 @@ test("deals with overlapping array from parent fragment", (prefix) => {
       expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{
         __typename: "Track";
         id: number;
-        artists: Array<{
-          __typename: "Artist";
-          id: number;
-          birthdate: string;
-          lastname: string;
-        }>;
+        artists?:
+          | Array<{
+              __typename: "Artist";
+              id: number;
+              birthdate: string;
+              lastname: string;
+            }>
+          | null
+          | undefined;
       }>();
     });
   }

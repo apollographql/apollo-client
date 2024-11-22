@@ -81,7 +81,9 @@ type MergeUnions<TUnion> = MergeUnionsAcc<
 type DistributedRequiredExclude<T, U> =
   T extends any ?
     Required<T> extends Required<U> ?
-      never
+      Required<U> extends Required<T> ?
+        never
+      : T
     : T
   : T;
 

@@ -58,7 +58,7 @@ test("unmasks deeply nested fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([51, "instantiations"]);
+  }).types([5, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -113,7 +113,7 @@ test("unmasks deeply nested fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([51, "instantiations"]);
+  }).types([5, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -181,7 +181,7 @@ test("unmasks deeply nested nullable fragments", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([51, "instantiations"]);
+  }).types([5, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -229,7 +229,7 @@ test("unmasks DeepPartial types", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as Unmasked<Source>;
-  }).types([51, "instantiations"]);
+  }).types([5, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
@@ -245,7 +245,7 @@ test("unmasks DeepPartial types", (prefix) => {
 test("Unmasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, Unmasked<{}>>();
-  }).types([92, "instantiations"]);
+  }).types([80, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
@@ -253,7 +253,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, Unmasked<Record<string, any>>>();
-  }).types([89, "instantiations"]);
+  }).types([99, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
@@ -263,7 +263,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, Unmasked<unknown>>();
-  }).types([43, "instantiations"]);
+  }).types([47, "instantiations"]);
 
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<Unmasked<unknown>>().toBeUnknown();
@@ -271,7 +271,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "any instantiations", () => {
     attest<any, Unmasked<any>>();
-  }).types([93, "instantiations"]);
+  }).types([48, "instantiations"]);
 
   bench(prefix + "any functionality", () => {
     expectTypeOf<Unmasked<any>>().toBeAny();
@@ -289,7 +289,7 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, MaybeMasked<Record<string, any>>>();
-  }).types([89, "instantiations"]);
+  }).types([93, "instantiations"]);
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<MaybeMasked<Record<string, any>>>().toEqualTypeOf<
       Record<string, any>
@@ -362,7 +362,7 @@ test("deals with overlapping array from parent fragment", (prefix) => {
 
     bench(prefix + "instantiations", () => {
       return {} as Unmasked<Source>;
-    }).types([51, "instantiations"]);
+    }).types([5, "instantiations"]);
 
     bench(prefix + "functionality", () => {
       expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{

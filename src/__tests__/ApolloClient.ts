@@ -2971,6 +2971,7 @@ describe("ApolloClient", () => {
 
     test("client.mutate uses masked/unmasked type when using Masked<TData>", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName": "UserFieldsFragment" };
 
@@ -3077,6 +3078,7 @@ describe("ApolloClient", () => {
 
     test("client.watchQuery uses correct masked/unmasked types", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName": "UserFieldsFragment" };
 

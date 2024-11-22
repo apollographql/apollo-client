@@ -332,9 +332,12 @@ test("deals with overlapping array from parent fragment", (prefix) => {
   {
     type Source = {
       __typename: "Track";
+      /** comment: id */
       id: number;
+      /** comment: artists */
       artists?: Array<{
         __typename: "Artist";
+        /** comment: artists.id */
         id: number;
         " $fragmentRefs"?: {
           ArtistFragment: ArtistFragment;
@@ -348,6 +351,7 @@ test("deals with overlapping array from parent fragment", (prefix) => {
     type ArtistFragment = {
       " $fragmentName"?: "Fragment__Artist";
       __typename: "Artist";
+      /** comment: artists.birthday */
       birthdate: string;
     };
 
@@ -356,6 +360,7 @@ test("deals with overlapping array from parent fragment", (prefix) => {
       __typename: "Track";
       artists?: Array<{
         __typename: "Artist";
+        /** comment: artists.lastname */
         lastname: string;
       }> | null;
     };
@@ -365,7 +370,14 @@ test("deals with overlapping array from parent fragment", (prefix) => {
     }).types([5, "instantiations"]);
 
     bench(prefix + "functionality", () => {
-      expectTypeOf<Unmasked<Source>>().branded.toEqualTypeOf<{
+      const x = {} as Unmasked<Source>;
+      // some fields for hovering
+      x.id;
+      x.artists;
+      x.artists?.[0]?.id;
+      x.artists?.[0]?.birthdate;
+      x.artists?.[0]?.lastname;
+      expectTypeOf(x).branded.toEqualTypeOf<{
         __typename: "Track";
         id: number;
         artists?:

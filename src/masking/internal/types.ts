@@ -67,91 +67,78 @@ type CombineByTypeName<T extends { __typename?: string }> = {
   [TypeName in NonNullable<T["__typename"]>]: Extract<
     T,
     { __typename?: TypeName }
-  > extends infer SubSelection extends { __typename?: string } ?
-    Prettify<CombineWithArrays<SubSelection>>
+  > extends infer SubSelection ?
+    Prettify<MergeUnions<SubSelection>>
   : never;
 }[NonNullable<T["__typename"]>];
 
-/**
- * Returns all possible keys of an intersection type.
- * Where
- * ```ts
- * keyof ({ common: string, unique1: number } | { common: string, unique2: boolean })
- * => "common"
- * ```
- * This type behaves like
- * ```ts
- * AllDistributedKeys<({ common: string, unique1: number } | { common: string, unique2: boolean })>
- * => "common" | "unique1" | "unique2"
- * ```
- */
-type AllDistributedKeys<T> = T extends any ? keyof T : never;
+type MergeUnions<TUnion> = MergeUnionsAcc<TUnion, takeOneFromUnion<TUnion>, {}>;
 
-/**
-```ts
-  CombineWithArrays<
-  | {
-      __typename: "B";
-      b1: number;
-      sharedNested: Array<{
-        __typename: "A";
-        a: string;
-      }>;
-    }
-  | {
-      __typename: "B";
-      b2: number;
-      sharedNested: Array<{
-        __typename: "A";
-        b: string;
-      }>;
-    }
-  >;
-  =>
+type MergeUnionsAcc<TUnion, Curr, Merged> =
+  [Curr] extends [never] ? Merged
+  : MergeUnionsAcc<
+      Exclude<TUnion, Curr>,
+      takeOneFromUnion<Exclude<TUnion, Curr>>,
+      MergeByTypeName<Curr, Merged>
+    >;
+type unionToIntersection<T> =
+  (T extends unknown ? (x: T) => unknown : never) extends (
+    (x: infer U) => unknown
+  ) ?
+    U
+  : never;
+
+type takeOneFromUnion<T> =
+  unionToIntersection<T extends T ? (x: T) => 0 : never> extends (
+    (x: infer U) => 0
+  ) ?
+    U
+  : never;
+
+type MergeByTypeName<T, U> =
+  // both have a __typename
+  [T, U] extends [{ __typename?: infer TName }, { __typename?: infer UName }] ?
+    [TName, UName] extends [UName, TName] ?
+      MergeObjects<T, U>
+    : T | U
+  : // only one has a __typename
+  "__typename" extends keyof T | keyof U ? T | U
+  : // no __typename
+    MergeObjects<T, U>;
+
+type MergeObjects<T, U> = Prettify<
   {
-    __typename: "B";
-  } & {
-      b1: number;
-  } & {
-      sharedNested: {
-          __typename: "A";
-          a: string;
-          b: string;
-      }[];
-  } & {
-      b2: number;
-  }
-```
- */
-type CombineWithArrays<T> = UnionToIntersection<
-  AllDistributedKeys<T> extends infer AllKeys ?
-    AllKeys extends PropertyKey ?
-      Extract<T, { [_ in AllKeys]?: any }> extends (
-        infer Sub extends { [_ in AllKeys]?: any }
-      ) ?
-        ArrayValues<Sub[AllKeys]> extends never ?
-          {
-            [K in keyof Sub as K & AllKeys]: Sub[K];
-          }
-        : {
-            [K in AllKeys]:
-              | Array<
-                  | CombineIntersection<NonNullable<ArrayValues<Sub[K]>>>
-                  | Extract<ArrayValues<Sub[K]>, null | undefined>
-                >
-              | Extract<Sub[K], null | undefined>;
-          }
-      : never
-    : never
-  : never
+    [k in keyof T]: k extends keyof U ?
+      [T[k], U[k]] extends [object, object] ?
+        T[k] extends unknown[] ?
+          U[k] extends unknown[] ?
+            MergeUnions<T[k][number] | U[k][number]>[]
+          : T[k]
+        : MergeUnions<T[k] | U[k]>
+      : T[k]
+    : T[k];
+  } & Pick<U, Exclude<keyof U, keyof T>>
 >;
 
-type ArrayValues<T> =
-  T extends any ?
-    T extends Array<infer U> ?
-      U
-    : never
-  : never;
+type UserFieldsFragment = {
+  __typename: "User";
+  id: number;
+  age: number;
+} & { " $fragmentName"?: "UserFiedsFragment" };
+
+type NameFieldsFragment = {
+  __typename: "User";
+  firstName: string;
+  lastName: string;
+} & { " $fragmentName"?: "NameFieldsFragment" };
+
+type FooF = {
+  __typename: "Foo";
+  firstName: string;
+  lastName: string;
+} & { " $fragmentName"?: "NameFieldsFragment" };
+
+type T = MergeUnions<UserFieldsFragment | NameFieldsFragment | FooF>;
 
 export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined

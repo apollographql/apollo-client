@@ -28,10 +28,41 @@ export type UnwrapFragmentRefs<TData> =
     : TData
   : never;
 
+/**
+ ```ts
+  CombineIntersection<
+    | { foo: string }
+    | { __typename: "A"; a: string }
+    | { __typename: "B"; b1: number }
+    | { __typename: "B"; b2: string }
+  > =>
+    | { foo: string }
+    | CombineByTypeName<
+      | { __typename: "A"; a: string }
+      | { __typename: "B"; b1: number }
+      | { __typename: "B"; b2: string }
+    >
+ ```
+ */
 type CombineIntersection<T> =
   | Exclude<T, { __typename?: string }>
   | CombineByTypeName<Extract<T, { __typename?: string }>>;
-
+/**
+```ts
+  CombineByTypeName<
+    | { __typename: "A"; a: string }
+    | { __typename: "B"; b1: number }
+    | { __typename: "B"; b2: string }
+  > =>
+  | CombineWithArrays<
+    | { __typename: "A"; a: string }
+  >
+  | CombineWithArrays<
+    | { __typename: "B"; b1: number }
+    | { __typename: "B"; b2: number }
+  >
+```
+ */
 type CombineByTypeName<T extends { __typename?: string }> = {
   [TypeName in NonNullable<T["__typename"]>]: Extract<
     T,
@@ -41,8 +72,57 @@ type CombineByTypeName<T extends { __typename?: string }> = {
   : never;
 }[NonNullable<T["__typename"]>];
 
+/**
+ * Returns all possible keys of an intersection type.
+ * Where
+ * ```ts
+ * keyof ({ common: string, unique1: number } | { common: string, unique2: boolean })
+ * => "common"
+ * ```
+ * This type behaves like
+ * ```ts
+ * AllDistributedKeys<({ common: string, unique1: number } | { common: string, unique2: boolean })>
+ * => "common" | "unique1" | "unique2"
+ * ```
+ */
 type AllDistributedKeys<T> = T extends any ? keyof T : never;
 
+/**
+```ts
+  CombineWithArrays<
+  | {
+      __typename: "B";
+      b1: number;
+      sharedNested: Array<{
+        __typename: "A";
+        a: string;
+      }>;
+    }
+  | {
+      __typename: "B";
+      b2: number;
+      sharedNested: Array<{
+        __typename: "A";
+        b: string;
+      }>;
+    }
+  >;
+  =>
+  {
+    __typename: "B";
+  } & {
+      b1: number;
+  } & {
+      sharedNested: {
+          __typename: "A";
+          a: string;
+          b: string;
+      }[];
+  } & {
+      b2: number;
+  }
+```
+ */
 type CombineWithArrays<T> = UnionToIntersection<
   AllDistributedKeys<T> extends infer AllKeys ?
     AllKeys extends PropertyKey ?

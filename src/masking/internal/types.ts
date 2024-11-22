@@ -28,20 +28,6 @@ export type UnwrapFragmentRefs<TData> =
     : TData
   : never;
 
-type test = CombineIntersection<
-  //| Omit<undefined, " $fragmentName">
-  | {
-      __typename?: "User" | undefined;
-      id?: number | undefined;
-      age?: number | undefined;
-    }
-  | {
-      __typename?: "User" | undefined;
-      firstName?: string | undefined;
-      lastName?: string | undefined;
-    }
->;
-
 type CombineIntersection<T> =
   | Exclude<T, { __typename?: string }>
   | CombineByTypeName<Extract<T, { __typename?: string }>>;
@@ -57,27 +43,35 @@ type CombineByTypeName<T extends { __typename?: string }> = {
 
 type AllDistributedKeys<T> = T extends any ? keyof T : never;
 
-type CombineWithArrays<T extends { __typename?: string }> = UnionToIntersection<
+type CombineWithArrays<T> = UnionToIntersection<
   AllDistributedKeys<T> extends infer AllKeys ?
     AllKeys extends PropertyKey ?
-      {
-        [K in AllKeys]: Extract<T, { [K in AllKeys]?: any }>[K] extends (
-          infer V
-        ) ?
-          [V] extends [Array<infer ArrayItem>] ?
-            Array<
-              // prevent union with null|undefined
-              | UnionToIntersection<NonNullable<ArrayItem>>
-
-              // preserve null|undefined
-              | Extract<ArrayItem, null | undefined>
-            >
-          : V
-        : never;
-      }
+      Extract<T, { [_ in AllKeys]?: any }> extends (
+        infer Sub extends { [_ in AllKeys]?: any }
+      ) ?
+        ArrayValues<Sub[AllKeys]> extends never ?
+          {
+            [K in keyof Sub as K & AllKeys]: Sub[K];
+          }
+        : {
+            [K in AllKeys]:
+              | Array<
+                  | CombineWithArrays<NonNullable<ArrayValues<Sub[K]>>>
+                  | Extract<ArrayValues<Sub[K]>, null | undefined>
+                >
+              | Extract<Sub[K], null | undefined>;
+          }
+      : never
     : never
   : never
 >;
+
+type ArrayValues<T> =
+  T extends any ?
+    T extends Array<infer U> ?
+      U
+    : never
+  : never;
 
 export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 // force distrubution when T is a union with | undefined

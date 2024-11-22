@@ -1,7 +1,7 @@
-import { MaybeMasked, type Unmasked } from "../index";
+import type { MaybeMasked, Unmasked } from "../index.js";
 import { attest, bench } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
-import { DeepPartial } from "../../utilities";
+import type { DeepPartial } from "../../utilities/index.js";
 
 import { setup } from "@ark/attest";
 
@@ -232,7 +232,7 @@ test("unmasks DeepPartial types", (prefix) => {
   }).types([51, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    expectTypeOf<Unmasked<DeepPartial<UserFieldsFragment>>>().toEqualTypeOf<{
+    expectTypeOf<Unmasked<Source>>().toEqualTypeOf<{
       __typename?: "User";
       id?: number;
       age?: number;

@@ -100,6 +100,10 @@ export const GET_POST_DETAILS = gql`
 
 Fragments can be registered with your `InMemoryCache` instance so that they can be referred to by name in any query or `InMemoryCache` operation (such as `cache.readFragment`, `cache.readQuery` and `cache.watch`) without needing to interpolate their declarations.
 
+<Note>
+We do not recommend using the fragment registry when using the GraphQL Codegen [client preset](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client) with the generated `graphql` function. The client preset precompiles GraphQL queries and includes the fragment definition for you.
+</Note>
+
 Let's look at an example in React.
 
 ```js title="index.js" {7-12}

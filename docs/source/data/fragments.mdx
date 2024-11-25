@@ -245,11 +245,39 @@ The tree-like structure of a GraphQL response resembles the hierarchy of a front
 
 Consider the following view hierarchy for an app:
 
-```
-FeedPage
-└── FeedEntry
-    ├── EntryInfo
-    └── VoteButtons
+```mermaid
+graph TD
+  subgraph FeedPageGroup[" "]
+    direction TB
+    FeedPage[&lt;FeedPage /&gt;]
+    FeedQuery["query FeedQuery { feed { ...FeedEntryFragment } }"]
+    FeedPage ~~~ FeedQuery
+  end
+
+  subgraph FeedEntryGroup[" "]
+    direction TB
+    FeedEntry["&lt;FeedEntry /&gt;"]
+    FeedEntryFragment["fragment FeedEntry { ...EntryInfoFragment ...VoteButtonsFragment }"]
+    FeedEntry ~~~ FeedEntryFragment
+  end
+
+  subgraph EntryInfoGroup[" "]
+    direction TB
+    EntryInfo["&lt;EntryInfo /&gt;"]
+    EntryInfoFragment["fragment EntryInfo { ... }"]
+    EntryInfo ~~~ EntryInfoFragment
+  end
+
+  subgraph VoteButtonsGroup[" "]
+    direction TB
+    VoteButtons["&lt;VoteButtons /&gt;"]
+    VoteButtonsFragment["fragment VoteButtons { ... }"]
+    VoteButtons ~~~ VoteButtonsFragment
+  end
+
+  FeedPageGroup --> FeedEntryGroup
+  FeedEntryGroup --> EntryInfoGroup
+  FeedEntryGroup --> VoteButtonsGroup
 ```
 
 In this app, the `FeedPage` component executes a query to fetch a list of `FeedEntry` objects. The `EntryInfo` and `VoteButtons` subcomponents need specific fields from the enclosing `FeedEntry` object.

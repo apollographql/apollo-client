@@ -330,67 +330,137 @@ test("distributed members on MaybeMasked", (prefix) => {
 });
 
 test("deals with overlapping array from parent fragment", (prefix) => {
-  {
-    type Source = {
-      __typename: "Track";
-      /** comment: id */
-      id: number;
-      /** comment: artists */
-      artists?: Array<{
-        __typename: "Artist";
-        /** comment: artists.id */
-        id: number;
-        " $fragmentRefs"?: {
-          ArtistFragment: ArtistFragment;
-        };
-      }> | null;
-      " $fragmentRefs"?: {
-        NestedTrackFragment: NestedTrackFragment;
-      };
-    };
-
-    type ArtistFragment = {
-      " $fragmentName"?: "Fragment__Artist";
+  type Source = {
+    __typename: "Track";
+    /** comment: id */
+    id: number;
+    /** comment: artists */
+    artists?: Array<{
       __typename: "Artist";
-      /** comment: artists.birthday */
-      birthdate: string;
+      /** comment: artists.id */
+      id: number;
+      " $fragmentRefs"?: {
+        ArtistFragment: ArtistFragment;
+      };
+    }> | null;
+    " $fragmentRefs"?: {
+      NestedTrackFragment: NestedTrackFragment;
     };
+  };
 
-    type NestedTrackFragment = {
-      " $fragmentName"?: "Fragment__Track";
+  type ArtistFragment = {
+    " $fragmentName"?: "Fragment__Artist";
+    __typename: "Artist";
+    /** comment: artists.birthday */
+    birthdate: string;
+  };
+
+  type NestedTrackFragment = {
+    " $fragmentName"?: "Fragment__Track";
+    __typename: "Track";
+    artists?: Array<{
+      __typename: "Artist";
+      /** comment: artists.lastname */
+      lastname: string;
+    }> | null;
+  };
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+    // some fields for hovering
+    x.id;
+    x.artists;
+    x.artists?.[0]?.id;
+    x.artists?.[0]?.birthdate;
+    x.artists?.[0]?.lastname;
+    expectTypeOf(x).branded.toEqualTypeOf<{
       __typename: "Track";
-      artists?: Array<{
-        __typename: "Artist";
-        /** comment: artists.lastname */
-        lastname: string;
-      }> | null;
-    };
+      id: number;
+      artists?:
+        | Array<{
+            __typename: "Artist";
+            id: number;
+            birthdate: string;
+            lastname: string;
+          }>
+        | null
+        | undefined;
+    }>();
+  });
+});
 
-    bench(prefix + "instantiations", () => {
-      return {} as Unmasked<Source>;
-    }).types([5, "instantiations"]);
+test("base type, multiple fragments on sub-types", (prefix) => {
+  type Source = {
+    __typename: "Track";
+    id: number;
+    artists?: Array<{
+      __typename: "Person" | "Animatronic" | "CartoonCharacter";
+      id: number;
+      name: string;
+      " $fragmentRefs"?: {
+        PersonFragment: PersonFragment;
+        AnimatronicFragment: AnimatronicFragment;
+        CartoonCharacterFragment: CartoonCharacterFragment;
+      };
+    }> | null;
+  };
 
-    bench(prefix + "functionality", () => {
-      const x = {} as Unmasked<Source>;
-      // some fields for hovering
-      x.id;
-      x.artists;
-      x.artists?.[0]?.id;
-      x.artists?.[0]?.birthdate;
-      x.artists?.[0]?.lastname;
-      expectTypeOf(x).branded.toEqualTypeOf<{
-        __typename: "Track";
-        id: number;
-        artists?:
-          | Array<{
-              __typename: "Artist";
-              id: number;
-              birthdate: string;
-              lastname: string;
-            }>
-          | null
-          | undefined;
-      }>();
-    });
-  }
+  type PersonFragment = {
+    " $fragmentName"?: "Fragment__Person";
+    __typename: "Person";
+    birthdate: string;
+  };
+  type AnimatronicFragment = {
+    " $fragmentName"?: "Fragment__Animatronic";
+    __typename: "Animatronic";
+    manufacturer: string;
+    warrantyEndDate: string;
+  };
+  type CartoonCharacterFragment = {
+    " $fragmentName"?: "Fragment__CartoonCharacter";
+    __typename: "CartoonCharacter";
+    animator: string;
+    voiceActor: string;
+  };
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      __typename: "Track";
+      id: number;
+      artists?:
+        | Array<
+            | {
+                __typename: "Person";
+                id: number;
+                name: string;
+                birthdate: string;
+              }
+            | {
+                __typename: "Animatronic";
+                id: number;
+                name: string;
+                manufacturer: string;
+                warrantyEndDate: string;
+              }
+            | {
+                __typename: "CartoonCharacter";
+                id: number;
+                name: string;
+                animator: string;
+                voiceActor: string;
+              }
+          >
+        | null
+        | undefined;
+    }>();
+  });
 });

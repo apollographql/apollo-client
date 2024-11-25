@@ -64,13 +64,67 @@ type CombineIntersection<T> =
 ```
  */
 type CombineByTypeName<T extends { __typename?: string }> = {
-  [TypeName in NonNullable<T["__typename"]>]: Extract<
-    T,
-    { __typename?: TypeName }
-  > extends infer SubSelection ?
-    Prettify<MergeUnions<SubSelection>>
-  : never;
+  [TypeName in NonNullable<T["__typename"]>]: Prettify<
+    MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>
+  >;
 }[NonNullable<T["__typename"]>];
+
+/**
+```ts
+CombineByTypeName<
+  | {
+      __typename: "Person" | "Animatronic" | "CartoonCharacter";
+      id: number;
+      name: string;
+    }
+  | {
+      __typename: "Person";
+      birthdate: string;
+    }
+  | {
+      __typename: "Animatronic";
+      manufacturer: string;
+      warrantyEndDate: string;
+    }
+  | {
+      __typename: "CartoonCharacter";
+      animator: string;
+      voiceActor: string;
+    }
+>
+    =>
+{
+    id: number;
+    name: string;
+    __typename: "Person";
+    birthdate: string;
+} | {
+    id: number;
+    name: string;
+    __typename: "Animatronic";
+    manufacturer: string;
+    warrantyEndDate: string;
+} | {
+    id: number;
+    name: string;
+    __typename: "CartoonCharacter";
+    animator: string;
+    voiceActor: string;
+}
+```
+ */
+type ExtractByMatchingTypeNames<
+  Union extends { __typename?: string },
+  TypeName extends string,
+> = Union extends any ?
+  TypeName extends NonNullable<Union["__typename"]> ?
+    Omit<
+      Union,
+      "__typename"
+    > & // preserve `?`, which `& { __typename: TypeName }` would not do
+    { [K in keyof Union as K extends "__typename" ? K : never]: TypeName }
+  : never
+: never;
 
 type MergeUnions<TUnion> = MergeUnionsAcc<
   TUnion,

@@ -118,7 +118,8 @@ type ExtractByMatchingTypeNames<
   TypeName extends string,
 > = Union extends any ?
   TypeName extends NonNullable<Union["__typename"]> ?
-    Omit<Union, "__typename"> & { // preserve `?`, which `& { __typename: TypeName }` would not do
+    Omit<Union, "__typename"> & {
+      // preserve `?`, which `& { __typename: TypeName }` would not do
       [K in keyof Union as K extends "__typename" ? K : never]: TypeName;
     }
   : never

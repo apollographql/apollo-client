@@ -224,7 +224,7 @@ We create a separate file that creates and exports our fragment registry. This g
 import { gql } from "@apollo/client";
 import { fragmentRegistry } from "./fragmentRegistry";
 
-// Register the fragment outside the component to ensure it is registered when this module is loaded.
+// Define the fragment outside the component to ensure it gets registered when this module is loaded.
 const ITEM_FRAGMENT = gql`
   fragment ItemFragment on Item {
     # ...

@@ -74,7 +74,6 @@ import { gql } from '@apollo/client';
 import { COMMENT_FRAGMENT } from './Comment';
 
 export const GET_POST_DETAILS = gql`
-  ${COMMENT_FRAGMENT}
   query CommentsForPost($postId: ID!) {
     post(postId: $postId) {
       title
@@ -85,6 +84,8 @@ export const GET_POST_DETAILS = gql`
       }
     }
   }
+
+  ${COMMENT_FRAGMENT}
 `;
 
 // ...PostDetails component definition...

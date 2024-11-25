@@ -218,14 +218,13 @@ type CanReadFunction = (value: StoreValue) => boolean;
 
 // Warning: (ae-forgotten-export) The symbol "Prettify" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "MergeUnions" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "ExtractByMatchingTypeNames" needs to be exported by the entry point index.d.ts
 //
 // @public
 type CombineByTypeName<T extends {
     __typename?: string;
 }> = {
-    [TypeName in NonNullable<T["__typename"]>]: Extract<T, {
-        __typename?: TypeName;
-    }> extends infer SubSelection ? Prettify<MergeUnions<SubSelection>> : never;
+    [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
 }[NonNullable<T["__typename"]>];
 
 // Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
@@ -462,6 +461,13 @@ export namespace EntityStore {
         readonly stump: Stump;
     }
 }
+
+// @public
+type ExtractByMatchingTypeNames<Union extends {
+    __typename?: string;
+}, TypeName extends string> = Union extends any ? TypeName extends NonNullable<Union["__typename"]> ? Omit<Union, "__typename"> & {
+    [K in keyof Union as K extends "__typename" ? K : never]: TypeName;
+} : never : never;
 
 // @public (undocumented)
 export interface FieldFunctionOptions<TArgs = Record<string, any>, TVars = Record<string, any>> {

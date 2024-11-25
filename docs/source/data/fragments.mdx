@@ -175,7 +175,7 @@ const client = new ApolloClient({
 The local version of the `ExtraFields` fragment declared in `ItemList.jsx` takes precedence over the `ExtraFields` originally registered with the `InMemoryCache`. Thus, its definition will be used when the `ExtraFields` fragment spread is parsed inside of the registered `ItemFragment` _only when `GetItemList` query is executed_, because explicit definitions take precedence over registered fragments.
 
 ```jsx title="ItemList.jsx" {8-10,17}
-const listQuery = gql`
+const GET_ITEM_LIST = gql`
   query GetItemList {
     list {
       ...ItemFragment
@@ -187,7 +187,7 @@ const listQuery = gql`
   }
 `;
 function ToDoList() {
-  const { data } = useQuery(listQuery);
+  const { data } = useQuery(GET_ITEM_LIST);
   return (
     <ol>
       {data?.list.map((item) => (
@@ -225,13 +225,13 @@ import { gql } from "@apollo/client";
 import { fragmentRegistry } from "./fragmentRegistry";
 
 // Register the fragment outside the component to ensure it is registered when this module is loaded.
-const ItemFragment = gql`
+const ITEM_FRAGMENT = gql`
   fragment ItemFragment on Item {
     # ...
   }
 `
 
-fragmentRegistry.register(ItemFragment);
+fragmentRegistry.register(ITEM_FRAGMENT);
 
 function TodoItem() {
   // ...
@@ -292,7 +292,7 @@ In this app, the `FeedPage` component executes a query to fetch a list of `FeedE
 A colocated fragment is just like any other fragment, except it's defined in the same file as a particular component that uses the fragment's fields. For example, the `VoteButtons` child component of `FeedPage` might use the fields `score` and `vote { choice }` from the `FeedEntry` object:
 
 ```js title="VoteButtons.jsx"
-export const VoteButtonsFragment = gql`
+export const VOTE_BUTTONS_FRAGMENT = gql`
   fragment VoteButtonsFragment on FeedEntry {
     score
     vote {
@@ -305,7 +305,7 @@ export const VoteButtonsFragment = gql`
 After you define a fragment in a child component, the _parent_ component can refer to it in its _own_ colocated fragments, like so:
 
 ```js title="FeedEntry.jsx"
-export const FeedEntryFragment = gql`
+export const FEED_ENTRY_FRAGMENT = gql`
   fragment FeedEntryFragment on FeedEntry {
     commentCount
     repository {
@@ -318,8 +318,8 @@ export const FeedEntryFragment = gql`
     ...VoteButtonsFragment
     ...EntryInfoFragment
   }
-  ${VoteButtonsFragment}
-  ${EntryInfoFragment}
+  ${VOTE_BUTTONS_FRAGMENT}
+  ${ENTRY_INFO_FRAGMENT}
 `
 ```
 
@@ -476,7 +476,7 @@ The `useFragment` hook represents a lightweight live binding into the Apollo Cli
 Given the following fragment definition:
 
 ```js
-const ItemFragment = gql`
+const ITEM_FRAGMENT = gql`
   fragment ItemFragment on Item {
     text
   }
@@ -493,7 +493,8 @@ const listQuery = gql`
       ...ItemFragment
     }
   }
-  ${ItemFragment}
+
+  ${ITEM_FRAGMENT}
 `;
 
 function List() {
@@ -520,7 +521,7 @@ We can then use `useFragment` from within the `<Item>` component to create a liv
 ```tsx
 function Item(props: { id: number }) {
   const { complete, data } = useFragment({
-    fragment: ItemFragment,
+    fragment: ITEM_FRAGMENT,
     fragmentName: "ItemFragment",
     from: {
       __typename: "Item",
@@ -535,7 +536,7 @@ function Item(props: { id: number }) {
 ```jsx
 function Item(props) {
   const { complete, data } = useFragment({
-    fragment: ItemFragment,
+    fragment: ITEM_FRAGMENT,
     fragmentName: "ItemFragment",
     from: {
       __typename: "Item",
@@ -572,7 +573,7 @@ function Item(props: { item: { __typename: 'Item', id: number }}) {
 ```jsx
 function Item(props) {
   const { complete, data } = useFragment({
-    fragment: ItemFragment,
+    fragment: ITEM_FRAGMENT,
     fragmentName: "ItemFragment",
     from: item
   });

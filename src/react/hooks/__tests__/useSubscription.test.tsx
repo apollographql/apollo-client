@@ -2419,6 +2419,7 @@ describe.skip("Type Tests", () => {
 
   test("uses unmasked types when using TypedDocumentNode", async () => {
     type UserFieldsFragment = {
+      __typename: "User";
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
 

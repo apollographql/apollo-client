@@ -3242,6 +3242,7 @@ describe.skip("Type Tests", () => {
 
   test("uses masked/unmasked type when using Masked<TData>", async () => {
     type UserFieldsFragment = {
+      __typename: "User";
       age: number;
     } & { " $fragmentName": "UserFieldsFragment" };
 

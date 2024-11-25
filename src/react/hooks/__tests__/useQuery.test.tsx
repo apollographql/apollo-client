@@ -10898,6 +10898,7 @@ describe("useQuery Hook", () => {
 
     it("masks partial cache data when returnPartialData is `true`", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 

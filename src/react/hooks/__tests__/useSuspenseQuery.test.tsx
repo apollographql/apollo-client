@@ -286,17 +286,20 @@ function useVariablesQueryCase() {
 }
 
 type CharacterFragment = {
+  __typename: "Character";
   name: string;
 } & { " $fragmentName"?: "CharacterFragment" };
 
 interface MaskedVariablesCaseData {
   character: {
+    __typename: "Character";
     id: string;
   } & { " $fragmentRefs"?: { CharacterFragment: CharacterFragment } };
 }
 
 interface UnmaskedVariablesCaseData {
   character: {
+    __typename: "Character";
     id: string;
     name: string;
   };
@@ -11461,6 +11464,7 @@ describe("useSuspenseQuery", () => {
 
   it("masks partial cache data when returnPartialData is `true`", async () => {
     type UserFieldsFragment = {
+      __typename: "User";
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
 

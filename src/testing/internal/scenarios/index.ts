@@ -65,6 +65,7 @@ export function setupVariablesCase() {
 }
 
 export type MaskedVariablesCaseFragment = {
+  __typename: "Character";
   name: string;
 } & { " $fragmentName"?: "MaskedVariablesCaseFragment" };
 

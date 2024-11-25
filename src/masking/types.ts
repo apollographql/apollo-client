@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
   ContainsFragmentsRefs,
+  IsAny,
   RemoveFragmentName,
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
@@ -38,15 +39,21 @@ export type FragmentType<TData> =
  * enabled.
  */
 export type MaybeMasked<TData> =
-  TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
-  : DataMasking extends { enabled: true } ? TData
-  : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData>
-  : TData;
+  // distribute TData - in case of a union, do the next steps for each member
+  TData extends any ?
+    // prevent "Type instantiation is excessively deep and possibly infinite."
+    true extends IsAny<TData> ? TData
+    : TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
+    : DataMasking extends { enabled: true } ? TData
+    : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData>
+    : TData
+  : never;
 
 /**
  * Unmasks a type to provide its full result.
  */
 export type Unmasked<TData> =
-  TData extends object ?
+  true extends IsAny<TData> ? TData
+  : TData extends object ?
     UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
   : TData;

@@ -814,6 +814,7 @@ describe("client.watchQuery", () => {
 
   test("masks partial cache data when returnPartialData is `true`", async () => {
     type UserFieldsFragment = {
+      __typename: "User";
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
 

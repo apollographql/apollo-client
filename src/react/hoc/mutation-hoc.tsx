@@ -101,6 +101,8 @@ export function withMutation<
               // up onto the result since it was passed as a nested prop
               // we massage the Mutation component's shape here to replicate that
               // this matches the query HoC
+
+              // @ts-ignore Type instantiation is excessively deep and possibly infinite.
               const result = Object.assign(r, data || {});
               const name = operationOptions.name || "mutate";
               const resultName =

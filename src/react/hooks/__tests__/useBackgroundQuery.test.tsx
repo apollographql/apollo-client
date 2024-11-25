@@ -4789,6 +4789,7 @@ it("masks cache and network result when using cache-and-network fetch policy", a
 
 it("masks partial cache data when returnPartialData is `true`", async () => {
   type UserFieldsFragment = {
+    __typename: "User";
     age: number;
   } & { " $fragmentName"?: "UserFieldsFragment" };
 

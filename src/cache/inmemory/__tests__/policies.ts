@@ -13,8 +13,8 @@ import {
 import { MissingFieldError } from "../..";
 import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
 import { FieldPolicy, StorageType } from "../policies";
-import { itAsync, subscribeAndCount, MockLink } from "../../../testing/core";
-import { spyOnConsole } from "../../../testing/internal";
+import { itAsync, MockLink } from "../../../testing/core";
+import { ObservableStream, spyOnConsole } from "../../../testing/internal";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");
@@ -3688,7 +3688,7 @@ describe("type policies", function () {
       }
     );
 
-    itAsync("can handle Relay-style pagination", (resolve, reject) => {
+    it("can handle Relay-style pagination", async () => {
       const cache = new InMemoryCache({
         addTypename: false,
         typePolicies: {
@@ -4065,7 +4065,9 @@ describe("type policies", function () {
             },
           },
         },
-      ]).setOnError(reject);
+      ]).setOnError((error) => {
+        throw new Error(error);
+      });
 
       const client = new ApolloClient({ link, cache });
 
@@ -4086,275 +4088,282 @@ describe("type policies", function () {
         },
       });
 
-      subscribeAndCount(reject, observable, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              search: {
-                edges: firstEdges,
-                pageInfo: firstPageInfo,
-                totalCount: 1292,
-              },
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: firstEdges,
+              pageInfo: firstPageInfo,
+              totalCount: 1292,
             },
-          });
+          },
+        });
+        expect(cache.extract()).toMatchSnapshot();
+      }
 
-          expect(cache.extract()).toMatchSnapshot();
+      observable.fetchMore({ variables: secondVariables });
 
-          observable.fetchMore({
-            variables: secondVariables,
-          });
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              search: {
-                edges: [...firstEdges, ...secondEdges],
-                pageInfo: {
-                  __typename: "PageInfo",
-                  startCursor: firstPageInfo.startCursor,
-                  endCursor: secondPageInfo.endCursor,
-                  hasPreviousPage: false,
-                  hasNextPage: true,
-                },
-                totalCount: 1292,
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: [...firstEdges, ...secondEdges],
+              pageInfo: {
+                __typename: "PageInfo",
+                startCursor: firstPageInfo.startCursor,
+                endCursor: secondPageInfo.endCursor,
+                hasPreviousPage: false,
+                hasNextPage: true,
               },
+              totalCount: 1292,
             },
-          });
+          },
+        });
+        expect(cache.extract()).toMatchSnapshot();
+      }
 
-          expect(cache.extract()).toMatchSnapshot();
+      observable.fetchMore({ variables: thirdVariables });
 
-          observable.fetchMore({
-            variables: thirdVariables,
-          });
-        } else if (count === 3) {
-          expect(result.data.search.edges.length).toBe(5);
+      {
+        const result = await stream.takeNext();
 
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              search: {
-                edges: [...thirdEdges, ...secondEdges],
-                pageInfo: {
-                  __typename: "PageInfo",
-                  startCursor: thirdPageInfo.startCursor,
-                  endCursor: secondPageInfo.endCursor,
-                  hasPreviousPage: true,
-                  hasNextPage: true,
-                },
-                totalCount: 1292,
+        expect(result.data.search.edges.length).toBe(5);
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: [...thirdEdges, ...secondEdges],
+              pageInfo: {
+                __typename: "PageInfo",
+                startCursor: thirdPageInfo.startCursor,
+                endCursor: secondPageInfo.endCursor,
+                hasPreviousPage: true,
+                hasNextPage: true,
               },
+              totalCount: 1292,
             },
-          });
+          },
+        });
 
-          expect(cache.extract()).toMatchSnapshot();
+        expect(cache.extract()).toMatchSnapshot();
+      }
 
-          observable.fetchMore({
-            variables: fourthVariables,
-          });
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              search: {
-                edges: [...fourthEdges, ...thirdEdges, ...secondEdges],
-                pageInfo: {
-                  __typename: "PageInfo",
-                  startCursor: firstPageInfo.startCursor,
-                  endCursor: secondPageInfo.endCursor,
-                  hasPreviousPage: false,
-                  hasNextPage: true,
-                },
-                totalCount: 1292,
+      observable.fetchMore({ variables: fourthVariables });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: [...fourthEdges, ...thirdEdges, ...secondEdges],
+              pageInfo: {
+                __typename: "PageInfo",
+                startCursor: firstPageInfo.startCursor,
+                endCursor: secondPageInfo.endCursor,
+                hasPreviousPage: false,
+                hasNextPage: true,
               },
+              totalCount: 1292,
             },
-          });
+          },
+        });
 
-          expect(result.data.search.edges).toEqual([
-            ...firstEdges,
-            ...secondEdges,
-          ]);
+        expect(result.data.search.edges).toEqual([
+          ...firstEdges,
+          ...secondEdges,
+        ]);
 
-          expect(cache.extract()).toMatchSnapshot();
+        expect(cache.extract()).toMatchSnapshot();
+      }
 
-          observable.fetchMore({
-            variables: fifthVariables,
-          });
-        } else if (count === 5) {
-          expect(result.data.search.edges.length).toBe(7);
+      observable.fetchMore({ variables: fifthVariables });
 
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              search: {
-                edges: [...firstEdges, ...secondEdges, ...fifthEdges],
-                pageInfo: {
-                  __typename: "PageInfo",
-                  startCursor: firstPageInfo.startCursor,
-                  endCursor: fifthPageInfo.endCursor,
-                  hasPreviousPage: false,
-                  hasNextPage: true,
-                },
-                totalCount: 1292,
+      {
+        const result = await stream.takeNext();
+
+        expect(result.data.search.edges.length).toBe(7);
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: [...firstEdges, ...secondEdges, ...fifthEdges],
+              pageInfo: {
+                __typename: "PageInfo",
+                startCursor: firstPageInfo.startCursor,
+                endCursor: fifthPageInfo.endCursor,
+                hasPreviousPage: false,
+                hasNextPage: true,
               },
+              totalCount: 1292,
             },
-          });
+          },
+        });
 
-          expect(cache.extract()).toMatchSnapshot();
+        expect(cache.extract()).toMatchSnapshot();
+      }
 
-          // Now search for a different artist to verify that they keyArgs
-          // function we passed to relayStylePagination above keeps
-          // different search queries separate in the cache.
-          client
-            .query({
-              query,
-              variables: {
-                query: "James Turrell",
-                first: 1,
+      // Now search for a different artist to verify that they keyArgs
+      // function we passed to relayStylePagination above keeps
+      // different search queries separate in the cache.
+      {
+        const result = await client.query({
+          query,
+          variables: {
+            query: "James Turrell",
+            first: 1,
+          },
+        });
+        const snapshot = cache.extract();
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: turrellEdges.slice(0, 1),
+              pageInfo: turrellPageInfo1,
+              totalCount: 13531,
+            },
+          },
+        });
+
+        expect(snapshot).toMatchSnapshot();
+        expect(
+          // Note that Turrell's name has been lower-cased.
+          snapshot.ROOT_QUERY!["search:james turrell"]
+        ).toEqual({
+          edges: turrellEdges.slice(0, 1).map((edge) => ({
+            ...edge,
+            // The relayStylePagination merge function updates the
+            // edge.cursor field of the first and last edge, even if
+            // the query did not request the edge.cursor field, if
+            // pageInfo.{start,end}Cursor are defined.
+            cursor: turrellPageInfo1.startCursor,
+            // Artist objects are normalized by HREF:
+            node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+          })),
+          pageInfo: turrellPageInfo1,
+          totalCount: 13531,
+        });
+      }
+
+      // Evict the Basquiat entity to verify that the dangling
+      // edge.node Reference gets automatically elided from the
+      // Basquiat search results, thanks to the read function
+      // generated by the relayStylePagination helper.
+      expect(
+        cache.evict({
+          id: cache.identify({
+            __typename: "Artist",
+            href: "/artist/jean-michel-basquiat",
+          }),
+        })
+      ).toBe(true);
+
+      {
+        const result = await stream.takeNext();
+
+        // Same full list of edges that we saw in the previous case.
+        const edges = [...firstEdges, ...secondEdges, ...fifthEdges];
+
+        // Remove the Basquiat edge, which we know to be first.
+        expect(edges.shift()).toEqual({
+          __typename: "SearchableEdge",
+          node: {
+            __typename: "Artist",
+            href: "/artist/jean-michel-basquiat",
+            displayLabel: "Jean-Michel Basquiat",
+            bio: "American, 1960-1988, New York, New York, based in New York, New York",
+          },
+        });
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges,
+              pageInfo: {
+                __typename: "PageInfo",
+                startCursor: fourthPageInfo.startCursor,
+                endCursor: fifthPageInfo.endCursor,
+                hasPreviousPage: false,
+                hasNextPage: true,
               },
-            })
-            .then((result) => {
-              expect(result).toEqual({
-                loading: false,
-                networkStatus: NetworkStatus.ready,
-                data: {
-                  search: {
-                    edges: turrellEdges.slice(0, 1),
-                    pageInfo: turrellPageInfo1,
-                    totalCount: 13531,
-                  },
-                },
-              });
-
-              const snapshot = cache.extract();
-              expect(snapshot).toMatchSnapshot();
-              expect(
-                // Note that Turrell's name has been lower-cased.
-                snapshot.ROOT_QUERY!["search:james turrell"]
-              ).toEqual({
-                edges: turrellEdges.slice(0, 1).map((edge) => ({
-                  ...edge,
-                  // The relayStylePagination merge function updates the
-                  // edge.cursor field of the first and last edge, even if
-                  // the query did not request the edge.cursor field, if
-                  // pageInfo.{start,end}Cursor are defined.
-                  cursor: turrellPageInfo1.startCursor,
-                  // Artist objects are normalized by HREF:
-                  node: { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                })),
-                pageInfo: turrellPageInfo1,
-                totalCount: 13531,
-              });
-
-              // Evict the Basquiat entity to verify that the dangling
-              // edge.node Reference gets automatically elided from the
-              // Basquiat search results, thanks to the read function
-              // generated by the relayStylePagination helper.
-              expect(
-                cache.evict({
-                  id: cache.identify({
-                    __typename: "Artist",
-                    href: "/artist/jean-michel-basquiat",
-                  }),
-                })
-              ).toBe(true);
-            }, reject);
-        } else if (count === 6) {
-          // Same full list of edges that we saw in the previous case.
-          const edges = [...firstEdges, ...secondEdges, ...fifthEdges];
-
-          // Remove the Basquiat edge, which we know to be first.
-          expect(edges.shift()).toEqual({
-            __typename: "SearchableEdge",
-            node: {
-              __typename: "Artist",
-              href: "/artist/jean-michel-basquiat",
-              displayLabel: "Jean-Michel Basquiat",
-              bio: "American, 1960-1988, New York, New York, based in New York, New York",
+              totalCount: 1292,
             },
-          });
+          },
+        });
 
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              search: {
-                edges,
-                pageInfo: {
-                  __typename: "PageInfo",
-                  startCursor: fourthPageInfo.startCursor,
-                  endCursor: fifthPageInfo.endCursor,
-                  hasPreviousPage: false,
-                  hasNextPage: true,
-                },
-                totalCount: 1292,
-              },
+        expect(cache.extract()).toMatchSnapshot();
+      }
+
+      {
+        // Now search for James Turrell again with args.first === 2
+        // (turrellVariables2), but without args.after, so that the
+        // new results overwrite the existing results (#6592).
+        const result = await client.query({
+          query,
+          variables: turrellVariables2,
+          // Necessary to skip the cache, like fetchMore does.
+          fetchPolicy: "network-only",
+        });
+        const snapshot = cache.extract();
+
+        expect(result).toEqual({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: {
+            search: {
+              edges: turrellEdges,
+              pageInfo: turrellPageInfo2,
+              totalCount: 13531,
             },
-          });
+          },
+        });
 
-          expect(cache.extract()).toMatchSnapshot();
+        expect(snapshot).toMatchSnapshot();
+        expect(
+          // Note that Turrell's name has been lower-cased.
+          snapshot.ROOT_QUERY!["search:james turrell"]
+        ).toEqual({
+          edges: turrellEdges.map((edge, i) => ({
+            ...edge,
+            // This time the cursors are different depending on which
+            // of the two edges we're considering.
+            cursor: [turrellPageInfo2.startCursor, turrellPageInfo2.endCursor][
+              i
+            ],
+            node: [
+              // Artist objects are normalized by HREF:
+              { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
+              // However, SearchableItem objects are not normalized.
+              edge.node,
+            ][i],
+          })),
+          pageInfo: turrellPageInfo2,
+          totalCount: 13531,
+        });
+      }
 
-          // Now search for James Turrell again with args.first === 2
-          // (turrellVariables2), but without args.after, so that the
-          // new results overwrite the existing results (#6592).
-          client
-            .query({
-              query,
-              variables: turrellVariables2,
-              // Necessary to skip the cache, like fetchMore does.
-              fetchPolicy: "network-only",
-            })
-            .then((result) => {
-              expect(result).toEqual({
-                loading: false,
-                networkStatus: NetworkStatus.ready,
-                data: {
-                  search: {
-                    edges: turrellEdges,
-                    pageInfo: turrellPageInfo2,
-                    totalCount: 13531,
-                  },
-                },
-              });
-
-              const snapshot = cache.extract();
-              expect(snapshot).toMatchSnapshot();
-              expect(
-                // Note that Turrell's name has been lower-cased.
-                snapshot.ROOT_QUERY!["search:james turrell"]
-              ).toEqual({
-                edges: turrellEdges.map((edge, i) => ({
-                  ...edge,
-                  // This time the cursors are different depending on which
-                  // of the two edges we're considering.
-                  cursor: [
-                    turrellPageInfo2.startCursor,
-                    turrellPageInfo2.endCursor,
-                  ][i],
-                  node: [
-                    // Artist objects are normalized by HREF:
-                    { __ref: 'Artist:{"href":"/artist/james-turrell"}' },
-                    // However, SearchableItem objects are not normalized.
-                    edge.node,
-                  ][i],
-                })),
-                pageInfo: turrellPageInfo2,
-                totalCount: 13531,
-              });
-
-              // Wait a bit to make sure there are no additional results for
-              // Basquiat.
-              setTimeout(resolve, 100);
-            });
-        } else {
-          reject("should not receive another result for Basquiat");
-        }
-      });
+      await expect(stream).not.toEmitValue();
     });
 
     it("runs nested merge functions as well as ancestors", function () {

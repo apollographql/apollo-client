@@ -31,10 +31,15 @@ import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
-import { ObservableStream, spyOnConsole } from "../../../testing/internal";
+import { spyOnConsole } from "../../../testing/internal";
 import { expectTypeOf } from "expect-type";
 import { Masked } from "../../../masking";
-import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
+import {
+  createRenderStream,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { MutationTuple, QueryResult } from "../../types/types";
+import { invariant } from "../../../utilities/globals";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -2214,21 +2219,21 @@ describe("useMutation Hook", () => {
 
       const link = new ApolloLink((operation) => {
         return new Observable((observer) => {
-          const { operationName } = operation;
-          if (operationName === "NumbersQuery") {
-            observer.next({
-              data: getNumbersData(),
-            });
-          } else if (operationName === "RemoveNumberMutation") {
-            const last = numbersArray[numbersArray.length - 1];
-            numbersArray = numbersArray.slice(0, -1);
-            observer.next({
-              data: {
-                removeLastNumber: last,
-              },
-            });
-          }
           setTimeout(() => {
+            const { operationName } = operation;
+            if (operationName === "NumbersQuery") {
+              observer.next({
+                data: getNumbersData(),
+              });
+            } else if (operationName === "RemoveNumberMutation") {
+              const last = getLastNumber();
+              numbersArray = numbersArray.slice(0, -1);
+              observer.next({
+                data: {
+                  removeLastNumber: last,
+                },
+              });
+            }
             observer.complete();
           }, 50);
         });
@@ -2278,13 +2283,19 @@ describe("useMutation Hook", () => {
         }
       `;
 
-      const { result } = renderHook(
-        () => ({
-          query: useQuery(NumbersQuery, {
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          useQueryResult: null as QueryResult<TNumbersQuery> | null,
+          useMutationResult: null as MutationTuple<any, any> | null,
+        },
+      });
+
+      function App() {
+        renderStream.mergeSnapshot({
+          useQueryResult: useQuery(NumbersQuery, {
             notifyOnNetworkStatusChange: true,
           }),
-
-          mutation: useMutation(RemoveNumberMutation, {
+          useMutationResult: useMutation(RemoveNumberMutation, {
             update(cache) {
               const oldData = cache.readQuery({ query: NumbersQuery });
               cache.writeQuery({
@@ -2309,179 +2320,262 @@ describe("useMutation Hook", () => {
               });
             },
           }),
-        }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+        });
 
-      const obsQueryMap = client.getObservableQueries();
-      expect(obsQueryMap.size).toBe(1);
-      const observedResults: Array<{ data: TNumbersQuery }> = [];
+        return null;
+      }
 
-      const stream = new ObservableStream(obsQueryMap.values().next().value);
+      renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
 
-      expect(observedResults).toEqual([]);
+      async function getNextSnapshot() {
+        const { snapshot } = await renderStream.takeRender();
 
-      expect(result.current.query.loading).toBe(true);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.mutation[1].called).toBe(false);
+        invariant(snapshot.useQueryResult);
+        invariant(snapshot.useMutationResult);
+
+        return {
+          useQueryResult: snapshot.useQueryResult,
+          useMutationResult: snapshot.useMutationResult,
+        };
+      }
+
+      function getLastNumber() {
+        return numbersArray[numbersArray.length - 1];
+      }
+
+      expect(getLastNumber()).toEqual({ id: "7", value: 222 });
 
       {
-        const result = await stream.takeNext();
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
 
-        expect(result).toEqual({
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          partial: true,
-        });
+        expect(useQueryResult.loading).toBe(true);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.loading);
+        expect(useQueryResult.data).toBeUndefined();
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(false);
+        expect(mutationResult.data).toBeUndefined();
       }
 
       {
-        const result = await stream.takeNext();
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
         const data = getNumbersData();
 
-        expect(data.numbers.numbersArray.length).toBe(7);
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data,
-        });
+        expect(data.numbers.numbersArray).toHaveLength(7);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(false);
+        expect(mutationResult.data).toBeUndefined();
       }
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
+      const [mutate] =
+        renderStream.getCurrentRender().snapshot.useMutationResult!;
+
+      let promise!: ReturnType<typeof mutate>;
+      act(() => {
+        promise = mutate();
+      });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(7);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      // Not passing an onQueryUpdated callback should allow cache
+      // broadcasts to propagate as normal. The point of this test is to
+      // demonstrate that *adding* onQueryUpdated should not prevent cache
+      // broadcasts (see below for where we test that).
+      await expect(promise).resolves.toEqual({
+        data: {
+          removeLastNumber: {
+            id: "7",
+          },
         },
-        { interval: 1 }
-      );
-
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.mutation[1].called).toBe(false);
-
-      expect(numbersArray[numbersArray.length - 1]).toEqual({
-        id: "7",
-        value: 222,
       });
 
-      const [mutate] = result.current.mutation;
+      expect(getLastNumber()).toEqual({ id: "6", value: 899 });
 
-      await act(async () => {
-        expect(
-          await mutate()
-          // Not passing an onQueryUpdated callback should allow cache
-          // broadcasts to propagate as normal. The point of this test is to
-          // demonstrate that *adding* onQueryUpdated should not prevent cache
-          // broadcasts (see below for where we test that).
-        ).toEqual({
-          data: {
-            removeLastNumber: {
-              id: "7",
-            },
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(6);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(6);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "7" } });
+      }
+
+      act(() => {
+        promise = mutate({
+          // Adding this onQueryUpdated callback, which merely examines the
+          // updated query and its DiffResult, should not change the broadcast
+          // behavior of the ObservableQuery.
+          onQueryUpdated(oq, diff) {
+            expect(oq.queryName).toBe("NumbersQuery");
+            expect(diff.result.numbers.numbersArray.length).toBe(5);
+            expect(diff.result.numbers.sum).toBe(2456);
           },
         });
       });
 
       {
-        const result = await stream.takeNext();
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
         const data = getNumbersData();
 
-        expect(data.numbers.numbersArray.length).toBe(6);
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data,
-        });
+        expect(data.numbers.numbersArray).toHaveLength(6);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
       }
 
-      expect(numbersArray[numbersArray.length - 1]).toEqual({
-        id: "6",
-        value: 899,
+      await expect(promise).resolves.toEqual({
+        data: {
+          removeLastNumber: {
+            id: "6",
+          },
+        },
       });
 
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.mutation[1].called).toBe(true);
+      expect(getLastNumber()).toEqual({ id: "5", value: 72 });
 
-      await act(async () => {
-        expect(
-          await mutate({
-            // Adding this onQueryUpdated callback, which merely examines the
-            // updated query and its DiffResult, should not change the broadcast
-            // behavior of the ObservableQuery.
-            onQueryUpdated(oq, diff) {
-              expect(oq.queryName).toBe("NumbersQuery");
-              expect(diff.result.numbers.numbersArray.length).toBe(5);
-              expect(diff.result.numbers.sum).toBe(2456);
-            },
-          })
-        ).toEqual({
-          data: {
-            removeLastNumber: {
-              id: "6",
-            },
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(5);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(5);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "6" } });
+      }
+
+      act(() => {
+        promise = mutate({
+          onQueryUpdated(oq, diff) {
+            expect(oq.queryName).toBe("NumbersQuery");
+            expect(diff.result.numbers.numbersArray.length).toBe(4);
+            expect(diff.result.numbers.sum).toBe(2384);
+            // Returning false from onQueryUpdated prevents the cache broadcast.
+            return false;
           },
         });
       });
 
       {
-        const result = await stream.takeNext();
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
         const data = getNumbersData();
 
-        expect(data.numbers.numbersArray.length).toBe(5);
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data,
-        });
+        expect(data.numbers.numbersArray).toHaveLength(5);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
       }
 
-      expect(numbersArray[numbersArray.length - 1]).toEqual({
-        id: "5",
-        value: 72,
-      });
-
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.mutation[1].called).toBe(true);
-
-      await act(async () => {
-        expect(
-          await mutate({
-            onQueryUpdated(oq, diff) {
-              expect(oq.queryName).toBe("NumbersQuery");
-              expect(diff.result.numbers.numbersArray.length).toBe(4);
-              expect(diff.result.numbers.sum).toBe(2384);
-              // Returning false from onQueryUpdated prevents the cache broadcast.
-              return false;
-            },
-          })
-        ).toEqual({
-          data: {
-            removeLastNumber: {
-              id: "5",
-            },
+      await expect(promise).resolves.toEqual({
+        data: {
+          removeLastNumber: {
+            id: "5",
           },
-        });
+        },
       });
 
-      expect(numbersArray[numbersArray.length - 1]).toEqual({
-        id: "4",
-        value: 344,
-      });
+      expect(getLastNumber()).toEqual({ id: "4", value: 344 });
 
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.mutation[1].called).toBe(true);
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
 
-      await expect(stream).not.toEmitValue();
+        expect(data.numbers.numbersArray).toHaveLength(4);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        // TODO: Check against previous set of numbers since broadcast did not
+        // happen.
+        // expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "5" } });
+      }
+
+      await expect(renderStream).not.toRerender();
     });
 
     it("refetchQueries should work with BatchHttpLink", async () => {

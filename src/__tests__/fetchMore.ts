@@ -5,7 +5,6 @@ import {
   ApolloClient,
   ApolloLink,
   NetworkStatus,
-  ObservableQuery,
   TypedDocumentNode,
 } from "../core";
 

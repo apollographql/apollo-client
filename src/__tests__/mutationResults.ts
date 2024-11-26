@@ -150,11 +150,7 @@ describe("mutation results", () => {
     };
   }
 
-  function setupDelayObsQuery(
-    reject: (reason: any) => any,
-    delay: number,
-    ...mockedResponses: any[]
-  ) {
+  function setupDelayObsQuery(delay: number, ...mockedResponses: any[]) {
     const client = new ApolloClient({
       link: mockSingleLink(
         {
@@ -163,7 +159,9 @@ describe("mutation results", () => {
           delay,
         },
         ...mockedResponses
-      ).setOnError(reject),
+      ).setOnError((error) => {
+        throw error;
+      }),
       cache: new InMemoryCache({
         dataIdFromObject: (obj: any) => {
           if (obj.id && obj.__typename) {
@@ -966,7 +964,7 @@ describe("mutation results", () => {
     itAsync(
       "does not fail if the query did not finish loading",
       (resolve, reject) => {
-        const { client, obsQuery } = setupDelayObsQuery(reject, 15, {
+        const { client, obsQuery } = setupDelayObsQuery(15, {
           request: { query: mutation },
           result: mutationResult,
         });

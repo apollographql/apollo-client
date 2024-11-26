@@ -29,20 +29,20 @@ export type UnwrapFragmentRefs<TData> =
   : never;
 
 /**
- ```ts
-  CombineIntersection<
-    | { foo: string }
+```ts
+CombineIntersection<
+  | { foo: string }
+  | { __typename: "A"; a: string }
+  | { __typename: "B"; b1: number }
+  | { __typename: "B"; b2: string }
+> =>
+  | { foo: string }
+  | CombineByTypeName<
     | { __typename: "A"; a: string }
     | { __typename: "B"; b1: number }
     | { __typename: "B"; b2: string }
-  > =>
-    | { foo: string }
-    | CombineByTypeName<
-      | { __typename: "A"; a: string }
-      | { __typename: "B"; b1: number }
-      | { __typename: "B"; b2: string }
-    >
- ```
+  >
+```
  */
 type CombineIntersection<T> =
   | Exclude<T, { __typename?: string }>

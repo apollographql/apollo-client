@@ -706,6 +706,10 @@ const client = new ApolloClient({
 
 When `dataMasking` is enabled, fields defined in fragments are hidden from our component. This prevents us from accessing data that the component didn't ask for.
 
+<Tip>
+We recommend enabling the `dataMasking` flag immediately when creating new applications. See the section on [migrating an existing application](#migrating-an-existing-application) to learn how to enable data masking in existing applications.
+</Tip>
+
 Let's revisit our example from the previous section.
 
 ```jsx title="Posts.jsx"

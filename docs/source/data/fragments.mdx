@@ -170,7 +170,7 @@ const client = new ApolloClient({
 });
 ```
 
-The local version of the `ExtraFields` fragment declared in `ItemList.jsx` takes precedence over the `ExtraFields` originally registered with the `InMemoryCache`. Thus, its definition will be used when the `ExtraFields` fragment spread is parsed inside of the registered `ItemFragment` _only when `GetItemList` query is executed_, because explicit definitions take precedence over registered fragments.
+The local version of the `ExtraFields` fragment declared in `ItemList.jsx` takes precedence over the `ExtraFields` fragment originally registered with the `InMemoryCache` instance. Thus, the local definition will _only be used when `GetItemList` query is executed_, because explicit definitions take precedence over registered fragments.
 
 ```jsx title="ItemList.jsx" {8-10,17}
 const GET_ITEM_LIST = gql`

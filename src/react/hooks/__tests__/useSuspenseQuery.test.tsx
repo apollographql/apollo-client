@@ -172,6 +172,7 @@ function useSimpleQueryCase() {
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
+      delay: 20,
     },
   ];
 
@@ -1700,6 +1701,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1712,6 +1714,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1724,6 +1727,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
     ];
 
@@ -1815,6 +1819,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1827,6 +1832,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1839,6 +1845,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
     ];
 
@@ -1919,6 +1926,7 @@ describe("useSuspenseQuery", () => {
             character: { __typename: "Character", id: "1", name: "Spider-Man" },
           },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "2" } },
@@ -1931,6 +1939,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -1943,6 +1952,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
     ];
 
@@ -2169,6 +2179,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query: fullQuery },
         result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+        delay: 20,
       },
     ];
 
@@ -2225,6 +2236,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query: fullQuery },
         result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+        delay: 20,
       },
     ];
 
@@ -2406,6 +2418,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query: fullQuery },
         result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+        delay: 20,
       },
     ];
 
@@ -2558,6 +2571,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query: fullQuery },
         result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+        delay: 20,
       },
     ];
 
@@ -2685,6 +2699,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query: fullQuery },
         result: { data: { character: { id: "1", name: "Doctor Strange" } } },
+        delay: 20,
       },
     ];
 
@@ -3028,10 +3043,12 @@ describe("useSuspenseQuery", () => {
         {
           request: { query: query1 },
           result: { data: { hello: "query1" } },
+          delay: 20,
         },
         {
           request: { query: query2 },
           result: { data: { world: "query2" } },
+          delay: 20,
         },
       ];
 
@@ -3637,12 +3654,14 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 20,
       },
     ];
 
@@ -4158,12 +4177,14 @@ describe("useSuspenseQuery", () => {
         result: {
           errors: graphQLErrors,
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "2" } },
         result: {
           data: { user: { id: "2", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
     ];
 
@@ -4227,12 +4248,14 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           data: { user: { id: "1", name: "Captain Marvel (updated)" } },
         },
+        delay: 20,
       },
     ];
 
@@ -4390,12 +4413,14 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "2" } },
         result: {
           data: { user: { id: "2", name: "Captain America" } },
         },
+        delay: 20,
       },
     ];
 
@@ -4455,18 +4480,21 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           data: { user: { id: "1", name: "Captain Marvel (updated)" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           data: { user: { id: "1", name: "Captain Marvel (updated again)" } },
         },
+        delay: 20,
       },
     ];
 
@@ -4545,12 +4573,14 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 20,
       },
     ];
 
@@ -4605,12 +4635,14 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 20,
       },
     ];
 
@@ -4667,12 +4699,14 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 20,
       },
     ];
 
@@ -4741,6 +4775,7 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
@@ -4748,6 +4783,7 @@ describe("useSuspenseQuery", () => {
           data: { user: { id: "1", name: null } },
           errors: [new GraphQLError("Something went wrong")],
         },
+        delay: 20,
       },
     ];
 
@@ -5065,6 +5101,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query, variables: { min: 0, max: 12 } },
         result: { data: { primes: [2, 3, 5, 7, 11] } },
+        delay: 20,
       },
       {
         request: { query, variables: { min: 12, max: 30 } },
@@ -5141,6 +5178,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query, variables: { min: 0, max: 12 } },
         result: { data: { primes: [2, 3, 5, 7, 11] } },
+        delay: 20,
       },
       {
         request: { query, variables: { min: 12, max: 30 } },
@@ -5220,6 +5258,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query, variables: { min: 0, max: 12 } },
         result: { data: { primes: [2, 3, 5, 7, 11] } },
+        delay: 20,
       },
       {
         request: { query, variables: { min: 12, max: 30 } },
@@ -6044,6 +6083,7 @@ describe("useSuspenseQuery", () => {
         result: {
           errors: [new GraphQLError("oops")],
         },
+        delay: 20,
       },
     ];
 
@@ -6255,6 +6295,7 @@ describe("useSuspenseQuery", () => {
       {
         request: { query, variables: { min: 0, max: 12 } },
         result: { data: { primes: [2, 3, 5, 7, 11] } },
+        delay: 20,
       },
       {
         request: { query, variables: { min: 12, max: 30 } },
@@ -6392,6 +6433,7 @@ describe("useSuspenseQuery", () => {
             },
           },
         },
+        delay: 20,
       },
       {
         request: { query: fullQuery },
@@ -6741,18 +6783,21 @@ describe("useSuspenseQuery", () => {
         result: {
           data: { user: { id: "1", name: "Captain Marvel" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           data: { user: { id: "1", name: "Captain Marvel (updated)" } },
         },
+        delay: 20,
       },
       {
         request: { query, variables: { id: "1" } },
         result: {
           data: { user: { id: "1", name: "Captain Marvel (updated again)" } },
         },
+        delay: 20,
       },
     ];
 

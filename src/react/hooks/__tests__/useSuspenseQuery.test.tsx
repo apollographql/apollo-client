@@ -288,6 +288,7 @@ function useVariablesQueryCase() {
         character: { __typename: "Character", id: String(index + 1), name },
       },
     },
+    delay: 20,
   }));
 
   return { query, mocks };
@@ -439,7 +440,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(IS_REACT_19 ? 3 : 2);
+    expect(renders.count).toBe(2);
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,

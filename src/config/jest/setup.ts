@@ -38,4 +38,4 @@ if (!Symbol.asyncDispose) {
 expect.addEqualityTesters([areApolloErrorsEqual, areGraphQLErrorsEqual]);
 
 // @ts-ignore
-globalThis.REACT_FALLBACK_THROTTLE_MS = 10;
+globalThis.REACT_FALLBACK_THROTTLE_MS = 30;

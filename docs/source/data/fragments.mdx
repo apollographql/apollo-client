@@ -16,7 +16,7 @@ fragment NameParts on Person {
 
 Every fragment includes a subset of the fields that belong to its associated type. In the above example, the `Person` type must declare `firstName` and `lastName` fields for the `NameParts` fragment to be valid.
 
-We can now include the `NameParts` fragment in any number of queries and mutations that refer to `Person` objects, like so:
+You can include the `NameParts` fragment in any number of operations that refer to `Person` objects by using the spread operator (`...`), followed by the fragment name:
 
 ```graphql
 query GetPerson {
@@ -26,8 +26,6 @@ query GetPerson {
   }
 }
 ```
-
->You precede an included fragment with three periods (`...`), much like JavaScript [spread syntax](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax).
 
 Based on our `NameParts` definition, the above query is equivalent to:
 

@@ -919,7 +919,7 @@ If we inspect the `data` property returned by `useFragment` in `PostDetails`, we
 Throughout this example, You'll notice that we never touched the `GetPosts` query as a result of this change. Because we included `CommentFragment` with `PostDetailsFragment`, it was added to our query automatically. Colocating fragments like this is a powerful pattern that, when combined with data masking, provide very self-isolated components.
 
 <Tip>
-We recommend that parent components only add fragments defined by their directly-rendered children to prevent coupling with more deeply nested components. In this example, the `GetPosts` query did not include the `CommentFragment` fragment directly but rather it relied on the `PostDetails` component to include it in the `PostDetailsFragment` fragment.
+We recommend that parent components only add fragments defined by their directly-rendered children to prevent coupling with more deeply nested components. In this example, the `GetPosts` query did not include the `CommentFragment` fragment directly but rather it relied on the `PostDetails` component to include it with the `PostDetailsFragment` fragment.
 </Tip>
 
 ### Working with other operation types

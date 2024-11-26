@@ -9,7 +9,7 @@ import {
   Observable,
   ObservableSubscription as Subscription,
 } from "../utilities";
-import { itAsync, mockSingleLink } from "../testing";
+import { itAsync, MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 
 describe("mutation results", () => {
@@ -120,10 +120,7 @@ describe("mutation results", () => {
     },
   };
 
-  function setupObsQuery(
-    reject: (reason: any) => any,
-    ...mockedResponses: any[]
-  ) {
+  function setupObsQuery(...mockedResponses: MockedResponse[]) {
     const client = new ApolloClient({
       link: mockSingleLink(
         {
@@ -189,7 +186,7 @@ describe("mutation results", () => {
   }
 
   itAsync("correctly primes cache for tests", (resolve, reject) => {
-    const { client, obsQuery } = setupObsQuery(reject);
+    const { client, obsQuery } = setupObsQuery();
     return obsQuery
       .result()
       .then(() => client.query({ query }))
@@ -221,7 +218,7 @@ describe("mutation results", () => {
         },
       };
 
-      const { client, obsQuery } = setupObsQuery(reject, {
+      const { client, obsQuery } = setupObsQuery({
         request: { query: mutation },
         result: mutationResult,
       });
@@ -478,7 +475,6 @@ describe("mutation results", () => {
       };
 
       const { client, obsQuery } = setupObsQuery(
-        reject,
         {
           request: { query: queryTodos },
           result: queryTodosResult,
@@ -803,7 +799,7 @@ describe("mutation results", () => {
 
     itAsync("analogous of ARRAY_INSERT", (resolve, reject) => {
       let subscriptionHandle: Subscription;
-      const { client, obsQuery } = setupObsQuery(reject, {
+      const { client, obsQuery } = setupObsQuery({
         request: { query: mutation },
         result: mutationResult,
       });
@@ -874,7 +870,7 @@ describe("mutation results", () => {
           requiredVar: "x",
           // optionalVar: 'y',
         };
-        const { client, obsQuery } = setupObsQuery(reject, {
+        const { client, obsQuery } = setupObsQuery({
           request: {
             query: mutationWithVars,
             variables,
@@ -937,7 +933,7 @@ describe("mutation results", () => {
     itAsync(
       "does not fail if the query did not complete correctly",
       (resolve, reject) => {
-        const { client, obsQuery } = setupObsQuery(reject, {
+        const { client, obsQuery } = setupObsQuery({
           request: { query: mutation },
           result: mutationResult,
         });
@@ -1002,9 +998,6 @@ describe("mutation results", () => {
       "does not make next queries fail if a mutation fails",
       (resolve, reject) => {
         const { client, obsQuery } = setupObsQuery(
-          (error) => {
-            throw error;
-          },
           {
             request: { query: mutation },
             result: { errors: [new Error("mock error")] },
@@ -1060,7 +1053,7 @@ describe("mutation results", () => {
 
     itAsync("error handling in reducer functions", (resolve, reject) => {
       let subscriptionHandle: Subscription;
-      const { client, obsQuery } = setupObsQuery(reject, {
+      const { client, obsQuery } = setupObsQuery({
         request: { query: mutation },
         result: mutationResult,
       });
@@ -1463,7 +1456,7 @@ describe("mutation results", () => {
 
     itAsync("analogous of ARRAY_INSERT", (resolve, reject) => {
       let subscriptionHandle: Subscription;
-      const { client, obsQuery } = setupObsQuery(reject, {
+      const { client, obsQuery } = setupObsQuery({
         request: { query: mutation },
         result: mutationResult,
       });
@@ -1554,7 +1547,7 @@ describe("mutation results", () => {
           // optionalVar: 'y',
         };
 
-        const { client, obsQuery } = setupObsQuery(reject, {
+        const { client, obsQuery } = setupObsQuery({
           request: {
             query: mutationWithVars,
             variables,
@@ -1635,9 +1628,6 @@ describe("mutation results", () => {
       "does not make next queries fail if a mutation fails",
       (resolve, reject) => {
         const { client, obsQuery } = setupObsQuery(
-          (error) => {
-            throw error;
-          },
           {
             request: { query: mutation },
             result: { errors: [new Error("mock error")] },
@@ -1731,7 +1721,7 @@ describe("mutation results", () => {
 
     itAsync("error handling in reducer functions", (resolve, reject) => {
       let subscriptionHandle: Subscription;
-      const { client, obsQuery } = setupObsQuery(reject, {
+      const { client, obsQuery } = setupObsQuery({
         request: { query: mutation },
         result: mutationResult,
       });

@@ -441,7 +441,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,
@@ -471,7 +471,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "1" });
 
     expect(result.current).toBe(previousResult);
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -1133,7 +1133,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1195,7 +1195,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1370,7 +1370,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1427,7 +1427,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1484,7 +1484,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1541,7 +1541,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1603,7 +1603,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,
@@ -1661,7 +1661,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1774,7 +1774,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6);
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -1886,7 +1886,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6);
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toMatchObject([
       {
@@ -1993,7 +1993,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6);
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toMatchObject([
       {
@@ -2070,7 +2070,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.suspenseCount).toBe(2);
-    expect(renders.count).toBe(6);
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,
@@ -2116,7 +2116,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(1);
+    expect(renders.count).toBe(1 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
       {
@@ -2203,7 +2203,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2271,7 +2271,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
       {
@@ -2341,7 +2341,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2385,7 +2385,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2448,7 +2448,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2484,7 +2484,7 @@ describe("useSuspenseQuery", () => {
 
     const cachedData = cache.readQuery({ query });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2514,7 +2514,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2531,7 +2531,7 @@ describe("useSuspenseQuery", () => {
       networkStatus: NetworkStatus.ready,
       error: undefined,
     });
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2601,7 +2601,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2661,7 +2661,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
       {
@@ -2734,7 +2734,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
       {
@@ -2804,7 +2804,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -2907,7 +2907,7 @@ describe("useSuspenseQuery", () => {
         });
       });
       expect(renders.suspenseCount).toBe(1);
-      expect(renders.count).toBe(3);
+      expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.frames).toMatchObject([
         {
           ...mocks[0].result,
@@ -2954,7 +2954,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       {
         ...mocks[0].result,
@@ -3002,7 +3002,7 @@ describe("useSuspenseQuery", () => {
       // 2. Unsuspend and return results from initial fetch
       // 3. Change variables and suspend
       // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(4);
+      expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
         {
@@ -3081,7 +3081,7 @@ describe("useSuspenseQuery", () => {
       // 2. Unsuspend and return results from initial fetch
       // 3. Change queries and suspend
       // 5. Unsuspend and return results from refetch
-      expect(renders.count).toBe(4);
+      expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
         {
@@ -3300,7 +3300,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current.data).toEqual(mocks[0].result.data);
     });
 
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -3817,7 +3817,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
@@ -3924,7 +3924,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
@@ -3985,7 +3985,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -4048,7 +4048,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       {
         data: undefined,
@@ -4087,7 +4087,7 @@ describe("useSuspenseQuery", () => {
 
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -4214,7 +4214,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.errorCount).toBe(0);
     expect(renders.errors).toEqual([]);
     expect(renders.suspenseCount).toBe(2);
@@ -4284,7 +4284,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -4448,7 +4448,7 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       });
     });
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -4534,7 +4534,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(6);
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(3);
     expect(renders.frames).toMatchObject([
       {
@@ -4863,7 +4863,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -4974,7 +4974,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -5382,7 +5382,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
@@ -5421,7 +5421,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
@@ -5463,7 +5463,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -5509,7 +5509,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -6278,7 +6278,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ canonizeResults: true });
 
     verifyCanonicalResults(result.current.data, true);
-    expect(renders.count).toBe(2);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
   });
 
   it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {
@@ -6496,7 +6496,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -6913,7 +6913,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -7013,7 +7013,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+      expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(1);
       expect(renders.frames).toMatchObject([
         {
@@ -7200,7 +7200,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
       {
@@ -7334,7 +7334,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(0);
     expect(renders.frames).toMatchObject([
       {
@@ -7492,7 +7492,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -7840,7 +7840,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(6 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -7985,7 +7985,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
@@ -8223,7 +8223,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(5 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -8506,7 +8506,7 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       });
 
-      expect(renders.count).toBe(5);
+      expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
       expect(renders.suspenseCount).toBe(2);
       expect(renders.frames).toMatchObject([
         {
@@ -8980,7 +8980,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -9149,7 +9149,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -9416,7 +9416,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(7);
+    expect(renders.count).toBe(7 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -9579,7 +9579,7 @@ describe("useSuspenseQuery", () => {
       }
     );
 
-    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.frames).toMatchObject([
       { data: { greeting: "Hello" }, networkStatus: NetworkStatus.ready },
       {

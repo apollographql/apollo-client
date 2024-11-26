@@ -22,7 +22,12 @@ import {
   FieldMergeFunction,
 } from "../cache";
 
-import { itAsync, mockSingleLink, subscribeAndCount } from "../testing";
+import {
+  itAsync,
+  MockedResponse,
+  mockSingleLink,
+  subscribeAndCount,
+} from "../testing";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`
@@ -233,7 +238,7 @@ describe("fetchMore on an observable query", () => {
     });
   }
 
-  function setup(reject: (reason: any) => any, ...mockedResponses: any[]) {
+  function setup(...mockedResponses: MockedResponse[]) {
     const link = mockSingleLink(
       {
         request: {
@@ -243,7 +248,7 @@ describe("fetchMore on an observable query", () => {
         result,
       },
       ...mockedResponses
-    ).setOnError(reject);
+    );
 
     const client = new ApolloClient({
       link,
@@ -293,7 +298,7 @@ describe("fetchMore on an observable query", () => {
 
   describe("triggers new result with async new variables", () => {
     itAsync("updateQuery", (resolve, reject) => {
-      const observable = setup(reject, {
+      const observable = setup({
         request: {
           query,
           variables: variablesMore,
@@ -392,7 +397,7 @@ describe("fetchMore on an observable query", () => {
 
   describe("basic fetchMore results merging", () => {
     itAsync("updateQuery", (resolve, reject) => {
-      const observable = setup(reject, {
+      const observable = setup({
         request: {
           query,
           variables: variablesMore,
@@ -1211,7 +1216,7 @@ describe("fetchMore on an observable query", () => {
   );
 
   itAsync("fetching more with a different query", (resolve, reject) => {
-    const observable = setup(reject, {
+    const observable = setup({
       request: {
         query: query2,
         variables: variables2,
@@ -1392,7 +1397,7 @@ describe("fetchMore on an observable query", () => {
   });
 
   itAsync("will not leak fetchMore query", (resolve, reject) => {
-    const observable = setup(reject, {
+    const observable = setup({
       request: {
         query,
         variables: variablesMore,

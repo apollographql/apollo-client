@@ -44,6 +44,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  toEmitError: T extends ObservableStream<any> ?
+    (error?: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
   toEmitNextValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };

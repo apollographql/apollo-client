@@ -5382,7 +5382,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
@@ -5424,7 +5424,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -5470,7 +5470,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -6454,7 +6454,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -6868,7 +6868,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -6968,7 +6968,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      expect(renders.count).toBe(3);
+      expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
       expect(renders.suspenseCount).toBe(1);
       expect(renders.frames).toMatchObject([
         {
@@ -7447,7 +7447,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -7795,7 +7795,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(6);
+    expect(renders.count).toBe(6 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -7940,7 +7940,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(4 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
@@ -8178,7 +8178,7 @@ describe("useSuspenseQuery", () => {
       error: undefined,
     });
 
-    expect(renders.count).toBe(5);
+    expect(renders.count).toBe(5 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(2);
     expect(renders.frames).toMatchObject([
       {
@@ -8935,7 +8935,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -9104,7 +9104,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {
@@ -9534,7 +9534,7 @@ describe("useSuspenseQuery", () => {
       }
     );
 
-    expect(renders.count).toBe(3);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.frames).toMatchObject([
       { data: { greeting: "Hello" }, networkStatus: NetworkStatus.ready },
       {
@@ -9757,6 +9757,11 @@ describe("useSuspenseQuery", () => {
     }
 
     await act(() => user.click(screen.getByText("Refresh")));
+
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      await takeRender();
+    }
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -10190,6 +10195,12 @@ describe("useSuspenseQuery", () => {
       expect(renderedComponents).toStrictEqual([SuspenseFallback]);
     }
 
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([]);
+    }
+
     {
       const { snapshot, renderedComponents } = await renderStream.takeRender();
 
@@ -10376,6 +10387,12 @@ describe("useSuspenseQuery", () => {
       expect(renderedComponents).toStrictEqual([SuspenseFallback]);
     }
 
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([]);
+    }
+
     {
       const { snapshot } = await renderStream.takeRender();
 
@@ -10553,6 +10570,12 @@ describe("useSuspenseQuery", () => {
     // initial suspended render
     await renderStream.takeRender();
 
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([]);
+    }
+
     {
       const { snapshot, renderedComponents } = await renderStream.takeRender();
 
@@ -10567,6 +10590,12 @@ describe("useSuspenseQuery", () => {
 
     await act(() => user.click(screen.getByText("Fetch next")));
     await renderStream.takeRender();
+
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([]);
+    }
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -10583,6 +10612,12 @@ describe("useSuspenseQuery", () => {
 
     await act(() => user.click(screen.getByText("Fetch next")));
     await renderStream.takeRender();
+
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([]);
+    }
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -10680,6 +10715,12 @@ describe("useSuspenseQuery", () => {
       const { renderedComponents } = await renderStream.takeRender();
 
       expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      const { renderedComponents } = await renderStream.takeRender();
+      expect(renderedComponents).toStrictEqual([]);
     }
 
     {

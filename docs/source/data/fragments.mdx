@@ -662,7 +662,9 @@ export default function PostDetails({ post }) {
 }
 ````
 
-The `Posts` component is responsible for fetching and rendering a list of posts. We loop over each post and render a `PostDetails` component to display details about the post. `PostDetails` uses a colocated fragment to define it's own data requirements necessary to render post details, which is included in the `GetPosts` query. When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from our list of all posts by checking the `publishedAt` property on the post object.
+The `Posts` component is responsible for fetching and rendering a list of posts. We loop over each post and render a `PostDetails` component to display details about the post. `PostDetails` uses a colocated fragment to define its own data requirements necessary to render post details, which is included in the `GetPosts` query. 
+
+When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from our list of all posts by checking the `publishedAt` property on the post object.
 
 This may work great for a while, but consider what happens when we start modifying our `PostDetails` component.
 

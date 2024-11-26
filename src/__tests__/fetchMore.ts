@@ -1077,11 +1077,6 @@ describe("fetchMore on an observable query", () => {
 
       await expect(stream).not.toEmitValue();
     });
-
-    // itAsync("no-cache", (resolve, reject) => {
-    //   const client = makeClient();
-    //   resolve();
-    // });
   });
 
   it("fetchMore passes new args to field merge function", async () => {

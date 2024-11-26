@@ -45,41 +45,37 @@ describe("updateQuery on a simple query", () => {
     },
   };
 
-  itAsync("triggers new result from updateQuery", (resolve, reject) => {
-    let latestResult: any = null;
+  it("triggers new result from updateQuery", async () => {
     const link = mockSingleLink({
       request: { query },
       result,
-    }).setOnError(reject);
+    });
 
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
 
-    const obsHandle = client.watchQuery({
-      query,
-    });
-    const sub = obsHandle.subscribe({
-      next(queryResult: any) {
-        // do nothing
-        latestResult = queryResult;
-      },
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    {
+      const result = await stream.takeNext();
+
+      expect(result.data.entry.value).toBe(1);
+    }
+
+    observable.updateQuery((prevResult: any) => {
+      const res = cloneDeep(prevResult);
+      res.entry.value = 2;
+      return res;
     });
 
-    return new Promise((resolve) => setTimeout(resolve, 5))
-      .then(() => obsHandle)
-      .then((watchedQuery: ObservableQuery<any>) => {
-        expect(latestResult.data.entry.value).toBe(1);
-        watchedQuery.updateQuery((prevResult: any) => {
-          const res = cloneDeep(prevResult);
-          res.entry.value = 2;
-          return res;
-        });
-      })
-      .then(() => expect(latestResult.data.entry.value).toBe(2))
-      .then(() => sub.unsubscribe())
-      .then(resolve, reject);
+    {
+      const result = await stream.takeNext();
+
+      expect(result.data.entry.value).toBe(2);
+    }
   });
 });
 
@@ -108,45 +104,44 @@ describe("updateQuery on a query with required and optional variables", () => {
     },
   };
 
-  itAsync("triggers new result from updateQuery", (resolve, reject) => {
-    let latestResult: any = null;
+  it("triggers new result from updateQuery", async () => {
     const link = mockSingleLink({
       request: {
         query,
         variables,
       },
       result,
-    }).setOnError(reject);
+    });
 
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
     });
 
-    const obsHandle = client.watchQuery({
+    const observable = client.watchQuery({
       query,
       variables,
     });
-    const sub = obsHandle.subscribe({
-      next(queryResult: any) {
-        // do nothing
-        latestResult = queryResult;
-      },
+
+    const stream = new ObservableStream(observable);
+
+    {
+      const result = await stream.takeNext();
+
+      expect(result.data.entry.value).toBe(1);
+    }
+
+    observable.updateQuery((prevResult: any) => {
+      const res = cloneDeep(prevResult);
+      res.entry.value = 2;
+      return res;
     });
 
-    return new Promise((resolve) => setTimeout(resolve, 5))
-      .then(() => obsHandle)
-      .then((watchedQuery: ObservableQuery<any, any>) => {
-        expect(latestResult.data.entry.value).toBe(1);
-        watchedQuery.updateQuery((prevResult: any) => {
-          const res = cloneDeep(prevResult);
-          res.entry.value = 2;
-          return res;
-        });
-      })
-      .then(() => expect(latestResult.data.entry.value).toBe(2))
-      .then(() => sub.unsubscribe())
-      .then(resolve, reject);
+    {
+      const result = await stream.takeNext();
+
+      expect(result.data.entry.value).toBe(2);
+    }
   });
 });
 
@@ -1307,7 +1302,7 @@ describe("fetchMore on an observable query", () => {
   });
 
   describe("will not get an error from `fetchMore` if thrown", () => {
-    itAsync("updateQuery", (resolve, reject) => {
+    it("updateQuery", async () => {
       const fetchMoreError = new Error("Uh, oh!");
       const link = mockSingleLink(
         {
@@ -1333,38 +1328,26 @@ describe("fetchMore on an observable query", () => {
         notifyOnNetworkStatusChange: true,
       });
 
-      let count = 0;
-      observable.subscribe({
-        next: ({ data, networkStatus }) => {
-          switch (++count) {
-            case 1:
-              expect(networkStatus).toBe(NetworkStatus.ready);
-              expect((data as any).entry.comments.length).toBe(10);
-              observable
-                .fetchMore({
-                  variables: { start: 10 },
-                  updateQuery: (prev) => {
-                    reject(new Error("should not have called updateQuery"));
-                    return prev;
-                  },
-                })
-                .catch((e) => {
-                  expect(e.networkError).toBe(fetchMoreError);
-                  resolve();
-                });
-              break;
-          }
-        },
-        error: () => {
-          reject(new Error("`error` called when it wasn’t supposed to be."));
-        },
-        complete: () => {
-          reject(new Error("`complete` called when it wasn’t supposed to be."));
-        },
-      });
+      const stream = new ObservableStream(observable);
+
+      const { data, networkStatus } = await stream.takeNext();
+
+      expect(networkStatus).toBe(NetworkStatus.ready);
+      expect(data.entry.comments.length).toBe(10);
+
+      const error = await observable
+        .fetchMore({
+          variables: { start: 10 },
+          updateQuery: () => {
+            throw new Error("should not have called updateQuery");
+          },
+        })
+        .catch((error) => error);
+
+      expect(error.networkError).toBe(fetchMoreError);
     });
 
-    itAsync("field policy", (resolve, reject) => {
+    it("field policy", async () => {
       const fetchMoreError = new Error("Uh, oh!");
       const link = mockSingleLink(
         {
@@ -1391,7 +1374,7 @@ describe("fetchMore on an observable query", () => {
                   keyArgs: false,
                   merge(_, incoming) {
                     if (calledFetchMore) {
-                      reject(new Error("should not have called merge"));
+                      throw new Error("should not have called merge");
                     }
                     return incoming;
                   },
@@ -1408,32 +1391,20 @@ describe("fetchMore on an observable query", () => {
         notifyOnNetworkStatusChange: true,
       });
 
-      let count = 0;
-      observable.subscribe({
-        next: ({ data, networkStatus }) => {
-          switch (++count) {
-            case 1:
-              expect(networkStatus).toBe(NetworkStatus.ready);
-              expect((data as any).entry.comments.length).toBe(10);
-              calledFetchMore = true;
-              observable
-                .fetchMore({
-                  variables: { start: 10 },
-                })
-                .catch((e) => {
-                  expect(e.networkError).toBe(fetchMoreError);
-                  resolve();
-                });
-              break;
-          }
-        },
-        error: () => {
-          reject(new Error("`error` called when it wasn’t supposed to be."));
-        },
-        complete: () => {
-          reject(new Error("`complete` called when it wasn’t supposed to be."));
-        },
-      });
+      const stream = new ObservableStream(observable);
+
+      const { data, networkStatus } = await stream.takeNext();
+
+      expect(networkStatus).toBe(NetworkStatus.ready);
+      expect(data.entry.comments.length).toBe(10);
+
+      const error = await observable
+        .fetchMore({
+          variables: { start: 10 },
+        })
+        .catch((error) => error);
+
+      expect(error.networkError).toBe(fetchMoreError);
     });
   });
 
@@ -1775,7 +1746,7 @@ describe("fetchMore on an observable query with connection", () => {
   });
 
   describe("will set the network status to `fetchMore`", () => {
-    itAsync("updateQuery", (resolve, reject) => {
+    it("updateQuery", async () => {
       const link = mockSingleLink(
         {
           request: { query: transformedQuery, variables },
@@ -1787,7 +1758,7 @@ describe("fetchMore on an observable query with connection", () => {
           result: resultMore,
           delay: 5,
         }
-      ).setOnError(reject);
+      );
 
       const client = new ApolloClient({
         link,
@@ -1800,44 +1771,45 @@ describe("fetchMore on an observable query with connection", () => {
         notifyOnNetworkStatusChange: true,
       });
 
-      let count = 0;
-      observable.subscribe({
-        next: ({ data, networkStatus }) => {
-          switch (count++) {
-            case 0:
-              expect(networkStatus).toBe(NetworkStatus.ready);
-              expect((data as any).entry.comments.length).toBe(10);
-              observable.fetchMore({
-                variables: { start: 10 },
-                updateQuery: (prev: any, options: any) => {
-                  const state = cloneDeep(prev) as any;
-                  state.entry.comments = [
-                    ...state.entry.comments,
-                    ...options.fetchMoreResult.entry.comments,
-                  ];
-                  return state;
-                },
-              });
-              break;
-            case 1:
-              expect(networkStatus).toBe(NetworkStatus.fetchMore);
-              expect((data as any).entry.comments.length).toBe(10);
-              break;
-            case 2:
-              expect(networkStatus).toBe(NetworkStatus.ready);
-              expect((data as any).entry.comments.length).toBe(20);
-              setTimeout(resolve, 10);
-              break;
-            default:
-              reject(new Error("`next` called too many times"));
-          }
+      const stream = new ObservableStream(observable);
+
+      {
+        const { data, networkStatus } = await stream.takeNext();
+
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data.entry.comments.length).toBe(10);
+      }
+
+      observable.fetchMore({
+        variables: { start: 10 },
+        updateQuery: (prev: any, options: any) => {
+          const state = cloneDeep(prev) as any;
+          state.entry.comments = [
+            ...state.entry.comments,
+            ...options.fetchMoreResult.entry.comments,
+          ];
+          return state;
         },
-        error: (error: any) => reject(error),
-        complete: () => reject(new Error("Should not have completed")),
       });
+
+      {
+        const { data, networkStatus } = await stream.takeNext();
+
+        expect(networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(data.entry.comments.length).toBe(10);
+      }
+
+      {
+        const { data, networkStatus } = await stream.takeNext();
+
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect((data as any).entry.comments.length).toBe(20);
+      }
+
+      await expect(stream).not.toEmitValue();
     });
 
-    itAsync("field policy", (resolve, reject) => {
+    it("field policy", async () => {
       const link = mockSingleLink(
         {
           request: { query: transformedQuery, variables },
@@ -1849,7 +1821,7 @@ describe("fetchMore on an observable query with connection", () => {
           result: resultMore,
           delay: 5,
         }
-      ).setOnError(reject);
+      );
 
       const client = new ApolloClient({
         link,
@@ -1870,33 +1842,34 @@ describe("fetchMore on an observable query with connection", () => {
         notifyOnNetworkStatusChange: true,
       });
 
-      let count = 0;
-      observable.subscribe({
-        next: ({ data, networkStatus }) => {
-          switch (count++) {
-            case 0:
-              expect(networkStatus).toBe(NetworkStatus.ready);
-              expect((data as any).entry.comments.length).toBe(10);
-              observable.fetchMore({
-                variables: { start: 10 },
-              });
-              break;
-            case 1:
-              expect(networkStatus).toBe(NetworkStatus.fetchMore);
-              expect((data as any).entry.comments.length).toBe(10);
-              break;
-            case 2:
-              expect(networkStatus).toBe(NetworkStatus.ready);
-              expect((data as any).entry.comments.length).toBe(20);
-              setTimeout(resolve, 10);
-              break;
-            default:
-              reject(new Error("`next` called too many times"));
-          }
-        },
-        error: (error: any) => reject(error),
-        complete: () => reject(new Error("Should not have completed")),
+      const stream = new ObservableStream(observable);
+
+      {
+        const { data, networkStatus } = await stream.takeNext();
+
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect((data as any).entry.comments.length).toBe(10);
+      }
+
+      observable.fetchMore({
+        variables: { start: 10 },
       });
+
+      {
+        const { data, networkStatus } = await stream.takeNext();
+
+        expect(networkStatus).toBe(NetworkStatus.fetchMore);
+        expect(data.entry.comments.length).toBe(10);
+      }
+
+      {
+        const { data, networkStatus } = await stream.takeNext();
+
+        expect(networkStatus).toBe(NetworkStatus.ready);
+        expect(data.entry.comments.length).toBe(20);
+      }
+
+      await expect(stream).not.toEmitValue();
     });
   });
 });

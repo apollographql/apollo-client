@@ -620,21 +620,17 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 2),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 2),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -652,22 +648,18 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 4),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 4),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -686,25 +678,21 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
-          },
-        });
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+        { operationName: "GetTODOs", offset: 5, limit: 3 },
+      ]);
 
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-          { operationName: "GetTODOs", offset: 5, limit: 3 },
-        ]);
-
-        checkCacheExtract1234678(client.cache);
-      }
+      checkCacheExtract1234678(client.cache);
 
       await expect(stream).not.toEmitAnything();
     });
@@ -726,21 +714,17 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 2),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 2),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -758,34 +742,26 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        data: {
+          TODO: tasks.slice(0, 2),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: true,
-          networkStatus: NetworkStatus.fetchMore,
-          data: {
-            TODO: tasks.slice(0, 2),
-          },
-        });
-      }
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 4),
+        },
+      });
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 4),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -804,37 +780,29 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        data: {
+          TODO: tasks.slice(0, 4),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: true,
-          networkStatus: NetworkStatus.fetchMore,
-          data: {
-            TODO: tasks.slice(0, 4),
-          },
-        });
-      }
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
+        },
+      });
 
-      {
-        const result = await stream.takeNext();
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+        { operationName: "GetTODOs", offset: 5, limit: 3 },
+      ]);
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-          { operationName: "GetTODOs", offset: 5, limit: 3 },
-        ]);
-
-        checkCacheExtract1234678(client.cache);
-      }
+      checkCacheExtract1234678(client.cache);
 
       await expect(stream).not.toEmitAnything();
     });
@@ -855,21 +823,17 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 2),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 2),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -887,22 +851,18 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 4),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 4),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -921,24 +881,20 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-          { operationName: "GetTODOs", offset: 5, limit: 3 },
-        ]);
-        checkCacheExtract1234678(client.cache);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+        { operationName: "GetTODOs", offset: 5, limit: 3 },
+      ]);
+      checkCacheExtract1234678(client.cache);
 
       await expect(stream).not.toEmitAnything();
     });
@@ -960,21 +916,17 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 2),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 2),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -992,34 +944,26 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        data: {
+          TODO: tasks.slice(0, 2),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: true,
-          networkStatus: NetworkStatus.fetchMore,
-          data: {
-            TODO: tasks.slice(0, 2),
-          },
-        });
-      }
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: tasks.slice(0, 4),
+        },
+      });
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(0, 4),
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-        ]);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+      ]);
 
       {
         const fetchMoreResult = await observable.fetchMore({
@@ -1038,36 +982,28 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitNextValue({
+        loading: true,
+        networkStatus: NetworkStatus.fetchMore,
+        data: {
+          TODO: tasks.slice(0, 4),
+        },
+      });
 
-        expect(result).toEqual({
-          loading: true,
-          networkStatus: NetworkStatus.fetchMore,
-          data: {
-            TODO: tasks.slice(0, 4),
-          },
-        });
-      }
+      await expect(stream).toEmitNextValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
+        },
+      });
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
-          },
-        });
-
-        expect(linkRequests).toEqual([
-          { operationName: "GetTODOs", offset: 0, limit: 2 },
-          { operationName: "GetTODOs", offset: 2, limit: 2 },
-          { operationName: "GetTODOs", offset: 5, limit: 3 },
-        ]);
-        checkCacheExtract1234678(client.cache);
-      }
+      expect(linkRequests).toEqual([
+        { operationName: "GetTODOs", offset: 0, limit: 2 },
+        { operationName: "GetTODOs", offset: 2, limit: 2 },
+        { operationName: "GetTODOs", offset: 5, limit: 3 },
+      ]);
+      checkCacheExtract1234678(client.cache);
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1190,19 +1126,15 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const result = await stream.takeNext();
+    await expect(stream).toEmitNextValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        groceries: initialGroceries,
+      },
+    });
 
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        data: {
-          groceries: initialGroceries,
-        },
-      });
-
-      expect(mergeArgsHistory).toEqual([{ offset: 0, limit: 2 }]);
-    }
+    expect(mergeArgsHistory).toEqual([{ offset: 0, limit: 2 }]);
 
     {
       const fetchMoreResult = await observable.fetchMore({
@@ -1223,25 +1155,21 @@ describe("fetchMore on an observable query", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
-    {
-      const result = await stream.takeNext();
+    // This result comes entirely from the cache, without updating the
+    // original variables for the ObservableQuery, because the
+    // offsetLimitPagination field policy has keyArgs:false.
+    await expect(stream).toEmitNextValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        groceries: finalGroceries,
+      },
+    });
 
-      // This result comes entirely from the cache, without updating the
-      // original variables for the ObservableQuery, because the
-      // offsetLimitPagination field policy has keyArgs:false.
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        data: {
-          groceries: finalGroceries,
-        },
-      });
-
-      expect(mergeArgsHistory).toEqual([
-        { offset: 0, limit: 2 },
-        { offset: 2, limit: 3 },
-      ]);
-    }
+    expect(mergeArgsHistory).toEqual([
+      { offset: 0, limit: 2 },
+      { offset: 2, limit: 3 },
+    ]);
 
     await expect(stream).not.toEmitAnything();
   });
@@ -1473,39 +1401,39 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const result = await stream.takeNext();
+    await expect(stream).toEmitNextValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        emptyItems: [],
+      },
+    });
 
-      expect(result.loading).toBe(false);
-      expect(result.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.data.emptyItems).toHaveLength(0);
-    }
+    const fetchMoreResult = await observable.fetchMore({
+      variables,
+    });
 
-    {
-      const fetchMoreResult = await observable.fetchMore({
-        variables,
-      });
+    expect(fetchMoreResult).toEqual({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: { emptyItems: [] },
+    });
 
-      expect(fetchMoreResult.loading).toBe(false);
-      expect(fetchMoreResult.networkStatus).toBe(NetworkStatus.ready);
-      expect(fetchMoreResult.data.emptyItems).toHaveLength(0);
-    }
+    await expect(stream).toEmitNextValue({
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+      data: {
+        emptyItems: [],
+      },
+    });
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.loading).toBe(true);
-      expect(result.networkStatus).toBe(NetworkStatus.fetchMore);
-      expect(result.data.emptyItems).toHaveLength(0);
-    }
-
-    {
-      const result = await stream.takeNext();
-
-      expect(result.loading).toBe(false);
-      expect(result.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.data.emptyItems).toHaveLength(0);
-    }
+    await expect(stream).toEmitNextValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        emptyItems: [],
+      },
+    });
 
     await expect(stream).not.toEmitAnything();
   });

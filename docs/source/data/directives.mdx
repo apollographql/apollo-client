@@ -181,7 +181,7 @@ Notice that the `Trail` component isn't receiving the entire `trail` object via 
 ## `@unmask`
 </MinVersion>
 
-The `@unmask` directive is used to make fragment data available when using [data masking](./fragments#data-masking). It is primarily used to [migrate an existing application](./fragments#migrating-an-existing-application) to utilize data masking. It is considered an escape hatch for all other cases where working with masked data would otherwise be difficult.
+The `@unmask` directive is used to make fragment data available when using [data masking](./fragments#data-masking). It is primarily used to [incrementally adopt data masking in an existing application](./fragments#incremental-adoption-in-an-existing-application). It is considered an escape hatch for all other cases where working with masked data would otherwise be difficult.
 
 ```graphql
 query GetPosts {
@@ -211,7 +211,7 @@ When the `dataMasking` option is omitted or set to `false`, this directive has n
 
 ### Migrate mode
 
-`@unmask` is best used to [migrate existing applications](./fragments#migrating-an-existing-application) by providing development-only warnings when accessing would-be masked fields throughout your application. To use `@unmask` in migrate mode, set the `mode` argument to `migrate`.
+`@unmask` is best used to [incrementally adopt data masking in existing applications](./fragments#incremental-adoption-in-an-existing-application) by providing development-only warnings when accessing would-be masked fields throughout your application. To use `@unmask` in migrate mode, set the `mode` argument to `migrate`.
 
 ```graphql
 query GetPost(id: $id) {

@@ -588,3 +588,570 @@ function Item(props) {
 </Note>
 
 See the [API reference](../api/react/hooks#usefragment) for more details on the supported options.
+
+<MinVersion version="3.12.0">
+## Data masking
+</MinVersion>
+
+By default, Apollo Client returns all data for all fields defined in a GraphQL operation. As your app grows, components that query your GraphQL data can become tightly coupled to their component subtrees. [Colocated fragments](#colocating-fragments) reduce the degree of coupling by moving components' data requirements into fragments. However, colocating fragments doesn't eliminate the issue.
+
+Let's take a look at an example. The following `Posts.jsx` defines a `Posts` component that fetches and displays a list of posts, optionally filtering out unpublished ones, using a GraphQL query that includes a fragment for post details.
+
+```jsx title="Posts.jsx"
+import { POST_DETAILS_FRAGMENT } from './PostDetails';
+
+const GET_POSTS = gql`
+  query GetPosts {
+    posts {
+      id
+      ...PostDetailsFragment
+    }
+  }
+
+  ${POST_DETAILS_FRAGMENT}
+`;
+
+export default function Posts({ includeUnpublishedPosts }) {
+  const { data, loading } = useQuery(GET_POSTS);
+  const posts = data?.posts ?? [];
+
+  if (loading) {
+    return <Spinner />;
+  }
+
+  const allPosts = includeUnpublishedPosts
+    ? posts
+    : posts.filter((post) => post.publishedAt);
+
+  if (allPosts.length === 0) {
+    return <div>No posts to display</div>;
+  }
+
+  return (
+    <div>
+      {allPosts.map((post) => (
+        <PostDetails key={post.id} post={post} />
+      ))}
+    </div>
+  );
+}
+```
+
+The following `PostDetails.jsx` defines the fragment for post details and the associated UI elements.
+```jsx title="PostDetails.jsx"
+export const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetailsFragment on Post {
+    title
+    shortDescription
+    publishedAt
+  }
+`;
+
+export default function PostDetails({ post }) {
+  return (
+    <section>
+      <h1>{post.title}</h1>
+      <p>{post.shortDescription}</p>
+      <p>
+        {post.publishedAt ?
+          `Published: ${formatDate(post.publishedAt)}`
+        : 'Private'}
+      </p>
+    </section>
+  );
+}
+````
+
+The `Posts` component is responsible for fetching and rendering a list of posts. We loop over each post and render a `PostDetails` component to display details about the post. `PostDetails` uses a colocated fragment to define its own data requirements necessary to render post details, which is included in the `GetPosts` query.
+
+When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from the list of all posts by checking the `publishedAt` property on the post object.
+
+This strategy might work well for a while, but consider what happens when we start modifying the `PostDetails` component.
+
+Suppose we've decided we no longer want to show the publish date on the list of posts and prefer to display it on individual posts. Let's modify `PostDetails` accordingly.
+
+```jsx title="PostDetails.jsx"
+export const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetailsFragment on Post {
+    title
+    shortDescription
+  }
+`;
+
+export default function PostDetails({ post }) {
+  return (
+    <section>
+      <h1>{post.title}</h1>
+      <p>{post.shortDescription}</p>
+    </section>
+  );
+}
+````
+
+We've removed the check for `publishedAt` since we no longer show the publish date. We've also removed the `publishedAt` field from the `PostDetailsFragment` fragment since we no longer use this field in the `PostDetails` component.
+
+Uh oh, we just broke our app—the `Posts` component no longer shows any posts! The `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of the `Posts` component.
+
+This coupling is an example of an **implicit dependency** between components. As the application grows in complexity, these implicit dependencies can become more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in the component tree or if multiple queries used it.
+
+**Data masking** helps eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. As a result, data masking creates more loosely coupled components that are more resistant to change.
+
+### Enabling data masking
+
+To enable data masking in Apollo Client, set the `dataMasking` flag in the `ApolloClient` constructor to `true`.
+
+```jsx {2}
+const client = new ApolloClient({
+  dataMasking: true,
+  // ...
+});
+```
+
+When `dataMasking` is enabled, fields defined in fragments are hidden from components. This prevents the component from accessing data it didn't ask for.
+
+Enabling data masking applies it to all operation types and all request-based APIs, such as `useQuery`, `client.query`, `client.mutate`, etc. Cache APIs, such as `cache.readQuery` and `cache.readFragment` are never masked.
+
+<Tip>
+We recommend enabling the `dataMasking` flag immediately when creating new applications. See the section on [adoption in an existing application](#adoption-in-an-existing-application) to learn how to enable data masking in existing applications.
+</Tip>
+
+Let's revisit the example from the previous section.
+
+```jsx title="Posts.jsx"
+const GET_POSTS = gql`
+  query GetPosts {
+    posts {
+      id
+      ...PostDetailsFragment
+    }
+  }
+
+  ${POST_DETAILS_FRAGMENT}
+`;
+
+export default function Posts({ includeUnpublishedPosts }) {
+  const { data, loading } = useQuery(GET_POSTS);
+
+  // ...
+}
+```
+
+Our `GetPosts` query asks for the `posts` field along with an `id` for each post. All other fields are defined in `PostDetailsFragment`. If we were to inspect `data`, we'd see that the only accessible fields are those defined in the query but not the fragment.
+
+```json
+{
+  "posts": [
+    {
+      "__typename": "Post",
+      "id": "1"
+    },
+    {
+      "__typename": "Post",
+      "id": "2"
+    }
+  ]
+}
+```
+
+We can access more data by adding fields to the query. Let's fix the previous section's example by adding the `publishedAt` field to the `GetPosts` query so that the `Posts` component can use it.
+
+```jsx {5} title="Posts.jsx"
+const GET_POSTS = gql`
+  query GetPosts {
+    posts {
+      id
+      publishedAt
+      ...PostDetailsFragment
+    }
+  }
+
+  ${POST_DETAILS_FRAGMENT}
+`;
+```
+
+Now if we inspect `data`, we'll see that `publishedAt` is available to the `Posts` component.
+
+```json
+{
+  "posts": [
+    {
+      "__typename": "Post",
+      "publishedAt": "2024-01-01",
+      "id": "1"
+    },
+    {
+      "__typename": "Post",
+      "publishedAt": null,
+      "id": "2"
+    }
+  ]
+}
+```
+
+### Reading fragment data
+
+Now that the `GetPosts` query is masked, we've introduced a problem for the `PostDetails` component. The `post` prop no longer contains the fields from the `PostDetailsFragment` fragment, preventing us from rendering that data.
+
+We read the fragment data with the [`useFragment` hook](#usefragment).
+
+```jsx title="PostDetails.jsx"
+function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+  });
+
+  // ...
+}
+```
+
+Now we use the `data` property returned from `useFragment` to render the details from the `post`.
+
+```jsx {17-18} title="PostDetails.jsx"
+function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+  });
+
+  // It's a good idea to check the `complete` flag to ensure all data was
+  // successfully queried from the cache. This can indicate a potential
+  // issue with the cache configuration or parent object when `complete`
+  // is `false`.
+  if (!complete) {
+    return null;
+  }
+
+  return (
+    <section>
+      <h1>{data.title}</h1>
+      <p>{data.shortDescription}</p>
+    </section>
+  )
+}
+```
+
+<Note>
+It's important that the parent query or fragment selects any [`keyFields`](../caching/cache-configuration#customizing-cache-ids) for objects passed to the `from` option. Without this, we'd have no way to identify the object with the cache and the `data` returned from `useFragment` would be incomplete. If you forget to include key fields in the parent object, you will see a warning in the console.
+</Note>
+
+### Nesting fragments in other fragments
+
+<Note>
+You can nest fragments with or without data masking (for an example, see the section on [colocating fragments](#colocating-fragments).) The following section describes how you can use masking in components with `useFragment`.
+</Note>
+
+As your UI grows in complexity, it is common to split up components into smaller, more reusable chunks. As a result you may end up with more deeply nested components that have their own data requirements. Much like queries, we can nest fragments within other fragments.
+
+Let's add a `Comment` component that will be used by `PostDetails` to render the `topComment` for the post.
+
+```jsx title="Comment.jsx"
+export const COMMENT_FRAGMENT = gql`
+  fragment CommentFragment on Comment {
+    postedBy {
+      displayName
+    }
+    createdAt
+    content
+  }
+`
+
+export default function Comment({ comment }) {
+  const { data, complete } = useFragment({
+    fragment: COMMENT_FRAGMENT,
+    from: comment,
+  });
+
+  // ... render comment details
+}
+```
+
+Much like `PostDetails`, we used `useFragment` to read the `CommentFragment` fragment data since it is masked and not available on the `comment` prop.
+
+We can now use the `Comment` component and `CommentFragment` fragment in the `PostDetails` component to render the `topComment`.
+
+```jsx {1,7-10,13,29} title="PostDetails.jsx"
+import { COMMENT_FRAGMENT } from "./Comment";
+
+export const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetailsFragment on Post {
+    title
+    shortDescription
+    topComment {
+      id
+      ...CommentFragment
+    }
+  }
+
+  ${COMMENT_FRAGMENT}
+`;
+
+export default function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+    fragmentName: "PostDetailsFragment",
+  });
+
+  // complete check omitted for brevity
+
+  return (
+    <section>
+      <h1>{data.title}</h1>
+      <p>{data.shortDescription}</p>
+      <Comment comment={data.topComment} />
+    </section>
+  );
+}
+```
+
+<Note>
+We added the `fragmentName` option to `useFragment` in `PostDetails`. This is needed because we've added another fragment definition (`CommentFragment`) to the `POST_DETAILS_FRAGMENT` document. `fragmentName` tells `useFragment` that it should use the `PostDetailsFragment` fragment definition when querying for data in the cache.
+</Note>
+
+If we inspect the `data` property returned by `useFragment` in `PostDetails`, we'll see that only the fields included by the `PostDetailsFragment` fragment are a part of the object.
+
+```json
+{
+  "__typename": "Post",
+  "title": "The Amazing Adventures of Data Masking",
+  "shortDescription": "In this article we dive into...",
+  "topComment": {
+    "__typename": "Comment",
+    "id": "1"
+  }
+}
+```
+
+Throughout this example, You'll notice that we never touched the `GetPosts` query as a result of this change. Because we included `CommentFragment` with `PostDetailsFragment`, it was added to the query automatically. Colocating fragments like this is a powerful pattern that, when combined with data masking, provide very self-isolated components.
+
+<Tip>
+We recommend that parent components only add fragments defined by their directly-rendered children to prevent coupling with more deeply nested components. In this example, the `GetPosts` query did not include the `CommentFragment` fragment directly but rather it relied on the `PostDetails` component to include it with the `PostDetailsFragment` fragment.
+</Tip>
+
+### Working with other operation types
+
+Data masking is not limited to queries but also extends to other operation types. As a rule of thumb, any value that is used to _read_ data from a request-based API is masked. APIs that perform cache updates are never masked.
+
+Refer to the code samples below to see what data is masked in mutations and subscriptions.
+
+#### Mutations
+
+For more information about mutations, visit the [mutations page](./mutations).
+
+```jsx
+// data is masked
+const [mutate, { data }] = useMutation(MUTATION, {
+  onCompleted: (data) => {
+    // data is masked
+  },
+  update: (cache, { data }) => {
+    // data is unmasked
+  },
+  refetchQueries: ({ data }) => {
+    // data is unmasked
+  },
+  updateQueries: {
+    ExampleQuery: (previous, { mutationResult }) => {
+      // mutationResult is unmasked
+    }
+  }
+});
+
+async function runMutation() {
+  const { data } = await mutate()
+
+  // data is masked
+}
+```
+
+```jsx
+// data is masked
+const { data } = await client.mutate({
+  update: (cache, { data }) => {
+    // data is unmasked
+  },
+  refetchQueries: ({ data }) => {
+    // data is unmasked
+  },
+  updateQueries: {
+    ExampleQuery: (previous, { mutationResult }) => {
+      // mutationResult is unmasked
+    }
+  }
+});
+```
+
+#### Subscriptions
+
+For more information about subscriptions, visit the [subscriptions page](./subscriptions).
+
+```jsx
+function MyComponent() {
+  // data is masked
+  const { data } = useSubscription(SUBSCRIPTION, {
+    onData: ({ data }) => {
+      // data is unmasked
+    }
+  });
+}
+```
+
+```jsx
+const observable = client.subscribe({ query: SUBSCRIPTION });
+
+observable.subscribe({
+  next: ({ data }) => {
+    // data is masked
+  },
+});
+```
+
+```jsx
+const { subscribeToMore } = useQuery(QUERY);
+
+function startSubscription() {
+  subscribeToMore({
+    document: SUBSCRIPTION,
+    updateQuery: (queryData, { subscriptionData }) => {
+      // queryData is unmasked
+      // subscriptionData is unmasked
+    }
+  })
+}
+```
+
+### Selectively unmasking fragment data
+
+As you work with data masking more extensively, you may need access to the full operation result. Apollo Client includes an `@unmask` directive you can apply to fragment spreads. Adding `@unmask` to a fragment spread makes the fragment data available.
+
+<Note>
+The `@unmask` directive is an escape hatch. First try adding additional needed fields to the operation before relying on `@unmask`. As an exception, you might use `@unmask` frequently to [adopt data masking in an existing application](#incremental-adoption-in-an-existing-application).
+</Note>
+
+```graphql
+query GetPosts {
+  posts {
+    id
+    ...PostFragment @unmask
+  }
+}
+```
+
+Only fragments marked with `@unmask` will unmask the results. Fragments not marked with `@unmask` will remain masked.
+
+```graphql
+query GetPosts {
+  posts {
+    id
+    ...PostFragment @unmask
+    # This data remains masked
+    ...PostDetailsFragment
+  }
+}
+```
+
+### Incremental adoption in an existing application
+
+Existing applications can take advantage of the data masking features through an incremental adoption approach. This section will walk through the steps needed to adopt data masking in a larger codebase.
+
+#### 1. Apply the `@unmask` directive to all fragment spreads
+
+Before enabling the `dataMasking` flag in the client, it is wise to ensure that your components continue to receive full results to avoid breakages. We can use the `@unmask` directive to handle this.
+
+<Tip>
+We recommend using `@unmask` in migrate mode to enable development-only warnings when accessing would-be masked fields. Learn more about migrate mode in the [`@unmask` docs](./directives#unmask).
+</Tip>
+
+```graphql
+query GetPost($id) {
+  post(id: $id) {
+    id
+    ...PostDetails @unmask(mode: "migrate")
+  }
+}
+```
+
+This is rather tedious to do by hand for large applications. Apollo Client provides a codemod that applies `@unmask` to your GraphQL documents for you. To use the codemod:
+
+1. Clone the [`apollo-client` repository](https://github.com/apollographql/apollo-client)
+
+   ```sh
+   git clone https://github.com/apollographql/apollo-client.git
+   ```
+
+2. Install dependencies in `apollo-client`
+
+    ```sh
+    npm install
+    ```
+
+3. Run the codemod via [`jscodeshift`](https://github.com/facebook/jscodeshift) against your codebase.
+
+   ```sh
+   npx jscodeshift -t ../path/to/apollo-client/scripts/codemods/data-masking/unmask.ts --extensions ts --parser ts ./src/**/*.ts --mode migrate
+   ```
+
+   <Note>
+   This command uses the `--mode migrate` option to enable migrate mode on all `@unmask` directives. Omit this option if you prefer to use `@unmask` without the development-only warnings.
+   </Note>
+
+The codemod supports `.js`, `.jsx`, `.ts`, `.tsx`, `.graphql`, and `.gql` files. Use the `graphql` parser when running the codemod against GraphQL files.
+
+By default, the codemod searches for `gql` and `graphql` tags in source files. If your application uses a custom name, use the `--tag` option to specify the name. Use `--tag` more than once to specify multiple names.
+
+```sh
+npx jscodeshift ... --tag myGql
+```
+
+<Caution>
+Comments in GraphQL documents may be lost after running the codemod because the `graphql` library's `print` function used by the codemod doesn't retain comments. Always check the output from changes made by the codemod before comitting them.
+</Caution>
+
+#### 2. Enable `dataMasking`
+
+With fragments unmasked, it is safe to enable data masking in your application. Add the `dataMasking` option to your client instance to enable it.
+
+```js {2}
+new ApolloClient({
+  dataMasking: true,
+  // ...
+});
+```
+
+> Enabling data masking early in the adoption process makes it much easier to adopt for newly added queries and fragments since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
+
+#### 3. Use `useFragment`
+
+With data masking enabled, you can now begin the process of refactoring your components to use data masking. It is easiest to look for areas of the codebase where you see field access warnings in the console on would-be masked fields (requires migrate mode).
+
+Refactor components that consume query data from props to use `useFragment` instead. Use the `data` property returned from `useFragment` to get the field value instead of the prop.
+
+```jsx
+function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+  })
+
+  // ... use `data` instead of `post`
+}
+```
+
+As you make these changes, you will begin to see warnings disappear. Repeat this process until you no longer see warnings in the console.
+
+When you no longer see field access warnings, it is safe to remove the `@unmask` directive from your query.
+
+```diff
+query GetPosts {
+  posts {
+    id
+-   ...PostDetails @unmask(mode: "migrate")
++   ...PostDetails
+  }
+}
+```
+
+Repeat this process until all `@unmask` directives have been removed from your codebase.
+
+Congratulations 🎉! Your application is now using data masking everywhere 😎.

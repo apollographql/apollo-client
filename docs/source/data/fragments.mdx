@@ -666,7 +666,7 @@ The `Posts` component is responsible for fetching and rendering a list of posts.
 
 When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from our list of all posts by checking the `publishedAt` property on the post object.
 
-This may work great for a while, but consider what happens when we start modifying our `PostDetails` component.
+This strategy might work well for a while, but consider what happens when we start modifying the `PostDetails` component.
 
 We've decided that we no longer want to show the publish date when viewing the list of posts and prefer to display it when viewing an individual post. Let's modify `PostDetails` accordingly.
 

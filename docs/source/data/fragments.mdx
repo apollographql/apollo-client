@@ -39,7 +39,7 @@ query GetPerson {
 }
 ```
 
-If we later _change_ which fields are included in the `NameParts` fragment, we automatically change which fields are included in operations that _use_ the fragment. This reduces the effort required to keep fields consistent across a set of operations.
+Changes to the `NameParts` fragment automatically update the fields included in any operations that use it. This reduces the effort required to keep fields consistent across a set of operations.
 
 ## Example usage
 

@@ -829,3 +829,93 @@ function PostDetails({ post }) {
 <Note>
 It's important that the parent query or fragment selects any [`keyFields`](../caching/cache-configuration#customizing-cache-ids) for objects passed to the `from` option. Without this, we'd have no way to identify the object with the cache and the `data` returned from `useFragment` would be incomplete. If you forget to include key fields in the parent object, you will see a warning emitted in the console.
 </Note>
+
+### Nesting fragments in other fragments
+
+As your UI grows in complexity, it is common to split up components into smaller, more reusable chunks. As a result you may end up with more deeply nested components that have their own data requirements. Much like queries, we can nest fragments within other fragments.
+
+Let's add a `Comment` component that will be used by `PostDetails` to render the `topComment` for the post.
+
+```jsx title="Comment.jsx"
+export const COMMENT_FRAGMENT = gql`
+  fragment CommentFragment on Comment {
+    postedBy {
+      displayName
+    }
+    createdAt
+    content
+  }
+`
+
+export default function Comment({ comment }) {
+  const { data, complete } = useFragment({
+    fragment: COMMENT_FRAGMENT,
+    from: comment,
+  });
+
+  // ... render comment details
+}
+```
+
+Much like `PostDetails`, we used `useFragment` to read the `CommentFragment` fragment data since it is masked and not available on the `comment` prop.
+
+We can now use the `Comment` component and `CommentFragment` fragment in our `PostDetails` component to render the `topComment`.
+
+```jsx {1,7-10,13,29} title="PostDetails.jsx"
+import { COMMENT_FRAGMENT } from "./Comment";
+
+export const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetailsFragment on Post {
+    title
+    shortDescription
+    topComment {
+      id
+      ...CommentFragment
+    }
+  }
+
+  ${COMMENT_FRAGMENT}
+`;
+
+export default function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+    fragmentName: "PostDetailsFragment",
+  });
+
+  // complete check omitted for brevity
+
+  return (
+    <section>
+      <h1>{data.title}</h1>
+      <p>{data.shortDescription}</p>
+      <Comment comment={data.topComment} />
+    </section>
+  );
+}
+```
+
+<Note>
+We added the `fragmentName` option to `useFragment` in `PostDetails`. This is needed because we've added another fragment definition (`CommentFragment`) to the `POST_DETAILS_FRAGMENT` document. `fragmentName` tells `useFragment` that it should use the `PostDetailsFragment` fragment definition when querying for data in the cache.
+</Note>
+
+If we inspect the `data` property returned by `useFragment` in `PostDetails`, we'll see that only the fields included by the `PostDetailsFragment` fragment are a part of the object.
+
+```json
+{
+  "__typename": "Post",
+  "title": "The Amazing Adventures of Data Masking",
+  "shortDescription": "In this article we dive into...",
+  "topComment": {
+    "__typename": "Comment",
+    "id": "1"
+  }
+}
+```
+
+Throughout this example, You'll notice that we never touched the `GetPosts` query as a result of this change. Because we included `CommentFragment` with `PostDetailsFragment`, it was added to our query automatically. Colocating fragments like this is a powerful pattern that, when combined with data masking, provide very self-isolated components.
+
+<Tip>
+We recommend that parent components only add fragments defined by their directly-rendered children to prevent coupling with more deeply nested components. In this example, the `GetPosts` query did not include the `CommentFragment` fragment directly but rather it relied on the `PostDetails` component to include it in the `PostDetailsFragment` fragment.
+</Tip>

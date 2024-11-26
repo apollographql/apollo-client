@@ -829,7 +829,7 @@ function PostDetails({ post }) {
 ```
 
 <Note>
-It's important that the parent query or fragment selects any [`keyFields`](../caching/cache-configuration#customizing-cache-ids) for objects passed to the `from` option. Without this, we'd have no way to identify the object with the cache and the `data` returned from `useFragment` would be incomplete. If you forget to include key fields in the parent object, you will see a warning emitted in the console.
+It's important that the parent query or fragment selects any [`keyFields`](../caching/cache-configuration#customizing-cache-ids) for objects passed to the `from` option. Without this, we'd have no way to identify the object with the cache and the `data` returned from `useFragment` would be incomplete. If you forget to include key fields in the parent object, you will see a warning in the console.
 </Note>
 
 ### Nesting fragments in other fragments

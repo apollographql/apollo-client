@@ -22,7 +22,7 @@ import {
   FieldMergeFunction,
 } from "../cache";
 
-import { itAsync, MockedResponse, mockSingleLink } from "../testing";
+import { MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream } from "../testing/internal";
 
 describe("updateQuery on a simple query", () => {
@@ -1408,7 +1408,7 @@ describe("fetchMore on an observable query", () => {
     });
   });
 
-  itAsync("will not leak fetchMore query", (resolve, reject) => {
+  it("will not leak fetchMore query", async () => {
     const observable = setup({
       request: {
         query,
@@ -1423,14 +1423,11 @@ describe("fetchMore on an observable query", () => {
 
     const beforeQueryCount = count();
 
-    observable
-      .fetchMore({
-        variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
-      })
-      .then(() => {
-        expect(count()).toBe(beforeQueryCount);
-      })
-      .then(resolve, reject);
+    await observable.fetchMore({
+      variables: { start: 10 }, // rely on the fact that the original variables had limit: 10
+    });
+
+    expect(count()).toBe(beforeQueryCount);
   });
 
   it("delivers all loading states even if data unchanged", async () => {

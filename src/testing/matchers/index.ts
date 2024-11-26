@@ -3,10 +3,10 @@ import { toMatchDocument } from "./toMatchDocument.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
 import { toBeDisposed } from "./toBeDisposed.js";
-import { toEmitValue } from "./toEmitValue.js";
+import { toEmitAnything } from "./toEmitAnything.js";
 
 expect.extend({
-  toEmitValue,
+  toEmitAnything,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

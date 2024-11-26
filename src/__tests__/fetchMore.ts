@@ -1603,7 +1603,6 @@ describe("fetchMore on an observable query with connection", () => {
   }
 
   function setupWithCacheConfig(
-    reject: (reason: any) => any,
     cacheConfig: InMemoryCacheConfig,
     ...mockedResponses: any[]
   ) {
@@ -1617,7 +1616,7 @@ describe("fetchMore on an observable query with connection", () => {
           result,
         },
         ...mockedResponses
-      ).setOnError(reject),
+      ),
       cache: new InMemoryCache(cacheConfig),
     });
 
@@ -1674,7 +1673,6 @@ describe("fetchMore on an observable query with connection", () => {
 
     itAsync("field policy", (resolve, reject) => {
       const observable = setupWithCacheConfig(
-        reject,
         {
           typePolicies: {
             Entry: {

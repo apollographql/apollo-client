@@ -690,7 +690,7 @@ export default function PostDetails({ post }) {
 
 We've removed the check for `publishedAt` since we no longer show the publish date. We've also removed the `publishedAt` field from the `PostDetailsFragment` fragment since we no longer use this field in the `PostDetails` component.
 
-Uh oh, we just broke our app! Our `Posts` component no longer shows any posts! Our `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of our `Posts` component.
+Uh oh, we just broke our app—our `Posts` component no longer shows any posts! Our `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of our `Posts` component.
 
 This is an example of an **implicit dependency** between our components. As the application grows in complexity, these types of implicit dependencies can be more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if this component was used in multiple queries!
 

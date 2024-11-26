@@ -1037,3 +1037,108 @@ query GetPosts {
   }
 }
 ```
+
+### Migrating an existing application
+
+Existing applications can take advantage of the new data masking features through an incremental adoption approach. This section will walk through the steps needed to begin adoption in a larger codebase.
+
+#### 1. Apply the `@unmask` directive to all fragment spreads
+
+Before enabling the `dataMasking` flag in the client, it is wise to ensure that your components continue to receive full results. We can use the `@unmask` directive to handle this.
+
+<Tip>
+We recommend using `@unmask` in migrate mode to enable development-only warnings when accessing would-be masked fields. Learn more about migrate mode in the [`@unmask` docs](./directives#unmask).
+</Tip>
+
+```graphql
+query GetPost($id) {
+  post(id: $id) {
+    id
+    ...PostDetails @unmask(mode: "migrate")
+  }
+}
+```
+
+This is rather tedious to do by hand for large applications. Apollo Client provides a codemod that applies `@unmask` to your GraphQL documents for you. To use the codemod:
+
+1. Clone the [`apollo-client` repository](https://github.com/apollographql/apollo-client)
+
+   ```sh
+   git clone https://github.com/apollographql/apollo-client.git
+   ```
+
+2. Install dependencies
+
+    ```sh
+    npm install
+    ```
+
+3. Run the codemod via [`jscodeshift`](https://github.com/facebook/jscodeshift)
+
+   ```sh
+   npx jscodeshift -t ../path/to/apollo-client/scripts/codemods/data-masking/unmask.ts --extensions ts --parser ts ./src/**/*.ts --mode migrate
+   ```
+
+   <Note>
+   This command uses the `--mode migrate` option to enable migrate mode on all `@unmask` directives. Omit this option if you prefer to use `@unmask` without the development-only warnings.
+   </Note>
+
+The codemod supports `.js`, `.jsx`, `.ts`, `.tsx`, `.graphql`, and `.gql` files. Use the `graphql` parser when running the codemod against GraphQL files.
+
+By default, the codemod searches for `gql` and `graphql` tags in source files. If your application uses a custom name, use the `--tag` option to specify the name. Use `--tag` more than once to specify multiple names.
+
+```sh
+npx jscodeshift ... --tag myGql
+```
+
+<Caution>
+Comments in GraphQL documents may be lost after running the codemod because the `graphql` library's `print` function used by the codemod doesn't retain comments. Always check the output from changes made by the codemod before comitting them.
+</Caution>
+
+#### 2. Enable `dataMasking`
+
+With fragments unmasked, it is safe to enable data masking in your application. Add the `dataMasking` option to your client instance to enable it.
+
+```js {2}
+new ApolloClient({
+  dataMasking: true,
+  // ...
+});
+```
+
+> Enabling data masking early in the migration process makes it much easier to adopt for newly added queries and fragments without the risk of human error since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
+
+#### 3. Use `useFragment`
+
+With data masking enabled, you can now begin the process of refactoring your components to use data masking. It is easiest to look for areas of the codebase where you see field access warnings in the console on would-be masked fields (requires migrate mode).
+
+Refactor components that consume query data from props to use `useFragment` instead. Use the `data` property returned from `useFragment` to get the field value instead of the prop.
+
+```jsx
+function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+  })
+
+  // ... use `data` instead of `post`
+}
+```
+
+As you make these changes, you will begin to see warnings disappear. Repeat this process until you no longer see warnings in the console.
+
+When you no longer see field access warnings, it is safe to remove the `@unmask` directive from your query.
+
+```diff
+query GetPosts {
+  posts {
+    id
+-   ...PostDetails @unmask(mode: "migrate")
++   ...PostDetails
+  }
+}
+```
+
+Repeat this process until all `@unmask` directives have been removed from your codebase.
+
+Congratulations 🎉! Your application is now using data masking everywhere 😎.

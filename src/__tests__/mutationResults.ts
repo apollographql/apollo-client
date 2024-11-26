@@ -241,72 +241,71 @@ describe("mutation results", () => {
     }
   );
 
-  itAsync(
-    "correctly integrates field changes by default with variables",
-    (resolve, reject) => {
-      const query = gql`
-        query getMini($id: ID!) {
-          mini(id: $id) {
-            id
-            cover(maxWidth: 600, maxHeight: 400)
-            __typename
-          }
+  it("correctly integrates field changes by default with variables", async () => {
+    const query = gql`
+      query getMini($id: ID!) {
+        mini(id: $id) {
+          id
+          cover(maxWidth: 600, maxHeight: 400)
+          __typename
         }
-      `;
-      const mutation = gql`
-        mutation upload($signature: String!) {
-          mini: submitMiniCoverS3DirectUpload(signature: $signature) {
-            id
-            cover(maxWidth: 600, maxHeight: 400)
-            __typename
-          }
-        }
-      `;
-
-      const link = mockSingleLink(
-        {
-          request: {
-            query,
-            variables: { id: 1 },
-          } as any,
-          delay: 100,
-          result: {
-            data: { mini: { id: 1, cover: "image", __typename: "Mini" } },
-          },
-        },
-        {
-          request: {
-            query: mutation,
-            variables: { signature: "1234" },
-          } as any,
-          delay: 150,
-          result: {
-            data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
-          },
-        }
-      ).setOnError(reject);
-
-      interface Data {
-        mini: { id: number; cover: string; __typename: string };
       }
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({
-          dataIdFromObject: (obj: any) => {
-            if (obj.id && obj.__typename) {
-              return obj.__typename + obj.id;
-            }
-            return null;
-          },
-        }),
-      });
+    `;
+    const mutation = gql`
+      mutation upload($signature: String!) {
+        mini: submitMiniCoverS3DirectUpload(signature: $signature) {
+          id
+          cover(maxWidth: 600, maxHeight: 400)
+          __typename
+        }
+      }
+    `;
 
-      const obs = client.watchQuery<Data>({
-        query,
-        variables: { id: 1 },
-        notifyOnNetworkStatusChange: false,
-      });
+    const link = mockSingleLink(
+      {
+        request: {
+          query,
+          variables: { id: 1 },
+        } as any,
+        delay: 100,
+        result: {
+          data: { mini: { id: 1, cover: "image", __typename: "Mini" } },
+        },
+      },
+      {
+        request: {
+          query: mutation,
+          variables: { signature: "1234" },
+        } as any,
+        delay: 150,
+        result: {
+          data: { mini: { id: 1, cover: "image2", __typename: "Mini" } },
+        },
+      }
+    );
 
+    interface Data {
+      mini: { id: number; cover: string; __typename: string };
+    }
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        dataIdFromObject: (obj: any) => {
+          if (obj.id && obj.__typename) {
+            return obj.__typename + obj.id;
+          }
+          return null;
+        },
+      }),
+    });
+
+    const obs = client.watchQuery<Data>({
+      query,
+      variables: { id: 1 },
+      notifyOnNetworkStatusChange: false,
+    });
+
+    await new Promise<void>((resolve, reject) => {
       let count = 0;
       obs.subscribe({
         next: (result) => {
@@ -329,108 +328,103 @@ describe("mutation results", () => {
         },
         error: reject,
       });
-    }
-  );
+    });
+  });
 
-  itAsync(
-    "should write results to cache according to errorPolicy",
-    async (resolve, reject) => {
-      const expectedFakeError = new GraphQLError("expected/fake error");
+  it("should write results to cache according to errorPolicy", async () => {
+    const expectedFakeError = new GraphQLError("expected/fake error");
 
-      const client = new ApolloClient({
-        cache: new InMemoryCache({
-          typePolicies: {
-            Person: {
-              keyFields: ["name"],
-            },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        typePolicies: {
+          Person: {
+            keyFields: ["name"],
           },
-        }),
+        },
+      }),
 
-        link: new ApolloLink(
-          (operation) =>
-            new Observable((observer) => {
-              observer.next({
-                errors: [expectedFakeError],
-                data: {
-                  newPerson: {
-                    __typename: "Person",
-                    name: operation.variables.newName,
-                  },
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            observer.next({
+              errors: [expectedFakeError],
+              data: {
+                newPerson: {
+                  __typename: "Person",
+                  name: operation.variables.newName,
                 },
-              });
-              observer.complete();
-            })
-        ).setOnError(reject),
-      });
+              },
+            });
+            observer.complete();
+          })
+      ),
+    });
 
-      const mutation = gql`
-        mutation AddNewPerson($newName: String!) {
-          newPerson(name: $newName) {
-            name
-          }
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
         }
-      `;
+      }
+    `;
 
-      await client
-        .mutate({
-          mutation,
-          variables: {
-            newName: "Hugh Willson",
-          },
-        })
-        .then(
-          () => {
-            reject("should have thrown for default errorPolicy");
-          },
-          (error) => {
-            expect(error.message).toBe(expectedFakeError.message);
-          }
-        );
-
-      expect(client.cache.extract()).toMatchSnapshot();
-
-      const ignoreErrorsResult = await client.mutate({
+    await client
+      .mutate({
         mutation,
-        errorPolicy: "ignore",
         variables: {
-          newName: "Jenn Creighton",
+          newName: "Hugh Willson",
         },
-      });
-
-      expect(ignoreErrorsResult).toEqual({
-        data: {
-          newPerson: {
-            __typename: "Person",
-            name: "Jenn Creighton",
-          },
+      })
+      .then(
+        () => {
+          throw new Error("should have thrown for default errorPolicy");
         },
-      });
+        (error) => {
+          expect(error.message).toBe(expectedFakeError.message);
+        }
+      );
 
-      expect(client.cache.extract()).toMatchSnapshot();
+    expect(client.cache.extract()).toMatchSnapshot();
 
-      const allErrorsResult = await client.mutate({
-        mutation,
-        errorPolicy: "all",
-        variables: {
-          newName: "Ellen Shapiro",
+    const ignoreErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "ignore",
+      variables: {
+        newName: "Jenn Creighton",
+      },
+    });
+
+    expect(ignoreErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Jenn Creighton",
         },
-      });
+      },
+    });
 
-      expect(allErrorsResult).toEqual({
-        data: {
-          newPerson: {
-            __typename: "Person",
-            name: "Ellen Shapiro",
-          },
+    expect(client.cache.extract()).toMatchSnapshot();
+
+    const allErrorsResult = await client.mutate({
+      mutation,
+      errorPolicy: "all",
+      variables: {
+        newName: "Ellen Shapiro",
+      },
+    });
+
+    expect(allErrorsResult).toEqual({
+      data: {
+        newPerson: {
+          __typename: "Person",
+          name: "Ellen Shapiro",
         },
-        errors: [expectedFakeError],
-      });
+      },
+      errors: [expectedFakeError],
+    });
 
-      expect(client.cache.extract()).toMatchSnapshot();
-
-      resolve();
-    }
-  );
+    expect(client.cache.extract()).toMatchSnapshot();
+  });
 
   it("should warn when the result fields don't match the query fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
@@ -1210,7 +1204,7 @@ describe("mutation results", () => {
     }
   });
 
-  itAsync("allows mutations with optional arguments", (resolve, reject) => {
+  it("allows mutations with optional arguments", async () => {
     let count = 0;
 
     const client = new ApolloClient({
@@ -1257,7 +1251,7 @@ describe("mutation results", () => {
       }
     `;
 
-    Promise.all([
+    await Promise.all([
       client.mutate({
         mutation,
         variables: { a: 1, b: 2 },
@@ -1273,24 +1267,22 @@ describe("mutation results", () => {
       client.mutate({
         mutation,
       }),
-    ])
-      .then((results) => {
-        expect(client.cache.extract()).toEqual({
-          ROOT_MUTATION: {
-            __typename: "Mutation",
-          },
-        });
-        expect(results).toEqual([
-          { data: { result: "hello" } },
-          { data: { result: "world" } },
-          { data: { result: "goodbye" } },
-          { data: { result: "moon" } },
-        ]);
-      })
-      .then(resolve, reject);
+    ]).then((results) => {
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
+      expect(results).toEqual([
+        { data: { result: "hello" } },
+        { data: { result: "world" } },
+        { data: { result: "goodbye" } },
+        { data: { result: "moon" } },
+      ]);
+    });
   });
 
-  itAsync("allows mutations with default values", (resolve, reject) => {
+  it("allows mutations with default values", async () => {
     let count = 0;
 
     const client = new ApolloClient({
@@ -1339,7 +1331,7 @@ describe("mutation results", () => {
       }
     `;
 
-    Promise.all([
+    await Promise.all([
       client.mutate({
         mutation,
         variables: { a: 1, b: "water" },
@@ -1352,103 +1344,96 @@ describe("mutation results", () => {
         mutation,
         variables: { c: 3 },
       }),
-    ])
-      .then((results) => {
-        expect(client.cache.extract()).toEqual({
-          ROOT_MUTATION: {
-            __typename: "Mutation",
-          },
-        });
-        expect(results).toEqual([
-          { data: { result: "hello" } },
-          { data: { result: "world" } },
-          { data: { result: "goodbye" } },
-        ]);
-      })
-      .then(resolve, reject);
+    ]).then((results) => {
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
+      expect(results).toEqual([
+        { data: { result: "hello" } },
+        { data: { result: "world" } },
+        { data: { result: "goodbye" } },
+      ]);
+    });
   });
 
-  itAsync(
-    "will pass null to the network interface when provided",
-    (resolve, reject) => {
-      let count = 0;
+  it("will pass null to the network interface when provided", async () => {
+    let count = 0;
 
-      const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
-        link: ApolloLink.from([
-          ({ variables }: any) =>
-            new Observable((observer) => {
-              switch (count++) {
-                case 0:
-                  expect(variables).toEqual({
-                    a: 1,
-                    b: 2,
-                    c: null,
-                  });
-                  observer.next({ data: { result: "hello" } });
-                  observer.complete();
-                  return;
-                case 1:
-                  expect(variables).toEqual({
-                    a: 1,
-                    b: null,
-                    c: 3,
-                  });
-                  observer.next({ data: { result: "world" } });
-                  observer.complete();
-                  return;
-                case 2:
-                  expect(variables).toEqual({
-                    a: null,
-                    b: null,
-                    c: null,
-                  });
-                  observer.next({ data: { result: "moon" } });
-                  observer.complete();
-                  return;
-                default:
-                  observer.error(new Error("Too many network calls."));
-                  return;
-              }
-            }),
-        ] as any),
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: ApolloLink.from([
+        ({ variables }: any) =>
+          new Observable((observer) => {
+            switch (count++) {
+              case 0:
+                expect(variables).toEqual({
+                  a: 1,
+                  b: 2,
+                  c: null,
+                });
+                observer.next({ data: { result: "hello" } });
+                observer.complete();
+                return;
+              case 1:
+                expect(variables).toEqual({
+                  a: 1,
+                  b: null,
+                  c: 3,
+                });
+                observer.next({ data: { result: "world" } });
+                observer.complete();
+                return;
+              case 2:
+                expect(variables).toEqual({
+                  a: null,
+                  b: null,
+                  c: null,
+                });
+                observer.next({ data: { result: "moon" } });
+                observer.complete();
+                return;
+              default:
+                observer.error(new Error("Too many network calls."));
+                return;
+            }
+          }),
+      ] as any),
+    });
+
+    const mutation = gql`
+      mutation ($a: Int!, $b: Int, $c: Int) {
+        result(a: $a, b: $b, c: $c)
+      }
+    `;
+
+    await Promise.all([
+      client.mutate({
+        mutation,
+        variables: { a: 1, b: 2, c: null },
+      }),
+      client.mutate({
+        mutation,
+        variables: { a: 1, b: null, c: 3 },
+      }),
+      client.mutate({
+        mutation,
+        variables: { a: null, b: null, c: null },
+      }),
+    ]).then((results) => {
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
       });
-
-      const mutation = gql`
-        mutation ($a: Int!, $b: Int, $c: Int) {
-          result(a: $a, b: $b, c: $c)
-        }
-      `;
-
-      Promise.all([
-        client.mutate({
-          mutation,
-          variables: { a: 1, b: 2, c: null },
-        }),
-        client.mutate({
-          mutation,
-          variables: { a: 1, b: null, c: 3 },
-        }),
-        client.mutate({
-          mutation,
-          variables: { a: null, b: null, c: null },
-        }),
-      ])
-        .then((results) => {
-          expect(client.cache.extract()).toEqual({
-            ROOT_MUTATION: {
-              __typename: "Mutation",
-            },
-          });
-          expect(results).toEqual([
-            { data: { result: "hello" } },
-            { data: { result: "world" } },
-            { data: { result: "moon" } },
-          ]);
-        })
-        .then(resolve, reject);
-    }
-  );
+      expect(results).toEqual([
+        { data: { result: "hello" } },
+        { data: { result: "world" } },
+        { data: { result: "moon" } },
+      ]);
+    });
+  });
 
   describe("store transaction updater", () => {
     const mutation = gql`
@@ -1785,79 +1770,71 @@ describe("mutation results", () => {
         .then(resolve, reject);
     });
 
-    itAsync(
-      "mutate<MyType>() data should never be `undefined` in case of success",
-      (resolve, reject) => {
-        const mutation = gql`
-          mutation Foo {
-            foo {
-              bar
-            }
+    it("mutate<MyType>() data should never be `undefined` in case of success", async () => {
+      const mutation = gql`
+        mutation Foo {
+          foo {
+            bar
           }
-        `;
+        }
+      `;
 
-        const result1 = {
-          data: {
-            foo: {
-              bar: "a",
-            },
+      const result1 = {
+        data: {
+          foo: {
+            bar: "a",
           },
-        };
+        },
+      };
 
-        const client = new ApolloClient({
-          link: mockSingleLink({
-            request: { query: mutation } as any,
-            result: result1,
-          }).setOnError(reject),
-          cache: new InMemoryCache({ addTypename: false }),
+      const client = new ApolloClient({
+        link: mockSingleLink({
+          request: { query: mutation } as any,
+          result: result1,
+        }),
+        cache: new InMemoryCache({ addTypename: false }),
+      });
+
+      await client
+        .mutate<{ foo: { bar: string } }>({
+          mutation: mutation,
+        })
+        .then((result) => {
+          // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'.", even without `!` operator
+          if (!result.data?.foo.bar) {
+            throw new Error("data was unexpectedly undefined");
+          }
         });
+    });
 
-        client
-          .mutate<{ foo: { bar: string } }>({
-            mutation: mutation,
-          })
-          .then((result) => {
-            // This next line should **not** raise "TS2533: Object is possibly 'null' or 'undefined'.", even without `!` operator
-            if (result.data!.foo.bar) {
-              resolve();
-            }
-          }, reject);
-      }
-    );
+    it("data might be undefined in case of failure with errorPolicy = ignore", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          () =>
+            new Observable<FetchResult<{ foo: string }>>((observer) => {
+              observer.next({
+                errors: [new GraphQLError("Oops")],
+              });
+              observer.complete();
+            })
+        ),
+      });
 
-    itAsync(
-      "data might be undefined in case of failure with errorPolicy = ignore",
-      async (resolve, reject) => {
-        const client = new ApolloClient({
-          cache: new InMemoryCache(),
-          link: new ApolloLink(
-            () =>
-              new Observable<FetchResult<{ foo: string }>>((observer) => {
-                observer.next({
-                  errors: [new GraphQLError("Oops")],
-                });
-                observer.complete();
-              })
-          ).setOnError(reject),
-        });
+      const ignoreErrorsResult = await client.mutate({
+        mutation: gql`
+          mutation Foo {
+            foo
+          }
+        `,
+        fetchPolicy: "no-cache",
+        errorPolicy: "ignore",
+      });
 
-        const ignoreErrorsResult = await client.mutate({
-          mutation: gql`
-            mutation Foo {
-              foo
-            }
-          `,
-          fetchPolicy: "no-cache",
-          errorPolicy: "ignore",
-        });
-
-        expect(ignoreErrorsResult).toEqual({
-          data: undefined,
-          errors: undefined,
-        });
-
-        resolve();
-      }
-    );
+      expect(ignoreErrorsResult).toEqual({
+        data: undefined,
+        errors: undefined,
+      });
+    });
   });
 });

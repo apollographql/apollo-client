@@ -470,7 +470,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ id: "1" });
 
     expect(result.current).toBe(previousResult);
-    expect(renders.count).toBe(4);
+    expect(renders.count).toBe(3 + (IS_REACT_19 ? 1 : 0));
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toMatchObject([
       {

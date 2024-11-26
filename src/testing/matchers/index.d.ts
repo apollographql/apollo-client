@@ -36,6 +36,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toBeGarbageCollected: T extends WeakRef<any> ? () => Promise<R>
   : { error: "matcher needs to be called on a WeakRef instance" };
 
+  toComplete: T extends ObservableStream<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
   toEmitAnything: T extends ObservableStream<any> ?
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };

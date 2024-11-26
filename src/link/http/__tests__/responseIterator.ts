@@ -442,29 +442,30 @@ describe("multipart responses", () => {
   });
 
   // test is still failing as observer.complete is called even after error is thrown
-  // itAsync('throws error on unsupported patch content type', (resolve, reject) => {
-  //   const stream = Readable.from(
-  //     bodyIncorrectChunkType.split("\r\n").map((line) => line + "\r\n")
-  //   );
-  //   const fetch = jest.fn(async () => ({
-  //     status: 200,
-  //     body: stream,
-  //     headers: new Headers({ "content-type": `multipart/mixed; boundary=${BOUNDARY}` }),
-  //   }));
-  //   const link = new HttpLink({
-  //     fetch: fetch as any,
-  //   });
-  //   const observable = execute(link, { query: sampleDeferredQuery });
-  //   const mockError = { throws: new Error('Unsupported patch content type: application/json is required') };
+  it.failing("throws error on unsupported patch content type", async () => {
+    const stream = Readable.from(
+      bodyIncorrectChunkType.split("\r\n").map((line) => line + "\r\n")
+    );
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body: stream,
+      headers: new Headers({
+        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
+      }),
+    }));
+    const link = new HttpLink({
+      fetch: fetch as any,
+    });
+    const observable = execute(link, { query: sampleDeferredQuery });
+    const mockError = {
+      throws: new Error(
+        "Unsupported patch content type: application/json is required"
+      ),
+    };
+    const observableStream = new ObservableStream(observable);
 
-  //   observable.subscribe(
-  //     () => reject('next should not have been called'),
-  //     makeCallback(resolve, reject, (error) => {
-  //       expect(error).toEqual(mockError.throws);
-  //     }),
-  //     () => reject('complete should not have been called'),
-  //   );
-  // });
+    await expect(observableStream).toEmitError(mockError.throws);
+  });
 
   describe("without TextDecoder defined in the environment", () => {
     beforeAll(() => {

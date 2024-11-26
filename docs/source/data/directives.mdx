@@ -175,3 +175,37 @@ const Trail = ({ id }) => {
 ```
 
 Notice that the `Trail` component isn't receiving the entire `trail` object via props, only the `id` which is used along with the fragment document to create a live binding for each trail item in the cache. This allows each `Trail` component to react to the cache updates for a single trail independently. Updates to a trail's `status` will not cause the parent `App` component to rerender since the `@nonreactive` directive is applied to the `TrailFragment` spread, a fragment that includes the `status` field.
+
+
+<MinVersion version="3.12.0">
+## `@unmask`
+</MinVersion>
+
+TODO: Add intro section for `@unmask`
+
+`@unmask` on its own however does little to help us determine whether a would-be masked field is accessed throughout our components. Apollo Client provides the ability to give you development-only warnings when accessing would-be masked fields throughout your application. To enable development-only warnings, set the `mode` argument to `migrate` with the `@unmask` directive.
+
+```graphql
+query GetPost(id: $id) {
+  post(id: $id) {
+    id
+    ...PostDetails @unmask(mode: "migrate")
+  }
+}
+
+fragment PostDetails on Post {
+  title
+}
+```
+
+Now when you access `title` from the query result, you'll see a console warning.
+
+```tsx
+const { data } = useQuery(GET_POST);
+
+const title = data.post.title;
+```
+
+```
+Accessing unmasked field on query 'GetPost' at path 'post.title'. This field will not be available when masking is enabled. Please read the field from the fragment instead.
+```

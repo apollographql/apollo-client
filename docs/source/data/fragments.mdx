@@ -692,7 +692,7 @@ We've removed the check for `publishedAt` since we no longer show the publish da
 
 Uh oh, we just broke our app—our `Posts` component no longer shows any posts! Our `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of our `Posts` component.
 
-This is an example of an **implicit dependency** between our components. As the application grows in complexity, these types of implicit dependencies can be more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if this component was used in multiple queries!
+This coupling is an example of an **implicit dependency** between components. As the application grows in complexity, these implicit dependencies can become more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if multiple queries used it.
 
 Data masking helps us eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. This creates more loosely coupled components that are more resistant to change.
 

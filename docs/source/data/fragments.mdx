@@ -668,7 +668,7 @@ When the `includeUnpublishedPosts` prop is false, the `Posts` component filters 
 
 This strategy might work well for a while, but consider what happens when we start modifying the `PostDetails` component.
 
-We've decided that we no longer want to show the publish date when viewing the list of posts and prefer to display it when viewing an individual post. Let's modify `PostDetails` accordingly.
+Suppose we've decided we no longer want to show the publish date on the list of posts and prefer to display it on individual posts. Let's modify `PostDetails` accordingly.
 
 ```jsx title="PostDetails.jsx"
 export const POST_DETAILS_FRAGMENT = gql`

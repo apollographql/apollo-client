@@ -709,7 +709,7 @@ const client = new ApolloClient({
 
 When `dataMasking` is enabled, fields defined in fragments are hidden from components. This prevents the component from accessing data it didn't ask for.
 
-Enabling data masking enables masking on all operation types and extends to all request-based APIs, such as `useQuery`, `client.query`, `client.mutate`, etc. Cache APIs, such as `cache.readQuery` and `cache.readFragment` are never masked.
+Enabling data masking applies it to all operation types and all request-based APIs, such as `useQuery`, `client.query`, `client.mutate`, etc. Cache APIs, such as `cache.readQuery` and `cache.readFragment` are never masked.
 
 <Tip>
 We recommend enabling the `dataMasking` flag immediately when creating new applications. See the section on [migrating an existing application](#migrating-an-existing-application) to learn how to enable data masking in existing applications.

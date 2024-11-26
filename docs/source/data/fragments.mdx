@@ -664,7 +664,7 @@ export default function PostDetails({ post }) {
 
 The `Posts` component is responsible for fetching and rendering a list of posts. We loop over each post and render a `PostDetails` component to display details about the post. `PostDetails` uses a colocated fragment to define its own data requirements necessary to render post details, which is included in the `GetPosts` query.
 
-When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from our list of all posts by checking the `publishedAt` property on the post object.
+When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from the list of all posts by checking the `publishedAt` property on the post object.
 
 This strategy might work well for a while, but consider what happens when we start modifying the `PostDetails` component.
 
@@ -690,9 +690,9 @@ export default function PostDetails({ post }) {
 
 We've removed the check for `publishedAt` since we no longer show the publish date. We've also removed the `publishedAt` field from the `PostDetailsFragment` fragment since we no longer use this field in the `PostDetails` component.
 
-Uh oh, we just broke our app—our `Posts` component no longer shows any posts! Our `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of our `Posts` component.
+Uh oh, we just broke our app—the `Posts` component no longer shows any posts! The `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of the `Posts` component.
 
-This coupling is an example of an **implicit dependency** between components. As the application grows in complexity, these implicit dependencies can become more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if multiple queries used it.
+This coupling is an example of an **implicit dependency** between components. As the application grows in complexity, these implicit dependencies can become more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in the component tree or if multiple queries used it.
 
 **Data masking** helps eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. As a result, data masking creates more loosely coupled components that are more resistant to change.
 
@@ -715,7 +715,7 @@ Enabling data masking applies it to all operation types and all request-based AP
 We recommend enabling the `dataMasking` flag immediately when creating new applications. See the section on [adoption in an existing application](#adoption-in-an-existing-application) to learn how to enable data masking in existing applications.
 </Tip>
 
-Let's revisit our example from the previous section.
+Let's revisit the example from the previous section.
 
 ```jsx title="Posts.jsx"
 const GET_POSTS = gql`
@@ -736,7 +736,7 @@ export default function Posts({ includeUnpublishedPosts }) {
 }
 ```
 
-Our `GetPosts` query asks for the `posts` field along with an `id` for each post. All other fields are defined in `PostDetailsFragment`. If we were to inspect `data`, we'd see that the only accessible fields are those defined in our query but not the fragment.
+Our `GetPosts` query asks for the `posts` field along with an `id` for each post. All other fields are defined in `PostDetailsFragment`. If we were to inspect `data`, we'd see that the only accessible fields are those defined in the query but not the fragment.
 
 ```json
 {
@@ -753,7 +753,7 @@ Our `GetPosts` query asks for the `posts` field along with an `id` for each post
 }
 ```
 
-We can access more data by adding fields to our query. Let's fix the previous section's example by adding the `publishedAt` field to our `GetPosts` query so that our `Posts` component can use it.
+We can access more data by adding fields to the query. Let's fix the previous section's example by adding the `publishedAt` field to the `GetPosts` query so that the `Posts` component can use it.
 
 ```jsx {5} title="Posts.jsx"
 const GET_POSTS = gql`
@@ -790,7 +790,7 @@ Now if we inspect `data`, we'll see that `publishedAt` is available to the `Post
 
 ### Reading fragment data
 
-Now that our `GetPosts` query is masked, we've introduced a problem for our `PostDetails` component. The `post` prop no longer contains the fields from our `PostDetailsFragment` fragment, preventing us from rendering that data.
+Now that the `GetPosts` query is masked, we've introduced a problem for the `PostDetails` component. The `post` prop no longer contains the fields from the `PostDetailsFragment` fragment, preventing us from rendering that data.
 
 We read the fragment data with the [`useFragment` hook](#usefragment).
 
@@ -816,7 +816,7 @@ function PostDetails({ post }) {
 
   // It's a good idea to check the `complete` flag to ensure all data was
   // successfully queried from the cache. This can indicate a potential
-  // issue with our cache configuration or parent object when `complete`
+  // issue with the cache configuration or parent object when `complete`
   // is `false`.
   if (!complete) {
     return null;
@@ -864,7 +864,7 @@ export default function Comment({ comment }) {
 
 Much like `PostDetails`, we used `useFragment` to read the `CommentFragment` fragment data since it is masked and not available on the `comment` prop.
 
-We can now use the `Comment` component and `CommentFragment` fragment in our `PostDetails` component to render the `topComment`.
+We can now use the `Comment` component and `CommentFragment` fragment in the `PostDetails` component to render the `topComment`.
 
 ```jsx {1,7-10,13,29} title="PostDetails.jsx"
 import { COMMENT_FRAGMENT } from "./Comment";
@@ -919,7 +919,7 @@ If we inspect the `data` property returned by `useFragment` in `PostDetails`, we
 }
 ```
 
-Throughout this example, You'll notice that we never touched the `GetPosts` query as a result of this change. Because we included `CommentFragment` with `PostDetailsFragment`, it was added to our query automatically. Colocating fragments like this is a powerful pattern that, when combined with data masking, provide very self-isolated components.
+Throughout this example, You'll notice that we never touched the `GetPosts` query as a result of this change. Because we included `CommentFragment` with `PostDetailsFragment`, it was added to the query automatically. Colocating fragments like this is a powerful pattern that, when combined with data masking, provide very self-isolated components.
 
 <Tip>
 We recommend that parent components only add fragments defined by their directly-rendered children to prevent coupling with more deeply nested components. In this example, the `GetPosts` query did not include the `CommentFragment` fragment directly but rather it relied on the `PostDetails` component to include it with the `PostDetailsFragment` fragment.

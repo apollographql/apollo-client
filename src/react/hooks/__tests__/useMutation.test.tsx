@@ -2190,6 +2190,10 @@ describe("useMutation Hook", () => {
         { id: "7", value: 222 },
       ];
 
+      // Modifying this value means we can return a subset of our numbers array
+      // without needing to mutate or reassignn the original numbersArray.
+      let totalNumbers: number = numbersArray.length;
+
       type TNumbersQuery = {
         numbers: {
           __typename: "NumbersResult";
@@ -2202,13 +2206,15 @@ describe("useMutation Hook", () => {
         };
       };
 
-      function getNumbersData(): TNumbersQuery {
+      function getNumbersData(length: number = totalNumbers): TNumbersQuery {
+        const numbers = numbersArray.slice(0, length);
+
         return {
           numbers: {
             __typename: "NumbersResult",
             id: "numbersId",
-            numbersArray,
-            sum: numbersArray.reduce((sum, b) => sum + b.value, 0),
+            numbersArray: numbers,
+            sum: numbers.reduce((sum, b) => sum + b.value, 0),
           },
         };
       }
@@ -2222,13 +2228,13 @@ describe("useMutation Hook", () => {
                 data: getNumbersData(),
               });
             } else if (operationName === "RemoveNumberMutation") {
-              const last = getLastNumber();
-              numbersArray = numbersArray.slice(0, -1);
               observer.next({
                 data: {
-                  removeLastNumber: last,
+                  removeLastNumber: getLastNumber(),
                 },
               });
+
+              totalNumbers--;
             }
             observer.complete();
           }, 50);
@@ -2341,7 +2347,9 @@ describe("useMutation Hook", () => {
       }
 
       function getLastNumber() {
-        return numbersArray[numbersArray.length - 1];
+        const numbers = numbersArray.slice(0, totalNumbers);
+
+        return numbers[numbers.length - 1];
       }
 
       expect(getLastNumber()).toEqual({ id: "7", value: 222 });

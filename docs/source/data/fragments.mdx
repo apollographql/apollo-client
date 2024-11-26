@@ -595,7 +595,7 @@ See the [API reference](../api/react/hooks#usefragment) for more details on the 
 
 By default, Apollo Client returns all data for all fields defined in a GraphQL operation. As your app grows, components that query your GraphQL data can become tightly coupled to their component subtrees. [Colocated fragments](#colocating-fragments) reduce the degree of coupling by moving components' data requirements into fragments. However, colocating fragments doesn't eliminate the issue.
 
-Let's take a look at an example.
+Let's take a look at an example. The following `Posts.jsx` defines a `Posts` component that fetches and displays a list of posts, optionally filtering out unpublished ones, using a GraphQL query that includes a fragment for post details.
 
 ```jsx title="Posts.jsx"
 import { POST_DETAILS_FRAGMENT } from './PostDetails';
@@ -637,6 +637,7 @@ export default function Posts({ includeUnpublishedPosts }) {
 }
 ```
 
+The following `PostDetails.jsx` defines the fragment for post details and the associated UI elements.
 ```jsx title="PostDetails.jsx"
 export const POST_DETAILS_FRAGMENT = gql`
   fragment PostDetailsFragment on Post {

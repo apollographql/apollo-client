@@ -9,8 +9,8 @@ import {
   Observable,
   ObservableSubscription as Subscription,
 } from "../utilities";
-import { itAsync, subscribeAndCount, mockSingleLink } from "../testing";
-import { spyOnConsole } from "../testing/internal";
+import { itAsync, mockSingleLink } from "../testing";
+import { ObservableStream, spyOnConsole } from "../testing/internal";
 
 describe("mutation results", () => {
   const query = gql`
@@ -1108,102 +1108,107 @@ describe("mutation results", () => {
     });
   });
 
-  itAsync(
-    "does not fail if one of the previous queries did not complete correctly",
-    (resolve, reject) => {
-      const variableQuery = gql`
-        query Echo($message: String) {
-          echo(message: $message)
+  it("does not fail if one of the previous queries did not complete correctly", async () => {
+    const variableQuery = gql`
+      query Echo($message: String) {
+        echo(message: $message)
+      }
+    `;
+
+    const variables1 = {
+      message: "a",
+    };
+
+    const result1 = {
+      data: {
+        echo: "a",
+      },
+    };
+
+    const variables2 = {
+      message: "b",
+    };
+
+    const result2 = {
+      data: {
+        echo: "b",
+      },
+    };
+
+    const resetMutation = gql`
+      mutation Reset {
+        reset {
+          echo
         }
-      `;
+      }
+    `;
 
-      const variables1 = {
-        message: "a",
-      };
-
-      const result1 = {
-        data: {
-          echo: "a",
+    const resetMutationResult = {
+      data: {
+        reset: {
+          echo: "0",
         },
-      };
+      },
+    };
 
-      const variables2 = {
-        message: "b",
-      };
-
-      const result2 = {
-        data: {
-          echo: "b",
+    const client = new ApolloClient({
+      link: mockSingleLink(
+        {
+          request: { query: variableQuery, variables: variables1 } as any,
+          result: result1,
         },
-      };
-
-      const resetMutation = gql`
-        mutation Reset {
-          reset {
-            echo
-          }
+        {
+          request: { query: variableQuery, variables: variables2 } as any,
+          result: result2,
+        },
+        {
+          request: { query: resetMutation } as any,
+          result: resetMutationResult,
         }
-      `;
+      ),
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-      const resetMutationResult = {
-        data: {
-          reset: {
-            echo: "0",
-          },
-        },
-      };
+    const watchedQuery = client.watchQuery({
+      query: variableQuery,
+      variables: variables1,
+    });
 
-      const client = new ApolloClient({
-        link: mockSingleLink(
-          {
-            request: { query: variableQuery, variables: variables1 } as any,
-            result: result1,
-          },
-          {
-            request: { query: variableQuery, variables: variables2 } as any,
-            result: result2,
-          },
-          {
-            request: { query: resetMutation } as any,
-            result: resetMutationResult,
-          }
-        ).setOnError(reject),
-        cache: new InMemoryCache({ addTypename: false }),
-      });
+    const firstSubs = watchedQuery.subscribe({
+      next: () => null,
+      error: (error) => {
+        throw error;
+      },
+    });
 
-      const watchedQuery = client.watchQuery({
-        query: variableQuery,
-        variables: variables1,
-      });
+    // Cancel the query right away!
+    firstSubs.unsubscribe();
 
-      const firstSubs = watchedQuery.subscribe({
-        next: () => null,
-        error: reject,
-      });
+    const stream = new ObservableStream(watchedQuery);
 
-      // Cancel the query right away!
-      firstSubs.unsubscribe();
+    watchedQuery.refetch(variables2);
 
-      subscribeAndCount(reject, watchedQuery, (count, result) => {
-        if (count === 1) {
-          expect(result.data).toEqual({ echo: "b" });
-          client.mutate({
-            mutation: resetMutation,
-            updateQueries: {
-              Echo: () => {
-                return { echo: "0" };
-              },
-            },
-          });
-        } else if (count === 2) {
-          expect(result.data).toEqual({ echo: "0" });
-          resolve();
-        }
-      });
+    {
+      const result = await stream.takeNext();
 
-      watchedQuery.refetch(variables2);
+      expect(result.data).toEqual({ echo: "b" });
     }
-  );
+
+    client.mutate({
+      mutation: resetMutation,
+      updateQueries: {
+        Echo: () => {
+          return { echo: "0" };
+        },
+      },
+    });
+
+    {
+      const result = await stream.takeNext();
+
+      expect(result.data).toEqual({ echo: "0" });
+    }
+  });
 
   itAsync("allows mutations with optional arguments", (resolve, reject) => {
     let count = 0;

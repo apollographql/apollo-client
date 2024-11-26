@@ -336,7 +336,7 @@ describe("fetchMore on an observable query", () => {
         }
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("field policy", async () => {
@@ -388,7 +388,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -446,7 +446,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("field policy", async () => {
@@ -500,7 +500,7 @@ describe("fetchMore on an observable query", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -706,7 +706,7 @@ describe("fetchMore on an observable query", () => {
         checkCacheExtract1234678(client.cache);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("cache-and-network with notifyOnNetworkStatusChange: true", async () => {
@@ -836,7 +836,7 @@ describe("fetchMore on an observable query", () => {
         checkCacheExtract1234678(client.cache);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("network-only", async () => {
@@ -940,7 +940,7 @@ describe("fetchMore on an observable query", () => {
         checkCacheExtract1234678(client.cache);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("network-only with notifyOnNetworkStatusChange: true", async () => {
@@ -1069,7 +1069,7 @@ describe("fetchMore on an observable query", () => {
         checkCacheExtract1234678(client.cache);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -1243,7 +1243,7 @@ describe("fetchMore on an observable query", () => {
       ]);
     }
 
-    await expect(stream).not.toEmitValue();
+    await expect(stream).not.toEmitAnything();
   });
 
   it("fetching more with a different query", async () => {
@@ -1297,7 +1297,7 @@ describe("fetchMore on an observable query", () => {
       }
     }
 
-    await expect(stream).not.toEmitValue();
+    await expect(stream).not.toEmitAnything();
   });
 
   describe("will not get an error from `fetchMore` if thrown", () => {
@@ -1507,7 +1507,7 @@ describe("fetchMore on an observable query", () => {
       expect(result.data.emptyItems).toHaveLength(0);
     }
 
-    await expect(stream).not.toEmitValue();
+    await expect(stream).not.toEmitAnything();
   });
 });
 
@@ -1684,7 +1684,7 @@ describe("fetchMore on an observable query with connection", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("field policy", async () => {
@@ -1737,7 +1737,7 @@ describe("fetchMore on an observable query with connection", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -1802,7 +1802,7 @@ describe("fetchMore on an observable query with connection", () => {
         expect((data as any).entry.comments.length).toBe(20);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("field policy", async () => {
@@ -1865,7 +1865,7 @@ describe("fetchMore on an observable query with connection", () => {
         expect(data.entry.comments.length).toBe(20);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
   });
 });

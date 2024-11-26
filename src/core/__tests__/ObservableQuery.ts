@@ -150,7 +150,7 @@ describe("ObservableQuery", () => {
 
         observable.stopPolling();
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
 
       it("stops polling if goes from something -> 0", async () => {
@@ -185,7 +185,7 @@ describe("ObservableQuery", () => {
 
         observable.setOptions({ query, pollInterval: 0 });
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
 
       it("can change from x>0 to y>0", async () => {
@@ -229,7 +229,7 @@ describe("ObservableQuery", () => {
 
         observable.stopPolling();
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
     });
 
@@ -299,7 +299,7 @@ describe("ObservableQuery", () => {
         expect(data).toEqual(data2);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("rerenders when refetch is called", async () => {
@@ -367,7 +367,7 @@ describe("ObservableQuery", () => {
         expect(result.data).toEqual(data2);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("rerenders with new variables then shows correct data for previous variables", async () => {
@@ -468,7 +468,7 @@ describe("ObservableQuery", () => {
 
       observable.refetch();
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does a network request if fetchPolicy becomes networkOnly", async () => {
@@ -501,7 +501,7 @@ describe("ObservableQuery", () => {
         expect(data).toEqual(dataTwo);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does a network request if fetchPolicy is cache-only then store is reset then fetchPolicy becomes not cache-only", async () => {
@@ -557,7 +557,7 @@ describe("ObservableQuery", () => {
         expect(timesFired).toBe(1);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does a network request if fetchPolicy changes from cache-only", async () => {
@@ -615,7 +615,7 @@ describe("ObservableQuery", () => {
         expect(timesFired).toBe(1);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("can set queries to standby and will not fetch when doing so", async () => {
@@ -667,7 +667,7 @@ describe("ObservableQuery", () => {
       // make sure the query didn't get fired again.
       expect(timesFired).toBe(1);
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("will not fetch when setting a cache-only query to standby", async () => {
@@ -722,7 +722,7 @@ describe("ObservableQuery", () => {
       // make sure the query didn't get fired again.
       expect(timesFired).toBe(1);
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("returns a promise which eventually returns data", async () => {
@@ -795,7 +795,7 @@ describe("ObservableQuery", () => {
         expect(result.data).toEqual(dataTwo);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does invalidate the currentResult data if the variables change", async () => {
@@ -831,7 +831,7 @@ describe("ObservableQuery", () => {
         expect(observable.getCurrentResult().loading).toBe(false);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does invalidate the currentResult data if the variables change", async () => {
@@ -899,7 +899,7 @@ describe("ObservableQuery", () => {
         expect(observable.getCurrentResult().loading).toBe(false);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does not invalidate the currentResult errors if the variables change", async () => {
@@ -940,7 +940,7 @@ describe("ObservableQuery", () => {
         expect(observable.getCurrentResult().loading).toBe(false);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does not perform a query when unsubscribed if variables change", async () => {
@@ -998,7 +998,7 @@ describe("ObservableQuery", () => {
         expect(result.data).toEqual(dataTwo);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("sets networkStatus to `setVariables` when calling refetch with new variables", async () => {
@@ -1048,7 +1048,7 @@ describe("ObservableQuery", () => {
         expect(result.data).toEqual(dataTwo);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("does not rerun query if variables do not change", async () => {
@@ -1071,7 +1071,7 @@ describe("ObservableQuery", () => {
 
       observable.setVariables(variables);
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("handles variables changing while a query is in-flight", async () => {
@@ -1101,7 +1101,7 @@ describe("ObservableQuery", () => {
       expect(result.loading).toBe(false);
       expect(result.data).toEqual(dataTwo);
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -1167,7 +1167,7 @@ describe("ObservableQuery", () => {
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("calling refetch with different variables before the query itself resolved will only yield the result for the new variables", async () => {
@@ -1204,7 +1204,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
       });
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
@@ -1552,7 +1552,7 @@ describe("ObservableQuery", () => {
         "cache-and-network",
       ]);
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("cache-and-network refetch should run @client(always: true) resolvers when network request fails", async () => {
@@ -1673,7 +1673,7 @@ describe("ObservableQuery", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     describe("warnings about refetch({ variables })", () => {
@@ -1760,7 +1760,7 @@ describe("ObservableQuery", () => {
           );
         }
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
 
       it("should warn if passed { variables } and query does not declare $variables", async () => {
@@ -1871,7 +1871,7 @@ describe("ObservableQuery", () => {
           }
         );
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
 
       it("should not warn if passed { variables } and query declares $variables", async () => {
@@ -1947,7 +1947,7 @@ describe("ObservableQuery", () => {
           expect(console.warn).not.toHaveBeenCalled();
         }
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
     });
   });
@@ -2077,7 +2077,7 @@ describe("ObservableQuery", () => {
         expect(observable.getCurrentResult()).toEqual(result);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("returns the current query status immediately", async () => {
@@ -2327,7 +2327,7 @@ describe("ObservableQuery", () => {
         expect(current.networkStatus).toEqual(7);
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("returns loading even if full data is available when using network-only fetchPolicy", async () => {
@@ -2384,7 +2384,7 @@ describe("ObservableQuery", () => {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
@@ -2932,7 +2932,7 @@ describe("ObservableQuery", () => {
           expect(result.data.people_one).toEqual(mutationData);
         }
 
-        await expect(stream).not.toEmitValue();
+        await expect(stream).not.toEmitAnything();
       });
     });
   });
@@ -3262,7 +3262,7 @@ describe("ObservableQuery", () => {
     expect(onWatchUpdatedCount).toBe(1);
     queryManager.stop();
 
-    await expect(stream).not.toEmitValue();
+    await expect(stream).not.toEmitAnything();
   });
 
   it("ObservableQuery#map respects Symbol.species", async () => {

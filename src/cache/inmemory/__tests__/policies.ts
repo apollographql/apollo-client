@@ -4363,7 +4363,7 @@ describe("type policies", function () {
         });
       }
 
-      await expect(stream).not.toEmitValue();
+      await expect(stream).not.toEmitAnything();
     });
 
     it("runs nested merge functions as well as ancestors", function () {

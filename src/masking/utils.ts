@@ -7,6 +7,7 @@ export const SetImpl = canUseWeakSet ? WeakSet : Set;
 
 // Contextual slot that allows us to disable accessor warnings on fields when in
 // migrate mode.
+/** @internal */
 export const disableWarningsSlot = new Slot<boolean>();
 
 let issuedWarning = false;

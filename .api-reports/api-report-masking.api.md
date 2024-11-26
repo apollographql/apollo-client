@@ -346,7 +346,7 @@ interface DeleteModifier {
 // @public (undocumented)
 const _deleteModifier: unique symbol;
 
-// @public (undocumented)
+// @internal (undocumented)
 export const disableWarningsSlot: {
     readonly id: string;
     hasValue(): boolean;

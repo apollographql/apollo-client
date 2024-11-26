@@ -2564,9 +2564,9 @@ describe("useMutation Hook", () => {
 
         expect(useQueryResult.loading).toBe(false);
         expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
-        // TODO: Check against previous set of numbers since broadcast did not
-        // happen.
-        // expect(useQueryResult.data).toEqual(data);
+        // This mutation did not braodcast results, so we expect our numbers to
+        // equal the previous set.
+        expect(useQueryResult.data).toEqual(getNumbersData(5));
 
         expect(mutationResult.loading).toBe(false);
         expect(mutationResult.called).toBe(true);

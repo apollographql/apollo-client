@@ -1010,10 +1010,10 @@ function startSubscription() {
 
 ### Selectively unmasking fragment data
 
-As you work with data masking more extensively, you may find cases that require work with the full operation result. For such cases, Apollo Client includes an `@unmask` directive that is applied to fragment spreads. Adding `@unmask` to a fragment spread makes the fragment data available.
+As you work with data masking more extensively, you may find cases that require access to the full operation result. For such cases, Apollo Client includes an `@unmask` directive that is applied to fragment spreads. Adding `@unmask` to a fragment spread makes the fragment data available.
 
 <Note>
-The `@unmask` directive is an escape hatch. First try adding additional needed fields to your operation before relying on `@unmask`. It is ok however to use `@unmask` to migrate an existing app. Learn more about migrating an existing app in the ["Migrating an existing application" section](#migrating-an-existing-application).
+The `@unmask` directive is an escape hatch. First try adding additional needed fields to your operation before relying on `@unmask`. It is ok however to use `@unmask` to migrate an existing application. Learn more about migrating an existing app in the ["Migrating an existing application" section](#migrating-an-existing-application).
 </Note>
 
 ```graphql
@@ -1044,7 +1044,7 @@ Existing applications can take advantage of the new data masking features throug
 
 #### 1. Apply the `@unmask` directive to all fragment spreads
 
-Before enabling the `dataMasking` flag in the client, it is wise to ensure that your components continue to receive full results. We can use the `@unmask` directive to handle this.
+Before enabling the `dataMasking` flag in the client, it is wise to ensure that your components continue to receive full results to avoid breakages. We can use the `@unmask` directive to handle this.
 
 <Tip>
 We recommend using `@unmask` in migrate mode to enable development-only warnings when accessing would-be masked fields. Learn more about migrate mode in the [`@unmask` docs](./directives#unmask).
@@ -1067,13 +1067,13 @@ This is rather tedious to do by hand for large applications. Apollo Client provi
    git clone https://github.com/apollographql/apollo-client.git
    ```
 
-2. Install dependencies
+2. Install dependencies in `apollo-client`
 
     ```sh
     npm install
     ```
 
-3. Run the codemod via [`jscodeshift`](https://github.com/facebook/jscodeshift)
+3. Run the codemod via [`jscodeshift`](https://github.com/facebook/jscodeshift) against your codebase.
 
    ```sh
    npx jscodeshift -t ../path/to/apollo-client/scripts/codemods/data-masking/unmask.ts --extensions ts --parser ts ./src/**/*.ts --mode migrate
@@ -1106,7 +1106,7 @@ new ApolloClient({
 });
 ```
 
-> Enabling data masking early in the migration process makes it much easier to adopt for newly added queries and fragments without the risk of human error since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
+> Enabling data masking early in the migration process makes it much easier to adopt for newly added queries and fragments since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
 
 #### 3. Use `useFragment`
 

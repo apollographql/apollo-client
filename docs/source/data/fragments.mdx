@@ -694,7 +694,7 @@ Uh oh, we just broke our app—our `Posts` component no longer shows any posts! 
 
 This coupling is an example of an **implicit dependency** between components. As the application grows in complexity, these implicit dependencies can become more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if multiple queries used it.
 
-Data masking helps us eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. This creates more loosely coupled components that are more resistant to change.
+**Data masking** helps eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. As a result, data masking creates more loosely coupled components that are more resistant to change.
 
 ### Enabling data masking
 

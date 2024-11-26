@@ -244,7 +244,7 @@ We then import our shared fragment registry into our component file and register
 
 ## Colocating fragments
 
-The tree-like structure of a GraphQL response resembles the hierarchy of a frontend's rendered components. Because of this similarity, you can use fragments to split query logic up _between_ components, so that each component requests exactly the fields that it uses. This helps make your component logic more succinct by combining multiple UI components into a single data fetch.
+The tree-like structure of a GraphQL response resembles the hierarchy of a frontend's rendered components. Because of this similarity, you can use fragments to split query logic _between_ components, so each component requests exactly the fields it needs. This helps make your component logic more succinct by combining multiple UI components into a single data fetch.
 
 Consider the following view hierarchy for an app:
 

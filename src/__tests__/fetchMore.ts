@@ -1569,7 +1569,7 @@ describe("fetchMore on an observable query with connection", () => {
     });
   }
 
-  function setup(reject: (reason: any) => any, ...mockedResponses: any[]) {
+  function setup(...mockedResponses: MockedResponse[]) {
     const link = mockSingleLink(
       {
         request: {
@@ -1579,7 +1579,7 @@ describe("fetchMore on an observable query with connection", () => {
         result,
       },
       ...mockedResponses
-    ).setOnError(reject);
+    );
 
     const client = new ApolloClient({
       link,
@@ -1629,7 +1629,7 @@ describe("fetchMore on an observable query with connection", () => {
 
   describe("fetchMore with connection results merging", () => {
     itAsync("updateQuery", (resolve, reject) => {
-      const observable = setup(reject, {
+      const observable = setup({
         request: {
           query: transformedQuery,
           variables: variablesMore,

@@ -4,9 +4,11 @@ import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.j
 import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
 import { toBeDisposed } from "./toBeDisposed.js";
 import { toEmitAnything } from "./toEmitAnything.js";
+import { toEmitNextValue } from "./toEmitNextValue.js";
 
 expect.extend({
   toEmitAnything,
+  toEmitNextValue,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

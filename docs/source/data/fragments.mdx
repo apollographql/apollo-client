@@ -1007,3 +1007,33 @@ function startSubscription() {
   })
 }
 ```
+
+### Selectively unmasking fragment data
+
+As you work with data masking more extensively, you may find cases that require work with the full operation result. For such cases, Apollo Client includes an `@unmask` directive that is applied to fragment spreads. Adding `@unmask` to a fragment spread makes the fragment data available.
+
+<Note>
+The `@unmask` directive is an escape hatch. First try adding additional needed fields to your operation before relying on `@unmask`. It is ok however to use `@unmask` to migrate an existing app. Learn more about migrating an existing app in the ["Migrating an existing application" section](#migrating-an-existing-application).
+</Note>
+
+```graphql
+query GetPosts {
+  posts {
+    id
+    ...PostFragment @unmask
+  }
+}
+```
+
+Only fragments marked with `@unmask` will unmask the results. Fragments not marked with `@unmask` will remain masked.
+
+```graphql
+query GetPosts {
+  posts {
+    id
+    ...PostFragment @unmask
+    # This data remains masked
+    ...PostDetailsFragment
+  }
+}
+```

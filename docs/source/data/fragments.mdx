@@ -588,3 +588,107 @@ function Item(props) {
 </Note>
 
 See the [API reference](../api/react/hooks#usefragment) for more details on the supported options.
+
+<MinVersion version="3.12.0">
+## Data masking
+</MinVersion>
+
+By default, Apollo Client returns all data for all fields defined in a GraphQL operation. As your app grows and scales over time, this can create a high degree of coupling between your query components and the rest of the rendered components. [Colocated fragments](#colocating-fragments) help reduce this degree of coupling by moving component's data requirements into fragments, however on its own does not entirely eliminate it.
+
+Let's take a look at an example.
+
+```jsx title="Posts.jsx"
+import { POST_DETAILS_FRAGMENT } from './PostDetails';
+
+const GET_POSTS = gql`
+  query GetPosts {
+    posts {
+      id
+      ...PostDetailsFragment
+    }
+  }
+
+  ${POST_DETAILS_FRAGMENT}
+`;
+
+export default function Posts({ includeUnpublishedPosts }) {
+  const { data, loading } = useQuery(GET_POSTS);
+  const posts = data?.posts ?? [];
+
+  if (loading) {
+    return <Spinner />;
+  }
+
+  const allPosts = includeUnpublishedPosts
+    ? posts
+    : posts.filter((post) => post.publishedAt);
+
+  if (allPosts.length === 0) {
+    return <div>No posts to display</div>;
+  }
+
+  return (
+    <div>
+      {allPosts.map((post) => (
+        <PostDetails key={post.id} post={post} />
+      ))}
+    </div>
+  );
+}
+```
+
+```jsx title="PostDetails.jsx"
+export const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetailsFragment on Post {
+    title
+    shortDescription
+    publishedAt
+  }
+`;
+
+export default function PostDetails({ post }) {
+  return (
+    <section>
+      <h1>{post.title}</h1>
+      <p>{post.shortDescription}</p>
+      <p>
+        {post.publishedAt ?
+          `Published: ${formatDate(post.publishedAt)}`
+        : 'Private'}
+      </p>
+    </section>
+  );
+}
+````
+
+The `Posts` component is responsible for fetching and rendering a list of posts. We loop over each post and render a `PostDetails` component to display details about the post. `PostDetails` uses a colocated fragment to define it's own data requirements necessary to render post details, which is included in the `GetPosts` query. When the `includeUnpublishedPosts` prop is false, the `Posts` component filters out unpublished posts from our list of all posts by checking the `publishedAt` property on the post object.
+
+This may work great for a while, but consider what happens when we start modifying our `PostDetails` component.
+
+We've decided that we no longer want to show the publish date when viewing the list of posts and prefer to display it when viewing an individual post. Let's modify `PostDetails` accordingly.
+
+```jsx title="PostDetails.jsx"
+export const POST_DETAILS_FRAGMENT = gql`
+  fragment PostDetailsFragment on Post {
+    title
+    shortDescription
+  }
+`;
+
+export default function PostDetails({ post }) {
+  return (
+    <section>
+      <h1>{post.title}</h1>
+      <p>{post.shortDescription}</p>
+    </section>
+  );
+}
+````
+
+We've removed the check for `publishedAt` since we no longer show the publish date. We've also removed the `publishedAt` field from the `PostDetailsFragment` fragment since we no longer use this field in the `PostDetails` component.
+
+Uh oh, we just broke our app! Our `Posts` component no longer shows any posts! Our `Posts` component still depends on `publishedAt`, but because the field was declared in the `PostDetailsFragment` fragment, changes to `PostDetails` resulted in a subtle breakage of our `Posts` component.
+
+This is an example of an **implicit dependency** between our components. As the application grows in complexity, these types of implicit dependencies can be more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if this component was used in multiple queries!
+
+Data masking helps us eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. This creates more loosely coupled components that are more resistant to change.

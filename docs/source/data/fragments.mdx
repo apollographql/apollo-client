@@ -692,3 +692,89 @@ Uh oh, we just broke our app! Our `Posts` component no longer shows any posts! O
 This is an example of an **implicit dependency** between our components. As the application grows in complexity, these types of implicit dependencies can be more and more difficult to track. Imagine if `PostDetails` was a component nested much deeper in our component tree or if this component was used in multiple queries!
 
 Data masking helps us eliminate these types of implicit dependencies by returning only the data declared by the component's query or fragment. This creates more loosely coupled components that are more resistant to change.
+
+### Enabling data masking
+
+To enable data masking in Apollo Client, set the `dataMasking` flag in the `ApolloClient` constructor to `true`.
+
+```jsx {2}
+const client = new ApolloClient({
+  dataMasking: true,
+  // ...
+});
+```
+
+When `dataMasking` is enabled, fields defined in fragments are hidden from our component. This prevents us from accessing data that the component didn't ask for.
+
+Let's revisit our example from the previous section.
+
+```jsx title="Posts.jsx"
+const GET_POSTS = gql`
+  query GetPosts {
+    posts {
+      id
+      ...PostDetailsFragment
+    }
+  }
+
+  ${POST_DETAILS_FRAGMENT}
+`;
+
+export default function Posts({ includeUnpublishedPosts }) {
+  const { data, loading } = useQuery(GET_POSTS);
+
+  // ...
+}
+```
+
+Our `GetPosts` query asks for the `posts` field along with an `id` for each post. All other fields are defined in `PostDetailsFragment`. If we were to inspect `data`, we'd see that the only accessible fields are those defined in our query but not the fragment.
+
+```json
+{
+  "posts": [
+    {
+      "__typename": "Post",
+      "id": "1"
+    },
+    {
+      "__typename": "Post",
+      "id": "2"
+    }
+  ]
+}
+```
+
+We can access more data by adding fields to our query. Let's fix the previous section's example by adding the `publishedAt` field to our `GetPosts` query so that our `Posts` component can use it.
+
+```jsx {5} title="Posts.jsx"
+const GET_POSTS = gql`
+  query GetPosts {
+    posts {
+      id
+      publishedAt
+      ...PostDetailsFragment
+    }
+  }
+
+  ${POST_DETAILS_FRAGMENT}
+`;
+```
+
+Now if we inspect `data`, we'll see that `publishedAt` is available to the `Posts` component.
+
+```json
+{
+  "posts": [
+    {
+      "__typename": "Post",
+      "publishedAt": "2024-01-01",
+      "id": "1"
+    },
+    {
+      "__typename": "Post",
+      "publishedAt": null,
+      "id": "2"
+    }
+  ]
+}
+```

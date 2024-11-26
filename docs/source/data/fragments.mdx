@@ -1022,7 +1022,7 @@ function startSubscription() {
 As you work with data masking more extensively, you may need access to the full operation result. Apollo Client includes an `@unmask` directive you can apply to fragment spreads. Adding `@unmask` to a fragment spread makes the fragment data available.
 
 <Note>
-The `@unmask` directive is an escape hatch. First try adding additional needed fields to your operation before relying on `@unmask`. It is ok however to use `@unmask` to migrate an existing application. Learn more about migrating an existing app in the ["Migrating an existing application" section](#migrating-an-existing-application).
+The `@unmask` directive is an escape hatch. First try adding additional needed fields to the operation before relying on `@unmask`. As an exception, you might use `@unmask` frequently when [migrating an existing application](#migrating-an-existing-application).
 </Note>
 
 ```graphql

@@ -593,7 +593,7 @@ See the [API reference](../api/react/hooks#usefragment) for more details on the 
 ## Data masking
 </MinVersion>
 
-By default, Apollo Client returns all data for all fields defined in a GraphQL operation. As your app grows and scales over time, this can create a high degree of coupling between your query components and the rest of the rendered components. [Colocated fragments](#colocating-fragments) help reduce this degree of coupling by moving component's data requirements into fragments, however on its own does not entirely eliminate it.
+By default, Apollo Client returns all data for all fields defined in a GraphQL operation. As your app grows and scales over time, this can create a high degree of coupling between the components that query your GraphQL data and the component subtree underneath it. [Colocated fragments](#colocating-fragments) reduce the degree of coupling by moving component's data requirements into fragments, however on its own does not entirely eliminate it.
 
 Let's take a look at an example.
 

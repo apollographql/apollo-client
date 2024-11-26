@@ -782,3 +782,50 @@ Now if we inspect `data`, we'll see that `publishedAt` is available to the `Post
   ]
 }
 ```
+
+### Reading fragment data
+
+Now that our `GetPosts` query is masked, we've introduced a problem for our `PostDetails` component. The `post` prop no longer contains the fields from our `PostDetailsFragment` fragment, preventing us from rendering that data!
+
+We read the fragment data with the [`useFragment` hook](#usefragment).
+
+```jsx title="PostDetails.jsx"
+function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+  });
+
+  // ...
+}
+```
+
+Now we use the `data` property returned from `useFragment` to render the details from the `post`.
+
+```jsx {17-18} title="PostDetails.jsx"
+function PostDetails({ post }) {
+  const { data, complete } = useFragment({
+    fragment: POST_DETAILS_FRAGMENT,
+    from: post,
+  });
+
+  // It's a good idea to check the `complete` flag to ensure all data was
+  // successfully queried from the cache. This can indicate a potential
+  // issue with our cache configuration or parent object when `complete`
+  // is `false`.
+  if (!complete) {
+    return null;
+  }
+
+  return (
+    <section>
+      <h1>{data.title}</h1>
+      <p>{data.shortDescription}</p>
+    </section>
+  )
+}
+```
+
+<Note>
+It's important that the parent query or fragment selects any [`keyFields`](../caching/cache-configuration#customizing-cache-ids) for objects passed to the `from` option. Without this, we'd have no way to identify the object with the cache and the `data` returned from `useFragment` would be incomplete. You will see a warning when key fields are missing from the parent object.
+</Note>

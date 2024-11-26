@@ -921,3 +921,89 @@ Throughout this example, You'll notice that we never touched the `GetPosts` quer
 <Tip>
 We recommend that parent components only add fragments defined by their directly-rendered children to prevent coupling with more deeply nested components. In this example, the `GetPosts` query did not include the `CommentFragment` fragment directly but rather it relied on the `PostDetails` component to include it in the `PostDetailsFragment` fragment.
 </Tip>
+
+### Working with other operation types
+
+Data masking is not limited to queries but also extends to other operation types. As a rule of thumb, any value that is used to _read_ data from a request-based API is masked. APIs that perform cache updates are never masked.
+
+#### Mutations
+
+```jsx
+// data is masked
+const [mutate, { data }] = useMutation(MUTATION, {
+  onCompleted: (data) => {
+    // data is masked
+  },
+  update: (cache, { data }) => {
+    // data is unmasked
+  },
+  refetchQueries: ({ data }) => {
+    // data is unmasked
+  },
+  updateQueries: {
+    ExampleQuery: (previous, { mutationResult }) => {
+      // mutationResult is unmasked
+    }
+  }
+});
+
+async function runMutation() {
+  const { data } = await mutate()
+
+  // data is masked
+}
+```
+
+```jsx
+// data is masked
+const { data } = await client.mutate({
+  update: (cache, { data }) => {
+    // data is unmasked
+  },
+  refetchQueries: ({ data }) => {
+    // data is unmasked
+  },
+  updateQueries: {
+    ExampleQuery: (previous, { mutationResult }) => {
+      // mutationResult is unmasked
+    }
+  }
+});
+```
+
+#### Subscriptions
+
+```jsx
+function MyComponent() {
+  // data is masked
+  const { data } = useSubscription(SUBSCRIPTION, {
+    onData: ({ data }) => {
+      // data is unmasked
+    }
+  });
+}
+```
+
+```jsx
+const observable = client.subscribe({ query: SUBSCRIPTION });
+
+observable.subscribe({
+  next: ({ data }) => {
+    // data is masked
+  },
+});
+```
+
+```jsx
+const { subscribeToMore } = useQuery(QUERY);
+
+function startSubscription() {
+  subscribeToMore({
+    document: SUBSCRIPTION,
+    updateQuery: (queryData, { subscriptionData }) => {
+      // queryData is unmasked
+      // subscriptionData is unmasked
+    }
+  })
+}
+```

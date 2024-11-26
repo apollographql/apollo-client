@@ -181,9 +181,37 @@ Notice that the `Trail` component isn't receiving the entire `trail` object via 
 ## `@unmask`
 </MinVersion>
 
-TODO: Add intro section for `@unmask`
+The `@unmask` directive is used to make fragment data available when using [data masking](./fragments#data-masking). It is primarily used to [migrate an existing application](./fragments#migrating-an-existing-application) to utilize data masking. It is considered an escape hatch for all other cases where working with masked data would otherwise be difficult.
 
-`@unmask` on its own however does little to help us determine whether a would-be masked field is accessed throughout our components. Apollo Client provides the ability to give you development-only warnings when accessing would-be masked fields throughout your application. To enable development-only warnings, set the `mode` argument to `migrate` with the `@unmask` directive.
+```graphql
+query GetPosts {
+  posts {
+    id
+    ...PostDetails @unmask
+  }
+}
+
+fragment PostDetails on Post {
+  title
+  publishedAt
+  topComment {
+    id
+    ...CommentFragment @unmask
+  }
+}
+
+fragment CommentFragment on Comment {
+  content
+}
+```
+
+<Note>
+When the `dataMasking` option is omitted or set to `false`, this directive has no effect.
+</Note>
+
+### Migrate mode
+
+`@unmask` is best used to [migrate existing applications](./fragments#migrating-an-existing-application) by providing development-only warnings when accessing would-be masked fields throughout your application. To use `@unmask` in migrate mode, set the `mode` argument to `migrate`.
 
 ```graphql
 query GetPost(id: $id) {
@@ -198,7 +226,7 @@ fragment PostDetails on Post {
 }
 ```
 
-Now when you access `title` from the query result, you'll see a console warning.
+Now when you access fields that would otherwise be masked, you will see a warning in the console.
 
 ```tsx
 const { data } = useQuery(GET_POST);
@@ -206,6 +234,10 @@ const { data } = useQuery(GET_POST);
 const title = data.post.title;
 ```
 
+In this example, accessing `title` on the `post` from the query result will result in the following warning:
+
 ```
 Accessing unmasked field on query 'GetPost' at path 'post.title'. This field will not be available when masking is enabled. Please read the field from the fragment instead.
 ```
+
+For more information on data masking, see the [data masking docs](./fragments#data-masking).

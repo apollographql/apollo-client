@@ -561,10 +561,12 @@ describe("cache-first", () => {
     const results: any[] = [];
     const client = new ApolloClient({
       link: new ApolloLink((operation, forward) => {
-        return forward(operation).map((result) => {
-          results.push(result);
-          return result;
-        });
+        return forward(operation).pipe(
+          map((result) => {
+            results.push(result);
+            return result;
+          })
+        );
       }).concat(
         createMutationLink((error) => {
           throw error;

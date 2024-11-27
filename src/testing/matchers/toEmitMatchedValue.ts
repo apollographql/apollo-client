@@ -1,4 +1,8 @@
-import { iterableEquality, subsetEquality } from "@jest/expect-utils";
+import {
+  iterableEquality,
+  subsetEquality,
+  getObjectSubset,
+} from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
@@ -8,9 +12,10 @@ export const toEmitMatchedValue: MatcherFunction<
 > = async function (actual, expected, options) {
   const stream = actual as ObservableStream<any>;
   const hint = this.utils.matcherHint(
-    this.isNot ? ".not.toEmitMatchedValue" : "toEmitMatchedValue",
+    "toEmitMatchedValue",
     "stream",
-    "expected"
+    "expected",
+    { isNot: this.isNot, promise: this.promise }
   );
 
   try {
@@ -37,7 +42,7 @@ export const toEmitMatchedValue: MatcherFunction<
           "\n\n" +
           this.utils.printDiffOrStringify(
             expected,
-            value,
+            getObjectSubset(value, expected, this.customTesters),
             "Expected",
             "Recieved",
             true

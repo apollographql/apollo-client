@@ -16,6 +16,7 @@ import {
   warnOnImproperCacheImplementation,
 } from "./utils.js";
 
+/** @internal */
 export function maskOperation<TData = unknown>(
   data: TData,
   document: DocumentNode | TypedDocumentNode<TData>,

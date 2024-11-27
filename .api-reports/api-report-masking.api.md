@@ -423,10 +423,10 @@ export type MaskedDocumentNode<TData = {
     [key: string]: any;
 }> = TypedDocumentNode<Masked<TData>, TVariables>;
 
-// @public (undocumented)
+// @internal (undocumented)
 export function maskFragment<TData = unknown>(data: TData, document: TypedDocumentNode<TData> | DocumentNode, cache: ApolloCache<unknown>, fragmentName?: string): TData;
 
-// @public (undocumented)
+// @internal (undocumented)
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode<TData>, cache: ApolloCache<unknown>): TData;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts

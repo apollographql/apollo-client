@@ -18,6 +18,7 @@ import {
   getFragmentDefinitions,
 } from "../utilities/index.js";
 
+/** @internal */
 export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,

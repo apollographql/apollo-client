@@ -79,7 +79,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     );
   }
 
-  const { rerender } = renderStream.render(<App />, {
+  const { rerender } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
   {

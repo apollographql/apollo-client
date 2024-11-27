@@ -45,7 +45,7 @@ function createDefaultClient(mocks: MockedResponse[]) {
   });
 }
 
-function renderDefaultTestApp<TData>({
+async function renderDefaultTestApp<TData>({
   client,
   queryRef,
 }: {
@@ -90,7 +90,7 @@ function renderDefaultTestApp<TData>({
     );
   }
 
-  const utils = renderStream.render(<App />, {
+  const utils = await renderStream.render(<App />, {
     wrapper: ({ children }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
     ),
@@ -110,7 +110,7 @@ test("loads a query and suspends when passed to useReadQuery", async () => {
 
   const queryRef = preloadQuery(query);
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -138,7 +138,7 @@ test("loads a query with variables and suspends when passed to useReadQuery", as
     variables: { id: "1" },
   });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1233,7 +1233,7 @@ test("reacts to cache updates", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1278,7 +1278,7 @@ test("ignores cached result and suspends when `fetchPolicy` is network-only", as
     fetchPolicy: "network-only",
   });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1307,7 +1307,7 @@ test("does not cache results when `fetchPolicy` is no-cache", async () => {
     fetchPolicy: "no-cache",
   });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1339,7 +1339,7 @@ test("returns initial cache data followed by network data when `fetchPolicy` is 
     fetchPolicy: "cache-and-network",
   });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1373,7 +1373,7 @@ test("returns cached data when all data is present in the cache", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1417,7 +1417,7 @@ test("suspends and ignores partial data in the cache", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1452,7 +1452,7 @@ test("throws when error is returned", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1483,7 +1483,7 @@ test("returns error when error policy is 'all'", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { errorPolicy: "all" });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1517,7 +1517,7 @@ test("discards error when error policy is 'ignore'", async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1567,7 +1567,7 @@ test("passes context to the link", async () => {
     context: { valueA: "A", valueB: "B" },
   });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   // initial render
   await renderStream.takeRender();
@@ -1633,7 +1633,7 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
     returnPartialData: true,
   });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1705,7 +1705,7 @@ test('enables canonical results when canonizeResults is "true"', async () => {
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { canonizeResults: true });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result?.data.results);
@@ -1763,7 +1763,7 @@ test("can disable canonical results when the cache's canonizeResults setting is 
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query, { canonizeResults: false });
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result!.data.results);
@@ -1798,7 +1798,7 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
-  const { renderStream } = renderDefaultTestApp({ client, queryRef });
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
 
   {
     const { renderedComponents } = await renderStream.takeRender();

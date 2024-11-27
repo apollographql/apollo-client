@@ -1,10 +1,10 @@
 import React, { Suspense, useState } from "react";
 import {
   act,
-  render,
   screen,
   renderHook,
   waitFor,
+  renderAsync,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
@@ -60,6 +60,7 @@ import {
 
 import {
   RenderStream,
+  RenderWithoutActAsync,
   createRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
@@ -225,14 +226,16 @@ function createDefaultProfiledComponents<
   };
 }
 
-function renderWithMocks(
+async function renderWithMocks(
   ui: React.ReactElement,
   props: MockedProviderProps,
-  { render: doRender } = { render }
+  { render: doRender }: { render: RenderWithoutActAsync } = {
+    render: renderAsync,
+  }
 ) {
   const user = userEvent.setup();
 
-  const utils = doRender(ui, {
+  const utils = await doRender(ui, {
     wrapper: ({ children }) => (
       <MockedProvider {...props}>{children}</MockedProvider>
     ),
@@ -241,16 +244,18 @@ function renderWithMocks(
   return { ...utils, user };
 }
 
-function renderWithClient(
+async function renderWithClient(
   ui: React.ReactElement,
   options: { client: ApolloClient<any> },
-  { render: doRender } = { render }
+  { render: doRender }: { render: RenderWithoutActAsync } = {
+    render: renderAsync,
+  }
 ) {
   const { client } = options;
   const user = userEvent.setup();
 
-  const utils = doRender(ui, {
-    wrapper: ({ children }) => (
+  const utils = await doRender(ui, {
+    wrapper: ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
     ),
   });
@@ -280,7 +285,7 @@ it("loads a query and suspends when the load query function is called", async ()
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -337,7 +342,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -399,7 +404,7 @@ it("tears down the query on unmount", async () => {
     );
   }
 
-  const { user, unmount } = renderWithClient(
+  const { user, unmount } = await renderWithClient(
     <App />,
     {
       client,
@@ -536,7 +541,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -622,7 +627,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -726,7 +731,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     );
   };
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -812,7 +817,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -898,7 +903,7 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client: globalClient,
@@ -966,7 +971,7 @@ it("passes context to the link", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1055,7 +1060,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1143,7 +1148,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       cache,
@@ -1210,7 +1215,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1286,7 +1291,7 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1357,7 +1362,7 @@ it("partial data is present in the cache so it is ignored and network request is
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1429,7 +1434,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1498,7 +1503,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1628,7 +1633,7 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = await renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load first todo")));
 
@@ -1719,7 +1724,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1844,7 +1849,7 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1933,7 +1938,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2029,7 +2034,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2138,7 +2143,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2262,7 +2267,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2424,7 +2429,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2571,7 +2576,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2673,7 +2678,7 @@ it("re-suspends when calling `refetch`", async () => {
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2762,7 +2767,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2846,7 +2851,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2960,7 +2965,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3043,7 +3048,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3130,7 +3135,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3219,7 +3224,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3354,7 +3359,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  const { user } = await renderWithMocks(<App />, { mocks });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3431,7 +3436,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3519,7 +3524,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3612,7 +3617,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3791,7 +3796,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  const { user } = await renderWithClient(<App />, { client });
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3904,7 +3909,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4022,7 +4027,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4127,7 +4132,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4208,7 +4213,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4329,7 +4334,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4424,7 +4429,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4543,7 +4548,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4620,7 +4625,7 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4742,7 +4747,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4849,7 +4854,7 @@ it("throws when calling loadQuery on first render", async () => {
     return null;
   }
 
-  expect(() => renderWithMocks(<App />, { mocks })).toThrow(
+  await expect(() => renderWithMocks(<App />, { mocks })).rejects.toThrow(
     new InvariantError(
       "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
     )
@@ -4875,7 +4880,7 @@ it("throws when calling loadQuery on subsequent render", async () => {
     return <button onClick={() => setCount(1)}>Load query in render</button>;
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <ReactErrorBoundary onError={(e) => (error = e)} fallback={<div>Oops</div>}>
       <App />
     </ReactErrorBoundary>,
@@ -4904,7 +4909,9 @@ it("allows loadQuery to be called in useEffect on first render", async () => {
     return null;
   }
 
-  expect(() => renderWithMocks(<App />, { mocks })).not.toThrow();
+  await expect(() =>
+    renderWithMocks(<App />, { mocks })
+  ).resolves.not.toThrow();
 });
 
 it("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
@@ -4978,7 +4985,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -5112,7 +5119,7 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
     );
   }
 
-  renderWithClient(<App />, { client }, renderStream);
+  await renderWithClient(<App />, { client }, renderStream);
   // initial render
   await renderStream.takeRender();
 

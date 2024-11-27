@@ -1425,7 +1425,7 @@ describe("useFragment", () => {
       data: { __typename: "User", id: 2, name: "Charlie" },
     });
 
-    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ id }: { id: number }) =>
         useFragment({ fragment, from: { __typename: "User", id } }),
       {
@@ -1489,7 +1489,7 @@ describe("useFragment", () => {
       },
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useFragment({ fragment, from: { __typename: "Post", id: 1 } }),
       {
         wrapper: ({ children }) => (
@@ -1560,7 +1560,7 @@ describe("useFragment", () => {
       },
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment,
@@ -1736,7 +1736,7 @@ describe("useFragment", () => {
     using _ = spyOnConsole("warn");
     const cache = new InMemoryCache();
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment: ItemFragment,

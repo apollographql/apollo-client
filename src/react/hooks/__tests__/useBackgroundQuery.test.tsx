@@ -190,7 +190,7 @@ it("tears down the query on unmount", async () => {
     );
   }
 
-  const { unmount } = renderStream.render(<App />, {
+  const { unmount } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -499,7 +499,7 @@ it("does not recreate queryRef and execute a network request when rerendering us
     );
   }
 
-  const { rerender } = renderStream.render(<App />, {
+  const { rerender } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -641,7 +641,7 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery",
     return null;
   }
 
-  const { unmount } = renderStream.render(<App />, {
+  const { unmount } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -677,7 +677,7 @@ it("disposes of old queryRefs when changing variables before the queryRef is use
     return null;
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
+  const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -760,7 +760,7 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery e
     );
   }
 
-  const { unmount } = renderStream.render(<App />, {
+  const { unmount } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
   const button = screen.getByText("Increment");
@@ -1692,7 +1692,7 @@ it("reacts to variables updates", async () => {
     );
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
+  const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createMockWrapper({ mocks }),
   });
 
@@ -2379,7 +2379,7 @@ it("result is referentially stable", async () => {
     );
   }
 
-  const { rerender } = renderStream.render(<App />, {
+  const { rerender } = await renderStream.render(<App />, {
     wrapper: createMockWrapper({ mocks }),
   });
 
@@ -3493,7 +3493,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     );
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
+  const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createMockWrapper({ cache, mocks }),
   });
 
@@ -3821,7 +3821,7 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
+  const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createMockWrapper({ cache, mocks }),
   });
 

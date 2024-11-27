@@ -751,7 +751,7 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const { takeSnapshot } = renderHookToSnapshotStream(
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useMutation<
             { createTodo: Todo },

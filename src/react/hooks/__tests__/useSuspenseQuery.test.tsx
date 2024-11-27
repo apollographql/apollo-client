@@ -9808,13 +9808,12 @@ describe("useSuspenseQuery", () => {
       expect(todo).toHaveTextContent("Clean room");
       expect(todo).toHaveAttribute("aria-busy", "false");
     }
-
-    await user.click(screen.getByText("Refresh"));
-
-    // if (IS_REACT_19) {
-    //   // React 19 sibling prerender
-    //   await takeRender();
-    // }
+    const el = screen.getByText("Refresh");
+    await user.click(el);
+    if (IS_REACT_19) {
+      // React 19 sibling prerender
+      await takeRender();
+    }
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -9830,7 +9829,7 @@ describe("useSuspenseQuery", () => {
       expect(withinDOM().queryByText("Loading")).not.toBeInTheDocument();
 
       // We can ensure this works with isPending from useTransition in the process
-      // expect(todo).toHaveAttribute("aria-busy", "true");
+      expect(todo).toHaveAttribute("aria-busy", "true");
 
       // Ensure we are showing the stale UI until the new todo has loaded
       expect(todo).toHaveTextContent("Clean room");

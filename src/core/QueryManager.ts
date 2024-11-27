@@ -108,7 +108,7 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
-import { maskFragment, maskOperation } from "./masking.js";
+import { maskFragment, maskOperation } from "../masking/index.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 interface MaskFragmentOptions<TData> {

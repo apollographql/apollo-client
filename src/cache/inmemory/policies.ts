@@ -52,7 +52,7 @@ import {
   keyArgsFnFromSpecifier,
   keyFieldsFnFromSpecifier,
 } from "./key-extractor.js";
-import { disableWarningsSlot } from "../../core/masking.js";
+import { disableWarningsSlot } from "../../masking/index.js";
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

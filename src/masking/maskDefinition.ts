@@ -1,20 +1,14 @@
 import { Kind } from "graphql";
 import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import {
-  createFragmentMap,
-  resultKeyNameFromField,
-  getFragmentDefinitions,
   getFragmentMaskMode,
-  getOperationDefinition,
   maybeDeepFreeze,
-  canUseWeakMap,
-  canUseWeakSet,
+  resultKeyNameFromField,
 } from "../utilities/index.js";
 import type { FragmentMap } from "../utilities/index.js";
-import type { ApolloCache, DocumentNode, TypedDocumentNode } from "./index.js";
+import type { ApolloCache } from "../cache/index.js";
+import { disableWarningsSlot } from "./utils.js";
 import { invariant } from "../utilities/globals/index.js";
-import { equal } from "@wry/equality";
-import { Slot } from "optimism";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
@@ -25,109 +19,7 @@ interface MaskingContext {
   knownChanged: WeakSet<any>;
 }
 
-const MapImpl = canUseWeakMap ? WeakMap : Map;
-const SetImpl = canUseWeakSet ? WeakSet : Set;
-
-// Contextual slot that allows us to disable accessor warnings on fields when in
-// migrate mode.
-export const disableWarningsSlot = new Slot<boolean>();
-
-export function maskOperation<TData = unknown>(
-  data: TData,
-  document: DocumentNode | TypedDocumentNode<TData>,
-  cache: ApolloCache<unknown>
-): TData {
-  if (!cache.fragmentMatches) {
-    if (__DEV__) {
-      warnOnImproperCacheImplementation();
-    }
-
-    return data;
-  }
-
-  const definition = getOperationDefinition(document);
-
-  invariant(
-    definition,
-    "Expected a parsed GraphQL document with a query, mutation, or subscription."
-  );
-
-  if (data == null) {
-    // Maintain the original `null` or `undefined` value
-    return data;
-  }
-
-  return maskDefinition(data, definition.selectionSet, {
-    operationType: definition.operation,
-    operationName: definition.name?.value,
-    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
-  });
-}
-
-export function maskFragment<TData = unknown>(
-  data: TData,
-  document: TypedDocumentNode<TData> | DocumentNode,
-  cache: ApolloCache<unknown>,
-  fragmentName?: string
-): TData {
-  if (!cache.fragmentMatches) {
-    if (__DEV__) {
-      warnOnImproperCacheImplementation();
-    }
-
-    return data;
-  }
-
-  const fragments = document.definitions.filter(
-    (node): node is FragmentDefinitionNode =>
-      node.kind === Kind.FRAGMENT_DEFINITION
-  );
-
-  if (typeof fragmentName === "undefined") {
-    invariant(
-      fragments.length === 1,
-      `Found %s fragments. \`fragmentName\` must be provided when there is not exactly 1 fragment.`,
-      fragments.length
-    );
-    fragmentName = fragments[0].name.value;
-  }
-
-  const fragment = fragments.find(
-    (fragment) => fragment.name.value === fragmentName
-  );
-
-  invariant(
-    !!fragment,
-    `Could not find fragment with name "%s".`,
-    fragmentName
-  );
-
-  if (data == null) {
-    // Maintain the original `null` or `undefined` value
-    return data;
-  }
-
-  if (equal(data, {})) {
-    // Return early and skip the masking algorithm if we don't have any data
-    // yet. This can happen when cache.diff returns an empty object which is
-    // used from watchFragment.
-    return data;
-  }
-
-  return maskDefinition(data, fragment.selectionSet, {
-    operationType: "fragment",
-    operationName: fragment.name.value,
-    fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
-    cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
-  });
-}
-
-function maskDefinition(
+export function maskDefinition(
   data: Record<string, any>,
   selectionSet: SelectionSetNode,
   context: MaskingContext
@@ -346,14 +238,4 @@ function getAccessorWarningDescriptor(
     enumerable: true,
     configurable: true,
   };
-}
-
-let issuedWarning = false;
-function warnOnImproperCacheImplementation() {
-  if (!issuedWarning) {
-    issuedWarning = true;
-    invariant.warn(
-      "The configured cache does not support data masking which effectively disables it. Please use a cache that supports data masking or disable data masking to silence this warning."
-    );
-  }
 }

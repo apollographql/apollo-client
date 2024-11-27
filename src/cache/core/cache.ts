@@ -30,7 +30,7 @@ import type {
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
 import { invariant } from "../../utilities/globals/index.js";
-import { maskFragment } from "../../core/masking.js";
+import { maskFragment } from "../../masking/index.js";
 import type {
   FragmentType,
   MaybeMasked,

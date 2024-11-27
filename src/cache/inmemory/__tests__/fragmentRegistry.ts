@@ -90,35 +90,27 @@ describe("FragmentRegistry", () => {
       client.watchQuery({ query, fetchPolicy: "cache-and-network" })
     );
 
-    {
-      const result = await stream.takeNext();
+    await expect(stream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {
+        __typename: "Query",
+        source: "local",
+      },
+    });
 
-      expect(result).toEqual({
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        data: {
-          __typename: "Query",
-          source: "local",
-        },
-      });
-    }
-
-    {
-      const result = await stream.takeNext();
-
-      expect(result).toEqual({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        data: {
-          __typename: "Query",
-          source: "link",
-        },
-      });
-
-      expect(cache.readQuery({ query })).toEqual({
+    await expect(stream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        __typename: "Query",
         source: "link",
-      });
-    }
+      },
+    });
+
+    expect(cache.readQuery({ query })).toEqual({
+      source: "link",
+    });
   });
 
   it("throws an error when not all used fragments are defined", () => {

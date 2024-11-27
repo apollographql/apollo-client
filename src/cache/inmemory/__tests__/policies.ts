@@ -4090,22 +4090,18 @@ describe("type policies", function () {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            search: {
-              edges: firstEdges,
-              pageInfo: firstPageInfo,
-              totalCount: 1292,
-            },
+      await expect(stream).toEmitValue({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          search: {
+            edges: firstEdges,
+            pageInfo: firstPageInfo,
+            totalCount: 1292,
           },
-        });
-        expect(cache.extract()).toMatchSnapshot();
-      }
+        },
+      });
+      expect(cache.extract()).toMatchSnapshot();
 
       observable.fetchMore({ variables: secondVariables });
 

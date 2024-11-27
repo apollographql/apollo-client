@@ -58,11 +58,9 @@ describe("updateQuery on a simple query", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data.entry.value).toBe(1);
-    }
+    await expect(stream).toEmitMatchedValue({
+      data: { entry: { value: 1 } },
+    });
 
     observable.updateQuery((prevResult: any) => {
       const res = cloneDeep(prevResult);
@@ -70,11 +68,9 @@ describe("updateQuery on a simple query", () => {
       return res;
     });
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data.entry.value).toBe(2);
-    }
+    await expect(stream).toEmitMatchedValue({
+      data: { entry: { value: 2 } },
+    });
   });
 });
 
@@ -124,11 +120,9 @@ describe("updateQuery on a query with required and optional variables", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data.entry.value).toBe(1);
-    }
+    await expect(stream).toEmitMatchedValue({
+      data: { entry: { value: 1 } },
+    });
 
     observable.updateQuery((prevResult: any) => {
       const res = cloneDeep(prevResult);
@@ -136,11 +130,9 @@ describe("updateQuery on a query with required and optional variables", () => {
       return res;
     });
 
-    {
-      const result = await stream.takeNext();
-
-      expect(result.data.entry.value).toBe(2);
-    }
+    await expect(stream).toEmitMatchedValue({
+      data: { entry: { value: 2 } },
+    });
   });
 });
 

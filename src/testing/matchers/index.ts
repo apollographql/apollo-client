@@ -6,8 +6,9 @@ import { toBeDisposed } from "./toBeDisposed.js";
 import { toComplete } from "./toComplete.js";
 import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
-import { toEmitValue } from "./toEmitValue.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
+import { toEmitNext } from "./toEmitNext.js";
+import { toEmitValue } from "./toEmitValue.js";
 import { toEmitValueStrict } from "./toEmitValueStrict.js";
 
 expect.extend({
@@ -15,6 +16,7 @@ expect.extend({
   toEmitAnything,
   toEmitError,
   toEmitMatchedValue,
+  toEmitNext,
   toEmitValue,
   toEmitValueStrict,
   toBeDisposed,

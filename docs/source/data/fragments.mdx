@@ -1379,7 +1379,13 @@ new ApolloClient({
 
 > Enabling data masking early in the adoption process makes it much easier to adopt for newly added queries and fragments since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
 
-#### 3. Use `useFragment`
+#### 3. Generate and opt in to use masked types
+
+If you are using TypeScript in your application, you will need to update your GraphQL Codegen configuration to [generate masked types](#generating-masked-types). Once you generate masked types, [opt in](#opting-in-to-use-masked-types) to use the masking types with your client.
+
+Learn more about using TypeScript with data masking in the ["Using with TypeScript"](#using-with-typescript) section.
+
+#### 4. Use `useFragment`
 
 With data masking enabled, you can now begin the process of refactoring your components to use data masking. It is easiest to look for areas of the codebase where you see field access warnings in the console on would-be masked fields (requires migrate mode).
 

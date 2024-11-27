@@ -43,7 +43,7 @@ import {
   MockLink,
   wait,
 } from "../testing";
-import { spyOnConsole } from "../testing/internal";
+import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { waitFor } from "@testing-library/react";
 
 describe("client", () => {
@@ -1910,11 +1910,11 @@ describe("client", () => {
       );
     });
 
-    itAsync("fetches from cache first, then network", (resolve, reject) => {
+    it("fetches from cache first, then network", async () => {
       const link = mockSingleLink({
         request: { query },
         result: { data: networkFetch },
-      }).setOnError(reject);
+      });
 
       const client = new ApolloClient({
         link,
@@ -1928,41 +1928,37 @@ describe("client", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      subscribeAndCount(reject, obs, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toEqual(initialData);
-        } else if (handleCount === 2) {
-          expect(result.data).toEqual(networkFetch);
-          resolve();
-        }
-      });
+      const stream = new ObservableStream(obs);
+
+      await expect(stream).toEmitMatchedValue({ data: initialData });
+      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+
+      await expect(stream).not.toEmitAnything();
     });
 
-    itAsync(
-      "does not fail if cache entry is not present",
-      (resolve, reject) => {
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: networkFetch },
-        }).setOnError(reject);
-        const client = new ApolloClient({
-          link,
-          cache: new InMemoryCache({ addTypename: false }),
-        });
+    it("does not fail if cache entry is not present", async () => {
+      const link = mockSingleLink({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+      });
 
-        const obs = client.watchQuery({
-          query,
-          fetchPolicy: "cache-and-network",
-        });
+      const obs = client.watchQuery({
+        query,
+        fetchPolicy: "cache-and-network",
+      });
+      const stream = new ObservableStream(obs);
 
-        subscribeAndCount(reject, obs, (handleCount, result) => {
-          expect(handleCount).toBe(1);
-          expect(result.data).toEqual(networkFetch);
-          expect(result.loading).toBe(false);
-          resolve();
-        });
-      }
-    );
+      await expect(stream).toEmitMatchedValue({
+        loading: false,
+        data: networkFetch,
+      });
+
+      await expect(stream).not.toEmitAnything();
+    });
 
     itAsync("fails if network request fails", (resolve, reject) => {
       const link = mockSingleLink(); // no queries = no replies.
@@ -2031,86 +2027,63 @@ describe("client", () => {
   });
 
   describe("standby queries", () => {
-    itAsync(
-      "are not watching the store or notifying on updates",
-      (resolve, reject) => {
-        const query = gql`
-          {
-            test
-          }
-        `;
-        const data = { test: "ok" };
-        const data2 = { test: "not ok" };
+    it("are not watching the store or notifying on updates", async () => {
+      const query = gql`
+        {
+          test
+        }
+      `;
+      const data = { test: "ok" };
+      const data2 = { test: "not ok" };
 
-        const link = mockSingleLink({
-          request: { query },
-          result: { data },
-        }).setOnError(reject);
+      const link = mockSingleLink({
+        request: { query },
+        result: { data },
+      });
 
-        const client = new ApolloClient({ link, cache: new InMemoryCache() });
+      const client = new ApolloClient({ link, cache: new InMemoryCache() });
+      const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
+      const stream = new ObservableStream(obs);
 
-        const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
+      await expect(stream).toEmitMatchedValue({ data });
 
-        let handleCalled = false;
-        subscribeAndCount(reject, obs, (handleCount, result) => {
-          if (handleCount === 1) {
-            expect(result.data).toEqual(data);
-            obs.setOptions({ query, fetchPolicy: "standby" }).then(() => {
-              client.writeQuery({ query, data: data2 });
-              // this write should be completely ignored by the standby query
-            });
-            setTimeout(() => {
-              if (!handleCalled) {
-                resolve();
-              }
-            }, 20);
-          }
-          if (handleCount === 2) {
-            handleCalled = true;
-            reject(new Error("Handle should never be called on standby query"));
-          }
-        });
-      }
-    );
+      await obs.setOptions({ query, fetchPolicy: "standby" });
+      // this write should be completely ignored by the standby query
+      client.writeQuery({ query, data: data2 });
 
-    itAsync(
-      "return the current result when coming out of standby",
-      (resolve, reject) => {
-        const query = gql`
-          {
-            test
-          }
-        `;
-        const data = { test: "ok" };
-        const data2 = { test: "not ok" };
+      await expect(stream).not.toEmitAnything();
+    });
 
-        const link = mockSingleLink({
-          request: { query },
-          result: { data },
-        }).setOnError(reject);
+    it("return the current result when coming out of standby", async () => {
+      const query = gql`
+        {
+          test
+        }
+      `;
+      const data = { test: "ok" };
+      const data2 = { test: "not ok" };
 
-        const client = new ApolloClient({ link, cache: new InMemoryCache() });
+      const link = mockSingleLink({
+        request: { query },
+        result: { data },
+      });
 
-        const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
+      const client = new ApolloClient({ link, cache: new InMemoryCache() });
+      const obs = client.watchQuery({ query, fetchPolicy: "cache-first" });
+      const stream = new ObservableStream(obs);
 
-        subscribeAndCount(reject, obs, (handleCount, result) => {
-          if (handleCount === 1) {
-            expect(result.data).toEqual(data);
-            obs.setOptions({ query, fetchPolicy: "standby" }).then(() => {
-              client.writeQuery({ query, data: data2 });
-              // this write should be completely ignored by the standby query
-              setTimeout(() => {
-                obs.setOptions({ query, fetchPolicy: "cache-first" });
-              }, 10);
-            });
-          }
-          if (handleCount === 2) {
-            expect(result.data).toEqual(data2);
-            resolve();
-          }
-        });
-      }
-    );
+      await expect(stream).toEmitMatchedValue({ data });
+
+      await obs.setOptions({ query, fetchPolicy: "standby" });
+      // this write should be completely ignored by the standby query
+      client.writeQuery({ query, data: data2 });
+      setTimeout(() => {
+        obs.setOptions({ query, fetchPolicy: "cache-first" });
+      }, 10);
+
+      await expect(stream).toEmitMatchedValue({ data: data2 });
+      await expect(stream).not.toEmitAnything();
+    });
   });
 
   describe("network-only fetchPolicy", () => {
@@ -3726,113 +3699,106 @@ describe("@connection", () => {
       }
     );
 
-    itAsync(
-      "can override global defaultOptions.watchQuery.nextFetchPolicy",
-      (resolve, reject) => {
-        let linkCount = 0;
-        const client = new ApolloClient({
-          cache: new InMemoryCache(),
-          link: new ApolloLink(
-            (request) =>
-              new Observable((observer) => {
-                observer.next({
-                  data: {
-                    linkCount: ++linkCount,
-                  },
-                });
-                observer.complete();
-              })
-          ),
-          defaultOptions: {
-            watchQuery: {
-              nextFetchPolicy(currentFetchPolicy) {
-                reject(
-                  new Error("should not have called global nextFetchPolicy")
-                );
-                return currentFetchPolicy;
-              },
+    it("can override global defaultOptions.watchQuery.nextFetchPolicy", async () => {
+      let linkCount = 0;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              observer.next({
+                data: {
+                  linkCount: ++linkCount,
+                },
+              });
+              observer.complete();
+            })
+        ),
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy() {
+              throw new Error("should not have called global nextFetchPolicy");
             },
           },
-        });
+        },
+      });
 
-        const query: TypedDocumentNode<{
-          linkCount: number;
-        }> = gql`
-          query CountQuery {
-            linkCount
-          }
-        `;
+      const query: TypedDocumentNode<{
+        linkCount: number;
+      }> = gql`
+        query CountQuery {
+          linkCount
+        }
+      `;
 
-        let fetchPolicyRecord: WatchQueryFetchPolicy[] = [];
-        const observable = client.watchQuery({
-          query,
-          nextFetchPolicy(currentFetchPolicy) {
-            fetchPolicyRecord.push(currentFetchPolicy);
-            return "cache-first";
-          },
-        });
+      let fetchPolicyRecord: WatchQueryFetchPolicy[] = [];
+      const observable = client.watchQuery({
+        query,
+        nextFetchPolicy(currentFetchPolicy) {
+          fetchPolicyRecord.push(currentFetchPolicy);
+          return "cache-first";
+        },
+      });
 
-        subscribeAndCount(reject, observable, (resultCount, result) => {
-          if (resultCount === 1) {
-            expect(result.loading).toBe(false);
-            expect(result.data).toEqual({ linkCount: 1 });
-            expect(fetchPolicyRecord).toEqual(["cache-first"]);
+      const stream = new ObservableStream(observable);
 
-            return client
-              .refetchQueries({
-                include: ["CountQuery"],
-              })
-              .then((results) => {
-                expect(results.length).toBe(1);
-                results.forEach((result) => {
-                  expect(result.loading).toBe(false);
-                  expect(result.data).toEqual({ linkCount: 2 });
-                });
-                expect(fetchPolicyRecord).toEqual([
-                  "cache-first",
-                  "network-only",
-                ]);
-              });
-          } else if (resultCount === 2) {
-            expect(result.loading).toBe(false);
-            expect(result.data).toEqual({ linkCount: 2 });
-            expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
+      await expect(stream).toEmitMatchedValue({
+        loading: false,
+        data: { linkCount: 1 },
+      });
+      expect(fetchPolicyRecord).toEqual(["cache-first"]);
 
-            return observable
-              .reobserve({
-                // Allow delivery of loading:true result.
-                notifyOnNetworkStatusChange: true,
-                // Force a network request in addition to loading:true cache result.
-                fetchPolicy: "cache-and-network",
-              })
-              .then((finalResult) => {
-                expect(finalResult.loading).toBe(false);
-                expect(finalResult.data).toEqual({ linkCount: 3 });
-                expect(fetchPolicyRecord).toEqual([
-                  "cache-first",
-                  "network-only",
-                  "cache-and-network",
-                ]);
-              });
-          } else if (resultCount === 3) {
-            expect(result.loading).toBe(true);
-            expect(result.data).toEqual({ linkCount: 2 });
-          } else if (resultCount === 4) {
-            expect(result.loading).toBe(false);
-            expect(result.data).toEqual({ linkCount: 3 });
-            expect(fetchPolicyRecord).toEqual([
-              "cache-first",
-              "network-only",
-              "cache-and-network",
-            ]);
+      const results = await client.refetchQueries({
+        include: ["CountQuery"],
+      });
 
-            setTimeout(resolve, 10);
-          } else {
-            reject(new Error(`Too many results (${resultCount})`));
-          }
-        });
-      }
-    );
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        loading: false,
+        data: { linkCount: 2 },
+      });
+
+      expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
+
+      await expect(stream).toEmitMatchedValue({
+        loading: false,
+        data: { linkCount: 2 },
+      });
+      expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
+
+      const finalResult = await observable.reobserve({
+        // Allow delivery of loading:true result.
+        notifyOnNetworkStatusChange: true,
+        // Force a network request in addition to loading:true cache result.
+        fetchPolicy: "cache-and-network",
+      });
+
+      expect(finalResult.loading).toBe(false);
+      expect(finalResult.data).toEqual({ linkCount: 3 });
+      expect(fetchPolicyRecord).toEqual([
+        "cache-first",
+        "network-only",
+        "cache-and-network",
+      ]);
+
+      await expect(stream).toEmitMatchedValue({
+        loading: true,
+        data: { linkCount: 2 },
+      });
+
+      await expect(stream).toEmitMatchedValue({
+        loading: false,
+        data: { linkCount: 3 },
+      });
+
+      expect(fetchPolicyRecord).toEqual([
+        "cache-first",
+        "network-only",
+        "cache-and-network",
+      ]);
+
+      await expect(stream).not.toEmitAnything();
+    });
 
     itAsync("allows setting default options for query", (resolve, reject) => {
       const errors = [{ message: "failure", name: "failure" }];

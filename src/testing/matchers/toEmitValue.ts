@@ -13,7 +13,7 @@ export const toEmitValue: MatcherFunction<[value: any, options?: TakeOptions]> =
 
     try {
       const value = await stream.takeNext(options);
-      const pass = this.equals(expected, value, this.customTesters);
+      const pass = this.equals(expected, value, this.customTesters, true);
 
       return {
         pass,

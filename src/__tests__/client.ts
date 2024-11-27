@@ -36,13 +36,7 @@ import {
 } from "../cache";
 import { ApolloError } from "../errors";
 
-import {
-  itAsync,
-  subscribeAndCount,
-  mockSingleLink,
-  MockLink,
-  wait,
-} from "../testing";
+import { itAsync, mockSingleLink, MockLink, wait } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { waitFor } from "@testing-library/react";
 
@@ -3560,144 +3554,131 @@ describe("@connection", () => {
       },
     };
 
-    itAsync(
-      "allows setting default options for watchQuery",
-      (resolve, reject) => {
-        const link = mockSingleLink({
-          request: { query },
-          result: { data: networkFetch },
-        }).setOnError(reject);
-        const client = new ApolloClient({
-          link,
-          cache: new InMemoryCache({ addTypename: false }),
-          defaultOptions: {
-            watchQuery: {
-              fetchPolicy: "cache-and-network",
+    it("allows setting default options for watchQuery", async () => {
+      const link = mockSingleLink({
+        request: { query },
+        result: { data: networkFetch },
+      });
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({ addTypename: false }),
+        defaultOptions: {
+          watchQuery: {
+            fetchPolicy: "cache-and-network",
+          },
+        },
+      });
+
+      client.writeQuery({
+        query,
+        data: initialData,
+      });
+
+      const obs = client.watchQuery({
+        query,
+        // This undefined value should be ignored in favor of
+        // defaultOptions.watchQuery.fetchPolicy.
+        fetchPolicy: void 0,
+      });
+
+      const stream = new ObservableStream(obs);
+
+      await expect(stream).toEmitMatchedValue({ data: initialData });
+      await expect(stream).toEmitMatchedValue({ data: networkFetch });
+      await expect(stream).not.toEmitAnything();
+    });
+
+    it("allows setting nextFetchPolicy in defaultOptions", async () => {
+      let networkCounter = 0;
+      let nextFetchPolicyCallCount = 0;
+
+      const client = new ApolloClient({
+        link: new ApolloLink(
+          () =>
+            new Observable((observer) => {
+              observer.next({
+                data: {
+                  count: networkCounter++,
+                },
+              });
+              observer.complete();
+            })
+        ),
+        cache: new InMemoryCache(),
+        defaultOptions: {
+          watchQuery: {
+            nextFetchPolicy(fetchPolicy, context) {
+              expect(++nextFetchPolicyCallCount).toBe(1);
+              expect(this.query).toBe(query);
+              expect(fetchPolicy).toBe("cache-first");
+
+              expect(context.reason).toBe("after-fetch");
+              expect(context.observable).toBe(obs);
+              expect(context.options).toBe(obs.options);
+              expect(context.initialFetchPolicy).toBe("cache-first");
+
+              // Usually options.nextFetchPolicy applies only once, but a
+              // nextFetchPolicy function can set this.nextFetchPolicy
+              // again to perform an additional transition.
+              this.nextFetchPolicy = (fetchPolicy) => {
+                ++nextFetchPolicyCallCount;
+                return "cache-first";
+              };
+
+              return "cache-and-network";
             },
           },
-        });
+        },
+      });
 
-        client.writeQuery({
-          query,
-          data: initialData,
-        });
+      const query = gql`
+        query {
+          count
+        }
+      `;
 
-        const obs = client.watchQuery({
-          query,
-          // This undefined value should be ignored in favor of
-          // defaultOptions.watchQuery.fetchPolicy.
-          fetchPolicy: void 0,
-        });
+      client.writeQuery({
+        query,
+        data: {
+          count: "initial",
+        },
+      });
 
-        subscribeAndCount(reject, obs, (handleCount, result) => {
-          const resultData = result.data;
-          if (handleCount === 1) {
-            expect(resultData).toEqual(initialData);
-          } else if (handleCount === 2) {
-            expect(resultData).toEqual(networkFetch);
-            resolve();
-          }
-        });
-      }
-    );
+      const obs = client.watchQuery({ query });
+      const stream = new ObservableStream(obs);
 
-    itAsync(
-      "allows setting nextFetchPolicy in defaultOptions",
-      (resolve, reject) => {
-        let networkCounter = 0;
-        let nextFetchPolicyCallCount = 0;
+      await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
+      expect(nextFetchPolicyCallCount).toBe(1);
 
-        const client = new ApolloClient({
-          link: new ApolloLink(
-            (operation) =>
-              new Observable((observer) => {
-                observer.next({
-                  data: {
-                    count: networkCounter++,
-                  },
-                });
-                observer.complete();
-              })
-          ),
+      // Refetching makes a copy of the current options, which
+      // includes options.nextFetchPolicy, so the inner
+      // nextFetchPolicy function ends up getting called twice.
+      obs.refetch();
 
-          cache: new InMemoryCache(),
+      await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
+      expect(nextFetchPolicyCallCount).toBe(2);
 
-          defaultOptions: {
-            watchQuery: {
-              nextFetchPolicy(fetchPolicy, context) {
-                expect(++nextFetchPolicyCallCount).toBe(1);
-                expect(this.query).toBe(query);
-                expect(fetchPolicy).toBe("cache-first");
+      await expect(stream).toEmitMatchedValue({ data: { count: 0 } });
+      expect(nextFetchPolicyCallCount).toBe(2);
 
-                expect(context.reason).toBe("after-fetch");
-                expect(context.observable).toBe(obs);
-                expect(context.options).toBe(obs.options);
-                expect(context.initialFetchPolicy).toBe("cache-first");
+      client.writeQuery({
+        query,
+        data: {
+          count: "secondary",
+        },
+      });
 
-                // Usually options.nextFetchPolicy applies only once, but a
-                // nextFetchPolicy function can set this.nextFetchPolicy
-                // again to perform an additional transition.
-                this.nextFetchPolicy = (fetchPolicy) => {
-                  ++nextFetchPolicyCallCount;
-                  return "cache-first";
-                };
+      await expect(stream).toEmitMatchedValue({ data: { count: "secondary" } });
+      expect(nextFetchPolicyCallCount).toBe(3);
 
-                return "cache-and-network";
-              },
-            },
-          },
-        });
+      client.cache.evict({ fieldName: "count" });
 
-        const query = gql`
-          query {
-            count
-          }
-        `;
+      await expect(stream).toEmitMatchedValue({ data: { count: 1 } });
+      expect(nextFetchPolicyCallCount).toBe(4);
+      expect(obs.options.fetchPolicy).toBe("cache-first");
 
-        client.writeQuery({
-          query,
-          data: {
-            count: "initial",
-          },
-        });
-
-        const obs = client.watchQuery({ query });
-
-        subscribeAndCount(reject, obs, (handleCount, result) => {
-          if (handleCount === 1) {
-            expect(nextFetchPolicyCallCount).toBe(1);
-            expect(result.data).toEqual({ count: "initial" });
-            // Refetching makes a copy of the current options, which
-            // includes options.nextFetchPolicy, so the inner
-            // nextFetchPolicy function ends up getting called twice.
-            obs.refetch();
-          } else if (handleCount === 2) {
-            expect(result.data).toEqual({ count: "initial" });
-            expect(nextFetchPolicyCallCount).toBe(2);
-          } else if (handleCount === 3) {
-            expect(result.data).toEqual({ count: 0 });
-            expect(nextFetchPolicyCallCount).toBe(2);
-            client.writeQuery({
-              query,
-              data: {
-                count: "secondary",
-              },
-            });
-          } else if (handleCount === 4) {
-            expect(result.data).toEqual({ count: "secondary" });
-            expect(nextFetchPolicyCallCount).toBe(3);
-            client.cache.evict({ fieldName: "count" });
-          } else if (handleCount === 5) {
-            expect(result.data).toEqual({ count: 1 });
-            expect(nextFetchPolicyCallCount).toBe(4);
-            expect(obs.options.fetchPolicy).toBe("cache-first");
-            setTimeout(resolve, 50);
-          } else {
-            reject("too many results");
-          }
-        });
-      }
-    );
+      await expect(stream).not.toEmitAnything();
+    });
 
     it("can override global defaultOptions.watchQuery.nextFetchPolicy", async () => {
       let linkCount = 0;

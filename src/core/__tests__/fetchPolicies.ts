@@ -9,6 +9,7 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { WatchQueryFetchPolicy, WatchQueryOptions } from "../watchQueryOptions";
 import { ApolloQueryResult } from "../types";
 import { ObservableQuery } from "../ObservableQuery";
+import { ObservableStream } from "../../testing/internal";
 
 const query = gql`
   query {
@@ -431,106 +432,105 @@ describe("no-cache", () => {
         .then(resolve, reject);
     });
 
-    itAsync(
-      "gives appropriate networkStatus for watched queries",
-      (resolve, reject) => {
-        const client = new ApolloClient({
-          link: ApolloLink.empty(),
-          cache: new InMemoryCache(),
-          resolvers: {
-            Query: {
-              hero(_data, args) {
-                return {
-                  __typename: "Hero",
-                  ...args,
-                  name: "Luke Skywalker",
-                };
-              },
+    it("gives appropriate networkStatus for watched queries", async () => {
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+        resolvers: {
+          Query: {
+            hero(_data, args) {
+              return {
+                __typename: "Hero",
+                ...args,
+                name: "Luke Skywalker",
+              };
             },
           },
-        });
+        },
+      });
 
-        const observable = client.watchQuery({
-          query: gql`
-            query FetchLuke($id: String) {
-              hero(id: $id) @client {
-                id
-                name
-              }
+      const observable = client.watchQuery({
+        query: gql`
+          query FetchLuke($id: String) {
+            hero(id: $id) @client {
+              id
+              name
             }
-          `,
-          fetchPolicy: "no-cache",
-          variables: { id: "1" },
-          notifyOnNetworkStatusChange: true,
-        });
-
-        function dataWithId(id: number | string) {
-          return {
-            hero: {
-              __typename: "Hero",
-              id: String(id),
-              name: "Luke Skywalker",
-            },
-          };
-        }
-
-        subscribeAndCount(reject, observable, (count, result) => {
-          if (count === 1) {
-            expect(result).toEqual({
-              data: dataWithId(1),
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-            });
-            expect(client.cache.extract(true)).toEqual({});
-            return observable.setVariables({ id: "2" });
-          } else if (count === 2) {
-            expect(result).toEqual({
-              loading: true,
-              networkStatus: NetworkStatus.setVariables,
-              partial: true,
-            });
-          } else if (count === 3) {
-            expect(result).toEqual({
-              data: dataWithId(2),
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-            });
-            expect(client.cache.extract(true)).toEqual({});
-            return observable.refetch();
-          } else if (count === 4) {
-            expect(result).toEqual({
-              data: dataWithId(2),
-              loading: true,
-              networkStatus: NetworkStatus.refetch,
-            });
-            expect(client.cache.extract(true)).toEqual({});
-          } else if (count === 5) {
-            expect(result).toEqual({
-              data: dataWithId(2),
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-            });
-            expect(client.cache.extract(true)).toEqual({});
-            return observable.refetch({ id: "3" });
-          } else if (count === 6) {
-            expect(result).toEqual({
-              loading: true,
-              networkStatus: NetworkStatus.setVariables,
-              partial: true,
-            });
-            expect(client.cache.extract(true)).toEqual({});
-          } else if (count === 7) {
-            expect(result).toEqual({
-              data: dataWithId(3),
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-            });
-            expect(client.cache.extract(true)).toEqual({});
-            resolve();
           }
-        });
+        `,
+        fetchPolicy: "no-cache",
+        variables: { id: "1" },
+        notifyOnNetworkStatusChange: true,
+      });
+
+      const stream = new ObservableStream(observable);
+
+      function dataWithId(id: number | string) {
+        return {
+          hero: {
+            __typename: "Hero",
+            id: String(id),
+            name: "Luke Skywalker",
+          },
+        };
       }
-    );
+
+      await expect(stream).toEmitValue({
+        data: dataWithId(1),
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(client.cache.extract(true)).toEqual({});
+
+      observable.setVariables({ id: "2" });
+
+      await expect(stream).toEmitValue({
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
+
+      await expect(stream).toEmitValue({
+        data: dataWithId(2),
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(client.cache.extract(true)).toEqual({});
+
+      observable.refetch();
+
+      await expect(stream).toEmitValue({
+        data: dataWithId(2),
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
+      expect(client.cache.extract(true)).toEqual({});
+
+      await expect(stream).toEmitValue({
+        data: dataWithId(2),
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(client.cache.extract(true)).toEqual({});
+
+      observable.refetch({ id: "3" });
+
+      await expect(stream).toEmitValue({
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
+      expect(client.cache.extract(true)).toEqual({});
+
+      await expect(stream).toEmitValue({
+        data: dataWithId(3),
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(client.cache.extract(true)).toEqual({});
+
+      await expect(stream).not.toEmitAnything();
+    });
   });
 });
 

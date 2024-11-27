@@ -14,7 +14,10 @@ export const toEmitError: MatcherFunction<
 
   try {
     const error = await stream.takeError(options);
-    const pass = expected === undefined ? true : this.equals(expected, error);
+    const pass =
+      expected === undefined ? true : (
+        this.equals(expected, error, this.customTesters)
+      );
 
     return {
       pass,

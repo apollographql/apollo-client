@@ -535,7 +535,7 @@ describe("no-cache", () => {
 });
 
 describe("cache-first", () => {
-  itAsync.skip(
+  itAsync(
     "does not trigger network request during optimistic update",
     (resolve, reject) => {
       const results: any[] = [];

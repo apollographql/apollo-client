@@ -7,11 +7,13 @@ import { toComplete } from "./toComplete.js";
 import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitValue } from "./toEmitValue.js";
+import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 
 expect.extend({
   toComplete,
   toEmitAnything,
   toEmitError,
+  toEmitMatchedValue,
   toEmitValue,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,

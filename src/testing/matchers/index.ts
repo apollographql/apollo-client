@@ -8,6 +8,7 @@ import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitValue } from "./toEmitValue.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
+import { toEmitValueStrict } from "./toEmitValueStrict.js";
 
 expect.extend({
   toComplete,
@@ -15,6 +16,7 @@ expect.extend({
   toEmitError,
   toEmitMatchedValue,
   toEmitValue,
+  toEmitValueStrict,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

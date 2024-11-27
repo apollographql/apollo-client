@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.12.0-rc.4
+
+### Patch Changes
+
+- [#12154](https://github.com/apollographql/apollo-client/pull/12154) [`d933def`](https://github.com/apollographql/apollo-client/commit/d933def986d476cd64321059299ab15031297f04) Thanks [@phryneas](https://github.com/phryneas)! - Data masking types: handle overlapping nested array types and fragments on interface types.
+
 ## 3.12.0-rc.3
 
 ### Patch Changes

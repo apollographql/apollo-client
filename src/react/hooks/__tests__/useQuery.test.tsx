@@ -43,6 +43,7 @@ import { InvariantError } from "../../../utilities/globals";
 import {
   createRenderStream,
   renderHookToSnapshotStream,
+  disableActEnvironment,
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -792,7 +793,8 @@ describe("useQuery Hook", () => {
         link,
         cache: new InMemoryCache(),
       });
-      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         () => [useQuery(query1, { fetchPolicy: "no-cache" }), useQuery(query2)],
         {
           wrapper: ({ children }) => (
@@ -1697,7 +1699,8 @@ describe("useQuery Hook", () => {
       ];
 
       const cache = new InMemoryCache();
-      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ skip }: { skip?: boolean }) =>
           useQuery(query, { pollInterval: 10, skip }),
         {
@@ -1829,7 +1832,8 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () => useQuery(query, { pollInterval: 20 }),
         { wrapper }
       );
@@ -1911,7 +1915,8 @@ describe("useQuery Hook", () => {
         cache,
       });
 
-      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             pollInterval: 10,
@@ -2067,7 +2072,8 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ link, cache });
 
-      const { takeSnapshot, unmount } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             pollInterval: 10,
@@ -3549,10 +3555,12 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+          { wrapper }
+        );
 
       {
         const result = await takeSnapshot();
@@ -3692,10 +3700,12 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+          { wrapper }
+        );
 
       {
         const result = await takeSnapshot();
@@ -4082,15 +4092,20 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              fetchPolicy: "no-cache",
+              variables: { limit: 2 },
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
       // loading
       await takeSnapshot();
@@ -4119,19 +4134,21 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            notifyOnNetworkStatusChange: true,
-            fetchPolicy: "no-cache",
-            variables: { limit: 2 },
-          }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              notifyOnNetworkStatusChange: true,
+              fetchPolicy: "no-cache",
+              variables: { limit: 2 },
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
       {
         const { loading, networkStatus, data } = await takeSnapshot();
@@ -4280,15 +4297,20 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              fetchPolicy: "no-cache",
+              variables: { limit: 2 },
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
       // loading
       await takeSnapshot();
@@ -4321,15 +4343,20 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useQuery(query, { fetchPolicy: "no-cache", variables: { limit: 2 } }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              fetchPolicy: "no-cache",
+              variables: { limit: 2 },
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
       // initial loading
       await takeSnapshot();
@@ -4487,6 +4514,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
@@ -4546,7 +4574,7 @@ describe("useQuery Hook", () => {
       );
     }
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -4746,6 +4774,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
@@ -4797,7 +4826,7 @@ describe("useQuery Hook", () => {
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -4968,6 +4997,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
@@ -5019,7 +5049,7 @@ describe("useQuery Hook", () => {
       return <button onClick={() => execute()}>Run 2nd query</button>;
     }
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -5127,6 +5157,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult | null,
@@ -5177,7 +5208,7 @@ describe("useQuery Hook", () => {
       return null;
     }
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -5246,6 +5277,7 @@ describe("useQuery Hook", () => {
 
     const user = userEvent.setup();
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult | null,
@@ -5336,7 +5368,7 @@ describe("useQuery Hook", () => {
       return <button onClick={() => mutate()}>Run mutation</button>;
     }
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -5449,14 +5481,16 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            variables: { id: 1 },
-            notifyOnNetworkStatusChange: true,
-          }),
-        { wrapper }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              variables: { id: 1 },
+              notifyOnNetworkStatusChange: true,
+            }),
+          { wrapper }
+        );
       {
         const result = await takeSnapshot();
         expect(result.loading).toBe(true);
@@ -5505,19 +5539,21 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            notifyOnNetworkStatusChange: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              notifyOnNetworkStatusChange: true,
+            }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks} cache={cache}>
+                {children}
+              </MockedProvider>
+            ),
+          }
+        );
 
       {
         const result = await takeSnapshot();
@@ -5814,15 +5850,17 @@ describe("useQuery Hook", () => {
             {children}
           </MockedProvider>
         );
-        const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-          () =>
-            useQuery(query, {
-              variables: { min: 0, max: 12 },
-              notifyOnNetworkStatusChange: true,
-              // Intentionally not passing refetchWritePolicy.
-            }),
-          { wrapper }
-        );
+        using _disabledAct = disableActEnvironment();
+        const { takeSnapshot, getCurrentSnapshot } =
+          await renderHookToSnapshotStream(
+            () =>
+              useQuery(query, {
+                variables: { min: 0, max: 12 },
+                notifyOnNetworkStatusChange: true,
+                // Intentionally not passing refetchWritePolicy.
+              }),
+            { wrapper }
+          );
 
         {
           const result = await takeSnapshot();
@@ -6314,7 +6352,8 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
-      const { takeSnapshot } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             onCompleted,
@@ -6609,45 +6648,47 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => ({
-          mutation: useMutation(mutation, {
-            optimisticResponse: { addCar: carData },
-            update(cache, { data }) {
-              cache.modify({
-                fields: {
-                  cars(existing, { readField }) {
-                    const newCarRef = cache.writeFragment({
-                      data: data!.addCar,
-                      fragment: gql`
-                        fragment NewCar on Car {
-                          id
-                          make
-                          model
-                        }
-                      `,
-                    });
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => ({
+            mutation: useMutation(mutation, {
+              optimisticResponse: { addCar: carData },
+              update(cache, { data }) {
+                cache.modify({
+                  fields: {
+                    cars(existing, { readField }) {
+                      const newCarRef = cache.writeFragment({
+                        data: data!.addCar,
+                        fragment: gql`
+                          fragment NewCar on Car {
+                            id
+                            make
+                            model
+                          }
+                        `,
+                      });
 
-                    if (
-                      existing.some(
-                        (ref: Reference) =>
-                          readField("id", ref) === data!.addCar.id
-                      )
-                    ) {
-                      return existing;
-                    }
+                      if (
+                        existing.some(
+                          (ref: Reference) =>
+                            readField("id", ref) === data!.addCar.id
+                        )
+                      ) {
+                        return existing;
+                      }
 
-                    return [...existing, newCarRef];
+                      return [...existing, newCarRef];
+                    },
                   },
-                },
-              });
-            },
-            onError,
+                });
+              },
+              onError,
+            }),
+            query: useQuery(query),
           }),
-          query: useQuery(query),
-        }),
-        { wrapper }
-      );
+          { wrapper }
+        );
 
       {
         const { query } = await takeSnapshot();
@@ -6873,7 +6914,8 @@ describe("useQuery Hook", () => {
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
-      const { takeSnapshot } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             partialRefetch: true,
@@ -7839,7 +7881,8 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { takeSnapshot } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { notifyOnNetworkStatusChange: true }),
         { wrapper }
       );
@@ -8299,7 +8342,8 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ gender }: { gender: string }) =>
           useQuery(query, {
             variables: { gender },
@@ -10091,11 +10135,15 @@ describe("useQuery Hook", () => {
       link,
       cache: new InMemoryCache(),
     });
-    const { takeSnapshot } = renderHookToSnapshotStream(() => useQuery(query), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     expect(requests).toBe(1);
     {
@@ -10149,14 +10197,16 @@ describe("useQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
     {
       const { loading, data, error } = await takeSnapshot();

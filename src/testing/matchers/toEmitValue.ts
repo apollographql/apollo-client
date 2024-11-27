@@ -1,3 +1,4 @@
+import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
@@ -13,7 +14,10 @@ export const toEmitValue: MatcherFunction<[value: any, options?: TakeOptions]> =
 
     try {
       const value = await stream.takeNext(options);
-      const pass = this.equals(expected, value, this.customTesters, true);
+      const pass = this.equals(value, expected, [
+        ...this.customTesters,
+        iterableEquality,
+      ]);
 
       return {
         pass,

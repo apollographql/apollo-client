@@ -26,6 +26,8 @@ import {
   userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 
+const IS_REACT_19 = React.version.startsWith("19");
+
 const typeDefs = /* GraphQL */ `
   type User {
     id: ID!
@@ -1212,12 +1214,19 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
     await renderStream.takeRender();
+
+    if (IS_REACT_19) {
+      // not sure why we have this additional commit
+      expect((await renderStream.takeRender()).snapshot).toStrictEqual({
+        result: null,
+      });
+    }
 
     await expect(renderStream).not.toRerender({ timeout: minDelay - 100 });
 

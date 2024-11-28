@@ -8,20 +8,17 @@ type Fn =
 
 export const rule = ESLintUtils.RuleCreator.withoutDocs({
   create(context) {
-    const functionsWithRenderStreamCall = new WeakMap<Fn, AST.CallExpression>();
-    const functionsWithDisabledActEnvironment = new WeakSet<Fn>();
-    function FunctionExitCheck(fnNode: Fn) {
-      const callNode = functionsWithRenderStreamCall.get(fnNode);
-      if (callNode) {
-        if (!functionsWithDisabledActEnvironment.has(fnNode)) {
-          context.report({
-            messageId: "missingDisableActEnvironment",
-            node: callNode,
-          });
-        }
+    let depth = 1;
+    let disabledDepth: number | false = false;
+
+    function EnterFn() {
+      depth++;
+    }
+    function ExitFn() {
+      depth--;
+      if (disabledDepth !== false && disabledDepth > depth) {
+        disabledDepth = false;
       }
-      functionsWithDisabledActEnvironment.delete(fnNode);
-      functionsWithRenderStreamCall.delete(fnNode);
     }
 
     return {
@@ -33,31 +30,32 @@ export const rule = ESLintUtils.RuleCreator.withoutDocs({
 
         if (
           directCallee?.type === "Identifier" &&
-          (directCallee.name === "takeRender" ||
-            directCallee.name === "takeSnapshot")
+          directCallee.name === "disableActEnvironment"
         ) {
-          const parentFunction = findParentFunction(node);
-          if (
-            parentFunction &&
-            !functionsWithRenderStreamCall.has(parentFunction)
-          ) {
-            functionsWithRenderStreamCall.set(parentFunction, node);
+          if (disabledDepth === false) {
+            disabledDepth = depth;
           }
         }
 
         if (
           directCallee?.type === "Identifier" &&
-          directCallee.name === "disableActEnvironment"
+          (directCallee.name === "takeRender" ||
+            directCallee.name === "takeSnapshot")
         ) {
-          const parentFunction = findParentFunction(node);
-          if (parentFunction) {
-            functionsWithDisabledActEnvironment.add(parentFunction);
+          if (disabledDepth === false) {
+            context.report({
+              messageId: "missingDisableActEnvironment",
+              node: node,
+            });
           }
         }
       },
-      "ArrowFunctionExpression:exit": FunctionExitCheck,
-      "FunctionExpression:exit": FunctionExitCheck,
-      "FunctionDeclaration:exit": FunctionExitCheck,
+      ArrowFunctionExpression: EnterFn,
+      FunctionExpression: EnterFn,
+      FunctionDeclaration: EnterFn,
+      "ArrowFunctionExpression:exit": ExitFn,
+      "FunctionExpression:exit": ExitFn,
+      "FunctionDeclaration:exit": ExitFn,
     };
   },
   meta: {

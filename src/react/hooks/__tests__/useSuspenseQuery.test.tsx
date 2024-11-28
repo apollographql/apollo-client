@@ -9810,10 +9810,6 @@ describe("useSuspenseQuery", () => {
     }
     const el = screen.getByText("Refresh");
     await user.click(el);
-    if (IS_REACT_19) {
-      // React 19 sibling prerender
-      await takeRender();
-    }
 
     // startTransition will avoid rendering the suspense fallback for already
     // revealed content if the state update inside the transition causes the
@@ -10628,12 +10624,6 @@ describe("useSuspenseQuery", () => {
     await user.click(screen.getByText("Fetch next"));
     await renderStream.takeRender();
 
-    if (IS_REACT_19) {
-      // React 19 sibling prerender
-      const { renderedComponents } = await renderStream.takeRender();
-      expect(renderedComponents).toStrictEqual([]);
-    }
-
     {
       const { snapshot } = await renderStream.takeRender();
 
@@ -10649,12 +10639,6 @@ describe("useSuspenseQuery", () => {
 
     await user.click(screen.getByText("Fetch next"));
     await renderStream.takeRender();
-
-    if (IS_REACT_19) {
-      // React 19 sibling prerender
-      const { renderedComponents } = await renderStream.takeRender();
-      expect(renderedComponents).toStrictEqual([]);
-    }
 
     {
       const { snapshot } = await renderStream.takeRender();

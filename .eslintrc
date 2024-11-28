@@ -89,7 +89,8 @@
       "rules": {
         "testing-library/prefer-user-event": "error",
         "testing-library/no-wait-for-multiple-assertions": "off",
-        "local-rules/require-using-disposable": "error"
+        "local-rules/require-using-disposable": "error",
+        "local-rules/require-disable-act-environment": "error"
       }
     }
   ],

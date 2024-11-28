@@ -31,6 +31,7 @@ import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 import {
+  disableActEnvironment,
   renderHookToSnapshotStream,
   renderToRenderStream,
 } from "@testing-library/react-render-stream";
@@ -1425,6 +1426,7 @@ describe("useFragment", () => {
       data: { __typename: "User", id: 2, name: "Charlie" },
     });
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ id }: { id: number }) =>
         useFragment({ fragment, from: { __typename: "User", id } }),
@@ -1489,6 +1491,7 @@ describe("useFragment", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useFragment({ fragment, from: { __typename: "Post", id: 1 } }),
       {
@@ -1560,6 +1563,7 @@ describe("useFragment", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
@@ -1736,6 +1740,7 @@ describe("useFragment", () => {
     using _ = spyOnConsole("warn");
     const cache = new InMemoryCache();
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
@@ -1801,6 +1806,7 @@ describe("has the same timing as `useQuery`", () => {
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
+    using _disabledAct = disableActEnvironment();
     const { takeRender, replaceSnapshot } = renderToRenderStream(
       <Component />,
       {
@@ -1882,6 +1888,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
+    using _disabledAct = disableActEnvironment();
     const { takeRender } = renderToRenderStream(<Parent />, {
       snapshotDOM: true,
       onRender() {
@@ -1973,6 +1980,7 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
+    using _disabledAct = disableActEnvironment();
     const { takeRender } = renderToRenderStream(<Parent />, {
       onRender() {
         const parent = screen.getByTestId("parent");

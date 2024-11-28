@@ -13,7 +13,10 @@ import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { createRenderStream } from "@testing-library/react-render-stream";
+import {
+  createRenderStream,
+  disableActEnvironment,
+} from "@testing-library/react-render-stream";
 
 describe("[queries] loading", () => {
   // networkStatus / loading
@@ -417,6 +420,7 @@ describe("[queries] loading", () => {
       <ApolloProvider client={client}>{children}</ApolloProvider>
     );
 
+    using _disabledAct = disableActEnvironment();
     const { takeRender, replaceSnapshot, render } = createRenderStream<
       DataValue<{
         allPeople: {

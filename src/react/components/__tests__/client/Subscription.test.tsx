@@ -9,7 +9,10 @@ import { ApolloLink, DocumentNode, Operation } from "../../../../link/core";
 import { itAsync, MockSubscriptionLink } from "../../../../testing";
 import { Subscription } from "../../Subscription";
 import { spyOnConsole } from "../../../../testing/internal";
-import { renderToRenderStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  renderToRenderStream,
+} from "@testing-library/react-render-stream";
 
 const results = [
   "Luke Skywalker",
@@ -435,6 +438,7 @@ describe("should update", () => {
         </Subscription>
       );
     }
+    using _disabledAct = disableActEnvironment();
     const { takeRender, replaceSnapshot, renderResultPromise } =
       renderToRenderStream<any>(
         <ApolloProvider client={client}>
@@ -531,6 +535,8 @@ describe("should update", () => {
         </Subscription>
       );
     }
+
+    using _disabledAct = disableActEnvironment();
     const { takeRender, replaceSnapshot, renderResultPromise } =
       renderToRenderStream<any>(<Container subscription={subscription} />, {
         wrapper: ({ children }) => (
@@ -624,6 +630,7 @@ describe("should update", () => {
         </Subscription>
       );
     }
+    using _disabledAct = disableActEnvironment();
     const { takeRender, renderResultPromise, replaceSnapshot } =
       renderToRenderStream<any>(<Container variables={variablesLuke} />, {
         wrapper: ({ children }) => (

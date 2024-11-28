@@ -20,7 +20,10 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
-import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -1249,6 +1252,7 @@ followed by new in-flight setup", async () => {
         async (errorPolicy) => {
           const onData = jest.fn();
           const onError = jest.fn();
+          using _disabledAct = disableActEnvironment();
           const {
             takeSnapshot,
             link,
@@ -1286,6 +1290,7 @@ followed by new in-flight setup", async () => {
       it("`errorPolicy: 'all'`: returns `{ error, data }`, calls `onError`", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
+        using _disabledAct = disableActEnvironment();
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           await setup({ errorPolicy: "all", onError, onData });
 
@@ -1320,6 +1325,7 @@ followed by new in-flight setup", async () => {
       it("`errorPolicy: 'ignore'`: returns `{ data }`, calls `onData`", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
+        using _disabledAct = disableActEnvironment();
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           await setup({
             errorPolicy: "ignore",
@@ -1361,6 +1367,7 @@ followed by new in-flight setup", async () => {
         async (errorPolicy) => {
           const onData = jest.fn();
           const onError = jest.fn();
+          using _disabledAct = disableActEnvironment();
           const {
             takeSnapshot,
             link,
@@ -1449,6 +1456,7 @@ describe("`restart` callback", () => {
     };
   }
   it("can restart a running subscription", async () => {
+    using _disabledAct = disableActEnvironment();
     const {
       link,
       takeSnapshot,
@@ -1512,6 +1520,7 @@ describe("`restart` callback", () => {
     }
   });
   it("will use the most recently passed in options", async () => {
+    using _disabledAct = disableActEnvironment();
     const {
       link,
       takeSnapshot,
@@ -1610,6 +1619,7 @@ describe("`restart` callback", () => {
     }
   });
   it("can restart a subscription that has completed", async () => {
+    using _disabledAct = disableActEnvironment();
     const {
       link,
       takeSnapshot,
@@ -1672,6 +1682,7 @@ describe("`restart` callback", () => {
     }
   });
   it("can restart a subscription that has errored", async () => {
+    using _disabledAct = disableActEnvironment();
     const {
       link,
       takeSnapshot,
@@ -1737,6 +1748,7 @@ describe("`restart` callback", () => {
     }
   });
   it("will not restart a subscription that has been `skip`ped", async () => {
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot, onSubscribe, onUnsubscribe } =
       await setup({
         variables: { id: "1" },
@@ -1790,6 +1802,7 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
@@ -1863,6 +1876,7 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
@@ -1928,6 +1942,7 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
@@ -1998,6 +2013,7 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {

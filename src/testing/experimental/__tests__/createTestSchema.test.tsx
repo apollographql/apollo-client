@@ -22,6 +22,7 @@ import { InvariantError } from "ts-invariant";
 import {
   RenderStream,
   createRenderStream,
+  disableActEnvironment,
 } from "@testing-library/react-render-stream";
 
 const typeDefs = /* GraphQL */ `
@@ -169,6 +170,7 @@ describe("schema proxy", () => {
   });
 
   it("mocks scalars and resolvers", async () => {
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(schema).mockGlobal();
@@ -256,6 +258,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -333,6 +336,7 @@ describe("schema proxy", () => {
   });
 
   it("schema.fork does not pollute the original schema", async () => {
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     schema.fork({
@@ -435,6 +439,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -551,6 +556,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -686,6 +692,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createErrorProfiler<ViewerQueryData>();
 
     const { ErrorBoundary } = createTrackedErrorComponents(renderStream);
@@ -761,6 +768,7 @@ describe("schema proxy", () => {
     // invalid schema
     const forkedSchema = { foo: "bar" };
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createErrorProfiler<ViewerQueryData>();
 
     const { ErrorBoundary } = createTrackedErrorComponents(renderStream);
@@ -884,6 +892,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -1025,6 +1034,7 @@ describe("schema proxy", () => {
         },
       },
     });
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     resetTestSchema.add({
@@ -1149,6 +1159,7 @@ describe("schema proxy", () => {
   });
 
   it("createSchemaFetch respects min and max delay", async () => {
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     const minDelay = 1500;

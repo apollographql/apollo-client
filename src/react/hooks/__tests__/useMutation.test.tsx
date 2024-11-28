@@ -32,7 +32,10 @@ import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { spyOnConsole } from "../../../testing/internal";
-import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -751,6 +754,7 @@ describe("useMutation Hook", () => {
         },
       ];
 
+      using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useMutation<

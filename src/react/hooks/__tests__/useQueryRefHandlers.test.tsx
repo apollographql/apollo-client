@@ -33,6 +33,7 @@ import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination, getMainDefinition } from "../../../utilities";
 import {
   createRenderStream,
+  disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -44,6 +45,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -144,6 +146,7 @@ test("refetches and resuspends when calling refetch", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -265,6 +268,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
@@ -391,6 +395,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
@@ -514,6 +519,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
@@ -632,6 +638,7 @@ test("`refetch` works with startTransition", async () => {
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
@@ -767,6 +774,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
@@ -932,6 +940,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -1019,6 +1028,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -1112,6 +1122,7 @@ test("resuspends when calling `fetchMore`", async () => {
   });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1204,6 +1215,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1316,6 +1328,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1419,6 +1432,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     link,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1522,6 +1536,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     link,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1634,6 +1649,7 @@ test("`fetchMore` works with startTransition", async () => {
   });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
@@ -1763,6 +1779,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     link,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
@@ -1983,6 +2000,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<

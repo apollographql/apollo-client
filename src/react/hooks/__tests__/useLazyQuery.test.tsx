@@ -25,7 +25,10 @@ import {
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 import { InvariantError } from "../../../utilities/globals";
-import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
@@ -99,6 +102,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
         wrapper: ({ children }) => (
@@ -137,6 +141,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
         // skip isn’t actually an option on the types
@@ -184,6 +189,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
         () =>
@@ -544,6 +550,7 @@ describe("useLazyQuery Hook", () => {
     ];
 
     const cache = new InMemoryCache();
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(() => useLazyQuery(query1), {
         wrapper: ({ children }) => (
@@ -600,6 +607,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
         () =>
@@ -659,6 +667,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(
         () =>
@@ -732,6 +741,7 @@ describe("useLazyQuery Hook", () => {
       <MockedProvider mocks={mocks}>{children}</MockedProvider>
     );
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
         wrapper,
@@ -813,6 +823,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(() => useLazyQuery(CAR_QUERY_BY_ID), {
         wrapper: ({ children }) => (
@@ -1088,6 +1099,7 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
       () => useLazyQuery(helloQuery),
       {
@@ -1755,6 +1767,7 @@ describe("useLazyQuery Hook", () => {
         ),
       });
 
+      using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () =>
@@ -1941,6 +1954,7 @@ describe("useLazyQuery Hook", () => {
       link,
       cache: new InMemoryCache(),
     });
+    using _disabledAct = disableActEnvironment();
     const { takeSnapshot, getCurrentSnapshot } =
       await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
         wrapper: ({ children }) => (

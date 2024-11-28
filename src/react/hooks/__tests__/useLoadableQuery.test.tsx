@@ -62,6 +62,7 @@ import {
   RenderStream,
   RenderWithoutActAsync,
   createRenderStream,
+  disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
@@ -266,6 +267,7 @@ async function renderWithClient(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -323,6 +325,7 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -386,6 +389,7 @@ it("tears down the query on unmount", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -521,6 +525,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -607,6 +612,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -707,6 +713,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -794,6 +801,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -882,6 +890,7 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -950,6 +959,7 @@ it("passes context to the link", async () => {
     }),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -1039,6 +1049,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     link: new MockLink([]),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -1128,6 +1139,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     data: { results },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1194,6 +1206,7 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -1273,6 +1286,7 @@ it("all data is present in the cache, no network request is made", async () => {
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1344,6 +1358,7 @@ it("partial data is present in the cache so it is ignored and network request is
     cache.writeQuery({ query, data: { hello: "from cache" } });
   }
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1414,6 +1429,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1483,6 +1499,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1705,6 +1722,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
   const client = new ApolloClient({ cache, link });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1826,6 +1844,7 @@ it("reacts to cache updates", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleQueryData> | null,
@@ -1911,6 +1930,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
     createDefaultProfiledComponents(renderStream);
@@ -2011,6 +2031,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2119,6 +2140,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2233,6 +2255,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2404,6 +2427,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2549,6 +2573,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2659,6 +2684,7 @@ it("re-suspends when calling `refetch`", async () => {
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2748,6 +2774,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2831,6 +2858,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -2943,6 +2971,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3024,6 +3053,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3111,6 +3141,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3200,6 +3231,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3413,6 +3445,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     }),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3494,6 +3527,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
 
 it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const { query, client } = usePaginatedQueryCase();
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3581,6 +3615,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
 
 it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
   const { query, link } = usePaginatedQueryCase();
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3881,6 +3916,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4001,6 +4037,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4102,6 +4139,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4191,6 +4229,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     variables: { id: "1" },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4306,6 +4345,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4408,6 +4448,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     data: { character: { id: "1" } },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4527,6 +4568,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     data: { character: { id: "1" } },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4603,6 +4645,7 @@ it('suspends and does not use partial data when changing variables and using a "
     variables: { id: "1" },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4726,6 +4769,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
 
   const client = new ApolloClient({ link, cache });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4956,6 +5000,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
 
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
@@ -5090,6 +5135,7 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
 
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<

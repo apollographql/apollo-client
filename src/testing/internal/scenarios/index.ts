@@ -63,6 +63,13 @@ export function setupVariablesCase() {
   return { mocks, query };
 }
 
+export function slowDownMocks<T extends MockedResponse<unknown>[]>(
+  mocks: T,
+  delay = 150
+) {
+  return mocks.map((mock) => ({ ...mock, delay }));
+}
+
 interface Letter {
   letter: string;
   position: number;

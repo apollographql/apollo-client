@@ -10676,7 +10676,7 @@ describe("useSuspenseQuery", () => {
             observer.next({ data: { letters } });
           }
           observer.complete();
-        }, 10);
+        }, 150);
       });
     });
 

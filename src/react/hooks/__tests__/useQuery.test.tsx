@@ -7,7 +7,6 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
-  ApolloQueryResult,
   NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
@@ -32,7 +31,6 @@ import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import {
   disableActWarnings,
-  PaginatedCaseData,
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal";
@@ -44,6 +42,7 @@ import {
   createRenderStream,
   renderHookToSnapshotStream,
   disableActEnvironment,
+  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -4116,12 +4115,10 @@ describe("useQuery Hook", () => {
 
       const { fetchMore } = getCurrentSnapshot();
 
-      await act(() =>
-        fetchMore({
-          variables: { offset: 2 },
-          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
-        })
-      );
+      await fetchMore({
+        variables: { offset: 2 },
+        updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+      });
 
       expect(fetches).toStrictEqual([
         { variables: { limit: 2 } },
@@ -4171,16 +4168,13 @@ describe("useQuery Hook", () => {
         });
       }
 
-      let fetchMorePromise!: Promise<ApolloQueryResult<PaginatedCaseData>>;
       const { fetchMore } = getCurrentSnapshot();
 
-      act(() => {
-        fetchMorePromise = fetchMore({
-          variables: { offset: 2 },
-          updateQuery: (prev, { fetchMoreResult }) => ({
-            letters: prev.letters.concat(fetchMoreResult.letters),
-          }),
-        });
+      let fetchMorePromise = fetchMore({
+        variables: { offset: 2 },
+        updateQuery: (prev, { fetchMoreResult }) => ({
+          letters: prev.letters.concat(fetchMoreResult.letters),
+        }),
       });
 
       {
@@ -4235,11 +4229,9 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender();
 
-      act(() => {
-        fetchMorePromise = fetchMore({
-          variables: { offset: 4 },
-          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
-        });
+      fetchMorePromise = fetchMore({
+        variables: { offset: 4 },
+        updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
       });
 
       {
@@ -4365,12 +4357,10 @@ describe("useQuery Hook", () => {
       await takeSnapshot();
 
       const { fetchMore } = getCurrentSnapshot();
-      await act(() =>
-        fetchMore({
-          variables: { offset: 2 },
-          updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
-        })
-      );
+      await fetchMore({
+        variables: { offset: 2 },
+        updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+      });
 
       expect(client.extract()).toStrictEqual({});
     });
@@ -4493,7 +4483,7 @@ describe("useQuery Hook", () => {
       id: number;
     }
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     const query1: TypedDocumentNode<Query1, Variables> = gql`
       query PersonQuery1($id: ID!) {
@@ -4617,7 +4607,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Run 2nd query")));
+    await user.click(screen.getByText("Run 2nd query"));
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -4674,7 +4664,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Reload 1st query")));
+    await user.click(screen.getByText("Reload 1st query"));
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -4753,7 +4743,7 @@ describe("useQuery Hook", () => {
       id: number;
     }
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     const query1: TypedDocumentNode<Query1, Variables> = gql`
       query PersonQuery1($id: ID!) {
@@ -4869,7 +4859,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Run 2nd query")));
+    await user.click(screen.getByText("Run 2nd query"));
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -4976,7 +4966,7 @@ describe("useQuery Hook", () => {
       id: number;
     }
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     const query1: TypedDocumentNode<Query1, Variables> = gql`
       query PersonQuery1($id: ID!) {
@@ -5092,7 +5082,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Run 2nd query")));
+    await user.click(screen.getByText("Run 2nd query"));
 
     {
       const { snapshot } = await renderStream.takeRender();
@@ -5275,7 +5265,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
@@ -5404,7 +5394,7 @@ describe("useQuery Hook", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Run mutation")));
+    await user.click(screen.getByText("Run mutation"));
     await renderStream.takeRender();
 
     {
@@ -6702,7 +6692,7 @@ describe("useQuery Hook", () => {
         expect(query.data).toEqual(carsData);
       }
 
-      act(() => void mutate());
+      mutate();
 
       {
         // The mutation ran and is loading the result. The query stays at not

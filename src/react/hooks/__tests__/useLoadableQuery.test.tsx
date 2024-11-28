@@ -64,6 +64,7 @@ import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
+  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -230,11 +231,9 @@ function createDefaultProfiledComponents<
 async function renderWithMocks(
   ui: React.ReactElement,
   props: MockedProviderProps,
-  { render: doRender }: { render: RenderWithoutActAsync } = {
-    render: renderAsync,
-  }
+  { render: doRender }: { render: RenderWithoutActAsync }
 ) {
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
 
   const utils = await doRender(ui, {
     wrapper: ({ children }) => (
@@ -248,12 +247,10 @@ async function renderWithMocks(
 async function renderWithClient(
   ui: React.ReactElement,
   options: { client: ApolloClient<any> },
-  { render: doRender }: { render: RenderWithoutActAsync } = {
-    render: renderAsync,
-  }
+  { render: doRender }: { render: RenderWithoutActAsync }
 ) {
   const { client } = options;
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
 
   const utils = await doRender(ui, {
     wrapper: ({ children }: { children: React.ReactNode }) => (
@@ -301,7 +298,7 @@ it("loads a query and suspends when the load query function is called", async ()
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -359,7 +356,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -419,7 +416,7 @@ it("tears down the query on unmount", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   const { snapshot } = await renderStream.takeRender();
@@ -556,7 +553,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
 
   // initial render
   await renderStream.takeRender();
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -573,7 +570,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(screen.getByText("Toggle")));
+  await user.click(screen.getByText("Toggle"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -644,7 +641,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
 
   // initial render
   await renderStream.takeRender();
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -665,14 +662,14 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     });
   }
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(client.getObservableQueries().size).toBe(1);
   // Here we don't expect a suspense cache entry because we previously disposed
@@ -752,7 +749,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load 1st character")));
+  await user.click(screen.getByText("Load 1st character"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -771,7 +768,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     });
   }
 
-  await act(() => user.click(screen.getByText("Load 2nd character")));
+  await user.click(screen.getByText("Load 2nd character"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -836,7 +833,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -849,7 +846,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     });
   }
 
-  await act(() => user.click(screen.getByText("Reset query")));
+  await user.click(screen.getByText("Reset query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -923,7 +920,7 @@ it("allows the client to be overridden", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   const { snapshot } = await renderStream.takeRender();
@@ -992,7 +989,7 @@ it("passes context to the link", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   const { snapshot } = await renderStream.takeRender();
@@ -1082,7 +1079,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result?.data.results);
@@ -1171,7 +1168,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result!.data.results);
@@ -1239,7 +1236,7 @@ it("returns initial cache data followed by network data when the fetch policy is
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1316,7 +1313,7 @@ it("all data is present in the cache, no network request is made", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   const { snapshot, renderedComponents } = await renderStream.takeRender();
 
@@ -1388,7 +1385,7 @@ it("partial data is present in the cache so it is ignored and network request is
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1461,7 +1458,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1531,7 +1528,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1650,7 +1647,8 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  const { user } = await renderWithClient(<App />, { client });
+  await renderWithClient(<App />, { client }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load first todo")));
 
@@ -1753,7 +1751,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load todo")));
+  await user.click(screen.getByText("Load todo"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1879,7 +1877,7 @@ it("reacts to cache updates", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -1969,7 +1967,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -1982,10 +1980,10 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     });
   }
 
-  await act(() => user.click(screen.getByText("Change error policy")));
+  await user.click(screen.getByText("Change error policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch greeting")));
+  await user.click(screen.getByText("Refetch greeting"));
   await renderStream.takeRender();
 
   {
@@ -2066,7 +2064,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2077,10 +2075,10 @@ it("applies `context` on next fetch when it changes between renders", async () =
     });
   }
 
-  await act(() => user.click(screen.getByText("Update context")));
+  await user.click(screen.getByText("Update context"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -2176,7 +2174,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2189,7 +2187,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   }
 
-  await act(() => user.click(screen.getByText("Canonize results")));
+  await user.click(screen.getByText("Canonize results"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2301,7 +2299,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2312,7 +2310,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch next")));
+  await user.click(screen.getByText("Refetch next"));
   await renderStream.takeRender();
 
   {
@@ -2329,10 +2327,10 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     ]);
   }
 
-  await act(() => user.click(screen.getByText("Change refetch write policy")));
+  await user.click(screen.getByText("Change refetch write policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch last")));
+  await user.click(screen.getByText("Refetch last"));
   await renderStream.takeRender();
 
   {
@@ -2464,7 +2462,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2479,7 +2477,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     });
   }
 
-  await act(() => user.click(screen.getByText("Update partial data")));
+  await user.click(screen.getByText("Update partial data"));
   await renderStream.takeRender();
 
   cache.modify({
@@ -2612,7 +2610,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2630,10 +2628,10 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     });
   }
 
-  await act(() => user.click(screen.getByText("Change fetch policy")));
+  await user.click(screen.getByText("Change fetch policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -2715,7 +2713,7 @@ it("re-suspends when calling `refetch`", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2733,7 +2731,7 @@ it("re-suspends when calling `refetch`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2805,7 +2803,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2823,7 +2821,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch with ID 2")));
+  await user.click(screen.getByText("Refetch with ID 2"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2890,7 +2888,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2910,7 +2908,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
 
   const button = screen.getByText("Refetch");
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2928,7 +2926,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     });
   }
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3005,7 +3003,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3018,7 +3016,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3089,7 +3087,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3102,7 +3100,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3177,7 +3175,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3190,7 +3188,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3267,7 +3265,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3280,7 +3278,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3391,7 +3389,8 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     );
   }
 
-  const { user } = await renderWithMocks(<App />, { mocks });
+  await renderWithMocks(<App />, { mocks }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3480,7 +3479,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3498,7 +3497,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3569,7 +3568,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3587,7 +3586,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
   await renderStream.takeRender();
 
   {
@@ -3663,7 +3662,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3681,7 +3680,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
   await renderStream.takeRender();
 
   {
@@ -3831,7 +3830,8 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     );
   }
 
-  const { user } = await renderWithClient(<App />, { client });
+  await renderWithClient(<App />, { client }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3956,7 +3956,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3970,7 +3970,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -4075,7 +4075,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   // initial load
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -4089,7 +4089,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -4181,7 +4181,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   // initial load
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4264,7 +4264,7 @@ it('suspends and does not use partial data from other variables in the cache whe
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4290,7 +4290,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 
-  await act(() => user.click(screen.getByText("Change variables")));
+  await user.click(screen.getByText("Change variables"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4386,7 +4386,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4482,7 +4482,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
   // initial load
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4602,7 +4602,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4680,7 +4680,7 @@ it('suspends and does not use partial data when changing variables and using a "
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4704,7 +4704,7 @@ it('suspends and does not use partial data when changing variables and using a "
     });
   }
 
-  await act(() => user.click(screen.getByText("Change variables")));
+  await user.click(screen.getByText("Change variables"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4802,7 +4802,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load todo")));
+  await user.click(screen.getByText("Load todo"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4898,7 +4898,15 @@ it("throws when calling loadQuery on first render", async () => {
     return null;
   }
 
-  await expect(() => renderWithMocks(<App />, { mocks })).rejects.toThrow(
+  await expect(
+    renderWithMocks(
+      <App />,
+      { mocks },
+      {
+        render: renderAsync,
+      }
+    )
+  ).rejects.toThrow(
     new InvariantError(
       "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
     )
@@ -4924,12 +4932,14 @@ it("throws when calling loadQuery on subsequent render", async () => {
     return <button onClick={() => setCount(1)}>Load query in render</button>;
   }
 
-  const { user } = await renderWithMocks(
+  await renderWithMocks(
     <ReactErrorBoundary onError={(e) => (error = e)} fallback={<div>Oops</div>}>
       <App />
     </ReactErrorBoundary>,
-    { mocks }
+    { mocks },
+    { render: renderAsync }
   );
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query in render")));
 
@@ -4953,8 +4963,8 @@ it("allows loadQuery to be called in useEffect on first render", async () => {
     return null;
   }
 
-  await expect(() =>
-    renderWithMocks(<App />, { mocks })
+  await expect(
+    renderWithMocks(<App />, { mocks }, { render: renderAsync })
   ).resolves.not.toThrow();
 });
 
@@ -5040,7 +5050,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();

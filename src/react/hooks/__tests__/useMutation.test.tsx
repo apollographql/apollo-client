@@ -781,11 +781,8 @@ describe("useMutation Hook", () => {
         expect(result.called).toBe(false);
       }
 
-      let fetchResult: any;
-      act(() => {
-        fetchResult = createTodo({
-          variables: { priority: "Low", description: "Get milk." },
-        });
+      let fetchResult = createTodo({
+        variables: { priority: "Low", description: "Get milk." },
       });
 
       {
@@ -796,7 +793,7 @@ describe("useMutation Hook", () => {
         expect(result.called).toBe(true);
       }
 
-      act(() => reset());
+      reset();
 
       {
         const [, result] = await takeSnapshot();

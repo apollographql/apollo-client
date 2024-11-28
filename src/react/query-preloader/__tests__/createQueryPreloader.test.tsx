@@ -28,7 +28,7 @@ import {
   VariablesCaseData,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { act, renderHook, screen } from "@testing-library/react";
+import { act, renderHookAsync, screen } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
@@ -36,6 +36,7 @@ import userEvent from "@testing-library/user-event";
 import {
   createRenderStream,
   disableActEnvironment,
+  userEventWithoutAct,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -224,7 +225,7 @@ test("useReadQuery auto-retains the queryRef and disposes of it when unmounted",
 
   const queryRef = preloadQuery(query);
 
-  const { unmount } = renderHook(() => useReadQuery(queryRef));
+  const { unmount } = await renderHookAsync(() => useReadQuery(queryRef));
 
   // We don't start the dispose timer until the promise is initially resolved
   // so we need to wait for it
@@ -265,7 +266,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -297,7 +298,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
     return null;
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -317,14 +318,14 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await wait(0);
   await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
@@ -356,7 +357,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   }
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -366,7 +367,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   // instead of the old one
   client.writeQuery({ query, data: { greeting: "While you were away" } });
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(queryRef).not.toBeDisposed();
 
@@ -385,7 +386,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -404,7 +405,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   expect(fetchCount).toBe(1);
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // this should now trigger a network request
   expect(fetchCount).toBe(2);
@@ -459,7 +460,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
       result: null as UseReadQueryResult<DeepPartial<VariablesCaseData>> | null,
     },
   });
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -494,7 +495,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     return null;
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -516,14 +517,14 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await wait(0);
   await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
@@ -573,7 +574,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   }
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -593,7 +594,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
     variables: { id: "1" },
   });
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(queryRef).not.toBeDisposed();
 
@@ -618,7 +619,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -638,7 +639,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   expect(fetchCount).toBe(1);
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // this should now trigger a network request
   expect(fetchCount).toBe(2);
@@ -668,7 +669,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   }
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -676,7 +677,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   client.clearStore();
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(fetchCount).toBe(3);
 
@@ -721,7 +722,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -753,7 +754,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
     return null;
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -773,14 +774,14 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await wait(0);
   await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
@@ -812,7 +813,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   }
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -822,7 +823,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   // instead of the old one
   client.writeQuery({ query, data: { greeting: "While you were away" } });
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(queryRef).not.toBeDisposed();
 
@@ -841,7 +842,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -859,7 +860,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   expect(fetchCount).toBe(1);
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(fetchCount).toBe(2);
   expect(queryRef).not.toBeDisposed();
@@ -903,7 +904,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -935,7 +936,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
     return null;
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -955,14 +956,14 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await wait(0);
   await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // Ensure we aren't refetching the data by checking we still render the same
   // cache result
@@ -994,7 +995,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   }
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -1004,7 +1005,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   // instead of the old one
   client.writeQuery({ query, data: { greeting: "While you were away" } });
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(queryRef).not.toBeDisposed();
 
@@ -1023,7 +1024,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -1041,7 +1042,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   expect(fetchCount).toBe(1);
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(fetchCount).toBe(2);
   expect(queryRef).not.toBeDisposed();
@@ -1085,7 +1086,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEvent.setup();
+  const user = userEventWithoutAct(userEvent.setup());
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -1117,7 +1118,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
     return null;
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -1137,14 +1138,14 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await wait(0);
   await renderStream.takeRender();
 
   expect(queryRef).toBeDisposed();
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   // Ensure we aren't refetching the data by checking we still render the same
   // result
@@ -1168,7 +1169,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   await expect(renderStream).not.toRerender();
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -1177,7 +1178,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   // Write a cache result to ensure that remounting will ignore this result
   client.writeQuery({ query, data: { greeting: "While you were away" } });
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(queryRef).not.toBeDisposed();
 
@@ -1195,7 +1196,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   expect(fetchCount).toBe(1);
 
   // unmount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -1213,7 +1214,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   expect(fetchCount).toBe(1);
 
   // mount ReadQueryHook
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(fetchCount).toBe(1);
   expect(queryRef).not.toBeDisposed();

@@ -10172,7 +10172,7 @@ describe("useSuspenseQuery", () => {
   it("fetchMore does not cause extra render", async () => {
     const { query, link } = setupPaginatedCase();
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
     const client = new ApolloClient({
       cache: new InMemoryCache({
         typePolicies: {
@@ -10260,7 +10260,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    await user.click(screen.getByText("Fetch next"));
 
     {
       const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -10308,7 +10308,7 @@ describe("useSuspenseQuery", () => {
     interface Data {
       todos: Todo[];
     }
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodosQuery($offset: Int!) {
@@ -10457,7 +10457,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Load more")));
+    await user.click(screen.getByText("Load more"));
 
     {
       const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -10550,7 +10550,7 @@ describe("useSuspenseQuery", () => {
       },
     ]);
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
     const client = new ApolloClient({
       cache: new InMemoryCache({
         typePolicies: {
@@ -10625,7 +10625,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    await user.click(screen.getByText("Fetch next"));
     await renderStream.takeRender();
 
     if (IS_REACT_19) {
@@ -10647,7 +10647,7 @@ describe("useSuspenseQuery", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch next")));
+    await user.click(screen.getByText("Fetch next"));
     await renderStream.takeRender();
 
     if (IS_REACT_19) {
@@ -10768,9 +10768,7 @@ describe("useSuspenseQuery", () => {
     }
 
     const { snapshot } = renderStream.getCurrentRender();
-    await act(() =>
-      snapshot.result!.fetchMore({ variables: { offset: 2 } }).catch(() => {})
-    );
+    snapshot.result!.fetchMore({ variables: { offset: 2 } }).catch(() => {});
 
     {
       const { renderedComponents } = await renderStream.takeRender();

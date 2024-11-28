@@ -2002,12 +2002,9 @@ describe("has the same timing as `useQuery`", () => {
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
     }
 
-    act(
-      () =>
-        void cache.evict({
-          id: cache.identify(item2),
-        })
-    );
+    cache.evict({
+      id: cache.identify(item2),
+    });
 
     {
       const { withinDOM } = await takeRender();

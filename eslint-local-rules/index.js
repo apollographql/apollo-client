@@ -13,4 +13,6 @@ module.exports = {
   "require-using-disposable": require("./require-using-disposable").rule,
   "require-disable-act-environment":
     require("./require-disable-act-environment").rule,
+  "forbid-act-in-disabled-act-environment":
+    require("./forbid-act-in-disabled-act-environment").rule,
 };

@@ -12,7 +12,7 @@ import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
 import userEvent from "@testing-library/user-event";
-import { act, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { createSchemaFetch } from "../createSchemaFetch.js";
 import {
   FallbackProps,
@@ -23,6 +23,7 @@ import {
   RenderStream,
   createRenderStream,
   disableActEnvironment,
+  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 
 const typeDefs = /* GraphQL */ `
@@ -603,7 +604,7 @@ describe("schema proxy", () => {
       );
     };
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     renderStream.render(<App />, {
       wrapper: createClientWrapper(client),
@@ -632,7 +633,7 @@ describe("schema proxy", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Change name")));
+    await user.click(screen.getByText("Change name"));
 
     // initial suspended render
     await renderStream.takeRender();
@@ -957,7 +958,7 @@ describe("schema proxy", () => {
       );
     };
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
     renderStream.render(<App />, {
       wrapper: createClientWrapper(client),
@@ -986,7 +987,7 @@ describe("schema proxy", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Change name")));
+    await user.click(screen.getByText("Change name"));
 
     await renderStream.takeRender();
     {
@@ -1130,9 +1131,9 @@ describe("schema proxy", () => {
 
     resetTestSchema.reset();
 
-    const user = userEvent.setup();
+    const user = userEventWithoutAct(userEvent.setup());
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     // initial suspended render
     await renderStream.takeRender();

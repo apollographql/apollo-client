@@ -1196,7 +1196,7 @@ followed by new in-flight setup", async () => {
   });
 
   describe("errorPolicy", () => {
-    function setup(
+    async function setup(
       initialProps: SubscriptionHookOptions<{ totalLikes: number }, {}>
     ) {
       const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
@@ -1217,7 +1217,7 @@ followed by new in-flight setup", async () => {
           </ErrorBoundary>
         </ApolloProvider>
       );
-      const { takeSnapshot } = renderHookToSnapshotStream(
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
           useSubscription(subscription, options),
         {
@@ -1254,7 +1254,7 @@ followed by new in-flight setup", async () => {
             link,
             graphQlErrorResult,
             errorBoundaryOnError,
-          } = setup({ errorPolicy, onError, onData });
+          } = await setup({ errorPolicy, onError, onData });
 
           await takeSnapshot();
           link.simulateResult(graphQlErrorResult);
@@ -1287,7 +1287,7 @@ followed by new in-flight setup", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
-          setup({ errorPolicy: "all", onError, onData });
+          await setup({ errorPolicy: "all", onError, onData });
 
         await takeSnapshot();
         link.simulateResult(graphQlErrorResult);
@@ -1321,7 +1321,7 @@ followed by new in-flight setup", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
-          setup({
+          await setup({
             errorPolicy: "ignore",
             onError,
             onData,
@@ -1366,7 +1366,7 @@ followed by new in-flight setup", async () => {
             link,
             protocolErrorResult,
             errorBoundaryOnError,
-          } = setup({ errorPolicy, onError, onData });
+          } = await setup({ errorPolicy, onError, onData });
 
           await takeSnapshot();
           link.simulateResult(protocolErrorResult);
@@ -1400,7 +1400,7 @@ followed by new in-flight setup", async () => {
 });
 
 describe("`restart` callback", () => {
-  function setup(
+  async function setup(
     initialProps: SubscriptionHookOptions<
       { totalLikes: number },
       { id: string }
@@ -1424,7 +1424,7 @@ describe("`restart` callback", () => {
       cache: new Cache(),
     });
     const { takeSnapshot, getCurrentSnapshot, rerender } =
-      renderHookToSnapshotStream(
+      await renderHookToSnapshotStream(
         (
           options: SubscriptionHookOptions<
             { totalLikes: number },
@@ -1455,7 +1455,7 @@ describe("`restart` callback", () => {
       getCurrentSnapshot,
       onSubscribe,
       onUnsubscribe,
-    } = setup({
+    } = await setup({
       variables: { id: "1" },
     });
 
@@ -1519,7 +1519,7 @@ describe("`restart` callback", () => {
       onSubscribe,
       onUnsubscribe,
       rerender,
-    } = setup({
+    } = await setup({
       variables: { id: "1" },
     });
     {
@@ -1616,7 +1616,7 @@ describe("`restart` callback", () => {
       getCurrentSnapshot,
       onSubscribe,
       onUnsubscribe,
-    } = setup({
+    } = await setup({
       variables: { id: "1" },
     });
     {
@@ -1678,7 +1678,7 @@ describe("`restart` callback", () => {
       getCurrentSnapshot,
       onSubscribe,
       onUnsubscribe,
-    } = setup({
+    } = await setup({
       variables: { id: "1" },
     });
     {
@@ -1738,7 +1738,7 @@ describe("`restart` callback", () => {
   });
   it("will not restart a subscription that has been `skip`ped", async () => {
     const { takeSnapshot, getCurrentSnapshot, onSubscribe, onUnsubscribe } =
-      setup({
+      await setup({
         variables: { id: "1" },
         skip: true,
       });
@@ -1790,7 +1790,7 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           ignoreResults: true,
@@ -1863,7 +1863,7 @@ describe("ignoreResults", () => {
     const onComplete = jest.fn(
       (() => {}) as SubscriptionHookOptions["onComplete"]
     );
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           ignoreResults: true,
@@ -1928,7 +1928,7 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
           ignoreResults,
@@ -1998,7 +1998,7 @@ describe("ignoreResults", () => {
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
         useSubscription(subscription, {
           ignoreResults,

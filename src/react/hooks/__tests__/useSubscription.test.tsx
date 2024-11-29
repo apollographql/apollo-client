@@ -12,7 +12,7 @@ import {
 import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink, wait } from "../../../testing";
+import { MockSubscriptionLink } from "../../../testing";
 import { useSubscription } from "../useSubscription";
 import { spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
@@ -631,10 +631,9 @@ describe("useSubscription Hook", () => {
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
 
-    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
     await act(async () => {
+      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
       link.simulateResult({ result: { data: null } }, /* complete */ true);
-      await wait(10);
     });
 
     await waitFor(
@@ -693,10 +692,9 @@ describe("useSubscription Hook", () => {
     expect(result.current.sub3.error).toBe(undefined);
     expect(result.current.sub3.data).toBe(undefined);
 
-    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
     await act(async () => {
+      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
       link.simulateResult({ result: { data: null } }, /* complete */ true);
-      await wait(10);
     });
 
     await waitFor(

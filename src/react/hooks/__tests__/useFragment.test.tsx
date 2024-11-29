@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { act } from "@testing-library/react";
 
 import { UseFragmentOptions, useFragment } from "../useFragment";
-import { MockedProvider, wait } from "../../../testing";
+import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
   InMemoryCache,
@@ -1515,9 +1515,6 @@ describe("useFragment", () => {
       });
     }
 
-    // necessary for React 17
-    await wait(0);
-
     client.writeFragment({
       fragment,
       data: {
@@ -1594,9 +1591,6 @@ describe("useFragment", () => {
         },
       });
     }
-
-    // necessary for React 17
-    await wait(0);
 
     client.writeFragment({
       fragment,
@@ -1831,9 +1825,6 @@ describe("has the same timing as `useQuery`", () => {
       expect(snapshot.queryData).toBe(undefined);
       expect(snapshot.fragmentData).toStrictEqual({});
     }
-
-    // necessary for React 17
-    await wait(10);
 
     assert(observer!);
     observer.next({ data: { item: initialItem } });

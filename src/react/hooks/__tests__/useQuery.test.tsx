@@ -6935,10 +6935,7 @@ describe("useQuery Hook", () => {
       }
 
       const calls = consoleSpy.error.mock.calls;
-      if (!IS_REACT_17) {
-        // React 17 doesn't know `IS_REACT_ACT_ENVIRONMENT` yet, so it will log a warning that we don't care about.
-        expect(calls.length).toBe(1);
-      }
+      expect(calls.length).toBe(1);
       expect(calls[0][0]).toMatch("Missing field");
 
       {

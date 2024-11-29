@@ -30,7 +30,6 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 
-const IS_REACT_17 = React.version.startsWith("17");
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
@@ -1136,14 +1135,11 @@ describe("useLazyQuery Hook", () => {
       );
     }
 
-    if (!IS_REACT_17) {
-      // in React 17 with RTL 16, this promise never resolves??
-      await executePromise.then((result) => {
-        expect(result.loading).toBe(false);
-        expect(result.data).toBeUndefined();
-        expect(result.error!.message).toBe("error 1");
-      });
-    }
+    await executePromise.then((result) => {
+      expect(result.loading).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error!.message).toBe("error 1");
+    });
 
     execute();
 
@@ -1951,11 +1947,6 @@ describe("useLazyQuery Hook", () => {
 
   // regression for https://github.com/apollographql/apollo-client/issues/11988
   test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
-    if (IS_REACT_17) {
-      // this test is currently broken in React 17 with RTL 16 and needs further investigation
-      return;
-    }
-
     const link = new MockSubscriptionLink();
     let requests = 0;
     link.onSetup(() => requests++);
@@ -1989,19 +1980,16 @@ describe("useLazyQuery Hook", () => {
 
     client.clearStore();
 
-    if (!IS_REACT_17) {
-      // in React 17 with RTL 16, this promise never resolves??
-      const executionResult = await promise;
-      expect(executionResult.data).toBeUndefined();
-      expect(executionResult.loading).toBe(true);
-      expect(executionResult.error).toEqual(
-        new ApolloError({
-          networkError: new InvariantError(
-            "Store reset while query was in flight (not completed in link chain)"
-          ),
-        })
-      );
-    }
+    const executionResult = await promise;
+    expect(executionResult.data).toBeUndefined();
+    expect(executionResult.loading).toBe(true);
+    expect(executionResult.error).toEqual(
+      new ApolloError({
+        networkError: new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        ),
+      })
+    );
 
     {
       const [, result] = await takeSnapshot();

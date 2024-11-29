@@ -11,7 +11,7 @@ import userEvent from "@testing-library/user-event";
 import { act } from "@testing-library/react";
 
 import { UseFragmentOptions, useFragment } from "../useFragment";
-import { MockedProvider } from "../../../testing";
+import { MockedProvider, wait } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
   InMemoryCache,
@@ -148,7 +148,7 @@ describe("useFragment", () => {
 
     expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -172,7 +172,7 @@ describe("useFragment", () => {
       "item 2",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.modify({
         fields: {
           list(list: readonly Reference[], { readField }) {
@@ -229,7 +229,7 @@ describe("useFragment", () => {
       "item 5",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -267,7 +267,7 @@ describe("useFragment", () => {
     ]);
 
     // set Item #2 back to its original value
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -885,7 +885,7 @@ describe("useFragment", () => {
 
     expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -909,7 +909,7 @@ describe("useFragment", () => {
       "item 2",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.modify({
         fields: {
           list(list: readonly Reference[], { readField }) {
@@ -964,7 +964,7 @@ describe("useFragment", () => {
       "item 5",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -1515,6 +1515,9 @@ describe("useFragment", () => {
       });
     }
 
+    // necessary for React 17
+    await wait(0);
+
     client.writeFragment({
       fragment,
       data: {
@@ -1591,6 +1594,9 @@ describe("useFragment", () => {
         },
       });
     }
+
+    // necessary for React 17
+    await wait(0);
 
     client.writeFragment({
       fragment,
@@ -1825,6 +1831,9 @@ describe("has the same timing as `useQuery`", () => {
       expect(snapshot.queryData).toBe(undefined);
       expect(snapshot.fragmentData).toStrictEqual({});
     }
+
+    // necessary for React 17
+    await wait(10);
 
     assert(observer!);
     observer.next({ data: { item: initialItem } });

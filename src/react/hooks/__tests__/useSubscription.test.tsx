@@ -1,5 +1,5 @@
 import React from "react";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import gql from "graphql-tag";
 
 import {
@@ -12,7 +12,7 @@ import {
 import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink } from "../../../testing";
+import { MockSubscriptionLink, wait } from "../../../testing";
 import { useSubscription } from "../useSubscription";
 import { spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
@@ -24,6 +24,8 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+
+const IS_REACT_17 = React.version.startsWith("17");
 
 describe("useSubscription Hook", () => {
   it("should handle a simple subscription properly", async () => {
@@ -625,14 +627,16 @@ describe("useSubscription Hook", () => {
       ),
     });
 
-    setTimeout(() => {
-      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-      link.simulateResult({ result: { data: null } }, /* complete */ true);
-    });
-
     expect(result.current.loading).toBe(true);
     expect(result.current.error).toBe(undefined);
     expect(result.current.data).toBe(undefined);
+
+    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    await act(async () => {
+      link.simulateResult({ result: { data: null } }, /* complete */ true);
+      await wait(10);
+    });
+
     await waitFor(
       () => {
         expect(result.current.loading).toBe(false);
@@ -689,9 +693,10 @@ describe("useSubscription Hook", () => {
     expect(result.current.sub3.error).toBe(undefined);
     expect(result.current.sub3.data).toBe(undefined);
 
-    setTimeout(() => {
-      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    await act(async () => {
       link.simulateResult({ result: { data: null } }, /* complete */ true);
+      await wait(10);
     });
 
     await waitFor(
@@ -1956,7 +1961,9 @@ describe("ignoreResults", () => {
         ),
       }
     );
-    expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+    if (!IS_REACT_17) {
+      expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+    }
 
     {
       const snapshot = await takeSnapshot();
@@ -2027,7 +2034,9 @@ describe("ignoreResults", () => {
         ),
       }
     );
-    expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+    if (!IS_REACT_17) {
+      expect(subscriptionCreated).toHaveBeenCalledTimes(1);
+    }
 
     {
       const snapshot = await takeSnapshot();

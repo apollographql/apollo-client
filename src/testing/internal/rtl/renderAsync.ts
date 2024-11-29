@@ -1,14 +1,13 @@
-import type { queries, Queries } from "@testing-library/dom";
-import type { RenderOptions, RenderResult } from "@testing-library/react";
-import { act, render } from "@testing-library/react";
-import type * as ReactDOMClient from "react-dom/client";
-
 // This is a helper required for React 19 testing.
 // There are currently multiple directions this could play out in RTL and none of
 // them has been released yet, so we are inling this helper for now.
 // See https://github.com/testing-library/react-testing-library/pull/1214
 // and https://github.com/testing-library/react-testing-library/pull/1365
-//
+
+import type { queries, Queries } from "@testing-library/dom";
+import type { RenderOptions, RenderResult } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
+import type * as ReactDOMClient from "react-dom/client";
 
 type RendererableContainer = ReactDOMClient.Container;
 type HydrateableContainer = Parameters<

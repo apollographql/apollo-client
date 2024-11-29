@@ -27,3 +27,4 @@ export {
 } from "./renderHelpers.js";
 export { actAsync } from "./rtl/actAsync.js";
 export { renderAsync } from "./rtl/renderAsync.js";
+export { renderHookAsync } from "./rtl/renderHookAsync.js";

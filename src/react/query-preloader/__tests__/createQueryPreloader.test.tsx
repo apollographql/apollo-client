@@ -26,9 +26,10 @@ import {
   setupSimpleCase,
   setupVariablesCase,
   VariablesCaseData,
+  renderHookAsync,
 } from "../../../testing/internal";
 import { ApolloProvider } from "../../context";
-import { act, renderHookAsync, screen } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import { UseReadQueryResult, useReadQuery } from "../../hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";

@@ -5,7 +5,6 @@ import {
   screen,
   waitFor,
   RenderHookOptions,
-  renderHookAsync,
   renderHook,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -59,6 +58,7 @@ import {
   spyOnConsole,
   actAsync,
   renderAsync,
+  renderHookAsync,
 } from "../../../testing/internal";
 
 import {

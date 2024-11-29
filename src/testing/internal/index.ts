@@ -26,3 +26,4 @@ export {
   createClientWrapper,
 } from "./renderHelpers.js";
 export { actAsync } from "./rtl/actAsync.js";
+export { renderAsync } from "./rtl/renderAsync.js";

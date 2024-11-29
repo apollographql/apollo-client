@@ -7,7 +7,6 @@ import {
   RenderHookOptions,
   renderHookAsync,
   renderHook,
-  renderAsync,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
@@ -59,6 +58,7 @@ import {
   setupPaginatedCase,
   spyOnConsole,
   actAsync,
+  renderAsync,
 } from "../../../testing/internal";
 
 import {

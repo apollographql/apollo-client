@@ -1,11 +1,5 @@
 import React, { Suspense, useState } from "react";
-import {
-  act,
-  screen,
-  renderHook,
-  waitFor,
-  renderAsync,
-} from "@testing-library/react";
+import { act, screen, renderHook, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
@@ -56,6 +50,7 @@ import {
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
+  renderAsync,
 } from "../../../testing/internal";
 
 import {

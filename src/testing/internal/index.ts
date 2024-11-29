@@ -25,3 +25,4 @@ export {
   createMockWrapper,
   createClientWrapper,
 } from "./renderHelpers.js";
+export { actAsync } from "./rtl/actAsync.js";

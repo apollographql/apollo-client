@@ -3,12 +3,11 @@ import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import {
   act,
   screen,
-  renderAsync,
   waitFor,
   RenderHookOptions,
   renderHookAsync,
   renderHook,
-  actAsync,
+  renderAsync,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
@@ -59,6 +58,7 @@ import {
   PaginatedCaseVariables,
   setupPaginatedCase,
   spyOnConsole,
+  actAsync,
 } from "../../../testing/internal";
 
 import {
@@ -70,6 +70,8 @@ import {
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_19 = React.version.startsWith("19");
+
+afterEach(() => wait(10));
 
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
@@ -3687,7 +3689,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch().catch(() => {});
+      void result.current.refetch().catch(() => {});
     });
 
     await waitFor(() => expect(renders.errorCount).toBe(1));
@@ -4280,7 +4282,7 @@ describe("useSuspenseQuery", () => {
 
     // TODO check: using actAsync instead of unawaited act changes observed render counts here.
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4444,7 +4446,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch({ id: "2" });
+      void result.current.refetch({ id: "2" });
     });
 
     await waitFor(() => {
@@ -4517,7 +4519,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -4529,7 +4531,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -4604,7 +4606,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch().catch(() => {});
+      void result.current.refetch().catch(() => {});
     });
 
     await waitFor(() => {
@@ -4669,7 +4671,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await act(async () => {
+    await actAsync(async () => {
       await result.current.refetch();
     });
 
@@ -4738,7 +4740,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -4814,7 +4816,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -4969,7 +4971,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -5011,7 +5013,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
+    await actAsync(() => {
       result.current.fetchMore({
         variables: { offset: 2 },
         updateQuery: (prev, { fetchMoreResult }) => ({
@@ -5067,7 +5069,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    act(() => {
+    await actAsync(() => {
       result.current.fetchMore({ variables: { offset: 2 } });
     });
 
@@ -5152,8 +5154,8 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
+    await actAsync(() => {
+      void result.current.refetch({ min: 12, max: 30 });
     });
 
     await waitFor(() => {
@@ -5229,8 +5231,8 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
+    await actAsync(() => {
+      void result.current.refetch({ min: 12, max: 30 });
     });
 
     await waitFor(() => {
@@ -5305,8 +5307,8 @@ describe("useSuspenseQuery", () => {
 
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
-    act(() => {
-      result.current.refetch({ min: 12, max: 30 });
+    await actAsync(() => {
+      void result.current.refetch({ min: 12, max: 30 });
     });
 
     await waitFor(() => {
@@ -6109,7 +6111,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ errorPolicy: "all" });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -6182,7 +6184,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ context: { phase: "rerender" } });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -6356,7 +6358,7 @@ describe("useSuspenseQuery", () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
     await actAsync(async () => {
-      await result.current.refetch({ min: 12, max: 30 });
+      void result.current.refetch({ min: 12, max: 30 });
     });
 
     await waitFor(() => {
@@ -6378,7 +6380,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ refetchWritePolicy: "overwrite" });
 
     await actAsync(async () => {
-      await result.current.refetch({ min: 30, max: 50 });
+      void result.current.refetch({ min: 30, max: 50 });
     });
 
     await waitFor(() => {
@@ -6596,7 +6598,7 @@ describe("useSuspenseQuery", () => {
     const cacheKey = cache.identify({ __typename: "Character", id: "1" })!;
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -6749,7 +6751,7 @@ describe("useSuspenseQuery", () => {
     await rerenderAsync({ errorPolicy: "all", variables: { id: "1" } });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     const expectedError = new ApolloError({
@@ -6826,7 +6828,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {
@@ -6838,7 +6840,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(async () => {
-      await result.current.refetch();
+      void result.current.refetch();
     });
 
     await waitFor(() => {

@@ -8408,7 +8408,7 @@ describe("useSuspenseQuery", () => {
       });
 
       let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
-      act(() => {
+      await actAsync(() => {
         fetchMorePromise = result.current.fetchMore({
           variables: { offset: 1 },
         });

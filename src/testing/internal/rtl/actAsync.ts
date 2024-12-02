@@ -5,9 +5,13 @@
 // and https://github.com/testing-library/react-testing-library/pull/1365
 
 import * as React from "react";
+import * as DeprecatedReactTestUtils from "react-dom/test-utils";
+
+const reactAct =
+  typeof React.act === "function" ? React.act : DeprecatedReactTestUtils.act;
 
 export function actAsync<T>(scope: () => T | Promise<T>): Promise<T> {
-  return React.act(async () => {
+  return reactAct(async () => {
     return await scope();
   });
 }

@@ -1184,8 +1184,7 @@ To opt in to using masked types throughout your entire application at once, you 
 We recommend this approach for most cases. Use this approach with the [`@unmask` directive](./directives#unmask) for the best path to [incremental adoption](#incremental-adoption-in-an-existing-application).
 </Tip>
 
-First create a TypeScript file that will be used to modify the `DataMasking` type. This file should be located in a path included by your `tsconfig.json` file.
-
+First create a TypeScript file that will be used to modify the `DataMasking` type.
 
 ```ts title="apollo-client.d.ts"
 // This import is necessary to ensure all Apollo Client imports

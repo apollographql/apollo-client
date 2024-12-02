@@ -384,13 +384,13 @@ describe("useLazyQuery Hook", () => {
       },
     };
 
-    const execResult = await act(() =>
-      result.current.exec({
-        variables: {
-          execVar: true,
-        },
-      })
-    );
+    const execPromise = result.current.exec({
+      variables: {
+        execVar: true,
+      },
+    });
+    await act(() => execPromise);
+    const execResult = await execPromise;
 
     await waitFor(
       () => {
@@ -432,15 +432,16 @@ describe("useLazyQuery Hook", () => {
     expect(result.current.query.called).toBe(true);
     expect(result.current.query.data).toEqual(expectedFinalData);
 
-    const refetchResult = await act(() =>
-      result.current.query.reobserve({
-        fetchPolicy: "network-only",
-        nextFetchPolicy: "cache-first",
-        variables: {
-          execVar: false,
-        },
-      })
-    );
+    const refetchPromise = result.current.query.reobserve({
+      fetchPolicy: "network-only",
+      nextFetchPolicy: "cache-first",
+      variables: {
+        execVar: false,
+      },
+    });
+    await act(() => refetchPromise);
+    const refetchResult = await refetchPromise;
+
     expect(refetchResult.loading).toBe(false);
     expect(refetchResult.data).toEqual({
       counter: 2,
@@ -473,15 +474,15 @@ describe("useLazyQuery Hook", () => {
       { interval: 1 }
     );
 
-    const execResult2 = await act(() =>
-      result.current.exec({
-        fetchPolicy: "cache-and-network",
-        nextFetchPolicy: "cache-first",
-        variables: {
-          execVar: true,
-        },
-      })
-    );
+    const execPromise2 = result.current.exec({
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+      variables: {
+        execVar: true,
+      },
+    });
+    await act(() => execPromise2);
+    const execResult2 = await execPromise2;
 
     await waitFor(
       () => {
@@ -1903,7 +1904,9 @@ describe("useLazyQuery Hook", () => {
         { interval: 1 }
       );
 
-      const execResult = await act(() => result.current.exec());
+      const execPromise = result.current.exec();
+      await act(() => execPromise);
+      const execResult = await execPromise;
       expect(execResult.loading).toBe(false);
       expect(execResult.called).toBe(true);
       expect(execResult.data).toEqual({ counter: 1 });

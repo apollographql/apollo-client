@@ -1143,7 +1143,11 @@ const config: CodegenConfig = {
 We require [v4.5.1](https://github.com/dotansimha/graphql-code-generator/releases/tag/release-1732308151614) as the minimum supported version of `@graphql-codegen/client-preset` which includes support for the `@unmask` directive.
 </Note>
 
-Add the following configuration to your GraphQL Codegen config. We ask that you [disable fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) when using the client preset because it generates extra types and functions that aren't needed for Apollo Client's data masking feature.
+Add the following configuration to your GraphQL Codegen config.
+
+<Caution>
+The [fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#fragment-masking) feature in the client preset is incompatible with Apollo Client's data masking feature. You need to [disable fragment masking](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#how-to-disable-fragment-masking) in your configuration (included below). If you use the [generated `useFragment` function](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#the-usefragment-helper), you will need to use Apollo Client's [`useFragment`](#usefragment) function instead.
+</Caution>
 
 ```ts title="codegen.ts"
 const config: CodegenConfig = {

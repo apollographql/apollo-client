@@ -1,6 +1,5 @@
 import gql from "graphql-tag";
 
-import { itAsync } from "../../../testing";
 import { InMemoryCache } from "../inMemoryCache";
 import { visit, FragmentDefinitionNode } from "graphql";
 import { hasOwn } from "../helpers";
@@ -242,7 +241,7 @@ describe("policies.fragmentMatches", () => {
     console.warn = warn;
   });
 
-  itAsync("can infer fuzzy subtypes heuristically", (resolve, reject) => {
+  it("can infer fuzzy subtypes heuristically", async () => {
     const cache = new InMemoryCache({
       possibleTypes: {
         A: ["B", "C"],
@@ -279,7 +278,7 @@ describe("policies.fragmentMatches", () => {
         FragmentDefinition(frag) {
           function check(typename: string, result: boolean) {
             if (result !== cache.policies.fragmentMatches(frag, typename)) {
-              reject(
+              throw new Error(
                 `fragment ${frag.name.value} should${
                   result ? "" : " not"
                 } have matched typename ${typename}`
@@ -577,7 +576,5 @@ describe("policies.fragmentMatches", () => {
         },
       }).size
     ).toBe("ABCDEF".length);
-
-    resolve();
   });
 });

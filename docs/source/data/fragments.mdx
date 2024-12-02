@@ -1310,6 +1310,45 @@ export default function Posts() {
 
 In this example, the `GetPosts` query selects enough fields to satisfy the `PostDetails` data requirements, but TypeScript warns us because the `PostDetailsFragment` was not included in the `GetPosts` query.
 
+#### Unwrapping masked types
+
+On rare occasion you may need access to the unmasked type of a particular operation. Apollo Client provides the `Unmasked` helper type that unwraps masked types and removes meta information on the type.
+
+<Note>
+This is the same helper type that the client uses when unwrapping types while data masking is disabled or for APIs that use the full result.
+</Note>
+
+```ts
+import { Unmasked } from "@apollo/client";
+
+type QueryType = {
+  currentUser: {
+    __typename: "User";
+    id: string;
+    name: string;
+  } & { " $fragmentRefs"?: { UserFragment: UserFragment } }
+}
+
+type UserFragment = {
+  __typename: "User";
+  age: number | null;
+} & { " $fragmentName"?: "UserFragment" }
+
+type UnmaskedQueryType = Unmasked<QueryType>;
+//   ^? type UnmaskedQueryType = {
+//        currentUser: {
+//          __typename: "User";
+//          id: string;
+//          name: string;
+//          age: number | null;
+//        }
+//      }
+```
+
+<Note>
+This example does not use GraphQL Codegen's true type output since it includes additional types that map scalar values differently.
+</Note>
+
 ### Incremental adoption in an existing application
 
 Existing applications can take advantage of the data masking features through an incremental adoption approach. This section will walk through the steps needed to adopt data masking in a larger codebase.

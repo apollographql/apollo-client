@@ -55,10 +55,10 @@ import {
 
 import {
   RenderStream,
-  RenderWithoutActAsync,
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
+  AsyncRenderFn,
 } from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -225,7 +225,7 @@ function createDefaultProfiledComponents<
 async function renderWithMocks(
   ui: React.ReactElement,
   props: MockedProviderProps,
-  { render: doRender }: { render: RenderWithoutActAsync }
+  { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const user = userEvent.setup();
 
@@ -241,7 +241,7 @@ async function renderWithMocks(
 async function renderWithClient(
   ui: React.ReactElement,
   options: { client: ApolloClient<any> },
-  { render: doRender }: { render: RenderWithoutActAsync }
+  { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const { client } = options;
   const user = userEvent.setup();

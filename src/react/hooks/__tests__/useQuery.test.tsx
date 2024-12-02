@@ -29,11 +29,7 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
-import {
-  actAsync,
-  setupPaginatedCase,
-  spyOnConsole,
-} from "../../../testing/internal";
+import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
@@ -1568,7 +1564,7 @@ describe("useQuery Hook", () => {
 
       checkObservableQueries(1);
 
-      await actAsync(() =>
+      await act(() =>
         result.current.reobserve().then((result) => {
           expect(result.loading).toBe(false);
           expect(result.loading).toBe(false);

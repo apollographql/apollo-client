@@ -29,6 +29,7 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+import { actAsync } from "../../../testing/internal";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
@@ -384,11 +385,13 @@ describe("useLazyQuery Hook", () => {
       },
     };
 
-    const execResult = await result.current.exec({
-      variables: {
-        execVar: true,
-      },
-    });
+    const execResult = await actAsync(() =>
+      result.current.exec({
+        variables: {
+          execVar: true,
+        },
+      })
+    );
 
     await waitFor(
       () => {
@@ -430,13 +433,15 @@ describe("useLazyQuery Hook", () => {
     expect(result.current.query.called).toBe(true);
     expect(result.current.query.data).toEqual(expectedFinalData);
 
-    const refetchResult = await result.current.query.reobserve({
-      fetchPolicy: "network-only",
-      nextFetchPolicy: "cache-first",
-      variables: {
-        execVar: false,
-      },
-    });
+    const refetchResult = await actAsync(() =>
+      result.current.query.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          execVar: false,
+        },
+      })
+    );
     expect(refetchResult.loading).toBe(false);
     expect(refetchResult.data).toEqual({
       counter: 2,
@@ -469,13 +474,15 @@ describe("useLazyQuery Hook", () => {
       { interval: 1 }
     );
 
-    const execResult2 = await result.current.exec({
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "cache-first",
-      variables: {
-        execVar: true,
-      },
-    });
+    const execResult2 = await actAsync(() =>
+      result.current.exec({
+        fetchPolicy: "cache-and-network",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          execVar: true,
+        },
+      })
+    );
 
     await waitFor(
       () => {
@@ -1897,7 +1904,7 @@ describe("useLazyQuery Hook", () => {
         { interval: 1 }
       );
 
-      const execResult = await result.current.exec();
+      const execResult = await actAsync(() => result.current.exec());
       expect(execResult.loading).toBe(false);
       expect(execResult.called).toBe(true);
       expect(execResult.data).toEqual({ counter: 1 });

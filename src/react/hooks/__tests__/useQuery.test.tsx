@@ -29,7 +29,11 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
-import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
+import {
+  actAsync,
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
@@ -1564,14 +1568,16 @@ describe("useQuery Hook", () => {
 
       checkObservableQueries(1);
 
-      await result.current.reobserve().then((result) => {
-        expect(result.loading).toBe(false);
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toEqual({
-          linkCount: 2,
-        });
-      });
+      await actAsync(() =>
+        result.current.reobserve().then((result) => {
+          expect(result.loading).toBe(false);
+          expect(result.loading).toBe(false);
+          expect(result.networkStatus).toBe(NetworkStatus.ready);
+          expect(result.data).toEqual({
+            linkCount: 2,
+          });
+        })
+      );
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

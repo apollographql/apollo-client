@@ -6,8 +6,8 @@
 
 import * as React from "react";
 
-export function actAsync(scope: () => void | Promise<void>): Promise<void> {
+export function actAsync<T>(scope: () => T | Promise<T>): Promise<T> {
   return React.act(async () => {
-    await scope();
+    return await scope();
   });
 }

@@ -29,11 +29,7 @@ import {
 import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
-import {
-  disableActWarnings,
-  setupPaginatedCase,
-  spyOnConsole,
-} from "../../../testing/internal";
+import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
 import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
@@ -6876,7 +6872,6 @@ describe("useQuery Hook", () => {
     });
 
     it("should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache", async () => {
-      using _disabledActWarnings = disableActWarnings();
       using consoleSpy = spyOnConsole("error");
       const query = gql`
         {

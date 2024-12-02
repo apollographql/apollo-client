@@ -1241,9 +1241,7 @@ When using [colocated fragments](#colocating-fragments) with your components, it
 - TypeScript prevents you from accessing fields on the object that may be defined with the parent.
 - The object passed to the component is guaranteed to contain a fragment reference of the same type.
 
-Apollo Client provides the `FragmentType` helper type for this purpose.
-
-As an example, let's use the `PostDetails` fragment from previous sections.
+Apollo Client provides the `FragmentType` helper type for this purpose. As an example, let's use the `PostDetails` fragment from previous sections.
 
 ```tsx {1,14} title="PostDetails.tsx"
 import type { FragmentType } from "@apollo/client";

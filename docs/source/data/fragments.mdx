@@ -1281,7 +1281,7 @@ function PostDetails({ post }: PostDetailsProps) {
 }
 ```
 
-`FragmentType` also prevents parent components from accidentally omitting fragment definitions for child components, regardless of whether it satisfies the same fields or not.
+`FragmentType` also prevents parent components from accidentally omitting fragment spreads for child components, regardless of whether the field selection satisfies the fragment's data requirements.
 
 ```tsx title="Posts.tsx"
 const GET_POSTS = gql`
@@ -1307,6 +1307,8 @@ export default function Posts() {
   );
 }
 ```
+
+In this example, the `GetPosts` query selects enough fields to satisfy the `PostDetails` data requirements, but TypeScript warns us because the `PostDetailsFragment` was not included in the `GetPosts` query.
 
 ### Incremental adoption in an existing application
 

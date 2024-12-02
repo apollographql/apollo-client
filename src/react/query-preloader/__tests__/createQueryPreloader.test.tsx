@@ -37,7 +37,6 @@ import userEvent from "@testing-library/user-event";
 import {
   createRenderStream,
   disableActEnvironment,
-  userEventWithoutAct,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -267,7 +266,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -461,7 +460,7 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
       result: null as UseReadQueryResult<DeepPartial<VariablesCaseData>> | null,
     },
   });
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -723,7 +722,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -905,7 +904,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
@@ -1087,7 +1086,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
       result: null as UseReadQueryResult<SimpleCaseData> | null,
     },
   });
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 

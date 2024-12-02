@@ -65,7 +65,6 @@ import {
   createRenderStream,
   disableActEnvironment,
   renderToRenderStream,
-  userEventWithoutAct,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -9712,7 +9711,7 @@ describe("useSuspenseQuery", () => {
         completed: boolean;
       };
     }
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodoItemQuery($id: ID!) {
@@ -10170,7 +10169,7 @@ describe("useSuspenseQuery", () => {
   it("fetchMore does not cause extra render", async () => {
     const { query, link } = setupPaginatedCase();
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const client = new ApolloClient({
       cache: new InMemoryCache({
         typePolicies: {
@@ -10306,7 +10305,7 @@ describe("useSuspenseQuery", () => {
     interface Data {
       todos: Todo[];
     }
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodosQuery($offset: Int!) {
@@ -10548,7 +10547,7 @@ describe("useSuspenseQuery", () => {
       },
     ]);
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const client = new ApolloClient({
       cache: new InMemoryCache({
         typePolicies: {

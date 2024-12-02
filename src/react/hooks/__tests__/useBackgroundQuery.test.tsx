@@ -63,7 +63,6 @@ import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
-  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 
 afterEach(() => {
@@ -288,7 +287,7 @@ it("auto disposes of the queryRef if not used within configured timeout", async 
 
 it("will resubscribe after disposed when mounting useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache: new InMemoryCache(),
@@ -373,7 +372,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
 
 it("auto resubscribes when mounting useReadQuery after naturally disposed by useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache: new InMemoryCache(),
@@ -469,7 +468,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
 
 it("does not recreate queryRef and execute a network request when rerendering useBackgroundQuery after queryRef is disposed", async () => {
   const { query } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   let fetchCount = 0;
   const client = new ApolloClient({
     link: new ApolloLink(() => {
@@ -559,7 +558,7 @@ it("does not recreate queryRef and execute a network request when rerendering us
 // https://github.com/apollographql/apollo-client/issues/11815
 it("does not recreate queryRef or execute a network request when rerendering useBackgroundQuery in strict mode", async () => {
   const { query } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   let fetchCount = 0;
   const client = new ApolloClient({
     link: new ApolloLink(() => {
@@ -755,7 +754,7 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery e
     link: new MockLink(mocks),
     cache: new InMemoryCache(),
   });
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const renderStream = createDefaultProfiler<SimpleCaseData>();
 
@@ -1347,7 +1346,7 @@ it("works with startTransition to change variables", async () => {
     };
   }
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, Variables> = gql`
     query TodoItemQuery($id: ID!) {
@@ -1825,7 +1824,7 @@ it("does not suspend when using `skipToken` in options", async () => {
 
 it("suspends when `skip` becomes `false` after it was `true`", async () => {
   const { query, mocks } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
@@ -1879,7 +1878,7 @@ it("suspends when `skip` becomes `false` after it was `true`", async () => {
 it("suspends when switching away from `skipToken` in options", async () => {
   const { query, mocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
@@ -1932,7 +1931,7 @@ it("suspends when switching away from `skipToken` in options", async () => {
 it("renders skip result, does not suspend, and maintains `data` when `skip` becomes `true` after it was `false`", async () => {
   const { query, mocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
@@ -1989,7 +1988,7 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
 
 it("renders skip result, does not suspend, and maintains `data` when switching back to `skipToken`", async () => {
   const { query, mocks } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
@@ -2046,7 +2045,7 @@ it("renders skip result, does not suspend, and maintains `data` when switching b
 
 it("does not make network requests when `skip` is `true`", async () => {
   const { query, mocks } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   let fetchCount = 0;
 
@@ -2138,7 +2137,7 @@ it("does not make network requests when `skipToken` is used", async () => {
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   let fetchCount = 0;
 
@@ -2226,7 +2225,7 @@ it("does not make network requests when `skipToken` is used in strict mode", asy
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   let fetchCount = 0;
 
@@ -2315,7 +2314,7 @@ it("does not make network requests when using `skip` option in strict mode", asy
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultTrackedComponents(renderStream);
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   let fetchCount = 0;
 
@@ -2454,7 +2453,7 @@ it("result is referentially stable", async () => {
 it("`skip` option works with `startTransition`", async () => {
   const { query, mocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
@@ -2532,7 +2531,7 @@ it("`skip` option works with `startTransition`", async () => {
 
 it("`skipToken` works with `startTransition`", async () => {
   const { query, mocks } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const renderStream = createRenderStream({
     initialSnapshot: {
@@ -2612,7 +2611,7 @@ it("`skipToken` works with `startTransition`", async () => {
 
 it("applies `errorPolicy` on next fetch when it changes between renders", async () => {
   const { query } = setupSimpleCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const mocks = [
     {
@@ -2698,7 +2697,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     context: Record<string, any>;
   }
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data> = gql`
     query {
@@ -2814,7 +2813,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     { __typename: "Result", value: 5 },
   ];
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   cache.writeQuery({
     query,
@@ -2879,7 +2878,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     primes: number[];
   }
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, { min: number; max: number }> = gql`
     query GetPrimes($min: number, $max: number) {
@@ -3032,7 +3031,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     };
   }
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const partialQuery: TypedDocumentNode<PartialData> = gql`
     query {
@@ -3163,7 +3162,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
 it("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
   const { query, mocks } = setupVariablesCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const cache = new InMemoryCache();
 
   cache.writeQuery({
@@ -3274,7 +3273,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 
 it("properly handles changing options along with changing `variables`", async () => {
   const { query } = setupVariablesCase();
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const mocks: MockedResponse<VariablesCaseData>[] = [
     {
       request: { query, variables: { id: "1" } },
@@ -4153,7 +4152,7 @@ it.each<SuspenseQueryHookFetchPolicy>([
 describe("refetch", () => {
   it("re-suspends when calling `refetch`", async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const renderStream = createDefaultProfiler<VariablesCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
@@ -4248,7 +4247,7 @@ describe("refetch", () => {
 
   it("re-suspends when calling `refetch` with new variables", async () => {
     const { query, mocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const renderStream = createDefaultProfiler<VariablesCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
@@ -4325,7 +4324,7 @@ describe("refetch", () => {
 
   it("re-suspends multiple times when calling `refetch` multiple times", async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const renderStream = createDefaultProfiler<VariablesCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
@@ -4455,7 +4454,7 @@ describe("refetch", () => {
   it("throws errors when errors are returned after calling `refetch`", async () => {
     using _consoleSpy = spyOnConsole("error");
     const { query, mocks: defaultMocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const mocks: MockedResponse<VariablesCaseData>[] = [
       ...defaultMocks,
       {
@@ -4544,7 +4543,7 @@ describe("refetch", () => {
 
   it('ignores errors returned after calling `refetch` when errorPolicy is set to "ignore"', async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const mocks = [
       ...defaultMocks,
       {
@@ -4642,7 +4641,7 @@ describe("refetch", () => {
 
   it('returns errors after calling `refetch` when errorPolicy is set to "all"', async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const mocks = [
       ...defaultMocks,
       {
@@ -4742,7 +4741,7 @@ describe("refetch", () => {
 
   it('handles partial data results after calling `refetch` when errorPolicy is set to "all"', async () => {
     const { query, mocks: defaultMocks } = setupVariablesCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const mocks = [
       ...defaultMocks,
       {
@@ -4854,7 +4853,7 @@ describe("refetch", () => {
       };
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodoItemQuery($id: ID!) {
@@ -4987,7 +4986,7 @@ describe("refetch", () => {
       };
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodoItemQuery($id: ID!) {
         todo(id: $id) {
@@ -5109,7 +5108,7 @@ describe("refetch", () => {
       };
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodoItemQuery($id: ID!) {
@@ -5241,7 +5240,7 @@ describe("refetch", () => {
   });
 
   it('honors refetchWritePolicy set to "merge"', async () => {
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<QueryData, { min: number; max: number }> =
       gql`
@@ -5359,7 +5358,7 @@ describe("refetch", () => {
   });
 
   it('defaults refetchWritePolicy to "overwrite"', async () => {
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<QueryData, { min: number; max: number }> =
       gql`
@@ -5485,7 +5484,7 @@ describe("fetchMore", () => {
         },
       },
     });
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const renderStream = createDefaultProfiler<PaginatedCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
@@ -5560,7 +5559,7 @@ describe("fetchMore", () => {
 
   it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     const { query, link } = setupPaginatedCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const renderStream = createDefaultProfiler<PaginatedCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
@@ -5645,7 +5644,7 @@ describe("fetchMore", () => {
 
   it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
     const { query, link } = setupPaginatedCase();
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
     const renderStream = createDefaultProfiler<PaginatedCaseData>();
     const { SuspenseFallback, ReadQueryHook } =
       createDefaultTrackedComponents(renderStream);
@@ -5750,7 +5749,7 @@ describe("fetchMore", () => {
       todos: Todo[];
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodosQuery($offset: Int!) {
@@ -5960,7 +5959,7 @@ describe("fetchMore", () => {
     interface Data {
       todos: Todo[];
     }
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query: TypedDocumentNode<Data, Variables> = gql`
       query TodosQuery($offset: Int!) {

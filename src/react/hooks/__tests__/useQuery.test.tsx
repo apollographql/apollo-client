@@ -42,7 +42,6 @@ import {
   createRenderStream,
   renderHookToSnapshotStream,
   disableActEnvironment,
-  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -4483,7 +4482,7 @@ describe("useQuery Hook", () => {
       id: number;
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query1: TypedDocumentNode<Query1, Variables> = gql`
       query PersonQuery1($id: ID!) {
@@ -4743,7 +4742,7 @@ describe("useQuery Hook", () => {
       id: number;
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query1: TypedDocumentNode<Query1, Variables> = gql`
       query PersonQuery1($id: ID!) {
@@ -4966,7 +4965,7 @@ describe("useQuery Hook", () => {
       id: number;
     }
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     const query1: TypedDocumentNode<Query1, Variables> = gql`
       query PersonQuery1($id: ID!) {
@@ -5265,7 +5264,7 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({

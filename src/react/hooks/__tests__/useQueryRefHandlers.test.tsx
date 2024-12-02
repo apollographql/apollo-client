@@ -34,7 +34,6 @@ import { concatPagination, getMainDefinition } from "../../../utilities";
 import {
   createRenderStream,
   disableActEnvironment,
-  userEventWithoutAct,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -131,7 +130,7 @@ test("does not interfere with updates from useReadQuery", async () => {
 test("refetches and resuspends when calling refetch", async () => {
   const { query, mocks: defaultMocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const mocks = [
     defaultMocks[0],
@@ -263,7 +262,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     },
   });
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache,
@@ -390,7 +389,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     },
   });
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache,
@@ -514,7 +513,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     },
   });
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     link: new MockLink(mocks),
     cache,
@@ -605,7 +604,7 @@ test("`refetch` works with startTransition", async () => {
       completed: boolean;
     };
   }
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const query: TypedDocumentNode<Data, Variables> = gql`
     query TodoItemQuery($id: ID!) {
@@ -754,7 +753,7 @@ test("`refetch` works with startTransition", async () => {
 test("`refetch` works with startTransition from useBackgroundQuery and usePreloadedQueryHandlers", async () => {
   const { query, mocks: defaultMocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const mocks = [
     defaultMocks[0],
@@ -925,7 +924,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
 test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   const { query, mocks: defaultMocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const mocks = [
     defaultMocks[0],
@@ -1013,7 +1012,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
 test("refetches from queryRefs produced by useLoadableQuery", async () => {
   const { query, mocks: defaultMocks } = setupSimpleCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const mocks = [
     defaultMocks[0],
@@ -1107,7 +1106,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
 test("resuspends when calling `fetchMore`", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const client = new ApolloClient({
     cache: new InMemoryCache({
@@ -1211,7 +1210,7 @@ test("resuspends when calling `fetchMore`", async () => {
 test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
@@ -1313,7 +1312,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
 test("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const client = new ApolloClient({
     cache: new InMemoryCache({
@@ -1419,7 +1418,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
 test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     cache: new InMemoryCache({
       typePolicies: {
@@ -1523,7 +1522,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
 test("paginates from queryRefs produced by useLoadableQuery", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     cache: new InMemoryCache({
       typePolicies: {
@@ -1635,7 +1634,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
 test("`fetchMore` works with startTransition", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     cache: new InMemoryCache({
       typePolicies: {
@@ -1766,7 +1765,7 @@ test("`fetchMore` works with startTransition", async () => {
 test("`fetchMore` works with startTransition from useBackgroundQuery and useQueryRefHandlers", async () => {
   const { query, link } = setupPaginatedCase();
 
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
   const client = new ApolloClient({
     cache: new InMemoryCache({
       typePolicies: {

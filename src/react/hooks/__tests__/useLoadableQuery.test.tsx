@@ -59,7 +59,6 @@ import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
-  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -228,7 +227,7 @@ async function renderWithMocks(
   props: MockedProviderProps,
   { render: doRender }: { render: RenderWithoutActAsync }
 ) {
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const utils = await doRender(ui, {
     wrapper: ({ children }) => (
@@ -245,7 +244,7 @@ async function renderWithClient(
   { render: doRender }: { render: RenderWithoutActAsync }
 ) {
   const { client } = options;
-  const user = userEventWithoutAct(userEvent.setup());
+  const user = userEvent.setup();
 
   const utils = await doRender(ui, {
     wrapper: ({ children }: { children: React.ReactNode }) => (

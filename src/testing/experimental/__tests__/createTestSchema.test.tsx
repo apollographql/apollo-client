@@ -23,7 +23,6 @@ import {
   RenderStream,
   createRenderStream,
   disableActEnvironment,
-  userEventWithoutAct,
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_19 = React.version.startsWith("19");
@@ -606,7 +605,7 @@ describe("schema proxy", () => {
       );
     };
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     renderStream.render(<App />, {
       wrapper: createClientWrapper(client),
@@ -960,7 +959,7 @@ describe("schema proxy", () => {
       );
     };
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     renderStream.render(<App />, {
       wrapper: createClientWrapper(client),
@@ -1133,7 +1132,7 @@ describe("schema proxy", () => {
 
     resetTestSchema.reset();
 
-    const user = userEventWithoutAct(userEvent.setup());
+    const user = userEvent.setup();
 
     await user.click(screen.getByText("Refetch"));
 

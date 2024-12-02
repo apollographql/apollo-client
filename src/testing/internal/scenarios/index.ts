@@ -17,7 +17,7 @@ export function setupSimpleCase() {
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
-      delay: 10,
+      delay: 20,
     },
   ];
 

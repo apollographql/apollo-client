@@ -466,7 +466,7 @@ describe("should update", () => {
 
     await expect(takeRender).not.toRerender({ timeout: 50 });
 
-    rerender(
+    await rerender(
       <ApolloProvider client={client2}>
         <Container />
       </ApolloProvider>
@@ -564,7 +564,7 @@ describe("should update", () => {
 
     await expect(takeRender).not.toRerender({ timeout: 50 });
 
-    rerender(<Container subscription={subscriptionHero} />);
+    await rerender(<Container subscription={subscriptionHero} />);
     {
       const {
         snapshot: { loading, data },
@@ -658,7 +658,7 @@ describe("should update", () => {
 
     await expect(takeRender).not.toRerender({ timeout: 50 });
 
-    rerender(<Container variables={variablesHan} />);
+    await rerender(<Container variables={variablesHan} />);
 
     {
       const {

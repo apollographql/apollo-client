@@ -122,7 +122,7 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "6.4.6",
     "@testing-library/react": "^16.0.1",
-    "@testing-library/react-render-stream": "https://pkg.pr.new/testing-library/react-render-stream-testing-library/@testing-library/react-render-stream@084b691a6",
+    "@testing-library/react-render-stream": "https://pkg.pr.new/testing-library/react-render-stream-testing-library/@testing-library/react-render-stream@0cf8f41d6",
     "@testing-library/user-event": "14.5.2",
     "@tsconfig/node20": "20.1.4",
     "@types/bytes": "3.1.4",

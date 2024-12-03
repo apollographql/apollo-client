@@ -1154,6 +1154,7 @@ const config: CodegenConfig = {
       preset: "client",
       presetConfig: {
         // ...
+        // disables the incompatible GraphQL Codegen fragment masking feature
         fragmentMasking: false,
         inlineFragmentTypes: "mask",
         customDirectives: {

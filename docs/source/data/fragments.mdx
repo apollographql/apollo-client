@@ -1097,13 +1097,10 @@ type GetCurrentUserQuery = {
   currentUser: {
     __typename: "User";
     id: string;
+    // omitted: additional internal metadata
   } | null
 }
 ```
-
-<Note>
-GraphQL Codegen generates masked types with additional meta information on the type that is omitted in this example.
-</Note>
 
 #### Generating masked types
 

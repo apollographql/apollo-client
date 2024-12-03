@@ -325,7 +325,7 @@ describe("[queries] loading", () => {
                 expect(data!.networkStatus).toBe(7);
                 // this isn't reloading fully
                 setTimeout(() => {
-                  data!.refetch();
+                  void data!.refetch();
                 });
                 break;
               case 1:
@@ -431,7 +431,7 @@ describe("[queries] loading", () => {
       }>
     >();
 
-    render(<Container />, {
+    await render(<Container />, {
       wrapper,
     });
 
@@ -445,7 +445,7 @@ describe("[queries] loading", () => {
       expect(snapshot.loading).toBe(false);
       expect(snapshot.allPeople?.people[0].name).toMatch(/Darth Skywalker - /);
     }
-    render(<Container />, {
+    await render(<Container />, {
       wrapper,
     });
     // Loading after remount

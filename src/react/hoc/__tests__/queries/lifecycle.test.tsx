@@ -83,7 +83,7 @@ describe("[queries] lifecycle", () => {
       expect(snapshot!.allPeople).toEqual(data1.allPeople);
     }
 
-    rerender(<Container first={2} />);
+    await rerender(<Container first={2} />);
 
     {
       const { snapshot } = await takeRender();
@@ -397,7 +397,7 @@ describe("[queries] lifecycle", () => {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
               expect(props.data!.allPeople).toEqual(data1.allPeople);
-              props.data!.refetch();
+              void props.data!.refetch();
             } else if (count === 3) {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
@@ -759,7 +759,7 @@ describe("[queries] lifecycle", () => {
     const Container = graphql<Vars, Data>(query)(
       class extends React.Component<ChildProps<Vars, Data>> {
         componentDidMount() {
-          this.props.data!.refetch().then((result) => {
+          void this.props.data!.refetch().then((result) => {
             expect(result.data!.user.name).toBe("Luke Skywalker");
             done = true;
           });

@@ -1447,7 +1447,7 @@ describe("useFragment", () => {
       });
     }
 
-    rerender({ id: 2 });
+    await rerender({ id: 2 });
 
     {
       const snapshot = await takeSnapshot();

@@ -532,7 +532,7 @@ it("does not recreate queryRef and execute a network request when rerendering us
   await renderStream.takeRender();
   await wait(0);
 
-  rerender(<App />);
+  await rerender(<App />);
   await renderStream.takeRender();
 
   expect(fetchCount).toBe(1);
@@ -702,7 +702,7 @@ it("disposes of old queryRefs when changing variables before the queryRef is use
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   await wait(10);
 
@@ -1743,7 +1743,7 @@ it("reacts to variables updates", async () => {
     });
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2441,7 +2441,7 @@ it("result is referentially stable", async () => {
     result = snapshot.result;
   }
 
-  rerender(<App />);
+  await rerender(<App />);
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -3575,7 +3575,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     });
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3910,7 +3910,7 @@ it('suspends and does not use partial data when changing variables and using a "
     });
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4217,7 +4217,7 @@ describe("refetch", () => {
       });
     }
 
-    user.click(screen.getByText("Refetch"));
+    await user.click(screen.getByText("Refetch"));
 
     {
       // parent component re-suspends
@@ -5161,7 +5161,7 @@ describe("refetch", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                refetch();
+                void refetch();
               });
             }}
           >
@@ -5832,7 +5832,7 @@ describe("fetchMore", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                fetchMore({ variables: { offset: 1 } });
+                void fetchMore({ variables: { offset: 1 } });
               });
             }}
           >
@@ -6048,7 +6048,7 @@ describe("fetchMore", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                fetchMore({ variables: { offset: 1 } });
+                void fetchMore({ variables: { offset: 1 } });
               });
             }}
           >

@@ -1562,7 +1562,7 @@ describe("`restart` callback", () => {
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
-    rerender({ variables: { id: "2" } });
+    void rerender({ variables: { id: "2" } });
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
@@ -1978,7 +1978,7 @@ describe("ignoreResults", () => {
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(1);
 
-    rerender({ ignoreResults: false });
+    await rerender({ ignoreResults: false });
     {
       const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
@@ -2061,7 +2061,7 @@ describe("ignoreResults", () => {
     }
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
 
-    rerender({ ignoreResults: true });
+    await rerender({ ignoreResults: true });
     {
       const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({

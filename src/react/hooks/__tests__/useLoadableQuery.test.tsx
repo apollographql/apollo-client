@@ -3369,7 +3369,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
         <button
           onClick={() => {
             startTransition(() => {
-              refetch();
+              void refetch();
             });
           }}
         >
@@ -3806,7 +3806,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
         <button
           onClick={() => {
             startTransition(() => {
-              fetchMore({ variables: { offset: 1 } });
+              void fetchMore({ variables: { offset: 1 } });
             });
           }}
         >

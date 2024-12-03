@@ -91,7 +91,8 @@
         "testing-library/no-wait-for-multiple-assertions": "off",
         "local-rules/require-using-disposable": "error",
         "local-rules/require-disable-act-environment": "error",
-        "local-rules/forbid-act-in-disabled-act-environment": "error"
+        "local-rules/forbid-act-in-disabled-act-environment": "error",
+        "@typescript-eslint/no-floating-promises": "warn"
       }
     }
   ],

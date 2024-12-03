@@ -113,7 +113,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     });
   }
 
-  rerender(<App />);
+  await rerender(<App />);
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -181,7 +181,7 @@ test("refetches and resuspends when calling refetch", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -306,7 +306,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -433,7 +433,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -556,7 +556,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -662,7 +662,7 @@ test("`refetch` works with startTransition", async () => {
           disabled={isPending}
           onClick={() => {
             startTransition(() => {
-              refetch();
+              void refetch();
             });
           }}
         >
@@ -695,7 +695,7 @@ test("`refetch` works with startTransition", async () => {
     );
   }
 
-  renderStream.render(<App />);
+  await renderStream.render(<App />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -802,7 +802,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
       <button
         onClick={() =>
           startTransition(() => {
-            refetch();
+            void refetch();
           })
         }
       >
@@ -823,7 +823,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
         <button
           onClick={() =>
             startTransition(() => {
-              refetch();
+              void refetch();
             })
           }
         >
@@ -836,7 +836,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -972,7 +972,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1061,7 +1061,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -1160,7 +1160,7 @@ test("resuspends when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1260,7 +1260,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1366,7 +1366,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   }
 
   const queryRef = preloadQuery(query);
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1472,7 +1472,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1579,7 +1579,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -1681,7 +1681,7 @@ test("`fetchMore` works with startTransition", async () => {
         <button
           onClick={() =>
             startTransition(() => {
-              fetchMore({ variables: { offset: 2, limit: 2 } });
+              void fetchMore({ variables: { offset: 2, limit: 2 } });
             })
           }
         >
@@ -1696,7 +1696,7 @@ test("`fetchMore` works with startTransition", async () => {
 
   const queryRef = preloadQuery(query);
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1811,7 +1811,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
       <button
         onClick={() =>
           startTransition(() => {
-            fetchMore({ variables: { offset: 4, limit: 2 } });
+            void fetchMore({ variables: { offset: 4, limit: 2 } });
           })
         }
       >
@@ -1832,7 +1832,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
         <button
           onClick={() =>
             startTransition(() => {
-              fetchMore({ variables: { offset: 2, limit: 2 } });
+              void fetchMore({ variables: { offset: 2, limit: 2 } });
             })
           }
         >
@@ -1845,7 +1845,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2039,7 +2039,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();

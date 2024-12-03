@@ -384,13 +384,14 @@ describe("useLazyQuery Hook", () => {
       },
     };
 
-    const execPromise = result.current.exec({
-      variables: {
-        execVar: true,
-      },
+    let execResult: QueryResult;
+    await act(async () => {
+      execResult = await result.current.exec({
+        variables: {
+          execVar: true,
+        },
+      });
     });
-    await act(() => execPromise);
-    const execResult = await execPromise;
 
     await waitFor(
       () => {
@@ -474,15 +475,16 @@ describe("useLazyQuery Hook", () => {
       { interval: 1 }
     );
 
-    const execPromise2 = result.current.exec({
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "cache-first",
-      variables: {
-        execVar: true,
-      },
+    let execResult2: QueryResult;
+    await act(async () => {
+      execResult2 = await result.current.exec({
+        fetchPolicy: "cache-and-network",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          execVar: true,
+        },
+      });
     });
-    await act(() => execPromise2);
-    const execResult2 = await execPromise2;
 
     await waitFor(
       () => {
@@ -1148,7 +1150,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.error!.message).toBe("error 1");
     });
 
-    execute();
+    void execute();
 
     {
       const [, result] = await takeSnapshot();
@@ -1189,14 +1191,14 @@ describe("useLazyQuery Hook", () => {
     await waitFor(
       () => {
         expect(result.current[1].loading).toBe(false);
-        execute();
+        void execute();
       },
       { interval: 1 }
     );
     await waitFor(
       () => {
         expect(result.current[1].data).toBe(undefined);
-        execute();
+        void execute();
       },
       { interval: 1 }
     );
@@ -1904,9 +1906,11 @@ describe("useLazyQuery Hook", () => {
         { interval: 1 }
       );
 
-      const execPromise = result.current.exec();
-      await act(() => execPromise);
-      const execResult = await execPromise;
+      let execPromise: Promise<QueryResult>;
+      await act(async () => {
+        execPromise = result.current.exec();
+      });
+      const execResult = await execPromise!;
       expect(execResult.loading).toBe(false);
       expect(execResult.called).toBe(true);
       expect(execResult.data).toEqual({ counter: 1 });
@@ -1987,7 +1991,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.data).toBeUndefined();
     }
 
-    client.clearStore();
+    await client.clearStore();
 
     const executionResult = await promise;
     expect(executionResult.data).toBeUndefined();

@@ -593,7 +593,7 @@ describe("useQuery Hook", () => {
 
       const mutate = result.current[1][0];
       act(() => {
-        mutate({ variables: { name: "world 2" } });
+        void mutate({ variables: { name: "world 2" } });
         setName("world 2");
       });
 
@@ -821,7 +821,7 @@ describe("useQuery Hook", () => {
         expect(result1.data).toStrictEqual(allThingsData);
       }
 
-      rerender({});
+      await rerender({});
       {
         const [result0, result1] = await takeSnapshot();
         expect(result0.loading).toBe(false);
@@ -1719,7 +1719,7 @@ describe("useQuery Hook", () => {
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      rerender({ skip: true });
+      await rerender({ skip: true });
       {
         const snapshot = await takeSnapshot();
         expect(snapshot.loading).toBe(false);
@@ -1728,7 +1728,7 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender({ timeout: 100 });
 
-      rerender({ skip: false });
+      await rerender({ skip: false });
       {
         const result = await takeSnapshot();
         expect(result.loading).toBe(false);
@@ -3058,7 +3058,7 @@ describe("useQuery Hook", () => {
       await new Promise((resolve) => setTimeout(resolve));
       expect(onError).toHaveBeenCalledTimes(1);
 
-      result.current.refetch();
+      await act(async () => void result.current.refetch());
       await waitFor(
         () => {
           expect(result.current.loading).toBe(true);
@@ -3716,7 +3716,7 @@ describe("useQuery Hook", () => {
         expect(result.error).toBeInstanceOf(ApolloError);
         expect(result.error!.message).toBe("same error");
       }
-      getCurrentSnapshot().refetch();
+      await getCurrentSnapshot().refetch();
 
       {
         const result = await takeSnapshot();
@@ -4001,7 +4001,9 @@ describe("useQuery Hook", () => {
       );
       expect(result.current.networkStatus).toBe(NetworkStatus.ready);
       expect(result.current.data).toEqual({ letters: ab });
-      result.current.fetchMore({ variables: { limit: 2 } });
+      await act(
+        async () => void result.current.fetchMore({ variables: { limit: 2 } })
+      );
 
       expect(result.current.loading).toBe(false);
       await waitFor(
@@ -4552,7 +4554,7 @@ describe("useQuery Hook", () => {
               // Intentionally use reobserve here as opposed to refetch to
               // ensure we check against reported cache results with cache-first
               // and notifyOnNetworkStatusChange
-              useQueryResult.observable.reobserve();
+              void useQueryResult.observable.reobserve();
             }}
           >
             Reload 1st query
@@ -5488,7 +5490,7 @@ describe("useQuery Hook", () => {
         expect(result.loading).toBe(false);
         expect(result.data).toEqual({ hello: "world 1" });
       }
-      getCurrentSnapshot().refetch({ id: 2 });
+      await getCurrentSnapshot().refetch({ id: 2 });
       {
         const result = await takeSnapshot();
         expect(result.loading).toBe(true);
@@ -5554,7 +5556,9 @@ describe("useQuery Hook", () => {
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      getCurrentSnapshot().refetch();
+      await getCurrentSnapshot()
+        .refetch()
+        .catch(() => {});
       {
         const result = await takeSnapshot();
         expect(result.loading).toBe(true);
@@ -5569,7 +5573,7 @@ describe("useQuery Hook", () => {
         expect(result.data).toEqual({ hello: "world 1" });
       }
 
-      getCurrentSnapshot().refetch();
+      await getCurrentSnapshot().refetch();
       {
         const result = await takeSnapshot();
         expect(result.loading).toBe(true);
@@ -5668,7 +5672,10 @@ describe("useQuery Hook", () => {
         expect(mergeParams).toEqual([[void 0, [2, 3, 5, 7, 11]]]);
 
         const thenFn = jest.fn();
-        result.current.refetch({ min: 12, max: 30 }).then(thenFn);
+        await act(
+          async () =>
+            void result.current.refetch({ min: 12, max: 30 }).then(thenFn)
+        );
 
         await waitFor(
           () => {
@@ -5761,7 +5768,10 @@ describe("useQuery Hook", () => {
         expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
 
         const thenFn = jest.fn();
-        result.current.refetch({ min: 12, max: 30 }).then(thenFn);
+        await act(
+          async () =>
+            void result.current.refetch({ min: 12, max: 30 }).then(thenFn)
+        );
 
         await waitFor(
           () => {
@@ -5865,7 +5875,7 @@ describe("useQuery Hook", () => {
         }
 
         const thenFn = jest.fn();
-        getCurrentSnapshot().refetch({ min: 12, max: 30 }).then(thenFn);
+        await getCurrentSnapshot().refetch({ min: 12, max: 30 }).then(thenFn);
 
         {
           const result = await takeSnapshot();
@@ -5976,7 +5986,7 @@ describe("useQuery Hook", () => {
             result.networkStatus === NetworkStatus.ready &&
             !hasRefetchedRef.current
           ) {
-            client.reFetchObservableQueries();
+            void client.reFetchObservableQueries();
             hasRefetchedRef.current = true;
           }
         }, [result.networkStatus]);
@@ -6345,7 +6355,7 @@ describe("useQuery Hook", () => {
           useQuery(query, {
             onCompleted,
             notifyOnNetworkStatusChange: true,
-            pollInterval: 110,
+            pollInterval: 200,
           }),
         {
           wrapper: ({ children }) => (
@@ -6461,7 +6471,7 @@ describe("useQuery Hook", () => {
       const ChildComponent: React.FC = () => {
         const { data, client } = useQuery(query, { onCompleted });
         function refetchQueries() {
-          client.refetchQueries({ include: "active" });
+          void client.refetchQueries({ include: "active" });
         }
         function writeQuery() {
           client.writeQuery({ query, data: { hello: "baz" } });
@@ -6527,7 +6537,7 @@ describe("useQuery Hook", () => {
           notifyOnNetworkStatusChange: true,
         });
         function refetchQueries() {
-          client.refetchQueries({ include: "active" });
+          void client.refetchQueries({ include: "active" });
         }
         function writeQuery() {
           client.writeQuery({ query, data: { hello: "baz" } });
@@ -6693,7 +6703,7 @@ describe("useQuery Hook", () => {
         expect(query.data).toEqual(carsData);
       }
 
-      mutate();
+      void mutate();
 
       {
         // The mutation ran and is loading the result. The query stays at not
@@ -7001,7 +7011,7 @@ describe("useQuery Hook", () => {
       const entityId = 1;
       const shortTitle = "Short";
       const longerTitle = "A little longer";
-      client.mutate({
+      await client.mutate({
         mutation,
         variables: {
           id: entityId,
@@ -7036,15 +7046,16 @@ describe("useQuery Hook", () => {
         },
       });
 
-      setTimeout(() => {
-        client.mutate({
-          mutation,
-          variables: {
-            id: entityId,
-            title: longerTitle,
-          },
-        });
-      });
+      await act(
+        async () =>
+          void client.mutate({
+            mutation,
+            variables: {
+              id: entityId,
+              title: longerTitle,
+            },
+          })
+      );
 
       await waitFor(
         () => {
@@ -7273,7 +7284,7 @@ describe("useQuery Hook", () => {
       );
       expect(requestSpy).toHaveBeenCalledTimes(1);
       requestSpy.mockRestore();
-      expect(promise).resolves.toEqual({
+      await expect(promise).resolves.toEqual({
         data: { hello: "world" },
         loading: false,
         networkStatus: 7,
@@ -7887,7 +7898,7 @@ describe("useQuery Hook", () => {
         expect(result.data).toEqual(data1);
         expect(result.previousData).toBe(undefined);
 
-        result.refetch();
+        await result.refetch();
       }
 
       {
@@ -7996,7 +8007,9 @@ describe("useQuery Hook", () => {
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
 
-      result.current.refetch({ vin: "ABCDEFG0123456789" });
+      await act(
+        async () => void result.current.refetch({ vin: "ABCDEFG0123456789" })
+      );
       expect(result.current.loading).toBe(true);
       expect(result.current.data).toEqual(data1);
       expect(result.current.previousData).toEqual(data1);
@@ -8197,7 +8210,8 @@ describe("useQuery Hook", () => {
 
       await waitFor(
         () => {
-          result.current.useQueryResult.reobserve().then((result) => {
+          // TODO investigate why do we call `reobserve` in a very quick loop here?
+          void result.current.useQueryResult.reobserve().then((result) => {
             expect(result.loading).toBe(false);
             expect(result.data).toEqual({ a: "aaa", b: 2 });
           });
@@ -8290,7 +8304,7 @@ describe("useQuery Hook", () => {
       const link = new ApolloLink((operation) => {
         return new Observable((observer) => {
           const { gender } = operation.variables;
-          new Promise((resolve) => setTimeout(resolve, 300)).then(() => {
+          void wait(300).then(() => {
             observer.next({
               data: {
                 people:
@@ -8354,7 +8368,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      rerender({ gender: "female" });
+      await rerender({ gender: "female" });
 
       {
         const result = await takeSnapshot();
@@ -8374,7 +8388,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      rerender({ gender: "nonbinary" });
+      await rerender({ gender: "nonbinary" });
 
       {
         const result = await takeSnapshot();
@@ -10140,7 +10154,7 @@ describe("useQuery Hook", () => {
       expect(result.data).toBeUndefined();
     }
 
-    client.clearStore();
+    await client.clearStore();
 
     {
       const result = await takeSnapshot();

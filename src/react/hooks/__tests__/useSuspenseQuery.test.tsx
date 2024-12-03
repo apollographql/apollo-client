@@ -5014,7 +5014,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(() => {
-      result.current.fetchMore({
+      void result.current.fetchMore({
         variables: { offset: 2 },
         updateQuery: (prev, { fetchMoreResult }) => ({
           letters: prev.letters.concat(fetchMoreResult.letters),
@@ -5070,7 +5070,7 @@ describe("useSuspenseQuery", () => {
     });
 
     await actAsync(() => {
-      result.current.fetchMore({ variables: { offset: 2 } });
+      void result.current.fetchMore({ variables: { offset: 2 } });
     });
 
     await waitFor(() => {
@@ -9913,7 +9913,7 @@ describe("useSuspenseQuery", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                refetch();
+                void refetch();
               });
             }}
           >
@@ -10063,7 +10063,7 @@ describe("useSuspenseQuery", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                fetchMore({ variables: { offset: 1 } });
+                void fetchMore({ variables: { offset: 1 } });
               });
             }}
           >
@@ -10215,7 +10215,7 @@ describe("useSuspenseQuery", () => {
           disabled={isPending}
           onClick={() =>
             startTransition(() => {
-              fetchMore({
+              void fetchMore({
                 variables: {
                   offset: data.letters.length,
                   limit: data.letters.length + 1,
@@ -10407,7 +10407,7 @@ describe("useSuspenseQuery", () => {
         <button
           onClick={() => {
             startTransition(() => {
-              fetchMore({ variables: { offset: 1 } });
+              void fetchMore({ variables: { offset: 1 } });
             });
           }}
         >

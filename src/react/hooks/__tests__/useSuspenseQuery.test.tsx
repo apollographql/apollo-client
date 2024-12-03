@@ -64,7 +64,6 @@ import {
 import {
   createRenderStream,
   disableActEnvironment,
-  renderToRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -401,10 +400,12 @@ describe("useSuspenseQuery", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot } = await renderToRenderStream<
+    const { takeRender, replaceSnapshot, render } = await createRenderStream<
       UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
-    >(<App />, {
+    >({
       snapshotDOM: true,
+    });
+    await render(<App />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -9792,9 +9793,10 @@ describe("useSuspenseQuery", () => {
     }
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender } = await renderToRenderStream(<App />, {
+    const { takeRender, render } = await createRenderStream({
       snapshotDOM: true,
     });
+    await render(<App />);
 
     {
       const { withinDOM } = await takeRender();

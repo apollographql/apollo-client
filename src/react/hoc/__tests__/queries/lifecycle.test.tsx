@@ -12,7 +12,7 @@ import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
 import {
   disableActEnvironment,
-  renderToRenderStream,
+  createRenderStream,
 } from "@testing-library/react-render-stream";
 
 describe("[queries] lifecycle", () => {
@@ -62,13 +62,13 @@ describe("[queries] lifecycle", () => {
     );
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, renderResultPromise } =
-      renderToRenderStream<DataValue<Data, Vars>>(<Container first={1} />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
-    const { rerender } = await renderResultPromise;
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<DataValue<Data, Vars>>();
+    const { rerender } = await render(<Container first={1} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
 
     {
       const { snapshot } = await takeRender();

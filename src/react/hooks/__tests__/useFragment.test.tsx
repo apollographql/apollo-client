@@ -33,7 +33,7 @@ import { SubscriptionObserver } from "zen-observable-ts";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
-  renderToRenderStream,
+  createRenderStream,
 } from "@testing-library/react-render-stream";
 import { spyOnConsole } from "../../../testing/internal";
 
@@ -1807,18 +1807,17 @@ describe("has the same timing as `useQuery`", () => {
     }
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot } = renderToRenderStream(
-      <Component />,
-      {
-        initialSnapshot: {
-          queryData: undefined as any,
-          fragmentData: undefined as any,
-        },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+    const { takeRender, replaceSnapshot, render } = createRenderStream({
+      initialSnapshot: {
+        queryData: undefined as any,
+        fragmentData: undefined as any,
+      },
+    });
+    await render(<Component />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
 
     {
       const { snapshot } = await takeRender();
@@ -1889,7 +1888,7 @@ describe("has the same timing as `useQuery`", () => {
     }
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender } = renderToRenderStream(<Parent />, {
+    const { takeRender, render } = createRenderStream({
       snapshotDOM: true,
       onRender() {
         const parent = screen.getByTestId("parent");
@@ -1901,6 +1900,8 @@ describe("has the same timing as `useQuery`", () => {
           within(children).queryAllByText(/Item #2/).length
         );
       },
+    });
+    await render(<Parent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -1981,7 +1982,7 @@ describe("has the same timing as `useQuery`", () => {
     }
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender } = renderToRenderStream(<Parent />, {
+    const { takeRender, render } = createRenderStream({
       onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
@@ -1992,6 +1993,8 @@ describe("has the same timing as `useQuery`", () => {
           within(children).queryAllByText(/Item #2/).length
         );
       },
+    });
+    await render(<Parent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),

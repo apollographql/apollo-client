@@ -11,7 +11,7 @@ import { Subscription } from "../../Subscription";
 import { spyOnConsole } from "../../../../testing/internal";
 import {
   disableActEnvironment,
-  renderToRenderStream,
+  createRenderStream,
 } from "@testing-library/react-render-stream";
 
 const results = [
@@ -439,13 +439,12 @@ describe("should update", () => {
       );
     }
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, renderResultPromise } =
-      renderToRenderStream<any>(
-        <ApolloProvider client={client}>
-          <Container />
-        </ApolloProvider>
-      );
-    const { rerender } = await renderResultPromise;
+    const { takeRender, replaceSnapshot, render } = createRenderStream<any>();
+    const { rerender } = await render(
+      <ApolloProvider client={client}>
+        <Container />
+      </ApolloProvider>
+    );
     {
       const {
         snapshot: { loading, data },
@@ -537,13 +536,15 @@ describe("should update", () => {
     }
 
     using _disabledAct = disableActEnvironment();
-    const { takeRender, replaceSnapshot, renderResultPromise } =
-      renderToRenderStream<any>(<Container subscription={subscription} />, {
+    const { takeRender, replaceSnapshot, render } = createRenderStream<any>();
+    const { rerender } = await render(
+      <Container subscription={subscription} />,
+      {
         wrapper: ({ children }) => (
           <ApolloProvider client={mockClient}>{children}</ApolloProvider>
         ),
-      });
-    const { rerender } = await renderResultPromise;
+      }
+    );
 
     {
       const {
@@ -631,13 +632,12 @@ describe("should update", () => {
       );
     }
     using _disabledAct = disableActEnvironment();
-    const { takeRender, renderResultPromise, replaceSnapshot } =
-      renderToRenderStream<any>(<Container variables={variablesLuke} />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={mockClient}>{children}</ApolloProvider>
-        ),
-      });
-    const { rerender } = await renderResultPromise;
+    const { takeRender, render, replaceSnapshot } = createRenderStream<any>();
+    const { rerender } = await render(<Container variables={variablesLuke} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={mockClient}>{children}</ApolloProvider>
+      ),
+    });
 
     {
       const {

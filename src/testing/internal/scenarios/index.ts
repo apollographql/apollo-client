@@ -67,7 +67,7 @@ export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
   mocks: T,
   delay = 150
 ) {
-  return mocks.map((mock) => ({ ...mock, delay }));
+  return mocks.map((mock) => ({ delay, ...mock }));
 }
 
 interface Letter {

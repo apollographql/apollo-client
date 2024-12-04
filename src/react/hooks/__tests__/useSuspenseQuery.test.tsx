@@ -69,8 +69,6 @@ import {
 
 const IS_REACT_19 = React.version.startsWith("19");
 
-afterEach(() => wait(10));
-
 type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
   RenderHookOptions<Props>,
   "wrapper"

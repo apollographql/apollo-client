@@ -32,7 +32,10 @@ import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { spyOnConsole } from "../../../testing/internal";
-import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -119,7 +122,7 @@ describe("useMutation Hook", () => {
         const [createTodo, { loading, data }] =
           useMutation(CREATE_TODO_MUTATION);
         useEffect(() => {
-          createTodo({ variables });
+          void createTodo({ variables });
         }, [variables]);
 
         return { loading, data };
@@ -751,7 +754,8 @@ describe("useMutation Hook", () => {
         },
       ];
 
-      const { takeSnapshot } = renderHookToSnapshotStream(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useMutation<
             { createTodo: Todo },
@@ -777,11 +781,8 @@ describe("useMutation Hook", () => {
         expect(result.called).toBe(false);
       }
 
-      let fetchResult: any;
-      act(() => {
-        fetchResult = createTodo({
-          variables: { priority: "Low", description: "Get milk." },
-        });
+      let fetchResult = createTodo({
+        variables: { priority: "Low", description: "Get milk." },
       });
 
       {
@@ -792,7 +793,7 @@ describe("useMutation Hook", () => {
         expect(result.called).toBe(true);
       }
 
-      act(() => reset());
+      reset();
 
       {
         const [, result] = await takeSnapshot();
@@ -1479,7 +1480,7 @@ describe("useMutation Hook", () => {
         });
 
         useEffect(() => {
-          createTodo({ variables });
+          void createTodo({ variables });
         }, []);
 
         return null;
@@ -1526,7 +1527,7 @@ describe("useMutation Hook", () => {
         });
 
         useEffect(() => {
-          createTodo({ variables });
+          void createTodo({ variables });
         }, []);
 
         return null;
@@ -1569,7 +1570,7 @@ describe("useMutation Hook", () => {
           });
 
           useEffect(() => {
-            createTodo({ variables });
+            void createTodo({ variables });
           }, []);
 
           return null;
@@ -1634,7 +1635,7 @@ describe("useMutation Hook", () => {
             case 0:
               expect(loading).toBeFalsy();
               expect(data).toBeUndefined();
-              createTodo({ variables });
+              void createTodo({ variables });
 
               const dataInStore = client.cache.extract(true);
               expect(dataInStore["Todo:1"]).toEqual(
@@ -1707,7 +1708,7 @@ describe("useMutation Hook", () => {
         });
 
         useEffect(() => {
-          createTodo({ variables });
+          void createTodo({ variables });
         }, []);
 
         return null;
@@ -1885,7 +1886,7 @@ describe("useMutation Hook", () => {
       expect(result.current.mutation[1].data).toBe(undefined);
       const createTodo = result.current.mutation[0];
       act(() => {
-        createTodo({
+        void createTodo({
           variables,
           async onQueryUpdated(obsQuery, diff) {
             const result = await obsQuery.reobserve();
@@ -1981,8 +1982,8 @@ describe("useMutation Hook", () => {
 
       expect(result.current.query.data).toEqual(mocks[0].result.data);
       const mutate = result.current.mutation[0];
-      act(() => {
-        mutate({
+      await act(async () => {
+        await mutate({
           variables,
           refetchQueries: ["getTodos"],
         });
@@ -2146,24 +2147,21 @@ describe("useMutation Hook", () => {
         (resolve) => (onMutationDone = resolve)
       );
 
-      setTimeout(() => {
-        act(() => {
-          mutate({
-            variables,
-            refetchQueries: ["getTodos"],
-            update() {
-              unmount();
-            },
-          }).then((result) => {
-            expect(result.data).toEqual(CREATE_TODO_RESULT);
-            onMutationDone();
-          });
-        });
-      });
-
       expect(result.current.query.loading).toBe(false);
       expect(result.current.query.data).toEqual(mocks[0].result.data);
 
+      await act(async () => {
+        await mutate({
+          variables,
+          refetchQueries: ["getTodos"],
+          update() {
+            unmount();
+          },
+        }).then((result) => {
+          expect(result.data).toEqual(CREATE_TODO_RESULT);
+          onMutationDone();
+        });
+      });
       await mutatePromise;
 
       await waitFor(() => {
@@ -2595,7 +2593,7 @@ describe("useMutation Hook", () => {
         );
 
         useEffect(() => {
-          createTodo({ variables });
+          void createTodo({ variables });
         }, [variables]);
 
         return { loading, data };

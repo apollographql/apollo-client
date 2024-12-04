@@ -1,0 +1,13 @@
+diff --git a/node_modules/@testing-library/react/dist/pure.js b/node_modules/@testing-library/react/dist/pure.js
+index 7b62fa7..9ad1d9e 100644
+--- a/node_modules/@testing-library/react/dist/pure.js
++++ b/node_modules/@testing-library/react/dist/pure.js
+@@ -223,7 +223,7 @@ function renderRoot(ui, {
+ function render(ui, {
+   container,
+   baseElement = container,
+-  legacyRoot = false,
++  legacyRoot = React.version.startsWith("17"),
+   queries,
+   hydrate = false,
+   wrapper

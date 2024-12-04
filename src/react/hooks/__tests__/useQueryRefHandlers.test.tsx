@@ -1,5 +1,5 @@
 import React from "react";
-import { act, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import {
   ApolloClient,
   InMemoryCache,
@@ -33,6 +33,7 @@ import { useLoadableQuery } from "../useLoadableQuery";
 import { concatPagination, getMainDefinition } from "../../../utilities";
 import {
   createRenderStream,
+  disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -44,6 +45,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -79,7 +81,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     );
   }
 
-  const { rerender } = renderStream.render(<App />, {
+  const { rerender } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
   {
@@ -111,7 +113,7 @@ test("does not interfere with updates from useReadQuery", async () => {
     });
   }
 
-  rerender(<App />);
+  await rerender(<App />);
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -144,6 +146,7 @@ test("refetches and resuspends when calling refetch", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -178,7 +181,7 @@ test("refetches and resuspends when calling refetch", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -196,7 +199,7 @@ test("refetches and resuspends when calling refetch", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -265,6 +268,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
@@ -302,7 +306,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -318,7 +322,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -391,6 +395,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
@@ -428,7 +433,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -444,7 +449,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -514,6 +519,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<QueryData> | null,
@@ -550,7 +556,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
@@ -566,7 +572,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -632,6 +638,7 @@ test("`refetch` works with startTransition", async () => {
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
@@ -655,7 +662,7 @@ test("`refetch` works with startTransition", async () => {
           disabled={isPending}
           onClick={() => {
             startTransition(() => {
-              refetch();
+              void refetch();
             });
           }}
         >
@@ -688,7 +695,7 @@ test("`refetch` works with startTransition", async () => {
     );
   }
 
-  renderStream.render(<App />);
+  await renderStream.render(<App />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -710,7 +717,7 @@ test("`refetch` works with startTransition", async () => {
   }
 
   const button = screen.getByText("Refetch");
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -767,6 +774,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
@@ -794,7 +802,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
       <button
         onClick={() =>
           startTransition(() => {
-            refetch();
+            void refetch();
           })
         }
       >
@@ -815,7 +823,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
         <button
           onClick={() =>
             startTransition(() => {
-              refetch();
+              void refetch();
             })
           }
         >
@@ -828,7 +836,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -846,7 +854,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch from parent")));
+  await user.click(screen.getByText("Refetch from parent"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -878,7 +886,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch from child")));
+  await user.click(screen.getByText("Refetch from child"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -932,6 +940,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -963,7 +972,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -981,7 +990,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1019,6 +1028,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleCaseData> | null,
@@ -1051,12 +1061,12 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1074,7 +1084,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1112,6 +1122,7 @@ test("resuspends when calling `fetchMore`", async () => {
   });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1149,7 +1160,7 @@ test("resuspends when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1172,7 +1183,7 @@ test("resuspends when calling `fetchMore`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Load next")));
+  await user.click(screen.getByText("Load next"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1204,6 +1215,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const client = new ApolloClient({ cache: new InMemoryCache(), link });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1248,7 +1260,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   }
 
   const queryRef = preloadQuery(query);
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1271,7 +1283,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Load next")));
+  await user.click(screen.getByText("Load next"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1316,6 +1328,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1353,7 +1366,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   }
 
   const queryRef = preloadQuery(query);
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1376,7 +1389,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
     });
   }
 
-  await act(() => user.click(screen.getByText("Load next")));
+  await user.click(screen.getByText("Load next"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1419,6 +1432,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     link,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1458,7 +1472,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1481,7 +1495,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Load next")));
+  await user.click(screen.getByText("Load next"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1522,6 +1536,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     link,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<PaginatedCaseData> | null,
@@ -1564,12 +1579,12 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1592,7 +1607,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Load next")));
+  await user.click(screen.getByText("Load next"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1634,6 +1649,7 @@ test("`fetchMore` works with startTransition", async () => {
   });
   const preloadQuery = createQueryPreloader(client);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
@@ -1665,7 +1681,7 @@ test("`fetchMore` works with startTransition", async () => {
         <button
           onClick={() =>
             startTransition(() => {
-              fetchMore({ variables: { offset: 2, limit: 2 } });
+              void fetchMore({ variables: { offset: 2, limit: 2 } });
             })
           }
         >
@@ -1680,7 +1696,7 @@ test("`fetchMore` works with startTransition", async () => {
 
   const queryRef = preloadQuery(query);
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1703,7 +1719,7 @@ test("`fetchMore` works with startTransition", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Load next")));
+  await user.click(screen.getByText("Load next"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1763,6 +1779,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     link,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
@@ -1794,7 +1811,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
       <button
         onClick={() =>
           startTransition(() => {
-            fetchMore({ variables: { offset: 4, limit: 2 } });
+            void fetchMore({ variables: { offset: 4, limit: 2 } });
           })
         }
       >
@@ -1815,7 +1832,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
         <button
           onClick={() =>
             startTransition(() => {
-              fetchMore({ variables: { offset: 2, limit: 2 } });
+              void fetchMore({ variables: { offset: 2, limit: 2 } });
             })
           }
         >
@@ -1828,7 +1845,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1851,7 +1868,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     });
   }
 
-  await act(() => user.click(screen.getByText("Paginate from parent")));
+  await user.click(screen.getByText("Paginate from parent"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1893,7 +1910,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     });
   }
 
-  await act(() => user.click(screen.getByText("Paginate from child")));
+  await user.click(screen.getByText("Paginate from child"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1983,6 +2000,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   const preloadQuery = createQueryPreloader(client);
   const queryRef = preloadQuery(query);
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
@@ -2021,7 +2039,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();

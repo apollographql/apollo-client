@@ -17,7 +17,7 @@ export function setupSimpleCase() {
     {
       request: { query },
       result: { data: { greeting: "Hello" } },
-      delay: 10,
+      delay: 20,
     },
   ];
 
@@ -61,6 +61,16 @@ export function setupVariablesCase() {
   );
 
   return { mocks, query };
+}
+
+export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
+  mocks: T,
+  delay = 150,
+  override = false
+) {
+  return mocks.map((mock) =>
+    override ? { ...mock, delay } : { delay, ...mock }
+  );
 }
 
 interface Letter {

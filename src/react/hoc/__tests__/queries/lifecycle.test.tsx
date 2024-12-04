@@ -10,7 +10,10 @@ import { mockSingleLink } from "../../../../testing";
 import { Query as QueryComponent } from "../../../components";
 import { graphql } from "../../graphql";
 import { ChildProps, DataValue } from "../../types";
-import { renderToRenderStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  createRenderStream,
+} from "@testing-library/react-render-stream";
 
 describe("[queries] lifecycle", () => {
   // lifecycle
@@ -58,13 +61,14 @@ describe("[queries] lifecycle", () => {
       }
     );
 
-    const { takeRender, replaceSnapshot, renderResultPromise } =
-      renderToRenderStream<DataValue<Data, Vars>>(<Container first={1} />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
-    const { rerender } = await renderResultPromise;
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<DataValue<Data, Vars>>();
+    const { rerender } = await render(<Container first={1} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
 
     {
       const { snapshot } = await takeRender();
@@ -79,7 +83,7 @@ describe("[queries] lifecycle", () => {
       expect(snapshot!.allPeople).toEqual(data1.allPeople);
     }
 
-    rerender(<Container first={2} />);
+    await rerender(<Container first={2} />);
 
     {
       const { snapshot } = await takeRender();
@@ -393,7 +397,7 @@ describe("[queries] lifecycle", () => {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
               expect(props.data!.allPeople).toEqual(data1.allPeople);
-              props.data!.refetch();
+              void props.data!.refetch();
             } else if (count === 3) {
               expect(props.foo).toEqual(43);
               expect(props.data!.loading).toEqual(false);
@@ -755,7 +759,7 @@ describe("[queries] lifecycle", () => {
     const Container = graphql<Vars, Data>(query)(
       class extends React.Component<ChildProps<Vars, Data>> {
         componentDidMount() {
-          this.props.data!.refetch().then((result) => {
+          void this.props.data!.refetch().then((result) => {
             expect(result.data!.user.name).toBe("Luke Skywalker");
             done = true;
           });

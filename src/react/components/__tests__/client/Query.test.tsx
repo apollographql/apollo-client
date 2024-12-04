@@ -11,7 +11,10 @@ import { ApolloProvider } from "../../../context";
 import { itAsync, MockedProvider, mockSingleLink } from "../../../../testing";
 import { Query } from "../../Query";
 import { QueryResult } from "../../../types/types";
-import { renderToRenderStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  createRenderStream,
+} from "@testing-library/react-render-stream";
 
 const allPeopleQuery: DocumentNode = gql`
   query people {
@@ -1500,7 +1503,10 @@ describe("Query component", () => {
       );
     }
 
-    const { takeRender, replaceSnapshot } = renderToRenderStream<QueryResult>(
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } =
+      createRenderStream<QueryResult>();
+    await render(
       <ApolloProvider client={client}>
         <Container />
       </ApolloProvider>

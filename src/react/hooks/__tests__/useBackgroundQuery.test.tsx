@@ -55,11 +55,13 @@ import {
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
+  addDelayToMocks,
 } from "../../../testing/internal";
 import { SubscribeToMoreFunction } from "../useSuspenseQuery";
 import {
   RenderStream,
   createRenderStream,
+  disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -147,7 +149,8 @@ it("fetches a simple query with minimal config", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -190,7 +193,8 @@ it("tears down the query on unmount", async () => {
     );
   }
 
-  const { unmount } = renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  const { unmount } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -316,7 +320,8 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -333,7 +338,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(screen.getByText("Toggle")));
+  await user.click(screen.getByText("Toggle"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -392,7 +397,8 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const toggleButton = screen.getByText("Toggle");
 
@@ -415,7 +421,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     });
   }
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
@@ -425,7 +431,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
   // again.
   expect(client).toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -499,7 +505,8 @@ it("does not recreate queryRef and execute a network request when rerendering us
     );
   }
 
-  const { rerender } = renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -521,16 +528,16 @@ it("does not recreate queryRef and execute a network request when rerendering us
     });
   }
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
-  rerender(<App />);
+  await rerender(<App />);
   await renderStream.takeRender();
 
   expect(fetchCount).toBe(1);
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -597,7 +604,8 @@ it("does not recreate queryRef or execute a network request when rerendering use
     );
   }
 
-  renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
     wrapper: createClientWrapper(client, React.StrictMode),
   });
 
@@ -613,7 +621,7 @@ it("does not recreate queryRef or execute a network request when rerendering use
   const firstRender = await renderStream.takeRender();
   const initialQueryRef = firstRender.snapshot.queryRef;
 
-  await act(() => user.click(incrementButton));
+  await user.click(incrementButton);
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -641,7 +649,8 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery",
     return null;
   }
 
-  const { unmount } = renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  const { unmount } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -677,7 +686,8 @@ it("disposes of old queryRefs when changing variables before the queryRef is use
     return null;
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -692,9 +702,9 @@ it("disposes of old queryRefs when changing variables before the queryRef is use
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
-  await wait(0);
+  await wait(10);
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query, {
@@ -721,7 +731,8 @@ it("does not prematurely dispose of the queryRef when using strict mode", async 
     return null;
   }
 
-  renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
     wrapper: createClientWrapper(client, React.StrictMode),
   });
 
@@ -760,12 +771,13 @@ it("disposes of the queryRef when unmounting before it is used by useReadQuery e
     );
   }
 
-  const { unmount } = renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  const { unmount } = await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
   const button = screen.getByText("Increment");
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -816,7 +828,10 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(globalClient) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
+    wrapper: createClientWrapper(globalClient),
+  });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -872,7 +887,8 @@ it("passes context to the link", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ link }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ link }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -944,7 +960,8 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ cache }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ cache }) });
 
   const {
     snapshot: { result },
@@ -1013,7 +1030,8 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ cache }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ cache }) });
 
   const { snapshot } = await renderStream.takeRender();
   const result = snapshot.result!;
@@ -1058,7 +1076,8 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1122,7 +1141,8 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const { snapshot, renderedComponents } = await renderStream.takeRender();
 
@@ -1179,7 +1199,8 @@ it("partial data is present in the cache so it is ignored and network request is
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1231,7 +1252,8 @@ it("existing data in the cache is ignored when fetchPolicy is 'network-only'", a
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1285,7 +1307,8 @@ it("fetches data from the network but does not update the cache when fetchPolicy
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1399,7 +1422,8 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1421,7 +1445,7 @@ it("works with startTransition to change variables", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Change todo")));
+  await user.click(screen.getByText("Change todo"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1516,7 +1540,8 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1620,7 +1645,8 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1692,8 +1718,11 @@ it("reacts to variables updates", async () => {
     );
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
-    wrapper: createMockWrapper({ mocks }),
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App id="1" />, {
+    wrapper: createMockWrapper({
+      mocks: addDelayToMocks(mocks, 150, true),
+    }),
   });
 
   {
@@ -1714,7 +1743,7 @@ it("reacts to variables updates", async () => {
     });
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1755,7 +1784,8 @@ it("does not suspend when `skip` is true", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   const { renderedComponents } = await renderStream.takeRender();
 
@@ -1782,7 +1812,8 @@ it("does not suspend when using `skipToken` in options", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   const { renderedComponents } = await renderStream.takeRender();
 
@@ -1814,7 +1845,8 @@ it("suspends when `skip` becomes `false` after it was `true`", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1822,7 +1854,7 @@ it("suspends when `skip` becomes `false` after it was `true`", async () => {
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Run query")));
+  await user.click(screen.getByText("Run query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1866,7 +1898,8 @@ it("suspends when switching away from `skipToken` in options", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1874,7 +1907,7 @@ it("suspends when switching away from `skipToken` in options", async () => {
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Run query")));
+  await user.click(screen.getByText("Run query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1918,7 +1951,8 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1936,7 +1970,7 @@ it("renders skip result, does not suspend, and maintains `data` when `skip` beco
     });
   }
 
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1974,7 +2008,8 @@ it("renders skip result, does not suspend, and maintains `data` when switching b
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1992,7 +2027,7 @@ it("renders skip result, does not suspend, and maintains `data` when switching b
     });
   }
 
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -2055,14 +2090,15 @@ it("does not make network requests when `skip` is `true`", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial skipped result
   await renderStream.takeRender();
   expect(fetchCount).toBe(0);
 
   // Toggle skip to `false`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   expect(fetchCount).toBe(1);
   {
@@ -2082,7 +2118,7 @@ it("does not make network requests when `skip` is `true`", async () => {
   }
 
   // Toggle skip to `true`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   expect(fetchCount).toBe(1);
   {
@@ -2142,14 +2178,15 @@ it("does not make network requests when `skipToken` is used", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial skipped result
   await renderStream.takeRender();
   expect(fetchCount).toBe(0);
 
   // Toggle skip to `false`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   expect(fetchCount).toBe(1);
   {
@@ -2169,7 +2206,7 @@ it("does not make network requests when `skipToken` is used", async () => {
   }
 
   // Toggle skip to `true`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   expect(fetchCount).toBe(1);
   {
@@ -2229,7 +2266,8 @@ it("does not make network requests when `skipToken` is used in strict mode", asy
     );
   }
 
-  renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
     wrapper: createClientWrapper(client, React.StrictMode),
   });
 
@@ -2238,7 +2276,7 @@ it("does not make network requests when `skipToken` is used in strict mode", asy
   expect(fetchCount).toBe(0);
 
   // Toggle skip to `false`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
   await renderStream.takeRender();
 
   {
@@ -2254,7 +2292,7 @@ it("does not make network requests when `skipToken` is used in strict mode", asy
   expect(fetchCount).toBe(1);
 
   // Toggle skip to `true`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2317,7 +2355,8 @@ it("does not make network requests when using `skip` option in strict mode", asy
     );
   }
 
-  renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
     wrapper: createClientWrapper(client, React.StrictMode),
   });
 
@@ -2326,7 +2365,7 @@ it("does not make network requests when using `skip` option in strict mode", asy
   expect(fetchCount).toBe(0);
 
   // Toggle skip to `false`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
   await renderStream.takeRender();
 
   {
@@ -2342,7 +2381,7 @@ it("does not make network requests when using `skip` option in strict mode", asy
   expect(fetchCount).toBe(1);
 
   // Toggle skip to `true`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2379,7 +2418,8 @@ it("result is referentially stable", async () => {
     );
   }
 
-  const { rerender } = renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App />, {
     wrapper: createMockWrapper({ mocks }),
   });
 
@@ -2401,7 +2441,7 @@ it("result is referentially stable", async () => {
     result = snapshot.result;
   }
 
-  rerender(<App />);
+  await rerender(<App />);
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2450,7 +2490,8 @@ it("`skip` option works with `startTransition`", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2459,7 +2500,7 @@ it("`skip` option works with `startTransition`", async () => {
   }
 
   // Toggle skip to `false`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -2529,7 +2570,8 @@ it("`skipToken` works with `startTransition`", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2538,7 +2580,7 @@ it("`skipToken` works with `startTransition`", async () => {
   }
 
   // Toggle skip to `false`
-  await act(() => user.click(screen.getByText("Toggle skip")));
+  await user.click(screen.getByText("Toggle skip"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -2613,7 +2655,8 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
 
   // initial render
   await renderStream.takeRender();
@@ -2628,10 +2671,10 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     });
   }
 
-  await act(() => user.click(screen.getByText("Change error policy")));
+  await user.click(screen.getByText("Change error policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch greeting")));
+  await user.click(screen.getByText("Refetch greeting"));
   await renderStream.takeRender();
 
   {
@@ -2696,7 +2739,8 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2714,10 +2758,10 @@ it("applies `context` on next fetch when it changes between renders", async () =
     });
   }
 
-  await act(() => user.click(screen.getByText("Update context")));
+  await user.click(screen.getByText("Update context"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -2799,7 +2843,8 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  renderStream.render(<App />, { wrapper: createMockWrapper({ cache }) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createMockWrapper({ cache }) });
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2813,7 +2858,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   }
 
-  await act(() => user.click(screen.getByText("Canonize results")));
+  await user.click(screen.getByText("Canonize results"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2914,7 +2959,8 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial suspended render
   await renderStream.takeRender();
@@ -2930,7 +2976,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch next")));
+  await user.click(screen.getByText("Refetch next"));
   await renderStream.takeRender();
 
   {
@@ -2950,10 +2996,10 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     ]);
   }
 
-  await act(() => user.click(screen.getByText("Change refetch write policy")));
+  await user.click(screen.getByText("Change refetch write policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch last")));
+  await user.click(screen.getByText("Refetch last"));
   await renderStream.takeRender();
 
   {
@@ -3058,7 +3104,8 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // initial suspended render
   await renderStream.takeRender();
@@ -3075,7 +3122,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     });
   }
 
-  await act(() => user.click(screen.getByText("Update partial data")));
+  await user.click(screen.getByText("Update partial data"));
   await renderStream.takeRender();
 
   cache.modify({
@@ -3161,7 +3208,8 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -3179,7 +3227,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     });
   }
 
-  await act(() => user.click(screen.getByText("Change fetch policy")));
+  await user.click(screen.getByText("Change fetch policy"));
   {
     const { snapshot } = await renderStream.takeRender();
 
@@ -3197,7 +3245,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3298,7 +3346,8 @@ it("properly handles changing options along with changing `variables`", async ()
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -3319,7 +3368,7 @@ it("properly handles changing options along with changing `variables`", async ()
     });
   }
 
-  await act(() => user.click(screen.getByText("Get second character")));
+  await user.click(screen.getByText("Get second character"));
   await renderStream.takeRender();
 
   {
@@ -3341,7 +3390,7 @@ it("properly handles changing options along with changing `variables`", async ()
     });
   }
 
-  await act(() => user.click(screen.getByText("Get first character")));
+  await user.click(screen.getByText("Get first character"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -3362,7 +3411,7 @@ it("properly handles changing options along with changing `variables`", async ()
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3427,7 +3476,8 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -3493,8 +3543,12 @@ it('suspends and does not use partial data from other variables in the cache whe
     );
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
-    wrapper: createMockWrapper({ cache, mocks }),
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App id="1" />, {
+    wrapper: createMockWrapper({
+      cache,
+      mocks: addDelayToMocks(mocks, 150, true),
+    }),
   });
 
   {
@@ -3521,7 +3575,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     });
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3588,7 +3642,8 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3655,7 +3710,8 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3755,7 +3811,8 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -3821,8 +3878,12 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { rerender } = renderStream.render(<App id="1" />, {
-    wrapper: createMockWrapper({ cache, mocks }),
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await renderStream.render(<App id="1" />, {
+    wrapper: createMockWrapper({
+      cache,
+      mocks: addDelayToMocks(mocks, 150, true),
+    }),
   });
 
   {
@@ -3849,7 +3910,7 @@ it('suspends and does not use partial data when changing variables and using a "
     });
   }
 
-  rerender(<App id="2" />);
+  await rerender(<App id="2" />);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3936,7 +3997,8 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4047,7 +4109,8 @@ it.each<SuspenseQueryHookFetchPolicy>([
       );
     }
 
-    renderStream.render(<App />, {
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
       wrapper: createClientWrapper(client, React.StrictMode),
     });
 
@@ -4127,7 +4190,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4151,7 +4217,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       // parent component re-suspends
@@ -4202,7 +4268,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4226,7 +4295,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4306,7 +4375,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4328,7 +4400,7 @@ describe("refetch", () => {
 
     const button = screen.getByText("Refetch");
 
-    await act(() => user.click(button));
+    await user.click(button);
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4352,7 +4424,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(button));
+    await user.click(button);
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4417,7 +4489,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4444,7 +4519,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4504,7 +4579,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4531,7 +4609,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4599,7 +4677,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4626,7 +4707,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4697,7 +4778,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4724,7 +4808,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4834,7 +4918,10 @@ describe("refetch", () => {
       return null;
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4856,7 +4943,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Retry")));
+    await user.click(screen.getByText("Retry"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4964,7 +5051,10 @@ describe("refetch", () => {
       return null;
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -4984,7 +5074,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Retry")));
+    await user.click(screen.getByText("Retry"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5071,7 +5161,7 @@ describe("refetch", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                refetch();
+                void refetch();
               });
             }}
           >
@@ -5084,7 +5174,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ mocks }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ mocks }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5105,7 +5198,7 @@ describe("refetch", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       // startTransition will avoid rendering the suspense fallback for already
@@ -5216,7 +5309,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5235,7 +5331,7 @@ describe("refetch", () => {
       expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5330,7 +5426,10 @@ describe("refetch", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5349,7 +5448,7 @@ describe("refetch", () => {
       expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
     }
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5408,7 +5507,8 @@ describe("fetchMore", () => {
       );
     }
 
-    renderStream.render(<App />, {
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
       wrapper: createMockWrapper({ cache, link }),
     });
 
@@ -5432,7 +5532,7 @@ describe("fetchMore", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch more")));
+    await user.click(screen.getByText("Fetch more"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5489,7 +5589,10 @@ describe("fetchMore", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createMockWrapper({ link }) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createMockWrapper({ link }),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5511,7 +5614,7 @@ describe("fetchMore", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch more")));
+    await user.click(screen.getByText("Fetch more"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5577,7 +5680,10 @@ describe("fetchMore", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5599,7 +5705,7 @@ describe("fetchMore", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Fetch more")));
+    await user.click(screen.getByText("Fetch more"));
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5726,7 +5832,7 @@ describe("fetchMore", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                fetchMore({ variables: { offset: 1 } });
+                void fetchMore({ variables: { offset: 1 } });
               });
             }}
           >
@@ -5739,7 +5845,10 @@ describe("fetchMore", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5769,7 +5878,7 @@ describe("fetchMore", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Load more")));
+    await user.click(screen.getByText("Load more"));
 
     {
       // startTransition will avoid rendering the suspense fallback for already
@@ -5939,7 +6048,7 @@ describe("fetchMore", () => {
           <button
             onClick={() => {
               startTransition(() => {
-                fetchMore({ variables: { offset: 1 } });
+                void fetchMore({ variables: { offset: 1 } });
               });
             }}
           >
@@ -5952,7 +6061,10 @@ describe("fetchMore", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();
@@ -5982,7 +6094,7 @@ describe("fetchMore", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Load more")));
+    await user.click(screen.getByText("Load more"));
 
     {
       const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -6107,7 +6219,10 @@ describe("fetchMore", () => {
       );
     }
 
-    renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<App />, {
+      wrapper: createClientWrapper(client),
+    });
 
     {
       const { renderedComponents } = await renderStream.takeRender();

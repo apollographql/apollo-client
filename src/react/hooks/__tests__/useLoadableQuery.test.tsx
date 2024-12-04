@@ -1,11 +1,5 @@
 import React, { Suspense, useState } from "react";
-import {
-  act,
-  render,
-  screen,
-  renderHook,
-  waitFor,
-} from "@testing-library/react";
+import { act, screen, renderHook, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
@@ -56,12 +50,15 @@ import {
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
+  renderAsync,
 } from "../../../testing/internal";
 
 import {
   RenderStream,
   createRenderStream,
+  disableActEnvironment,
   useTrackRenders,
+  AsyncRenderFn,
 } from "@testing-library/react-render-stream";
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -225,14 +222,14 @@ function createDefaultProfiledComponents<
   };
 }
 
-function renderWithMocks(
+async function renderWithMocks(
   ui: React.ReactElement,
   props: MockedProviderProps,
-  { render: doRender } = { render }
+  { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const user = userEvent.setup();
 
-  const utils = doRender(ui, {
+  const utils = await doRender(ui, {
     wrapper: ({ children }) => (
       <MockedProvider {...props}>{children}</MockedProvider>
     ),
@@ -241,16 +238,16 @@ function renderWithMocks(
   return { ...utils, user };
 }
 
-function renderWithClient(
+async function renderWithClient(
   ui: React.ReactElement,
   options: { client: ApolloClient<any> },
-  { render: doRender } = { render }
+  { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const { client } = options;
   const user = userEvent.setup();
 
-  const utils = doRender(ui, {
-    wrapper: ({ children }) => (
+  const utils = await doRender(ui, {
+    wrapper: ({ children }: { children: React.ReactNode }) => (
       <ApolloProvider client={client}>{children}</ApolloProvider>
     ),
   });
@@ -261,6 +258,7 @@ function renderWithClient(
 it("loads a query and suspends when the load query function is called", async () => {
   const { query, mocks } = useSimpleQueryCase();
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -280,7 +278,7 @@ it("loads a query and suspends when the load query function is called", async ()
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -294,7 +292,7 @@ it("loads a query and suspends when the load query function is called", async ()
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -318,6 +316,7 @@ it("loads a query and suspends when the load query function is called", async ()
 it("loads a query with variables and suspends by passing variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -337,7 +336,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -351,7 +350,7 @@ it("loads a query with variables and suspends by passing variables to the loadQu
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -381,6 +380,7 @@ it("tears down the query on unmount", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -399,7 +399,7 @@ it("tears down the query on unmount", async () => {
     );
   }
 
-  const { user, unmount } = renderWithClient(
+  const { user, unmount } = await renderWithClient(
     <App />,
     {
       client,
@@ -410,7 +410,7 @@ it("tears down the query on unmount", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   const { snapshot } = await renderStream.takeRender();
@@ -516,6 +516,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -536,7 +537,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -546,7 +547,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
 
   // initial render
   await renderStream.takeRender();
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -563,7 +564,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(screen.getByText("Toggle")));
+  await user.click(screen.getByText("Toggle"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -602,6 +603,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -622,7 +624,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -633,7 +635,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
 
   // initial render
   await renderStream.takeRender();
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   expect(client.getObservableQueries().size).toBe(1);
   expect(client).toHaveSuspenseCacheEntryUsing(query);
@@ -654,14 +656,14 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
     });
   }
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
   await renderStream.takeRender();
   await wait(0);
 
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);
 
-  await act(() => user.click(toggleButton));
+  await user.click(toggleButton);
 
   expect(client.getObservableQueries().size).toBe(1);
   // Here we don't expect a suspense cache entry because we previously disposed
@@ -702,6 +704,7 @@ it("auto resubscribes when mounting useReadQuery after naturally disposed by use
 it("changes variables on a query and resuspends when passing new variables to the loadQuery function", async () => {
   const { query, mocks } = useVariablesQueryCase();
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -726,7 +729,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     );
   };
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -740,7 +743,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     expect(renderedComponents).toStrictEqual([App]);
   }
 
-  await act(() => user.click(screen.getByText("Load 1st character")));
+  await user.click(screen.getByText("Load 1st character"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -759,7 +762,7 @@ it("changes variables on a query and resuspends when passing new variables to th
     });
   }
 
-  await act(() => user.click(screen.getByText("Load 2nd character")));
+  await user.click(screen.getByText("Load 2nd character"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -789,6 +792,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -812,7 +816,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -823,7 +827,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -836,7 +840,7 @@ it("resets the `queryRef` to null and disposes of it when calling the `reset` fu
     });
   }
 
-  await act(() => user.click(screen.getByText("Reset query")));
+  await user.click(screen.getByText("Reset query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -877,6 +881,7 @@ it("allows the client to be overridden", async () => {
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -898,7 +903,7 @@ it("allows the client to be overridden", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client: globalClient,
@@ -909,7 +914,7 @@ it("allows the client to be overridden", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   const { snapshot } = await renderStream.takeRender();
@@ -945,6 +950,7 @@ it("passes context to the link", async () => {
     }),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -966,7 +972,7 @@ it("passes context to the link", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -977,7 +983,7 @@ it("passes context to the link", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   const { snapshot } = await renderStream.takeRender();
@@ -1034,6 +1040,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     link: new MockLink([]),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -1055,7 +1062,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1066,7 +1073,7 @@ it('enables canonical results when canonizeResults is "true"', async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result?.data.results);
@@ -1123,6 +1130,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     data: { results },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1143,7 +1151,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       cache,
@@ -1154,7 +1162,7 @@ it("can disable canonical results when the cache's canonizeResults setting is tr
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   const { snapshot } = await renderStream.takeRender();
   const resultSet = new Set(snapshot.result!.data.results);
@@ -1189,6 +1197,7 @@ it("returns initial cache data followed by network data when the fetch policy is
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -1210,7 +1219,7 @@ it("returns initial cache data followed by network data when the fetch policy is
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1221,7 +1230,7 @@ it("returns initial cache data followed by network data when the fetch policy is
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1268,6 +1277,7 @@ it("all data is present in the cache, no network request is made", async () => {
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1286,7 +1296,7 @@ it("all data is present in the cache, no network request is made", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1297,7 +1307,7 @@ it("all data is present in the cache, no network request is made", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   const { snapshot, renderedComponents } = await renderStream.takeRender();
 
@@ -1339,6 +1349,7 @@ it("partial data is present in the cache so it is ignored and network request is
     cache.writeQuery({ query, data: { hello: "from cache" } });
   }
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1357,7 +1368,7 @@ it("partial data is present in the cache so it is ignored and network request is
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1368,7 +1379,7 @@ it("partial data is present in the cache so it is ignored and network request is
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1409,6 +1420,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1429,7 +1441,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1440,7 +1452,7 @@ it("existing data in the cache is ignored when `fetchPolicy` is 'network-only'",
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1478,6 +1490,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
 
   cache.writeQuery({ query, data: { hello: "from cache" } });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1498,7 +1511,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1509,7 +1522,7 @@ it("fetches data from the network but does not update the cache when `fetchPolic
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -1628,7 +1641,8 @@ it("works with startTransition to change variables", async () => {
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  await renderWithClient(<App />, { client }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load first todo")));
 
@@ -1700,6 +1714,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   });
   const client = new ApolloClient({ cache, link });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -1719,7 +1734,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1730,7 +1745,7 @@ it('does not suspend deferred queries with data in the cache and using a "cache-
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load todo")));
+  await user.click(screen.getByText("Load todo"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -1821,6 +1836,7 @@ it("reacts to cache updates", async () => {
     link: new MockLink(mocks),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       result: null as UseReadQueryResult<SimpleQueryData> | null,
@@ -1844,7 +1860,7 @@ it("reacts to cache updates", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -1855,7 +1871,7 @@ it("reacts to cache updates", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -1906,6 +1922,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<SimpleQueryData>();
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
     createDefaultProfiledComponents(renderStream);
@@ -1933,7 +1950,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -1944,7 +1961,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -1957,10 +1974,10 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     });
   }
 
-  await act(() => user.click(screen.getByText("Change error policy")));
+  await user.click(screen.getByText("Change error policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch greeting")));
+  await user.click(screen.getByText("Refetch greeting"));
   await renderStream.takeRender();
 
   {
@@ -2006,6 +2023,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     cache: new InMemoryCache(),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2029,7 +2047,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2040,7 +2058,7 @@ it("applies `context` on next fetch when it changes between renders", async () =
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2051,10 +2069,10 @@ it("applies `context` on next fetch when it changes between renders", async () =
     });
   }
 
-  await act(() => user.click(screen.getByText("Update context")));
+  await user.click(screen.getByText("Update context"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -2114,6 +2132,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2138,7 +2157,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2149,7 +2168,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2162,7 +2181,7 @@ it("returns canonical results immediately when `canonizeResults` changes from `f
     expect(values).toEqual([0, 1, 1, 2, 3, 5]);
   }
 
-  await act(() => user.click(screen.getByText("Canonize results")));
+  await user.click(screen.getByText("Canonize results"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2228,6 +2247,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2262,7 +2282,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2273,7 +2293,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2284,7 +2304,7 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch next")));
+  await user.click(screen.getByText("Refetch next"));
   await renderStream.takeRender();
 
   {
@@ -2301,10 +2321,10 @@ it("applies changed `refetchWritePolicy` to next fetch when changing between ren
     ]);
   }
 
-  await act(() => user.click(screen.getByText("Change refetch write policy")));
+  await user.click(screen.getByText("Change refetch write policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch last")));
+  await user.click(screen.getByText("Refetch last"));
   await renderStream.takeRender();
 
   {
@@ -2399,6 +2419,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2424,7 +2445,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2435,7 +2456,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2450,7 +2471,7 @@ it("applies `returnPartialData` on next fetch when it changes between renders", 
     });
   }
 
-  await act(() => user.click(screen.getByText("Update partial data")));
+  await user.click(screen.getByText("Update partial data"));
   await renderStream.takeRender();
 
   cache.modify({
@@ -2544,6 +2565,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     cache,
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<Data>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2571,7 +2593,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -2582,7 +2604,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -2600,10 +2622,10 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
     });
   }
 
-  await act(() => user.click(screen.getByText("Change fetch policy")));
+  await user.click(screen.getByText("Change fetch policy"));
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -2654,6 +2676,7 @@ it("re-suspends when calling `refetch`", async () => {
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2673,7 +2696,7 @@ it("re-suspends when calling `refetch`", async () => {
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2684,7 +2707,7 @@ it("re-suspends when calling `refetch`", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2702,7 +2725,7 @@ it("re-suspends when calling `refetch`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2743,6 +2766,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -2762,7 +2786,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2773,7 +2797,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2791,7 +2815,7 @@ it("re-suspends when calling `refetch` with new variables", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch with ID 2")));
+  await user.click(screen.getByText("Refetch with ID 2"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2826,6 +2850,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook } =
@@ -2846,7 +2871,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2857,7 +2882,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2877,7 +2902,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
 
   const button = screen.getByText("Refetch");
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2895,7 +2920,7 @@ it("re-suspends multiple times when calling `refetch` multiple times", async () 
     });
   }
 
-  await act(() => user.click(button));
+  await user.click(button);
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -2938,6 +2963,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -2960,7 +2986,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -2971,7 +2997,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -2984,7 +3010,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3019,6 +3045,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3043,7 +3070,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3054,7 +3081,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3067,7 +3094,7 @@ it('ignores errors returned after calling `refetch` when errorPolicy is set to "
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3106,6 +3133,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3130,7 +3158,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3141,7 +3169,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3154,7 +3182,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3195,6 +3223,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<VariablesCaseData | undefined>();
 
   const { SuspenseFallback, ReadQueryHook, ErrorBoundary, ErrorFallback } =
@@ -3219,7 +3248,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -3230,7 +3259,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3243,7 +3272,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     });
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3340,7 +3369,7 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
         <button
           onClick={() => {
             startTransition(() => {
-              refetch();
+              void refetch();
             });
           }}
         >
@@ -3354,7 +3383,8 @@ it("`refetch` works with startTransition to allow React to show stale UI until f
     );
   }
 
-  const { user } = renderWithMocks(<App />, { mocks });
+  await renderWithMocks(<App />, { mocks }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3408,6 +3438,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     }),
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3431,7 +3462,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3442,7 +3473,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3460,7 +3491,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -3489,6 +3520,7 @@ it("re-suspends when calling `fetchMore` with different variables", async () => 
 
 it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   const { query, client } = usePaginatedQueryCase();
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3519,7 +3551,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3530,7 +3562,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3548,7 +3580,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
   await renderStream.takeRender();
 
   {
@@ -3576,6 +3608,7 @@ it("properly uses `updateQuery` when calling `fetchMore`", async () => {
 
 it("properly uses cache field policies when calling `fetchMore` without `updateQuery`", async () => {
   const { query, link } = usePaginatedQueryCase();
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<PaginatedQueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3612,7 +3645,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3623,7 +3656,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3641,7 +3674,7 @@ it("properly uses cache field policies when calling `fetchMore` without `updateQ
     });
   }
 
-  await act(() => user.click(screen.getByText("Fetch more")));
+  await user.click(screen.getByText("Fetch more"));
   await renderStream.takeRender();
 
   {
@@ -3773,7 +3806,7 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
         <button
           onClick={() => {
             startTransition(() => {
-              fetchMore({ variables: { offset: 1 } });
+              void fetchMore({ variables: { offset: 1 } });
             });
           }}
         >
@@ -3791,7 +3824,8 @@ it("`fetchMore` works with startTransition to allow React to show stale UI until
     );
   }
 
-  const { user } = renderWithClient(<App />, { client });
+  await renderWithClient(<App />, { client }, { render: renderAsync });
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query")));
 
@@ -3876,6 +3910,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -3904,7 +3939,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -3915,7 +3950,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -3929,7 +3964,7 @@ it('honors refetchWritePolicy set to "merge"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -3996,6 +4031,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<QueryData>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4022,7 +4058,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4033,7 +4069,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
   // initial load
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
   await renderStream.takeRender();
 
   {
@@ -4047,7 +4083,7 @@ it('defaults refetchWritePolicy to "overwrite"', async () => {
     expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
   }
 
-  await act(() => user.click(screen.getByText("Refetch")));
+  await user.click(screen.getByText("Refetch"));
   await renderStream.takeRender();
 
   {
@@ -4097,6 +4133,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4127,7 +4164,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4138,7 +4175,7 @@ it('does not suspend when partial data is in the cache and using a "cache-first"
   // initial load
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4186,6 +4223,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     variables: { id: "1" },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4208,7 +4246,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4220,7 +4258,7 @@ it('suspends and does not use partial data from other variables in the cache whe
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4246,7 +4284,7 @@ it('suspends and does not use partial data from other variables in the cache whe
     expect(renderedComponents).toStrictEqual([ReadQueryHook]);
   }
 
-  await act(() => user.click(screen.getByText("Change variables")));
+  await user.click(screen.getByText("Change variables"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4301,6 +4339,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     },
   ];
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4329,7 +4368,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4341,7 +4380,7 @@ it('suspends when partial data is in the cache and using a "network-only" fetch 
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4403,6 +4442,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     data: { character: { id: "1" } },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4424,7 +4464,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4436,7 +4476,7 @@ it('suspends when partial data is in the cache and using a "no-cache" fetch poli
   // initial load
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4522,6 +4562,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     data: { character: { id: "1" } },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<Data>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4543,7 +4584,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4555,7 +4596,7 @@ it('does not suspend when partial data is in the cache and using a "cache-and-ne
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4598,6 +4639,7 @@ it('suspends and does not use partial data when changing variables and using a "
     variables: { id: "1" },
   });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<VariablesCaseData>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4620,7 +4662,7 @@ it('suspends and does not use partial data when changing variables and using a "
     );
   }
 
-  const { user } = renderWithMocks(
+  const { user } = await renderWithMocks(
     <App />,
     {
       mocks,
@@ -4632,7 +4674,7 @@ it('suspends and does not use partial data when changing variables and using a "
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4656,7 +4698,7 @@ it('suspends and does not use partial data when changing variables and using a "
     });
   }
 
-  await act(() => user.click(screen.getByText("Change variables")));
+  await user.click(screen.getByText("Change variables"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -4721,6 +4763,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
 
   const client = new ApolloClient({ link, cache });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createDefaultProfiler<DeepPartial<QueryData>>();
   const { SuspenseFallback, ReadQueryHook } =
     createDefaultProfiledComponents(renderStream);
@@ -4742,7 +4785,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4753,7 +4796,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load todo")));
+  await user.click(screen.getByText("Load todo"));
 
   {
     const { snapshot, renderedComponents } = await renderStream.takeRender();
@@ -4849,7 +4892,15 @@ it("throws when calling loadQuery on first render", async () => {
     return null;
   }
 
-  expect(() => renderWithMocks(<App />, { mocks })).toThrow(
+  await expect(
+    renderWithMocks(
+      <App />,
+      { mocks },
+      {
+        render: renderAsync,
+      }
+    )
+  ).rejects.toThrow(
     new InvariantError(
       "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
     )
@@ -4875,12 +4926,14 @@ it("throws when calling loadQuery on subsequent render", async () => {
     return <button onClick={() => setCount(1)}>Load query in render</button>;
   }
 
-  const { user } = renderWithMocks(
+  await renderWithMocks(
     <ReactErrorBoundary onError={(e) => (error = e)} fallback={<div>Oops</div>}>
       <App />
     </ReactErrorBoundary>,
-    { mocks }
+    { mocks },
+    { render: renderAsync }
   );
+  const user = userEvent.setup();
 
   await act(() => user.click(screen.getByText("Load query in render")));
 
@@ -4904,7 +4957,9 @@ it("allows loadQuery to be called in useEffect on first render", async () => {
     return null;
   }
 
-  expect(() => renderWithMocks(<App />, { mocks })).not.toThrow();
+  await expect(
+    renderWithMocks(<App />, { mocks }, { render: renderAsync })
+  ).resolves.not.toThrow();
 });
 
 it("can subscribe to subscriptions and react to cache updates via `subscribeToMore`", async () => {
@@ -4949,6 +5004,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
 
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
@@ -4978,7 +5034,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     );
   }
 
-  const { user } = renderWithClient(
+  const { user } = await renderWithClient(
     <App />,
     {
       client,
@@ -4988,7 +5044,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   // initial render
   await renderStream.takeRender();
 
-  await act(() => user.click(screen.getByText("Load query")));
+  await user.click(screen.getByText("Load query"));
 
   {
     const { renderedComponents } = await renderStream.takeRender();
@@ -5083,6 +5139,7 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
 
   const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
+  using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
       subscribeToMore: null as SubscribeToMoreFunction<
@@ -5112,7 +5169,7 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
     );
   }
 
-  renderWithClient(<App />, { client }, renderStream);
+  await renderWithClient(<App />, { client }, renderStream);
   // initial render
   await renderStream.takeRender();
 

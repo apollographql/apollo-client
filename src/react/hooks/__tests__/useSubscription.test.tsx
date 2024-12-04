@@ -2110,7 +2110,8 @@ describe("data masking", () => {
       link,
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
@@ -2178,7 +2179,8 @@ describe("data masking", () => {
       link,
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
@@ -2249,7 +2251,8 @@ describe("data masking", () => {
     });
 
     const onData = jest.fn();
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription, { onData }),
       {
         wrapper: ({ children }) => (
@@ -2329,7 +2332,8 @@ describe("data masking", () => {
     });
 
     const onData = jest.fn();
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription, { onData }),
       {
         wrapper: ({ children }) => (

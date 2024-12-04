@@ -1172,7 +1172,7 @@ const config: CodegenConfig = {
 We recommend that you opt in to use masked types only after you've [enabled `dataMasking`](#enabling-data-masking) in your `ApolloClient` instance.
 </Note>
 
-By default, the client will unwrap operation types and provide the full operation result type. To prevent the client from unwrapping these types and use the masked type directly, you need to opt in to using them. This strategy allows for [incremental adoption](#incremental-adoption-in-an-existing-application) in your application and avoids the need to update large parts of your application to satisfy the change in types.
+By default, the client unwraps operation types and provides the full operation result type. To prevent this behavior and have the client use masked types, you need to opt in. This strategy allows for [incremental adoption](#incremental-adoption-in-an-existing-application) in your application and avoids the need to update large parts of your application to satisfy the change in types.
 
 You can opt in to use the masked types in one of two ways.
 

@@ -10897,7 +10897,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback={<div>Loading...</div>}>
         <App />
       </Suspense>,
@@ -10988,7 +10989,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11076,7 +11078,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11165,7 +11168,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11283,7 +11287,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11410,7 +11415,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11510,7 +11516,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11629,7 +11636,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,
@@ -11732,7 +11740,8 @@ describe("useSuspenseQuery", () => {
       return null;
     }
 
-    renderStream.render(
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(
       <Suspense fallback="Loading">
         <App />
       </Suspense>,

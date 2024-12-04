@@ -1269,7 +1269,6 @@ followed by new in-flight setup", async () => {
           link.simulateResult(graphQlErrorResult);
           {
             const snapshot = await takeSnapshot();
-            console.dir({ graphQlErrorResult, snapshot }, { depth: 5 });
             expect(snapshot).toStrictEqual({
               loading: false,
               error: new ApolloError({

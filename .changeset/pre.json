@@ -4,5 +4,24 @@
   "initialVersions": {
     "@apollo/client": "3.11.10"
   },
-  "changesets": []
+  "changesets": [
+    "brown-readers-smash",
+    "clean-turkeys-kick",
+    "cold-apes-bow",
+    "early-bobcats-eat",
+    "flat-beans-knock",
+    "gorgeous-zebras-confess",
+    "happy-months-happen",
+    "itchy-penguins-worry",
+    "kind-toys-tie",
+    "long-zoos-ring",
+    "mean-bottles-travel",
+    "nasty-camels-pay",
+    "nervous-owls-hear",
+    "nice-countries-share",
+    "perfect-jobs-flow",
+    "slimy-points-end",
+    "small-bears-confess",
+    "wicked-pans-appear"
+  ]
 }

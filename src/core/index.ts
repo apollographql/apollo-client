@@ -66,6 +66,16 @@ export {
   throwServerError,
 } from "../link/utils/index.js";
 
+/* Masking */
+export type {
+  DataMasking,
+  FragmentType,
+  Masked,
+  MaskedDocumentNode,
+  MaybeMasked,
+  Unmasked,
+} from "../masking/index.js";
+
 /* Utilities */
 
 export type {

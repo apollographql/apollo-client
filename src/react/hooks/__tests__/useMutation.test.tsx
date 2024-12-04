@@ -25,6 +25,7 @@ import {
   mockSingleLink,
   subscribeAndCount,
   MockedResponse,
+  MockLink,
 } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import { useQuery } from "../useQuery";
@@ -32,6 +33,8 @@ import { useMutation } from "../useMutation";
 import { BatchHttpLink } from "../../../link/batch-http";
 import { FetchResult } from "../../../link/core";
 import { spyOnConsole } from "../../../testing/internal";
+import { expectTypeOf } from "expect-type";
+import { Masked } from "../../../masking";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
@@ -2823,6 +2826,303 @@ describe("useMutation Hook", () => {
   });
 });
 
+describe("data masking", () => {
+  test("masks data returned from useMutation when dataMasking is `true`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useMutation(mutation),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [mutate, result] = await takeSnapshot();
+
+    expect(result.loading).toBe(false);
+    expect(result.data).toBeUndefined();
+    expect(result.error).toBeUndefined();
+
+    {
+      const { data, errors } = await mutate();
+
+      expect(data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+      expect(errors).toBeUndefined();
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toBeUndefined();
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+      expect(result.error).toBeUndefined();
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("does not mask data returned from useMutation when dataMasking is `false`", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useMutation(mutation),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [mutate, result] = await takeSnapshot();
+
+    expect(result.loading).toBe(false);
+    expect(result.data).toBeUndefined();
+    expect(result.error).toBeUndefined();
+
+    {
+      const { data, errors } = await mutate();
+
+      expect(data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(errors).toBeUndefined();
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result.loading).toBe(true);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toBeUndefined();
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result.loading).toBe(false);
+      expect(result.data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(result.error).toBeUndefined();
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("passes masked data to onCompleted, does not pass masked data to update", async () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      };
+    }
+
+    const mutation: TypedDocumentNode<Mutation, never> = gql`
+      mutation MaskedMutation {
+        updateUser {
+          id
+          name
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query: mutation },
+        result: {
+          data: {
+            updateUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache,
+      link: new MockLink(mocks),
+    });
+
+    const update = jest.fn();
+    const onCompleted = jest.fn();
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useMutation(mutation, { onCompleted, update }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    const [mutate] = await takeSnapshot();
+
+    await mutate();
+
+    expect(onCompleted).toHaveBeenCalledTimes(1);
+    expect(onCompleted).toHaveBeenCalledWith(
+      {
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      },
+      expect.anything()
+    );
+
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledWith(
+      cache,
+      {
+        data: {
+          updateUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        },
+      },
+      { context: undefined, variables: {} }
+    );
+  });
+});
+
 describe.skip("Type Tests", () => {
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
@@ -2833,5 +3133,174 @@ describe.skip("Type Tests", () => {
         nonExistingVariable: "string",
       },
     });
+  });
+
+  test("uses any as masked and unmasked type when using plain DocumentNode", () => {
+    const mutation = gql`
+      mutation ($id: ID!) {
+        updateUser(id: $id) {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      optimisticResponse: { foo: "foo" },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<any>();
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toMatchTypeOf<any>();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toMatchTypeOf<any>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toMatchTypeOf<any>();
+      },
+    });
+
+    expectTypeOf(data).toMatchTypeOf<any>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<any>>>();
+  });
+
+  test("uses TData type when using plain TypedDocumentNode", () => {
+    interface Mutation {
+      updateUser: {
+        __typename: "User";
+        id: string;
+        age: number;
+      };
+    }
+
+    interface Variables {
+      id: string;
+    }
+
+    const mutation: TypedDocumentNode<Mutation, Variables> = gql`
+      mutation ($id: ID!) {
+        updateUser(id: $id) {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      variables: { id: "1" },
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<
+            Mutation | null | undefined
+          >();
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toMatchTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
+      },
+    });
+
+    expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+  });
+
+  test("uses masked/unmasked type when using Masked<TData>", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName": "UserFieldsFragment" };
+
+    type Mutation = {
+      updateUser: {
+        __typename: "User";
+        id: string;
+      } & { " $fragmentRefs": { UserFieldsFragment: UserFieldsFragment } };
+    };
+
+    type UnmaskedMutation = {
+      updateUser: {
+        __typename: "User";
+        id: string;
+        age: number;
+      };
+    };
+
+    interface Variables {
+      id: string;
+    }
+
+    const mutation: TypedDocumentNode<Masked<Mutation>, Variables> = gql`
+      mutation ($id: ID!) {
+        updateUser(id: $id) {
+          id
+          ...UserFields
+        }
+      }
+
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const [mutate, { data }] = useMutation(mutation, {
+      optimisticResponse: {
+        updateUser: { __typename: "User", id: "1", age: 30 },
+      },
+      updateQueries: {
+        TestQuery: (_, { mutationResult }) => {
+          expectTypeOf(mutationResult.data).toMatchTypeOf<
+            UnmaskedMutation | null | undefined
+          >();
+
+          return {};
+        },
+      },
+      refetchQueries(result) {
+        expectTypeOf(result.data).toMatchTypeOf<
+          UnmaskedMutation | null | undefined
+        >();
+
+        return "active";
+      },
+      onCompleted(data) {
+        expectTypeOf(data).toMatchTypeOf<Mutation>();
+      },
+      update(_, result) {
+        expectTypeOf(result.data).toMatchTypeOf<
+          UnmaskedMutation | null | undefined
+        >();
+      },
+    });
+
+    expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
+    expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
   });
 });

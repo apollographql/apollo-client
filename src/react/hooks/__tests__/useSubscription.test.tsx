@@ -20,6 +20,8 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
+import { MaskedDocumentNode } from "../../../masking";
+import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
@@ -1267,7 +1269,6 @@ followed by new in-flight setup", async () => {
           link.simulateResult(graphQlErrorResult);
           {
             const snapshot = await takeSnapshot();
-            console.dir({ graphQlErrorResult, snapshot }, { depth: 5 });
             expect(snapshot).toStrictEqual({
               loading: false,
               error: new ApolloError({
@@ -2085,6 +2086,319 @@ describe("ignoreResults", () => {
   });
 });
 
+describe("data masking", () => {
+  test("masks data returned when dataMasking is `true`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new Cache(),
+      link,
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(error).toBeUndefined();
+    }
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 1,
+        },
+      });
+      expect(error).toBeUndefined();
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("does not mask data returned from subscriptions when dataMasking is `false`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: false,
+      cache: new Cache(),
+      link,
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(error).toBeUndefined();
+    }
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Test comment",
+          author: "Test User",
+        },
+      });
+      expect(error).toBeUndefined();
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("masks data passed to onData callback when dataMasking is `true`", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new Cache(),
+      link,
+    });
+
+    const onData = jest.fn();
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onData }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(error).toBeUndefined();
+    }
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 1,
+        },
+      });
+      expect(error).toBeUndefined();
+
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData).toHaveBeenCalledWith({
+        client: expect.anything(),
+        data: {
+          data: { addedComment: { __typename: "Comment", id: 1 } },
+          loading: false,
+          error: undefined,
+          variables: undefined,
+        },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  test("uses unmasked data when using the @unmask directive", async () => {
+    const subscription = gql`
+      subscription NewCommentSubscription {
+        addedComment {
+          id
+          ...CommentFields @unmask
+        }
+      }
+
+      fragment CommentFields on Comment {
+        comment
+        author
+      }
+    `;
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      dataMasking: true,
+      cache: new Cache(),
+      link,
+    });
+
+    const onData = jest.fn();
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onData }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(true);
+      expect(data).toBeUndefined();
+      expect(error).toBeUndefined();
+    }
+
+    link.simulateResult({
+      result: {
+        data: {
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
+          },
+        },
+      },
+    });
+
+    {
+      const { data, loading, error } = await takeSnapshot();
+
+      expect(loading).toBe(false);
+      expect(data).toEqual({
+        addedComment: {
+          __typename: "Comment",
+          id: 1,
+          comment: "Test comment",
+          author: "Test User",
+        },
+      });
+      expect(error).toBeUndefined();
+
+      expect(onData).toHaveBeenCalledTimes(1);
+      expect(onData).toHaveBeenCalledWith({
+        client: expect.anything(),
+        data: {
+          data: {
+            addedComment: {
+              __typename: "Comment",
+              id: 1,
+              comment: "Test comment",
+              author: "Test User",
+            },
+          },
+          loading: false,
+          error: undefined,
+          variables: undefined,
+        },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+});
+
 describe.skip("Type Tests", () => {
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
@@ -2098,5 +2412,75 @@ describe.skip("Type Tests", () => {
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;
+  });
+
+  test("uses masked types when using masked document", async () => {
+    type UserFieldsFragment = {
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Subscription {
+      userUpdated: {
+        __typename: "User";
+        id: string;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    const subscription: MaskedDocumentNode<Subscription> = gql``;
+
+    const { data } = useSubscription(subscription, {
+      onData: ({ data }) => {
+        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
+      },
+      onSubscriptionData: ({ subscriptionData }) => {
+        expectTypeOf(subscriptionData.data).toEqualTypeOf<
+          Subscription | undefined
+        >();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
+  });
+
+  test("uses unmasked types when using TypedDocumentNode", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Subscription {
+      userUpdated: {
+        __typename: "User";
+        id: string;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedSubscription {
+      userUpdated: {
+        __typename: "User";
+        id: string;
+        name: string;
+        age: number;
+      };
+    }
+
+    const subscription: TypedDocumentNode<Subscription> = gql``;
+
+    const { data } = useSubscription(subscription, {
+      onData: ({ data }) => {
+        expectTypeOf(data.data).toEqualTypeOf<
+          UnmaskedSubscription | undefined
+        >();
+      },
+      onSubscriptionData: ({ subscriptionData }) => {
+        expectTypeOf(subscriptionData.data).toEqualTypeOf<
+          UnmaskedSubscription | undefined
+        >();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<UnmaskedSubscription | undefined>();
   });
 });

@@ -35,6 +35,11 @@ import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
 import userEvent from "@testing-library/user-event";
 import {
+  MaskedVariablesCaseData,
+  setupMaskedVariablesCase,
+} from "../../../testing/internal/scenarios";
+import { Masked } from "../../../masking";
+import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
@@ -1876,6 +1881,115 @@ test("suspends deferred queries until initial chunk loads then rerenders with de
           message: "Hello world",
           recipient: { __typename: "Person", name: "Alice" },
         },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("masks result when dataMasking is `true`", async () => {
+  const { query, mocks } = setupMaskedVariablesCase();
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query, { variables: { id: "1" } });
+
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp<
+    Masked<MaskedVariablesCaseData>
+  >({
+    client,
+    queryRef,
+  });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("does not mask result when dataMasking is `false`", async () => {
+  const { query, mocks } = setupMaskedVariablesCase();
+  const client = new ApolloClient({
+    dataMasking: false,
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query, { variables: { id: "1" } });
+
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+    client,
+    queryRef,
+  });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+  }
+});
+
+test("does not mask results by default", async () => {
+  const { query, mocks } = setupMaskedVariablesCase();
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+  const preloadQuery = createQueryPreloader(client);
+
+  const queryRef = preloadQuery(query, { variables: { id: "1" } });
+
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
+    client,
+    queryRef,
+  });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot } = await renderStream.takeRender();
+
+    expect(snapshot.result).toEqual({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
       error: undefined,
       networkStatus: NetworkStatus.ready,

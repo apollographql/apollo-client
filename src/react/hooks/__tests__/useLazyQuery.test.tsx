@@ -25,6 +25,8 @@ import {
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 import { InvariantError } from "../../../utilities/globals";
+import { MaskedDocumentNode } from "../../../masking";
+import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
@@ -2021,6 +2023,486 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender({ timeout: 50 });
     expect(requests).toBe(1);
   });
+
+  describe("data masking", () => {
+    it("masks queries when dataMasking is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, { data }] = await takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+    });
+
+    it("does not mask queries when dataMasking is `false`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: false,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, { data }] = await takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        });
+      }
+    });
+
+    it("does not mask queries by default", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      const result = await execute();
+
+      expect(result.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, { data }] = await takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
+        });
+      }
+    });
+
+    it("masks queries updated by the cache", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 10,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      await execute();
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, { data }] = await takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+            age: 35,
+          },
+        },
+      });
+
+      {
+        const [, { data, previousData }] = await takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+          },
+        });
+
+        expect(previousData).toEqual({
+          currentUser: { __typename: "User", id: 1, name: "Test User" },
+        });
+      }
+    });
+
+    it("does not rerender when updating field in named fragment", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+          delay: 20,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+      // initial render
+      await takeSnapshot();
+
+      const [execute] = getCurrentSnapshot();
+      await execute();
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, { data }] = await takeSnapshot();
+
+        expect(data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 35,
+          },
+        },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+
+      expect(client.readQuery({ query })).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 35,
+        },
+      });
+    });
+  });
 });
 
 describe.skip("Type Tests", () => {
@@ -2036,5 +2518,203 @@ describe.skip("Type Tests", () => {
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;
+  });
+
+  test("uses masked types when using masked document", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedQuery {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    interface Subscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedSubscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: MaskedDocumentNode<Query> = gql``;
+
+    const [
+      execute,
+      { data, previousData, subscribeToMore, fetchMore, refetch, updateQuery },
+    ] = useLazyQuery(query, {
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<Query>();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
+
+    subscribeToMore({
+      document: gql`` as TypedDocumentNode<Subscription, never>,
+      updateQuery(queryData, { subscriptionData }) {
+        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(
+          subscriptionData.data
+        ).toEqualTypeOf<UnmaskedSubscription>();
+
+        return {} as UnmaskedQuery;
+      },
+    });
+
+    updateQuery((previousData) => {
+      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+
+      return {} as UnmaskedQuery;
+    });
+
+    {
+      const { data } = await execute();
+
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    }
+
+    {
+      const { data } = await fetchMore({
+        variables: {},
+        updateQuery: (queryData, { fetchMoreResult }) => {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).toEqualTypeOf<UnmaskedQuery>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+
+      expectTypeOf(data).toEqualTypeOf<Query>();
+    }
+
+    {
+      const { data } = await refetch();
+
+      expectTypeOf(data).toEqualTypeOf<Query>();
+    }
+  });
+
+  test("uses unmasked types when using TypedDocumentNode", async () => {
+    type UserFieldsFragment = {
+      __typename: "User";
+      age: number;
+    } & { " $fragmentName"?: "UserFieldsFragment" };
+
+    interface Query {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedQuery {
+      currentUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    interface Subscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+      } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+    }
+
+    interface UnmaskedSubscription {
+      updatedUser: {
+        __typename: "User";
+        id: number;
+        name: string;
+        age: number;
+      };
+    }
+
+    const query: TypedDocumentNode<Query> = gql``;
+
+    const [
+      execute,
+      { data, previousData, fetchMore, refetch, subscribeToMore, updateQuery },
+    ] = useLazyQuery(query, {
+      onCompleted(data) {
+        expectTypeOf(data).toEqualTypeOf<UnmaskedQuery>();
+      },
+    });
+
+    expectTypeOf(data).toEqualTypeOf<UnmaskedQuery | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery | undefined>();
+
+    subscribeToMore({
+      document: gql`` as TypedDocumentNode<Subscription, never>,
+      updateQuery(queryData, { subscriptionData }) {
+        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(
+          subscriptionData.data
+        ).toEqualTypeOf<UnmaskedSubscription>();
+
+        return {} as UnmaskedQuery;
+      },
+    });
+
+    updateQuery((previousData) => {
+      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+
+      return {} as UnmaskedQuery;
+    });
+
+    {
+      const { data } = await execute();
+
+      expectTypeOf(data).toEqualTypeOf<UnmaskedQuery | undefined>();
+    }
+
+    {
+      const { data } = await fetchMore({
+        variables: {},
+        updateQuery: (queryData, { fetchMoreResult }) => {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(fetchMoreResult).toEqualTypeOf<UnmaskedQuery>();
+
+          return {} as UnmaskedQuery;
+        },
+      });
+
+      expectTypeOf(data).toEqualTypeOf<UnmaskedQuery>();
+    }
+
+    {
+      const { data } = await refetch();
+
+      expectTypeOf(data).toEqualTypeOf<UnmaskedQuery>();
+    }
   });
 });

@@ -1,0 +1,18 @@
+query GetCurrentUser {
+  currentUser {
+    id
+    ...CurrentUserFields
+  }
+}
+
+fragment CurrentUserFields on User {
+  name
+  ...ProfileFields
+}
+
+fragment ProfileFields on User {
+  profile {
+    id
+    avatarUrl
+  }
+}

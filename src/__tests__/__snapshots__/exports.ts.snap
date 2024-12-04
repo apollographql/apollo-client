@@ -263,6 +263,14 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/masking 1`] = `
+Array [
+  "disableWarningsSlot",
+  "maskFragment",
+  "maskOperation",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/react 1`] = `
 Array [
   "ApolloConsumer",
@@ -415,6 +423,7 @@ Array [
   "DeepMerger",
   "DocumentTransform",
   "Observable",
+  "addNonReactiveToNamedFragments",
   "addTypenameToDocument",
   "argumentsObjectFromField",
   "asyncMap",
@@ -440,6 +449,7 @@ Array [
   "getFragmentDefinition",
   "getFragmentDefinitions",
   "getFragmentFromSelection",
+  "getFragmentMaskMode",
   "getFragmentQueryDocument",
   "getGraphQLErrorsFromResult",
   "getInclusionDirectives",
@@ -461,6 +471,7 @@ Array [
   "isExecutionPatchInitialResult",
   "isExecutionPatchResult",
   "isField",
+  "isFullyUnmaskedOperation",
   "isInlineFragment",
   "isMutationOperation",
   "isNonEmptyArray",
@@ -481,6 +492,7 @@ Array [
   "mergeOptions",
   "offsetLimitPagination",
   "omitDeep",
+  "preventUnhandledRejection",
   "print",
   "relayStylePagination",
   "removeArgumentsFromDocument",

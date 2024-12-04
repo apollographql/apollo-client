@@ -16,6 +16,7 @@ import {
   iterateObserversSafely,
   fixObservableSubclass,
   getQueryDefinition,
+  preventUnhandledRejection,
 } from "../utilities/index.js";
 import { ApolloError, isApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -36,6 +37,7 @@ import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -65,7 +67,7 @@ interface Last<TData, TVariables> {
 export class ObservableQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends Observable<ApolloQueryResult<TData>> {
+> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
@@ -89,7 +91,9 @@ export class ObservableQuery<
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
-  private observers = new Set<Observer<ApolloQueryResult<TData>>>();
+  private observers = new Set<
+    Observer<ApolloQueryResult<MaybeMasked<TData>>>
+  >();
   private subscriptions = new Set<ObservableSubscription>();
 
   private waitForOwnResult: boolean;
@@ -117,7 +121,7 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<TData>>) => {
+    super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -135,7 +139,7 @@ export class ObservableQuery<
       if (last && last.error) {
         observer.error && observer.error(last.error);
       } else if (last && last.result) {
-        observer.next && observer.next(last.result);
+        observer.next && observer.next(this.maskResult(last.result));
       }
 
       // Initiate observation of this query if it hasn't been reported to
@@ -164,6 +168,7 @@ export class ObservableQuery<
     this.isTornDown = false;
 
     this.subscribeToMore = this.subscribeToMore.bind(this);
+    this.maskResult = this.maskResult.bind(this);
 
     const {
       watchQuery: { fetchPolicy: defaultFetchPolicy = "cache-first" } = {},
@@ -196,13 +201,13 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
-  public result(): Promise<ApolloQueryResult<TData>> {
+  public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer
       // will never exist in this.observers due how zen-observable wraps observables.
       // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
-      const observer: Observer<ApolloQueryResult<TData>> = {
-        next: (result: ApolloQueryResult<TData>) => {
+      const observer: Observer<ApolloQueryResult<MaybeMasked<TData>>> = {
+        next: (result) => {
           resolve(result);
 
           // Stop the query within the QueryManager if we can before
@@ -235,7 +240,9 @@ export class ObservableQuery<
     this.queryInfo.resetDiff();
   }
 
-  public getCurrentResult(saveAsLastResult = true): ApolloQueryResult<TData> {
+  private getCurrentFullResult(
+    saveAsLastResult = true
+  ): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);
 
@@ -317,6 +324,12 @@ export class ObservableQuery<
     return result;
   }
 
+  public getCurrentResult(
+    saveAsLastResult = true
+  ): ApolloQueryResult<MaybeMasked<TData>> {
+    return this.maskResult(this.getCurrentFullResult(saveAsLastResult));
+  }
+
   // Compares newResult to the snapshot we took of this.lastResult when it was
   // first received.
   public isDifferentFromLastResult(
@@ -327,9 +340,13 @@ export class ObservableQuery<
       return true;
     }
 
+    const documentInfo = this.queryManager.getDocumentInfo(this.query);
+    const dataMasking = this.queryManager.dataMasking;
+    const query = dataMasking ? documentInfo.nonReactiveQuery : this.query;
+
     const resultIsDifferent =
-      this.queryManager.getDocumentInfo(this.query).hasNonreactiveDirective ?
-        !equalByQuery(this.query, this.last.result, newResult, this.variables)
+      dataMasking || documentInfo.hasNonreactiveDirective ?
+        !equalByQuery(query, this.last.result, newResult, this.variables)
       : !equal(this.last.result, newResult);
 
     return (
@@ -379,7 +396,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -431,14 +448,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   >(
     fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
       updateQuery?: (
-        previousQueryResult: TData,
+        previousQueryResult: Unmasked<TData>,
         options: {
-          fetchMoreResult: TFetchData;
+          fetchMoreResult: Unmasked<TFetchData>;
           variables: TFetchVars;
         }
-      ) => TData;
+      ) => Unmasked<TData>;
     }
-  ): Promise<ApolloQueryResult<TFetchData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -521,8 +538,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     optimistic: false,
                   },
                   (previous) =>
-                    updateQuery(previous!, {
-                      fetchMoreResult: fetchMoreResult.data,
+                    updateQuery(previous! as any, {
+                      fetchMoreResult: fetchMoreResult.data as any,
                       variables: combinedOptions.variables as TFetchVars,
                     })
                 );
@@ -535,7 +552,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                 cache.writeQuery({
                   query: combinedOptions.query,
                   variables: combinedOptions.variables,
-                  data: fetchMoreResult.data,
+                  data: fetchMoreResult.data as Unmasked<TFetchData>,
                 });
               }
             },
@@ -562,15 +579,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           // expects that the first argument always contains previous result
           // data, but not `undefined`.
           const lastResult = this.getLast("result")!;
-          const data = updateQuery!(lastResult.data, {
-            fetchMoreResult: fetchMoreResult.data,
+          const data = updateQuery!(lastResult.data as Unmasked<TData>, {
+            fetchMoreResult: fetchMoreResult.data as Unmasked<TFetchData>,
             variables: combinedOptions.variables as TFetchVars,
           });
 
-          this.reportResult({ ...lastResult, data }, this.variables);
+          this.reportResult(
+            { ...lastResult, data: data as TData },
+            this.variables
+          );
         }
 
-        return fetchMoreResult;
+        return this.maskResult(fetchMoreResult);
       })
       .finally(() => {
         // In case the cache writes above did not generate a broadcast
@@ -609,7 +629,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         context: options.context,
       })
       .subscribe({
-        next: (subscriptionData: { data: TSubscriptionData }) => {
+        next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
             this.updateQuery<TSubscriptionVariables>(
@@ -641,7 +661,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return this.reobserve(newOptions);
   }
 
@@ -672,7 +692,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<TData> | void> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
@@ -704,9 +724,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
-      previousQueryResult: TData,
+      previousQueryResult: Unmasked<TData>,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => TData
+    ) => Unmasked<TData>
   ): void {
     const { queryManager } = this;
     const { result } = queryManager.cache.diff<TData>({
@@ -716,7 +736,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       optimistic: false,
     });
 
-    const newResult = mapFn(result!, {
+    const newResult = mapFn(result! as Unmasked<TData>, {
       variables: (this as any).variables,
     });
 
@@ -1005,13 +1025,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<TData>> {
-    return this.reobserveAsConcast(newOptions, newNetworkStatus)
-      .promise as TODO;
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+    return preventUnhandledRejection(
+      this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
+        this.maskResult as TODO
+      )
+    );
   }
 
   public resubscribeAfterError(
-    onNext: (value: ApolloQueryResult<TData>) => void,
+    onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void,
     onError?: (error: any) => void,
     onComplete?: () => void
   ): ObservableSubscription;
@@ -1044,7 +1067,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // save the fetchMore result as this.lastResult, causing it to be
       // ignored due to the this.isDifferentFromLastResult check in
       // this.reportResult.
-      this.getCurrentResult(false),
+      this.getCurrentFullResult(false),
       this.variables
     );
   }
@@ -1063,7 +1086,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.updateLastResult(result, variables);
     }
     if (lastError || isDifferent) {
-      iterateObserversSafely(this.observers, "next", result);
+      iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }
   }
 
@@ -1106,6 +1129,22 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private transformDocument(document: DocumentNode) {
     return this.queryManager.transform(document);
+  }
+
+  private maskResult<T = TData>(
+    result: ApolloQueryResult<T>
+  ): ApolloQueryResult<MaybeMasked<T>> {
+    return result && "data" in result ?
+        {
+          ...result,
+          data: this.queryManager.maskOperation({
+            document: this.query,
+            data: result.data,
+            fetchPolicy: this.options.fetchPolicy,
+            id: this.queryId,
+          }),
+        }
+      : result;
   }
 }
 

@@ -8,10 +8,12 @@ import { equal } from "@wry/equality";
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
 import {
+  addNonReactiveToNamedFragments,
   defaultCacheSizes,
   hasDirectives,
   isExecutionPatchIncrementalResult,
   isExecutionPatchResult,
+  isFullyUnmaskedOperation,
   removeDirectivesFromDocument,
 } from "../utilities/index.js";
 import type { Cache, ApolloCache } from "../cache/index.js";
@@ -50,6 +52,7 @@ import type {
   MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
+  WatchQueryFetchPolicy,
 } from "./watchQueryOptions.js";
 import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
@@ -95,6 +98,7 @@ interface TransformCacheEntry {
   hasClientExports: boolean;
   hasForcedResolvers: boolean;
   hasNonreactiveDirective: boolean;
+  nonReactiveQuery: DocumentNode;
   clientQuery: DocumentNode | null;
   serverQuery: DocumentNode | null;
   defaultVars: OperationVariables;
@@ -104,6 +108,21 @@ interface TransformCacheEntry {
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
 import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
+import { maskFragment, maskOperation } from "../masking/index.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
+
+interface MaskFragmentOptions<TData> {
+  fragment: DocumentNode;
+  data: TData;
+  fragmentName?: string;
+}
+
+interface MaskOperationOptions<TData> {
+  document: DocumentNode;
+  data: TData;
+  id: string;
+  fetchPolicy?: WatchQueryFetchPolicy;
+}
 
 export interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
@@ -117,6 +136,7 @@ export interface QueryManagerOptions<TStore> {
   localState: LocalState<TStore>;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
+  dataMasking: boolean;
 }
 
 export class QueryManager<TStore> {
@@ -128,6 +148,7 @@ export class QueryManager<TStore> {
   public readonly documentTransform: DocumentTransform;
   public readonly ssrMode: boolean;
   public readonly defaultContext: Partial<DefaultContext>;
+  public readonly dataMasking: boolean;
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
@@ -163,6 +184,7 @@ export class QueryManager<TStore> {
     this.localState = options.localState;
     this.ssrMode = options.ssrMode;
     this.assumeImmutableResults = options.assumeImmutableResults;
+    this.dataMasking = options.dataMasking;
     const documentTransform = options.documentTransform;
     this.documentTransform =
       documentTransform ?
@@ -219,7 +241,7 @@ export class QueryManager<TStore> {
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<
-    FetchResult<TData>
+    FetchResult<MaybeMasked<TData>>
   > {
     invariant(
       mutation,
@@ -303,7 +325,9 @@ export class QueryManager<TStore> {
           const storeResult: typeof result = { ...result };
 
           if (typeof refetchQueries === "function") {
-            refetchQueries = refetchQueries(storeResult);
+            refetchQueries = refetchQueries(
+              storeResult as FetchResult<Unmasked<TData>>
+            );
           }
 
           if (errorPolicy === "ignore" && graphQLResultHasError(storeResult)) {
@@ -337,7 +361,15 @@ export class QueryManager<TStore> {
           // ExecutionPatchResult has arrived and we have assembled the
           // multipart response into a single result.
           if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
-            resolve(storeResult);
+            resolve({
+              ...storeResult,
+              data: self.maskOperation({
+                document: mutation,
+                data: storeResult.data,
+                fetchPolicy,
+                id: mutationId,
+              }) as any,
+            });
           }
         },
 
@@ -454,7 +486,7 @@ export class QueryManager<TStore> {
           if (complete && currentQueryResult) {
             // Run our reducer using the current query result and the mutation result.
             const nextQueryResult = updater(currentQueryResult, {
-              mutationResult: result,
+              mutationResult: result as FetchResult<Unmasked<TData>>,
               queryName: (document && getOperationName(document)) || void 0,
               queryVariables: variables!,
             });
@@ -530,7 +562,7 @@ export class QueryManager<TStore> {
             // either a SingleExecutionResult or the final ExecutionPatchResult,
             // call the update function.
             if (isFinalResult) {
-              update(cache as TCache, result, {
+              update(cache as TCache, result as FetchResult<Unmasked<TData>>, {
                 context: mutation.context,
                 variables: mutation.variables,
               });
@@ -676,12 +708,14 @@ export class QueryManager<TStore> {
         hasClientExports: hasClientExports(document),
         hasForcedResolvers: this.localState.shouldForceResolvers(document),
         hasNonreactiveDirective: hasDirectives(["nonreactive"], document),
+        nonReactiveQuery: addNonReactiveToNamedFragments(document),
         clientQuery: this.localState.clientQuery(document),
         serverQuery: removeDirectivesFromDocument(
           [
             { name: "client", remove: true },
             { name: "connection" },
             { name: "nonreactive" },
+            { name: "unmask" },
           ],
           document
         ),
@@ -762,7 +796,7 @@ export class QueryManager<TStore> {
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     invariant(
       options.query,
       "query option is required. You must specify your GraphQL document " +
@@ -784,10 +818,22 @@ export class QueryManager<TStore> {
       "pollInterval option only supported on watchQuery."
     );
 
-    return this.fetchQuery<TData, TVars>(queryId, {
-      ...options,
-      query: this.transform(options.query),
-    }).finally(() => this.stopQuery(queryId));
+    const query = this.transform(options.query);
+
+    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+      .then(
+        (result) =>
+          result && {
+            ...result,
+            data: this.maskOperation({
+              document: query,
+              data: result.data,
+              fetchPolicy: options.fetchPolicy,
+              id: queryId,
+            }),
+          }
+      )
+      .finally(() => this.stopQuery(queryId));
   }
 
   private queryIdCounter = 1;
@@ -967,14 +1013,17 @@ export class QueryManager<TStore> {
     this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
-  public startGraphQLSubscription<T = any>({
-    query,
-    fetchPolicy,
-    errorPolicy = "none",
-    variables,
-    context = {},
-    extensions = {},
-  }: SubscriptionOptions): Observable<FetchResult<T>> {
+  public startGraphQLSubscription<T = any>(
+    options: SubscriptionOptions
+  ): Observable<FetchResult<T>> {
+    let { query, variables } = options;
+    const {
+      fetchPolicy,
+      errorPolicy = "none",
+      context = {},
+      extensions = {},
+    } = options;
+
     query = this.transform(query);
     variables = this.getVariables(query, variables);
 
@@ -1514,6 +1563,48 @@ export class QueryManager<TStore> {
     }
 
     return results;
+  }
+
+  private noCacheWarningsByQueryId = new Set<string>();
+
+  public maskOperation<TData = unknown>(
+    options: MaskOperationOptions<TData>
+  ): MaybeMasked<TData> {
+    const { document, data } = options;
+
+    if (__DEV__) {
+      const { fetchPolicy, id } = options;
+      const operationType = getOperationDefinition(document)?.operation;
+      const operationId = (operationType?.[0] ?? "o") + id;
+
+      if (
+        this.dataMasking &&
+        fetchPolicy === "no-cache" &&
+        !isFullyUnmaskedOperation(document) &&
+        !this.noCacheWarningsByQueryId.has(operationId)
+      ) {
+        this.noCacheWarningsByQueryId.add(operationId);
+
+        invariant.warn(
+          '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.',
+          getOperationName(document) ??
+            `Unnamed ${operationType ?? "operation"}`
+        );
+      }
+    }
+
+    return (
+      this.dataMasking ?
+        maskOperation(data, document, this.cache)
+      : data) as MaybeMasked<TData>;
+  }
+
+  public maskFragment<TData = unknown>(options: MaskFragmentOptions<TData>) {
+    const { data, fragment, fragmentName } = options;
+
+    return this.dataMasking ?
+        maskFragment(data, fragment, this.cache, fragmentName)
+      : data;
   }
 
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(

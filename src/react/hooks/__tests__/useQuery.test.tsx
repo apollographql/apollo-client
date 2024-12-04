@@ -7,6 +7,7 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
+  FetchPolicy,
   NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
@@ -34,6 +35,7 @@ import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 import {
   createRenderStream,
   renderHookToSnapshotStream,
@@ -10250,6 +10252,915 @@ describe("useQuery Hook", () => {
     }
 
     await expect(takeSnapshot).not.toRerender({ timeout: 200 });
+  });
+
+  describe("data masking", () => {
+    it("masks queries when dataMasking is `true`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Masked<Query>, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query);
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.loading).toBe(true);
+      }
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+        const { result } = snapshot;
+
+        expect(result?.loading).toBe(false);
+        expect(result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+        expect(result?.previousData).toBeUndefined();
+      }
+    });
+
+    it("does not mask query when dataMasking is `false`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: false,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Query, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query);
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await renderStream.takeRender();
+
+      const { snapshot } = await renderStream.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(snapshot.result?.previousData).toBeUndefined();
+    });
+
+    it("does not mask query by default", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: TypedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Query, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query);
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await renderStream.takeRender();
+
+      const { snapshot } = await renderStream.takeRender();
+
+      expect(snapshot.result?.data).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(snapshot.result?.previousData).toBeUndefined();
+    });
+
+    it("masks queries updated by the cache", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Masked<Query>, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query);
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await renderStream.takeRender();
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+        expect(snapshot.result?.previousData).toBeUndefined();
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+            age: 35,
+          },
+        },
+      });
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (updated)",
+          },
+        });
+        expect(snapshot.result?.previousData).toEqual({
+          currentUser: { __typename: "User", id: 1, name: "Test User" },
+        });
+      }
+    });
+
+    it("does not rerender when updating field in named fragment", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User",
+                age: 30,
+              },
+            },
+          },
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Masked<Query>, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query);
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await renderStream.takeRender();
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+        expect(snapshot.result?.previousData).toBeUndefined();
+      }
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 35,
+          },
+        },
+      });
+
+      await expect(renderStream).not.toRerender();
+
+      expect(client.readQuery({ query })).toEqual({
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 35,
+        },
+      });
+    });
+
+    it.each(["cache-first", "cache-only"] as FetchPolicy[])(
+      "masks result from cache when using with %s fetch policy",
+      async (fetchPolicy) => {
+        type UserFieldsFragment = {
+          age: number;
+        } & { " $fragmentName"?: "UserFieldsFragment" };
+
+        interface Query {
+          currentUser: {
+            __typename: "User";
+            id: number;
+            name: string;
+          } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+        }
+
+        const query: MaskedDocumentNode<Query, never> = gql`
+          query MaskedQuery {
+            currentUser {
+              id
+              name
+              ...UserFields
+            }
+          }
+
+          fragment UserFields on User {
+            age
+          }
+        `;
+
+        const mocks = [
+          {
+            request: { query },
+            result: {
+              data: {
+                currentUser: {
+                  __typename: "User",
+                  id: 1,
+                  name: "Test User",
+                  age: 30,
+                },
+              },
+            },
+          },
+        ];
+
+        const client = new ApolloClient({
+          dataMasking: true,
+          cache: new InMemoryCache(),
+          link: new MockLink(mocks),
+        });
+
+        client.writeQuery({
+          query,
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+        });
+
+        const renderStream = createRenderStream({
+          initialSnapshot: {
+            result: null as QueryResult<Masked<Query>, never> | null,
+          },
+        });
+
+        function App() {
+          const result = useQuery(query, { fetchPolicy });
+
+          renderStream.replaceSnapshot({ result });
+
+          return null;
+        }
+
+        using _disabledAct = disableActEnvironment();
+        await renderStream.render(<App />, {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
+
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+        expect(snapshot.result?.previousData).toBeUndefined();
+      }
+    );
+
+    it("masks cache and network result when using cache-and-network fetch policy", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User (server)",
+                age: 35,
+              },
+            },
+          },
+          delay: 20,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 34,
+          },
+        },
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Masked<Query>, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query, { fetchPolicy: "cache-and-network" });
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+        expect(snapshot.result?.previousData).toBeUndefined();
+      }
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (server)",
+          },
+        });
+        expect(snapshot.result?.previousData).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
+        });
+      }
+    });
+
+    it("masks partial cache data when returnPartialData is `true`", async () => {
+      type UserFieldsFragment = {
+        __typename: "User";
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: "Test User (server)",
+                age: 35,
+              },
+            },
+          },
+          delay: 20,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      {
+        using _ = spyOnConsole("error");
+
+        client.writeQuery({
+          query,
+          data: {
+            // @ts-expect-error writing partial result
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              age: 34,
+            },
+          },
+        });
+      }
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Masked<Query>, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query, { returnPartialData: true });
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+          },
+        });
+      }
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+
+        expect(snapshot.result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User (server)",
+          },
+        });
+      }
+    });
+
+    it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
+      type UserFieldsFragment = {
+        age: number;
+      } & { " $fragmentName"?: "UserFieldsFragment" };
+
+      interface Query {
+        currentUser: {
+          __typename: "User";
+          id: number;
+          name: string;
+        } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
+      }
+
+      const query: MaskedDocumentNode<Query, never> = gql`
+        query MaskedQuery {
+          currentUser {
+            id
+            name
+            ...UserFields
+          }
+        }
+
+        fragment UserFields on User {
+          age
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            data: {
+              currentUser: {
+                __typename: "User",
+                id: 1,
+                name: null,
+                age: 34,
+              },
+            },
+            errors: [new GraphQLError("Couldn't get name")],
+          },
+          delay: 20,
+        },
+      ];
+
+      const client = new ApolloClient({
+        dataMasking: true,
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
+
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          result: null as QueryResult<Masked<Query>, never> | null,
+        },
+      });
+
+      function App() {
+        const result = useQuery(query, { errorPolicy: "all" });
+
+        renderStream.replaceSnapshot({ result });
+
+        return null;
+      }
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      // loading
+      await renderStream.takeRender();
+
+      {
+        const { snapshot } = await renderStream.takeRender();
+        const { result } = snapshot;
+
+        expect(result?.data).toEqual({
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: null,
+          },
+        });
+
+        expect(result?.error).toEqual(
+          new ApolloError({
+            graphQLErrors: [new GraphQLError("Couldn't get name")],
+          })
+        );
+      }
+    });
   });
 });
 

@@ -5,7 +5,8 @@ import type { DocumentNode, FormattedExecutionResult } from "graphql";
 import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform, Observable } from "../utilities/index.js";
+import type { DocumentTransform } from "../utilities/index.js";
+import type { Observable } from "../utilities/index.js";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";
@@ -144,6 +145,13 @@ export interface ApolloClientOptions<TCacheShape> {
    * @since 3.11.0
    */
   devtools?: DevtoolsOptions;
+
+  /**
+   * Determines if data masking is enabled for the client.
+   *
+   * @defaultValue false
+   */
+  dataMasking?: boolean;
 }
 
 // Though mergeOptions now resides in @apollo/client/utilities, it was
@@ -156,6 +164,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
+import type { MaybeMasked, Unmasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -237,6 +246,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       name: clientAwarenessName,
       version: clientAwarenessVersion,
       devtools,
+      dataMasking,
     } = options;
 
     let { link } = options;
@@ -292,6 +302,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
       documentTransform,
       queryDeduplication,
       ssrMode,
+      dataMasking: !!dataMasking,
       clientAwareness: {
         name: clientAwarenessName!,
         version: clientAwarenessVersion!,
@@ -443,7 +454,9 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public query<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: QueryOptions<TVariables, T>): Promise<ApolloQueryResult<T>> {
+  >(
+    options: QueryOptions<TVariables, T>
+  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -478,7 +491,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TCache extends ApolloCache<any> = ApolloCache<any>,
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<TData>> {
+  ): Promise<FetchResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.mutate) {
       options = mergeOptions(this.defaultOptions.mutate, options);
     }
@@ -494,8 +507,22 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public subscribe<
     T = any,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: SubscriptionOptions<TVariables, T>): Observable<FetchResult<T>> {
-    return this.queryManager.startGraphQLSubscription<T>(options);
+  >(
+    options: SubscriptionOptions<TVariables, T>
+  ): Observable<FetchResult<MaybeMasked<T>>> {
+    const id = this.queryManager.generateQueryId();
+
+    return this.queryManager
+      .startGraphQLSubscription<T>(options)
+      .map((result) => ({
+        ...result,
+        data: this.queryManager.maskOperation({
+          document: options.query,
+          data: result.data,
+          fetchPolicy: options.fetchPolicy,
+          id,
+        }),
+      }));
   }
 
   /**
@@ -510,7 +537,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readQuery<T = any, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false
-  ): T | null {
+  ): Unmasked<T> | null {
     return this.cache.readQuery<T, TVariables>(options, optimistic);
   }
 
@@ -537,7 +564,10 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   >(
     options: WatchFragmentOptions<TFragmentData, TVariables>
   ): Observable<WatchFragmentResult<TFragmentData>> {
-    return this.cache.watchFragment<TFragmentData, TVariables>(options);
+    return this.cache.watchFragment({
+      ...options,
+      [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,
+    });
   }
 
   /**
@@ -557,7 +587,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   public readFragment<T = any, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
-  ): T | null {
+  ): Unmasked<T> | null {
     return this.cache.readFragment<T, TVariables>(options, optimistic);
   }
 

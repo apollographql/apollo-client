@@ -51,6 +51,13 @@ jobs:
           path: reports/junit
       - store_artifacts:
           path: reports/junit
+  Attest:
+    docker:
+      - image: cimg/node:23.1.0
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run test:type-benches
 
   BuildTarball:
     docker:
@@ -133,6 +140,7 @@ workflows:
             parameters:
               project:
                 ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
+      - Attest
       - Formatting
       - Lint
       - BuildTarball

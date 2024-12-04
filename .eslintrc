@@ -25,7 +25,10 @@
       "excludedFiles": ["**/__tests__/**/*.*", "*.d.ts"],
       "extends": ["plugin:react-hooks/recommended"],
       "parserOptions": {
-        "project": "./tsconfig.json"
+        "project": [
+          "./tsconfig.json",
+          "./scripts/codemods/data-masking/tsconfig.json"
+        ]
       },
       "plugins": ["eslint-plugin-react-compiler"],
       "rules": {

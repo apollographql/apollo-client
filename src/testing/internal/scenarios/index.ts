@@ -63,7 +63,7 @@ export function setupVariablesCase() {
   return { mocks, query };
 }
 
-export function slowDownMocks<T extends MockedResponse<unknown>[]>(
+export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
   mocks: T,
   delay = 150
 ) {

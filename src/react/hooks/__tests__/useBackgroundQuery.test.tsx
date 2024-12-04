@@ -55,7 +55,7 @@ import {
   setupSimpleCase,
   setupVariablesCase,
   spyOnConsole,
-  slowDownMocks,
+  addDelayToMocks,
 } from "../../../testing/internal";
 import { SubscribeToMoreFunction } from "../useSuspenseQuery";
 import {
@@ -1721,7 +1721,7 @@ it("reacts to variables updates", async () => {
   using _disabledAct = disableActEnvironment();
   const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createMockWrapper({
-      mocks: slowDownMocks(mocks),
+      mocks: addDelayToMocks(mocks),
     }),
   });
 
@@ -3547,7 +3547,7 @@ it('suspends and does not use partial data from other variables in the cache whe
   const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createMockWrapper({
       cache,
-      mocks: slowDownMocks(mocks),
+      mocks: addDelayToMocks(mocks),
     }),
   });
 
@@ -3882,7 +3882,7 @@ it('suspends and does not use partial data when changing variables and using a "
   const { rerender } = await renderStream.render(<App id="1" />, {
     wrapper: createMockWrapper({
       cache,
-      mocks: slowDownMocks(mocks),
+      mocks: addDelayToMocks(mocks),
     }),
   });
 

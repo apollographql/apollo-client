@@ -12,7 +12,7 @@ export {
   setupSimpleCase,
   setupVariablesCase,
   setupPaginatedCase,
-  slowDownMocks,
+  addDelayToMocks,
 } from "./scenarios/index.js";
 
 export type {

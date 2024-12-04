@@ -1,5 +1,88 @@
 # @apollo/client
 
+## 3.12.0
+
+### Minor Changes
+
+- [#12124](https://github.com/apollographql/apollo-client/pull/12124) [`ab0a1b5`](https://github.com/apollographql/apollo-client/commit/ab0a1b587233410bddb0f9d180f0d5019c035af2) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Promote to 3.12.0-rc.0
+
+- [#12131](https://github.com/apollographql/apollo-client/pull/12131) [`21c3f08`](https://github.com/apollographql/apollo-client/commit/21c3f083013445707b7b50ae6390318bc568d0f5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `null` as a valid `from` value in `useFragment`.
+
+- [#12042](https://github.com/apollographql/apollo-client/pull/12042) [`1c0ecbf`](https://github.com/apollographql/apollo-client/commit/1c0ecbf3c0454056853dd3dcb493dfd5fa1a96b1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Introduces data masking into Apollo Client. Data masking allows components to access only the data they asked for through GraphQL fragments. This prevents coupling between components that might otherwise implicitly rely on fields not requested by the component. Data masking also provides the benefit that masked fields only rerender components that ask for the field.
+
+  To enable data masking in Apollo Client, set the `dataMasking` option to `true`.
+
+  ```ts
+  new ApolloClient({
+    dataMasking: true,
+    // ... other options
+  });
+  ```
+
+  You can selectively disable data masking using the `@unmask` directive. Apply this to any named fragment to receive all fields requested by the fragment.
+
+  ```graphql
+  query {
+    user {
+      id
+      ...UserFields @unmask
+    }
+  }
+  ```
+
+  To help with migration, use the `@unmask` migrate mode which will add warnings when accessing fields that would otherwise be masked.
+
+  ```graphql
+  query {
+    user {
+      id
+      ...UserFields @unmask(mode: "migrate")
+    }
+  }
+  ```
+
+### Patch Changes
+
+- [#12126](https://github.com/apollographql/apollo-client/pull/12126) [`d10d702`](https://github.com/apollographql/apollo-client/commit/d10d702ee9bd4d1d1dee2551821140f2c49d5c0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Maintain the existing document if its unchanged by the codemod and move to more naive whitespace formatting
+
+- [#12150](https://github.com/apollographql/apollo-client/pull/12150) [`9ed1e1e`](https://github.com/apollographql/apollo-client/commit/9ed1e1ef02b28445614fed4f5c141a289ac32d66) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue when using `Unmasked` with older versions of TypeScript when used with array fields.
+
+- [#12116](https://github.com/apollographql/apollo-client/pull/12116) [`8ae6e4e`](https://github.com/apollographql/apollo-client/commit/8ae6e4e5cec296c3910fdffb0ce51a0f5f06c5d3) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Prevent field accessor warnings when using `@unmask(mode: "migrate")` on objects that are passed into `cache.identify`.
+
+- [#12120](https://github.com/apollographql/apollo-client/pull/12120) [`6a98e76`](https://github.com/apollographql/apollo-client/commit/6a98e76af5c800a91a748c498611b55c33e02c68) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Provide a codemod that applies `@unmask` to all named fragments for all operations and fragments. To use the codemod, run the following command:
+
+  ```
+  npx jscodeshift -t node_modules/@apollo/client/scripts/codemods/data-masking/unmask.ts --extensions tsx --parser tsx path/to/app/
+  ```
+
+  To customize the tag used to search for GraphQL operations, use the `--tag` option. By default the codemod looks for `gql` and `graphql` tags.
+
+  To apply the directive in migrate mode in order to receive runtime warnings on potentially masked fields, use the `--mode migrate` option.
+
+  For more information on the options that can be used with `jscodeshift`, check out the [`jscodeshift` documentation](https://github.com/facebook/jscodeshift).
+
+- [#12134](https://github.com/apollographql/apollo-client/pull/12134) [`cfaf4ef`](https://github.com/apollographql/apollo-client/commit/cfaf4efc6dea56ae46a5b5199d8ed9414b0f17d8) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix issue where data went missing when an unmasked fragment in migrate mode selected fields that the parent did not.
+
+- [#12154](https://github.com/apollographql/apollo-client/pull/12154) [`d933def`](https://github.com/apollographql/apollo-client/commit/d933def986d476cd64321059299ab15031297f04) Thanks [@phryneas](https://github.com/phryneas)! - Data masking types: handle overlapping nested array types and fragments on interface types.
+
+- [#12139](https://github.com/apollographql/apollo-client/pull/12139) [`5a53e15`](https://github.com/apollographql/apollo-client/commit/5a53e15e713e5eb2ebc9216615ea1a845fad2685) Thanks [@phryneas](https://github.com/phryneas)! - Fix issue where masked data would sometimes get returned when the field was part of a child fragment from a fragment unmasked by the parent query.
+
+- [#12123](https://github.com/apollographql/apollo-client/pull/12123) [`8422a30`](https://github.com/apollographql/apollo-client/commit/8422a305eff861fc8f953731e92c860f555bd99a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Warn when using data masking with "no-cache" operations.
+
+- [#12139](https://github.com/apollographql/apollo-client/pull/12139) [`5a53e15`](https://github.com/apollographql/apollo-client/commit/5a53e15e713e5eb2ebc9216615ea1a845fad2685) Thanks [@phryneas](https://github.com/phryneas)! - Fix issue where the warning emitted by `@unmask(mode: "migrate")` would trigger unnecessarily when the fragment was used alongside a masked fragment inside an inline fragment.
+
+- [#12114](https://github.com/apollographql/apollo-client/pull/12114) [`1d4ce00`](https://github.com/apollographql/apollo-client/commit/1d4ce0034395147445165022f7d23f42ff638d8a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix error when combining `@unmask` and `@defer` directives on a fragment spread when data masking is enabled.
+
+- [#12130](https://github.com/apollographql/apollo-client/pull/12130) [`1e7d009`](https://github.com/apollographql/apollo-client/commit/1e7d009e4a52949dab0065f3219dfe148837531e) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix error thrown when applying unmask migrate mode warnings on interface types with selection sets that contain inline fragment conditions.
+
+- [#12152](https://github.com/apollographql/apollo-client/pull/12152) [`78137ec`](https://github.com/apollographql/apollo-client/commit/78137eccba90b80dd29bd8e1423b49ebe51ef8df) Thanks [@phryneas](https://github.com/phryneas)! - Add a helper that will skip the TS unmasking alorithm when no fragments are present on type level
+
+- [#12126](https://github.com/apollographql/apollo-client/pull/12126) [`d10d702`](https://github.com/apollographql/apollo-client/commit/d10d702ee9bd4d1d1dee2551821140f2c49d5c0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure documents unchanged by the codemod are left untouched.
+
+- [#12133](https://github.com/apollographql/apollo-client/pull/12133) [`a6ece37`](https://github.com/apollographql/apollo-client/commit/a6ece375119ce12c19749471c55b0059843a7217) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `null` is retained in nullable types when unmasking a type with the `Unmasked` helper type.
+
+- [#12139](https://github.com/apollographql/apollo-client/pull/12139) [`5a53e15`](https://github.com/apollographql/apollo-client/commit/5a53e15e713e5eb2ebc9216615ea1a845fad2685) Thanks [@phryneas](https://github.com/phryneas)! - Fix issue that threw errors when masking partial data with `@unmask(mode: "migrate")`.
+
 ## 3.12.0-rc.4
 
 ### Patch Changes

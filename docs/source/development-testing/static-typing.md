@@ -636,3 +636,7 @@ export function RocketInventoryList() {
   );
 }
 ```
+
+## Data masking
+
+Learn more about integrating TypeScript with data masking in the [data masking docs](../data/fragments#using-with-typescript).

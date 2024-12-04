@@ -1178,7 +1178,7 @@ You can opt in to use the masked types in one of two ways.
 
 ##### Opting in globally
 
-To opt in to using masked types throughout your entire application at once, you modify the `DataMasking` exported type from `@apollo/client` using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) ability.
+To turn on masked types for your whole application at once, modify the `DataMasking` exported type from `@apollo/client` using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) ability.
 
 <Tip>
 We recommend this approach for most cases. Use this approach with the [`@unmask` directive](./directives#unmask) for the best path to [incremental adoption](#incremental-adoption-in-an-existing-application).

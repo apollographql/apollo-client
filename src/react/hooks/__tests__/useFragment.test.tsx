@@ -1635,12 +1635,6 @@ describe("useFragment", () => {
       }
     );
 
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
-      "UserFields"
-    );
-
     {
       const { data, complete } = await takeSnapshot();
 
@@ -1648,6 +1642,12 @@ describe("useFragment", () => {
       // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
       expect(complete).toBe(true);
     }
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+      "UserFields"
+    );
   });
 
   it("allows `null` as valid `from` value without warning", async () => {

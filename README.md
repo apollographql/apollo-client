@@ -18,6 +18,8 @@ Join 1000+ engineers at GraphQL Summit for talks, workshops, and office hours, O
 
 Apollo Client is a fully-featured caching GraphQL client with integrations for React, Angular, and more. It allows you to easily build UI components that fetch data via GraphQL.
 
+Apollo Client aims to comply with the [Working Draft of the GraphQL specification](https://spec.graphql.org/draft/).
+
 | ☑️  Apollo Client User Survey |
 | :----- |
 | What do you like best about Apollo Client? What needs to be improved? Please tell us by taking a [one-minute survey](https://docs.google.com/forms/d/e/1FAIpQLSczNDXfJne3ZUOXjk9Ursm9JYvhTh1_nFTDfdq3XBAFWCzplQ/viewform?usp=pp_url&entry.1170701325=Apollo+Client&entry.204965213=Readme). Your responses will help us understand Apollo Client usage and allow us to serve you better. |

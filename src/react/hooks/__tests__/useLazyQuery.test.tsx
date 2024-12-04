@@ -2440,6 +2440,7 @@ describe("useLazyQuery Hook", () => {
               },
             },
           },
+          delay: 20,
         },
       ];
 

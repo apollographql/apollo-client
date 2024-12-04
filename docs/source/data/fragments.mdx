@@ -1313,7 +1313,7 @@ In this example, the `GetPosts` query selects enough fields to satisfy the `Post
 On rare occasions, you may need access to the unmasked type of a particular operation. Apollo Client provides the `Unmasked` helper type that unwraps masked types and removes meta information on the type.
 
 <Note>
-This is the same helper type used by the client when unwrapping types while data masking is disabled or for APIs that use the full result.
+This is the same helper type the client uses when unwrapping types while data masking is turned off or for APIs that use the full result.
 </Note>
 
 ```ts

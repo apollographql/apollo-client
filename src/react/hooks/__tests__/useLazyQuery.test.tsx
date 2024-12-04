@@ -2075,14 +2075,13 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useLazyQuery(query),
-        {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        }
-      );
+        });
 
       // initial render
       await takeSnapshot();
@@ -2164,14 +2163,13 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useLazyQuery(query),
-        {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        }
-      );
+        });
 
       // initial render
       await takeSnapshot();
@@ -2254,14 +2252,13 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useLazyQuery(query),
-        {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        }
-      );
+        });
 
       // initial render
       await takeSnapshot();
@@ -2345,20 +2342,19 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useLazyQuery(query),
-        {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        }
-      );
+        });
 
       // initial render
       await takeSnapshot();
 
       const [execute] = getCurrentSnapshot();
-      execute();
+      await execute();
 
       // Loading
       await takeSnapshot();
@@ -2444,6 +2440,7 @@ describe("useLazyQuery Hook", () => {
               },
             },
           },
+          delay: 20,
         },
       ];
 
@@ -2453,20 +2450,19 @@ describe("useLazyQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () => useLazyQuery(query),
-        {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useLazyQuery(query), {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
-        }
-      );
+        });
 
       // initial render
       await takeSnapshot();
 
       const [execute] = getCurrentSnapshot();
-      execute();
+      await execute();
 
       // Loading
       await takeSnapshot();

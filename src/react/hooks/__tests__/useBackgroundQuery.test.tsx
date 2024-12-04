@@ -4219,7 +4219,8 @@ it("masks queries when dataMasking is `true`", async () => {
     );
   }
 
-  renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -4307,7 +4308,8 @@ it("does not mask query when dataMasking is `false`", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
   await renderStream.takeRender();
@@ -4391,7 +4393,8 @@ it("does not mask query by default", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
   await renderStream.takeRender();
@@ -4476,7 +4479,8 @@ it("masks queries updated by the cache", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
   await renderStream.takeRender();
@@ -4592,7 +4596,8 @@ it("does not rerender when updating field in named fragment", async () => {
     );
   }
 
-  renderStream.render(<App />, {
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, {
     wrapper: createClientWrapper(client),
   });
 
@@ -4719,7 +4724,8 @@ it("masks result from cache when using with cache-first fetch policy", async () 
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   const { snapshot } = await renderStream.takeRender();
 
@@ -4815,7 +4821,8 @@ it("masks cache and network result when using cache-and-network fetch policy", a
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -4931,7 +4938,8 @@ it("masks partial cache data when returnPartialData is `true`", async () => {
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   {
     const { snapshot } = await renderStream.takeRender();
@@ -5031,7 +5039,8 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
     );
   }
 
-  renderStream.render(<App />, { wrapper: createClientWrapper(client) });
+  using _disabledAct = disableActEnvironment();
+  await renderStream.render(<App />, { wrapper: createClientWrapper(client) });
 
   // loading
   await renderStream.takeRender();

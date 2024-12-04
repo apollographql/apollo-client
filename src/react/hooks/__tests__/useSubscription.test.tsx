@@ -1269,7 +1269,6 @@ followed by new in-flight setup", async () => {
           link.simulateResult(graphQlErrorResult);
           {
             const snapshot = await takeSnapshot();
-            console.dir({ graphQlErrorResult, snapshot }, { depth: 5 });
             expect(snapshot).toStrictEqual({
               loading: false,
               error: new ApolloError({
@@ -2110,7 +2109,8 @@ describe("data masking", () => {
       link,
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
@@ -2178,7 +2178,8 @@ describe("data masking", () => {
       link,
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription),
       {
         wrapper: ({ children }) => (
@@ -2249,7 +2250,8 @@ describe("data masking", () => {
     });
 
     const onData = jest.fn();
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription, { onData }),
       {
         wrapper: ({ children }) => (
@@ -2329,7 +2331,8 @@ describe("data masking", () => {
     });
 
     const onData = jest.fn();
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription, { onData }),
       {
         wrapper: ({ children }) => (

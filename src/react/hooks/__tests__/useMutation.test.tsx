@@ -2873,7 +2873,8 @@ describe("data masking", () => {
       link: new MockLink(mocks),
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useMutation(mutation),
       {
         wrapper: ({ children }) => (
@@ -2888,10 +2889,18 @@ describe("data masking", () => {
     expect(result.data).toBeUndefined();
     expect(result.error).toBeUndefined();
 
-    let promise!: Promise<FetchResult<Mutation>>;
-    act(() => {
-      promise = mutate();
-    });
+    {
+      const { data, errors } = await mutate();
+
+      expect(data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
+      });
+      expect(errors).toBeUndefined();
+    }
 
     {
       const [, result] = await takeSnapshot();
@@ -2913,19 +2922,6 @@ describe("data masking", () => {
         },
       });
       expect(result.error).toBeUndefined();
-    }
-
-    {
-      const { data, errors } = await promise;
-
-      expect(data).toEqual({
-        updateUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-        },
-      });
-      expect(errors).toBeUndefined();
     }
 
     await expect(takeSnapshot).not.toRerender();
@@ -2977,7 +2973,8 @@ describe("data masking", () => {
       link: new MockLink(mocks),
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useMutation(mutation),
       {
         wrapper: ({ children }) => (
@@ -2992,10 +2989,19 @@ describe("data masking", () => {
     expect(result.data).toBeUndefined();
     expect(result.error).toBeUndefined();
 
-    let promise!: Promise<FetchResult<Mutation>>;
-    act(() => {
-      promise = mutate();
-    });
+    {
+      const { data, errors } = await mutate();
+
+      expect(data).toEqual({
+        updateUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+          age: 30,
+        },
+      });
+      expect(errors).toBeUndefined();
+    }
 
     {
       const [, result] = await takeSnapshot();
@@ -3018,20 +3024,6 @@ describe("data masking", () => {
         },
       });
       expect(result.error).toBeUndefined();
-    }
-
-    {
-      const { data, errors } = await promise;
-
-      expect(data).toEqual({
-        updateUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
-      });
-      expect(errors).toBeUndefined();
     }
 
     await expect(takeSnapshot).not.toRerender();
@@ -3086,7 +3078,9 @@ describe("data masking", () => {
 
     const update = jest.fn();
     const onCompleted = jest.fn();
-    const { takeSnapshot } = renderHookToSnapshotStream(
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useMutation(mutation, { onCompleted, update }),
       {
         wrapper: ({ children }) => (
@@ -3097,7 +3091,7 @@ describe("data masking", () => {
 
     const [mutate] = await takeSnapshot();
 
-    await act(() => mutate());
+    await mutate();
 
     expect(onCompleted).toHaveBeenCalledTimes(1);
     expect(onCompleted).toHaveBeenCalledWith(

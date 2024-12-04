@@ -1899,7 +1899,8 @@ test("masks result when dataMasking is `true`", async () => {
 
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
-  const { renderStream } = renderDefaultTestApp<
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp<
     Masked<MaskedVariablesCaseData>
   >({
     client,
@@ -1936,7 +1937,8 @@ test("does not mask result when dataMasking is `false`", async () => {
 
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
-  const { renderStream } = renderDefaultTestApp<MaskedVariablesCaseData>({
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
     client,
     queryRef,
   });
@@ -1970,7 +1972,8 @@ test("does not mask results by default", async () => {
 
   const queryRef = preloadQuery(query, { variables: { id: "1" } });
 
-  const { renderStream } = renderDefaultTestApp<MaskedVariablesCaseData>({
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp<MaskedVariablesCaseData>({
     client,
     queryRef,
   });

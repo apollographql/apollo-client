@@ -10318,7 +10318,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -10409,7 +10410,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -10493,7 +10495,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -10578,7 +10581,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -10691,7 +10695,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -10814,7 +10819,8 @@ describe("useQuery Hook", () => {
           return null;
         }
 
-        renderStream.render(<App />, {
+        using _disabledAct = disableActEnvironment();
+        await renderStream.render(<App />, {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
@@ -10909,7 +10915,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -11029,7 +11036,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -11124,7 +11132,8 @@ describe("useQuery Hook", () => {
         return null;
       }
 
-      renderStream.render(<App />, {
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),

@@ -1625,19 +1625,14 @@ describe("useFragment", () => {
 
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useFragment({ fragment, from: { __typename: "User" } }),
       {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
       }
-    );
-
-    expect(console.warn).toHaveBeenCalledTimes(1);
-    expect(console.warn).toHaveBeenCalledWith(
-      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
-      "UserFields"
     );
 
     {
@@ -1647,6 +1642,12 @@ describe("useFragment", () => {
       // TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
       expect(complete).toBe(true);
     }
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+      "UserFields"
+    );
   });
 
   it("allows `null` as valid `from` value without warning", async () => {
@@ -1664,7 +1665,8 @@ describe("useFragment", () => {
 
     const client = new ApolloClient({ cache: new InMemoryCache() });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useFragment({ fragment, from: null }),
       {
         wrapper: ({ children }) => (
@@ -1711,7 +1713,8 @@ describe("useFragment", () => {
       },
     });
 
-    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ from }) => useFragment({ fragment, from }),
       {
         initialProps: { from: null as UseFragmentOptions<any, never>["from"] },
@@ -1728,7 +1731,7 @@ describe("useFragment", () => {
       expect(complete).toBe(false);
     }
 
-    rerender({ from: { __typename: "User", id: "1" } });
+    await rerender({ from: { __typename: "User", id: "1" } });
 
     {
       const { data, complete } = await takeSnapshot();
@@ -1972,7 +1975,8 @@ describe("data masking", () => {
       },
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment,
@@ -2089,7 +2093,8 @@ describe("data masking", () => {
       return null;
     }
 
-    renderStream.render(<Parent />, {
+    using _disabledAct = disableActEnvironment();
+    await renderStream.render(<Parent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),

@@ -27,7 +27,10 @@ import { QueryResult } from "../../types/types";
 import { InvariantError } from "../../../utilities/globals";
 import { MaskedDocumentNode } from "../../../masking";
 import { expectTypeOf } from "expect-type";
-import { renderHookToSnapshotStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
@@ -101,14 +104,13 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () => useLazyQuery(helloQuery),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
-      }
-    );
+      });
 
     {
       const [, result] = await takeSnapshot();
@@ -141,15 +143,17 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      // skip isn’t actually an option on the types
-      () => useLazyQuery(helloQuery, { skip: true } as any),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        // skip isn’t actually an option on the types
+        () => useLazyQuery(helloQuery, { skip: true } as any),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
     {
       const [, result] = await takeSnapshot();
@@ -187,17 +191,19 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () =>
-        useLazyQuery(query, {
-          variables: { id: 1 },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(query, {
+            variables: { id: 1 },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
     {
       const [, result] = await takeSnapshot();
@@ -380,10 +386,13 @@ describe("useLazyQuery Hook", () => {
       },
     };
 
-    const execResult = await result.current.exec({
-      variables: {
-        execVar: true,
-      },
+    let execResult: QueryResult;
+    await act(async () => {
+      execResult = await result.current.exec({
+        variables: {
+          execVar: true,
+        },
+      });
     });
 
     await waitFor(
@@ -426,13 +435,16 @@ describe("useLazyQuery Hook", () => {
     expect(result.current.query.called).toBe(true);
     expect(result.current.query.data).toEqual(expectedFinalData);
 
-    const refetchResult = await result.current.query.reobserve({
+    const refetchPromise = result.current.query.reobserve({
       fetchPolicy: "network-only",
       nextFetchPolicy: "cache-first",
       variables: {
         execVar: false,
       },
     });
+    await act(() => refetchPromise);
+    const refetchResult = await refetchPromise;
+
     expect(refetchResult.loading).toBe(false);
     expect(refetchResult.data).toEqual({
       counter: 2,
@@ -465,12 +477,15 @@ describe("useLazyQuery Hook", () => {
       { interval: 1 }
     );
 
-    const execResult2 = await result.current.exec({
-      fetchPolicy: "cache-and-network",
-      nextFetchPolicy: "cache-first",
-      variables: {
-        execVar: true,
-      },
+    let execResult2: QueryResult;
+    await act(async () => {
+      execResult2 = await result.current.exec({
+        fetchPolicy: "cache-and-network",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          execVar: true,
+        },
+      });
     });
 
     await waitFor(
@@ -546,16 +561,15 @@ describe("useLazyQuery Hook", () => {
     ];
 
     const cache = new InMemoryCache();
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () => useLazyQuery(query1),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(query1), {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks} cache={cache}>
             {children}
           </MockedProvider>
         ),
-      }
-    );
+      });
 
     {
       const [, result] = await takeSnapshot();
@@ -604,17 +618,19 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () =>
-        useLazyQuery(helloQuery, {
-          fetchPolicy: "network-only",
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(helloQuery, {
+            fetchPolicy: "network-only",
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
     {
       const [, result] = await takeSnapshot();
@@ -662,17 +678,19 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () =>
-        useLazyQuery(helloQuery, {
-          notifyOnNetworkStatusChange: true,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(helloQuery, {
+            notifyOnNetworkStatusChange: true,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
     {
       const [, result] = await takeSnapshot();
@@ -734,10 +752,11 @@ describe("useLazyQuery Hook", () => {
       <MockedProvider mocks={mocks}>{children}</MockedProvider>
     );
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () => useLazyQuery(helloQuery),
-      { wrapper }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper,
+      });
 
     {
       const [, result] = await takeSnapshot();
@@ -815,14 +834,13 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () => useLazyQuery(CAR_QUERY_BY_ID),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(CAR_QUERY_BY_ID), {
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
-      }
-    );
+      });
 
     {
       const [, result] = await takeSnapshot();
@@ -1092,7 +1110,8 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { takeSnapshot, peekSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
       () => useLazyQuery(helloQuery),
       {
         wrapper: ({ children }) => (
@@ -1133,7 +1152,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.error!.message).toBe("error 1");
     });
 
-    execute();
+    void execute();
 
     {
       const [, result] = await takeSnapshot();
@@ -1174,14 +1193,14 @@ describe("useLazyQuery Hook", () => {
     await waitFor(
       () => {
         expect(result.current[1].loading).toBe(false);
-        execute();
+        void execute();
       },
       { interval: 1 }
     );
     await waitFor(
       () => {
         expect(result.current[1].data).toBe(undefined);
-        execute();
+        void execute();
       },
       { interval: 1 }
     );
@@ -1759,17 +1778,19 @@ describe("useLazyQuery Hook", () => {
         ),
       });
 
-      const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-        () =>
-          useLazyQuery(helloQuery, {
-            errorPolicy,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useLazyQuery(helloQuery, {
+              errorPolicy,
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
       {
         const [, result] = await takeSnapshot();
@@ -1887,7 +1908,11 @@ describe("useLazyQuery Hook", () => {
         { interval: 1 }
       );
 
-      const execResult = await result.current.exec();
+      let execPromise: Promise<QueryResult>;
+      await act(async () => {
+        execPromise = result.current.exec();
+      });
+      const execResult = await execPromise!;
       expect(execResult.loading).toBe(false);
       expect(execResult.called).toBe(true);
       expect(execResult.data).toEqual({ counter: 1 });
@@ -1944,14 +1969,13 @@ describe("useLazyQuery Hook", () => {
       link,
       cache: new InMemoryCache(),
     });
-    const { takeSnapshot, getCurrentSnapshot } = renderHookToSnapshotStream(
-      () => useLazyQuery(helloQuery),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
-      }
-    );
+      });
 
     {
       const [, result] = await takeSnapshot();
@@ -1969,7 +1993,7 @@ describe("useLazyQuery Hook", () => {
       expect(result.data).toBeUndefined();
     }
 
-    client.clearStore();
+    await client.clearStore();
 
     const executionResult = await promise;
     expect(executionResult.data).toBeUndefined();

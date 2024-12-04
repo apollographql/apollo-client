@@ -9,7 +9,10 @@ import { ApolloLink, DocumentNode, Operation } from "../../../../link/core";
 import { itAsync, MockSubscriptionLink } from "../../../../testing";
 import { Subscription } from "../../Subscription";
 import { spyOnConsole } from "../../../../testing/internal";
-import { renderToRenderStream } from "@testing-library/react-render-stream";
+import {
+  disableActEnvironment,
+  createRenderStream,
+} from "@testing-library/react-render-stream";
 
 const results = [
   "Luke Skywalker",
@@ -435,13 +438,13 @@ describe("should update", () => {
         </Subscription>
       );
     }
-    const { takeRender, replaceSnapshot, renderResultPromise } =
-      renderToRenderStream<any>(
-        <ApolloProvider client={client}>
-          <Container />
-        </ApolloProvider>
-      );
-    const { rerender } = await renderResultPromise;
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } = createRenderStream<any>();
+    const { rerender } = await render(
+      <ApolloProvider client={client}>
+        <Container />
+      </ApolloProvider>
+    );
     {
       const {
         snapshot: { loading, data },
@@ -462,7 +465,7 @@ describe("should update", () => {
 
     await expect(takeRender).not.toRerender({ timeout: 50 });
 
-    rerender(
+    await rerender(
       <ApolloProvider client={client2}>
         <Container />
       </ApolloProvider>
@@ -531,13 +534,17 @@ describe("should update", () => {
         </Subscription>
       );
     }
-    const { takeRender, replaceSnapshot, renderResultPromise } =
-      renderToRenderStream<any>(<Container subscription={subscription} />, {
+
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, replaceSnapshot, render } = createRenderStream<any>();
+    const { rerender } = await render(
+      <Container subscription={subscription} />,
+      {
         wrapper: ({ children }) => (
           <ApolloProvider client={mockClient}>{children}</ApolloProvider>
         ),
-      });
-    const { rerender } = await renderResultPromise;
+      }
+    );
 
     {
       const {
@@ -558,7 +565,7 @@ describe("should update", () => {
 
     await expect(takeRender).not.toRerender({ timeout: 50 });
 
-    rerender(<Container subscription={subscriptionHero} />);
+    await rerender(<Container subscription={subscriptionHero} />);
     {
       const {
         snapshot: { loading, data },
@@ -624,13 +631,13 @@ describe("should update", () => {
         </Subscription>
       );
     }
-    const { takeRender, renderResultPromise, replaceSnapshot } =
-      renderToRenderStream<any>(<Container variables={variablesLuke} />, {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={mockClient}>{children}</ApolloProvider>
-        ),
-      });
-    const { rerender } = await renderResultPromise;
+    using _disabledAct = disableActEnvironment();
+    const { takeRender, render, replaceSnapshot } = createRenderStream<any>();
+    const { rerender } = await render(<Container variables={variablesLuke} />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={mockClient}>{children}</ApolloProvider>
+      ),
+    });
 
     {
       const {
@@ -651,7 +658,7 @@ describe("should update", () => {
 
     await expect(takeRender).not.toRerender({ timeout: 50 });
 
-    rerender(<Container variables={variablesHan} />);
+    await rerender(<Container variables={variablesHan} />);
 
     {
       const {

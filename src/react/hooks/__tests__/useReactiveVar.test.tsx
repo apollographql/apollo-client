@@ -263,7 +263,7 @@ describe("useReactiveVar Hook", () => {
         }, [count]);
 
         useEffect(() => {
-          Promise.resolve().then(() => {
+          void Promise.resolve().then(() => {
             counterVar(counterVar() + 1);
           });
         }, []);
@@ -304,7 +304,7 @@ describe("useReactiveVar Hook", () => {
         }
 
         render(<Component />);
-        Promise.resolve().then(() => {
+        void Promise.resolve().then(() => {
           counterVar(1);
           counterVar(2);
           counterVar(3);

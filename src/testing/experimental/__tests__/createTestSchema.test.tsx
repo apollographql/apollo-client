@@ -12,7 +12,7 @@ import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
 import userEvent from "@testing-library/user-event";
-import { act, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { createSchemaFetch } from "../createSchemaFetch.js";
 import {
   FallbackProps,
@@ -22,7 +22,10 @@ import { InvariantError } from "ts-invariant";
 import {
   RenderStream,
   createRenderStream,
+  disableActEnvironment,
 } from "@testing-library/react-render-stream";
+
+const IS_REACT_19 = React.version.startsWith("19");
 
 const typeDefs = /* GraphQL */ `
   type User {
@@ -169,6 +172,7 @@ describe("schema proxy", () => {
   });
 
   it("mocks scalars and resolvers", async () => {
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(schema).mockGlobal();
@@ -256,6 +260,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -333,6 +338,7 @@ describe("schema proxy", () => {
   });
 
   it("schema.fork does not pollute the original schema", async () => {
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     schema.fork({
@@ -435,6 +441,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -551,6 +558,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -626,7 +634,7 @@ describe("schema proxy", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Change name")));
+    await user.click(screen.getByText("Change name"));
 
     // initial suspended render
     await renderStream.takeRender();
@@ -686,6 +694,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createErrorProfiler<ViewerQueryData>();
 
     const { ErrorBoundary } = createTrackedErrorComponents(renderStream);
@@ -761,6 +770,7 @@ describe("schema proxy", () => {
     // invalid schema
     const forkedSchema = { foo: "bar" };
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createErrorProfiler<ViewerQueryData>();
 
     const { ErrorBoundary } = createTrackedErrorComponents(renderStream);
@@ -884,6 +894,7 @@ describe("schema proxy", () => {
       },
     });
 
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     using _fetch = createSchemaFetch(forkedSchema).mockGlobal();
@@ -977,7 +988,7 @@ describe("schema proxy", () => {
       });
     }
 
-    await act(() => user.click(screen.getByText("Change name")));
+    await user.click(screen.getByText("Change name"));
 
     await renderStream.takeRender();
     {
@@ -1025,6 +1036,7 @@ describe("schema proxy", () => {
         },
       },
     });
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     resetTestSchema.add({
@@ -1122,7 +1134,7 @@ describe("schema proxy", () => {
 
     const user = userEvent.setup();
 
-    await act(() => user.click(screen.getByText("Refetch")));
+    await user.click(screen.getByText("Refetch"));
 
     // initial suspended render
     await renderStream.takeRender();
@@ -1149,6 +1161,7 @@ describe("schema proxy", () => {
   });
 
   it("createSchemaFetch respects min and max delay", async () => {
+    using _disabledAct = disableActEnvironment();
     const renderStream = createDefaultProfiler<ViewerQueryData>();
 
     const minDelay = 1500;
@@ -1200,12 +1213,19 @@ describe("schema proxy", () => {
       return <div>Hello</div>;
     };
 
-    renderStream.render(<App />, {
+    await renderStream.render(<App />, {
       wrapper: createClientWrapper(client),
     });
 
     // initial suspended render
     await renderStream.takeRender();
+
+    if (IS_REACT_19) {
+      // not sure why we have this additional commit
+      expect((await renderStream.takeRender()).snapshot).toStrictEqual({
+        result: null,
+      });
+    }
 
     await expect(renderStream).not.toRerender({ timeout: minDelay - 100 });
 

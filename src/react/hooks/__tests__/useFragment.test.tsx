@@ -36,9 +36,9 @@ import { SubscriptionObserver } from "zen-observable-ts";
 import { spyOnConsole } from "../../../testing/internal";
 import { FragmentType } from "../../../masking";
 import {
+  disableActEnvironment,
   createRenderStream,
   renderHookToSnapshotStream,
-  renderToRenderStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 
@@ -153,7 +153,7 @@ describe("useFragment", () => {
 
     expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -177,7 +177,7 @@ describe("useFragment", () => {
       "item 2",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.modify({
         fields: {
           list(list: readonly Reference[], { readField }) {
@@ -234,7 +234,7 @@ describe("useFragment", () => {
       "item 5",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -272,7 +272,7 @@ describe("useFragment", () => {
     ]);
 
     // set Item #2 back to its original value
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -890,7 +890,7 @@ describe("useFragment", () => {
 
     expect(renders).toEqual(["list", "item 1", "item 2", "item 5"]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -914,7 +914,7 @@ describe("useFragment", () => {
       "item 2",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.modify({
         fields: {
           list(list: readonly Reference[], { readField }) {
@@ -969,7 +969,7 @@ describe("useFragment", () => {
       "item 5",
     ]);
 
-    act(() => {
+    await act(async () => {
       cache.writeFragment({
         fragment: ItemFragment,
         data: {
@@ -1431,7 +1431,8 @@ describe("useFragment", () => {
       data: { __typename: "User", id: 2, name: "Charlie" },
     });
 
-    const { takeSnapshot, rerender } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ id }) => useFragment({ fragment, from: { __typename: "User", id } }),
       {
         initialProps: { id: 1 },
@@ -1450,7 +1451,7 @@ describe("useFragment", () => {
       });
     }
 
-    rerender({ id: 2 });
+    await rerender({ id: 2 });
 
     {
       const snapshot = await takeSnapshot();
@@ -1494,7 +1495,8 @@ describe("useFragment", () => {
       },
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useFragment({ fragment, from: { __typename: "Post", id: 1 } }),
       {
         wrapper: ({ children }) => (
@@ -1565,7 +1567,8 @@ describe("useFragment", () => {
       },
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment,
@@ -1902,7 +1905,8 @@ describe("data masking", () => {
       },
     });
 
-    const { takeSnapshot } = renderHookToSnapshotStream(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useFragment({
           fragment,
@@ -2194,11 +2198,14 @@ describe("has the same timing as `useQuery`", () => {
       return complete ? JSON.stringify(fragmentData) : "loading";
     }
 
-    const renderStream = renderToRenderStream(<Component />, {
+    using _disabledAct = disableActEnvironment();
+    const renderStream = createRenderStream({
       initialSnapshot: {
         queryData: undefined as any,
         fragmentData: undefined as any,
       },
+    });
+    await renderStream.render(<Component />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -2272,11 +2279,9 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify({ item: data })}</>;
     }
 
-    const renderStream = renderToRenderStream(<Parent />, {
+    using _disabledAct = disableActEnvironment();
+    const renderStream = createRenderStream({
       snapshotDOM: true,
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
       onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
@@ -2287,6 +2292,11 @@ describe("has the same timing as `useQuery`", () => {
           within(children).queryAllByText(/Item #2/).length
         );
       },
+    });
+    await renderStream.render(<Parent />, {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
     });
 
     {
@@ -2363,7 +2373,8 @@ describe("has the same timing as `useQuery`", () => {
       return <>{JSON.stringify(data)}</>;
     }
 
-    const renderStream = renderToRenderStream(<Parent />, {
+    using _disabledAct = disableActEnvironment();
+    const renderStream = createRenderStream({
       onRender() {
         const parent = screen.getByTestId("parent");
         const children = screen.getByTestId("children");
@@ -2374,6 +2385,8 @@ describe("has the same timing as `useQuery`", () => {
           within(children).queryAllByText(/Item #2/).length
         );
       },
+    });
+    await renderStream.render(<Parent />, {
       wrapper: ({ children }) => (
         <ApolloProvider client={client}>{children}</ApolloProvider>
       ),
@@ -2384,12 +2397,9 @@ describe("has the same timing as `useQuery`", () => {
       expect(withinDOM().queryAllByText(/Item #2/).length).toBe(2);
     }
 
-    act(
-      () =>
-        void cache.evict({
-          id: cache.identify(item2),
-        })
-    );
+    cache.evict({
+      id: cache.identify(item2),
+    });
 
     {
       const { withinDOM } = await renderStream.takeRender();

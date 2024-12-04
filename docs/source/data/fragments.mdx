@@ -1206,7 +1206,7 @@ With `enabled` set to `true`, any request-based API will type `data` using the m
 
 ##### Opting in per operation
 
-If you prefer an incremental approach, you can opt in to use masked types per operation. This can be useful when your application creates multiple Apollo Client instances where only a subset of them enable data masking.
+If you prefer an incremental approach, you can opt in to use masked types per operation. This can be useful when your application creates multiple Apollo Client instances where only a subset enables data masking.
 
 Apollo Client provides a `Masked` helper type that tells the client to use the masked type directly. You can use this with `TypedDocumentNode` or with generic arguments.
 

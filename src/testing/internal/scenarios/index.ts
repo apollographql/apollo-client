@@ -65,9 +65,12 @@ export function setupVariablesCase() {
 
 export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
   mocks: T,
-  delay = 150
+  delay = 150,
+  override = false
 ) {
-  return mocks.map((mock) => ({ delay, ...mock }));
+  return mocks.map((mock) =>
+    override ? { ...mock, delay } : { delay, ...mock }
+  );
 }
 
 interface Letter {

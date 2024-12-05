@@ -46,10 +46,11 @@ import wrap from "../../../testing/core/wrap";
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from "../../../testing/core/observableToPromise";
-import { itAsync, subscribeAndCount } from "../../../testing/core";
+import { itAsync, wait } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
+import { ObservableStream } from "../../../testing/internal";
 
 interface MockedMutation {
   reject: (reason: any) => any;
@@ -1790,88 +1791,86 @@ describe("QueryManager", () => {
     ]).then(resolve, reject);
   });
 
-  itAsync(
-    "updates result of previous query if the result of a new query overlaps",
-    (resolve, reject) => {
-      const query1 = gql`
-        {
-          people_one(id: 1) {
-            __typename
-            id
-            name
-            age
-          }
+  it("updates result of previous query if the result of a new query overlaps", async () => {
+    const query1 = gql`
+      {
+        people_one(id: 1) {
+          __typename
+          id
+          name
+          age
         }
-      `;
+      }
+    `;
 
-      const data1 = {
-        people_one: {
-          // Correctly identifying this entity is necessary so that fields
-          // from query1 and query2 can be safely merged in the cache.
-          __typename: "Human",
-          id: 1,
-          name: "Luke Skywalker",
-          age: 50,
-        },
-      };
+    const data1 = {
+      people_one: {
+        // Correctly identifying this entity is necessary so that fields
+        // from query1 and query2 can be safely merged in the cache.
+        __typename: "Human",
+        id: 1,
+        name: "Luke Skywalker",
+        age: 50,
+      },
+    };
 
-      const query2 = gql`
-        {
-          people_one(id: 1) {
-            __typename
-            id
-            name
-            username
-          }
+    const query2 = gql`
+      {
+        people_one(id: 1) {
+          __typename
+          id
+          name
+          username
         }
-      `;
+      }
+    `;
 
-      const data2 = {
+    const data2 = {
+      people_one: {
+        __typename: "Human",
+        id: 1,
+        name: "Luke Skywalker has a new name",
+        username: "luke",
+      },
+    };
+
+    const queryManager = mockQueryManager(
+      {
+        request: { query: query1 },
+        result: { data: data1 },
+      },
+      {
+        request: { query: query2 },
+        result: { data: data2 },
+        delay: 10,
+      }
+    );
+
+    const observable = queryManager.watchQuery<any>({ query: query1 });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitMatchedValue({ data: data1 });
+
+    await queryManager.query<any>({ query: query2 });
+
+    await expect(stream).toEmitMatchedValue({
+      data: {
         people_one: {
           __typename: "Human",
           id: 1,
           name: "Luke Skywalker has a new name",
-          username: "luke",
+          age: 50,
         },
-      };
+      },
+    });
 
-      const queryManager = mockQueryManager(
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data2 },
-          delay: 10,
-        }
-      );
-
-      const observable = queryManager.watchQuery<any>({ query: query1 });
-
-      subscribeAndCount(reject, observable, (handleCount, result) => {
-        if (handleCount === 1) {
-          expect(result.data).toEqual(data1);
-          queryManager.query<any>({ query: query2 });
-        } else if (handleCount === 2) {
-          expect(result.data).toEqual({
-            people_one: {
-              __typename: "Human",
-              id: 1,
-              name: "Luke Skywalker has a new name",
-              age: 50,
-            },
-          });
-          resolve();
-        }
-      });
-    }
-  );
+    await expect(stream).not.toEmitAnything();
+  });
 
   itAsync("warns if you forget the template literal tag", async (resolve) => {
     const queryManager = mockQueryManager();
     expect(() => {
-      queryManager.query<any>({
+      void queryManager.query<any>({
         // Bamboozle TypeScript into letting us do this
         query: "string" as any as DocumentNode,
       });
@@ -2438,262 +2437,224 @@ describe("QueryManager", () => {
     }
   );
 
-  itAsync(
-    "should not write unchanged network results to cache",
-    (resolve, reject) => {
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              info: {
-                merge: false,
-              },
+  it("should not write unchanged network results to cache", async () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            info: {
+              merge: false,
             },
           },
         },
-      });
+      },
+    });
 
-      const client = new ApolloClient({
-        cache,
-        link: new ApolloLink(
-          (operation) =>
-            new Observable((observer: Observer<FetchResult>) => {
-              switch (operation.operationName) {
-                case "A":
-                  observer.next!({ data: { info: { a: "ay" } } });
-                  break;
-                case "B":
-                  observer.next!({ data: { info: { b: "bee" } } });
-                  break;
-              }
-              observer.complete!();
-            })
-        ),
-      });
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer: Observer<FetchResult>) => {
+            switch (operation.operationName) {
+              case "A":
+                observer.next!({ data: { info: { a: "ay" } } });
+                break;
+              case "B":
+                observer.next!({ data: { info: { b: "bee" } } });
+                break;
+            }
+            observer.complete!();
+          })
+      ),
+    });
 
-      const queryA = gql`
-        query A {
-          info {
-            a
-          }
+    const queryA = gql`
+      query A {
+        info {
+          a
         }
-      `;
-      const queryB = gql`
-        query B {
-          info {
-            b
-          }
+      }
+    `;
+    const queryB = gql`
+      query B {
+        info {
+          b
         }
-      `;
+      }
+    `;
 
-      const obsA = client.watchQuery({
-        query: queryA,
-        returnPartialData: true,
-      });
+    const obsA = client.watchQuery({
+      query: queryA,
+      returnPartialData: true,
+    });
 
-      const obsB = client.watchQuery({
-        query: queryB,
-        returnPartialData: true,
-      });
+    const obsB = client.watchQuery({
+      query: queryB,
+      returnPartialData: true,
+    });
 
-      subscribeAndCount(reject, obsA, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {},
-            partial: true,
-          });
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                a: "ay",
-              },
-            },
-          });
-        } else if (count === 3) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {
-              info: {},
-            },
-            partial: true,
-          });
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                a: "ay",
-              },
-            },
-          });
-          setTimeout(resolve, 100);
-        } else {
-          reject(new Error(`Unexpected ${JSON.stringify({ count, result })}`));
-        }
-      });
+    const aStream = new ObservableStream(obsA);
+    const bStream = new ObservableStream(obsB);
 
-      subscribeAndCount(reject, obsB, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {},
-            partial: true,
-          });
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                b: "bee",
-              },
-            },
-          });
-        } else if (count === 3) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {
-              info: {},
-            },
-          });
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                b: "bee",
-              },
-            },
-          });
-          setTimeout(resolve, 100);
-        } else {
-          reject(new Error(`Unexpected ${JSON.stringify({ count, result })}`));
-        }
-      });
-    }
-  );
+    await expect(aStream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {},
+      partial: true,
+    });
 
-  itAsync(
-    "should disable feud-stopping logic after evict or modify",
-    (resolve, reject) => {
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              info: {
-                merge: false,
-              },
+    await expect(bStream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {},
+      partial: true,
+    });
+
+    await expect(aStream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          a: "ay",
+        },
+      },
+    });
+
+    await expect(bStream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          b: "bee",
+        },
+      },
+    });
+
+    await expect(aStream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {
+        info: {},
+      },
+      partial: true,
+    });
+
+    await expect(aStream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          a: "ay",
+        },
+      },
+    });
+
+    await expect(aStream).not.toEmitAnything();
+    await expect(bStream).not.toEmitAnything();
+  });
+
+  it("should disable feud-stopping logic after evict or modify", async () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            info: {
+              merge: false,
             },
           },
         },
-      });
+      },
+    });
 
-      const client = new ApolloClient({
-        cache,
-        link: new ApolloLink(
-          (operation) =>
-            new Observable((observer: Observer<FetchResult>) => {
-              observer.next!({ data: { info: { c: "see" } } });
-              observer.complete!();
-            })
-        ),
-      });
+    const client = new ApolloClient({
+      cache,
+      link: new ApolloLink(
+        () =>
+          new Observable((observer: Observer<FetchResult>) => {
+            observer.next!({ data: { info: { c: "see" } } });
+            observer.complete!();
+          })
+      ),
+    });
 
-      const query = gql`
-        query {
-          info {
-            c
-          }
+    const query = gql`
+      query {
+        info {
+          c
         }
-      `;
+      }
+    `;
 
-      const obs = client.watchQuery({
-        query,
-        returnPartialData: true,
-      });
+    const obs = client.watchQuery({
+      query,
+      returnPartialData: true,
+    });
 
-      subscribeAndCount(reject, obs, (count, result) => {
-        if (count === 1) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {},
-            partial: true,
-          });
-        } else if (count === 2) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                c: "see",
-              },
-            },
-          });
+    const stream = new ObservableStream(obs);
 
-          cache.evict({
-            fieldName: "info",
-          });
-        } else if (count === 3) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {},
-            partial: true,
-          });
-        } else if (count === 4) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                c: "see",
-              },
-            },
-          });
+    await expect(stream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {},
+      partial: true,
+    });
 
-          cache.modify({
-            fields: {
-              info(_, { DELETE }) {
-                return DELETE;
-              },
-            },
-          });
-        } else if (count === 5) {
-          expect(result).toEqual({
-            loading: true,
-            networkStatus: NetworkStatus.loading,
-            data: {},
-            partial: true,
-          });
-        } else if (count === 6) {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: {
-              info: {
-                c: "see",
-              },
-            },
-          });
+    await expect(stream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          c: "see",
+        },
+      },
+    });
 
-          setTimeout(resolve, 100);
-        } else {
-          reject(new Error(`Unexpected ${JSON.stringify({ count, result })}`));
-        }
-      });
-    }
-  );
+    cache.evict({ fieldName: "info" });
+
+    await expect(stream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {},
+      partial: true,
+    });
+
+    await expect(stream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          c: "see",
+        },
+      },
+    });
+
+    cache.modify({
+      fields: {
+        info(_, { DELETE }) {
+          return DELETE;
+        },
+      },
+    });
+
+    await expect(stream).toEmitValue({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      data: {},
+      partial: true,
+    });
+
+    await expect(stream).toEmitValue({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: {
+        info: {
+          c: "see",
+        },
+      },
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
 
   itAsync(
     "should not error when replacing unidentified data with a normalized ID",
@@ -2944,66 +2905,65 @@ describe("QueryManager", () => {
     }
   );
 
-  itAsync(
-    'only increments "queryInfo.lastRequestId" when fetching data from network',
-    (resolve, reject) => {
-      const query = gql`
-        query query($id: ID!) {
-          people_one(id: $id) {
-            name
-          }
+  it('only increments "queryInfo.lastRequestId" when fetching data from network', async () => {
+    const query = gql`
+      query query($id: ID!) {
+        people_one(id: $id) {
+          name
         }
-      `;
-      const variables = { id: 1 };
-      const dataOne = {
-        people_one: {
-          name: "Luke Skywalker",
-        },
-      };
-      const mockedResponses = [
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-      ];
+      }
+    `;
+    const variables = { id: 1 };
+    const dataOne = {
+      people_one: {
+        name: "Luke Skywalker",
+      },
+    };
+    const mockedResponses = [
+      {
+        request: { query, variables },
+        result: { data: dataOne },
+      },
+    ];
 
-      const queryManager = mockQueryManager(...mockedResponses);
-      const queryOptions: WatchQueryOptions<any> = {
-        query,
-        variables,
-        fetchPolicy: "cache-and-network",
-      };
-      const observable = queryManager.watchQuery(queryOptions);
+    const queryManager = mockQueryManager(...mockedResponses);
+    const queryOptions: WatchQueryOptions<any> = {
+      query,
+      variables,
+      fetchPolicy: "cache-and-network",
+    };
+    const observable = queryManager.watchQuery(queryOptions);
 
-      const mocks = mockFetchQuery(queryManager);
-      const queryId = "1";
-      const getQuery: QueryManager<any>["getQuery"] = (
-        queryManager as any
-      ).getQuery.bind(queryManager);
+    const mocks = mockFetchQuery(queryManager);
+    const queryId = "1";
+    const getQuery: QueryManager<any>["getQuery"] = (
+      queryManager as any
+    ).getQuery.bind(queryManager);
 
-      subscribeAndCount(reject, observable, async (handleCount) => {
-        const query = getQuery(queryId);
-        const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
-        expect(query.lastRequestId).toEqual(1);
-        expect(fqbpCalls.length).toBe(1);
+    const stream = new ObservableStream(observable);
 
-        // Simulate updating the options of the query, which will trigger
-        // fetchQueryByPolicy, but it should just read from cache and not
-        // update "queryInfo.lastRequestId". For more information, see
-        // https://github.com/apollographql/apollo-client/pull/7956#issue-610298427
-        await observable.setOptions({
-          ...queryOptions,
-          fetchPolicy: "cache-first",
-        });
+    await expect(stream).toEmitNext();
 
-        // "fetchQueryByPolicy" was called, but "lastRequestId" does not update
-        // since it was able to read from cache.
-        expect(query.lastRequestId).toEqual(1);
-        expect(fqbpCalls.length).toBe(2);
-        resolve();
+    {
+      const query = getQuery(queryId);
+      const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+
+      expect(query.lastRequestId).toEqual(1);
+      expect(fqbpCalls.length).toBe(1);
+
+      // Simulate updating the options of the query, which will trigger
+      // fetchQueryByPolicy, but it should just read from cache and not
+      // update "queryInfo.lastRequestId". For more information, see
+      // https://github.com/apollographql/apollo-client/pull/7956#issue-610298427
+      await observable.setOptions({
+        ...queryOptions,
+        fetchPolicy: "cache-first",
       });
+
+      expect(query.lastRequestId).toEqual(1);
+      expect(fqbpCalls.length).toBe(2);
     }
-  );
+  });
 
   describe("polling queries", () => {
     itAsync("allows you to poll queries", (resolve, reject) => {
@@ -5196,92 +5156,86 @@ describe("QueryManager", () => {
       }
     );
 
-    itAsync(
-      "also works with a query document and variables",
-      (resolve, reject) => {
-        const mutation = gql`
-          mutation changeAuthorName($id: ID!) {
-            changeAuthorName(newName: "Jack Smith", id: $id) {
-              firstName
-              lastName
-            }
+    it("also works with a query document and variables", async () => {
+      const mutation = gql`
+        mutation changeAuthorName($id: ID!) {
+          changeAuthorName(newName: "Jack Smith", id: $id) {
+            firstName
+            lastName
           }
-        `;
-        const mutationData = {
-          changeAuthorName: {
-            firstName: "Jack",
-            lastName: "Smith",
-          },
-        };
-        const query = gql`
-          query getAuthors($id: ID!) {
-            author(id: $id) {
-              firstName
-              lastName
-            }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
           }
-        `;
-        const data = {
-          author: {
-            firstName: "John",
-            lastName: "Smith",
-          },
-        };
-        const secondReqData = {
-          author: {
-            firstName: "Jane",
-            lastName: "Johnson",
-          },
-        };
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
 
-        const variables = { id: "1234" };
-        const mutationVariables = { id: "2345" };
-        const queryManager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data },
-            delay: 10,
-          },
-          {
-            request: { query, variables },
-            result: { data: secondReqData },
-            delay: 100,
-          },
-          {
-            request: { query: mutation, variables: mutationVariables },
-            result: { data: mutationData },
-            delay: 10,
-          }
-        );
-        const observable = queryManager.watchQuery<any>({ query, variables });
+      const variables = { id: "1234" };
+      const mutationVariables = { id: "2345" };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data },
+          delay: 10,
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+          delay: 100,
+        },
+        {
+          request: { query: mutation, variables: mutationVariables },
+          result: { data: mutationData },
+          delay: 10,
+        }
+      );
+      const observable = queryManager.watchQuery<any>({ query, variables });
+      const stream = new ObservableStream(observable);
 
-        subscribeAndCount(reject, observable, (count, result) => {
-          if (count === 1) {
-            expect(result.data).toEqual(data);
-            queryManager.mutate({
-              mutation,
-              variables: mutationVariables,
-              refetchQueries: [{ query, variables }],
-            });
-          } else if (count === 2) {
-            expect(result.data).toEqual(secondReqData);
-            expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      await expect(stream).toEmitMatchedValue({ data });
 
-            return new Promise((res) => setTimeout(res, 10))
-              .then(() => {
-                // Make sure the QueryManager cleans up legacy one-time queries like
-                // the one we requested above using refetchQueries.
-                queryManager["queries"].forEach((queryInfo, queryId) => {
-                  expect(queryId).not.toContain("legacyOneTimeQuery");
-                });
-              })
-              .then(resolve, reject);
-          } else {
-            reject("too many results");
-          }
-        });
-      }
-    );
+      await queryManager.mutate({
+        mutation,
+        variables: mutationVariables,
+        refetchQueries: [{ query, variables }],
+      });
+
+      await expect(stream).toEmitMatchedValue(
+        { data: secondReqData },
+        { timeout: 150 }
+      );
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+
+      await wait(10);
+
+      queryManager["queries"].forEach((_, queryId) => {
+        expect(queryId).not.toContain("legacyOneTimeQuery");
+      });
+
+      await expect(stream).not.toEmitAnything();
+    });
 
     itAsync(
       "also works with a conditional function that returns false",

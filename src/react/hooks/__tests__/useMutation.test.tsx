@@ -23,7 +23,6 @@ import {
   MockedProvider,
   MockSubscriptionLink,
   mockSingleLink,
-  subscribeAndCount,
   MockedResponse,
   MockLink,
 } from "../../../testing";
@@ -37,8 +36,11 @@ import { expectTypeOf } from "expect-type";
 import { Masked } from "../../../masking";
 import {
   disableActEnvironment,
+  createRenderStream,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+import { MutationTuple, QueryResult } from "../../types/types";
+import { invariant } from "../../../utilities/globals";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -2174,317 +2176,405 @@ describe("useMutation Hook", () => {
       });
     });
 
-    itAsync(
-      "using onQueryUpdated callback should not prevent cache broadcast",
-      async (resolve, reject) => {
-        // Mutating this array makes the tests below much more difficult to reason
-        // about, so instead we reassign the numbersArray variable to remove
-        // elements, without mutating the previous array object.
-        let numbersArray: ReadonlyArray<{ id: string; value: number }> = [
-          { id: "1", value: 324 },
-          { id: "2", value: 729 },
-          { id: "3", value: 987 },
-          { id: "4", value: 344 },
-          { id: "5", value: 72 },
-          { id: "6", value: 899 },
-          { id: "7", value: 222 },
-        ];
+    it("using onQueryUpdated callback should not prevent cache broadcast", async () => {
+      // Mutating this array makes the tests below much more difficult to reason
+      // about, so instead we reassign the numbersArray variable to remove
+      // elements, without mutating the previous array object.
+      let numbersArray: ReadonlyArray<{ id: string; value: number }> = [
+        { id: "1", value: 324 },
+        { id: "2", value: 729 },
+        { id: "3", value: 987 },
+        { id: "4", value: 344 },
+        { id: "5", value: 72 },
+        { id: "6", value: 899 },
+        { id: "7", value: 222 },
+      ];
 
-        type TNumbersQuery = {
-          numbers: {
-            __typename: "NumbersResult";
+      // Modifying this value means we can return a subset of our numbers array
+      // without needing to mutate or reassignn the original numbersArray.
+      let totalNumbers: number = numbersArray.length;
+
+      type TNumbersQuery = {
+        numbers: {
+          __typename: "NumbersResult";
+          id: string;
+          sum: number;
+          numbersArray: ReadonlyArray<{
             id: string;
-            sum: number;
-            numbersArray: ReadonlyArray<{
-              id: string;
-              value: number;
-            }>;
-          };
+            value: number;
+          }>;
         };
+      };
 
-        function getNumbersData(): TNumbersQuery {
-          return {
-            numbers: {
-              __typename: "NumbersResult",
-              id: "numbersId",
-              numbersArray,
-              sum: numbersArray.reduce((sum, b) => sum + b.value, 0),
-            },
-          };
-        }
+      function getNumbersData(length: number = totalNumbers): TNumbersQuery {
+        const numbers = numbersArray.slice(0, length);
 
-        const link = new ApolloLink((operation) => {
-          return new Observable((observer) => {
+        return {
+          numbers: {
+            __typename: "NumbersResult",
+            id: "numbersId",
+            numbersArray: numbers,
+            sum: numbers.reduce((sum, b) => sum + b.value, 0),
+          },
+        };
+      }
+
+      const link = new ApolloLink((operation) => {
+        return new Observable((observer) => {
+          setTimeout(() => {
             const { operationName } = operation;
             if (operationName === "NumbersQuery") {
               observer.next({
                 data: getNumbersData(),
               });
             } else if (operationName === "RemoveNumberMutation") {
-              const last = numbersArray[numbersArray.length - 1];
-              numbersArray = numbersArray.slice(0, -1);
               observer.next({
                 data: {
-                  removeLastNumber: last,
+                  removeLastNumber: getLastNumber(),
                 },
               });
-            }
-            setTimeout(() => {
-              observer.complete();
-            }, 50);
-          });
-        });
 
-        const client = new ApolloClient({
-          link,
-          cache: new InMemoryCache({
-            typePolicies: {
-              NumbersResult: {
-                fields: {
-                  numbersArray: { merge: false },
-                  sum(_, { readField }) {
-                    const numbersArray =
-                      readField<TNumbersQuery["numbers"]["numbersArray"]>(
-                        "numbersArray"
-                      );
-                    return (numbersArray || []).reduce(
-                      (sum, item) => sum + item.value,
-                      0
+              totalNumbers--;
+            }
+            observer.complete();
+          }, 50);
+        });
+      });
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            NumbersResult: {
+              fields: {
+                numbersArray: { merge: false },
+                sum(_, { readField }) {
+                  const numbersArray =
+                    readField<TNumbersQuery["numbers"]["numbersArray"]>(
+                      "numbersArray"
                     );
-                  },
+                  return (numbersArray || []).reduce(
+                    (sum, item) => sum + item.value,
+                    0
+                  );
                 },
               },
             },
-          }),
-        });
-
-        const NumbersQuery: TypedDocumentNode<TNumbersQuery> = gql`
-          query NumbersQuery {
-            numbers {
-              id
-              sum
-              numbersArray {
-                id
-                value
-              }
-            }
-          }
-        `;
-
-        const RemoveNumberMutation = gql`
-          mutation RemoveNumberMutation {
-            removeLastNumber {
-              id
-            }
-          }
-        `;
-
-        const { result } = renderHook(
-          () => ({
-            query: useQuery(NumbersQuery, {
-              notifyOnNetworkStatusChange: true,
-            }),
-
-            mutation: useMutation(RemoveNumberMutation, {
-              update(cache) {
-                const oldData = cache.readQuery({ query: NumbersQuery });
-                cache.writeQuery({
-                  query: NumbersQuery,
-                  data:
-                    oldData ?
-                      {
-                        ...oldData,
-                        numbers: {
-                          ...oldData.numbers,
-                          numbersArray: oldData.numbers.numbersArray.slice(
-                            0,
-                            -1
-                          ),
-                        },
-                      }
-                    : {
-                        numbers: {
-                          __typename: "NumbersResult",
-                          id: "numbersId",
-                          sum: 0,
-                          numbersArray: [],
-                        },
-                      },
-                });
-              },
-            }),
-          }),
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            ),
-          }
-        );
-
-        const obsQueryMap = client.getObservableQueries();
-        expect(obsQueryMap.size).toBe(1);
-        const observedResults: Array<{ data: TNumbersQuery }> = [];
-        subscribeAndCount(
-          reject,
-          obsQueryMap.values().next().value,
-          (count, result: { data: TNumbersQuery }) => {
-            observedResults.push(result);
-            expect(observedResults.length).toBe(count);
-            const data = getNumbersData();
-
-            if (count === 1) {
-              expect(result).toEqual({
-                loading: true,
-                networkStatus: NetworkStatus.loading,
-                partial: true,
-              });
-            } else if (count === 2) {
-              expect(data.numbers.numbersArray.length).toBe(7);
-              expect(result).toEqual({
-                loading: false,
-                networkStatus: NetworkStatus.ready,
-                data,
-              });
-            } else if (count === 3) {
-              expect(data.numbers.numbersArray.length).toBe(6);
-              expect(result).toEqual({
-                loading: false,
-                networkStatus: NetworkStatus.ready,
-                data,
-              });
-            } else if (count === 4) {
-              expect(data.numbers.numbersArray.length).toBe(5);
-              expect(result).toEqual({
-                loading: false,
-                networkStatus: NetworkStatus.ready,
-                data,
-              });
-
-              // This line is the only way to finish this test successfully.
-              setTimeout(resolve, 50);
-            } else {
-              // If we did not return false from the final onQueryUpdated function,
-              // we would receive an additional result here.
-              reject(
-                `too many renders (${count}); final result: ${JSON.stringify(
-                  result
-                )}`
-              );
-            }
-          }
-        );
-
-        expect(observedResults).toEqual([]);
-
-        expect(result.current.query.loading).toBe(true);
-        expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
-        expect(result.current.mutation[1].loading).toBe(false);
-        expect(result.current.mutation[1].called).toBe(false);
-        await waitFor(
-          () => {
-            expect(result.current.query.loading).toBe(false);
           },
-          { interval: 1 }
-        );
+        }),
+      });
 
-        expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.current.mutation[1].loading).toBe(false);
-        expect(result.current.mutation[1].called).toBe(false);
+      const NumbersQuery: TypedDocumentNode<TNumbersQuery> = gql`
+        query NumbersQuery {
+          numbers {
+            id
+            sum
+            numbersArray {
+              id
+              value
+            }
+          }
+        }
+      `;
 
-        expect(numbersArray[numbersArray.length - 1]).toEqual({
-          id: "7",
-          value: 222,
-        });
+      const RemoveNumberMutation = gql`
+        mutation RemoveNumberMutation {
+          removeLastNumber {
+            id
+          }
+        }
+      `;
 
-        const [mutate] = result.current.mutation;
-        await act(async () => {
-          expect(
-            await mutate()
-            // Not passing an onQueryUpdated callback should allow cache
-            // broadcasts to propagate as normal. The point of this test is to
-            // demonstrate that *adding* onQueryUpdated should not prevent cache
-            // broadcasts (see below for where we test that).
-          ).toEqual({
-            data: {
-              removeLastNumber: {
-                id: "7",
-              },
+      const renderStream = createRenderStream({
+        initialSnapshot: {
+          useQueryResult: null as QueryResult<TNumbersQuery> | null,
+          useMutationResult: null as MutationTuple<any, any> | null,
+        },
+      });
+
+      function App() {
+        renderStream.mergeSnapshot({
+          useQueryResult: useQuery(NumbersQuery, {
+            notifyOnNetworkStatusChange: true,
+          }),
+          useMutationResult: useMutation(RemoveNumberMutation, {
+            update(cache) {
+              const oldData = cache.readQuery({ query: NumbersQuery });
+              cache.writeQuery({
+                query: NumbersQuery,
+                data:
+                  oldData ?
+                    {
+                      ...oldData,
+                      numbers: {
+                        ...oldData.numbers,
+                        numbersArray: oldData.numbers.numbersArray.slice(0, -1),
+                      },
+                    }
+                  : {
+                      numbers: {
+                        __typename: "NumbersResult",
+                        id: "numbersId",
+                        sum: 0,
+                        numbersArray: [],
+                      },
+                    },
+              });
             },
-          });
+          }),
         });
 
-        expect(numbersArray[numbersArray.length - 1]).toEqual({
-          id: "6",
-          value: 899,
-        });
-
-        expect(result.current.query.loading).toBe(false);
-        expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.current.mutation[1].loading).toBe(false);
-        expect(result.current.mutation[1].called).toBe(true);
-
-        await act(async () => {
-          expect(
-            await mutate({
-              // Adding this onQueryUpdated callback, which merely examines the
-              // updated query and its DiffResult, should not change the broadcast
-              // behavior of the ObservableQuery.
-              onQueryUpdated(oq, diff) {
-                expect(oq.queryName).toBe("NumbersQuery");
-                expect(diff.result.numbers.numbersArray.length).toBe(5);
-                expect(diff.result.numbers.sum).toBe(2456);
-              },
-            })
-          ).toEqual({
-            data: {
-              removeLastNumber: {
-                id: "6",
-              },
-            },
-          });
-        });
-
-        expect(numbersArray[numbersArray.length - 1]).toEqual({
-          id: "5",
-          value: 72,
-        });
-
-        expect(result.current.query.loading).toBe(false);
-        expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.current.mutation[1].loading).toBe(false);
-        expect(result.current.mutation[1].called).toBe(true);
-
-        await act(async () => {
-          expect(
-            await mutate({
-              onQueryUpdated(oq, diff) {
-                expect(oq.queryName).toBe("NumbersQuery");
-                expect(diff.result.numbers.numbersArray.length).toBe(4);
-                expect(diff.result.numbers.sum).toBe(2384);
-                // Returning false from onQueryUpdated prevents the cache broadcast.
-                return false;
-              },
-            })
-          ).toEqual({
-            data: {
-              removeLastNumber: {
-                id: "5",
-              },
-            },
-          });
-        });
-
-        expect(numbersArray[numbersArray.length - 1]).toEqual({
-          id: "4",
-          value: 344,
-        });
-
-        expect(result.current.query.loading).toBe(false);
-        expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.current.mutation[1].loading).toBe(false);
-        expect(result.current.mutation[1].called).toBe(true);
+        return null;
       }
-    );
+
+      using _disabledAct = disableActEnvironment();
+      await renderStream.render(<App />, {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      });
+
+      async function getNextSnapshot() {
+        const { snapshot } = await renderStream.takeRender();
+
+        invariant(snapshot.useQueryResult);
+        invariant(snapshot.useMutationResult);
+
+        return {
+          useQueryResult: snapshot.useQueryResult,
+          useMutationResult: snapshot.useMutationResult,
+        };
+      }
+
+      function getLastNumber() {
+        const numbers = numbersArray.slice(0, totalNumbers);
+
+        return numbers[numbers.length - 1];
+      }
+
+      expect(getLastNumber()).toEqual({ id: "7", value: 222 });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+
+        expect(useQueryResult.loading).toBe(true);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.loading);
+        expect(useQueryResult.data).toBeUndefined();
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(false);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(7);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(false);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      const [mutate] =
+        renderStream.getCurrentRender().snapshot.useMutationResult!;
+
+      let promise = mutate();
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(7);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      // Not passing an onQueryUpdated callback should allow cache
+      // broadcasts to propagate as normal. The point of this test is to
+      // demonstrate that *adding* onQueryUpdated should not prevent cache
+      // broadcasts (see below for where we test that).
+      await expect(promise).resolves.toEqual({
+        data: {
+          removeLastNumber: {
+            id: "7",
+          },
+        },
+      });
+
+      expect(getLastNumber()).toEqual({ id: "6", value: 899 });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(6);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(6);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "7" } });
+      }
+
+      promise = mutate({
+        // Adding this onQueryUpdated callback, which merely examines the
+        // updated query and its DiffResult, should not change the broadcast
+        // behavior of the ObservableQuery.
+        onQueryUpdated(oq, diff) {
+          expect(oq.queryName).toBe("NumbersQuery");
+          expect(diff.result.numbers.numbersArray.length).toBe(5);
+          expect(diff.result.numbers.sum).toBe(2456);
+        },
+      });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(6);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      await expect(promise).resolves.toEqual({
+        data: {
+          removeLastNumber: {
+            id: "6",
+          },
+        },
+      });
+
+      expect(getLastNumber()).toEqual({ id: "5", value: 72 });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(5);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(5);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "6" } });
+      }
+
+      promise = mutate({
+        onQueryUpdated(oq, diff) {
+          expect(oq.queryName).toBe("NumbersQuery");
+          expect(diff.result.numbers.numbersArray.length).toBe(4);
+          expect(diff.result.numbers.sum).toBe(2384);
+          // Returning false from onQueryUpdated prevents the cache broadcast.
+          return false;
+        },
+      });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(5);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        expect(useQueryResult.data).toEqual(data);
+
+        expect(mutationResult.loading).toBe(true);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toBeUndefined();
+      }
+
+      await expect(promise).resolves.toEqual({
+        data: {
+          removeLastNumber: {
+            id: "5",
+          },
+        },
+      });
+
+      expect(getLastNumber()).toEqual({ id: "4", value: 344 });
+
+      {
+        const { useQueryResult, useMutationResult } = await getNextSnapshot();
+        const [, mutationResult] = useMutationResult;
+        const data = getNumbersData();
+
+        expect(data.numbers.numbersArray).toHaveLength(4);
+
+        expect(useQueryResult.loading).toBe(false);
+        expect(useQueryResult.networkStatus).toBe(NetworkStatus.ready);
+        // This mutation did not braodcast results, so we expect our numbers to
+        // equal the previous set.
+        expect(useQueryResult.data).toEqual(getNumbersData(5));
+
+        expect(mutationResult.loading).toBe(false);
+        expect(mutationResult.called).toBe(true);
+        expect(mutationResult.data).toEqual({ removeLastNumber: { id: "5" } });
+      }
+
+      await expect(renderStream).not.toRerender();
+    });
 
     it("refetchQueries should work with BatchHttpLink", async () => {
       const MUTATION_1 = gql`

@@ -4,8 +4,9 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef } from "../../react/index.js";
-import { NextRenderOptions } from "../internal/index.js";
+import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
+import { TakeOptions } from "../internal/ObservableStream.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -34,6 +35,38 @@ interface ApolloCustomMatchers<R = void, T = {}> {
 
   toBeGarbageCollected: T extends WeakRef<any> ? () => Promise<R>
   : { error: "matcher needs to be called on a WeakRef instance" };
+
+  toComplete: T extends ObservableStream<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEmitAnything: T extends ObservableStream<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEmitError: T extends ObservableStream<any> ?
+    (error?: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  /**
+   * Used to determine if the observable stream emitted a `next` event. Use
+   * `toEmitValue` to check if the `next` event emitted a specific value.
+   */
+  toEmitNext: T extends ObservableStream<any> ?
+    (options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEmitValue: T extends ObservableStream<any> ?
+    (value: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEmitValueStrict: T extends ObservableStream<any> ?
+    (value: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEmitMatchedValue: T extends ObservableStream<any> ?
+    (value: any, options?: TakeOptions) => Promise<R>
+  : { error: "matcher needs to be called on an ObservableStream instance" };
 }
 
 declare global {

@@ -3706,7 +3706,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   const stream = new ObservableStream(observable);
 
-  expect(await stream.takeNext()).toEqual({
+  await expect(stream).toEmitValue({
     loading: false,
     networkStatus: NetworkStatus.ready,
     data: {
@@ -3714,9 +3714,9 @@ test("does not return partial cache data when `returnPartialData` is false and n
     },
   });
 
-  observable.reobserve({ variables: { id: 1 } });
+  await observable.reobserve({ variables: { id: 1 } });
 
-  expect(await stream.takeNext()).toEqual({
+  await expect(stream).toEmitValue({
     loading: true,
     networkStatus: NetworkStatus.setVariables,
     data: undefined,
@@ -3728,7 +3728,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
     data: undefined,
   });
 
-  expect(await stream.takeNext()).toEqual({
+  await expect(stream).toEmitValue({
     loading: false,
     networkStatus: NetworkStatus.ready,
     data: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },

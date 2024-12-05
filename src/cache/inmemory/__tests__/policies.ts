@@ -13,7 +13,7 @@ import {
 import { MissingFieldError } from "../..";
 import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
 import { FieldPolicy, StorageType } from "../policies";
-import { itAsync, MockLink } from "../../../testing/core";
+import { MockLink } from "../../../testing/core";
 import { ObservableStream, spyOnConsole } from "../../../testing/internal";
 
 function reverse(s: string) {
@@ -3505,188 +3505,186 @@ describe("type policies", function () {
       });
     });
 
-    itAsync(
-      "can handle Relay-style pagination without args",
-      (resolve, reject) => {
-        const cache = new InMemoryCache({
-          addTypename: false,
-          typePolicies: {
-            Query: {
-              fields: {
-                todos: relayStylePagination(),
-              },
+    it("can handle Relay-style pagination without args", async () => {
+      const cache = new InMemoryCache({
+        addTypename: false,
+        typePolicies: {
+          Query: {
+            fields: {
+              todos: relayStylePagination(),
             },
           },
-        });
+        },
+      });
 
-        const firstQuery = gql`
-          query TodoQuery {
-            todos {
-              totalCount
-            }
+      const firstQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
           }
-        `;
+        }
+      `;
 
-        const secondQuery = gql`
-          query TodoQuery {
-            todos(after: $after, first: $first) {
-              pageInfo {
-                __typename
-                hasNextPage
-                endCursor
-              }
-              totalCount
-              edges {
+      const secondQuery = gql`
+        query TodoQuery {
+          todos(after: $after, first: $first) {
+            pageInfo {
+              __typename
+              hasNextPage
+              endCursor
+            }
+            totalCount
+            edges {
+              __typename
+              id
+              node {
                 __typename
                 id
-                node {
-                  __typename
-                  id
-                  title
-                }
+                title
               }
             }
           }
-        `;
+        }
+      `;
 
-        const thirdQuery = gql`
-          query TodoQuery {
-            todos {
-              totalCount
-              extraMetaData
-            }
+      const thirdQuery = gql`
+        query TodoQuery {
+          todos {
+            totalCount
+            extraMetaData
           }
-        `;
+        }
+      `;
 
-        const secondVariables = {
-          first: 1,
-        };
+      const secondVariables = {
+        first: 1,
+      };
 
-        const secondEdges = [
-          {
-            __typename: "TodoEdge",
-            id: "edge1",
-            node: {
-              __typename: "Todo",
-              id: "1",
-              title: "Fix the tests",
-            },
+      const secondEdges = [
+        {
+          __typename: "TodoEdge",
+          id: "edge1",
+          node: {
+            __typename: "Todo",
+            id: "1",
+            title: "Fix the tests",
           },
-        ];
+        },
+      ];
 
-        const secondPageInfo = {
-          __typename: "PageInfo",
-          endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
-          hasNextPage: true,
-        };
+      const secondPageInfo = {
+        __typename: "PageInfo",
+        endCursor: "YXJyYXljb25uZWN0aW9uOjI=",
+        hasNextPage: true,
+      };
 
-        const link = new MockLink([
-          {
-            request: {
-              query: firstQuery,
-            },
-            result: {
-              data: {
-                todos: {
-                  totalCount: 1292,
-                },
-              },
-            },
+      const link = new MockLink([
+        {
+          request: {
+            query: firstQuery,
           },
-          {
-            request: {
-              query: secondQuery,
-              variables: secondVariables,
-            },
-            result: {
-              data: {
-                todos: {
-                  edges: secondEdges,
-                  pageInfo: secondPageInfo,
-                  totalCount: 1292,
-                },
-              },
-            },
-          },
-          {
-            request: {
-              query: thirdQuery,
-            },
-            result: {
-              data: {
-                todos: {
-                  totalCount: 1293,
-                  extraMetaData: "extra",
-                },
-              },
-            },
-          },
-        ]).setOnError(reject);
-
-        const client = new ApolloClient({ link, cache });
-
-        client.query({ query: firstQuery }).then((result) => {
-          expect(result).toEqual({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
+          result: {
             data: {
               todos: {
                 totalCount: 1292,
               },
             },
-          });
-
-          expect(cache.extract()).toEqual({
-            ROOT_QUERY: {
-              __typename: "Query",
+          },
+        },
+        {
+          request: {
+            query: secondQuery,
+            variables: secondVariables,
+          },
+          result: {
+            data: {
               todos: {
-                edges: [],
-                pageInfo: {
-                  endCursor: "",
-                  hasNextPage: true,
-                  hasPreviousPage: false,
-                  startCursor: "",
-                },
+                edges: secondEdges,
+                pageInfo: secondPageInfo,
                 totalCount: 1292,
               },
             },
-          });
+          },
+        },
+        {
+          request: {
+            query: thirdQuery,
+          },
+          result: {
+            data: {
+              todos: {
+                totalCount: 1293,
+                extraMetaData: "extra",
+              },
+            },
+          },
+        },
+      ]).setOnError((error) => {
+        throw new Error(error);
+      });
 
-          client
-            .query({ query: secondQuery, variables: secondVariables })
-            .then((result) => {
-              expect(result).toEqual({
-                loading: false,
-                networkStatus: NetworkStatus.ready,
-                data: {
-                  todos: {
-                    edges: secondEdges,
-                    pageInfo: secondPageInfo,
-                    totalCount: 1292,
-                  },
-                },
-              });
+      const client = new ApolloClient({ link, cache });
 
-              expect(cache.extract()).toMatchSnapshot();
+      let result = await client.query({ query: firstQuery });
 
-              client.query({ query: thirdQuery }).then((result) => {
-                expect(result).toEqual({
-                  loading: false,
-                  networkStatus: NetworkStatus.ready,
-                  data: {
-                    todos: {
-                      totalCount: 1293,
-                      extraMetaData: "extra",
-                    },
-                  },
-                });
-                expect(cache.extract()).toMatchSnapshot();
-                resolve();
-              });
-            });
-        });
-      }
-    );
+      expect(result).toEqual({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          todos: {
+            totalCount: 1292,
+          },
+        },
+      });
+
+      expect(cache.extract()).toEqual({
+        ROOT_QUERY: {
+          __typename: "Query",
+          todos: {
+            edges: [],
+            pageInfo: {
+              endCursor: "",
+              hasNextPage: true,
+              hasPreviousPage: false,
+              startCursor: "",
+            },
+            totalCount: 1292,
+          },
+        },
+      });
+
+      result = await client.query({
+        query: secondQuery,
+        variables: secondVariables,
+      });
+
+      expect(result).toEqual({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          todos: {
+            edges: secondEdges,
+            pageInfo: secondPageInfo,
+            totalCount: 1292,
+          },
+        },
+      });
+
+      expect(cache.extract()).toMatchSnapshot();
+
+      result = await client.query({ query: thirdQuery });
+      expect(result).toEqual({
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        data: {
+          todos: {
+            totalCount: 1293,
+            extraMetaData: "extra",
+          },
+        },
+      });
+      expect(cache.extract()).toMatchSnapshot();
+    });
 
     it("can handle Relay-style pagination", async () => {
       const cache = new InMemoryCache({
@@ -4103,7 +4101,7 @@ describe("type policies", function () {
       });
       expect(cache.extract()).toMatchSnapshot();
 
-      observable.fetchMore({ variables: secondVariables });
+      await observable.fetchMore({ variables: secondVariables });
 
       {
         const result = await stream.takeNext();
@@ -4128,7 +4126,7 @@ describe("type policies", function () {
         expect(cache.extract()).toMatchSnapshot();
       }
 
-      observable.fetchMore({ variables: thirdVariables });
+      await observable.fetchMore({ variables: thirdVariables });
 
       {
         const result = await stream.takeNext();
@@ -4156,7 +4154,7 @@ describe("type policies", function () {
         expect(cache.extract()).toMatchSnapshot();
       }
 
-      observable.fetchMore({ variables: fourthVariables });
+      await observable.fetchMore({ variables: fourthVariables });
 
       {
         const result = await stream.takeNext();
@@ -4187,7 +4185,7 @@ describe("type policies", function () {
         expect(cache.extract()).toMatchSnapshot();
       }
 
-      observable.fetchMore({ variables: fifthVariables });
+      await observable.fetchMore({ variables: fifthVariables });
 
       {
         const result = await stream.takeNext();
@@ -5157,7 +5155,7 @@ describe("type policies", function () {
       expect(personMergeCount).toBe(3);
     });
 
-    it("can force merging references with non-normalized objects", function () {
+    it("can force merging references with non-normalized objects", async function () {
       const nameQuery = gql`
         query GetName {
           viewer {
@@ -5175,7 +5173,7 @@ describe("type policies", function () {
         }
       `;
 
-      check(
+      await check(
         new InMemoryCache({
           typePolicies: {
             Query: {
@@ -5189,7 +5187,7 @@ describe("type policies", function () {
         })
       );
 
-      check(
+      await check(
         new InMemoryCache({
           typePolicies: {
             User: {
@@ -5199,7 +5197,7 @@ describe("type policies", function () {
         })
       );
 
-      function check(cache: InMemoryCache) {
+      async function check(cache: InMemoryCache) {
         // Write nameQuery first, so the existing data will be a
         // non-normalized object when we write emailQuery next.
         cache.writeQuery({
@@ -5271,7 +5269,7 @@ describe("type policies", function () {
           },
         });
 
-        cache.reset();
+        await cache.reset();
         expect(cache.extract()).toEqual({});
 
         // Write emailQuery first, so the existing data will be a

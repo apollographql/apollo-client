@@ -1851,7 +1851,7 @@ describe("QueryManager", () => {
 
     await expect(stream).toEmitMatchedValue({ data: data1 });
 
-    queryManager.query<any>({ query: query2 });
+    await queryManager.query<any>({ query: query2 });
 
     await expect(stream).toEmitMatchedValue({
       data: {
@@ -1870,7 +1870,7 @@ describe("QueryManager", () => {
   itAsync("warns if you forget the template literal tag", async (resolve) => {
     const queryManager = mockQueryManager();
     expect(() => {
-      queryManager.query<any>({
+      void queryManager.query<any>({
         // Bamboozle TypeScript into letting us do this
         query: "string" as any as DocumentNode,
       });
@@ -5216,7 +5216,7 @@ describe("QueryManager", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      queryManager.mutate({
+      await queryManager.mutate({
         mutation,
         variables: mutationVariables,
         refetchQueries: [{ query, variables }],

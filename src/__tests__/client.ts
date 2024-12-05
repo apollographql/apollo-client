@@ -72,19 +72,19 @@ describe("client", () => {
     });
 
     expect(() => {
-      client.query(
+      void client.query(
         gql`
           {
             a
           }
         ` as any
       );
-    }).toThrowError(
+    }).toThrow(
       "query option is required. You must specify your GraphQL document in the query option."
     );
     expect(() => {
-      client.query({ query: "{ a }" } as any);
-    }).toThrowError('You must wrap the query string in a "gql" tag.');
+      void client.query({ query: "{ a }" } as any);
+    }).toThrow('You must wrap the query string in a "gql" tag.');
   });
 
   it("should throw an error if mutation option is missing", async () => {
@@ -137,48 +137,44 @@ describe("client", () => {
     }
   );
 
-  itAsync(
-    "should allow a single query with an apollo-link enabled network interface",
-    (resolve, reject) => {
-      const query = gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-              __typename
-            }
+  it("should allow a single query with an apollo-link enabled network interface", async () => {
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
             __typename
           }
+          __typename
         }
-      `;
+      }
+    `;
 
-      const data = {
-        allPeople: {
-          people: [
-            {
-              name: "Luke Skywalker",
-              __typename: "Person",
-            },
-          ],
-          __typename: "People",
-        },
-      };
+    const data = {
+      allPeople: {
+        people: [
+          {
+            name: "Luke Skywalker",
+            __typename: "Person",
+          },
+        ],
+        __typename: "People",
+      },
+    };
 
-      const variables = { first: 1 };
+    const variables = { first: 1 };
 
-      const link = ApolloLink.from([() => Observable.of({ data })]);
+    const link = ApolloLink.from([() => Observable.of({ data })]);
 
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-      client.query({ query, variables }).then((actualResult) => {
-        expect(actualResult.data).toEqual(data);
-        resolve();
-      });
-    }
-  );
+    const actualResult = await client.query({ query, variables });
+
+    expect(actualResult.data).toEqual(data);
+  });
 
   itAsync(
     "should allow for a single query with complex default variables to take place",
@@ -1767,7 +1763,7 @@ describe("client", () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        client.query({ query, returnPartialData: true } as QueryOptions);
+        void client.query({ query, returnPartialData: true } as QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
 
@@ -1777,7 +1773,7 @@ describe("client", () => {
         cache: new InMemoryCache(),
       });
       expect(() => {
-        client.query({ query, returnPartialData: true } as QueryOptions);
+        void client.query({ query, returnPartialData: true } as QueryOptions);
       }).toThrowError(/returnPartialData/);
     });
   });
@@ -2072,7 +2068,7 @@ describe("client", () => {
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
-        obs.setOptions({ query, fetchPolicy: "cache-first" });
+        void obs.setOptions({ query, fetchPolicy: "cache-first" });
       }, 10);
 
       await expect(stream).toEmitMatchedValue({ data: data2 });
@@ -3653,7 +3649,7 @@ describe("@connection", () => {
       // Refetching makes a copy of the current options, which
       // includes options.nextFetchPolicy, so the inner
       // nextFetchPolicy function ends up getting called twice.
-      obs.refetch();
+      void obs.refetch();
 
       await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
       expect(nextFetchPolicyCallCount).toBe(2);

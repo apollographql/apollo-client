@@ -140,7 +140,7 @@ describe("ObservableQuery", () => {
           expect(data).toEqual(dataOne);
         }
 
-        observable.setOptions({ query, pollInterval: 10 });
+        await observable.setOptions({ query, pollInterval: 10 });
 
         {
           const { data } = await stream.takeNext();
@@ -183,7 +183,7 @@ describe("ObservableQuery", () => {
           expect(data).toEqual(dataOne);
         }
 
-        observable.setOptions({ query, pollInterval: 0 });
+        await observable.setOptions({ query, pollInterval: 0 });
 
         await expect(stream).not.toEmitAnything();
       });
@@ -219,7 +219,7 @@ describe("ObservableQuery", () => {
           expect(data).toEqual(dataOne);
         }
 
-        observable.setOptions({ query, pollInterval: 10 });
+        await observable.setOptions({ query, pollInterval: 10 });
 
         {
           const { data } = await stream.takeNext();
@@ -283,7 +283,7 @@ describe("ObservableQuery", () => {
         expect(loading).toBe(false);
       }
 
-      observable.refetch(variables2);
+      await observable.refetch(variables2);
 
       {
         const { loading, networkStatus } = await stream.takeNext();
@@ -351,7 +351,7 @@ describe("ObservableQuery", () => {
         expect(result.data).toEqual(data);
       }
 
-      observable.refetch();
+      await observable.refetch();
 
       {
         const { loading, networkStatus } = await stream.takeNext();
@@ -462,11 +462,11 @@ describe("ObservableQuery", () => {
         expect(data).toEqual(dataOne);
       }
 
-      observable.refetch();
+      await observable.refetch().catch(() => {});
 
       await stream.takeError();
 
-      observable.refetch();
+      await observable.refetch();
 
       await expect(stream).not.toEmitAnything();
     });
@@ -492,7 +492,7 @@ describe("ObservableQuery", () => {
         expect(data).toEqual(dataOne);
       }
 
-      observable.setOptions({ fetchPolicy: "network-only" });
+      await observable.setOptions({ fetchPolicy: "network-only" });
 
       {
         const { data, loading } = await stream.takeNext();
@@ -605,7 +605,7 @@ describe("ObservableQuery", () => {
         expect(timesFired).toBe(0);
       }
 
-      observable.setOptions({ fetchPolicy: "cache-first" });
+      await observable.setOptions({ fetchPolicy: "cache-first" });
 
       {
         const result = await stream.takeNext();
@@ -779,7 +779,7 @@ describe("ObservableQuery", () => {
         expect(result.data).toEqual(dataOne);
       }
 
-      observable.setVariables(differentVariables);
+      await observable.setVariables(differentVariables);
 
       {
         const result = await stream.takeNext();
@@ -929,7 +929,7 @@ describe("ObservableQuery", () => {
         expect(observable.getCurrentResult().errors).toEqual([error]);
       }
 
-      observable.setVariables(differentVariables);
+      await observable.setVariables(differentVariables);
       expect(observable.getCurrentResult().errors).toBeUndefined();
 
       {
@@ -981,7 +981,7 @@ describe("ObservableQuery", () => {
         expect(result.networkStatus).toBe(NetworkStatus.ready);
       }
 
-      observable.setVariables(differentVariables);
+      await observable.setVariables(differentVariables);
 
       {
         const result = await stream.takeNext();
@@ -1031,7 +1031,7 @@ describe("ObservableQuery", () => {
         expect(result.networkStatus).toBe(NetworkStatus.ready);
       }
 
-      observable.refetch(differentVariables);
+      await observable.refetch(differentVariables);
 
       {
         const result = await stream.takeNext();
@@ -1069,7 +1069,7 @@ describe("ObservableQuery", () => {
 
       expect(result.data).toEqual(dataOne);
 
-      observable.setVariables(variables);
+      await observable.setVariables(variables);
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1093,7 +1093,7 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      observable.setVariables(differentVariables);
+      await observable.setVariables(differentVariables);
 
       const result = await stream.takeNext();
 
@@ -1139,7 +1139,7 @@ describe("ObservableQuery", () => {
         });
       }
 
-      observable.refetch(differentVariables);
+      await observable.refetch(differentVariables);
 
       {
         const result = await stream.takeNext();
@@ -1188,7 +1188,7 @@ describe("ObservableQuery", () => {
       });
       const stream = new ObservableStream(observableQuery);
 
-      observableQuery.refetch({ id: 2 });
+      void observableQuery.refetch({ id: 2 });
 
       observers[0].next({ data: dataOne });
       observers[0].complete();
@@ -1237,8 +1237,8 @@ describe("ObservableQuery", () => {
         });
       }
 
-      observableQuery.refetch({ id: 2 });
-      observableQuery.refetch({ id: 3 });
+      void observableQuery.refetch({ id: 2 });
+      void observableQuery.refetch({ id: 3 });
 
       observers[1].next({ data: dataTwo });
       observers[1].complete();
@@ -1290,7 +1290,7 @@ describe("ObservableQuery", () => {
       const stream = new ObservableStream(observable);
 
       await stream.takeNext();
-      observable.refetch(differentVariables);
+      await observable.refetch(differentVariables);
 
       const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
       expect(fqbpCalls.length).toBe(2);
@@ -1361,7 +1361,7 @@ describe("ObservableQuery", () => {
 
         expect(result.data).toEqual(data);
         expect(result.loading).toBe(false);
-        observable.refetch(variables2);
+        await observable.refetch(variables2);
       }
 
       {
@@ -1376,7 +1376,7 @@ describe("ObservableQuery", () => {
 
         expect(result.data).toEqual(data2);
         expect(result.loading).toBe(false);
-        observable.refetch(variables1);
+        await observable.refetch(variables1);
       }
 
       {
@@ -1475,7 +1475,7 @@ describe("ObservableQuery", () => {
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
 
-      observable.refetch(variables2);
+      await observable.refetch(variables2);
 
       {
         const result = await stream.takeNext();
@@ -1631,12 +1631,9 @@ describe("ObservableQuery", () => {
       // Make the next network request fail.
       linkObservable = errorObservable;
 
-      try {
-        await observable.refetch();
-        throw new Error("Refetch should have errored");
-      } catch (error) {
-        expect(error).toBe(intentionalNetworkFailure);
-      }
+      await expect(() => observable.refetch()).rejects.toThrow(
+        intentionalNetworkFailure
+      );
 
       {
         const result = await stream.takeNext();
@@ -1849,31 +1846,25 @@ describe("ObservableQuery", () => {
           );
         }
 
-        await promise.then(
-          (result) => {
-            throw new Error(
-              `unexpected result ${JSON.stringify(result)}; should have thrown`
-            );
-          },
-          (error) => {
-            expect((error as Error).message).toMatch(
-              "No more mocked responses for the query: query QueryWithVarsVar($vars: [String!])"
-            );
-            expect(console.warn).toHaveBeenCalledTimes(1);
-            expect(console.warn).toHaveBeenCalledWith(
-              [
-                "Called refetch(%o) for query %o, which does not declare a $variables variable.",
-                "Did you mean to call refetch(variables) instead of refetch({ variables })?",
-              ].join("\n"),
-              { variables: { vars: ["d", "e"] } },
-              "QueryWithVarsVar"
-            );
-          }
+        await expect(promise).rejects.toEqual(
+          expect.objectContaining({
+            message: expect.stringMatching(
+              /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
+            ),
+          })
+        );
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          [
+            "Called refetch(%o) for query %o, which does not declare a $variables variable.",
+            "Did you mean to call refetch(variables) instead of refetch({ variables })?",
+          ].join("\n"),
+          { variables: { vars: ["d", "e"] } },
+          "QueryWithVarsVar"
         );
 
         await expect(stream).not.toEmitAnything();
       });
-
       it("should not warn if passed { variables } and query declares $variables", async () => {
         using _ = spyOnConsole("warn");
 
@@ -1930,7 +1921,7 @@ describe("ObservableQuery", () => {
           });
         }
 
-        observableWithVariablesVar.refetch({ variables: ["d", "e"] });
+        await observableWithVariablesVar.refetch({ variables: ["d", "e"] });
 
         {
           const result = await stream.takeNext();
@@ -2058,7 +2049,7 @@ describe("ObservableQuery", () => {
         expect(observable.getCurrentResult()).toEqual(result);
       }
 
-      observable.refetch();
+      void observable.refetch();
 
       {
         const result = await stream.takeNext();
@@ -2162,9 +2153,9 @@ describe("ObservableQuery", () => {
 
       const observable = queryManager.watchQuery({ query, variables });
 
-      await observable.result().catch((theError: any) => {
-        expect(theError.graphQLErrors).toEqual([error]);
-      });
+      await expect(observable.result()).rejects.toThrow(
+        new ApolloError({ graphQLErrors: [error] })
+      );
 
       const currentResult = observable.getCurrentResult();
       const currentResult2 = observable.getCurrentResult();
@@ -2832,7 +2823,7 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate2
           );
 
-          observableQuery.refetch();
+          void observableQuery.refetch();
 
           cache.writeQuery({ query, data: cacheValues.update3 });
           expect(observableQuery.getCurrentResult()).toStrictEqual(
@@ -2912,7 +2903,7 @@ describe("ObservableQuery", () => {
           expect(observable.getCurrentResult()).toEqual(result);
         }
 
-        queryManager.mutate({
+        void queryManager.mutate({
           mutation,
           optimisticResponse,
           updateQueries,
@@ -3113,7 +3104,7 @@ describe("ObservableQuery", () => {
       expect(observable.query).toBe(result);
     });
 
-    it("is updated with transformed query when `setOptions` changes the query", () => {
+    it("is updated with transformed query when `setOptions` changes the query", async () => {
       const query = gql`
         query {
           currentUser {
@@ -3146,7 +3137,7 @@ describe("ObservableQuery", () => {
         }
       `);
 
-      observable.setOptions({ query: updatedQuery });
+      await observable.setOptions({ query: updatedQuery });
 
       expect(observable.query).toMatchDocument(gql`
         query {
@@ -3507,9 +3498,9 @@ test("handles changing variables in rapid succession before other request is com
     });
   });
 
-  observable.reobserve({ variables: { department: "HR" } });
+  void observable.reobserve({ variables: { department: "HR" } });
   await wait(10);
-  observable.reobserve({ variables: { department: null } });
+  void observable.reobserve({ variables: { department: null } });
 
   // Wait for request to finish
   await wait(50);

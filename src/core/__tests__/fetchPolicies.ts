@@ -482,7 +482,7 @@ describe("no-cache", () => {
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      observable.setVariables({ id: "2" });
+      await observable.setVariables({ id: "2" });
 
       await expect(stream).toEmitValue({
         loading: true,
@@ -497,7 +497,7 @@ describe("no-cache", () => {
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      observable.refetch();
+      await observable.refetch();
 
       await expect(stream).toEmitValue({
         data: dataWithId(2),
@@ -513,7 +513,7 @@ describe("no-cache", () => {
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      observable.refetch({ id: "3" });
+      await observable.refetch({ id: "3" });
 
       await expect(stream).toEmitValue({
         loading: true,
@@ -702,7 +702,7 @@ describe("cache-only", () => {
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
-    observable.refetch();
+    await observable.refetch();
 
     await expect(stream).toEmitValue({
       loading: false,
@@ -768,7 +768,7 @@ describe("cache-and-network", function () {
       networkStatus: NetworkStatus.ready,
     });
 
-    observable.setVariables({ id: "2" });
+    await observable.setVariables({ id: "2" });
 
     await expect(stream).toEmitValue({
       data: {},
@@ -783,7 +783,7 @@ describe("cache-and-network", function () {
       networkStatus: NetworkStatus.ready,
     });
 
-    observable.refetch();
+    await observable.refetch();
 
     await expect(stream).toEmitValue({
       data: dataWithId(2),
@@ -797,7 +797,7 @@ describe("cache-and-network", function () {
       networkStatus: NetworkStatus.ready,
     });
 
-    observable.refetch({ id: "3" });
+    await observable.refetch({ id: "3" });
 
     await expect(stream).toEmitValue({
       data: {},

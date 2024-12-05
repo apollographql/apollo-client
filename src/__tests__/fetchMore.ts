@@ -1696,7 +1696,7 @@ describe("fetchMore on an observable query with connection", () => {
         expect(data.entry.comments.length).toBe(10);
       }
 
-      observable.fetchMore({
+      void observable.fetchMore({
         variables: { start: 10 },
         updateQuery: (prev: any, options: any) => {
           const state = cloneDeep(prev) as any;
@@ -1767,7 +1767,7 @@ describe("fetchMore on an observable query with connection", () => {
         expect((data as any).entry.comments.length).toBe(10);
       }
 
-      observable.fetchMore({
+      void observable.fetchMore({
         variables: { start: 10 },
       });
 

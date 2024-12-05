@@ -63,7 +63,7 @@ interface BaseOptions {
 // Warning: (ae-forgotten-export) The symbol "ApolloLink" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & {
+export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => ApolloLink & ({
     resetHashCache: () => void;
 } & ({
     getMemoryInternals(): {
@@ -73,7 +73,7 @@ export const createPersistedQueryLink: (options: PersistedQueryLink.Options) => 
     };
 } | {
     getMemoryInternals?: undefined;
-});
+}));
 
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.12.1
+
+### Patch Changes
+
+- [#12171](https://github.com/apollographql/apollo-client/pull/12171) [`e1efe74`](https://github.com/apollographql/apollo-client/commit/e1efe74c61b5f31fdd122ff8f4ce01012d0f5398) Thanks [@phryneas](https://github.com/phryneas)! - Fix import extension in masking entry point.
+
 ## 3.12.0
 
 ### Minor Changes

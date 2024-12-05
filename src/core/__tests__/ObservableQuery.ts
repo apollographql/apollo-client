@@ -3672,7 +3672,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
   });
 
   cache.writeQuery({
-    query: partialQuery,
+    query,
     variables: { id: 1 },
     data: {
       car: {
@@ -3685,7 +3685,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
   });
 
   cache.writeQuery({
-    query,
+    query: partialQuery,
     variables: { id: 2 },
     data: {
       car: {
@@ -3699,7 +3699,7 @@ test("does not return partial cache data when `returnPartialData` is false and n
 
   const observable = client.watchQuery({
     query,
-    variables: { id: 2 },
+    variables: { id: 1 },
     returnPartialData: false,
     notifyOnNetworkStatusChange: true,
   });
@@ -3710,11 +3710,11 @@ test("does not return partial cache data when `returnPartialData` is false and n
     loading: false,
     networkStatus: NetworkStatus.ready,
     data: {
-      car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
+      car: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
     },
   });
 
-  await observable.reobserve({ variables: { id: 1 } });
+  await observable.reobserve({ variables: { id: 2 } });
 
   await expect(stream).toEmitValue({
     loading: true,
@@ -3731,12 +3731,12 @@ test("does not return partial cache data when `returnPartialData` is false and n
   await expect(stream).toEmitValue({
     loading: false,
     networkStatus: NetworkStatus.ready,
-    data: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
+    data: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
   });
 
   expect(observable.getCurrentResult()).toEqual({
     loading: false,
     networkStatus: NetworkStatus.ready,
-    data: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
+    data: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
   });
 });

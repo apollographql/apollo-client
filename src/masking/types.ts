@@ -5,7 +5,7 @@ import type {
   RemoveFragmentName,
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
-} from "./internal/types.ts";
+} from "./internal/types.js";
 import type { Prettify } from "../utilities/index.js";
 
 export interface DataMasking {}

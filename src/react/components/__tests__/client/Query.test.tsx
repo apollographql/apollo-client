@@ -210,7 +210,7 @@ describe("Query component", () => {
       ];
 
       const Component = () => (
-        <Query query={allPeopleQuery} data-ref={React.useRef()}>
+        <Query query={allPeopleQuery} data-ref={React.useRef(void 0)}>
           {(result: any) => {
             if (result.loading) {
               return null;

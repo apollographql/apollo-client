@@ -83,6 +83,7 @@ const standardReact17Config = {
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",
+    "^react-dom/client$": "<rootDir>/../config/jest/react-dom-17-client.js",
     "^react-dom/server$": "react-dom-17/server",
     "^react-dom/test-utils$": "react-dom-17/test-utils",
   },

@@ -63,17 +63,17 @@ const standardReact19Config = {
   ...defaults,
   displayName: "ReactDOM 19",
   testPathIgnorePatterns: react19TestFileIgnoreList,
-  moduleNameMapper: {
-    "^react$": "react-19",
-    "^react-dom$": "react-dom-19",
-    "^react-dom/(.*)$": "react-dom-19/$1",
-  },
 };
 
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: [ignoreTSFiles],
+  moduleNameMapper: {
+    "^react$": "react-18",
+    "^react-dom$": "react-dom-18",
+    "^react-dom/(.*)$": "react-dom-18/$1",
+  },
 };
 
 const standardReact17Config = {

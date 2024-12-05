@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.12.2
+
+### Patch Changes
+
+- [#12175](https://github.com/apollographql/apollo-client/pull/12175) [`84af347`](https://github.com/apollographql/apollo-client/commit/84af347d53bc31df4a6a90a55e7c98413144376a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Update peer deps to allow for React 19 stable release.
+
 ## 3.12.1
 
 ### Patch Changes

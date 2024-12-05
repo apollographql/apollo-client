@@ -5,11 +5,7 @@ import hoistNonReactStatics from "hoist-non-react-statics";
 
 import { parser } from "../parser/index.js";
 import type { DefaultContext, OperationVariables } from "../../core/types.js";
-import type {
-  BaseMutationOptions,
-  MutationFunction,
-  MutationResult,
-} from "../types/types.js";
+import type { BaseMutationOptions } from "../types/types.js";
 import { Mutation } from "../components/index.js";
 
 import {
@@ -91,12 +87,9 @@ export function withMutation<
         }
 
         return (
+          // @ts-expect-error
           <Mutation ignoreResults {...opts} mutation={document}>
-            {/* @ts-expect-error */}
-            {(
-              mutate: MutationFunction<TData, TGraphQLVariables>,
-              { data, ...r }: MutationResult<TData>
-            ) => {
+            {(mutate, { data, ...r }) => {
               // the HOC's historically hoisted the data from the execution result
               // up onto the result since it was passed as a nested prop
               // we massage the Mutation component's shape here to replicate that

@@ -173,7 +173,7 @@
     "react-19": "npm:react@19.0.0",
     "react-dom": "18.3.1",
     "react-dom-17": "npm:react-dom@^17",
-    "react-dom-19": "npm:react-dom@19.0.0-rc.1",
+    "react-dom-19": "npm:react-dom@19.0.0",
     "react-error-boundary": "4.0.13",
     "recast": "0.23.9",
     "resolve": "1.22.8",

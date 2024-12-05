@@ -1,7 +1,7 @@
 // Adapted from v0.30.0 of https://github.com/acdlite/recompose/blob/master/src/packages/recompose/withState.js
 // to avoid incurring an indirect dependency on ua-parser-js via fbjs.
 
-import React, { createFactory, Component } from "react";
+import React, { Component } from "react";
 
 const setStatic =
   (key: string, value: string) => (BaseComponent: React.ComponentClass) => {
@@ -33,7 +33,6 @@ const wrapDisplayName = (
 export const withState =
   (stateName: string, stateUpdaterName: string, initialState: unknown) =>
   (BaseComponent: React.ComponentClass) => {
-    const factory = createFactory(BaseComponent);
     class WithState extends Component<
       Record<string, unknown>,
       { stateValue: unknown }
@@ -58,11 +57,15 @@ export const withState =
         );
 
       render() {
-        return factory({
-          ...this.props,
-          [stateName]: this.state.stateValue,
-          [stateUpdaterName]: this.updateStateValue,
-        });
+        return (
+          <BaseComponent
+            {...{
+              ...this.props,
+              [stateName]: this.state.stateValue,
+              [stateUpdaterName]: this.updateStateValue,
+            }}
+          />
+        );
       }
     }
 

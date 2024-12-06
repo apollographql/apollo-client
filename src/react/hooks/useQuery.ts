@@ -86,6 +86,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   client: ReturnType<typeof useApolloClient>;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
+  registerObservableQuery: () => void;
   resultData: InternalResult<TData, TVariables>;
 }
 
@@ -180,18 +181,29 @@ function useInternalState<
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
+    // See if there is an existing observable that was used to fetch the same
+    // data and if so, use it instead since it will contain the proper queryId
+    // to fetch the result set. This is used during SSR.
+    const ssrObservable = renderPromises?.getSSRObservable(
+      makeWatchQueryOptions()
+    );
+    let { observable, register } =
+      ssrObservable ?
+        { observable: ssrObservable, register: () => {} }
+      : client.createQuery(
+          getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
+        );
+    if (renderPromises && !ssrObservable) {
+      // In SSR, useEffects are not called, so we need to register the observable now
+      register();
+      register = () => {};
+    }
+
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable:
-        // See if there is an existing observable that was used to fetch the same
-        // data and if so, use it instead since it will contain the proper queryId
-        // to fetch the result set. This is used during SSR.
-        (renderPromises &&
-          renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
-        client.watchQuery(
-          getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
-        ),
+      observable,
+      registerObservableQuery: register,
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
@@ -204,6 +216,13 @@ function useInternalState<
 
   let [internalState, updateInternalState] =
     React.useState(createInternalState);
+
+  // Creating a watcher/listener in a `useState` breaks the rules of React
+  // useState initializers should be pure, aka, the result should be throwable and recreatable
+  // Instead of registering the observable with the QueryManager in the `useState` initializer, we create it in a `useEffect` hook
+  // The actual subscription of the query is handled in the `useObservableSubscriptionResult` hook
+  const registerObservableQuery = internalState.registerObservableQuery;
+  React.useEffect(registerObservableQuery, [registerObservableQuery]);
 
   /**
    * Used by `useLazyQuery` when a new query is executed.

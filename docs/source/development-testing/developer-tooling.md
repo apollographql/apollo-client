@@ -29,7 +29,7 @@ The Apollo Client Devtools appear as an "Apollo" tab in your web browser's Inspe
 - **Mutation inspector:** View active mutations and their variables, and re-run individual mutations.
 - **Cache inspector:** Visualize the Apollo Client cache and search it by field name and/or value.
 
-![Apollo Client Devtools](../assets/devtools/apollo-client-devtools/ac-browser-devtools-3.png)
+<img class="screenshot" alt="Apollo Client Devtools" src="../assets/devtools/apollo-client-devtools/ac-browser-devtools-3.png"/>
 
 ### Installation
 

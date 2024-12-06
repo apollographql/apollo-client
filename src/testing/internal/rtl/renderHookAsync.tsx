@@ -31,6 +31,7 @@ export async function renderHookAsync<
 ): Promise<RenderHookResult<Result, Props>> {
   const { initialProps, ...renderOptions } = options;
 
+  // @ts-expect-error
   if (renderOptions.legacyRoot && typeof ReactDOM.render !== "function") {
     const error = new Error(
       "`legacyRoot: true` is not supported in this version of React. " +

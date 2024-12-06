@@ -5,7 +5,7 @@ import ReactDOM from "react-dom/server";
 import gql from "graphql-tag";
 import { DocumentNode } from "graphql";
 
-import { ApolloClient } from "../../../../core";
+import { ApolloClient, TypedDocumentNode } from "../../../../core";
 import { ApolloProvider } from "../../../context";
 import { InMemoryCache as Cache } from "../../../../cache";
 import { itAsync, mockSingleLink } from "../../../../testing";
@@ -805,7 +805,7 @@ describe("SSR", () => {
     });
 
     it("shouldn't run queries (via Query component) if ssr is turned to off", () => {
-      const query = gql`
+      const query: TypedDocumentNode<Data> = gql`
         query user($id: ID) {
           currentUser(id: $id) {
             firstName
@@ -833,7 +833,7 @@ describe("SSR", () => {
 
       const Element = (props: { id: string }) => (
         <Query query={query} ssr={false} variables={props}>
-          {({ data, loading }: { data: Data; loading: boolean }) => (
+          {({ data, loading }) => (
             <div>
               {loading || !data ? "loading" : data.currentUser!.firstName}
             </div>

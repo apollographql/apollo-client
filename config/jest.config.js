@@ -63,17 +63,17 @@ const standardReact19Config = {
   ...defaults,
   displayName: "ReactDOM 19",
   testPathIgnorePatterns: react19TestFileIgnoreList,
-  moduleNameMapper: {
-    "^react$": "react-19",
-    "^react-dom$": "react-dom-19",
-    "^react-dom/(.*)$": "react-dom-19/$1",
-  },
 };
 
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
   testPathIgnorePatterns: [ignoreTSFiles],
+  moduleNameMapper: {
+    "^react$": "react-18",
+    "^react-dom$": "react-dom-18",
+    "^react-dom/(.*)$": "react-dom-18/$1",
+  },
 };
 
 const standardReact17Config = {
@@ -83,6 +83,7 @@ const standardReact17Config = {
   moduleNameMapper: {
     "^react$": "react-17",
     "^react-dom$": "react-dom-17",
+    "^react-dom/client$": "<rootDir>/../config/jest/react-dom-17-client.js",
     "^react-dom/server$": "react-dom-17/server",
     "^react-dom/test-utils$": "react-dom-17/test-utils",
   },

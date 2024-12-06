@@ -3851,6 +3851,11 @@ describe("useQuery Hook", () => {
       { name: "D", position: 4 },
     ];
 
+    const ef = [
+      { name: "E", position: 5 },
+      { name: "F", position: 6 },
+    ];
+
     const mocks = [
       {
         request: { query, variables: { limit: 2 } },
@@ -4462,6 +4467,187 @@ describe("useQuery Hook", () => {
         { interval: 1 }
       );
       expect(result.current.data).toEqual({ countries });
+    });
+
+    it("should handle inconsistent cache items", async () => {
+      const query1 = gql`
+        query letters($limit: Int, $offset: Int) {
+          letters(limit: $limit, offset: $offset) {
+            name
+          }
+        }
+      `;
+
+      const query2 = gql`
+        query letters($limit: Int, $offset: Int) {
+          letters(limit: $limit, offset: $offset) {
+            name
+            position
+          }
+        }
+      `;
+
+      const mocks = [
+        {
+          request: { query: query1, variables: { limit: 2, offset: 0 } },
+          result: {
+            data: {
+              letters: ab.map(({ position, ...letter }) => letter),
+            },
+          },
+        },
+        {
+          request: { query: query1, variables: { limit: 2, offset: 2 } },
+          result: {
+            data: {
+              letters: cd.map(({ position, ...letter }) => letter),
+            },
+          },
+        },
+        {
+          request: { query: query1, variables: { limit: 2, offset: 4 } },
+          result: {
+            data: {
+              letters: ef.map(({ position, ...letter }) => letter),
+            },
+          },
+        },
+        {
+          request: { query: query2, variables: { limit: 2, offset: 0 } },
+          result: {
+            data: {
+              letters: ab,
+            },
+          },
+        },
+        {
+          request: { query: query2, variables: { limit: 2, offset: 2 } },
+          result: {
+            data: {
+              letters: cd,
+            },
+          },
+        },
+      ];
+
+      const cache = new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              letters: {
+                keyArgs: false,
+                merge(existing, incoming, { args }) {
+                  if (!incoming) {
+                    return existing;
+                  }
+                  if (!existing) {
+                    return incoming;
+                  }
+                  const result = [...existing];
+                  for (let i = 0; i < incoming.length; i++) {
+                    result[(args?.offset ?? 0) + i] = incoming[i];
+                  }
+                  return result;
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      const { result, rerender } = renderHook(
+        ({ query, variables }) =>
+          useQuery(query, {
+            variables,
+            fetchPolicy: "network-only",
+            notifyOnNetworkStatusChange: true,
+          }),
+        {
+          wrapper,
+          initialProps: { query: query1, variables: { limit: 2, offset: 0 } },
+        }
+      );
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+      expect(result.current.data).toBe(undefined);
+
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { interval: 1 }
+      );
+
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data.letters).toEqual(
+        ab.map(({ position, ...letter }) => letter)
+      );
+
+      act(() => void result.current.fetchMore({ variables: { limit: 2, offset: 2 } }));
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
+
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { interval: 1 }
+      );
+
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data.letters).toEqual(
+        ab.concat(cd).map(({ position, ...letter }) => letter)
+      );
+
+      act(() => void result.current.fetchMore({ variables: { limit: 2, offset: 4 } }));
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.fetchMore);
+
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { interval: 1 }
+      );
+
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data.letters).toEqual(
+        ab
+          .concat(cd)
+          .concat(ef)
+          .map(({ position, ...letter }) => letter)
+      );
+
+      rerender({ query: query2, variables: { limit: 2, offset: 0 } });
+
+      expect(result.current.loading).toBe(true);
+      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
+
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { interval: 1 }
+      );
+
+      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data.letters).toEqual(ab);
+
+      act(() => void result.current.fetchMore({ variables: { limit: 2, offset: 2 } }));
+
+      await new Promise((resolve) => setTimeout(resolve, 40));
+
+      // expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      expect(result.current.data.letters).toEqual(ab.concat(cd));
     });
   });
 

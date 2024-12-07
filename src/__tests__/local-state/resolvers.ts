@@ -1,27 +1,19 @@
 import gql from "graphql-tag";
 import { DocumentNode, ExecutionResult } from "graphql";
-import { assign } from "lodash";
 
 import { LocalState } from "../../core/LocalState";
 
-import {
-  ApolloClient,
-  ApolloQueryResult,
-  Resolvers,
-  WatchQueryOptions,
-} from "../../core";
+import { ApolloClient, ApolloQueryResult, Resolvers } from "../../core";
 
 import { InMemoryCache, isReference } from "../../cache";
-import { Observable, Observer } from "../../utilities";
+import { Observable } from "../../utilities";
 import { ApolloLink } from "../../link/core";
-import { itAsync } from "../../testing";
 import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
-import wrap from "../../testing/core/wrap";
+import { ObservableStream } from "../../testing/internal";
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
-const assertWithObserver = ({
-  reject,
+const setupTestWithResolvers = ({
   resolvers,
   query,
   serverQuery,
@@ -30,10 +22,8 @@ const assertWithObserver = ({
   serverResult,
   error,
   delay,
-  observer,
 }: {
-  reject: (reason: any) => any;
-  resolvers?: Resolvers;
+  resolvers: Resolvers;
   query: DocumentNode;
   serverQuery?: DocumentNode;
   variables?: object;
@@ -41,7 +31,6 @@ const assertWithObserver = ({
   error?: Error;
   serverResult?: ExecutionResult;
   delay?: number;
-  observer: Observer<ApolloQueryResult<any>>;
 }) => {
   const queryManager = mockQueryManager({
     request: { query: serverQuery || query, variables },
@@ -50,22 +39,15 @@ const assertWithObserver = ({
     delay,
   });
 
-  if (resolvers) {
-    queryManager.getLocalState().addResolvers(resolvers);
-  }
+  queryManager.getLocalState().addResolvers(resolvers);
 
-  const finalOptions = assign(
-    { query, variables },
-    queryOptions
-  ) as WatchQueryOptions;
-  return queryManager.watchQuery<any>(finalOptions).subscribe({
-    next: wrap(reject, observer.next!),
-    error: observer.error,
-  });
+  return new ObservableStream(
+    queryManager.watchQuery<any>({ query, variables, ...queryOptions })
+  );
 };
 
 describe("Basic resolver capabilities", () => {
-  itAsync("should run resolvers for @client queries", (resolve, reject) => {
+  it("should run resolvers for @client queries", async () => {
     const query = gql`
       query Test {
         foo @client {
@@ -80,234 +62,183 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    assertWithObserver({
-      reject,
+    const stream = setupTestWithResolvers({ resolvers, query });
+
+    await expect(stream).toEmitMatchedValue({ data: { foo: { bar: true } } });
+  });
+
+  it("should handle queries with a mix of @client and server fields", async () => {
+    const query = gql`
+      query Mixed {
+        foo @client {
+          bar
+        }
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      query Mixed {
+        bar {
+          baz
+        }
+      }
+    `;
+
+    const resolvers = {
+      Query: {
+        foo: () => ({ bar: true }),
+      },
+    };
+
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
-      observer: {
-        next({ data }) {
-          try {
-            expect(data).toEqual({ foo: { bar: true } });
-          } catch (error) {
-            reject(error);
-          }
-          resolve();
-        },
+      serverQuery,
+      serverResult: { data: { bar: { baz: true } } },
+    });
+
+    await expect(stream).toEmitMatchedValue({
+      data: {
+        foo: { bar: true },
+        bar: { baz: true },
       },
     });
   });
 
-  itAsync(
-    "should handle queries with a mix of @client and server fields",
-    (resolve, reject) => {
-      const query = gql`
-        query Mixed {
-          foo @client {
-            bar
-          }
-          bar {
-            baz
-          }
+  it("should handle a mix of @client fields with fragments and server fields", async () => {
+    const query = gql`
+      fragment client on ClientData {
+        bar
+        __typename
+      }
+
+      query Mixed {
+        foo @client {
+          ...client
         }
-      `;
-
-      const serverQuery = gql`
-        query Mixed {
-          bar {
-            baz
-          }
+        bar {
+          baz
         }
-      `;
+      }
+    `;
 
-      const resolvers = {
-        Query: {
-          foo: () => ({ bar: true }),
-        },
-      };
-
-      assertWithObserver({
-        reject,
-        resolvers,
-        query,
-        serverQuery,
-        serverResult: { data: { bar: { baz: true } } },
-        observer: {
-          next({ data }) {
-            try {
-              expect(data).toEqual({ foo: { bar: true }, bar: { baz: true } });
-            } catch (error) {
-              reject(error);
-            }
-            resolve();
-          },
-        },
-      });
-    }
-  );
-
-  itAsync(
-    "should handle a mix of @client fields with fragments and server fields",
-    (resolve, reject) => {
-      const query = gql`
-        fragment client on ClientData {
-          bar
-          __typename
+    const serverQuery = gql`
+      query Mixed {
+        bar {
+          baz
         }
+      }
+    `;
 
-        query Mixed {
-          foo @client {
-            ...client
-          }
-          bar {
-            baz
-          }
+    const resolvers = {
+      Query: {
+        foo: () => ({ bar: true, __typename: "ClientData" }),
+      },
+    };
+
+    const stream = setupTestWithResolvers({
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
+    });
+
+    await expect(stream).toEmitMatchedValue({
+      data: {
+        foo: { bar: true, __typename: "ClientData" },
+        bar: { baz: true },
+      },
+    });
+  });
+
+  it("should handle @client fields inside fragments", async () => {
+    const query = gql`
+      fragment Foo on Foo {
+        bar
+        ...Foo2
+      }
+      fragment Foo2 on Foo {
+        __typename
+        baz @client
+      }
+      query Mixed {
+        foo {
+          ...Foo
         }
-      `;
-
-      const serverQuery = gql`
-        query Mixed {
-          bar {
-            baz
-          }
+        bar {
+          baz
         }
-      `;
+      }
+    `;
 
-      const resolvers = {
-        Query: {
-          foo: () => ({ bar: true, __typename: "ClientData" }),
-        },
-      };
-
-      assertWithObserver({
-        reject,
-        resolvers,
-        query,
-        serverQuery,
-        serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
-        observer: {
-          next({ data }) {
-            try {
-              expect(data).toEqual({
-                foo: { bar: true, __typename: "ClientData" },
-                bar: { baz: true },
-              });
-            } catch (error) {
-              reject(error);
-            }
-            resolve();
-          },
-        },
-      });
-    }
-  );
-
-  itAsync(
-    "should handle @client fields inside fragments",
-    (resolve, reject) => {
-      const query = gql`
-        fragment Foo on Foo {
-          bar
-          ...Foo2
+    const serverQuery = gql`
+      fragment Foo on Foo {
+        bar
+      }
+      query Mixed {
+        foo {
+          ...Foo
         }
-        fragment Foo2 on Foo {
-          __typename
-          baz @client
+        bar {
+          baz
         }
-        query Mixed {
-          foo {
-            ...Foo
-          }
-          bar {
-            baz
-          }
+      }
+    `;
+
+    const resolvers = {
+      Foo: {
+        baz: () => false,
+      },
+    };
+
+    const stream = setupTestWithResolvers({
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: {
+        data: { foo: { bar: true, __typename: `Foo` }, bar: { baz: true } },
+      },
+    });
+
+    await expect(stream).toEmitMatchedValue({
+      data: {
+        foo: { bar: true, baz: false, __typename: "Foo" },
+        bar: { baz: true },
+      },
+    });
+  });
+
+  it("should have access to query variables when running @client resolvers", async () => {
+    const query = gql`
+      query WithVariables($id: ID!) {
+        foo @client {
+          bar(id: $id)
         }
-      `;
+      }
+    `;
 
-      const serverQuery = gql`
-        fragment Foo on Foo {
-          bar
-        }
-        query Mixed {
-          foo {
-            ...Foo
-          }
-          bar {
-            baz
-          }
-        }
-      `;
+    const resolvers = {
+      Query: {
+        foo: () => ({ __typename: "Foo" }),
+      },
+      Foo: {
+        bar: (_data: any, { id }: { id: number }) => id,
+      },
+    };
 
-      const resolvers = {
-        Foo: {
-          baz: () => false,
-        },
-      };
+    const stream = setupTestWithResolvers({
+      resolvers,
+      query,
+      variables: { id: 1 },
+    });
 
-      assertWithObserver({
-        reject,
-        resolvers,
-        query,
-        serverQuery,
-        serverResult: {
-          data: { foo: { bar: true, __typename: `Foo` }, bar: { baz: true } },
-        },
-        observer: {
-          next({ data }) {
-            try {
-              expect(data).toEqual({
-                foo: { bar: true, baz: false, __typename: "Foo" },
-                bar: { baz: true },
-              });
-            } catch (error) {
-              reject(error);
-            }
-            resolve();
-          },
-        },
-      });
-    }
-  );
+    await expect(stream).toEmitMatchedValue({ data: { foo: { bar: 1 } } });
+  });
 
-  itAsync(
-    "should have access to query variables when running @client resolvers",
-    (resolve, reject) => {
-      const query = gql`
-        query WithVariables($id: ID!) {
-          foo @client {
-            bar(id: $id)
-          }
-        }
-      `;
-
-      const resolvers = {
-        Query: {
-          foo: () => ({ __typename: "Foo" }),
-        },
-        Foo: {
-          bar: (_data: any, { id }: { id: number }) => id,
-        },
-      };
-
-      assertWithObserver({
-        reject,
-        resolvers,
-        query,
-        variables: { id: 1 },
-        observer: {
-          next({ data }) {
-            try {
-              expect(data).toEqual({ foo: { bar: 1 } });
-            } catch (error) {
-              reject(error);
-            }
-            resolve();
-          },
-        },
-      });
-    }
-  );
-
-  itAsync("should pass context to @client resolvers", (resolve, reject) => {
+  it("should pass context to @client resolvers", async () => {
     const query = gql`
       query WithContext {
         foo @client {
@@ -325,127 +256,99 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    assertWithObserver({
-      reject,
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       queryOptions: { context: { id: 1 } },
-      observer: {
-        next({ data }) {
-          try {
-            expect(data).toEqual({ foo: { bar: 1 } });
-          } catch (error) {
-            reject(error);
+    });
+
+    await expect(stream).toEmitMatchedValue({ data: { foo: { bar: 1 } } });
+  });
+
+  it("should combine local @client resolver results with server results, for the same field", async () => {
+    const query = gql`
+      query author {
+        author {
+          name
+          stats {
+            totalPosts
+            postsToday @client
           }
-          resolve();
+        }
+      }
+    `;
+
+    const serverQuery = gql`
+      query author {
+        author {
+          name
+          stats {
+            totalPosts
+          }
+        }
+      }
+    `;
+
+    const resolvers = {
+      Stats: {
+        postsToday: () => 10,
+      },
+    };
+
+    const stream = setupTestWithResolvers({
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: {
+        data: {
+          author: {
+            name: "John Smith",
+            stats: {
+              totalPosts: 100,
+              __typename: "Stats",
+            },
+            __typename: "Author",
+          },
+        },
+      },
+    });
+
+    await expect(stream).toEmitMatchedValue({
+      data: {
+        author: {
+          name: "John Smith",
+          stats: {
+            totalPosts: 100,
+            postsToday: 10,
+          },
         },
       },
     });
   });
 
-  itAsync(
-    "should combine local @client resolver results with server results, for " +
-      "the same field",
-    (resolve, reject) => {
-      const query = gql`
-        query author {
-          author {
-            name
-            stats {
-              totalPosts
-              postsToday @client
-            }
-          }
-        }
-      `;
+  it("should handle resolvers that work with booleans properly", async () => {
+    const query = gql`
+      query CartDetails {
+        isInCart @client
+      }
+    `;
 
-      const serverQuery = gql`
-        query author {
-          author {
-            name
-            stats {
-              totalPosts
-            }
-          }
-        }
-      `;
+    const cache = new InMemoryCache();
+    cache.writeQuery({ query, data: { isInCart: true } });
 
-      const resolvers = {
-        Stats: {
-          postsToday: () => 10,
+    const client = new ApolloClient({
+      cache,
+      resolvers: {
+        Query: {
+          isInCart: () => false,
         },
-      };
+      },
+    });
 
-      assertWithObserver({
-        reject,
-        resolvers,
-        query,
-        serverQuery,
-        serverResult: {
-          data: {
-            author: {
-              name: "John Smith",
-              stats: {
-                totalPosts: 100,
-                __typename: "Stats",
-              },
-              __typename: "Author",
-            },
-          },
-        },
-        observer: {
-          next({ data }) {
-            try {
-              expect(data).toEqual({
-                author: {
-                  name: "John Smith",
-                  stats: {
-                    totalPosts: 100,
-                    postsToday: 10,
-                  },
-                },
-              });
-            } catch (error) {
-              reject(error);
-            }
-            resolve();
-          },
-        },
-      });
-    }
-  );
+    const { data } = await client.query({ query, fetchPolicy: "network-only" });
 
-  itAsync(
-    "should handle resolvers that work with booleans properly",
-    (resolve, reject) => {
-      const query = gql`
-        query CartDetails {
-          isInCart @client
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      cache.writeQuery({ query, data: { isInCart: true } });
-
-      const client = new ApolloClient({
-        cache,
-        resolvers: {
-          Query: {
-            isInCart: () => false,
-          },
-        },
-      });
-
-      return client
-        .query({ query, fetchPolicy: "network-only" })
-        .then(({ data }: any) => {
-          expect({ ...data }).toMatchObject({
-            isInCart: false,
-          });
-          resolve();
-        });
-    }
-  );
+    expect(data).toMatchObject({ isInCart: false });
+  });
 
   it("should handle nested asynchronous @client resolvers (issue #4841)", () => {
     const query = gql`
@@ -569,57 +472,47 @@ describe("Basic resolver capabilities", () => {
     ]);
   });
 
-  itAsync(
-    "should not run resolvers without @client directive (issue #9571)",
-    (resolve, reject) => {
-      const query = gql`
-        query Mixed {
-          foo @client {
-            bar
-          }
-          bar {
-            baz
-          }
+  it("should not run resolvers without @client directive (issue #9571)", async () => {
+    const query = gql`
+      query Mixed {
+        foo @client {
+          bar
         }
-      `;
-
-      const serverQuery = gql`
-        query Mixed {
-          bar {
-            baz
-          }
+        bar {
+          baz
         }
-      `;
+      }
+    `;
 
-      const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
+    const serverQuery = gql`
+      query Mixed {
+        bar {
+          baz
+        }
+      }
+    `;
 
-      const resolvers = {
-        Query: {
-          foo: () => ({ __typename: `Foo`, bar: true }),
-          bar: barResolver,
-        },
-      };
+    const barResolver = jest.fn(() => ({ __typename: `Bar`, baz: false }));
 
-      assertWithObserver({
-        reject,
-        resolvers,
-        query,
-        serverQuery,
-        serverResult: { data: { bar: { baz: true } } },
-        observer: {
-          next({ data }) {
-            try {
-              expect(data).toEqual({ foo: { bar: true }, bar: { baz: true } });
-              expect(barResolver).not.toHaveBeenCalled();
-            } catch (error) {
-              reject(error);
-            }
-            resolve();
-          },
-        },
-      });
-    }
-  );
+    const resolvers = {
+      Query: {
+        foo: () => ({ __typename: `Foo`, bar: true }),
+        bar: barResolver,
+      },
+    };
+
+    const stream = setupTestWithResolvers({
+      resolvers,
+      query,
+      serverQuery,
+      serverResult: { data: { bar: { baz: true } } },
+    });
+
+    await expect(stream).toEmitMatchedValue({
+      data: { foo: { bar: true }, bar: { baz: true } },
+    });
+    expect(barResolver).not.toHaveBeenCalled();
+  });
 });
 
 describe("Writing cache data from resolvers", () => {
@@ -777,440 +670,394 @@ describe("Writing cache data from resolvers", () => {
 });
 
 describe("Resolving field aliases", () => {
-  itAsync(
-    "should run resolvers for missing client queries with aliased field",
-    (resolve, reject) => {
-      // expect.assertions(1);
-      const query = gql`
-        query Aliased {
-          foo @client {
-            bar
-          }
-          baz: bar {
-            foo
-          }
+  it("should run resolvers for missing client queries with aliased field", async () => {
+    const query = gql`
+      query Aliased {
+        foo @client {
+          bar
         }
-      `;
+        baz: bar {
+          foo
+        }
+      }
+    `;
 
-      const link = new ApolloLink(() =>
-        // Each link is responsible for implementing their own aliasing so it
-        // returns baz not bar
-        Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
-      );
+    const link = new ApolloLink(() =>
+      // Each link is responsible for implementing their own aliasing so it
+      // returns baz not bar
+      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+    );
 
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-        resolvers: {
-          Query: {
-            foo: () => ({ bar: true, __typename: "Foo" }),
-          },
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true, __typename: "Foo" }),
         },
-      });
+      },
+    });
 
-      client.query({ query }).then(({ data }) => {
-        try {
-          expect(data).toEqual({
-            foo: { bar: true, __typename: "Foo" },
-            baz: { foo: true, __typename: "Baz" },
-          });
-        } catch (e) {
-          reject(e);
-          return;
+    const { data } = await client.query({ query });
+
+    expect(data).toEqual({
+      foo: { bar: true, __typename: "Foo" },
+      baz: { foo: true, __typename: "Baz" },
+    });
+  });
+
+  it("should run resolvers for client queries when aliases are in use on the @client-tagged node", async () => {
+    const aliasedQuery = gql`
+      query Test {
+        fie: foo @client {
+          bar
         }
-        resolve();
-      }, reject);
-    }
-  );
+      }
+    `;
 
-  itAsync(
-    "should run resolvers for client queries when aliases are in use on " +
-      "the @client-tagged node",
-    (resolve, reject) => {
-      const aliasedQuery = gql`
-        query Test {
-          fie: foo @client {
-            bar
-          }
-        }
-      `;
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: ApolloLink.empty(),
-        resolvers: {
-          Query: {
-            foo: () => ({ bar: true, __typename: "Foo" }),
-            fie: () => {
-              reject(
-                "Called the resolver using the alias' name, instead of " +
-                  "the correct resolver name."
-              );
-            },
-          },
+    const fie = jest.fn();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: ApolloLink.empty(),
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true, __typename: "Foo" }),
+          fie,
         },
-      });
+      },
+    });
 
-      client.query({ query: aliasedQuery }).then(({ data }) => {
-        expect(data).toEqual({ fie: { bar: true, __typename: "Foo" } });
-        resolve();
-      }, reject);
-    }
-  );
+    const { data } = await client.query({ query: aliasedQuery });
 
-  itAsync(
-    "should respect aliases for *nested fields* on the @client-tagged node",
-    (resolve, reject) => {
-      const aliasedQuery = gql`
-        query Test {
-          fie: foo @client {
-            fum: bar
-          }
-          baz: bar {
-            foo
-          }
+    expect(data).toEqual({ fie: { bar: true, __typename: "Foo" } });
+    expect(fie).not.toHaveBeenCalled();
+  });
+
+  it("should respect aliases for *nested fields* on the @client-tagged node", async () => {
+    const aliasedQuery = gql`
+      query Test {
+        fie: foo @client {
+          fum: bar
         }
-      `;
+        baz: bar {
+          foo
+        }
+      }
+    `;
 
-      const link = new ApolloLink(() =>
-        Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
-      );
+    const link = new ApolloLink(() =>
+      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+    );
 
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-        resolvers: {
-          Query: {
-            foo: () => ({ bar: true, __typename: "Foo" }),
-            fie: () => {
-              reject(
-                "Called the resolver using the alias' name, instead of " +
-                  "the correct resolver name."
-              );
-            },
-          },
+    const fie = jest.fn();
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Query: {
+          foo: () => ({ bar: true, __typename: "Foo" }),
+          fie,
         },
-      });
+      },
+    });
 
-      client.query({ query: aliasedQuery }).then(({ data }) => {
-        expect(data).toEqual({
-          fie: { fum: true, __typename: "Foo" },
-          baz: { foo: true, __typename: "Baz" },
-        });
-        resolve();
-      }, reject);
-    }
-  );
+    const { data } = await client.query({ query: aliasedQuery });
 
-  it(
-    "should pull initialized values for aliased fields tagged with @client " +
-      "from the cache",
-    () => {
-      const query = gql`
+    expect(data).toEqual({
+      fie: { fum: true, __typename: "Foo" },
+      baz: { foo: true, __typename: "Baz" },
+    });
+    expect(fie).not.toHaveBeenCalled();
+  });
+
+  it("should pull initialized values for aliased fields tagged with @client from the cache", async () => {
+    const query = gql`
+      {
+        fie: foo @client {
+          bar
+        }
+      }
+    `;
+
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+      resolvers: {},
+    });
+
+    cache.writeQuery({
+      query: gql`
         {
-          fie: foo @client {
+          foo {
             bar
           }
         }
-      `;
-
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.empty(),
-        resolvers: {},
-      });
-
-      cache.writeQuery({
-        query: gql`
-          {
-            foo {
-              bar
-            }
-          }
-        `,
-        data: {
-          foo: {
-            bar: "yo",
-            __typename: "Foo",
-          },
+      `,
+      data: {
+        foo: {
+          bar: "yo",
+          __typename: "Foo",
         },
-      });
+      },
+    });
 
-      return client.query({ query }).then(({ data }) => {
-        expect({ ...data }).toMatchObject({
-          fie: { bar: "yo", __typename: "Foo" },
-        });
-      });
-    }
-  );
+    const { data } = await client.query({ query });
 
-  it(
-    "should resolve @client fields using local resolvers and not have " +
-      "their value overridden when a fragment is loaded",
-    () => {
-      const query = gql`
-        fragment LaunchDetails on Launch {
-          id
-          __typename
+    expect({ ...data }).toMatchObject({
+      fie: { bar: "yo", __typename: "Foo" },
+    });
+  });
+
+  it("should resolve @client fields using local resolvers and not have their value overridden when a fragment is loaded", async () => {
+    const query = gql`
+      fragment LaunchDetails on Launch {
+        id
+        __typename
+      }
+      query Launch {
+        launch {
+          isInCart @client
+          ...LaunchDetails
         }
-        query Launch {
-          launch {
-            isInCart @client
-            ...LaunchDetails
-          }
-        }
-      `;
+      }
+    `;
 
-      const link = new ApolloLink(() =>
-        Observable.of({
-          data: {
-            launch: {
-              id: 1,
-              __typename: "Launch",
-            },
-          },
-        })
-      );
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-        resolvers: {
-          Launch: {
-            isInCart() {
-              return true;
-            },
-          },
-        },
-      });
-
-      client.writeQuery({
-        query: gql`
-          {
-            launch {
-              isInCart
-            }
-          }
-        `,
+    const link = new ApolloLink(() =>
+      Observable.of({
         data: {
           launch: {
-            isInCart: false,
+            id: 1,
             __typename: "Launch",
           },
         },
-      });
+      })
+    );
 
-      return client
-        .query({ query })
-        .then(({ data }) => {
-          // `isInCart` resolver is fired, returning `true` (which is then
-          // stored in the cache).
-          expect(data.launch.isInCart).toBe(true);
-        })
-        .then(() => {
-          client.query({ query }).then(({ data }) => {
-            // When the same query fires again, `isInCart` should be pulled from
-            // the cache and have a value of `true`.
-            expect(data.launch.isInCart).toBe(true);
-          });
-        });
-    }
-  );
-});
-
-describe("Force local resolvers", () => {
-  it(
-    "should force the running of local resolvers marked with " +
-      "`@client(always: true)` when using `ApolloClient.query`",
-    async () => {
-      const query = gql`
-        query Author {
-          author {
-            name
-            isLoggedIn @client(always: true)
-          }
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link: ApolloLink.empty(),
-        resolvers: {},
-      });
-
-      cache.writeQuery({
-        query,
-        data: {
-          author: {
-            name: "John Smith",
-            isLoggedIn: false,
-            __typename: "Author",
-          },
-        },
-      });
-
-      // When the resolver isn't defined, there isn't anything to force, so
-      // make sure the query resolves from the cache properly.
-      const { data: data1 } = await client.query({ query });
-      expect(data1.author.isLoggedIn).toEqual(false);
-
-      client.addResolvers({
-        Author: {
-          isLoggedIn() {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Launch: {
+          isInCart() {
             return true;
           },
         },
-      });
+      },
+    });
 
-      // A resolver is defined, so make sure it's forced, and the result
-      // resolves properly as a combination of cache and local resolver
-      // data.
-      const { data: data2 } = await client.query({ query });
-      expect(data2.author.isLoggedIn).toEqual(true);
-    }
-  );
-
-  it(
-    "should avoid running forced resolvers a second time when " +
-      "loading results over the network (so not from the cache)",
-    async () => {
-      const query = gql`
-        query Author {
-          author {
-            name
-            isLoggedIn @client(always: true)
+    client.writeQuery({
+      query: gql`
+        {
+          launch {
+            isInCart
           }
         }
-      `;
-
-      const link = new ApolloLink(() =>
-        Observable.of({
-          data: {
-            author: {
-              name: "John Smith",
-              __typename: "Author",
-            },
-          },
-        })
-      );
-
-      let count = 0;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-        resolvers: {
-          Author: {
-            isLoggedIn() {
-              count += 1;
-              return true;
-            },
-          },
+      `,
+      data: {
+        launch: {
+          isInCart: false,
+          __typename: "Launch",
         },
-      });
+      },
+    });
 
+    {
       const { data } = await client.query({ query });
-      expect(data.author.isLoggedIn).toEqual(true);
-      expect(count).toEqual(1);
+      // `isInCart` resolver is fired, returning `true` (which is then
+      // stored in the cache).
+      expect(data.launch.isInCart).toBe(true);
     }
-  );
 
-  it(
-    "should only force resolvers for fields marked with " +
-      "`@client(always: true)`, not all `@client` fields",
-    async () => {
-      const query = gql`
-        query UserDetails {
-          name @client
+    {
+      const { data } = await client.query({ query });
+      // When the same query fires again, `isInCart` should be pulled from
+      // the cache and have a value of `true`.
+      expect(data.launch.isInCart).toBe(true);
+    }
+  });
+});
+
+describe("Force local resolvers", () => {
+  it("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.query`", async () => {
+    const query = gql`
+      query Author {
+        author {
+          name
           isLoggedIn @client(always: true)
         }
-      `;
+      }
+    `;
 
-      let nameCount = 0;
-      let isLoggedInCount = 0;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        resolvers: {
-          Query: {
-            name() {
-              nameCount += 1;
-              return "John Smith";
-            },
-            isLoggedIn() {
-              isLoggedInCount += 1;
-              return true;
-            },
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link: ApolloLink.empty(),
+      resolvers: {},
+    });
+
+    cache.writeQuery({
+      query,
+      data: {
+        author: {
+          name: "John Smith",
+          isLoggedIn: false,
+          __typename: "Author",
+        },
+      },
+    });
+
+    // When the resolver isn't defined, there isn't anything to force, so
+    // make sure the query resolves from the cache properly.
+    const { data: data1 } = await client.query({ query });
+    expect(data1.author.isLoggedIn).toEqual(false);
+
+    client.addResolvers({
+      Author: {
+        isLoggedIn() {
+          return true;
+        },
+      },
+    });
+
+    // A resolver is defined, so make sure it's forced, and the result
+    // resolves properly as a combination of cache and local resolver
+    // data.
+    const { data: data2 } = await client.query({ query });
+    expect(data2.author.isLoggedIn).toEqual(true);
+  });
+
+  it("should avoid running forced resolvers a second time when loading results over the network (so not from the cache)", async () => {
+    const query = gql`
+      query Author {
+        author {
+          name
+          isLoggedIn @client(always: true)
+        }
+      }
+    `;
+
+    const link = new ApolloLink(() =>
+      Observable.of({
+        data: {
+          author: {
+            name: "John Smith",
+            __typename: "Author",
           },
         },
-      });
+      })
+    );
 
-      await client.query({ query });
-      expect(nameCount).toEqual(1);
-      expect(isLoggedInCount).toEqual(1);
-
-      // On the next request, `name` will be loaded from the cache only,
-      // whereas `isLoggedIn` will be loaded from the cache then overwritten
-      // by running its forced local resolver.
-      await client.query({ query });
-      expect(nameCount).toEqual(1);
-      expect(isLoggedInCount).toEqual(2);
-    }
-  );
-
-  itAsync(
-    "should force the running of local resolvers marked with " +
-      "`@client(always: true)` when using `ApolloClient.watchQuery`",
-    (resolve, reject) => {
-      const query = gql`
-        query IsUserLoggedIn {
-          isUserLoggedIn @client(always: true)
-        }
-      `;
-
-      const queryNoForce = gql`
-        query IsUserLoggedIn {
-          isUserLoggedIn @client
-        }
-      `;
-
-      let callCount = 0;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        resolvers: {
-          Query: {
-            isUserLoggedIn() {
-              callCount += 1;
-              return true;
-            },
+    let count = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Author: {
+          isLoggedIn() {
+            count += 1;
+            return true;
           },
         },
-      });
+      },
+    });
 
-      client.watchQuery({ query }).subscribe({
-        next() {
-          expect(callCount).toBe(1);
+    const { data } = await client.query({ query });
+    expect(data.author.isLoggedIn).toEqual(true);
+    expect(count).toEqual(1);
+  });
 
-          client.watchQuery({ query }).subscribe({
-            next() {
-              expect(callCount).toBe(2);
+  it("should only force resolvers for fields marked with `@client(always: true)`, not all `@client` fields", async () => {
+    const query = gql`
+      query UserDetails {
+        name @client
+        isLoggedIn @client(always: true)
+      }
+    `;
 
-              client.watchQuery({ query: queryNoForce }).subscribe({
-                next() {
-                  // Result is loaded from the cache since the resolver
-                  // isn't being forced.
-                  expect(callCount).toBe(2);
-                  resolve();
-                },
-              });
-            },
-          });
+    let nameCount = 0;
+    let isLoggedInCount = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      resolvers: {
+        Query: {
+          name() {
+            nameCount += 1;
+            return "John Smith";
+          },
+          isLoggedIn() {
+            isLoggedInCount += 1;
+            return true;
+          },
         },
-      });
-    }
-  );
+      },
+    });
 
-  it("should allow client-only virtual resolvers (#4731)", function () {
+    await client.query({ query });
+    expect(nameCount).toEqual(1);
+    expect(isLoggedInCount).toEqual(1);
+
+    // On the next request, `name` will be loaded from the cache only,
+    // whereas `isLoggedIn` will be loaded from the cache then overwritten
+    // by running its forced local resolver.
+    await client.query({ query });
+    expect(nameCount).toEqual(1);
+    expect(isLoggedInCount).toEqual(2);
+  });
+
+  it("should force the running of local resolvers marked with `@client(always: true)` when using `ApolloClient.watchQuery`", async () => {
+    const query = gql`
+      query IsUserLoggedIn {
+        isUserLoggedIn @client(always: true)
+      }
+    `;
+
+    const queryNoForce = gql`
+      query IsUserLoggedIn {
+        isUserLoggedIn @client
+      }
+    `;
+
+    let callCount = 0;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      resolvers: {
+        Query: {
+          isUserLoggedIn() {
+            callCount += 1;
+            return true;
+          },
+        },
+      },
+    });
+
+    {
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitNext();
+      expect(callCount).toBe(1);
+    }
+
+    {
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitNext();
+      expect(callCount).toBe(2);
+    }
+
+    {
+      const stream = new ObservableStream(
+        client.watchQuery({ query: queryNoForce })
+      );
+
+      await expect(stream).toEmitNext();
+      // Result is loaded from the cache since the resolver
+      // isn't being forced.
+      expect(callCount).toBe(2);
+    }
+  });
+
+  it("should allow client-only virtual resolvers (#4731)", async () => {
     const query = gql`
       query UserData {
         userData @client {
@@ -1241,21 +1088,21 @@ describe("Force local resolvers", () => {
       },
     });
 
-    return client.query({ query }).then((result) => {
-      expect(result.data).toEqual({
-        userData: {
-          __typename: "User",
-          firstName: "Ben",
-          lastName: "Newman",
-          fullName: "Ben Newman",
-        },
-      });
+    const result = await client.query({ query });
+
+    expect(result.data).toEqual({
+      userData: {
+        __typename: "User",
+        firstName: "Ben",
+        lastName: "Newman",
+        fullName: "Ben Newman",
+      },
     });
   });
 });
 
 describe("Async resolvers", () => {
-  itAsync("should support async @client resolvers", async (resolve, reject) => {
+  it("should support async @client resolvers", async () => {
     const query = gql`
       query Member {
         isLoggedIn @client
@@ -1276,64 +1123,61 @@ describe("Async resolvers", () => {
     const {
       data: { isLoggedIn },
     } = await client.query({ query })!;
+
     expect(isLoggedIn).toBe(true);
-    return resolve();
   });
 
-  itAsync(
-    "should support async @client resolvers mixed with remotely resolved data",
-    async (resolve, reject) => {
-      const query = gql`
-        query Member {
-          member {
-            name
-            sessionCount @client
-            isLoggedIn @client
-          }
+  it("should support async @client resolvers mixed with remotely resolved data", async () => {
+    const query = gql`
+      query Member {
+        member {
+          name
+          sessionCount @client
+          isLoggedIn @client
         }
-      `;
+      }
+    `;
 
-      const testMember = {
-        name: "John Smithsonian",
-        isLoggedIn: true,
-        sessionCount: 10,
-      };
+    const testMember = {
+      name: "John Smithsonian",
+      isLoggedIn: true,
+      sessionCount: 10,
+    };
 
-      const link = new ApolloLink(() =>
-        Observable.of({
-          data: {
-            member: {
-              name: testMember.name,
-              __typename: "Member",
-            },
-          },
-        })
-      );
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link,
-        resolvers: {
-          Member: {
-            isLoggedIn() {
-              return Promise.resolve(testMember.isLoggedIn);
-            },
-            sessionCount() {
-              return testMember.sessionCount;
-            },
+    const link = new ApolloLink(() =>
+      Observable.of({
+        data: {
+          member: {
+            name: testMember.name,
+            __typename: "Member",
           },
         },
-      });
+      })
+    );
 
-      const {
-        data: { member },
-      } = await client.query({ query })!;
-      expect(member.name).toBe(testMember.name);
-      expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
-      expect(member.sessionCount).toBe(testMember.sessionCount);
-      return resolve();
-    }
-  );
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link,
+      resolvers: {
+        Member: {
+          isLoggedIn() {
+            return Promise.resolve(testMember.isLoggedIn);
+          },
+          sessionCount() {
+            return testMember.sessionCount;
+          },
+        },
+      },
+    });
+
+    const {
+      data: { member },
+    } = await client.query({ query })!;
+
+    expect(member.name).toBe(testMember.name);
+    expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
+    expect(member.sessionCount).toBe(testMember.sessionCount);
+  });
 });
 
 describe("LocalState helpers", () => {

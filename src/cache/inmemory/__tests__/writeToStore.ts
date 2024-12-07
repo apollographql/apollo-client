@@ -19,7 +19,6 @@ import {
   cloneDeep,
   getMainDefinition,
 } from "../../../utilities";
-import { itAsync } from "../../../testing/core";
 import { StoreWriter } from "../writeToStore";
 import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
 import { InMemoryCache } from "../inMemoryCache";
@@ -1860,137 +1859,132 @@ describe("writing to the store", () => {
     expect(cache.extract()).toMatchSnapshot();
   });
 
-  itAsync(
-    "should allow a union of objects of a different type, when overwriting a generated id with a real id",
-    (resolve, reject) => {
-      const dataWithPlaceholder = {
-        author: {
-          hello: "Foo",
-          __typename: "Placeholder",
-        },
-      };
-      const dataWithAuthor = {
-        author: {
-          firstName: "John",
-          lastName: "Smith",
-          id: "129",
-          __typename: "Author",
-        },
-      };
-      const query = gql`
-        query {
-          author {
-            ... on Author {
-              firstName
-              lastName
-              id
-              __typename
-            }
-            ... on Placeholder {
-              hello
-              __typename
-            }
+  it("should allow a union of objects of a different type, when overwriting a generated id with a real id", async () => {
+    const dataWithPlaceholder = {
+      author: {
+        hello: "Foo",
+        __typename: "Placeholder",
+      },
+    };
+    const dataWithAuthor = {
+      author: {
+        firstName: "John",
+        lastName: "Smith",
+        id: "129",
+        __typename: "Author",
+      },
+    };
+    const query = gql`
+      query {
+        author {
+          ... on Author {
+            firstName
+            lastName
+            id
+            __typename
+          }
+          ... on Placeholder {
+            hello
+            __typename
           }
         }
-      `;
+      }
+    `;
 
-      let mergeCount = 0;
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Query: {
-            fields: {
-              author: {
-                merge(existing, incoming, { isReference, readField }) {
-                  switch (++mergeCount) {
-                    case 1:
-                      expect(existing).toBeUndefined();
-                      expect(isReference(incoming)).toBe(false);
-                      expect(incoming).toEqual(dataWithPlaceholder.author);
-                      break;
-                    case 2:
-                      expect(existing).toEqual(dataWithPlaceholder.author);
-                      expect(isReference(incoming)).toBe(true);
-                      expect(readField("__typename", incoming)).toBe("Author");
-                      break;
-                    case 3:
-                      expect(isReference(existing)).toBe(true);
-                      expect(readField("__typename", existing)).toBe("Author");
-                      expect(incoming).toEqual(dataWithPlaceholder.author);
-                      break;
-                    default:
-                      reject("unreached");
-                  }
-                  return incoming;
-                },
+    let mergeCount = 0;
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Query: {
+          fields: {
+            author: {
+              merge(existing, incoming, { isReference, readField }) {
+                switch (++mergeCount) {
+                  case 1:
+                    expect(existing).toBeUndefined();
+                    expect(isReference(incoming)).toBe(false);
+                    expect(incoming).toEqual(dataWithPlaceholder.author);
+                    break;
+                  case 2:
+                    expect(existing).toEqual(dataWithPlaceholder.author);
+                    expect(isReference(incoming)).toBe(true);
+                    expect(readField("__typename", incoming)).toBe("Author");
+                    break;
+                  case 3:
+                    expect(isReference(existing)).toBe(true);
+                    expect(readField("__typename", existing)).toBe("Author");
+                    expect(incoming).toEqual(dataWithPlaceholder.author);
+                    break;
+                  default:
+                    throw new Error("unreached");
+                }
+                return incoming;
               },
             },
           },
         },
-      });
+      },
+    });
 
-      // write the first object, without an ID, placeholder
-      cache.writeQuery({
-        query,
-        data: dataWithPlaceholder,
-      });
+    // write the first object, without an ID, placeholder
+    cache.writeQuery({
+      query,
+      data: dataWithPlaceholder,
+    });
 
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          author: {
-            hello: "Foo",
-            __typename: "Placeholder",
-          },
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        author: {
+          hello: "Foo",
+          __typename: "Placeholder",
         },
-      });
+      },
+    });
 
-      // replace with another one of different type with ID
-      cache.writeQuery({
-        query,
-        data: dataWithAuthor,
-      });
+    // replace with another one of different type with ID
+    cache.writeQuery({
+      query,
+      data: dataWithAuthor,
+    });
 
-      expect(cache.extract()).toEqual({
-        "Author:129": {
-          firstName: "John",
-          lastName: "Smith",
-          id: "129",
-          __typename: "Author",
+    expect(cache.extract()).toEqual({
+      "Author:129": {
+        firstName: "John",
+        lastName: "Smith",
+        id: "129",
+        __typename: "Author",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        author: makeReference("Author:129"),
+      },
+    });
+
+    // and go back to the original:
+    cache.writeQuery({
+      query,
+      data: dataWithPlaceholder,
+    });
+
+    // Author__129 will remain in the store,
+    // but will not be referenced by any of the fields,
+    // hence we combine, and in that very order
+    expect(cache.extract()).toEqual({
+      "Author:129": {
+        firstName: "John",
+        lastName: "Smith",
+        id: "129",
+        __typename: "Author",
+      },
+      ROOT_QUERY: {
+        __typename: "Query",
+        author: {
+          hello: "Foo",
+          __typename: "Placeholder",
         },
-        ROOT_QUERY: {
-          __typename: "Query",
-          author: makeReference("Author:129"),
-        },
-      });
-
-      // and go back to the original:
-      cache.writeQuery({
-        query,
-        data: dataWithPlaceholder,
-      });
-
-      // Author__129 will remain in the store,
-      // but will not be referenced by any of the fields,
-      // hence we combine, and in that very order
-      expect(cache.extract()).toEqual({
-        "Author:129": {
-          firstName: "John",
-          lastName: "Smith",
-          id: "129",
-          __typename: "Author",
-        },
-        ROOT_QUERY: {
-          __typename: "Query",
-          author: {
-            hello: "Foo",
-            __typename: "Placeholder",
-          },
-        },
-      });
-
-      resolve();
-    }
-  );
+      },
+    });
+  });
 
   it("does not swallow errors other than field errors", () => {
     const query = gql`
@@ -2888,29 +2882,28 @@ describe("writing to the store", () => {
     expect(mergeCounts).toEqual({ first: 1, second: 1, third: 1, fourth: 1 });
   });
 
-  itAsync(
-    "should allow silencing broadcast of cache updates",
-    function (resolve, reject) {
-      const cache = new InMemoryCache({
-        typePolicies: {
-          Counter: {
-            // Counter is a singleton, but we want to be able to test
-            // writing to it with writeFragment, so it needs to have an ID.
-            keyFields: [],
-          },
+  it("should allow silencing broadcast of cache updates", async () => {
+    const cache = new InMemoryCache({
+      typePolicies: {
+        Counter: {
+          // Counter is a singleton, but we want to be able to test
+          // writing to it with writeFragment, so it needs to have an ID.
+          keyFields: [],
         },
-      });
+      },
+    });
 
-      const query = gql`
-        query {
-          counter {
-            count
-          }
+    const query = gql`
+      query {
+        counter {
+          count
         }
-      `;
+      }
+    `;
 
-      const results: number[] = [];
+    const results: number[] = [];
 
+    const promise = new Promise<void>((resolve) => {
       cache.watch({
         query,
         optimistic: true,
@@ -2925,101 +2918,103 @@ describe("writing to the store", () => {
           resolve();
         },
       });
+    });
 
-      let count = 0;
+    let count = 0;
 
-      cache.writeQuery({
-        query,
-        data: {
-          counter: {
-            __typename: "Counter",
-            count: ++count,
-          },
-        },
-        broadcast: false,
-      });
-
-      expect(cache.extract()).toEqual({
-        ROOT_QUERY: {
-          __typename: "Query",
-          counter: { __ref: "Counter:{}" },
-        },
-        "Counter:{}": {
+    cache.writeQuery({
+      query,
+      data: {
+        counter: {
           __typename: "Counter",
-          count: 1,
-        },
-      });
-
-      expect(results).toEqual([]);
-
-      const counterId = cache.identify({
-        __typename: "Counter",
-      })!;
-
-      cache.writeFragment({
-        id: counterId,
-        fragment: gql`
-          fragment Count on Counter {
-            count
-          }
-        `,
-        data: {
           count: ++count,
         },
+      },
+      broadcast: false,
+    });
+
+    expect(cache.extract()).toEqual({
+      ROOT_QUERY: {
+        __typename: "Query",
+        counter: { __ref: "Counter:{}" },
+      },
+      "Counter:{}": {
+        __typename: "Counter",
+        count: 1,
+      },
+    });
+
+    expect(results).toEqual([]);
+
+    const counterId = cache.identify({
+      __typename: "Counter",
+    })!;
+
+    cache.writeFragment({
+      id: counterId,
+      fragment: gql`
+        fragment Count on Counter {
+          count
+        }
+      `,
+      data: {
+        count: ++count,
+      },
+      broadcast: false,
+    });
+
+    const counterMeta = {
+      extraRootIds: ["Counter:{}"],
+    };
+
+    expect(cache.extract()).toEqual({
+      __META: counterMeta,
+      ROOT_QUERY: {
+        __typename: "Query",
+        counter: { __ref: "Counter:{}" },
+      },
+      "Counter:{}": {
+        __typename: "Counter",
+        count: 2,
+      },
+    });
+
+    expect(results).toEqual([]);
+
+    expect(
+      cache.evict({
+        id: counterId,
+        fieldName: "count",
         broadcast: false,
-      });
+      })
+    ).toBe(true);
 
-      const counterMeta = {
-        extraRootIds: ["Counter:{}"],
-      };
+    expect(cache.extract()).toEqual({
+      __META: counterMeta,
+      ROOT_QUERY: {
+        __typename: "Query",
+        counter: { __ref: "Counter:{}" },
+      },
+      "Counter:{}": {
+        __typename: "Counter",
+      },
+    });
 
-      expect(cache.extract()).toEqual({
-        __META: counterMeta,
-        ROOT_QUERY: {
-          __typename: "Query",
-          counter: { __ref: "Counter:{}" },
-        },
-        "Counter:{}": {
+    expect(results).toEqual([]);
+
+    // Only this write should trigger a broadcast.
+    cache.writeQuery({
+      query,
+      data: {
+        counter: {
           __typename: "Counter",
-          count: 2,
+          count: 3,
         },
-      });
+      },
+    });
 
-      expect(results).toEqual([]);
-
-      expect(
-        cache.evict({
-          id: counterId,
-          fieldName: "count",
-          broadcast: false,
-        })
-      ).toBe(true);
-
-      expect(cache.extract()).toEqual({
-        __META: counterMeta,
-        ROOT_QUERY: {
-          __typename: "Query",
-          counter: { __ref: "Counter:{}" },
-        },
-        "Counter:{}": {
-          __typename: "Counter",
-        },
-      });
-
-      expect(results).toEqual([]);
-
-      // Only this write should trigger a broadcast.
-      cache.writeQuery({
-        query,
-        data: {
-          counter: {
-            __typename: "Counter",
-            count: 3,
-          },
-        },
-      });
-    }
-  );
+    await promise;
+  });
 
   it("writeFragment should be able to infer ROOT_QUERY", () => {
     const cache = new InMemoryCache();

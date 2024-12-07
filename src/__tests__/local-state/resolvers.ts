@@ -13,7 +13,7 @@ import { ObservableStream } from "../../testing/internal";
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
-const assertWithObserver = ({
+const setupTestWithResolvers = ({
   resolvers,
   query,
   serverQuery,
@@ -62,7 +62,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({ resolvers, query });
+    const stream = setupTestWithResolvers({ resolvers, query });
 
     await expect(stream).toEmitMatchedValue({ data: { foo: { bar: true } } });
   });
@@ -93,7 +93,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       serverQuery,
@@ -139,7 +139,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       serverQuery,
@@ -194,7 +194,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       serverQuery,
@@ -229,7 +229,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       variables: { id: 1 },
@@ -256,7 +256,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       queryOptions: { context: { id: 1 } },
@@ -295,7 +295,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       serverQuery,
@@ -501,7 +501,7 @@ describe("Basic resolver capabilities", () => {
       },
     };
 
-    const stream = assertWithObserver({
+    const stream = setupTestWithResolvers({
       resolvers,
       query,
       serverQuery,

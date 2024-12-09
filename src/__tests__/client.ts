@@ -2565,7 +2565,7 @@ describe("client", () => {
     });
 
     await wait(0);
-    expect(observable.refetch()).rejects.toThrow();
+    await expect(observable.refetch()).rejects.toThrow();
 
     await expect(stream).toEmitValue({
       loading: true,
@@ -2598,7 +2598,7 @@ describe("client", () => {
     });
 
     await wait(0);
-    expect(observable.refetch()).resolves.toBeTruthy();
+    await expect(observable.refetch()).resolves.toBeTruthy();
 
     await expect(stream).toEmitValue({
       loading: true,

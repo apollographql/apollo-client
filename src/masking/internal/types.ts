@@ -184,7 +184,8 @@ export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;
 
 export type ContainsFragmentsRefs<TData> =
-  TData extends object ?
+  true extends IsAny<TData> ? false
+  : TData extends object ?
     " $fragmentRefs" extends keyof TData ?
       true
     : ContainsFragmentsRefs<TData[keyof TData]>

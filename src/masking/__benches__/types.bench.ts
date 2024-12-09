@@ -480,3 +480,21 @@ test("does not detect `$fragmentRefs` if type contains `any`", (prefix) => {
     expectTypeOf(x).branded.toEqualTypeOf<Source>();
   });
 });
+
+test("leaves tuples alone", (prefix) => {
+  interface Source {
+    coords: [long: number, lat: number];
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      coords: [long: number, lat: number];
+    }>();
+  });
+});

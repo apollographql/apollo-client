@@ -20,7 +20,6 @@ export type UnwrapFragmentRefs<TData> =
             >
         >
       >
-    : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>>
     : TData extends object ?
       {
         [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;

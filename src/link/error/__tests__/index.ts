@@ -17,7 +17,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       expect(graphQLErrors![0].message).toBe("resolver blew up");
       called = true;
@@ -51,7 +51,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = onError(({ operation, networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       expect(operation.operationName).toBe("Foo");

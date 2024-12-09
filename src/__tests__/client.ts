@@ -591,9 +591,9 @@ describe("client", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    await client.query({ query }).catch((error: ApolloError) => {
-      expect(error.graphQLErrors).toEqual(errors);
-    });
+    await expect(client.query({ query })).rejects.toEqual(
+      expect.objectContaining({ graphQLErrors: errors })
+    );
   });
 
   it("should return GraphQL errors correctly for a single query with an apollo-link enabled network interface", async () => {
@@ -636,9 +636,9 @@ describe("client", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    await client.query({ query }).catch((error: ApolloError) => {
-      expect(error.graphQLErrors).toEqual(errors);
-    });
+    await expect(client.query({ query })).rejects.toEqual(
+      expect.objectContaining({ graphQLErrors: errors })
+    );
   });
 
   it("should pass a network error correctly on a query with apollo-link network interface", async () => {
@@ -2104,16 +2104,9 @@ describe("client", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    try {
-      await client.mutate({ mutation });
-      throw new Error("Returned a result when it should not have.");
-    } catch (e) {
-      const error = e as ApolloError;
-
-      expect(error.graphQLErrors).toBeDefined();
-      expect(error.graphQLErrors.length).toBe(1);
-      expect(error.graphQLErrors[0].message).toBe(errors[0].message);
-    }
+    await expect(client.mutate({ mutation })).rejects.toEqual(
+      expect.objectContaining({ graphQLErrors: errors })
+    );
   });
 
   it("should allow errors to be returned from a mutation", async () => {

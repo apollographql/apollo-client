@@ -299,7 +299,7 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, MaybeMasked<unknown>>();
-  }).types([52, "instantiations"]);
+  }).types([54, "instantiations"]);
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<MaybeMasked<unknown>>().toBeUnknown();
   });
@@ -461,6 +461,40 @@ test("base type, multiple fragments on sub-types", (prefix) => {
           >
         | null
         | undefined;
+    }>();
+  });
+});
+
+test("does not detect `$fragmentRefs` if type contains `any`", (prefix) => {
+  interface Source {
+    foo: { bar: any[] };
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("leaves tuples alone", (prefix) => {
+  interface Source {
+    coords: [long: number, lat: number];
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      coords: [long: number, lat: number];
     }>();
   });
 });

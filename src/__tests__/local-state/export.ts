@@ -258,12 +258,15 @@ describe("@client @export tests", () => {
       resolvers: {},
     });
 
-    cache.writeQuery({
-      query,
-      data: {
-        appContainer,
-      },
-    });
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          appContainer,
+        },
+      });
+    }
 
     const { data } = await client.query({ query });
 
@@ -357,16 +360,19 @@ describe("@client @export tests", () => {
       resolvers: {},
     });
 
-    cache.writeQuery({
-      query,
-      data: {
-        postRequiringReview: {
-          loggedInReviewerId,
-          __typename: "Post",
-          id: 10,
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          postRequiringReview: {
+            loggedInReviewerId,
+            __typename: "Post",
+            id: 10,
+          },
         },
-      },
-    });
+      });
+    }
 
     const { data } = await client.query({ query });
 
@@ -434,14 +440,17 @@ describe("@client @export tests", () => {
       },
     });
 
-    cache.writeQuery({
-      query,
-      data: {
-        postRequiringReview: {
-          __typename: "Post",
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          postRequiringReview: {
+            __typename: "Post",
+          },
         },
-      },
-    });
+      });
+    }
 
     const { data } = await client.query({ query });
 
@@ -661,13 +670,16 @@ describe("@client @export tests", () => {
       resolvers: {},
     });
 
-    cache.writeQuery({
-      query,
-      data: {
-        primaryReviewerId,
-        secondaryReviewerId,
-      },
-    });
+    {
+      using _ = spyOnConsole("error");
+      cache.writeQuery({
+        query,
+        data: {
+          primaryReviewerId,
+          secondaryReviewerId,
+        },
+      });
+    }
 
     const { data } = await client.query({ query });
 

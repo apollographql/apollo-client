@@ -11,3 +11,4 @@ dist/
 # custom paths
 __tests__/
 ./docs/source/data/subscriptions.mdx
+./docs/source/development-testing/developer-tooling.md

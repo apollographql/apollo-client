@@ -40,3 +40,29 @@ You can install the extension via the webstores for [Chrome](https://chrome.goog
 While your app is in dev mode, the Apollo Client Devtools will appear as an "Apollo" tab in your web browser inspector. To enable the devtools in your app in production, pass `connectToDevTools: true` to the `ApolloClient` constructor in your app. Pass `connectToDevTools: false` if want to manually disable this functionality.
 
 Find more information about contributing and debugging on the [Apollo Client Devtools GitHub page](https://github.com/apollographql/apollo-client-devtools).
+
+## Apollo Client Devtools in VS Code
+
+* Install the Apollo VS Code extension: [start installation](vscode:extension/apollographql.vscode-apollo) | [marketplace page](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
+* Set the "Apollographql > Dev Tools: Show Panel" setting to "detect" or "always" in the VS code settings dialog.
+<img class="screenshot" alt="A screenshot of the VS Code settings dialog focusing on the 'Show Panel' option" src="../assets/devtools/vscode-setting.png"/>
+* In your code base, install the `@apollo/client-devtools-vscode` package:
+```sh
+npm install @apollo/client-devtools-vscode
+```
+* After initializing your `ApolloClient` instance, call `registerClient` with your client instance.
+```js
+import { registerClient } from "@apollo/client-devtools-vscode";
+
+const client = new ApolloClient({ /* ... */ });
+
+// we recommend wrapping this statement in a check for e.g. process.env.NODE_ENV === "development"
+const devtoolsRegistration = registerClient(
+  client,
+  // the default port of the VSCode DevTools is 7095
+  "ws://localhost:7095",
+);
+```
+* Open the "Apollo Client DevTools" panel in VS Code.
+* Start your application. It should automatically connect to the DevTools.
+<img class="screenshot" alt="Apollo Client Devtools in a VS Code panel" src="../assets/devtools/vscode-panel.png"/>

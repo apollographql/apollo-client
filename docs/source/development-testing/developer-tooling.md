@@ -43,6 +43,12 @@ Find more information about contributing and debugging on the [Apollo Client Dev
 
 ## Apollo Client Devtools in VS Code
 
+<Note>
+
+This feature is currently released as "experimental" - please try it out and give us feedback in our [GitHub issues](https://github.com/apollographql/vscode-graphql/issues)!
+
+</Note>
+
 * Install the Apollo VS Code extension: [start installation](vscode:extension/apollographql.vscode-apollo) | [marketplace page](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
 * Set the "Apollographql > Dev Tools: Show Panel" setting to "detect" or "always" in the VS code settings dialog.
 <img class="screenshot" alt="A screenshot of the VS Code settings dialog focusing on the 'Show Panel' option" src="../assets/devtools/vscode-setting.png"/>

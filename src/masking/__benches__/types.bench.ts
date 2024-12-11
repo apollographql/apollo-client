@@ -2,7 +2,6 @@ import type { MaybeMasked, Unmasked } from "../index.js";
 import { attest, bench } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 import type { DeepPartial } from "../../utilities/index.js";
-import type { ContainsFragmentsRefs } from "../internal/types.js";
 
 import { setup } from "@ark/attest";
 

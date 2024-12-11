@@ -139,6 +139,7 @@ export type { OnlyRequiredProperties } from "./types/OnlyRequiredProperties.js";
 export type { Prettify } from "./types/Prettify.js";
 export type { UnionToIntersection } from "./types/UnionToIntersection.js";
 export type { NoInfer } from "./types/NoInfer.js";
+export type { RemoveIndexSignature } from "./types/RemoveIndexSignature.js";
 
 export {
   AutoCleanedStrongCache,

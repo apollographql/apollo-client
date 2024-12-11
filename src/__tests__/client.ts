@@ -667,10 +667,9 @@ describe("client", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    await client.query({ query }).catch((error: ApolloError) => {
-      expect(error.networkError).toBeDefined();
-      expect(error.networkError!.message).toEqual(networkError.message);
-    });
+    await expect(client.query({ query })).rejects.toThrow(
+      new ApolloError({ networkError })
+    );
   });
 
   it("should not warn when receiving multiple results from apollo-link network interface", () => {
@@ -1742,15 +1741,6 @@ describe("client", () => {
       "to receive multiple results from the cache and the network, or consider " +
       "using a different fetchPolicy, such as cache-first or network-only.";
 
-    function checkCacheAndNetworkError(callback: () => any) {
-      try {
-        callback();
-        throw new Error("not reached");
-      } catch (thrown) {
-        expect((thrown as Error).message).toBe(cacheAndNetworkError);
-      }
-    }
-
     // Test that cache-and-network can only be used on watchQuery, not query.
     it("warns when used with client.query", () => {
       const client = new ApolloClient({
@@ -1758,12 +1748,12 @@ describe("client", () => {
         cache: new InMemoryCache(),
       });
 
-      checkCacheAndNetworkError(() =>
-        client.query({
+      expect(() => {
+        void client.query({
           query,
           fetchPolicy: "cache-and-network" as FetchPolicy,
-        })
-      );
+        });
+      }).toThrow(new Error(cacheAndNetworkError));
     });
 
     it("warns when used with client.query with defaultOptions", () => {
@@ -1777,14 +1767,15 @@ describe("client", () => {
         },
       });
 
-      checkCacheAndNetworkError(() =>
-        client.query({
-          query,
-          // This undefined value should be ignored in favor of
-          // defaultOptions.query.fetchPolicy.
-          fetchPolicy: void 0,
-        })
-      );
+      expect(
+        () =>
+          void client.query({
+            query,
+            // This undefined value should be ignored in favor of
+            // defaultOptions.query.fetchPolicy.
+            fetchPolicy: void 0,
+          })
+      ).toThrow(new Error(cacheAndNetworkError));
     });
 
     it("fetches from cache first, then network", async () => {
@@ -2067,15 +2058,9 @@ describe("client", () => {
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    try {
-      await client.mutate({ mutation });
-      throw new Error("Returned a result when it should not have.");
-    } catch (e) {
-      const error = e as ApolloError;
-
-      expect(error.networkError).toBeDefined();
-      expect(error.networkError!.message).toBe(networkError.message);
-    }
+    await expect(client.mutate({ mutation })).rejects.toThrow(
+      new ApolloError({ networkError })
+    );
   });
 
   it("should pass a GraphQL error correctly on a mutation", async () => {

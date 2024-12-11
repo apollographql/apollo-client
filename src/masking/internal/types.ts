@@ -1,4 +1,4 @@
-import type { Prettify } from "../../utilities/index.js";
+import type { Prettify, RemoveIndexSignature } from "../../utilities/index.js";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -185,7 +185,7 @@ export type RemoveFragmentName<T> =
 export type ContainsFragmentsRefs<TData> =
   true extends IsAny<TData> ? false
   : TData extends object ?
-    " $fragmentRefs" extends keyof TData ?
+    " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ?
       true
     : ContainsFragmentsRefs<TData[keyof TData]>
   : false;

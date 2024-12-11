@@ -2,6 +2,7 @@ import type { MaybeMasked, Unmasked } from "../index.js";
 import { attest, bench } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 import type { DeepPartial } from "../../utilities/index.js";
+import type { ContainsFragmentsRefs } from "../internal/types.js";
 
 import { setup } from "@ark/attest";
 
@@ -496,6 +497,84 @@ test("leaves tuples alone", (prefix) => {
 
     expectTypeOf(x).branded.toEqualTypeOf<{
       coords: [long: number, lat: number];
+    }>();
+  });
+});
+
+test("does not detect `$fragmentRefs` if type is a record type", (prefix) => {
+  interface MetadataItem {
+    foo: string;
+  }
+
+  interface Source {
+    metadata: Record<string, MetadataItem>;
+    " $fragmentName": "Source";
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("does not detect `$fragmentRefs` on types with index signatures", (prefix) => {
+  interface Source {
+    foo: string;
+    " $fragmentName": "Source";
+    [key: string]: string;
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
+  type Source = {
+    __typename: "Foo";
+    id: number;
+    metadata: Record<string, number>;
+    structuredMetadata: StructuredMetadata;
+  } & { " $fragmentName"?: "UserFieldsFragment" } & {
+    " $fragmentRefs"?: {
+      FooFragment: FooFragment;
+    };
+  };
+
+  interface StructuredMetadata {
+    bar: number;
+    [index: string]: number;
+  }
+
+  type FooFragment = {
+    __typename: "Foo";
+    foo: string;
+  } & { " $fragmentName"?: "FooFragment" };
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      __typename: "Foo";
+      id: number;
+      metadata: Record<string, number>;
+      foo: string;
+      structuredMetadata: StructuredMetadata;
     }>();
   });
 });

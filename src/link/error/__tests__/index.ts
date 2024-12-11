@@ -80,7 +80,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = onError(({ operation, networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       expect(operation.operationName).toBe("Foo");
@@ -111,7 +111,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = onError(({ operation, networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       expect(networkError!.name).toBe("ServerError");
@@ -146,7 +146,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = onError(({ graphQLErrors }) => {
       expect(graphQLErrors).toBeUndefined();
       called = true;
@@ -261,7 +261,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = onError(({ graphQLErrors, response, operation }) => {
       expect(graphQLErrors![0].message).toBe("resolver blew up");
       expect(response!.data!.foo).toBe(true);
@@ -303,7 +303,7 @@ describe("error handling with class", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = new ErrorLink(({ graphQLErrors, networkError }) => {
       expect(graphQLErrors![0].message).toBe("resolver blew up");
       called = true;
@@ -337,7 +337,7 @@ describe("error handling with class", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = new ErrorLink(({ networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       called = true;
@@ -365,7 +365,7 @@ describe("error handling with class", () => {
       }
     `;
 
-    let called!: boolean;
+    let called = false;
     const errorLink = new ErrorLink(({ networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       called = true;

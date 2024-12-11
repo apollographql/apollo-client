@@ -468,6 +468,7 @@ test("base type, multiple fragments on sub-types", (prefix) => {
 test("does not detect `$fragmentRefs` if type contains `any`", (prefix) => {
   interface Source {
     foo: { bar: any[] };
+    " $fragmentName": "foo";
   }
 
   bench(prefix + "instantiations", () => {

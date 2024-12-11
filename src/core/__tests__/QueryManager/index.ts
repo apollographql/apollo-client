@@ -30,20 +30,13 @@ import {
 // core
 import { NetworkStatus } from "../../networkStatus";
 import { ObservableQuery } from "../../ObservableQuery";
-import {
-  MutationBaseOptions,
-  MutationOptions,
-  WatchQueryOptions,
-} from "../../watchQueryOptions";
+import { WatchQueryOptions } from "../../watchQueryOptions";
 import { QueryManager } from "../../QueryManager";
 
 import { ApolloError } from "../../../errors";
 
 // testing utils
 import { waitFor } from "@testing-library/react";
-import observableToPromise, {
-  observableToPromiseAndSubscription,
-} from "../../../testing/core/observableToPromise";
 import { wait } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
@@ -2924,22 +2917,14 @@ describe("QueryManager", () => {
         pollInterval: 50,
         notifyOnNetworkStatusChange: false,
       });
+      const stream = new ObservableStream(observable);
 
-      const { promise, subscription } = observableToPromiseAndSubscription(
-        {
-          observable,
-          wait: 60,
-        },
-        (result) => expect(result.data).toEqual(data1),
-        (result) => {
-          expect(result.data).toEqual(data2);
+      await expect(stream).toEmitMatchedValue({ data: data1 });
+      await expect(stream).toEmitMatchedValue({ data: data2 });
 
-          // we unsubscribe here manually, rather than waiting for the timeout.
-          subscription.unsubscribe();
-        }
-      );
+      stream.unsubscribe();
 
-      await promise;
+      await expect(stream).not.toEmitAnything();
     });
 
     it("allows you to unsubscribe from polled query errors", async () => {
@@ -2988,31 +2973,16 @@ describe("QueryManager", () => {
         pollInterval: 50,
         notifyOnNetworkStatusChange: false,
       });
+      const stream = new ObservableStream(observable);
 
-      let isFinished = false;
-      process.once("unhandledRejection", () => {
-        if (!isFinished) {
-          throw new Error("unhandledRejection from network");
-        }
-      });
-
-      const { promise, subscription } = observableToPromiseAndSubscription(
-        {
-          observable,
-          wait: 60,
-          errorCallbacks: [
-            (error) => {
-              expect(error.message).toMatch("Network error");
-              subscription.unsubscribe();
-            },
-          ],
-        },
-        (result) => expect(result.data).toEqual(data1)
+      await expect(stream).toEmitMatchedValue({ data: data1 });
+      await expect(stream).toEmitError(
+        new ApolloError({ networkError: new Error("Network error") })
       );
 
-      await promise;
-      await wait(4);
-      isFinished = true;
+      stream.unsubscribe();
+
+      await expect(stream).not.toEmitAnything();
     });
 
     it("exposes a way to start a polling query", async () => {
@@ -3269,7 +3239,7 @@ describe("QueryManager", () => {
       expect(queryManager.mutationStore).toEqual({});
     });
 
-    xit("should only refetch once when we store reset", () => {
+    xit("should only refetch once when we store reset", async () => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
@@ -3309,22 +3279,19 @@ describe("QueryManager", () => {
       );
       queryManager = createQueryManager({ link });
       const observable = queryManager.watchQuery<any>({ query });
+      const stream = new ObservableStream(observable);
 
-      // wait just to make sure the observable doesn't fire again
-      return observableToPromise(
-        { observable, wait: 0 },
-        (result) => {
-          expect(result.data).toEqual(data);
-          expect(timesFired).toBe(1);
-          // reset the store after data has returned
-          void resetStore(queryManager);
-        },
-        (result) => {
-          // only refetch once and make sure data has changed
-          expect(result.data).toEqual(data2);
-          expect(timesFired).toBe(2);
-        }
-      );
+      await expect(stream).toEmitMatchedValue({ data });
+      expect(timesFired).toBe(1);
+
+      // reset the store after data has returned
+      void resetStore(queryManager);
+
+      // only refetch once and make sure data has changed
+      await expect(stream).toEmitMatchedValue({ data: data2 });
+      expect(timesFired).toBe(2);
+
+      await expect(stream).not.toEmitAnything();
     });
 
     it("should not refetch torn-down queries", async () => {
@@ -3356,17 +3323,15 @@ describe("QueryManager", () => {
 
       queryManager = createQueryManager({ link });
       observable = queryManager.watchQuery({ query });
+      const stream = new ObservableStream(observable);
 
-      await observableToPromise({ observable, wait: 0 }, (result) =>
-        expect(result.data).toEqual(data)
-      );
+      await expect(stream).toEmitMatchedValue({ data });
+
+      stream.unsubscribe();
 
       expect(timesFired).toBe(1);
 
-      // at this point the observable query has been torn down
-      // because observableToPromise unsubscribe before resolving
       void resetStore(queryManager);
-
       await wait(50);
 
       expect(timesFired).toBe(1);
@@ -3829,8 +3794,6 @@ describe("QueryManager", () => {
       expect(timesFired).toBe(1);
 
       stream.unsubscribe();
-      // at this point the observable query has been torn down
-      // because observableToPromise unsubscribe before resolving
       void queryManager.reFetchObservableQueries();
 
       await wait(50);
@@ -4696,9 +4659,10 @@ describe("QueryManager", () => {
       );
 
       const observable = queryManager.watchQuery<any>({ query });
-      await observableToPromise({ observable }, (result) => {
-        expect(result.data).toEqual(data);
-      });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitMatchedValue({ data });
+      stream.unsubscribe();
 
       // The subscription has been stopped already
       await queryManager.mutate({
@@ -4763,9 +4727,10 @@ describe("QueryManager", () => {
       );
 
       const observable = queryManager.watchQuery<any>({ query });
-      await observableToPromise({ observable }, (result) => {
-        expect(result.data).toEqual(data);
-      });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitMatchedValue({ data });
+      stream.unsubscribe();
 
       // The subscription has been stopped already
       await queryManager.mutate({
@@ -5495,152 +5460,333 @@ describe("QueryManager", () => {
   });
 
   describe("awaitRefetchQueries", () => {
-    const awaitRefetchTest = ({
-      awaitRefetchQueries,
-      testQueryError = false,
-    }: MutationBaseOptions<any, any, any> & { testQueryError?: boolean }) =>
-      new Promise<void>((resolve, reject) => {
-        const query = gql`
-          query getAuthors($id: ID!) {
-            author(id: $id) {
-              firstName
-              lastName
-            }
+    it("should not wait for `refetchQueries` to complete before resolving the mutation, when `awaitRefetchQueries` is undefined", async () => {
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
           }
-        `;
+        }
+      `;
 
-        const queryData = {
-          author: {
-            firstName: "John",
-            lastName: "Smith",
-          },
-        };
+      const queryData = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
 
-        const mutation = gql`
-          mutation changeAuthorName {
-            changeAuthorName(newName: "Jack Smith") {
-              firstName
-              lastName
-            }
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
           }
-        `;
+        }
+      `;
 
-        const mutationData = {
-          changeAuthorName: {
-            firstName: "Jack",
-            lastName: "Smith",
-          },
-        };
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
 
-        const secondReqData = {
-          author: {
-            firstName: "Jane",
-            lastName: "Johnson",
-          },
-        };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
 
-        const variables = { id: "1234" };
+      const variables = { id: "1234" };
 
-        const refetchError =
-          testQueryError ? new Error("Refetch failed") : undefined;
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: queryData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+        }
+      );
 
-        const queryManager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data: queryData },
-          },
-          {
-            request: { query: mutation },
-            result: { data: mutationData },
-          },
-          {
-            request: { query, variables },
-            result: { data: secondReqData },
-            error: refetchError,
-          }
-        );
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
+      });
+      const stream = new ObservableStream(observable);
+      let mutationComplete = false;
 
-        const observable = queryManager.watchQuery<any>({
-          query,
-          variables,
-          notifyOnNetworkStatusChange: false,
+      await expect(stream).toEmitMatchedValue({ data: queryData });
+
+      void queryManager
+        .mutate({
+          mutation,
+          refetchQueries: ["getAuthors"],
+          awaitRefetchQueries: false,
+        })
+        .then(() => {
+          mutationComplete = true;
         });
 
-        let isRefetchErrorCaught = false;
-        let mutationComplete = false;
-        return observableToPromise(
-          { observable },
-          (result) => {
-            expect(result.data).toEqual(queryData);
-            const mutateOptions: MutationOptions<any, any, any> = {
-              mutation,
-              refetchQueries: ["getAuthors"],
-            };
-            if (awaitRefetchQueries) {
-              mutateOptions.awaitRefetchQueries = awaitRefetchQueries;
-            }
-            queryManager
-              .mutate(mutateOptions)
-              .then(() => {
-                mutationComplete = true;
-              })
-              .catch((error) => {
-                expect(error).toBeDefined();
-                isRefetchErrorCaught = true;
-              });
-          },
-          (result) => {
-            if (awaitRefetchQueries) {
-              expect(mutationComplete).not.toBeTruthy();
-            } else {
-              expect(mutationComplete).toBeTruthy();
-            }
-            expect(observable.getCurrentResult().data).toEqual(secondReqData);
-            expect(result.data).toEqual(secondReqData);
+      await expect(stream).toEmitMatchedValue({ data: secondReqData });
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      expect(mutationComplete).toBe(true);
+    });
+
+    it("should not wait for `refetchQueries` to complete before resolving the mutation, when `awaitRefetchQueries` is false", async () => {
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
           }
-        )
-          .then(() => resolve())
-          .catch((error) => {
-            const isRefetchError =
-              awaitRefetchQueries &&
-              testQueryError &&
-              error.message.includes(refetchError?.message);
+        }
+      `;
 
-            if (isRefetchError) {
-              return setTimeout(() => {
-                expect(isRefetchErrorCaught).toBe(true);
-                resolve();
-              }, 10);
-            }
+      const queryData = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
 
-            reject(error);
-          });
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: queryData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+        }
+      );
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
       });
+      const stream = new ObservableStream(observable);
+      let mutationComplete = false;
 
-    it(
-      "should not wait for `refetchQueries` to complete before resolving " +
-        "the mutation, when `awaitRefetchQueries` is undefined",
-      () => awaitRefetchTest({ awaitRefetchQueries: void 0 })
-    );
+      await expect(stream).toEmitMatchedValue({ data: queryData });
 
-    it(
-      "should not wait for `refetchQueries` to complete before resolving " +
-        "the mutation, when `awaitRefetchQueries` is false",
-      () => awaitRefetchTest({ awaitRefetchQueries: false })
-    );
+      void queryManager
+        .mutate({ mutation, refetchQueries: ["getAuthors"] })
+        .then(() => {
+          mutationComplete = true;
+        });
 
-    it(
-      "should wait for `refetchQueries` to complete before resolving " +
-        "the mutation, when `awaitRefetchQueries` is `true`",
-      () => awaitRefetchTest({ awaitRefetchQueries: true })
-    );
+      await expect(stream).toEmitMatchedValue({ data: secondReqData });
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      expect(mutationComplete).toBe(true);
+    });
 
-    it(
-      "should allow catching errors from `refetchQueries` when " +
-        "`awaitRefetchQueries` is `true`",
-      () =>
-        awaitRefetchTest({ awaitRefetchQueries: true, testQueryError: true })
-    );
+    it("should wait for `refetchQueries` to complete before resolving the mutation, when `awaitRefetchQueries` is `true`", async () => {
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const queryData = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: queryData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+        }
+      );
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
+      });
+      const stream = new ObservableStream(observable);
+      let mutationComplete = false;
+
+      await expect(stream).toEmitMatchedValue({ data: queryData });
+
+      void queryManager
+        .mutate({
+          mutation,
+          refetchQueries: ["getAuthors"],
+          awaitRefetchQueries: true,
+        })
+        .then(() => {
+          mutationComplete = true;
+        });
+
+      await expect(stream).toEmitMatchedValue({ data: secondReqData });
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      expect(mutationComplete).toBe(false);
+    });
+
+    it("should allow catching errors from `refetchQueries` when `awaitRefetchQueries` is `true`", async () => {
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const queryData = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+
+      const mutation = gql`
+        mutation changeAuthorName {
+          changeAuthorName(newName: "Jack Smith") {
+            firstName
+            lastName
+          }
+        }
+      `;
+
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+      const refetchError = new Error("Refetch failed");
+
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data: queryData },
+        },
+        {
+          request: { query: mutation },
+          result: { data: mutationData },
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+          error: refetchError,
+        }
+      );
+
+      const observable = queryManager.watchQuery<any>({
+        query,
+        variables,
+        notifyOnNetworkStatusChange: false,
+      });
+      const stream = new ObservableStream(observable);
+      let isRefetchErrorCaught = false;
+
+      await expect(stream).toEmitMatchedValue({ data: queryData });
+
+      void queryManager
+        .mutate({
+          mutation,
+          refetchQueries: ["getAuthors"],
+          awaitRefetchQueries: true,
+        })
+        .catch((error) => {
+          expect(error).toBeDefined();
+          isRefetchErrorCaught = true;
+        });
+
+      await expect(stream).toEmitError(
+        new ApolloError({ networkError: refetchError })
+      );
+      expect(isRefetchErrorCaught).toBe(true);
+    });
   });
 
   describe("store watchers", () => {

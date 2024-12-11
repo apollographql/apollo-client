@@ -8,7 +8,7 @@ import { DocumentNode } from "graphql";
 import { ApolloClient, TypedDocumentNode } from "../../../../core";
 import { ApolloProvider } from "../../../context";
 import { InMemoryCache as Cache } from "../../../../cache";
-import { itAsync, mockSingleLink } from "../../../../testing";
+import { mockSingleLink } from "../../../../testing";
 import { Query } from "../../../components";
 import { getDataFromTree, getMarkupFromTree } from "../../../ssr";
 import { graphql } from "../../graphql";
@@ -543,86 +543,78 @@ describe("SSR", () => {
       });
     });
 
-    itAsync(
-      "should allow for setting state in a component",
-      (resolve, reject) => {
-        const query = gql`
-          query user($id: ID) {
-            currentUser(id: $id) {
-              firstName
-            }
+    it("should allow for setting state in a component", async () => {
+      const query = gql`
+        query user($id: ID) {
+          currentUser(id: $id) {
+            firstName
           }
-        `;
-        const resultData = { currentUser: { firstName: "James" } };
-        const variables = { id: "1" };
-        const link = mockSingleLink({
-          request: { query, variables },
-          result: { data: resultData },
-        });
-
-        const cache = new Cache({ addTypename: false });
-        const apolloClient = new ApolloClient({
-          link,
-          cache,
-        });
-
-        interface Props {
-          id: string;
         }
-        interface Data {
-          currentUser: {
-            firstName: string;
+      `;
+      const resultData = { currentUser: { firstName: "James" } };
+      const variables = { id: "1" };
+      const link = mockSingleLink({
+        request: { query, variables },
+        result: { data: resultData },
+      });
+
+      const cache = new Cache({ addTypename: false });
+      const apolloClient = new ApolloClient({
+        link,
+        cache,
+      });
+
+      interface Props {
+        id: string;
+      }
+      interface Data {
+        currentUser: {
+          firstName: string;
+        };
+      }
+      interface Variables {
+        id: string;
+      }
+
+      class Element extends React.Component<
+        ChildProps<Props, Data, Variables>,
+        { thing: number }
+      > {
+        state = { thing: 1 };
+
+        static getDerivedStateFromProps() {
+          return {
+            thing: 2,
           };
         }
-        interface Variables {
-          id: string;
+
+        render() {
+          const { data } = this.props;
+          expect(this.state.thing).toBe(2);
+          return (
+            <div>
+              {!data || data.loading || !data.currentUser ?
+                "loading"
+              : data.currentUser.firstName}
+            </div>
+          );
         }
-
-        class Element extends React.Component<
-          ChildProps<Props, Data, Variables>,
-          { thing: number }
-        > {
-          state = { thing: 1 };
-
-          static getDerivedStateFromProps() {
-            return {
-              thing: 2,
-            };
-          }
-
-          render() {
-            const { data } = this.props;
-            expect(this.state.thing).toBe(2);
-            return (
-              <div>
-                {!data || data.loading || !data.currentUser ?
-                  "loading"
-                : data.currentUser.firstName}
-              </div>
-            );
-          }
-        }
-
-        const ElementWithData = graphql<Props, Data, Variables>(query)(Element);
-
-        const app = (
-          <ApolloProvider client={apolloClient}>
-            <ElementWithData id={"1"} />
-          </ApolloProvider>
-        );
-
-        getDataFromTree(app)
-          .then(() => {
-            const initialState = cache.extract();
-            expect(initialState).toBeTruthy();
-            expect(
-              initialState.ROOT_QUERY!['currentUser({"id":"1"})']
-            ).toBeTruthy();
-            resolve();
-          })
-          .catch(console.error);
       }
-    );
+
+      const ElementWithData = graphql<Props, Data, Variables>(query)(Element);
+
+      const app = (
+        <ApolloProvider client={apolloClient}>
+          <ElementWithData id={"1"} />
+        </ApolloProvider>
+      );
+
+      await getDataFromTree(app);
+
+      const initialState = cache.extract();
+      expect(initialState).toBeTruthy();
+      expect(initialState.ROOT_QUERY!['currentUser({"id":"1"})']).toBeTruthy();
+    });
 
     it("should correctly initialize an empty state to null", () => {
       class Element extends React.Component<any, any> {
@@ -651,7 +643,7 @@ describe("SSR", () => {
       return getDataFromTree(<Element />);
     });
 
-    itAsync("should allow prepping state from props", (resolve, reject) => {
+    it("should allow prepping state from props", async () => {
       const query = gql`
         query user($id: ID) {
           currentUser(id: $id) {
@@ -730,16 +722,11 @@ describe("SSR", () => {
         </ApolloProvider>
       );
 
-      getDataFromTree(app)
-        .then(() => {
-          const initialState = apolloClient.cache.extract();
-          expect(initialState).toBeTruthy();
-          expect(
-            initialState.ROOT_QUERY!['currentUser({"id":"1"})']
-          ).toBeTruthy();
-          resolve();
-        })
-        .catch(console.error);
+      await getDataFromTree(app);
+
+      const initialState = apolloClient.cache.extract();
+      expect(initialState).toBeTruthy();
+      expect(initialState.ROOT_QUERY!['currentUser({"id":"1"})']).toBeTruthy();
     });
 
     it("shouldn't run queries if ssr is turned to off", () => {

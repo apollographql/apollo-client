@@ -9,8 +9,9 @@ import { Observable } from "../../../utilities";
 import { createHttpLink } from "../../http/createHttpLink";
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
-import { itAsync } from "../../../testing";
+import { wait } from "../../../testing";
 import { toPromise } from "../../utils";
+import { ObservableStream } from "../../../testing/internal";
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint
@@ -79,52 +80,53 @@ describe("happy path", () => {
     fetchMock.restore();
   });
 
-  itAsync(
-    "sends a sha256 hash of the query under extensions",
-    (resolve, reject) => {
-      fetchMock.post(
-        "/graphql",
-        () => new Promise((resolve) => resolve({ body: response }))
-      );
-      const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
-      execute(link, { query, variables }).subscribe((result) => {
-        expect(result.data).toEqual(data);
-        const [uri, request] = fetchMock.lastCall()!;
-        expect(uri).toEqual("/graphql");
-        expect(request!.body!).toBe(
-          JSON.stringify({
-            operationName: "Test",
-            variables,
-            extensions: {
-              persistedQuery: {
-                version: VERSION,
-                sha256Hash: hash,
-              },
-            },
-          })
-        );
-        resolve();
-      }, reject);
-    }
-  );
-
-  itAsync("sends a version along with the request", (resolve, reject) => {
+  it("sends a sha256 hash of the query under extensions", async () => {
     fetchMock.post(
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
-    execute(link, { query, variables }).subscribe((result) => {
-      expect(result.data).toEqual(data);
-      const [uri, request] = fetchMock.lastCall()!;
-      expect(uri).toEqual("/graphql");
-      const parsed = JSON.parse(request!.body!.toString());
-      expect(parsed.extensions.persistedQuery.version).toBe(VERSION);
-      resolve();
-    }, reject);
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [uri, request] = fetchMock.lastCall()!;
+
+    expect(uri).toEqual("/graphql");
+    expect(request!.body!).toBe(
+      JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: hash,
+          },
+        },
+      })
+    );
   });
 
-  itAsync("memoizes between requests", (resolve, reject) => {
+  it("sends a version along with the request", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response }))
+    );
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [uri, request] = fetchMock.lastCall()!;
+    expect(uri).toEqual("/graphql");
+
+    const parsed = JSON.parse(request!.body!.toString());
+    expect(parsed.extensions.persistedQuery.version).toBe(VERSION);
+  });
+
+  it("memoizes between requests", async () => {
     fetchMock.post(
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response })),
@@ -140,15 +142,23 @@ describe("happy path", () => {
       createHttpLink()
     );
 
-    execute(link, { query, variables }).subscribe((result) => {
+    {
+      const observable = execute(link, { query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitValue({ data });
+      await expect(stream).toComplete();
       expect(hashSpy).toHaveBeenCalledTimes(1);
-      expect(result.data).toEqual(data);
-      execute(link, { query, variables }).subscribe((result2) => {
-        expect(hashSpy).toHaveBeenCalledTimes(1);
-        expect(result2.data).toEqual(data);
-        resolve();
-      }, reject);
-    }, reject);
+    }
+
+    {
+      const observable = execute(link, { query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitValue({ data });
+      await expect(stream).toComplete();
+      expect(hashSpy).toHaveBeenCalledTimes(1);
+    }
   });
 
   it("clears the cache when calling `resetHashCache`", async () => {
@@ -177,7 +187,7 @@ describe("happy path", () => {
     await expect(hashRefs[0]).toBeGarbageCollected();
   });
 
-  itAsync("supports loading the hash from other method", (resolve, reject) => {
+  it("supports loading the hash from other method", async () => {
     fetchMock.post(
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
@@ -187,33 +197,34 @@ describe("happy path", () => {
       createHttpLink()
     );
 
-    execute(link, { query, variables }).subscribe((result) => {
-      expect(result.data).toEqual(data);
-      const [uri, request] = fetchMock.lastCall()!;
-      expect(uri).toEqual("/graphql");
-      const parsed = JSON.parse(request!.body!.toString());
-      expect(parsed.extensions.persistedQuery.sha256Hash).toBe("foo");
-      resolve();
-    }, reject);
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [uri, request] = fetchMock.lastCall()!;
+    expect(uri).toEqual("/graphql");
+
+    const parsed = JSON.parse(request!.body!.toString());
+    expect(parsed.extensions.persistedQuery.sha256Hash).toBe("foo");
   });
 
-  itAsync("errors if unable to convert to sha256", (resolve, reject) => {
+  it("errors if unable to convert to sha256", async () => {
     fetchMock.post(
       "/graphql",
       () => new Promise((resolve) => resolve({ body: response }))
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
 
-    execute(link, { query: "1234", variables } as any).subscribe(
-      reject as any,
-      (error) => {
-        expect(error.message).toMatch(/Invalid AST Node/);
-        resolve();
-      }
-    );
+    const observable = execute(link, { query: "1234", variables } as any);
+    const stream = new ObservableStream(observable);
+
+    const error = await stream.takeError();
+
+    expect(error.message).toMatch(/Invalid AST Node/);
   });
 
-  itAsync("unsubscribes correctly", (resolve, reject) => {
+  it("unsubscribes correctly", async () => {
     const delay = new ApolloLink(() => {
       return new Observable((ob) => {
         setTimeout(() => {
@@ -224,92 +235,70 @@ describe("happy path", () => {
     });
     const link = createPersistedQuery({ sha256 }).concat(delay);
 
-    const sub = execute(link, { query, variables }).subscribe(
-      reject,
-      reject,
-      reject
-    );
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
 
-    setTimeout(() => {
-      sub.unsubscribe();
-      resolve();
-    }, 10);
+    await wait(10);
+
+    stream.unsubscribe();
+
+    await expect(stream).not.toEmitAnything({ timeout: 150 });
   });
 
-  itAsync(
-    "should error if `sha256` and `generateHash` options are both missing",
-    (resolve, reject) => {
+  it("should error if `sha256` and `generateHash` options are both missing", async () => {
+    const createPersistedQueryFn = createPersistedQuery as any;
+
+    expect(() => createPersistedQueryFn()).toThrow(
+      'Missing/invalid "sha256" or "generateHash" function'
+    );
+  });
+
+  it.each(["sha256", "generateHash"])(
+    "should error if `%s` option is not a function",
+    async (option) => {
       const createPersistedQueryFn = createPersistedQuery as any;
-      try {
-        createPersistedQueryFn();
-        reject("should have thrown an error");
-      } catch (error) {
-        expect(
-          (error as Error).message.indexOf(
-            'Missing/invalid "sha256" or "generateHash" function'
-          )
-        ).toBe(0);
-        resolve();
-      }
-    }
-  );
 
-  itAsync(
-    "should error if `sha256` or `generateHash` options are not functions",
-    (resolve, reject) => {
-      const createPersistedQueryFn = createPersistedQuery as any;
-      [{ sha256: "ooops" }, { generateHash: "ooops" }].forEach((options) => {
-        try {
-          createPersistedQueryFn(options);
-          reject("should have thrown an error");
-        } catch (error) {
-          expect(
-            (error as Error).message.indexOf(
-              'Missing/invalid "sha256" or "generateHash" function'
-            )
-          ).toBe(0);
-          resolve();
-        }
-      });
-    }
-  );
-
-  itAsync(
-    "should work with a synchronous SHA-256 function",
-    (resolve, reject) => {
-      const crypto = require("crypto");
-      const sha256Hash = crypto.createHmac("sha256", queryString).digest("hex");
-
-      fetchMock.post(
-        "/graphql",
-        () => new Promise((resolve) => resolve({ body: response }))
+      expect(() => createPersistedQueryFn({ [option]: "ooops" })).toThrow(
+        'Missing/invalid "sha256" or "generateHash" function'
       );
-      const link = createPersistedQuery({
-        sha256(data) {
-          return crypto.createHmac("sha256", data).digest("hex");
-        },
-      }).concat(createHttpLink());
-
-      execute(link, { query, variables }).subscribe((result) => {
-        expect(result.data).toEqual(data);
-        const [uri, request] = fetchMock.lastCall()!;
-        expect(uri).toEqual("/graphql");
-        expect(request!.body!).toBe(
-          JSON.stringify({
-            operationName: "Test",
-            variables,
-            extensions: {
-              persistedQuery: {
-                version: VERSION,
-                sha256Hash: sha256Hash,
-              },
-            },
-          })
-        );
-        resolve();
-      }, reject);
     }
   );
+
+  it("should work with a synchronous SHA-256 function", async () => {
+    const crypto = require("crypto");
+    const sha256Hash = crypto.createHmac("sha256", queryString).digest("hex");
+
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response }))
+    );
+    const link = createPersistedQuery({
+      sha256(data) {
+        return crypto.createHmac("sha256", data).digest("hex");
+      },
+    }).concat(createHttpLink());
+
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [uri, request] = fetchMock.lastCall()!;
+
+    expect(uri).toEqual("/graphql");
+    expect(request!.body!).toBe(
+      JSON.stringify({
+        operationName: "Test",
+        variables,
+        extensions: {
+          persistedQuery: {
+            version: VERSION,
+            sha256Hash: sha256Hash,
+          },
+        },
+      })
+    );
+  });
 });
 
 describe("failure path", () => {
@@ -356,98 +345,99 @@ describe("failure path", () => {
       })
   );
 
-  itAsync(
-    "sends GET for the first response only with useGETForHashedQueries",
-    (resolve, reject) => {
-      const params = new URLSearchParams({
-        operationName: "Test",
-        variables: JSON.stringify({
-          id: 1,
-        }),
-        extensions: JSON.stringify({
-          persistedQuery: {
-            version: 1,
-            sha256Hash: hash,
-          },
-        }),
-      }).toString();
-      fetchMock.get(
-        `/graphql?${params}`,
-        () => new Promise((resolve) => resolve({ body: errorResponse }))
-      );
-      fetchMock.post(
-        "/graphql",
-        () => new Promise((resolve) => resolve({ body: response }))
-      );
-      const link = createPersistedQuery({
-        sha256,
-        useGETForHashedQueries: true,
-      }).concat(createHttpLink());
-      execute(link, { query, variables }).subscribe((result) => {
-        expect(result.data).toEqual(data);
-        const [[, failure]] = fetchMock.calls();
-        expect(failure!.method).toBe("GET");
-        expect(failure!.body).not.toBeDefined();
-        const [, [, success]] = fetchMock.calls();
-        expect(success!.method).toBe("POST");
-        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-        expect(
-          JSON.parse(success!.body!.toString()).extensions.persistedQuery
-            .sha256Hash
-        ).toBe(hash);
-        resolve();
-      }, reject);
-    }
-  );
+  it("sends GET for the first response only with useGETForHashedQueries", async () => {
+    const params = new URLSearchParams({
+      operationName: "Test",
+      variables: JSON.stringify({
+        id: 1,
+      }),
+      extensions: JSON.stringify({
+        persistedQuery: {
+          version: 1,
+          sha256Hash: hash,
+        },
+      }),
+    }).toString();
+    fetchMock.get(
+      `/graphql?${params}`,
+      () => new Promise((resolve) => resolve({ body: errorResponse }))
+    );
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response }))
+    );
+    const link = createPersistedQuery({
+      sha256,
+      useGETForHashedQueries: true,
+    }).concat(createHttpLink());
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
 
-  itAsync(
-    "sends POST for both requests without useGETForHashedQueries",
-    (resolve, reject) => {
-      fetchMock.post(
-        "/graphql",
-        () => new Promise((resolve) => resolve({ body: errorResponse })),
-        { repeat: 1 }
-      );
-      fetchMock.post(
-        "/graphql",
-        () => new Promise((resolve) => resolve({ body: response })),
-        { repeat: 1 }
-      );
-      const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
-      execute(link, { query, variables }).subscribe((result) => {
-        expect(result.data).toEqual(data);
-        const [[, failure]] = fetchMock.calls();
-        expect(failure!.method).toBe("POST");
-        expect(JSON.parse(failure!.body!.toString())).toEqual({
-          operationName: "Test",
-          variables,
-          extensions: {
-            persistedQuery: {
-              version: VERSION,
-              sha256Hash: hash,
-            },
-          },
-        });
-        const [, [, success]] = fetchMock.calls();
-        expect(success!.method).toBe("POST");
-        expect(JSON.parse(success!.body!.toString())).toEqual({
-          operationName: "Test",
-          query: queryString,
-          variables,
-          extensions: {
-            persistedQuery: {
-              version: VERSION,
-              sha256Hash: hash,
-            },
-          },
-        });
-        resolve();
-      }, reject);
-    }
-  );
+    await expect(stream).toEmitValue({ data });
+
+    const [[, failure]] = fetchMock.calls();
+
+    expect(failure!.method).toBe("GET");
+    expect(failure!.body).not.toBeDefined();
+
+    const [, [, success]] = fetchMock.calls();
+
+    expect(success!.method).toBe("POST");
+    expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+    expect(
+      JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash
+    ).toBe(hash);
+  });
+
+  it("sends POST for both requests without useGETForHashedQueries", async () => {
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: errorResponse })),
+      { repeat: 1 }
+    );
+    fetchMock.post(
+      "/graphql",
+      () => new Promise((resolve) => resolve({ body: response })),
+      { repeat: 1 }
+    );
+    const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [[, failure]] = fetchMock.calls();
+
+    expect(failure!.method).toBe("POST");
+    expect(JSON.parse(failure!.body!.toString())).toEqual({
+      operationName: "Test",
+      variables,
+      extensions: {
+        persistedQuery: {
+          version: VERSION,
+          sha256Hash: hash,
+        },
+      },
+    });
+
+    const [, [, success]] = fetchMock.calls();
+
+    expect(success!.method).toBe("POST");
+    expect(JSON.parse(success!.body!.toString())).toEqual({
+      operationName: "Test",
+      query: queryString,
+      variables,
+      extensions: {
+        persistedQuery: {
+          version: VERSION,
+          sha256Hash: hash,
+        },
+      },
+    });
+  });
 
   // https://github.com/apollographql/apollo-client/pull/7456
-  itAsync("forces POST request when sending full query", (resolve, reject) => {
+  it("forces POST request when sending full query", async () => {
     fetchMock.post(
       "/graphql",
       () => new Promise((resolve) => resolve({ body: giveUpResponse })),
@@ -469,29 +459,33 @@ describe("failure path", () => {
         return true;
       },
     }).concat(createHttpLink());
-    execute(link, { query, variables }).subscribe((result) => {
-      expect(result.data).toEqual(data);
-      const [[, failure]] = fetchMock.calls();
-      expect(failure!.method).toBe("POST");
-      expect(JSON.parse(failure!.body!.toString())).toEqual({
-        operationName: "Test",
-        variables,
-        extensions: {
-          persistedQuery: {
-            version: VERSION,
-            sha256Hash: hash,
-          },
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [[, failure]] = fetchMock.calls();
+
+    expect(failure!.method).toBe("POST");
+    expect(JSON.parse(failure!.body!.toString())).toEqual({
+      operationName: "Test",
+      variables,
+      extensions: {
+        persistedQuery: {
+          version: VERSION,
+          sha256Hash: hash,
         },
-      });
-      const [, [, success]] = fetchMock.calls();
-      expect(success!.method).toBe("POST");
-      expect(JSON.parse(success!.body!.toString())).toEqual({
-        operationName: "Test",
-        query: queryString,
-        variables,
-      });
-      resolve();
-    }, reject);
+      },
+    });
+
+    const [, [, success]] = fetchMock.calls();
+
+    expect(success!.method).toBe("POST");
+    expect(JSON.parse(success!.body!.toString())).toEqual({
+      operationName: "Test",
+      query: queryString,
+      variables,
+    });
   });
 
   it.each([
@@ -583,7 +577,7 @@ describe("failure path", () => {
     }
   );
 
-  itAsync("works with multiple errors", (resolve, reject) => {
+  it("works with multiple errors", async () => {
     fetchMock.post(
       "/graphql",
       () => new Promise((resolve) => resolve({ body: multiResponse })),
@@ -595,76 +589,84 @@ describe("failure path", () => {
       { repeat: 1 }
     );
     const link = createPersistedQuery({ sha256 }).concat(createHttpLink());
-    execute(link, { query, variables }).subscribe((result) => {
-      expect(result.data).toEqual(data);
-      const [[, failure]] = fetchMock.calls();
-      expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
-      const [, [, success]] = fetchMock.calls();
-      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-      expect(
-        JSON.parse(success!.body!.toString()).extensions.persistedQuery
-          .sha256Hash
-      ).toBe(hash);
-      resolve();
-    }, reject);
+    const observable = execute(link, { query, variables });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitValue({ data });
+
+    const [[, failure]] = fetchMock.calls();
+
+    expect(JSON.parse(failure!.body!.toString()).query).not.toBeDefined();
+
+    const [, [, success]] = fetchMock.calls();
+
+    expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+    expect(
+      JSON.parse(success!.body!.toString()).extensions.persistedQuery.sha256Hash
+    ).toBe(hash);
   });
 
   describe.each([[400], [500]])("status %s", (status) => {
-    itAsync(
-      `handles a ${status} network with a "PERSISTED_QUERY_NOT_FOUND" error and still retries`,
-      (resolve, reject) => {
-        let requestCount = 0;
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
+    it(`handles a ${status} network with a "PERSISTED_QUERY_NOT_FOUND" error and still retries`, async () => {
+      let requestCount = 0;
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
 
-        // mock it again so we can verify it doesn't try anymore
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 5 }
-        );
+      // mock it again so we can verify it doesn't try anymore
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 5 }
+      );
 
-        const fetcher = (...args: any[]) => {
-          if (++requestCount % 2) {
-            return Promise.resolve({
-              json: () => Promise.resolve(errorResponseWithCode),
-              text: () => Promise.resolve(errorResponseWithCode),
-              status,
-            });
-          }
-          // @ts-expect-error
-          return global.fetch.apply(null, args);
-        };
-        const link = createPersistedQuery({ sha256 }).concat(
-          createHttpLink({ fetch: fetcher } as any)
-        );
+      const fetcher = (...args: any[]) => {
+        if (++requestCount % 2) {
+          return Promise.resolve({
+            json: () => Promise.resolve(errorResponseWithCode),
+            text: () => Promise.resolve(errorResponseWithCode),
+            status,
+          });
+        }
+        // @ts-expect-error
+        return global.fetch.apply(null, args);
+      };
+      const link = createPersistedQuery({ sha256 }).concat(
+        createHttpLink({ fetch: fetcher } as any)
+      );
 
-        execute(link, { query, variables }).subscribe((result) => {
-          expect(result.data).toEqual(data);
-          const [[, success]] = fetchMock.calls();
-          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-          expect(
-            JSON.parse(success!.body!.toString()).extensions.persistedQuery
-              .sha256Hash
-          ).toBe(hash);
-          execute(link, { query, variables }).subscribe((secondResult) => {
-            expect(secondResult.data).toEqual(data);
-            const [, [, success]] = fetchMock.calls();
-            expect(JSON.parse(success!.body!.toString()).query).toBe(
-              queryString
-            );
-            expect(
-              JSON.parse(success!.body!.toString()).extensions.persistedQuery
-                .sha256Hash
-            ).toBe(hash);
-            resolve();
-          }, reject);
-        }, reject);
+      {
+        const observable = execute(link, { query, variables });
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitValue({ data });
+
+        const [[, success]] = fetchMock.calls();
+
+        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+        expect(
+          JSON.parse(success!.body!.toString()).extensions.persistedQuery
+            .sha256Hash
+        ).toBe(hash);
       }
-    );
+
+      {
+        const observable = execute(link, { query, variables });
+        const stream = new ObservableStream(observable);
+
+        await expect(stream).toEmitValue({ data });
+
+        const [, [, success]] = fetchMock.calls();
+
+        expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+        expect(
+          JSON.parse(success!.body!.toString()).extensions.persistedQuery
+            .sha256Hash
+        ).toBe(hash);
+      }
+    });
 
     it(`will fail on an unrelated ${status} network error, but still send a hash the next request`, async () => {
       let failed = false;
@@ -711,43 +713,42 @@ describe("failure path", () => {
       ).toBe(hash);
     });
 
-    itAsync(
-      `handles ${status} response network error and graphql error without disabling persistedQuery support`,
-      (resolve, reject) => {
-        let failed = false;
-        fetchMock.post(
-          "/graphql",
-          () => new Promise((resolve) => resolve({ body: response })),
-          { repeat: 1 }
-        );
+    it(`handles ${status} response network error and graphql error without disabling persistedQuery support`, async () => {
+      let failed = false;
+      fetchMock.post(
+        "/graphql",
+        () => new Promise((resolve) => resolve({ body: response })),
+        { repeat: 1 }
+      );
 
-        const fetcher = (...args: any[]) => {
-          if (!failed) {
-            failed = true;
-            return Promise.resolve({
-              json: () => Promise.resolve(errorResponse),
-              text: () => Promise.resolve(errorResponse),
-              status,
-            });
-          }
-          // @ts-expect-error
-          return global.fetch.apply(null, args);
-        };
+      const fetcher = (...args: any[]) => {
+        if (!failed) {
+          failed = true;
+          return Promise.resolve({
+            json: () => Promise.resolve(errorResponse),
+            text: () => Promise.resolve(errorResponse),
+            status,
+          });
+        }
+        // @ts-expect-error
+        return global.fetch.apply(null, args);
+      };
 
-        const link = createPersistedQuery({ sha256 }).concat(
-          createHttpLink({ fetch: fetcher } as any)
-        );
+      const link = createPersistedQuery({ sha256 }).concat(
+        createHttpLink({ fetch: fetcher } as any)
+      );
 
-        execute(link, { query, variables }).subscribe((result) => {
-          expect(result.data).toEqual(data);
-          const [[, success]] = fetchMock.calls();
-          expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
-          expect(
-            JSON.parse(success!.body!.toString()).extensions
-          ).not.toBeUndefined();
-          resolve();
-        }, reject);
-      }
-    );
+      const observable = execute(link, { query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitValue({ data });
+
+      const [[, success]] = fetchMock.calls();
+
+      expect(JSON.parse(success!.body!.toString()).query).toBe(queryString);
+      expect(
+        JSON.parse(success!.body!.toString()).extensions
+      ).not.toBeUndefined();
+    });
   });
 });

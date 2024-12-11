@@ -4,7 +4,7 @@ import { ApolloClient, NetworkStatus } from "../../core";
 import { ApolloLink } from "../../link/core";
 import { InMemoryCache } from "../../cache";
 import { Observable } from "../../utilities";
-import { itAsync, mockSingleLink } from "../../testing";
+import { mockSingleLink } from "../../testing";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { WatchQueryFetchPolicy, WatchQueryOptions } from "../watchQueryOptions";
 import { ApolloQueryResult } from "../types";
@@ -56,7 +56,7 @@ const mutationResult = {
 
 const merged = { author: { ...result.author, firstName: "James" } };
 
-const createLink = (reject: (reason: any) => any) =>
+const createLink = () =>
   mockSingleLink(
     {
       request: { query },
@@ -66,7 +66,7 @@ const createLink = (reject: (reason: any) => any) =>
       request: { query },
       result: { data: result },
     }
-  ).setOnError(reject);
+  );
 
 const createFailureLink = () =>
   mockSingleLink(
@@ -80,7 +80,7 @@ const createFailureLink = () =>
     }
   );
 
-const createMutationLink = (reject: (reason: any) => any) =>
+const createMutationLink = () =>
   // fetch the data
   mockSingleLink(
     {
@@ -95,41 +95,10 @@ const createMutationLink = (reject: (reason: any) => any) =>
       request: { query },
       result: { data: merged },
     }
-  ).setOnError(reject);
-
-describe("network-only", () => {
-  itAsync(
-    "requests from the network even if already in cache",
-    (resolve, reject) => {
-      let called = 0;
-      const inspector = new ApolloLink((operation, forward) => {
-        called++;
-        return forward(operation).map((result) => {
-          called++;
-          return result;
-        });
-      });
-
-      const client = new ApolloClient({
-        link: inspector.concat(createLink(reject)),
-        cache: new InMemoryCache({ addTypename: false }),
-      });
-
-      return client
-        .query({ query })
-        .then(() =>
-          client
-            .query({ fetchPolicy: "network-only", query })
-            .then((actualResult) => {
-              expect(actualResult.data).toEqual(result);
-              expect(called).toBe(4);
-            })
-        )
-        .then(resolve, reject);
-    }
   );
 
-  itAsync("saves data to the cache on success", (resolve, reject) => {
+describe("network-only", () => {
+  it("requests from the network even if already in cache", async () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -140,22 +109,43 @@ describe("network-only", () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink(reject)),
+      link: inspector.concat(createLink()),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client
-      .query({ query, fetchPolicy: "network-only" })
-      .then(() =>
-        client.query({ query }).then((actualResult) => {
-          expect(actualResult.data).toEqual(result);
-          expect(called).toBe(2);
-        })
-      )
-      .then(resolve, reject);
+    await client.query({ query });
+    const actualResult = await client.query({
+      fetchPolicy: "network-only",
+      query,
+    });
+
+    expect(actualResult.data).toEqual(result);
+    expect(called).toBe(4);
   });
 
-  itAsync("does not save data to the cache on failure", (resolve, reject) => {
+  it("saves data to the cache on success", async () => {
+    let called = 0;
+    const inspector = new ApolloLink((operation, forward) => {
+      called++;
+      return forward(operation).map((result) => {
+        called++;
+        return result;
+      });
+    });
+
+    const client = new ApolloClient({
+      link: inspector.concat(createLink()),
+      cache: new InMemoryCache({ addTypename: false }),
+    });
+
+    await client.query({ query, fetchPolicy: "network-only" });
+    const actualResult = await client.query({ query });
+
+    expect(actualResult.data).toEqual(result);
+    expect(called).toBe(2);
+  });
+
+  it("does not save data to the cache on failure", async () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -171,24 +161,20 @@ describe("network-only", () => {
     });
 
     let didFail = false;
-    return client
-      .query({ query, fetchPolicy: "network-only" })
-      .catch((e) => {
-        expect(e.message).toMatch("query failed");
-        didFail = true;
-      })
-      .then(() =>
-        client.query({ query }).then((actualResult) => {
-          expect(actualResult.data).toEqual(result);
-          // the first error doesn't call .map on the inspector
-          expect(called).toBe(3);
-          expect(didFail).toBe(true);
-        })
-      )
-      .then(resolve, reject);
+    await client.query({ query, fetchPolicy: "network-only" }).catch((e) => {
+      expect(e.message).toMatch("query failed");
+      didFail = true;
+    });
+
+    const actualResult = await client.query({ query });
+
+    expect(actualResult.data).toEqual(result);
+    // the first error doesn't call .map on the inspector
+    expect(called).toBe(3);
+    expect(didFail).toBe(true);
   });
 
-  itAsync("updates the cache on a mutation", (resolve, reject) => {
+  it("updates the cache on a mutation", async () => {
     const inspector = new ApolloLink((operation, forward) => {
       return forward(operation).map((result) => {
         return result;
@@ -196,28 +182,23 @@ describe("network-only", () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createMutationLink(reject)),
+      link: inspector.concat(createMutationLink()),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client
-      .query({ query })
-      .then(() =>
-        // XXX currently only no-cache is supported as a fetchPolicy
-        // this mainly serves to ensure the cache is updated correctly
-        client.mutate({ mutation, variables })
-      )
-      .then(() => {
-        return client.query({ query }).then((actualResult) => {
-          expect(actualResult.data).toEqual(merged);
-        });
-      })
-      .then(resolve, reject);
+    await client.query({ query });
+    // XXX currently only no-cache is supported as a fetchPolicy
+    // this mainly serves to ensure the cache is updated correctly
+    await client.mutate({ mutation, variables });
+
+    const actualResult = await client.query({ query });
+
+    expect(actualResult.data).toEqual(merged);
   });
 });
 
 describe("no-cache", () => {
-  itAsync("requests from the network when not in cache", (resolve, reject) => {
+  it("requests from the network when not in cache", async () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -228,81 +209,62 @@ describe("no-cache", () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createLink(reject)),
+      link: inspector.concat(createLink()),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client
-      .query({ fetchPolicy: "no-cache", query })
-      .then((actualResult) => {
-        expect(actualResult.data).toEqual(result);
-        expect(called).toBe(2);
-      })
-      .then(resolve, reject);
+    const actualResult = await client.query({ fetchPolicy: "no-cache", query });
+
+    expect(actualResult.data).toEqual(result);
+    expect(called).toBe(2);
   });
 
-  itAsync(
-    "requests from the network even if already in cache",
-    (resolve, reject) => {
-      let called = 0;
-      const inspector = new ApolloLink((operation, forward) => {
+  it("requests from the network even if already in cache", async () => {
+    let called = 0;
+    const inspector = new ApolloLink((operation, forward) => {
+      called++;
+      return forward(operation).map((result) => {
         called++;
-        return forward(operation).map((result) => {
-          called++;
-          return result;
-        });
+        return result;
       });
+    });
 
-      const client = new ApolloClient({
-        link: inspector.concat(createLink(reject)),
-        cache: new InMemoryCache({ addTypename: false }),
-      });
+    const client = new ApolloClient({
+      link: inspector.concat(createLink()),
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-      return client
-        .query({ query })
-        .then(() =>
-          client
-            .query({ fetchPolicy: "no-cache", query })
-            .then((actualResult) => {
-              expect(actualResult.data).toEqual(result);
-              expect(called).toBe(4);
-            })
-        )
-        .then(resolve, reject);
-    }
-  );
+    await client.query({ query });
+    const actualResult = await client.query({ fetchPolicy: "no-cache", query });
 
-  itAsync(
-    "does not save the data to the cache on success",
-    (resolve, reject) => {
-      let called = 0;
-      const inspector = new ApolloLink((operation, forward) => {
+    expect(actualResult.data).toEqual(result);
+    expect(called).toBe(4);
+  });
+
+  it("does not save the data to the cache on success", async () => {
+    let called = 0;
+    const inspector = new ApolloLink((operation, forward) => {
+      called++;
+      return forward(operation).map((result) => {
         called++;
-        return forward(operation).map((result) => {
-          called++;
-          return result;
-        });
+        return result;
       });
+    });
 
-      const client = new ApolloClient({
-        link: inspector.concat(createLink(reject)),
-        cache: new InMemoryCache({ addTypename: false }),
-      });
+    const client = new ApolloClient({
+      link: inspector.concat(createLink()),
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-      return client
-        .query({ query, fetchPolicy: "no-cache" })
-        .then(() =>
-          client.query({ query }).then((actualResult) => {
-            expect(actualResult.data).toEqual(result);
-            // the second query couldn't read anything from the cache
-            expect(called).toBe(4);
-          })
-        )
-        .then(resolve, reject);
-    }
-  );
+    await client.query({ query, fetchPolicy: "no-cache" });
+    const actualResult = await client.query({ query });
 
-  itAsync("does not save data to the cache on failure", (resolve, reject) => {
+    expect(actualResult.data).toEqual(result);
+    // the second query couldn't read anything from the cache
+    expect(called).toBe(4);
+  });
+
+  it("does not save data to the cache on failure", async () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
@@ -318,24 +280,20 @@ describe("no-cache", () => {
     });
 
     let didFail = false;
-    return client
-      .query({ query, fetchPolicy: "no-cache" })
-      .catch((e) => {
-        expect(e.message).toMatch("query failed");
-        didFail = true;
-      })
-      .then(() =>
-        client.query({ query }).then((actualResult) => {
-          expect(actualResult.data).toEqual(result);
-          // the first error doesn't call .map on the inspector
-          expect(called).toBe(3);
-          expect(didFail).toBe(true);
-        })
-      )
-      .then(resolve, reject);
+    await client.query({ query, fetchPolicy: "no-cache" }).catch((e) => {
+      expect(e.message).toMatch("query failed");
+      didFail = true;
+    });
+
+    const actualResult = await client.query({ query });
+
+    expect(actualResult.data).toEqual(result);
+    // the first error doesn't call .map on the inspector
+    expect(called).toBe(3);
+    expect(didFail).toBe(true);
   });
 
-  itAsync("does not update the cache on a mutation", (resolve, reject) => {
+  it("does not update the cache on a mutation", async () => {
     const inspector = new ApolloLink((operation, forward) => {
       return forward(operation).map((result) => {
         return result;
@@ -343,59 +301,46 @@ describe("no-cache", () => {
     });
 
     const client = new ApolloClient({
-      link: inspector.concat(createMutationLink(reject)),
+      link: inspector.concat(createMutationLink()),
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return client
-      .query({ query })
-      .then(() =>
-        client.mutate({ mutation, variables, fetchPolicy: "no-cache" })
-      )
-      .then(() => {
-        return client.query({ query }).then((actualResult) => {
-          expect(actualResult.data).toEqual(result);
-        });
-      })
-      .then(resolve, reject);
+    await client.query({ query });
+    await client.mutate({ mutation, variables, fetchPolicy: "no-cache" });
+    const actualResult = await client.query({ query });
+
+    expect(actualResult.data).toEqual(result);
   });
 
   describe("when notifyOnNetworkStatusChange is set", () => {
-    itAsync(
-      "does not save the data to the cache on success",
-      (resolve, reject) => {
-        let called = 0;
-        const inspector = new ApolloLink((operation, forward) => {
+    it("does not save the data to the cache on success", async () => {
+      let called = 0;
+      const inspector = new ApolloLink((operation, forward) => {
+        called++;
+        return forward(operation).map((result) => {
           called++;
-          return forward(operation).map((result) => {
-            called++;
-            return result;
-          });
+          return result;
         });
+      });
 
-        const client = new ApolloClient({
-          link: inspector.concat(createLink(reject)),
-          cache: new InMemoryCache({ addTypename: false }),
-        });
+      const client = new ApolloClient({
+        link: inspector.concat(createLink()),
+        cache: new InMemoryCache({ addTypename: false }),
+      });
 
-        return client
-          .query({
-            query,
-            fetchPolicy: "no-cache",
-            notifyOnNetworkStatusChange: true,
-          })
-          .then(() =>
-            client.query({ query }).then((actualResult) => {
-              expect(actualResult.data).toEqual(result);
-              // the second query couldn't read anything from the cache
-              expect(called).toBe(4);
-            })
-          )
-          .then(resolve, reject);
-      }
-    );
+      await client.query({
+        query,
+        fetchPolicy: "no-cache",
+        notifyOnNetworkStatusChange: true,
+      });
+      const actualResult = await client.query({ query });
 
-    itAsync("does not save data to the cache on failure", (resolve, reject) => {
+      expect(actualResult.data).toEqual(result);
+      // the second query couldn't read anything from the cache
+      expect(called).toBe(4);
+    });
+
+    it("does not save data to the cache on failure", async () => {
       let called = 0;
       const inspector = new ApolloLink((operation, forward) => {
         called++;
@@ -411,7 +356,7 @@ describe("no-cache", () => {
       });
 
       let didFail = false;
-      return client
+      await client
         .query({
           query,
           fetchPolicy: "no-cache",
@@ -420,16 +365,14 @@ describe("no-cache", () => {
         .catch((e) => {
           expect(e.message).toMatch("query failed");
           didFail = true;
-        })
-        .then(() =>
-          client.query({ query }).then((actualResult) => {
-            expect(actualResult.data).toEqual(result);
-            // the first error doesn't call .map on the inspector
-            expect(called).toBe(3);
-            expect(didFail).toBe(true);
-          })
-        )
-        .then(resolve, reject);
+        });
+
+      const actualResult = await client.query({ query });
+
+      expect(actualResult.data).toEqual(result);
+      // the first error doesn't call .map on the inspector
+      expect(called).toBe(3);
+      expect(didFail).toBe(true);
     });
 
     it("gives appropriate networkStatus for watched queries", async () => {
@@ -543,11 +486,7 @@ describe("cache-first", () => {
           results.push(result);
           return result;
         });
-      }).concat(
-        createMutationLink((error) => {
-          throw error;
-        })
-      ),
+      }).concat(createMutationLink()),
       cache: new InMemoryCache(),
     });
 

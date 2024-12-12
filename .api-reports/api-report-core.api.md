@@ -479,8 +479,11 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 // @public (undocumented)
 export const concat: typeof ApolloLink.concat;
 
+// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type ContainsFragmentsRefs<TData> = TData extends object ? " $fragmentRefs" extends keyof TData ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+type ContainsFragmentsRefs<TData> = true extends IsAny<TData> ? false : TData extends object ? " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
 
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
@@ -1401,7 +1404,6 @@ interface MaskOperationOptions<TData> {
 // @public (undocumented)
 type MaybeAsync<T> = T | PromiseLike<T>;
 
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
@@ -2171,6 +2173,11 @@ export type RefetchWritePolicy = "merge" | "overwrite";
 type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
 
 // @public (undocumented)
+type RemoveIndexSignature<T> = {
+    [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
+};
+
+// @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
 // @public (undocumented)
@@ -2406,7 +2413,7 @@ export type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
     " $fragmentRefs"?: infer FragmentRefs;
-} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>> : TData extends object ? {
+} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
 } : TData : never;
 

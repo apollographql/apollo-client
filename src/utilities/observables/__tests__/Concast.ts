@@ -1,9 +1,9 @@
-import { itAsync } from "../../../testing/core";
 import { Observable, Observer } from "../Observable";
 import { Concast, ConcastSourcesIterable } from "../Concast";
+import { ObservableStream } from "../../../testing/internal";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
-  itAsync("can concatenate other observables", (resolve, reject) => {
+  it("can concatenate other observables", async () => {
     const concast = new Concast([
       Observable.of(1, 2, 3),
       Promise.resolve(Observable.of(4, 5)),
@@ -12,114 +12,94 @@ describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
       Observable.of(11),
     ]);
 
-    const results: number[] = [];
-    concast.subscribe({
-      next(num) {
-        results.push(num);
-      },
+    const stream = new ObservableStream(concast);
 
-      error: reject,
+    await expect(stream).toEmitValue(1);
+    await expect(stream).toEmitValue(2);
+    await expect(stream).toEmitValue(3);
+    await expect(stream).toEmitValue(4);
+    await expect(stream).toEmitValue(5);
+    await expect(stream).toEmitValue(6);
+    await expect(stream).toEmitValue(7);
+    await expect(stream).toEmitValue(8);
+    await expect(stream).toEmitValue(9);
+    await expect(stream).toEmitValue(10);
+    await expect(stream).toEmitValue(11);
+    await expect(stream).toComplete();
 
-      complete() {
-        concast.promise
-          .then((finalResult) => {
-            expect(results).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-            expect(finalResult).toBe(11);
-            resolve();
-          })
-          .catch(reject);
-      },
-    });
+    const finalResult = await concast.promise;
+
+    expect(finalResult).toBe(11);
   });
 
-  itAsync(
-    "Can tolerate being completed before input Promise resolves",
-    (resolve, reject) => {
-      let resolvePromise: (sources: ConcastSourcesIterable<number>) => void;
-      const delayPromise = new Promise<ConcastSourcesIterable<number>>(
-        (resolve) => {
-          resolvePromise = resolve;
-        }
-      );
+  it("Can tolerate being completed before input Promise resolves", async () => {
+    let resolvePromise: (sources: ConcastSourcesIterable<number>) => void;
+    const delayPromise = new Promise<ConcastSourcesIterable<number>>(
+      (resolve) => {
+        resolvePromise = resolve;
+      }
+    );
 
-      const concast = new Concast<number>(delayPromise);
-      const observer = {
-        next() {
-          reject(new Error("should not have called observer.next"));
-        },
-        error: reject,
-        complete() {
-          reject(new Error("should not have called observer.complete"));
-        },
-      };
+    const concast = new Concast<number>(delayPromise);
+    const observer = {
+      next() {
+        throw new Error("should not have called observer.next");
+      },
+      error() {
+        throw new Error("Should not have called observer.error");
+      },
+      complete() {
+        throw new Error("should not have called observer.complete");
+      },
+    };
 
-      concast.addObserver(observer);
-      concast.removeObserver(observer);
+    concast.addObserver(observer);
+    concast.removeObserver(observer);
 
-      return concast.promise
-        .then((finalResult) => {
-          expect(finalResult).toBeUndefined();
-          resolvePromise([]);
-          return delayPromise;
-        })
-        .then((delayedPromiseResult) => {
-          expect(delayedPromiseResult).toEqual([]);
-          resolve();
-        })
-        .catch(reject);
-    }
-  );
+    const finalResult = await concast.promise;
+    expect(finalResult).toBeUndefined();
 
-  itAsync(
-    "behaves appropriately if unsubscribed before first result",
-    (resolve, reject) => {
-      const concast = new Concast([
-        new Promise((resolve) => setTimeout(resolve, 100)).then(() =>
-          Observable.of(1, 2, 3)
-        ),
-      ]);
+    resolvePromise!([]);
+    const delayedPromiseResult = await delayPromise;
 
-      const cleanupCounts = {
-        first: 0,
-        second: 0,
-      };
+    expect(delayedPromiseResult).toEqual([]);
+  });
 
-      concast.beforeNext(() => {
-        ++cleanupCounts.first;
-      });
+  it("behaves appropriately if unsubscribed before first result", async () => {
+    const concast = new Concast([
+      new Promise((resolve) => setTimeout(resolve, 100)).then(() =>
+        Observable.of(1, 2, 3)
+      ),
+    ]);
 
-      const unsubscribe = concast.subscribe({
-        next() {
-          reject("should not have called observer.next");
-        },
-        error() {
-          reject("should not have called observer.error");
-        },
-        complete() {
-          reject("should not have called observer.complete");
-        },
-      });
+    const cleanupCounts = {
+      first: 0,
+      second: 0,
+    };
 
-      concast.beforeNext(() => {
-        ++cleanupCounts.second;
-      });
+    concast.beforeNext(() => {
+      ++cleanupCounts.first;
+    });
+    const stream = new ObservableStream(concast);
 
-      // Immediately unsubscribe the observer we just added, triggering
-      // completion.
-      unsubscribe.unsubscribe();
+    concast.beforeNext(() => {
+      ++cleanupCounts.second;
+    });
 
-      return concast.promise
-        .then((finalResult) => {
-          expect(finalResult).toBeUndefined();
-          expect(cleanupCounts).toEqual({
-            first: 1,
-            second: 1,
-          });
-          resolve();
-        })
-        .catch(reject);
-    }
-  );
+    // Immediately unsubscribe the observer we just added, triggering
+    // completion.
+    stream.unsubscribe();
+
+    const finalResult = await concast.promise;
+
+    expect(finalResult).toBeUndefined();
+    expect(cleanupCounts).toEqual({
+      first: 1,
+      second: 1,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
 
   it("concast.beforeNext listeners run before next result/error", () => {
     const log: Array<number | [string, any?]> = [];

@@ -59,14 +59,14 @@ This feature is currently released as "experimental" - please try it out and giv
 ```sh
 npm install @apollo/client-devtools-vscode
 ```
-* After initializing your `ApolloClient` instance, call `registerClient` with your client instance.
+* After initializing your `ApolloClient` instance, call `connectApolloClientToVSCodeDevTools` with your client instance.
 ```js
-import { registerClient } from "@apollo/client-devtools-vscode";
+import { connectApolloClientToVSCodeDevTools } from "@apollo/client-devtools-vscode";
 
 const client = new ApolloClient({ /* ... */ });
 
 // we recommend wrapping this statement in a check for e.g. process.env.NODE_ENV === "development"
-const devtoolsRegistration = registerClient(
+const devtoolsRegistration = connectApolloClientToVSCodeDevTools(
   client,
   // the default port of the VSCode DevTools is 7095
   "ws://localhost:7095",

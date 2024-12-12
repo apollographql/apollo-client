@@ -294,7 +294,7 @@ describe("useReactiveVar Hook", () => {
       }
 
       render(<Component />);
-      Promise.resolve().then(() => {
+      void Promise.resolve().then(() => {
         counterVar(1);
         counterVar(2);
         counterVar(3);
@@ -339,7 +339,7 @@ describe("useReactiveVar Hook", () => {
           } else {
             stopped = true;
             expect(rv()).toBe(goalCount);
-            screen
+            void screen
               .findByText(String(goalCount))
               .then((element) => {
                 expect(element.nodeName.toLowerCase()).toBe("h1");

@@ -1637,7 +1637,7 @@ describe("useMutation Hook", () => {
           case 0:
             expect(loading).toBeFalsy();
             expect(data).toBeUndefined();
-            createTodo({ variables });
+            void createTodo({ variables });
 
             const dataInStore = client.cache.extract(true);
             expect(dataInStore["Todo:1"]).toEqual(

@@ -19,7 +19,6 @@ import {
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import {
-  itAsync,
   MockedProvider,
   MockSubscriptionLink,
   mockSingleLink,
@@ -1500,7 +1499,7 @@ describe("useMutation Hook", () => {
       await waitFor(() => expect(variablesMatched).toBe(true));
     });
 
-    itAsync("should be called with the provided context", (resolve, reject) => {
+    it("should be called with the provided context", async () => {
       const context = { id: 3 };
 
       const variables = {
@@ -1544,13 +1543,13 @@ describe("useMutation Hook", () => {
         </MockedProvider>
       );
 
-      return waitFor(() => {
+      await waitFor(() => {
         expect(foundContext).toBe(true);
-      }).then(resolve, reject);
+      });
     });
 
     describe("If context is not provided", () => {
-      itAsync("should be undefined", (resolve, reject) => {
+      it("should be undefined", async () => {
         const variables = {
           description: "Get milk!",
         };
@@ -1587,92 +1586,89 @@ describe("useMutation Hook", () => {
           </MockedProvider>
         );
 
-        return waitFor(() => {
+        await waitFor(() => {
           expect(checkedContext).toBe(true);
-        }).then(resolve, reject);
+        });
       });
     });
   });
 
   describe("Optimistic response", () => {
-    itAsync(
-      "should support optimistic response handling",
-      async (resolve, reject) => {
-        const optimisticResponse = {
-          __typename: "Mutation",
-          createTodo: {
-            id: 1,
-            description: "TEMPORARY",
-            priority: "High",
-            __typename: "Todo",
+    it("should support optimistic response handling", async () => {
+      const optimisticResponse = {
+        __typename: "Mutation",
+        createTodo: {
+          id: 1,
+          description: "TEMPORARY",
+          priority: "High",
+          __typename: "Todo",
+        },
+      };
+
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
           },
-        };
+          result: { data: CREATE_TODO_RESULT },
+        },
+      ];
 
-        const variables = {
-          description: "Get milk!",
-        };
+      const link = mockSingleLink(...mocks);
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache,
+        link,
+      });
 
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: { data: CREATE_TODO_RESULT },
-          },
-        ];
-
-        const link = mockSingleLink(...mocks).setOnError(reject);
-        const cache = new InMemoryCache();
-        const client = new ApolloClient({
-          cache,
-          link,
-        });
-
-        let renderCount = 0;
-        const Component = () => {
-          const [createTodo, { loading, data }] = useMutation(
-            CREATE_TODO_MUTATION,
-            { optimisticResponse }
-          );
-
-          switch (renderCount) {
-            case 0:
-              expect(loading).toBeFalsy();
-              expect(data).toBeUndefined();
-              void createTodo({ variables });
-
-              const dataInStore = client.cache.extract(true);
-              expect(dataInStore["Todo:1"]).toEqual(
-                optimisticResponse.createTodo
-              );
-
-              break;
-            case 1:
-              expect(loading).toBeTruthy();
-              expect(data).toBeUndefined();
-              break;
-            case 2:
-              expect(loading).toBeFalsy();
-              expect(data).toEqual(CREATE_TODO_RESULT);
-              break;
-            default:
-          }
-          renderCount += 1;
-          return null;
-        };
-
-        render(
-          <ApolloProvider client={client}>
-            <Component />
-          </ApolloProvider>
+      let renderCount = 0;
+      const Component = () => {
+        const [createTodo, { loading, data }] = useMutation(
+          CREATE_TODO_MUTATION,
+          { optimisticResponse }
         );
 
-        return waitFor(() => {
-          expect(renderCount).toBe(3);
-        }).then(resolve, reject);
-      }
-    );
+        switch (renderCount) {
+          case 0:
+            expect(loading).toBeFalsy();
+            expect(data).toBeUndefined();
+            void createTodo({ variables });
+
+            const dataInStore = client.cache.extract(true);
+            expect(dataInStore["Todo:1"]).toEqual(
+              optimisticResponse.createTodo
+            );
+
+            break;
+          case 1:
+            expect(loading).toBeTruthy();
+            expect(data).toBeUndefined();
+            break;
+          case 2:
+            expect(loading).toBeFalsy();
+            expect(data).toEqual(CREATE_TODO_RESULT);
+            break;
+          default:
+        }
+        renderCount += 1;
+        return null;
+      };
+
+      render(
+        <ApolloProvider client={client}>
+          <Component />
+        </ApolloProvider>
+      );
+
+      await waitFor(() => {
+        expect(renderCount).toBe(3);
+      });
+    });
 
     it("should be called with the provided context", async () => {
       const optimisticResponse = {

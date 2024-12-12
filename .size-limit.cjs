@@ -45,7 +45,6 @@ const checks = [
       "@wry/equality",
       "@wry/trie",
       "graphql-tag",
-      "hoist-non-react-statics",
       "optimism",
       "prop-types",
       "response-iterator",

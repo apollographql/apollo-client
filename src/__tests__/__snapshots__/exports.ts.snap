@@ -297,30 +297,12 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/components 1`] = `
-Array [
-  "Mutation",
-  "Query",
-  "Subscription",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/react/context 1`] = `
 Array [
   "ApolloConsumer",
   "ApolloProvider",
   "getApolloContext",
   "resetApolloContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
-Array [
-  "graphql",
-  "withApollo",
-  "withMutation",
-  "withQuery",
-  "withSubscription",
 ]
 `;
 

@@ -607,9 +607,10 @@ export type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export function concatPagination<T = Reference>(keyArgs?: KeyArgs): FieldPolicy<T[]>;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ContainsFragmentsRefs<TData> = true extends IsAny<TData> ? false : TData extends object ? " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public (undocumented)
 export function createFragmentMap(fragments?: FragmentDefinitionNode[]): FragmentMap;
@@ -980,6 +981,9 @@ namespace EntityStore {
 
 // @public
 type ErrorPolicy = "none" | "ignore" | "all";
+
+// @public (undocumented)
+type Exact<in out T> = (x: T) => T;
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //

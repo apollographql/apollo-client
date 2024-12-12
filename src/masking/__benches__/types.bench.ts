@@ -577,3 +577,18 @@ test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
     }>();
   });
 });
+
+test("recursive types: no error 'Type instantiation is excessively deep and possibly infinite.'", (prefix) => {
+  // this type is self-recursive
+  type Source = import("graphql").IntrospectionQuery;
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});

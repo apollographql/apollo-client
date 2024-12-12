@@ -182,10 +182,13 @@ export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;
 
-export type ContainsFragmentsRefs<TData> =
-  true extends IsAny<TData> ? false
-  : TData extends object ?
-    " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ?
-      true
-    : ContainsFragmentsRefs<TData[keyof TData]>
-  : false;
+type Exact<in out T> = (x: T) => T;
+export type ContainsFragmentsRefs<TData, Seen = never> = true extends (
+  IsAny<TData>
+) ?
+  false
+: TData extends object ?
+  Exact<TData> extends Seen ? false
+  : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true
+  : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>>
+: false;

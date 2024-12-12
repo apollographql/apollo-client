@@ -19,7 +19,6 @@ const entryPoints = [
   { dirs: ["link", "ws"] },
   { dirs: ["masking"] },
   { dirs: ["react"] },
-  { dirs: ["react", "components"] },
   { dirs: ["react", "context"] },
   { dirs: ["react", "hoc"] },
   { dirs: ["react", "hooks"] },

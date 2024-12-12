@@ -1,4 +1,4 @@
-import type { Prettify } from "../../utilities/index.js";
+import type { Prettify, RemoveIndexSignature } from "../../utilities/index.js";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -20,7 +20,6 @@ export type UnwrapFragmentRefs<TData> =
             >
         >
       >
-    : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>>
     : TData extends object ?
       {
         [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
@@ -183,9 +182,13 @@ export type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 export type RemoveFragmentName<T> =
   T extends any ? Omit<T, " $fragmentName"> : T;
 
-export type ContainsFragmentsRefs<TData> =
-  TData extends object ?
-    " $fragmentRefs" extends keyof TData ?
-      true
-    : ContainsFragmentsRefs<TData[keyof TData]>
-  : false;
+type Exact<in out T> = (x: T) => T;
+export type ContainsFragmentsRefs<TData, Seen = never> = true extends (
+  IsAny<TData>
+) ?
+  false
+: TData extends object ?
+  Exact<TData> extends Seen ? false
+  : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true
+  : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>>
+: false;

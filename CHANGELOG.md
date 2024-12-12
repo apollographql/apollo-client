@@ -1,5 +1,17 @@
 # @apollo/client
 
+## 3.12.3
+
+### Patch Changes
+
+- [#12214](https://github.com/apollographql/apollo-client/pull/12214) [`8bfee88`](https://github.com/apollographql/apollo-client/commit/8bfee88102dd071ea5836f7267f30ca082671b2b) Thanks [@phryneas](https://github.com/phryneas)! - Data masking: prevent infinite recursion of `ContainsFragmentsRefs` type
+
+- [#12204](https://github.com/apollographql/apollo-client/pull/12204) [`851deb0`](https://github.com/apollographql/apollo-client/commit/851deb06f42eb255b4839c2b88430f991943ae0f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix `Unmasked` unwrapping tuple types into an array of their subtypes.
+
+- [#12204](https://github.com/apollographql/apollo-client/pull/12204) [`851deb0`](https://github.com/apollographql/apollo-client/commit/851deb06f42eb255b4839c2b88430f991943ae0f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `MaybeMasked` does not try and unwrap types that contain index signatures.
+
+- [#12204](https://github.com/apollographql/apollo-client/pull/12204) [`851deb0`](https://github.com/apollographql/apollo-client/commit/851deb06f42eb255b4839c2b88430f991943ae0f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure `MaybeMasked` does not try to unwrap the type as `Unmasked` if the type contains `any`.
+
 ## 3.12.2
 
 ### Patch Changes

@@ -480,10 +480,11 @@ type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 export const concat: typeof ApolloLink.concat;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ContainsFragmentsRefs<TData> = true extends IsAny<TData> ? false : TData extends object ? " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public (undocumented)
 export const createHttpLink: (linkOptions?: HttpOptions) => ApolloLink;
@@ -789,6 +790,9 @@ namespace EntityStore {
 
 // @public
 export type ErrorPolicy = "none" | "ignore" | "all";
+
+// @public (undocumented)
+type Exact<in out T> = (x: T) => T;
 
 // @public (undocumented)
 export const execute: typeof ApolloLink.execute;

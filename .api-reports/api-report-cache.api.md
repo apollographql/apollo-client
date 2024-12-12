@@ -237,10 +237,11 @@ type CombineIntersection<T> = Exclude<T, {
 }>>;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ContainsFragmentsRefs<TData> = true extends IsAny<TData> ? false : TData extends object ? " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public (undocumented)
 export function createFragmentRegistry(...fragments: DocumentNode[]): FragmentRegistryAPI;
@@ -464,6 +465,9 @@ export namespace EntityStore {
         readonly stump: Stump;
     }
 }
+
+// @public (undocumented)
+type Exact<in out T> = (x: T) => T;
 
 // @public
 type ExtractByMatchingTypeNames<Union extends {

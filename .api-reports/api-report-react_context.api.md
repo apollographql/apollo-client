@@ -518,10 +518,11 @@ class Concast<T> extends Observable<T> {
 type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type ContainsFragmentsRefs<TData> = true extends IsAny<TData> ? false : TData extends object ? " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // @public (undocumented)
 interface DataMasking {
@@ -704,6 +705,9 @@ interface DocumentTransformOptions {
 
 // @public
 type ErrorPolicy = "none" | "ignore" | "all";
+
+// @public (undocumented)
+type Exact<in out T> = (x: T) => T;
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //

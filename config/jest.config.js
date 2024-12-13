@@ -29,15 +29,7 @@ const defaults = {
 const ignoreTSFiles = ".ts$";
 const ignoreTSXFiles = ".tsx$";
 
-const react19TestFileIgnoreList = [
-  ignoreTSFiles,
-  // The HOCs and Render Prop Components have been deprecated since March 2020,
-  // and to test them we would need to rewrite a lot of our test suites.
-  // We will not support them any more for React 19.
-  // They will probably work, but we make no more guarantees.
-  "src/react/hoc/.*",
-  "src/react/components/.*",
-];
+const react19TestFileIgnoreList = [ignoreTSFiles];
 
 const react17TestFileIgnoreList = [
   ignoreTSFiles,

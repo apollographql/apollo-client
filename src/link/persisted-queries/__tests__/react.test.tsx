@@ -10,9 +10,10 @@ import { ApolloProvider } from "../../../react/context";
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache";
 import { ApolloClient } from "../../../core/ApolloClient";
 import { createHttpLink } from "../../http/createHttpLink";
-import { graphql } from "../../../react/hoc/graphql";
 import { getDataFromTree } from "../../../react/ssr/getDataFromTree";
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
+import { useQuery } from "../../../react";
+import { OperationVariables } from "../../../core";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");
@@ -88,11 +89,15 @@ describe("react application", () => {
       ssrMode: true,
     });
 
-    const Query = graphql<React.PropsWithChildren>(query)(({
-      data,
+    const Query = ({
       children,
+      variables,
+    }: {
+      children: React.ReactNode;
+      variables: OperationVariables;
     }) => {
-      if (data!.loading) return null;
+      const { data, loading } = useQuery(query, { variables });
+      if (loading) return null;
 
       return (
         <div>
@@ -100,10 +105,10 @@ describe("react application", () => {
           {children}
         </div>
       );
-    });
+    };
     const app = (
       <ApolloProvider client={client}>
-        <Query {...variables}>
+        <Query variables={variables}>
           <h1>Hello!</h1>
         </Query>
       </ApolloProvider>
@@ -135,7 +140,7 @@ describe("react application", () => {
 
     const app2 = (
       <ApolloProvider client={client2}>
-        <Query {...variables2}>
+        <Query variables={variables2}>
           <h1>Hello!</h1>
         </Query>
       </ApolloProvider>

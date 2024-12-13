@@ -38,7 +38,15 @@ For more information on setting up Apollo Client, see [Getting started](../get-s
 
 ## Apollo Client Devtools
 
-#### 1. Using [React Native Debugger](https://github.com/jhen0409/react-native-debugger)
+#### 1. Using the VS Code [Apollo GraphQL extension](https://marketplace.visualstudio.com/items?itemName=apollographql.vscode-apollo)
+
+<img class="screenshot" alt="Apollo Client Devtools in a VS Code panel" src="../assets/devtools/vscode-panel.png"/>
+
+The Apollo GraphQL VSCode extension comes with the Apollo Client Devtools bundled, and these can be used with React Native.
+
+See [Developer tools - Apollo Client Devtools in VS Code](../development-testing/developer-tooling/#apollo-client-devtools-in-vs-code) for setup instructions.
+
+#### 2. Using [React Native Debugger](https://github.com/jhen0409/react-native-debugger)
 
 The React Native Debugger supports the [Apollo Client Devtools](../development-testing/developer-tooling/#apollo-client-devtools):
 
@@ -46,7 +54,7 @@ The React Native Debugger supports the [Apollo Client Devtools](../development-t
   2. Enable "Debug JS Remotely" in your app.
   3. If you don't see the Developer Tools panel or the Apollo tab is missing from it, toggle the Developer Tools by right-clicking anywhere and selecting **Toggle Developer Tools**.
 
-#### 2. Using [Flipper](https://fbflipper.com/)
+#### 3. Using [Flipper](https://fbflipper.com/)
 
 A community plugin called [React Native Apollo devtools](https://github.com/razorpay/react-native-apollo-devtools) is available for Flipper, which supports viewing cache data.
 

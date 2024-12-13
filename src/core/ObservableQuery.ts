@@ -308,7 +308,6 @@ export class ObservableQuery<
       if (
         __DEV__ &&
         !diff.complete &&
-        !this.options.partialRefetch &&
         !result.loading &&
         !result.data &&
         !result.error

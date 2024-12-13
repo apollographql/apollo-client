@@ -107,16 +107,6 @@ export interface QueryOptionsDocumentation {
   refetchWritePolicy_suspense: unknown;
 
   /**
-   * If `true`, causes a query refetch if the query result is detected as partial.
-   *
-   * The default value is `false`.
-   *
-   * @deprecated
-   * Setting this option is unnecessary in Apollo Client 3, thanks to a more consistent application of fetch policies. It might be removed in a future release.
-   */
-  partialRefetch: unknown;
-
-  /**
    * Whether to canonize cache results before returning them. Canonization
    * takes some extra time, but it speeds up future deep equality comparisons.
    * Defaults to false.

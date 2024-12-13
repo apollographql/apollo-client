@@ -635,7 +635,6 @@ describe("QueryManager", () => {
           watchQuery: {
             fetchPolicy: "cache-and-network",
             returnPartialData: false,
-            partialRefetch: true,
             notifyOnNetworkStatusChange: true,
           },
           query: {

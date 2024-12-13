@@ -1,4 +1,4 @@
-import "./messageChannel-polyfill";
+import "../../../testing/internal/messageChannelPolyfill";
 import React from "react";
 
 import gql from "graphql-tag";

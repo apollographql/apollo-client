@@ -2059,8 +2059,6 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     notifyOnNetworkStatusChange?: boolean;
-    // @deprecated
-    partialRefetch?: boolean;
     pollInterval?: number;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     returnPartialData?: boolean;
@@ -2253,8 +2251,6 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
     notifyOnNetworkStatusChange?: boolean;
-    // @deprecated
-    partialRefetch?: boolean;
     pollInterval?: number;
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
@@ -2505,7 +2501,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:121:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:277:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:271:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

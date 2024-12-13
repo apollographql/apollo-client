@@ -1825,8 +1825,6 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     notifyOnNetworkStatusChange?: boolean;
-    // @deprecated
-    partialRefetch?: boolean;
     pollInterval?: number;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
     returnPartialData?: boolean;
@@ -2029,8 +2027,6 @@ interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> 
     // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
     nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
     notifyOnNetworkStatusChange?: boolean;
-    // @deprecated
-    partialRefetch?: boolean;
     pollInterval?: number;
     refetchWritePolicy?: RefetchWritePolicy;
     returnPartialData?: boolean;
@@ -2518,7 +2514,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:277:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:271:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:38:3 - (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:54:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:78:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts

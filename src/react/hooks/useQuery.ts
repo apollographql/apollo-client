@@ -11,7 +11,6 @@
  * makeWatchQueryOptions
  * isSSRAllowed
  * disableNetworkFetches
- * partialRefetch
  * renderPromises
  * isSyncSSR
  * callbacks
@@ -260,7 +259,6 @@ export function useQueryInternals<
   const isSyncSSR = !!renderPromises;
   const disableNetworkFetches = client.disableNetworkFetches;
   const ssrAllowed = options.ssr !== false && !options.skip;
-  const partialRefetch = options.partialRefetch;
 
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
     client,
@@ -301,7 +299,6 @@ export function useQueryInternals<
     options,
     watchQueryOptions,
     disableNetworkFetches,
-    partialRefetch,
     isSyncSSR,
     {
       onCompleted: options.onCompleted || noop,
@@ -329,7 +326,6 @@ function useObservableSubscriptionResult<
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   disableNetworkFetches: boolean,
-  partialRefetch: boolean | undefined,
   isSyncSSR: boolean,
   callbacks: {
     onCompleted: (data: MaybeMasked<TData>) => void;
@@ -410,7 +406,6 @@ function useObservableSubscriptionResult<
             resultData,
             observable,
             client,
-            partialRefetch,
             handleStoreChange,
             callbackRef.current
           );
@@ -445,7 +440,6 @@ function useObservableSubscriptionResult<
               resultData,
               observable,
               client,
-              partialRefetch,
               handleStoreChange,
               callbackRef.current
             );
@@ -468,33 +462,14 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [
-        disableNetworkFetches,
-        isSyncSSR,
-        observable,
-        resultData,
-        partialRefetch,
-        client,
-      ]
+      [disableNetworkFetches, isSyncSSR, observable, resultData, client]
     ),
     () =>
       currentResultOverride ||
-      getCurrentResult(
-        resultData,
-        observable,
-        callbackRef.current,
-        partialRefetch,
-        client
-      ),
+      getCurrentResult(resultData, observable, callbackRef.current, client),
     () =>
       currentResultOverride ||
-      getCurrentResult(
-        resultData,
-        observable,
-        callbackRef.current,
-        partialRefetch,
-        client
-      )
+      getCurrentResult(resultData, observable, callbackRef.current, client)
   );
 }
 
@@ -656,7 +631,6 @@ function setResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>,
-  partialRefetch: boolean | undefined,
   forceUpdate: () => void,
   callbacks: Callbacks<TData>
 ) {
@@ -674,7 +648,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   }
 
   resultData.current = toQueryResult(
-    unsafeHandlePartialRefetch(nextResult, observable, partialRefetch),
+    nextResult,
     resultData.previousData,
     observable,
     client
@@ -716,21 +690,17 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   callbacks: Callbacks<TData>,
-  partialRefetch: boolean | undefined,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
   if (!resultData.current) {
-    // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
-    // this could call unsafeHandlePartialRefetch
     setResult(
       observable.getCurrentResult(),
       resultData,
       observable,
       client,
-      partialRefetch,
       () => {},
       callbacks
     );
@@ -777,34 +747,6 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
     previousData,
   };
   return queryResult;
-}
-
-function unsafeHandlePartialRefetch<
-  TData,
-  TVariables extends OperationVariables,
->(
-  result: ApolloQueryResult<MaybeMasked<TData>>,
-  observable: ObservableQuery<TData, TVariables>,
-  partialRefetch: boolean | undefined
-): ApolloQueryResult<MaybeMasked<TData>> {
-  // TODO: This code should be removed when the partialRefetch option is
-  // removed. I was unable to get this hook to behave reasonably in certain
-  // edge cases when this block was put in an effect.
-  if (
-    result.partial &&
-    partialRefetch &&
-    !result.loading &&
-    (!result.data || Object.keys(result.data).length === 0) &&
-    observable.options.fetchPolicy !== "cache-only"
-  ) {
-    observable.refetch();
-    return {
-      ...result,
-      loading: true,
-      networkStatus: NetworkStatus.refetch,
-    };
-  }
-  return result;
 }
 
 const ssrDisabledResult = maybeDeepFreeze({

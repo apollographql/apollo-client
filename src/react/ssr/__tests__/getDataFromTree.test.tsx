@@ -1,4 +1,19 @@
 import React from "react";
+
+if (React.version.startsWith("19")) {
+  // react-dom/server uses MessageChannel in React 19
+  window.MessageChannel = jest.fn().mockImplementation(() => {
+    return {
+      port1: {
+        set onmessage(_cb: unknown) {},
+      },
+      port2: {
+        postMessage(_data: unknown) {},
+      },
+    };
+  });
+}
+
 import gql from "graphql-tag";
 import { DocumentNode } from "graphql";
 

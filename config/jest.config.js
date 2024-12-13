@@ -29,10 +29,7 @@ const defaults = {
 const ignoreTSFiles = ".ts$";
 const ignoreTSXFiles = ".tsx$";
 
-const react19TestFileIgnoreList = [
-  ignoreTSFiles,
-  "src/react/ssr/__tests__/getDataFromTree.test.tsx",
-];
+const react19TestFileIgnoreList = [ignoreTSFiles];
 
 const react17TestFileIgnoreList = [
   ignoreTSFiles,

@@ -1156,10 +1156,12 @@ const config: CodegenConfig = {
         // ...
         // disables the incompatible GraphQL Codegen fragment masking feature
         fragmentMasking: false,
-        inlineFragmentTypes: "mask",
         customDirectives: {
           apolloUnmask: true
         }
+      },
+      config: {
+        inlineFragmentTypes: "mask",
       }
     }
   }

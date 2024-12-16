@@ -1,6 +1,14 @@
-import type { MatcherFunction } from "expect";
+import type { MatcherFunction, MatcherContext } from "expect";
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
+
+function isErrorEqual(this: MatcherContext, expected: any, actual: any) {
+  if (typeof expected === "string" && actual instanceof Error) {
+    return actual.message === expected;
+  }
+
+  return this.equals(expected, actual, this.customTesters);
+}
 
 export const toEmitError: MatcherFunction<
   [value?: any, options?: TakeOptions]
@@ -15,9 +23,7 @@ export const toEmitError: MatcherFunction<
   try {
     const error = await stream.takeError(options);
     const pass =
-      expected === undefined ? true : (
-        this.equals(expected, error, this.customTesters)
-      );
+      expected === undefined ? true : isErrorEqual.call(this, expected, error);
 
     return {
       pass,
@@ -37,7 +43,7 @@ export const toEmitError: MatcherFunction<
           "\n\n" +
           this.utils.printDiffOrStringify(
             expected,
-            error,
+            typeof expected === "string" ? error.message : error,
             "Expected",
             "Recieved",
             true

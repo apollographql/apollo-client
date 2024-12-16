@@ -1,4 +1,7 @@
-import type { Observable } from "../../utilities/index.js";
+import type {
+  Observable,
+  ObservableSubscription,
+} from "../../utilities/index.js";
 import { ReadableStream } from "node:stream/web";
 
 export interface TakeOptions {
@@ -11,10 +14,12 @@ type ObservableEvent<T> =
 
 export class ObservableStream<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;
+  private subscription!: ObservableSubscription;
+
   constructor(observable: Observable<T>) {
     this.reader = new ReadableStream<ObservableEvent<T>>({
-      start(controller) {
-        observable.subscribe(
+      start: (controller) => {
+        this.subscription = observable.subscribe(
           (value) => controller.enqueue({ type: "next", value }),
           (error) => controller.enqueue({ type: "error", error }),
           () => controller.enqueue({ type: "complete" })
@@ -34,6 +39,10 @@ export class ObservableStream<T> {
         );
       }),
     ]);
+  }
+
+  unsubscribe() {
+    this.subscription.unsubscribe();
   }
 
   async takeNext(options?: TakeOptions): Promise<T> {

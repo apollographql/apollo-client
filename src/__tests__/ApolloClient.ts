@@ -2724,7 +2724,6 @@ describe("ApolloClient", () => {
             pollInterval: 100,
             notifyOnNetworkStatusChange: true,
             returnPartialData: true,
-            partialRefetch: true,
           },
         },
       });

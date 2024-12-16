@@ -1772,9 +1772,6 @@ Item
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
 // @public (undocumented)
-export function subscribeAndCount<TResult>(reject: (reason: any) => any, observable: Observable<TResult>, cb: (handleCount: number, result: TResult) => any): Subscription;
-
-// @public (undocumented)
 type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = {
     document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     variables?: TSubscriptionVariables;

@@ -1044,6 +1044,114 @@ describe("useQuery Hook", () => {
     });
   });
 
+  it('sets data to undefined when changing variables with a "network-only" fetch policy and notifyOnNetworkStatusChange: true', async () => {
+    const query = gql`
+      query ($for: String!) {
+        greeting
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { for: "Bob" } },
+        result: { data: { greeting: "Hello, Bob" } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { for: "Sally" } },
+        result: { data: { greeting: "Hello, Sally" } },
+        delay: 20,
+      },
+      {
+        request: { query, variables: { for: "Bob" } },
+        result: { data: { greeting: "Hello again, Bob" } },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+      (props) =>
+        useQuery(query, {
+          variables: { for: props.for },
+          fetchPolicy: "network-only",
+          notifyOnNetworkStatusChange: true,
+        }),
+      {
+        initialProps: { for: "Bob" },
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+    }
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toMatchObject({
+        data: { greeting: "Hello, Bob" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await rerender({ for: "Sally" });
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+      });
+    }
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toMatchObject({
+        data: { greeting: "Hello, Sally" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await rerender({ for: "Bob" });
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toMatchObject({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+      });
+    }
+
+    {
+      const snapshot = await takeSnapshot();
+
+      expect(snapshot).toMatchObject({
+        data: { greeting: "Hello again, Bob" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   describe("options.defaultOptions", () => {
     it("can provide a default fetchPolicy", async () => {
       const query = gql`

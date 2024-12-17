@@ -541,3 +541,19 @@ test("allows the client to be overridden", async () => {
 
   expect(data).toEqual({ __typename: "Item", id: 1, text: "Item #1" });
 });
+
+test("throws if no client is provided", () => {
+  using _spy = spyOnConsole("error");
+  expect(() =>
+    renderHook(() =>
+      useSuspenseFragment({
+        fragment: gql`
+          fragment ShouldThrow on Error {
+            shouldThrow
+          }
+        `,
+        from: {},
+      })
+    )
+  ).toThrow(/pass an ApolloClient/);
+});

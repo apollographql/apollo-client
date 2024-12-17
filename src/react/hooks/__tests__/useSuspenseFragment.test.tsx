@@ -743,3 +743,58 @@ test("does not suspend when changing `from` with data already written to cache",
 
   await expect(takeRender).not.toRerender();
 });
+
+it("does not rerender when fields with @nonreactive change", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text @nonreactive
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useSuspenseFragment({ fragment, from: { __typename: "Item", id: 1 } }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1 (updated)",
+    },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});

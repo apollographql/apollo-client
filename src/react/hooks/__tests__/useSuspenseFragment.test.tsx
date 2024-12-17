@@ -16,6 +16,10 @@ import {
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { spyOnConsole } from "../../../testing/internal";
+import { renderHook } from "@testing-library/react";
+import { InvariantError } from "ts-invariant";
+import { MockedProvider } from "../../../testing";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
@@ -33,6 +37,27 @@ function createDefaultTrackedComponents() {
 
   return { SuspenseFallback };
 }
+
+test("validates the GraphQL document is a fragment", () => {
+  using _ = spyOnConsole("error");
+
+  const fragment = gql`
+    query ShouldThrow {
+      createException
+    }
+  `;
+
+  expect(() => {
+    renderHook(
+      () => useSuspenseFragment({ fragment, from: { __typename: "Nope" } }),
+      { wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider> }
+    );
+  }).toThrow(
+    new InvariantError(
+      "Found a query operation named 'ShouldThrow'. No operations are allowed when using a fragment as a query. Only fragments are allowed."
+    )
+  );
+});
 
 test("suspends until cache value is complete", async () => {
   interface ItemFragment {

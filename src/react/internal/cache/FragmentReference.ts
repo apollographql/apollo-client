@@ -1,4 +1,8 @@
-import type { WatchFragmentResult } from "../../../cache/index.js";
+import type {
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "../../../cache/index.js";
+import type { ApolloClient } from "../../../core/ApolloClient.js";
 import type { MaybeMasked } from "../../../masking/index.js";
 import {
   createFulfilledPromise,
@@ -18,7 +22,10 @@ interface FragmentReferenceOptions {
   onDispose?: () => void;
 }
 
-export class FragmentReference<TData = unknown> {
+export class FragmentReference<
+  TData = unknown,
+  TVariables = Record<string, unknown>,
+> {
   public readonly observable: Observable<WatchFragmentResult<TData>>;
   public readonly key: FragmentKey = {};
   public promise!: FragmentRefPromise<MaybeMasked<TData>>;
@@ -32,14 +39,15 @@ export class FragmentReference<TData = unknown> {
   private references = 0;
 
   constructor(
-    observable: Observable<WatchFragmentResult<TData>>,
+    client: ApolloClient<any>,
+    watchFragmentOptions: WatchFragmentOptions<TData, TVariables>,
     options: FragmentReferenceOptions
   ) {
     this.dispose = this.dispose.bind(this);
     this.handleNext = this.handleNext.bind(this);
     this.handleError = this.handleError.bind(this);
 
-    this.observable = observable;
+    this.observable = client.watchFragment(watchFragmentOptions);
 
     if (options.onDispose) {
       this.onDispose = options.onDispose;

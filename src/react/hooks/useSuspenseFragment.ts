@@ -67,9 +67,13 @@ function _useSuspenseFragment<
     [cache, from]
   )!;
 
-  const fragmentRef = getSuspenseCache(client).getFragmentRef<TData>(
+  const fragmentRef = getSuspenseCache(client).getFragmentRef<
+    TData,
+    TVariables
+  >(
     [id, options.fragment, canonicalStringify(options.variables)],
-    () => client.watchFragment(options)
+    client,
+    options
   );
 
   let [current, setPromise] = React.useState<

@@ -40,7 +40,9 @@ export class FragmentReference<
 
   constructor(
     client: ApolloClient<any>,
-    watchFragmentOptions: WatchFragmentOptions<TData, TVariables>,
+    watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
+      from: string;
+    },
     options: FragmentReferenceOptions
   ) {
     this.dispose = this.dispose.bind(this);
@@ -53,7 +55,12 @@ export class FragmentReference<
       this.onDispose = options.onDispose;
     }
 
-    this.promise = this.createPendingPromise();
+    const diff = this.getDiff(client, watchFragmentOptions);
+
+    this.promise =
+      diff.complete ?
+        createFulfilledPromise(diff.result)
+      : this.createPendingPromise();
     this.subscribeToFragment();
   }
 
@@ -112,6 +119,14 @@ export class FragmentReference<
         break;
       }
       case "fulfilled": {
+        // This can occur when we already have a result written to the cache and
+        // we subscribe for the first time. We create a fulfilled promise in the
+        // constructor with a value that is the same as the first emitted value
+        // so we want to skip delivering it.
+        if (this.promise.value === result.data) {
+          return;
+        }
+
         this.promise =
           result.complete ?
             createFulfilledPromise(result.data)
@@ -137,5 +152,30 @@ export class FragmentReference<
         this.reject = reject;
       })
     );
+  }
+
+  private getDiff<TData, TVariables>(
+    client: ApolloClient<any>,
+    options: WatchFragmentOptions<TData, TVariables> & { from: string }
+  ) {
+    const { cache } = client;
+    const { from, fragment, fragmentName } = options;
+
+    const diff = cache.diff({
+      ...options,
+      query: cache["getFragmentDoc"](fragment, fragmentName),
+      returnPartialData: true,
+      id: from,
+      optimistic: true,
+    });
+
+    return {
+      ...diff,
+      result: client["queryManager"].maskFragment({
+        fragment,
+        fragmentName,
+        data: diff.result,
+      }) as MaybeMasked<TData>,
+    };
   }
 }

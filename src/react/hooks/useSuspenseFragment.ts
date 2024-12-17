@@ -70,11 +70,10 @@ function _useSuspenseFragment<
   const fragmentRef = getSuspenseCache(client).getFragmentRef<
     TData,
     TVariables
-  >(
-    [id, options.fragment, canonicalStringify(options.variables)],
-    client,
-    options
-  );
+  >([id, options.fragment, canonicalStringify(options.variables)], client, {
+    ...options,
+    from: id,
+  });
 
   let [current, setPromise] = React.useState<
     [FragmentKey, Promise<MaybeMasked<TData>>]

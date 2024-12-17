@@ -4,8 +4,11 @@ import {
 } from "../useSuspenseFragment";
 import {
   ApolloClient,
+  FragmentType,
   gql,
   InMemoryCache,
+  Masked,
+  MaskedDocumentNode,
   MaybeMasked,
   TypedDocumentNode,
 } from "../../../core";
@@ -1072,4 +1075,141 @@ test("does not rerender for cache writes to masked fields", async () => {
   });
 
   await expect(takeSnapshot).not.toRerender();
+});
+
+test("updates child fragments for cache updates to masked fields", async () => {
+  type Post = {
+    __typename: "Post";
+    id: number;
+    title: string;
+  } & { " $fragmentRefs"?: { PostFields: PostFields } };
+
+  type PostFields = {
+    __typename: "Post";
+    updatedAt: string;
+  } & { " $fragmentName"?: "PostFields" };
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  const postFieldsFragment: MaskedDocumentNode<PostFields> = gql`
+    fragment PostFields on Post {
+      updatedAt
+    }
+  `;
+
+  const postFragment: MaskedDocumentNode<Post> = gql`
+    fragment PostFragment on Post {
+      id
+      title
+      ...PostFields
+    }
+
+    ${postFieldsFragment}
+  `;
+
+  client.writeFragment({
+    fragment: postFragment,
+    fragmentName: "PostFragment",
+    data: {
+      __typename: "Post",
+      id: 1,
+      title: "Blog post",
+      updatedAt: "2024-01-01",
+    },
+  });
+
+  const { render, mergeSnapshot, takeRender } = createRenderStream({
+    initialSnapshot: {
+      parent: null as UseSuspenseFragmentResult<Masked<Post>> | null,
+      child: null as UseSuspenseFragmentResult<Masked<PostFields>> | null,
+    },
+  });
+
+  function Parent() {
+    useTrackRenders();
+    const parent = useSuspenseFragment({
+      fragment: postFragment,
+      fragmentName: "PostFragment",
+      from: { __typename: "Post", id: 1 },
+    });
+
+    mergeSnapshot({ parent });
+
+    return <Child post={parent.data} />;
+  }
+
+  function Child({ post }: { post: FragmentType<PostFields> }) {
+    useTrackRenders();
+    const child = useSuspenseFragment({
+      fragment: postFieldsFragment,
+      from: post,
+    });
+
+    mergeSnapshot({ child });
+    return null;
+  }
+
+  using _disabledAct = disableActEnvironment();
+  await render(<Parent />, {
+    wrapper: ({ children }) => (
+      <ApolloProvider client={client}>{children}</ApolloProvider>
+    ),
+  });
+
+  {
+    const { snapshot } = await takeRender();
+
+    expect(snapshot).toEqual({
+      parent: {
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+        },
+      },
+      child: {
+        data: {
+          __typename: "Post",
+          updatedAt: "2024-01-01",
+        },
+      },
+    });
+  }
+
+  client.writeFragment({
+    fragment: postFragment,
+    fragmentName: "PostFragment",
+    data: {
+      __typename: "Post",
+      id: 1,
+      title: "Blog post",
+      updatedAt: "2024-02-01",
+    },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([Child]);
+    expect(snapshot).toEqual({
+      parent: {
+        data: {
+          __typename: "Post",
+          id: 1,
+          title: "Blog post",
+        },
+      },
+      child: {
+        data: {
+          __typename: "Post",
+          updatedAt: "2024-02-01",
+        },
+      },
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
 });

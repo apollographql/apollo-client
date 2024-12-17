@@ -409,3 +409,87 @@ test("does not suspend and returns cache data when data is already in the cache"
 
   await expect(takeRender).not.toRerender();
 });
+
+test("receives cache updates after initial result when data is written to the cache before mounted", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const { takeRender, render, replaceSnapshot } =
+    createDefaultRenderStream<ItemFragment>();
+  const { SuspenseFallback } = createDefaultTrackedComponents();
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Cached" },
+  });
+
+  function App() {
+    useTrackRenders();
+
+    const result = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id: 1 },
+    });
+
+    replaceSnapshot({ result });
+
+    return null;
+  }
+
+  using _disabledAct = disableActEnvironment();
+  await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Cached",
+      },
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Updated" },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Updated",
+      },
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});

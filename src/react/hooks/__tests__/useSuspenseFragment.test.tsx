@@ -14,6 +14,7 @@ import { ApolloProvider } from "../../context";
 import {
   createRenderStream,
   disableActEnvironment,
+  renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
 import { spyOnConsole } from "../../../testing/internal";
@@ -492,4 +493,51 @@ test("receives cache updates after initial result when data is written to the ca
   }
 
   await expect(takeRender).not.toRerender();
+});
+
+test("allows the client to be overridden", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const defaultClient = new ApolloClient({ cache: new InMemoryCache() });
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  defaultClient.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Should not be used" },
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useSuspenseFragment({
+        fragment,
+        client,
+        from: { __typename: "Item", id: 1 },
+      }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={defaultClient}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const { data } = await takeSnapshot();
+
+  expect(data).toEqual({ __typename: "Item", id: 1, text: "Item #1" });
 });

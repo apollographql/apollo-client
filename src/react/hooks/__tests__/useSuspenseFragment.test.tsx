@@ -653,3 +653,93 @@ test("suspends until data is complete when changing `from` with no data written 
 
   await expect(takeRender).not.toRerender();
 });
+
+test("does not suspend when changing `from` with data already written to cache", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const { takeRender, replaceSnapshot, render } =
+    createDefaultRenderStream<ItemFragment>();
+  const { SuspenseFallback } = createDefaultTrackedComponents();
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  function App({ id }: { id: number }) {
+    useTrackRenders();
+
+    const result = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id },
+    });
+
+    replaceSnapshot({ result });
+
+    return null;
+  }
+
+  const { rerender } = await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App id={1} />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Item #1",
+      },
+    });
+  }
+
+  await rerender(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App id={2} />
+    </Suspense>
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 2,
+        text: "Item #2",
+      },
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});

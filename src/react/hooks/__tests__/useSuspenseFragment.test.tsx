@@ -2,8 +2,6 @@ import {
   useSuspenseFragment,
   UseSuspenseFragmentResult,
 } from "../useSuspenseFragment";
-import { createProfiler, useTrackRenders } from "../../../testing/internal";
-import { act, render } from "@testing-library/react";
 import {
   ApolloClient,
   gql,
@@ -12,9 +10,14 @@ import {
 } from "../../../core";
 import React, { Suspense } from "react";
 import { ApolloProvider } from "../../context";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 
-function createDefaultProfiler<TData = unknown>() {
-  return createProfiler({
+function createDefaultRenderStream<TData = unknown>() {
+  return createRenderStream({
     initialSnapshot: {
       result: null as UseSuspenseFragmentResult<TData> | null,
     },
@@ -37,7 +40,7 @@ test("suspends until cache value is complete", async () => {
     text: string;
   }
 
-  const Profiler = createDefaultProfiler();
+  const { render, takeRender, replaceSnapshot } = createDefaultRenderStream();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
   const client = new ApolloClient({ cache: new InMemoryCache() });
@@ -57,25 +60,25 @@ test("suspends until cache value is complete", async () => {
       from: { __typename: "Item", id: 1 },
     });
 
-    Profiler.replaceSnapshot({ result });
+    replaceSnapshot({ result });
 
     return null;
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  using _disabledAct = disableActEnvironment();
+  await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => {
+        return <ApolloProvider client={client}>{children}</ApolloProvider>;
+      },
+    }
+  );
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
@@ -90,7 +93,7 @@ test("suspends until cache value is complete", async () => {
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
     expect(snapshot.result).toEqual({
@@ -102,7 +105,7 @@ test("suspends until cache value is complete", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(takeRender).not.toRerender();
 });
 
 test("updates when the cache updates", async () => {
@@ -112,7 +115,7 @@ test("updates when the cache updates", async () => {
     text: string;
   }
 
-  const Profiler = createDefaultProfiler();
+  const { takeRender, render, replaceSnapshot } = createDefaultRenderStream();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
   const client = new ApolloClient({ cache: new InMemoryCache() });
@@ -132,25 +135,25 @@ test("updates when the cache updates", async () => {
       from: { __typename: "Item", id: 1 },
     });
 
-    Profiler.replaceSnapshot({ result });
+    replaceSnapshot({ result });
 
     return null;
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  using _disabledAct = disableActEnvironment();
+  await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
@@ -165,7 +168,7 @@ test("updates when the cache updates", async () => {
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
     expect(snapshot.result).toEqual({
@@ -177,19 +180,17 @@ test("updates when the cache updates", async () => {
     });
   }
 
-  act(() => {
-    client.writeFragment({
-      fragment,
-      data: {
-        __typename: "Item",
-        id: 1,
-        text: "Item #1 (updated)",
-      },
-    });
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1 (updated)",
+    },
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
     expect(snapshot.result).toEqual({
@@ -201,7 +202,7 @@ test("updates when the cache updates", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(takeRender).not.toRerender();
 });
 
 test("resuspends when data goes missing until complete again", async () => {
@@ -211,7 +212,7 @@ test("resuspends when data goes missing until complete again", async () => {
     text: string;
   }
 
-  const Profiler = createDefaultProfiler();
+  const { takeRender, render, replaceSnapshot } = createDefaultRenderStream();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
   const client = new ApolloClient({ cache: new InMemoryCache() });
@@ -231,25 +232,25 @@ test("resuspends when data goes missing until complete again", async () => {
       from: { __typename: "Item", id: 1 },
     });
 
-    Profiler.replaceSnapshot({ result });
+    replaceSnapshot({ result });
 
     return null;
   }
 
-  render(<App />, {
-    wrapper: ({ children }) => {
-      return (
-        <ApolloProvider client={client}>
-          <Profiler>
-            <Suspense fallback={<SuspenseFallback />}>{children}</Suspense>
-          </Profiler>
-        </ApolloProvider>
-      );
-    },
-  });
+  using _disabledAct = disableActEnvironment();
+  await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
@@ -264,7 +265,7 @@ test("resuspends when data goes missing until complete again", async () => {
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
     expect(snapshot.result).toEqual({
@@ -276,34 +277,30 @@ test("resuspends when data goes missing until complete again", async () => {
     });
   }
 
-  act(() => {
-    client.cache.modify({
-      id: "Item:1",
-      fields: {
-        text: (_, { DELETE }) => DELETE,
-      },
-    });
+  client.cache.modify({
+    id: "Item:1",
+    fields: {
+      text: (_, { DELETE }) => DELETE,
+    },
   });
 
   {
-    const { renderedComponents } = await Profiler.takeRender();
+    const { renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([SuspenseFallback]);
   }
 
-  act(() => {
-    client.writeFragment({
-      fragment,
-      data: {
-        __typename: "Item",
-        id: 1,
-        text: "Item #1 (updated)",
-      },
-    });
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1 (updated)",
+    },
   });
 
   {
-    const { snapshot, renderedComponents } = await Profiler.takeRender();
+    const { snapshot, renderedComponents } = await takeRender();
 
     expect(renderedComponents).toStrictEqual([App]);
     expect(snapshot.result).toEqual({
@@ -315,5 +312,5 @@ test("resuspends when data goes missing until complete again", async () => {
     });
   }
 
-  await expect(Profiler).not.toRerender();
+  await expect(takeRender).not.toRerender();
 });

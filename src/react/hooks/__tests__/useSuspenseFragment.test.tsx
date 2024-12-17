@@ -798,3 +798,68 @@ it("does not rerender when fields with @nonreactive change", async () => {
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+it("does not rerender when fields with @nonreactive on nested fragment change", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      ...ItemFields @nonreactive
+    }
+
+    fragment ItemFields on Item {
+      text
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "ItemFragment",
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useSuspenseFragment({
+        fragment,
+        fragmentName: "ItemFragment",
+        from: { __typename: "Item", id: 1 },
+      }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "ItemFragment",
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1 (updated)",
+    },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});

@@ -10,7 +10,7 @@ import type { Cache } from "../../cache/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { getSuspenseCache } from "../internal/index.js";
 import React, { useMemo } from "rehackt";
-import type { FragmentCacheKey, FragmentKey } from "../internal/cache/types.js";
+import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 
@@ -67,14 +67,8 @@ function _useSuspenseFragment<
     [cache, from]
   )!;
 
-  const cacheKey: FragmentCacheKey = [
-    id,
-    options.fragment,
-    canonicalStringify(options.variables),
-  ];
-
   const fragmentRef = getSuspenseCache(client).getFragmentRef<TData>(
-    cacheKey,
+    [id, options.fragment, canonicalStringify(options.variables)],
     () => client.watchFragment(options)
   );
 

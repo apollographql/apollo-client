@@ -1,6 +1,8 @@
 import { Trie } from "@wry/trie";
 import type {
+  ApolloClient,
   ObservableQuery,
+  WatchFragmentOptions,
   WatchFragmentResult,
 } from "../../../core/index.js";
 import type { Observable } from "../../../utilities/index.js";
@@ -57,16 +59,17 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  getFragmentRef<TData>(
+  getFragmentRef<TData, TVariables>(
     cacheKey: FragmentCacheKey,
-    createObservable: () => Observable<WatchFragmentResult<TData>>
+    client: ApolloClient<any>,
+    options: WatchFragmentOptions<TData, TVariables>
   ) {
     const ref = this.fragmentRefs.lookupArray(cacheKey) as {
-      current?: FragmentReference<TData>;
+      current?: FragmentReference<TData, TVariables>;
     };
 
     if (!ref.current) {
-      ref.current = new FragmentReference(createObservable(), {
+      ref.current = new FragmentReference(client, options, {
         onDispose: () => {
           delete ref.current;
         },

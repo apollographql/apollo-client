@@ -863,3 +863,62 @@ it("does not rerender when fields with @nonreactive on nested fragment change", 
 
   await expect(takeSnapshot).not.toRerender();
 });
+
+// TODO: Update when https://github.com/apollographql/apollo-client/issues/12003 is fixed
+it.failing(
+  "warns and suspends when passing parent object to `from` when key fields are missing",
+  async () => {
+    using _ = spyOnConsole("warn");
+
+    interface Fragment {
+      age: number;
+    }
+
+    const fragment: TypedDocumentNode<Fragment, never> = gql`
+      fragment UserFields on User {
+        age
+      }
+    `;
+
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
+    const { replaceSnapshot, render, takeRender } =
+      createDefaultRenderStream<Fragment>();
+    const { SuspenseFallback } = createDefaultTrackedComponents();
+
+    function App() {
+      const result = useSuspenseFragment({
+        fragment,
+        from: { __typename: "User" },
+      });
+
+      replaceSnapshot({ result });
+
+      return null;
+    }
+
+    using _disabledAct = disableActEnvironment();
+    await render(
+      <Suspense fallback={<SuspenseFallback />}>
+        <App />
+      </Suspense>,
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      "Could not identify object passed to `from` for '%s' fragment, either because the object is non-normalized or the key fields are missing. If you are masking this object, please ensure the key fields are requested by the parent object.",
+      "UserFields"
+    );
+
+    {
+      const { renderedComponents } = await takeRender();
+
+      expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+    }
+  }
+);

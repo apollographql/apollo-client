@@ -1,3 +1,4 @@
+import { equal } from "@wry/equality";
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
@@ -123,7 +124,7 @@ export class FragmentReference<
         // we subscribe for the first time. We create a fulfilled promise in the
         // constructor with a value that is the same as the first emitted value
         // so we want to skip delivering it.
-        if (this.promise.value === result.data) {
+        if (equal(this.promise.value, result.data)) {
           return;
         }
 

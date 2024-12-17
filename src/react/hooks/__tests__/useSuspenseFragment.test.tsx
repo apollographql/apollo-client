@@ -922,3 +922,154 @@ it.failing(
     }
   }
 );
+
+test("returns masked fragment when data masking is enabled", async () => {
+  type Post = {
+    __typename: "Post";
+    id: number;
+    title: string;
+  } & { " $fragmentRefs"?: { PostFields: PostFields } };
+
+  type PostFields = {
+    __typename: "Post";
+    updatedAt: string;
+  } & { " $fragmentName"?: "PostFields" };
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  const fragment: TypedDocumentNode<Post> = gql`
+    fragment PostFragment on Post {
+      id
+      title
+      ...PostFields
+    }
+
+    fragment PostFields on Post {
+      updatedAt
+    }
+  `;
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "PostFragment",
+    data: {
+      __typename: "Post",
+      id: 1,
+      title: "Blog post",
+      updatedAt: "2024-01-01",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useSuspenseFragment({
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const snapshot = await takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+      },
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("does not rerender for cache writes to masked fields", async () => {
+  type Post = {
+    __typename: "Post";
+    id: number;
+    title: string;
+  } & { " $fragmentRefs"?: { PostFields: PostFields } };
+
+  type PostFields = {
+    __typename: "Post";
+    updatedAt: string;
+  } & { " $fragmentName"?: "PostFields" };
+
+  const client = new ApolloClient({
+    dataMasking: true,
+    cache: new InMemoryCache(),
+  });
+
+  const fragment: TypedDocumentNode<Post> = gql`
+    fragment PostFragment on Post {
+      id
+      title
+      ...PostFields
+    }
+
+    fragment PostFields on Post {
+      updatedAt
+    }
+  `;
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "PostFragment",
+    data: {
+      __typename: "Post",
+      id: 1,
+      title: "Blog post",
+      updatedAt: "2024-01-01",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useSuspenseFragment({
+        fragment,
+        fragmentName: "PostFragment",
+        from: { __typename: "Post", id: 1 },
+      }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const snapshot = await takeSnapshot();
+
+    expect(snapshot).toEqual({
+      data: {
+        __typename: "Post",
+        id: 1,
+        title: "Blog post",
+      },
+    });
+  }
+
+  client.writeFragment({
+    fragment,
+    fragmentName: "PostFragment",
+    data: {
+      __typename: "Post",
+      id: 1,
+      title: "Blog post",
+      updatedAt: "2024-02-01",
+    },
+  });
+
+  await expect(takeSnapshot).not.toRerender();
+});

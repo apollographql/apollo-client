@@ -1,5 +1,6 @@
 import type {
   ApolloClient,
+  MaybeMasked,
   OperationVariables,
   Reference,
   StoreObject,
@@ -36,7 +37,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
-export type UseSuspenseFragmentResult<TData> = { data: TData };
+export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 
 export function useSuspenseFragment<
   TData = unknown,
@@ -77,10 +78,9 @@ function _useSuspenseFragment<
     () => client.watchFragment(options)
   );
 
-  let [current, setPromise] = React.useState<[FragmentKey, Promise<TData>]>([
-    fragmentRef.key,
-    fragmentRef.promise,
-  ]);
+  let [current, setPromise] = React.useState<
+    [FragmentKey, Promise<MaybeMasked<TData>>]
+  >([fragmentRef.key, fragmentRef.promise]);
 
   if (current[0] !== fragmentRef.key) {
     // eslint-disable-next-line react-compiler/react-compiler

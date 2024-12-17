@@ -6,6 +6,7 @@ import {
   ApolloClient,
   gql,
   InMemoryCache,
+  MaybeMasked,
   TypedDocumentNode,
 } from "../../../core";
 import React, { Suspense } from "react";
@@ -19,7 +20,7 @@ import {
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
-      result: null as UseSuspenseFragmentResult<TData> | null,
+      result: null as UseSuspenseFragmentResult<MaybeMasked<TData>> | null,
     },
   });
 }
@@ -40,7 +41,8 @@ test("suspends until cache value is complete", async () => {
     text: string;
   }
 
-  const { render, takeRender, replaceSnapshot } = createDefaultRenderStream();
+  const { render, takeRender, replaceSnapshot } =
+    createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
   const client = new ApolloClient({ cache: new InMemoryCache() });
@@ -115,7 +117,8 @@ test("updates when the cache updates", async () => {
     text: string;
   }
 
-  const { takeRender, render, replaceSnapshot } = createDefaultRenderStream();
+  const { takeRender, render, replaceSnapshot } =
+    createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
   const client = new ApolloClient({ cache: new InMemoryCache() });
@@ -212,7 +215,8 @@ test("resuspends when data goes missing until complete again", async () => {
     text: string;
   }
 
-  const { takeRender, render, replaceSnapshot } = createDefaultRenderStream();
+  const { takeRender, render, replaceSnapshot } =
+    createDefaultRenderStream<ItemFragment>();
   const { SuspenseFallback } = createDefaultTrackedComponents();
 
   const client = new ApolloClient({ cache: new InMemoryCache() });

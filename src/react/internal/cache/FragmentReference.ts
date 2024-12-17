@@ -1,4 +1,5 @@
 import type { WatchFragmentResult } from "../../../cache/index.js";
+import type { MaybeMasked } from "../../../masking/index.js";
 import {
   createFulfilledPromise,
   wrapPromiseWithState,
@@ -20,13 +21,13 @@ interface FragmentReferenceOptions {
 export class FragmentReference<TData = unknown> {
   public readonly observable: Observable<WatchFragmentResult<TData>>;
   public readonly key: FragmentKey = {};
-  public promise!: FragmentRefPromise<TData>;
+  public promise!: FragmentRefPromise<MaybeMasked<TData>>;
 
-  private resolve: ((result: TData) => void) | undefined;
+  private resolve: ((result: MaybeMasked<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
   private subscription!: ObservableSubscription;
-  private listeners = new Set<Listener<TData>>();
+  private listeners = new Set<Listener<MaybeMasked<TData>>>();
 
   private references = 0;
 
@@ -48,7 +49,7 @@ export class FragmentReference<TData = unknown> {
     this.subscribeToFragment();
   }
 
-  listen(listener: Listener<TData>) {
+  listen(listener: Listener<MaybeMasked<TData>>) {
     this.listeners.add(listener);
 
     return () => {
@@ -117,13 +118,13 @@ export class FragmentReference<TData = unknown> {
     this.reject?.(error);
   }
 
-  private deliver(promise: FragmentRefPromise<TData>) {
+  private deliver(promise: FragmentRefPromise<MaybeMasked<TData>>) {
     this.listeners.forEach((listener) => listener(promise));
   }
 
   private createPendingPromise() {
     return wrapPromiseWithState(
-      new Promise<TData>((resolve, reject) => {
+      new Promise<MaybeMasked<TData>>((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
       })

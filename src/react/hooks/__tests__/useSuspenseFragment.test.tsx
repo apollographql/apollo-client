@@ -60,6 +60,22 @@ test("validates the GraphQL document is a fragment", () => {
   );
 });
 
+test("throws if no client is provided", () => {
+  using _spy = spyOnConsole("error");
+  expect(() =>
+    renderHook(() =>
+      useSuspenseFragment({
+        fragment: gql`
+          fragment ShouldThrow on Error {
+            shouldThrow
+          }
+        `,
+        from: {},
+      })
+    )
+  ).toThrow(/pass an ApolloClient/);
+});
+
 test("suspends until cache value is complete", async () => {
   interface ItemFragment {
     __typename: "Item";
@@ -542,18 +558,98 @@ test("allows the client to be overridden", async () => {
   expect(data).toEqual({ __typename: "Item", id: 1, text: "Item #1" });
 });
 
-test("throws if no client is provided", () => {
-  using _spy = spyOnConsole("error");
-  expect(() =>
-    renderHook(() =>
-      useSuspenseFragment({
-        fragment: gql`
-          fragment ShouldThrow on Error {
-            shouldThrow
-          }
-        `,
-        from: {},
-      })
-    )
-  ).toThrow(/pass an ApolloClient/);
+test("suspends until data is complete when changing `from` with no data written to cache", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const { takeRender, replaceSnapshot, render } =
+    createDefaultRenderStream<ItemFragment>();
+  const { SuspenseFallback } = createDefaultTrackedComponents();
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  function App({ id }: { id: number }) {
+    useTrackRenders();
+
+    const result = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id },
+    });
+
+    replaceSnapshot({ result });
+
+    return null;
+  }
+
+  const { rerender } = await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App id={1} />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Item #1",
+      },
+    });
+  }
+
+  await rerender(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App id={2} />
+    </Suspense>
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2" },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 2,
+        text: "Item #2",
+      },
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
 });

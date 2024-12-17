@@ -3,9 +3,7 @@ import type {
   ApolloClient,
   ObservableQuery,
   WatchFragmentOptions,
-  WatchFragmentResult,
 } from "../../../core/index.js";
-import type { Observable } from "../../../utilities/index.js";
 import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
@@ -62,7 +60,7 @@ export class SuspenseCache {
   getFragmentRef<TData, TVariables>(
     cacheKey: FragmentCacheKey,
     client: ApolloClient<any>,
-    options: WatchFragmentOptions<TData, TVariables>
+    options: WatchFragmentOptions<TData, TVariables> & { from: string }
   ) {
     const ref = this.fragmentRefs.lookupArray(cacheKey) as {
       current?: FragmentReference<TData, TVariables>;

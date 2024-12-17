@@ -344,7 +344,7 @@ test("resuspends when data goes missing until complete again", async () => {
   await expect(takeRender).not.toRerender();
 });
 
-test("does not suspend and returns cache data when data is alredy in the cache", async () => {
+test("does not suspend and returns cache data when data is already in the cache", async () => {
   interface ItemFragment {
     __typename: "Item";
     id: number;

@@ -24,6 +24,7 @@ import { spyOnConsole } from "../../../testing/internal";
 import { renderHook } from "@testing-library/react";
 import { InvariantError } from "ts-invariant";
 import { MockedProvider } from "../../../testing";
+import { expectTypeOf } from "expect-type";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
@@ -926,6 +927,37 @@ it.failing(
   }
 );
 
+test("returns null if `from` is `null`", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useSuspenseFragment({ fragment, from: null }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const { data } = await takeSnapshot();
+
+  expect(data).toBeNull();
+});
+
 test("returns masked fragment when data masking is enabled", async () => {
   type Post = {
     __typename: "Post";
@@ -1212,4 +1244,38 @@ test("updates child fragments for cache updates to masked fields", async () => {
   }
 
   await expect(takeRender).not.toRerender();
+});
+
+describe.skip("type tests", () => {
+  test("returns TData when from is a non-null value", () => {
+    const fragment: TypedDocumentNode<{ foo: string }> = gql``;
+
+    const { data } = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Query" },
+    });
+
+    expectTypeOf(data).branded.toEqualTypeOf<{ foo: string }>();
+  });
+
+  test("returns TData | null when from is null", () => {
+    type Data = { foo: string };
+    type Vars = Record<string, never>;
+    const fragment: TypedDocumentNode<Data, Vars> = gql``;
+
+    const { data } = useSuspenseFragment({ fragment, from: null });
+
+    expectTypeOf(data).branded.toEqualTypeOf<null>();
+  });
+
+  test("returns TData | null when from is nullable", () => {
+    type Post = { __typename: "Post"; id: number };
+    type Vars = Record<string, never>;
+    const fragment: TypedDocumentNode<Post, Vars> = gql``;
+    const author = {} as { post: Post | null };
+
+    const { data } = useSuspenseFragment({ fragment, from: author.post });
+
+    expectTypeOf(data).branded.toEqualTypeOf<Post | null>();
+  });
 });

@@ -899,7 +899,7 @@ export class QueryManager<TStore> {
     include: InternalRefetchQueriesInclude = "active"
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    const queryNamesAndDocs = new Map<string | DocumentNode, boolean>();
+    const queryNamesAndDocs = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
     if (Array.isArray(include)) {
@@ -907,7 +907,7 @@ export class QueryManager<TStore> {
         if (typeof desc === "string") {
           queryNamesAndDocs.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndDocs.set(this.transform(desc), false);
+          queryNamesAndDocs.set(print(this.transform(desc)), false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -936,11 +936,11 @@ export class QueryManager<TStore> {
         if (
           include === "active" ||
           (queryName && queryNamesAndDocs.has(queryName)) ||
-          (document && queryNamesAndDocs.has(document))
+          (document && queryNamesAndDocs.has(print(document)))
         ) {
           queries.set(queryId, oq);
           if (queryName) queryNamesAndDocs.set(queryName, true);
-          if (document) queryNamesAndDocs.set(document, true);
+          if (document) queryNamesAndDocs.set(print(document), true);
         }
       }
     });
@@ -973,9 +973,7 @@ export class QueryManager<TStore> {
       queryNamesAndDocs.forEach((included, nameOrDoc) => {
         if (!included) {
           invariant.warn(
-            typeof nameOrDoc === "string" ?
-              `Unknown query named "%s" requested in refetchQueries options.include array`
-            : `Unknown query %o requested in refetchQueries options.include array`,
+            `Unknown query %s requested in refetchQueries options.include array`,
             nameOrDoc
           );
         }

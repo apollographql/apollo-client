@@ -5075,7 +5075,7 @@ describe("QueryManager", () => {
           (result) => {
             expect(result.data).toEqual(secondReqData);
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              'Unknown query named "%s" requested in refetchQueries options.include array',
+              'Unknown query %s requested in refetchQueries options.include array',
               "fakeQuery"
             );
           }
@@ -5148,7 +5148,7 @@ describe("QueryManager", () => {
           })
           .then(() => {
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              'Unknown query named "%s" requested in refetchQueries options.include array',
+              'Unknown query %s requested in refetchQueries options.include array',
               "getAuthors"
             );
           })

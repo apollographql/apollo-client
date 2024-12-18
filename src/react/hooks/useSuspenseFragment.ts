@@ -23,7 +23,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | string;
+  from: StoreObject | Reference | string | null;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
@@ -39,12 +39,51 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 
+const NULL_PLACEHOLDER = [] as unknown as [
+  FragmentKey,
+  Promise<MaybeMasked<any> | null>,
+];
+
+export function useSuspenseFragment<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: {};
+  }
+): UseSuspenseFragmentResult<TData>;
+
+export function useSuspenseFragment<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: null;
+  }
+): UseSuspenseFragmentResult<null>;
+
+export function useSuspenseFragment<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: {} | null;
+  }
+): UseSuspenseFragmentResult<TData | null>;
+
+export function useSuspenseFragment<
+  TData,
+  TVariables extends OperationVariables,
+>(
+  options: UseSuspenseFragmentOptions<TData, TVariables>
+): UseSuspenseFragmentResult<TData>;
+
 export function useSuspenseFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables>
-): UseSuspenseFragmentResult<TData> {
+): UseSuspenseFragmentResult<TData | null> {
   return wrapHook(
     "useSuspenseFragment",
     _useSuspenseFragment,
@@ -57,35 +96,41 @@ function _useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables>
-): UseSuspenseFragmentResult<TData> {
+): UseSuspenseFragmentResult<TData | null> {
   const client = useApolloClient(options.client);
   const { from } = options;
   const { cache } = client;
 
   const id = useMemo(
-    () => (typeof from === "string" ? from : cache.identify(from)),
+    () =>
+      typeof from === "string" ? from
+      : from === null ? null
+      : cache.identify(from),
     [cache, from]
-  )!;
+  ) as string | null;
 
-  const fragmentRef = getSuspenseCache(client).getFragmentRef<
-    TData,
-    TVariables
-  >([id, options.fragment, canonicalStringify(options.variables)], client, {
-    ...options,
-    from: id,
-  });
+  const fragmentRef =
+    id === null ? null : (
+      getSuspenseCache(client).getFragmentRef<TData, TVariables>(
+        [id, options.fragment, canonicalStringify(options.variables)],
+        client,
+        { ...options, from: id }
+      )
+    );
 
   let [current, setPromise] = React.useState<
-    [FragmentKey, Promise<MaybeMasked<TData>>]
-  >([fragmentRef.key, fragmentRef.promise]);
-
-  if (current[0] !== fragmentRef.key) {
-    // eslint-disable-next-line react-compiler/react-compiler
-    current[0] = fragmentRef.key;
-    current[1] = fragmentRef.promise;
-  }
+    [FragmentKey, Promise<MaybeMasked<TData> | null>]
+  >(
+    fragmentRef === null ? NULL_PLACEHOLDER : (
+      [fragmentRef.key, fragmentRef.promise]
+    )
+  );
 
   React.useEffect(() => {
+    if (fragmentRef === null) {
+      return;
+    }
+
     const dispose = fragmentRef.retain();
     const removeListener = fragmentRef.listen((promise) => {
       setPromise([fragmentRef.key, promise]);
@@ -97,9 +142,17 @@ function _useSuspenseFragment<
     };
   }, [fragmentRef]);
 
-  let promise = current[1];
+  if (fragmentRef === null) {
+    return { data: null };
+  }
 
-  const data = __use(promise);
+  if (current[0] !== fragmentRef!.key) {
+    // eslint-disable-next-line react-compiler/react-compiler
+    current[0] = fragmentRef!.key;
+    current[1] = fragmentRef!.promise;
+  }
+
+  const data = __use(current[1]);
 
   return { data };
 }

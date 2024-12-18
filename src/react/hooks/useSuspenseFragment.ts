@@ -146,10 +146,10 @@ function _useSuspenseFragment<
     return { data: null };
   }
 
-  if (current[0] !== fragmentRef!.key) {
+  if (current[0] !== fragmentRef.key) {
     // eslint-disable-next-line react-compiler/react-compiler
-    current[0] = fragmentRef!.key;
-    current[1] = fragmentRef!.promise;
+    current[0] = fragmentRef.key;
+    current[1] = fragmentRef.promise;
   }
 
   const data = __use(current[1]);

@@ -7,11 +7,11 @@ on:
   workflow_dispatch:
     inputs:
       branches:
-        description: "Branch to test"
+        description: "Branches to test"
         required: true
         default: '["main", "release-3.13", "release-4.0"]'
       tags:
-        description: "React and React-DOM tag"
+        description: "React and React-DOM versions"
         required: true
         default: '["canary", "experimental"]'
 jobs:

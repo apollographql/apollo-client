@@ -28,7 +28,7 @@ jobs:
       - uses: bahmutov/npm-install@v1
       - run: |
           npm install react@${{ matrix.tag }} react-dom@${{ matrix.tag }}
-          npm ls react react-dom
+          npm ls react react-dom || true #print installed React versions, don't fail CI because of peerDep problems
       # tests can be flaky, this runs only once a day and we want to minimize false negatives - retry up to three times
       - run: |
           parallel --line-buffer -j 1 --retries 3 'npm test -- --logHeapUsage --selectProjects ' ::: 'ReactDOM 19'

@@ -1019,6 +1019,67 @@ test("returns cached value when `from` changes from `null` to non-null value", a
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("returns null value when `from` changes from non-null value to `null`", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+    ({ id }) =>
+      useSuspenseFragment({
+        fragment,
+        from: id === null ? null : { __typename: "Item", id },
+      }),
+    {
+      initialProps: { id: 1 as null | number },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    });
+  }
+
+  await rerender({ id: null });
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toBeNull();
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("suspends until cached value is available when `from` changes from `null` to non-null value", async () => {
   interface ItemFragment {
     __typename: "Item";

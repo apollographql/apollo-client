@@ -813,6 +813,19 @@ interface FieldSpecifier {
     variables?: Record<string, any>;
 }
 
+// @public (undocumented)
+type FragmentCacheKey = [
+cacheId: string,
+fragment: DocumentNode,
+stringifiedVariables: string
+];
+
+// @public (undocumented)
+interface FragmentKey {
+    // (undocumented)
+    __fragmentKey?: string;
+}
+
 // @public
 interface FragmentMap {
     // (undocumented)
@@ -821,6 +834,41 @@ interface FragmentMap {
 
 // @public (undocumented)
 type FragmentMatcher = (rootValue: any, typeCondition: string, context: any) => boolean;
+
+// @public (undocumented)
+class FragmentReference<TData = unknown, TVariables = Record<string, unknown>> {
+    // Warning: (ae-forgotten-export) The symbol "FragmentReferenceOptions" needs to be exported by the entry point index.d.ts
+    constructor(client: ApolloClient<any>, watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
+        from: string;
+    }, options: FragmentReferenceOptions);
+    // Warning: (ae-forgotten-export) The symbol "FragmentKey" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    readonly key: FragmentKey;
+    // Warning: (ae-forgotten-export) The symbol "Listener_2" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    listen(listener: Listener_2<MaybeMasked<TData>>): () => void;
+    // (undocumented)
+    readonly observable: Observable<WatchFragmentResult<TData>>;
+    // Warning: (ae-forgotten-export) The symbol "FragmentRefPromise" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    promise: FragmentRefPromise<MaybeMasked<TData>>;
+    // (undocumented)
+    retain(): () => void;
+}
+
+// @public (undocumented)
+interface FragmentReferenceOptions {
+    // (undocumented)
+    onDispose?: () => void;
+}
+
+// Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type FragmentRefPromise<TData> = PromiseWithState<TData>;
 
 // @public (undocumented)
 type FragmentType<TData> = [
@@ -1041,6 +1089,9 @@ type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never ? true
 
 // @public (undocumented)
 type Listener<TData> = (promise: QueryRefPromise<TData>) => void;
+
+// @public (undocumented)
+type Listener_2<TData> = (promise: FragmentRefPromise<TData>) => void;
 
 // @public (undocumented)
 class LocalState<TCacheShape> {
@@ -1771,8 +1822,6 @@ export interface QueryReference<TData = unknown, TVariables = unknown> extends Q
     toPromise?: unknown;
 }
 
-// Warning: (ae-forgotten-export) The symbol "PromiseWithState" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<MaybeMasked<TData>>>;
 
@@ -2004,6 +2053,13 @@ class SuspenseCache {
     constructor(options?: SuspenseCacheOptions);
     // (undocumented)
     add(cacheKey: CacheKey, queryRef: InternalQueryReference<unknown>): void;
+    // Warning: (ae-forgotten-export) The symbol "FragmentCacheKey" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "FragmentReference" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    getFragmentRef<TData, TVariables>(cacheKey: FragmentCacheKey, client: ApolloClient<any>, options: WatchFragmentOptions<TData, TVariables> & {
+        from: string;
+    }): FragmentReference<TData, TVariables>;
     // (undocumented)
     getQueryRef<TData = any>(cacheKey: CacheKey, createObservable: () => ObservableQuery<TData>): InternalQueryReference<TData>;
 }
@@ -2255,6 +2311,41 @@ interface UseReadQueryResult<TData = unknown> {
     networkStatus: NetworkStatus;
 }
 
+// Warning: (ae-forgotten-export) The symbol "UseSuspenseFragmentOptions" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "UseSuspenseFragmentResult" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+function useSuspenseFragment<TData, TVariables extends OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: {};
+}): UseSuspenseFragmentResult<TData>;
+
+// @public (undocumented)
+function useSuspenseFragment<TData, TVariables extends OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: null;
+}): UseSuspenseFragmentResult<null>;
+
+// @public (undocumented)
+function useSuspenseFragment<TData, TVariables extends OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: {} | null;
+}): UseSuspenseFragmentResult<TData | null>;
+
+// @public (undocumented)
+function useSuspenseFragment<TData, TVariables extends OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables>): UseSuspenseFragmentResult<TData>;
+
+// @public (undocumented)
+interface UseSuspenseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer<TData>, NoInfer<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
+    client?: ApolloClient<any>;
+    // (undocumented)
+    from: StoreObject | Reference | string | null;
+    // (undocumented)
+    optimistic?: boolean;
+}
+
+// @public (undocumented)
+type UseSuspenseFragmentResult<TData> = {
+    data: MaybeMasked<TData>;
+};
+
 // Warning: (ae-forgotten-export) The symbol "SuspenseQueryHookOptions" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "UseSuspenseQueryResult" needs to be exported by the entry point index.d.ts
 //
@@ -2382,6 +2473,10 @@ interface WrappableHooks {
     //
     // (undocumented)
     useReadQuery: typeof useReadQuery;
+    // Warning: (ae-forgotten-export) The symbol "useSuspenseFragment" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    useSuspenseFragment: typeof useSuspenseFragment;
     // Warning: (ae-forgotten-export) The symbol "useSuspenseQuery" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

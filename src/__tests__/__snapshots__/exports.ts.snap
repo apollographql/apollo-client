@@ -67,6 +67,7 @@ Array [
   "useReactiveVar",
   "useReadQuery",
   "useSubscription",
+  "useSuspenseFragment",
   "useSuspenseQuery",
 ]
 `;
@@ -293,6 +294,7 @@ Array [
   "useReactiveVar",
   "useReadQuery",
   "useSubscription",
+  "useSuspenseFragment",
   "useSuspenseQuery",
 ]
 `;
@@ -338,6 +340,7 @@ Array [
   "useReactiveVar",
   "useReadQuery",
   "useSubscription",
+  "useSuspenseFragment",
   "useSuspenseQuery",
 ]
 `;

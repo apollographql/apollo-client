@@ -1019,6 +1019,94 @@ test("returns cached value when `from` changes from `null` to non-null value", a
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("suspends until cached value is available when `from` changes from `null` to non-null value", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  const { takeRender, render, replaceSnapshot } =
+    createDefaultRenderStream<ItemFragment | null>();
+  const { SuspenseFallback } = createDefaultTrackedComponents();
+
+  function App({ id }: { id: number | null }) {
+    useTrackRenders();
+    const result = useSuspenseFragment({
+      fragment,
+      from: id === null ? null : { __typename: "Item", id },
+    });
+
+    replaceSnapshot({ result });
+
+    return null;
+  }
+
+  using _disabledAct = disableActEnvironment();
+  const { rerender } = await render(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App id={null} />
+    </Suspense>,
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({ data: null });
+  }
+
+  await rerender(
+    <Suspense fallback={<SuspenseFallback />}>
+      <App id={1} />
+    </Suspense>
+  );
+
+  {
+    const { renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([SuspenseFallback]);
+  }
+
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    },
+  });
+
+  {
+    const { snapshot, renderedComponents } = await takeRender();
+
+    expect(renderedComponents).toStrictEqual([App]);
+    expect(snapshot.result).toEqual({
+      data: {
+        __typename: "Item",
+        id: 1,
+        text: "Item #1",
+      },
+    });
+  }
+
+  await expect(takeRender).not.toRerender();
+});
+
 test("returns masked fragment when data masking is enabled", async () => {
   type Post = {
     __typename: "Post";

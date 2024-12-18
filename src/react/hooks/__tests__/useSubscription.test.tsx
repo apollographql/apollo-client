@@ -12,7 +12,7 @@ import {
 import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink } from "../../../testing";
+import { MockSubscriptionLink, wait } from "../../../testing";
 import { useSubscription } from "../useSubscription";
 import { spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
@@ -1961,6 +1961,7 @@ describe("ignoreResults", () => {
       }
     );
     if (!IS_REACT_17) {
+      await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
     }
 
@@ -2034,6 +2035,7 @@ describe("ignoreResults", () => {
       }
     );
     if (!IS_REACT_17) {
+      await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
     }
 

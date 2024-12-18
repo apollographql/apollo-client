@@ -5,19 +5,23 @@ on:
   schedule:
     - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      branches:
+        description: "Branch to test"
+        required: true
+        default: '["main", "release-3.13", "release-4.0"]'
+      tags:
+        description: "React and React-DOM tag"
+        required: true
+        default: '["canary", "experimental"]'
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        tag:
-          - canary
-          - experimental
-        branch:
-          - main
-          - release-3.13
-          - release-4.0
+        tag: ${{ fromJson(github.event_name == 'workflow_dispatch' && inputs.tags || '["canary", "experimental"]') }}
+        branch: ${{ fromJson(github.event_name == 'workflow_dispatch' && inputs.branches || '["main", "release-3.13", "release-4.0"]') }}
     steps:
       - uses: actions/checkout@v4
         with:

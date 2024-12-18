@@ -1,6 +1,6 @@
 # a GitHub Action that once a day runs all tests from `main` and `release-*` branches
 # with the latest `canary` and `experimental` release of `react` and `react-dom`
-
+name: Scheduled React Canary Test
 on:
   schedule:
     - cron: "0 0 * * *"
@@ -14,12 +14,21 @@ jobs:
         tag:
           - canary
           - experimental
+        branch:
+          - main
+          - release-3.13
+          - release-4.0
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
       - uses: bahmutov/npm-install@v1
-      - run: npm install react@${{ matrix.tag }} react-dom@${{ matrix.tag }}
+      - run: |
+          npm install react@${{ matrix.tag }} react-dom@${{ matrix.tag }}
+          npm ls react react-dom
       # tests can be flaky, this runs only once a day and we want to minimize false negatives - retry up to three times
-      - run: "parallel --line-buffer -j 1 --retries 3 'npm run test:ci -- --selectProjects ' ::: 'ReactDOM 19'"
+      - run: |
+          parallel --line-buffer -j 1 --retries 3 'npm test -- --logHeapUsage --selectProjects ' ::: 'ReactDOM 19'

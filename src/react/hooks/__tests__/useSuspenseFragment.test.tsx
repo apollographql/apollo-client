@@ -958,6 +958,67 @@ test("returns null if `from` is `null`", async () => {
   expect(data).toBeNull();
 });
 
+test("returns cached value when `from` changes from `null` to non-null value", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const client = new ApolloClient({ cache: new InMemoryCache() });
+
+  client.writeFragment({
+    fragment,
+    data: {
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+    ({ id }) =>
+      useSuspenseFragment({
+        fragment,
+        from: id === null ? null : { __typename: "Item", id },
+      }),
+    {
+      initialProps: { id: null as null | number },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toBeNull();
+  }
+
+  await rerender({ id: 1 });
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({
+      __typename: "Item",
+      id: 1,
+      text: "Item #1",
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 test("returns masked fragment when data masking is enabled", async () => {
   type Post = {
     __typename: "Post";

@@ -2553,6 +2553,129 @@ describe("ObservableQuery", () => {
       });
     });
 
+    it("handles multiple calls to getCurrentResult without losing data while using `@defer`", async () => {
+      const query = gql`
+        {
+          greeting {
+            message
+            ... on Greeting @defer {
+              recipient {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const link = new MockSubscriptionLink();
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache(),
+      });
+
+      const obs = client.watchQuery({ query });
+      const stream = new ObservableStream(obs);
+
+      setTimeout(() => {
+        link.simulateResult({
+          result: {
+            data: {
+              greeting: {
+                message: "Hello world",
+                __typename: "Greeting",
+              },
+            },
+            hasNext: true,
+          },
+        });
+      });
+
+      {
+        const result = await stream.takeNext();
+        expect(result.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
+        });
+      }
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+      // second call to `getCurrentResult`
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          __typename: "Greeting",
+        },
+      });
+
+      setTimeout(() => {
+        link.simulateResult(
+          {
+            result: {
+              incremental: [
+                {
+                  data: {
+                    recipient: {
+                      name: "Alice",
+                      __typename: "Person",
+                    },
+                    __typename: "Greeting",
+                  },
+                  path: ["greeting"],
+                },
+              ],
+              hasNext: false,
+            },
+          },
+          true
+        );
+      });
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result.data).toEqual({
+          greeting: {
+            message: "Hello world",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
+            },
+            __typename: "Greeting",
+          },
+        });
+      }
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
+        },
+      });
+
+      expect(obs.getCurrentResult().data).toEqual({
+        greeting: {
+          message: "Hello world",
+          recipient: {
+            name: "Alice",
+            __typename: "Person",
+          },
+          __typename: "Greeting",
+        },
+      });
+    });
+
     {
       type Result = Partial<ApolloQueryResult<{ hello: string }>>;
 
@@ -3510,5 +3633,110 @@ test("handles changing variables in rapid succession before other request is com
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,
+  });
+});
+
+test("does not return partial cache data when `returnPartialData` is false and new variables are passed in", async () => {
+  const partialQuery = gql`
+    query MyCar($id: ID) {
+      car(id: $id) {
+        id
+        make
+      }
+    }
+  `;
+
+  const query = gql`
+    query MyCar($id: ID) {
+      car(id: $id) {
+        id
+        make
+        model
+      }
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink([
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            car: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
+          },
+        },
+      },
+    ]),
+  });
+
+  cache.writeQuery({
+    query,
+    variables: { id: 1 },
+    data: {
+      car: {
+        __typename: "Car",
+        id: 1,
+        make: "Ford",
+        model: "Pinto",
+      },
+    },
+  });
+
+  cache.writeQuery({
+    query: partialQuery,
+    variables: { id: 2 },
+    data: {
+      car: {
+        __typename: "Car",
+        id: 2,
+        make: "Ford",
+        model: "Bronco",
+      },
+    },
+  });
+
+  const observable = client.watchQuery({
+    query,
+    variables: { id: 1 },
+    returnPartialData: false,
+    notifyOnNetworkStatusChange: true,
+  });
+
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitValue({
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    data: {
+      car: { __typename: "Car", id: 1, make: "Ford", model: "Pinto" },
+    },
+  });
+
+  await observable.reobserve({ variables: { id: 2 } });
+
+  await expect(stream).toEmitValue({
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    data: undefined,
+  });
+
+  expect(observable.getCurrentResult()).toEqual({
+    loading: true,
+    networkStatus: NetworkStatus.setVariables,
+    data: undefined,
+  });
+
+  await expect(stream).toEmitValue({
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    data: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
+  });
+
+  expect(observable.getCurrentResult()).toEqual({
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    data: { __typename: "Car", id: 2, make: "Ford", model: "Bronco" },
   });
 });

@@ -5075,7 +5075,7 @@ describe("QueryManager", () => {
           (result) => {
             expect(result.data).toEqual(secondReqData);
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              'Unknown query named "%s" requested in refetchQueries options.include array',
+              "Unknown query %s requested in refetchQueries options.include array",
               "fakeQuery"
             );
           }
@@ -5148,7 +5148,7 @@ describe("QueryManager", () => {
           })
           .then(() => {
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              'Unknown query named "%s" requested in refetchQueries options.include array',
+              "Unknown query %s requested in refetchQueries options.include array",
               "getAuthors"
             );
           })
@@ -5233,6 +5233,161 @@ describe("QueryManager", () => {
       queryManager["queries"].forEach((_, queryId) => {
         expect(queryId).not.toContain("legacyOneTimeQuery");
       });
+
+      await expect(stream).not.toEmitAnything();
+    });
+
+    it("also works with a query document node", async () => {
+      const mutation = gql`
+        mutation changeAuthorName($id: ID!) {
+          changeAuthorName(newName: "Jack Smith", id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+      const mutationVariables = { id: "2345" };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data },
+          delay: 10,
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+          delay: 100,
+        },
+        {
+          request: { query: mutation, variables: mutationVariables },
+          result: { data: mutationData },
+          delay: 10,
+        }
+      );
+      const observable = queryManager.watchQuery<any>({ query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitMatchedValue({ data });
+
+      await queryManager.mutate({
+        mutation,
+        variables: mutationVariables,
+        refetchQueries: [query],
+      });
+
+      await expect(stream).toEmitMatchedValue(
+        { data: secondReqData },
+        { timeout: 150 }
+      );
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+
+      await wait(10);
+
+
+      await expect(stream).not.toEmitAnything();
+    });
+
+    it("also works with different references of a same query document node", async () => {
+      const mutation = gql`
+        mutation changeAuthorName($id: ID!) {
+          changeAuthorName(newName: "Jack Smith", id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+      const mutationVariables = { id: "2345" };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data },
+          delay: 10,
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+          delay: 100,
+        },
+        {
+          request: { query: mutation, variables: mutationVariables },
+          result: { data: mutationData },
+          delay: 10,
+        }
+      );
+      const observable = queryManager.watchQuery<any>({ query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitMatchedValue({ data });
+
+      await queryManager.mutate({
+        mutation,
+        variables: mutationVariables,
+        // spread the query into a new object to simulate multiple instances
+        refetchQueries: [{ ...query }],
+      });
+
+      await expect(stream).toEmitMatchedValue(
+        { data: secondReqData },
+        { timeout: 150 }
+      );
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+
 
       await expect(stream).not.toEmitAnything();
     });

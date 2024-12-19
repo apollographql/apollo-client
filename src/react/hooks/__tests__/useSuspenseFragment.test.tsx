@@ -23,7 +23,7 @@ import {
 import { spyOnConsole } from "../../../testing/internal";
 import { renderHook } from "@testing-library/react";
 import { InvariantError } from "ts-invariant";
-import { MockedProvider } from "../../../testing";
+import { MockedProvider, wait } from "../../../testing";
 import { expectTypeOf } from "expect-type";
 
 function createDefaultRenderStream<TData = unknown>() {
@@ -1454,6 +1454,116 @@ test("updates child fragments for cache updates to masked fields", async () => {
   }
 
   await expect(takeRender).not.toRerender();
+});
+
+test("tears down the subscription on unmount", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({ cache });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { unmount, takeSnapshot } = await renderHookToSnapshotStream(
+    () =>
+      useSuspenseFragment({ fragment, from: { __typename: "Item", id: 1 } }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({ __typename: "Item", id: 1, text: "Item #1" });
+  }
+
+  expect(cache["watches"].size).toBe(1);
+
+  unmount();
+  // We need to wait a tick since the cleanup is run in a setTimeout to
+  // prevent strict mode bugs.
+  await wait(0);
+
+  expect(cache["watches"].size).toBe(0);
+});
+
+test("tears down all watches when rendering multiple records", async () => {
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({ cache });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 2, text: "Item #2" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { unmount, rerender, takeSnapshot } = await renderHookToSnapshotStream(
+    ({ id }) =>
+      useSuspenseFragment({ fragment, from: { __typename: "Item", id } }),
+    {
+      initialProps: { id: 1 },
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({ __typename: "Item", id: 1, text: "Item #1" });
+  }
+
+  await rerender({ id: 2 });
+
+  {
+    const { data } = await takeSnapshot();
+
+    expect(data).toEqual({ __typename: "Item", id: 2, text: "Item #2" });
+  }
+
+  unmount();
+  // We need to wait a tick since the cleanup is run in a setTimeout to
+  // prevent strict mode bugs.
+  await wait(0);
+
+  expect(cache["watches"].size).toBe(0);
 });
 
 describe.skip("type tests", () => {

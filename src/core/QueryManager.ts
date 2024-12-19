@@ -1,6 +1,5 @@
 import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
-import { parse } from "graphql";
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
@@ -900,15 +899,19 @@ export class QueryManager<TStore> {
     include: InternalRefetchQueriesInclude = "active"
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
+    const queryNames = new Map<string, string | null>();
     const queryNamesAndQueryStrings = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
     if (Array.isArray(include)) {
       include.forEach((desc) => {
         if (typeof desc === "string") {
+          queryNames.set(desc, desc);
           queryNamesAndQueryStrings.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndQueryStrings.set(print(this.transform(desc)), false);
+          const queryString = print(this.transform(desc));
+          queryNames.set(queryString, getOperationName(desc));
+          queryNamesAndQueryStrings.set(queryString, false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -973,13 +976,7 @@ export class QueryManager<TStore> {
     if (__DEV__ && queryNamesAndQueryStrings.size) {
       queryNamesAndQueryStrings.forEach((included, nameOrQueryString) => {
         if (!included) {
-          const isQueryString =
-            nameOrQueryString.startsWith("query ") ||
-            nameOrQueryString.startsWith("{"); // Shorthand anonymous queries
-          const queryName =
-            isQueryString ?
-              getOperationName(parse(nameOrQueryString))
-            : nameOrQueryString;
+          const queryName = queryNames.get(nameOrQueryString);
 
           if (queryName) {
             invariant.warn(

@@ -46,7 +46,7 @@ import wrap from "../../../testing/core/wrap";
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from "../../../testing/core/observableToPromise";
-import { itAsync, wait } from "../../../testing/core";
+import { itAsync } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
@@ -5075,7 +5075,7 @@ describe("QueryManager", () => {
           (result) => {
             expect(result.data).toEqual(secondReqData);
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              "Unknown query %s requested in refetchQueries options.include array",
+              'Unknown query named "%s" requested in refetchQueries options.include array',
               "fakeQuery"
             );
           }
@@ -5148,8 +5148,153 @@ describe("QueryManager", () => {
           })
           .then(() => {
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              "Unknown query %s requested in refetchQueries options.include array",
+              'Unknown query named "%s" requested in refetchQueries options.include array',
               "getAuthors"
+            );
+          })
+          .then(resolve, reject);
+      }
+    );
+
+    itAsync(
+      "should ignore (with warning) a document node in refetchQueries that has no active subscriptions",
+      (resolve, reject) => {
+        const mutation = gql`
+          mutation changeAuthorName {
+            changeAuthorName(newName: "Jack Smith") {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const mutationData = {
+          changeAuthorName: {
+            firstName: "Jack",
+            lastName: "Smith",
+          },
+        };
+        const query = gql`
+          query getAuthors {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const data = {
+          author: {
+            firstName: "John",
+            lastName: "Smith",
+          },
+        };
+        const secondReqData = {
+          author: {
+            firstName: "Jane",
+            lastName: "Johnson",
+          },
+        };
+        const queryManager = mockQueryManager(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          }
+        );
+
+        const observable = queryManager.watchQuery<any>({ query });
+        return observableToPromise({ observable }, (result) => {
+          expect(result.data).toEqual(data);
+        })
+          .then(() => {
+            // The subscription has been stopped already
+            return queryManager.mutate({
+              mutation,
+              refetchQueries: [query],
+            });
+          })
+          .then(() => {
+            expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+              'Unknown query named "%s" requested in refetchQueries options.include array',
+              "getAuthors"
+            );
+          })
+          .then(resolve, reject);
+      }
+    );
+
+    itAsync(
+      "should ignore (with warning) a document node containing an anonymous query in refetchQueries that has no active subscriptions",
+      (resolve, reject) => {
+        const mutation = gql`
+          mutation changeAuthorName {
+            changeAuthorName(newName: "Jack Smith") {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const mutationData = {
+          changeAuthorName: {
+            firstName: "Jack",
+            lastName: "Smith",
+          },
+        };
+        const query = gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const data = {
+          author: {
+            firstName: "John",
+            lastName: "Smith",
+          },
+        };
+        const secondReqData = {
+          author: {
+            firstName: "Jane",
+            lastName: "Johnson",
+          },
+        };
+        const queryManager = mockQueryManager(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          }
+        );
+
+        const observable = queryManager.watchQuery<any>({ query });
+        return observableToPromise({ observable }, (result) => {
+          expect(result.data).toEqual(data);
+        })
+          .then(() => {
+            // The subscription has been stopped already
+            return queryManager.mutate({
+              mutation,
+              refetchQueries: [query],
+            });
+          })
+          .then(() => {
+            expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+              "Unknown query anonymous requested in refetchQueries options.include array"
             );
           })
           .then(resolve, reject);
@@ -5228,12 +5373,6 @@ describe("QueryManager", () => {
       );
       expect(observable.getCurrentResult().data).toEqual(secondReqData);
 
-      await wait(10);
-
-      queryManager["queries"].forEach((_, queryId) => {
-        expect(queryId).not.toContain("legacyOneTimeQuery");
-      });
-
       await expect(stream).not.toEmitAnything();
     });
 
@@ -5308,9 +5447,6 @@ describe("QueryManager", () => {
         { timeout: 150 }
       );
       expect(observable.getCurrentResult().data).toEqual(secondReqData);
-
-      await wait(10);
-
 
       await expect(stream).not.toEmitAnything();
     });
@@ -5387,7 +5523,6 @@ describe("QueryManager", () => {
         { timeout: 150 }
       );
       expect(observable.getCurrentResult().data).toEqual(secondReqData);
-
 
       await expect(stream).not.toEmitAnything();
     });

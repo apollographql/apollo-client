@@ -1,5 +1,6 @@
 import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
+import { parse } from "graphql";
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
@@ -899,15 +900,15 @@ export class QueryManager<TStore> {
     include: InternalRefetchQueriesInclude = "active"
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    const queryNamesAndDocs = new Map<string, boolean>();
+    const queryNamesAndQueryStrings = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
     if (Array.isArray(include)) {
       include.forEach((desc) => {
         if (typeof desc === "string") {
-          queryNamesAndDocs.set(desc, false);
+          queryNamesAndQueryStrings.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndDocs.set(print(this.transform(desc)), false);
+          queryNamesAndQueryStrings.set(print(this.transform(desc)), false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -935,12 +936,12 @@ export class QueryManager<TStore> {
 
         if (
           include === "active" ||
-          (queryName && queryNamesAndDocs.has(queryName)) ||
-          (document && queryNamesAndDocs.has(print(document)))
+          (queryName && queryNamesAndQueryStrings.has(queryName)) ||
+          (document && queryNamesAndQueryStrings.has(print(document)))
         ) {
           queries.set(queryId, oq);
-          if (queryName) queryNamesAndDocs.set(queryName, true);
-          if (document) queryNamesAndDocs.set(print(document), true);
+          if (queryName) queryNamesAndQueryStrings.set(queryName, true);
+          if (document) queryNamesAndQueryStrings.set(print(document), true);
         }
       }
     });
@@ -969,13 +970,27 @@ export class QueryManager<TStore> {
       });
     }
 
-    if (__DEV__ && queryNamesAndDocs.size) {
-      queryNamesAndDocs.forEach((included, nameOrDoc) => {
+    if (__DEV__ && queryNamesAndQueryStrings.size) {
+      queryNamesAndQueryStrings.forEach((included, nameOrQueryString) => {
         if (!included) {
-          invariant.warn(
-            `Unknown query %s requested in refetchQueries options.include array`,
-            nameOrDoc
-          );
+          const isQueryString =
+            nameOrQueryString.startsWith("query ") ||
+            nameOrQueryString.startsWith("{"); // Shorthand anonymous queries
+          const queryName =
+            isQueryString ?
+              getOperationName(parse(nameOrQueryString))
+            : nameOrQueryString;
+
+          if (queryName) {
+            invariant.warn(
+              `Unknown query named "%s" requested in refetchQueries options.include array`,
+              queryName
+            );
+          } else {
+            invariant.warn(
+              `Unknown query anonymous requested in refetchQueries options.include array`
+            );
+          }
         }
       });
     }

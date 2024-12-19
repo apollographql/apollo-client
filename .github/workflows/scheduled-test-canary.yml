@@ -1,0 +1,38 @@
+# a GitHub Action that once a day runs all tests from `main` and `release-*` branches
+# with the latest `canary` and `experimental` release of `react` and `react-dom`
+name: Scheduled React Canary Test
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    inputs:
+      branches:
+        description: "Branches to test"
+        required: true
+        default: '["main", "release-3.13", "release-4.0"]'
+      tags:
+        description: "React and React-DOM versions"
+        required: true
+        default: '["canary", "experimental"]'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJson(github.event_name == 'workflow_dispatch' && inputs.tags || '["canary", "experimental"]') }}
+        branch: ${{ fromJson(github.event_name == 'workflow_dispatch' && inputs.branches || '["main", "release-3.13", "release-4.0"]') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - uses: bahmutov/npm-install@v1
+      - run: |
+          npm install react@${{ matrix.tag }} react-dom@${{ matrix.tag }}
+      # tests can be flaky, this runs only once a day and we want to minimize false negatives - retry up to three times
+      - run: |
+          node -e 'console.log("\n\nReact %s, React-DOM %s\n\n", require("react").version, require("react-dom").version)'
+          parallel --line-buffer -j 1 --retries 3 'npm test -- --logHeapUsage --selectProjects ' ::: 'ReactDOM 19'

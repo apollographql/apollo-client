@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.12.4
+
+### Patch Changes
+
+- [#12236](https://github.com/apollographql/apollo-client/pull/12236) [`4334d30`](https://github.com/apollographql/apollo-client/commit/4334d30cc3fbedb4f736eff196c49a9f20a46704) Thanks [@charpeni](https://github.com/charpeni)! - Fix an issue with `refetchQueries` where comparing `DocumentNode`s internally by references could lead to an unknown query, even though the `DocumentNode` was indeed an active query—with a different reference.
+
 ## 3.12.3
 
 ### Patch Changes

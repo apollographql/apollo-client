@@ -862,6 +862,8 @@ class FragmentReference<TData = unknown, TVariables = Record<string, unknown>> {
 // @public (undocumented)
 interface FragmentReferenceOptions {
     // (undocumented)
+    autoDisposeTimeoutMs?: number;
+    // (undocumented)
     onDispose?: () => void;
 }
 

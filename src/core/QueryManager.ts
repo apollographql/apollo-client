@@ -988,7 +988,7 @@ export class QueryManager<TStore> {
             );
           } else {
             invariant.warn(
-              `Unknown query anonymous requested in refetchQueries options.include array`
+              `Unknown anonymous query requested in refetchQueries options.include array`
             );
           }
         }

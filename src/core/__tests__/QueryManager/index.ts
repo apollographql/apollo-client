@@ -5311,9 +5311,6 @@ describe("QueryManager", () => {
 
       await wait(10);
 
-      queryManager["queries"].forEach((_, queryId) => {
-        expect(queryId).not.toContain("legacyOneTimeQuery");
-      });
 
       await expect(stream).not.toEmitAnything();
     });

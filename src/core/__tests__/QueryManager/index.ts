@@ -5294,7 +5294,7 @@ describe("QueryManager", () => {
           })
           .then(() => {
             expect(consoleWarnSpy).toHaveBeenLastCalledWith(
-              "Unknown query anonymous requested in refetchQueries options.include array"
+              "Unknown anonymous query requested in refetchQueries options.include array"
             );
           })
           .then(resolve, reject);

@@ -899,15 +899,19 @@ export class QueryManager<TStore> {
     include: InternalRefetchQueriesInclude = "active"
   ) {
     const queries = new Map<string, ObservableQuery<any>>();
-    const queryNamesAndDocs = new Map<string | DocumentNode, boolean>();
+    const queryNames = new Map<string, string | null>();
+    const queryNamesAndQueryStrings = new Map<string, boolean>();
     const legacyQueryOptions = new Set<QueryOptions>();
 
     if (Array.isArray(include)) {
       include.forEach((desc) => {
         if (typeof desc === "string") {
-          queryNamesAndDocs.set(desc, false);
+          queryNames.set(desc, desc);
+          queryNamesAndQueryStrings.set(desc, false);
         } else if (isDocumentNode(desc)) {
-          queryNamesAndDocs.set(this.transform(desc), false);
+          const queryString = print(this.transform(desc));
+          queryNames.set(queryString, getOperationName(desc));
+          queryNamesAndQueryStrings.set(queryString, false);
         } else if (isNonNullObject(desc) && desc.query) {
           legacyQueryOptions.add(desc);
         }
@@ -935,12 +939,12 @@ export class QueryManager<TStore> {
 
         if (
           include === "active" ||
-          (queryName && queryNamesAndDocs.has(queryName)) ||
-          (document && queryNamesAndDocs.has(document))
+          (queryName && queryNamesAndQueryStrings.has(queryName)) ||
+          (document && queryNamesAndQueryStrings.has(print(document)))
         ) {
           queries.set(queryId, oq);
-          if (queryName) queryNamesAndDocs.set(queryName, true);
-          if (document) queryNamesAndDocs.set(document, true);
+          if (queryName) queryNamesAndQueryStrings.set(queryName, true);
+          if (document) queryNamesAndQueryStrings.set(print(document), true);
         }
       }
     });
@@ -969,15 +973,21 @@ export class QueryManager<TStore> {
       });
     }
 
-    if (__DEV__ && queryNamesAndDocs.size) {
-      queryNamesAndDocs.forEach((included, nameOrDoc) => {
+    if (__DEV__ && queryNamesAndQueryStrings.size) {
+      queryNamesAndQueryStrings.forEach((included, nameOrQueryString) => {
         if (!included) {
-          invariant.warn(
-            typeof nameOrDoc === "string" ?
-              `Unknown query named "%s" requested in refetchQueries options.include array`
-            : `Unknown query %o requested in refetchQueries options.include array`,
-            nameOrDoc
-          );
+          const queryName = queryNames.get(nameOrQueryString);
+
+          if (queryName) {
+            invariant.warn(
+              `Unknown query named "%s" requested in refetchQueries options.include array`,
+              queryName
+            );
+          } else {
+            invariant.warn(
+              `Unknown anonymous query requested in refetchQueries options.include array`
+            );
+          }
         }
       });
     }

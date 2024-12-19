@@ -20,11 +20,12 @@ import {
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { spyOnConsole } from "../../../testing/internal";
-import { renderHook } from "@testing-library/react";
+import { renderAsync, spyOnConsole } from "../../../testing/internal";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { InvariantError } from "ts-invariant";
-import { MockedProvider, wait } from "../../../testing";
+import { MockedProvider, MockSubscriptionLink, wait } from "../../../testing";
 import { expectTypeOf } from "expect-type";
+import userEvent from "@testing-library/user-event";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
@@ -1564,6 +1565,220 @@ test("tears down all watches when rendering multiple records", async () => {
   await wait(0);
 
   expect(cache["watches"].size).toBe(0);
+});
+
+test("tears down watches after default autoDisposeTimeoutMs if component never renders again after suspending", async () => {
+  jest.useFakeTimers();
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const cache = new InMemoryCache();
+  const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+  const link = new MockSubscriptionLink();
+  const client = new ApolloClient({ link, cache });
+
+  function App() {
+    const [showItem, setShowItem] = React.useState(true);
+
+    return (
+      <ApolloProvider client={client}>
+        <button onClick={() => setShowItem(false)}>Hide item</button>
+        {showItem && (
+          <Suspense fallback="Loading item...">
+            <Item />
+          </Suspense>
+        )}
+      </ApolloProvider>
+    );
+  }
+
+  function Item() {
+    const { data } = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id: 1 },
+    });
+
+    return <span>{data.text}</span>;
+  }
+
+  await renderAsync(<App />);
+
+  // Ensure <Greeting /> suspends immediately
+  expect(screen.getByText("Loading item...")).toBeInTheDocument();
+
+  // Hide the greeting before it finishes loading data
+  await act(() => user.click(screen.getByText("Hide item")));
+
+  expect(screen.queryByText("Loading item...")).not.toBeInTheDocument();
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  // clear the microtask queue
+  await act(() => Promise.resolve());
+
+  expect(cache["watches"].size).toBe(1);
+
+  jest.advanceTimersByTime(30_000);
+
+  expect(cache["watches"].size).toBe(0);
+
+  jest.useRealTimers();
+});
+
+test("tears down watches after configured autoDisposeTimeoutMs if component never renders again after suspending", async () => {
+  jest.useFakeTimers();
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+  const link = new MockSubscriptionLink();
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({
+    link,
+    cache,
+    defaultOptions: {
+      react: {
+        suspense: {
+          autoDisposeTimeoutMs: 5000,
+        },
+      },
+    },
+  });
+
+  function App() {
+    const [showItem, setShowItem] = React.useState(true);
+
+    return (
+      <ApolloProvider client={client}>
+        <button onClick={() => setShowItem(false)}>Hide item</button>
+        {showItem && (
+          <Suspense fallback="Loading item...">
+            <Item />
+          </Suspense>
+        )}
+      </ApolloProvider>
+    );
+  }
+
+  function Item() {
+    const { data } = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id: 1 },
+    });
+
+    return <span>{data.text}</span>;
+  }
+
+  await renderAsync(<App />);
+
+  // Ensure <Greeting /> suspends immediately
+  expect(screen.getByText("Loading item...")).toBeInTheDocument();
+
+  // Hide the greeting before it finishes loading data
+  await act(() => user.click(screen.getByText("Hide item")));
+
+  expect(screen.queryByText("Loading item...")).not.toBeInTheDocument();
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  // clear the microtask queue
+  await act(() => Promise.resolve());
+
+  expect(cache["watches"].size).toBe(1);
+
+  jest.advanceTimersByTime(5000);
+
+  expect(cache["watches"].size).toBe(0);
+
+  jest.useRealTimers();
+});
+
+test("cancels autoDisposeTimeoutMs if the component renders before timer finishes", async () => {
+  jest.useFakeTimers();
+  interface ItemFragment {
+    __typename: "Item";
+    id: number;
+    text: string;
+  }
+
+  const fragment: TypedDocumentNode<ItemFragment> = gql`
+    fragment ItemFragment on Item {
+      id
+      text
+    }
+  `;
+
+  const link = new MockSubscriptionLink();
+  const cache = new InMemoryCache();
+  const client = new ApolloClient({ link, cache });
+
+  function App() {
+    return (
+      <ApolloProvider client={client}>
+        <Suspense fallback="Loading item...">
+          <Item />
+        </Suspense>
+      </ApolloProvider>
+    );
+  }
+
+  function Item() {
+    const { data } = useSuspenseFragment({
+      fragment,
+      from: { __typename: "Item", id: 1 },
+    });
+
+    return <span>{data.text}</span>;
+  }
+
+  await renderAsync(<App />);
+
+  // Ensure <Greeting /> suspends immediately
+  expect(screen.getByText("Loading item...")).toBeInTheDocument();
+
+  client.writeFragment({
+    fragment,
+    data: { __typename: "Item", id: 1, text: "Item #1" },
+  });
+
+  // clear the microtask queue
+  await act(() => Promise.resolve());
+
+  await waitFor(() => {
+    expect(screen.getByText("Item #1")).toBeInTheDocument();
+  });
+
+  jest.advanceTimersByTime(30_000);
+
+  expect(cache["watches"].size).toBe(1);
+
+  jest.useRealTimers();
 });
 
 describe.skip("type tests", () => {

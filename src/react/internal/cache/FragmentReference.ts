@@ -20,6 +20,7 @@ type FragmentRefPromise<TData> = PromiseWithState<TData>;
 type Listener<TData> = (promise: FragmentRefPromise<TData>) => void;
 
 interface FragmentReferenceOptions {
+  autoDisposeTimeoutMs?: number;
   onDispose?: () => void;
 }
 
@@ -36,6 +37,7 @@ export class FragmentReference<
 
   private subscription!: ObservableSubscription;
   private listeners = new Set<Listener<MaybeMasked<TData>>>();
+  private autoDisposeTimeoutId?: NodeJS.Timeout;
 
   private references = 0;
 
@@ -58,11 +60,26 @@ export class FragmentReference<
 
     const diff = this.getDiff(client, watchFragmentOptions);
 
+    // Start a timer that will automatically dispose of the query if the
+    // suspended resource does not use this fragmentRef in the given time. This
+    // helps prevent memory leaks when a component has unmounted before the
+    // query has finished loading.
+    const startDisposeTimer = () => {
+      if (!this.references) {
+        this.autoDisposeTimeoutId = setTimeout(
+          this.dispose,
+          options.autoDisposeTimeoutMs ?? 30_000
+        );
+      }
+    };
+
     this.promise =
       diff.complete ?
         createFulfilledPromise(diff.result)
       : this.createPendingPromise();
     this.subscribeToFragment();
+
+    this.promise.then(startDisposeTimer, startDisposeTimer);
   }
 
   listen(listener: Listener<MaybeMasked<TData>>) {
@@ -75,6 +92,7 @@ export class FragmentReference<
 
   retain() {
     this.references++;
+    clearTimeout(this.autoDisposeTimeoutId);
     let disposed = false;
 
     return () => {

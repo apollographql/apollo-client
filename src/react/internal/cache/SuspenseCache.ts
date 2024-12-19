@@ -68,6 +68,7 @@ export class SuspenseCache {
 
     if (!ref.current) {
       ref.current = new FragmentReference(client, options, {
+        autoDisposeTimeoutMs: this.options.autoDisposeTimeoutMs,
         onDispose: () => {
           delete ref.current;
         },

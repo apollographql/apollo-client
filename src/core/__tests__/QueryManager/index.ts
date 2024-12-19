@@ -46,7 +46,7 @@ import wrap from "../../../testing/core/wrap";
 import observableToPromise, {
   observableToPromiseAndSubscription,
 } from "../../../testing/core/observableToPromise";
-import { itAsync, wait } from "../../../testing/core";
+import { itAsync } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
@@ -5156,6 +5156,151 @@ describe("QueryManager", () => {
       }
     );
 
+    itAsync(
+      "should ignore (with warning) a document node in refetchQueries that has no active subscriptions",
+      (resolve, reject) => {
+        const mutation = gql`
+          mutation changeAuthorName {
+            changeAuthorName(newName: "Jack Smith") {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const mutationData = {
+          changeAuthorName: {
+            firstName: "Jack",
+            lastName: "Smith",
+          },
+        };
+        const query = gql`
+          query getAuthors {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const data = {
+          author: {
+            firstName: "John",
+            lastName: "Smith",
+          },
+        };
+        const secondReqData = {
+          author: {
+            firstName: "Jane",
+            lastName: "Johnson",
+          },
+        };
+        const queryManager = mockQueryManager(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          }
+        );
+
+        const observable = queryManager.watchQuery<any>({ query });
+        return observableToPromise({ observable }, (result) => {
+          expect(result.data).toEqual(data);
+        })
+          .then(() => {
+            // The subscription has been stopped already
+            return queryManager.mutate({
+              mutation,
+              refetchQueries: [query],
+            });
+          })
+          .then(() => {
+            expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+              'Unknown query named "%s" requested in refetchQueries options.include array',
+              "getAuthors"
+            );
+          })
+          .then(resolve, reject);
+      }
+    );
+
+    itAsync(
+      "should ignore (with warning) a document node containing an anonymous query in refetchQueries that has no active subscriptions",
+      (resolve, reject) => {
+        const mutation = gql`
+          mutation changeAuthorName {
+            changeAuthorName(newName: "Jack Smith") {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const mutationData = {
+          changeAuthorName: {
+            firstName: "Jack",
+            lastName: "Smith",
+          },
+        };
+        const query = gql`
+          query {
+            author {
+              firstName
+              lastName
+            }
+          }
+        `;
+        const data = {
+          author: {
+            firstName: "John",
+            lastName: "Smith",
+          },
+        };
+        const secondReqData = {
+          author: {
+            firstName: "Jane",
+            lastName: "Johnson",
+          },
+        };
+        const queryManager = mockQueryManager(
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          }
+        );
+
+        const observable = queryManager.watchQuery<any>({ query });
+        return observableToPromise({ observable }, (result) => {
+          expect(result.data).toEqual(data);
+        })
+          .then(() => {
+            // The subscription has been stopped already
+            return queryManager.mutate({
+              mutation,
+              refetchQueries: [query],
+            });
+          })
+          .then(() => {
+            expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+              "Unknown anonymous query requested in refetchQueries options.include array"
+            );
+          })
+          .then(resolve, reject);
+      }
+    );
+
     it("also works with a query document and variables", async () => {
       const mutation = gql`
         mutation changeAuthorName($id: ID!) {
@@ -5228,11 +5373,156 @@ describe("QueryManager", () => {
       );
       expect(observable.getCurrentResult().data).toEqual(secondReqData);
 
-      await wait(10);
+      await expect(stream).not.toEmitAnything();
+    });
 
-      queryManager["queries"].forEach((_, queryId) => {
-        expect(queryId).not.toContain("legacyOneTimeQuery");
+    it("also works with a query document node", async () => {
+      const mutation = gql`
+        mutation changeAuthorName($id: ID!) {
+          changeAuthorName(newName: "Jack Smith", id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+      const mutationVariables = { id: "2345" };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data },
+          delay: 10,
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+          delay: 100,
+        },
+        {
+          request: { query: mutation, variables: mutationVariables },
+          result: { data: mutationData },
+          delay: 10,
+        }
+      );
+      const observable = queryManager.watchQuery<any>({ query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitMatchedValue({ data });
+
+      await queryManager.mutate({
+        mutation,
+        variables: mutationVariables,
+        refetchQueries: [query],
       });
+
+      await expect(stream).toEmitMatchedValue(
+        { data: secondReqData },
+        { timeout: 150 }
+      );
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+
+      await expect(stream).not.toEmitAnything();
+    });
+
+    it("also works with different references of a same query document node", async () => {
+      const mutation = gql`
+        mutation changeAuthorName($id: ID!) {
+          changeAuthorName(newName: "Jack Smith", id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const mutationData = {
+        changeAuthorName: {
+          firstName: "Jack",
+          lastName: "Smith",
+        },
+      };
+      const query = gql`
+        query getAuthors($id: ID!) {
+          author(id: $id) {
+            firstName
+            lastName
+          }
+        }
+      `;
+      const data = {
+        author: {
+          firstName: "John",
+          lastName: "Smith",
+        },
+      };
+      const secondReqData = {
+        author: {
+          firstName: "Jane",
+          lastName: "Johnson",
+        },
+      };
+
+      const variables = { id: "1234" };
+      const mutationVariables = { id: "2345" };
+      const queryManager = mockQueryManager(
+        {
+          request: { query, variables },
+          result: { data },
+          delay: 10,
+        },
+        {
+          request: { query, variables },
+          result: { data: secondReqData },
+          delay: 100,
+        },
+        {
+          request: { query: mutation, variables: mutationVariables },
+          result: { data: mutationData },
+          delay: 10,
+        }
+      );
+      const observable = queryManager.watchQuery<any>({ query, variables });
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitMatchedValue({ data });
+
+      await queryManager.mutate({
+        mutation,
+        variables: mutationVariables,
+        // spread the query into a new object to simulate multiple instances
+        refetchQueries: [{ ...query }],
+      });
+
+      await expect(stream).toEmitMatchedValue(
+        { data: secondReqData },
+        { timeout: 150 }
+      );
+      expect(observable.getCurrentResult().data).toEqual(secondReqData);
 
       await expect(stream).not.toEmitAnything();
     });

@@ -299,7 +299,7 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, MaybeMasked<unknown>>();
-  }).types([52, "instantiations"]);
+  }).types([54, "instantiations"]);
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<MaybeMasked<unknown>>().toBeUnknown();
   });
@@ -462,5 +462,133 @@ test("base type, multiple fragments on sub-types", (prefix) => {
         | null
         | undefined;
     }>();
+  });
+});
+
+test("does not detect `$fragmentRefs` if type contains `any`", (prefix) => {
+  interface Source {
+    foo: { bar: any[] };
+    " $fragmentName": "foo";
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("leaves tuples alone", (prefix) => {
+  interface Source {
+    coords: [long: number, lat: number];
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      coords: [long: number, lat: number];
+    }>();
+  });
+});
+
+test("does not detect `$fragmentRefs` if type is a record type", (prefix) => {
+  interface MetadataItem {
+    foo: string;
+  }
+
+  interface Source {
+    metadata: Record<string, MetadataItem>;
+    " $fragmentName": "Source";
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("does not detect `$fragmentRefs` on types with index signatures", (prefix) => {
+  interface Source {
+    foo: string;
+    " $fragmentName": "Source";
+    [key: string]: string;
+  }
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
+  type Source = {
+    __typename: "Foo";
+    id: number;
+    metadata: Record<string, number>;
+    structuredMetadata: StructuredMetadata;
+  } & { " $fragmentName"?: "UserFieldsFragment" } & {
+    " $fragmentRefs"?: {
+      FooFragment: FooFragment;
+    };
+  };
+
+  interface StructuredMetadata {
+    bar: number;
+    [index: string]: number;
+  }
+
+  type FooFragment = {
+    __typename: "Foo";
+    foo: string;
+  } & { " $fragmentName"?: "FooFragment" };
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      __typename: "Foo";
+      id: number;
+      metadata: Record<string, number>;
+      foo: string;
+      structuredMetadata: StructuredMetadata;
+    }>();
+  });
+});
+
+test("recursive types: no error 'Type instantiation is excessively deep and possibly infinite.'", (prefix) => {
+  // this type is self-recursive
+  type Source = import("graphql").IntrospectionQuery;
+
+  bench(prefix + "instantiations", () => {
+    return {} as MaybeMasked<Source>;
+  }).types([6, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as MaybeMasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<Source>();
   });
 });

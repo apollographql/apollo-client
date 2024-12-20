@@ -1783,14 +1783,26 @@ test("cancels autoDisposeTimeoutMs if the component renders before timer finishe
 
 describe.skip("type tests", () => {
   test("returns TData when from is a non-null value", () => {
-    const fragment: TypedDocumentNode<{ foo: string }> = gql``;
+    type Data = { foo: string };
+    const fragment: TypedDocumentNode<Data> = gql``;
 
-    const { data } = useSuspenseFragment({
-      fragment,
-      from: { __typename: "Query" },
-    });
+    {
+      const { data } = useSuspenseFragment({
+        fragment,
+        from: { __typename: "Query" },
+      });
 
-    expectTypeOf(data).branded.toEqualTypeOf<{ foo: string }>();
+      expectTypeOf(data).branded.toEqualTypeOf<Data>();
+    }
+
+    {
+      const { data } = useSuspenseFragment<Data>({
+        fragment: gql``,
+        from: { __typename: "Query" },
+      });
+
+      expectTypeOf(data).branded.toEqualTypeOf<Data>();
+    }
   });
 
   test("returns TData | null when from is null", () => {
@@ -1798,9 +1810,20 @@ describe.skip("type tests", () => {
     type Vars = Record<string, never>;
     const fragment: TypedDocumentNode<Data, Vars> = gql``;
 
-    const { data } = useSuspenseFragment({ fragment, from: null });
+    {
+      const { data } = useSuspenseFragment({ fragment, from: null });
 
-    expectTypeOf(data).branded.toEqualTypeOf<null>();
+      expectTypeOf(data).branded.toEqualTypeOf<null>();
+    }
+
+    {
+      const { data } = useSuspenseFragment<Data>({
+        fragment: gql``,
+        from: null,
+      });
+
+      expectTypeOf(data).branded.toEqualTypeOf<null>();
+    }
   });
 
   test("returns TData | null when from is nullable", () => {
@@ -1809,8 +1832,19 @@ describe.skip("type tests", () => {
     const fragment: TypedDocumentNode<Post, Vars> = gql``;
     const author = {} as { post: Post | null };
 
-    const { data } = useSuspenseFragment({ fragment, from: author.post });
+    {
+      const { data } = useSuspenseFragment({ fragment, from: author.post });
 
-    expectTypeOf(data).branded.toEqualTypeOf<Post | null>();
+      expectTypeOf(data).branded.toEqualTypeOf<Post | null>();
+    }
+
+    {
+      const { data } = useSuspenseFragment<Post>({
+        fragment: gql``,
+        from: author.post,
+      });
+
+      expectTypeOf(data).branded.toEqualTypeOf<Post | null>();
+    }
   });
 });

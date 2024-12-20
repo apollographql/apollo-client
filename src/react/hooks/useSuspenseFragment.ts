@@ -46,7 +46,7 @@ const NULL_PLACEHOLDER = [] as unknown as [
 
 export function useSuspenseFragment<
   TData,
-  TVariables extends OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
     from: {};
@@ -55,7 +55,7 @@ export function useSuspenseFragment<
 
 export function useSuspenseFragment<
   TData,
-  TVariables extends OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
     from: null;
@@ -64,7 +64,7 @@ export function useSuspenseFragment<
 
 export function useSuspenseFragment<
   TData,
-  TVariables extends OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
     from: {} | null;
@@ -73,7 +73,7 @@ export function useSuspenseFragment<
 
 export function useSuspenseFragment<
   TData,
-  TVariables extends OperationVariables,
+  TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables>
 ): UseSuspenseFragmentResult<TData>;

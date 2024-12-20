@@ -1,6 +1,5 @@
 import type {
   ApolloClient,
-  MaybeMasked,
   OperationVariables,
   Reference,
   StoreObject,
@@ -13,6 +12,7 @@ import React, { useMemo } from "rehackt";
 import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
+import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 
 export interface UseSuspenseFragmentOptions<TData, TVars>
   extends Omit<
@@ -23,7 +23,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | string | null;
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**

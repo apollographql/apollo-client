@@ -675,14 +675,6 @@ export class QueryManager<TStore> {
     return store;
   }
 
-  public resetErrors(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.networkError = undefined;
-      queryInfo.graphQLErrors = [];
-    }
-  }
-
   public transform(document: DocumentNode) {
     return this.documentTransform.transformDocument(document);
   }

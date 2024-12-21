@@ -3012,51 +3012,6 @@ describe("ObservableQuery", () => {
     });
   });
 
-  describe("resetQueryStoreErrors", () => {
-    it("should remove any GraphQLError's stored in the query store", async () => {
-      const graphQLError = new GraphQLError("oh no!");
-
-      const observable = mockWatchQuery({
-        request: { query, variables },
-        result: { errors: [graphQLError] },
-      });
-
-      await new Promise<void>((resolve) => {
-        observable.subscribe({
-          error() {
-            const { queryManager } = observable as any;
-            const queryInfo = queryManager["queries"].get(observable.queryId);
-            expect(queryInfo.graphQLErrors).toEqual([graphQLError]);
-
-            observable.resetQueryStoreErrors();
-            expect(queryInfo.graphQLErrors).toEqual([]);
-
-            resolve();
-          },
-        });
-      });
-    });
-
-    it("should remove network error's stored in the query store", async () => {
-      const networkError = new Error("oh no!");
-
-      const observable = mockWatchQuery({
-        request: { query, variables },
-        result: { data: dataOne },
-      });
-
-      const stream = new ObservableStream(observable);
-
-      await stream.takeNext();
-
-      const { queryManager } = observable as any;
-      const queryInfo = queryManager["queries"].get(observable.queryId);
-      queryInfo.networkError = networkError;
-      observable.resetQueryStoreErrors();
-      expect(queryInfo.networkError).toBeUndefined();
-    });
-  });
-
   describe(".query computed property", () => {
     it("is equal to transformed query when instantiating via `watchQuery`", () => {
       const query = gql`

@@ -157,7 +157,7 @@ export class QueryInfo {
     return diff;
   }
 
-  private lastDiff?: {
+  public lastDiff?: {
     diff: Cache.DiffResult<any>;
     options: Cache.DiffOptions;
   };

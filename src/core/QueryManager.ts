@@ -1429,10 +1429,10 @@ export class QueryManager<TStore> {
             // mitigate the clobbering somehow, but that would make this
             // particular cache write even less important, and thus
             // skipping it would be even safer than it is today.
-            if (queryInfo["lastDiff"] && queryInfo["lastDiff"].diff.complete) {
+            if (queryInfo.lastDiff && queryInfo.lastDiff.diff.complete) {
               // Reuse data from the last good (complete) diff that we
               // received, when possible.
-              result.data = queryInfo["lastDiff"].diff.result;
+              result.data = queryInfo.lastDiff.diff.result;
               return;
             }
             // If the previous this.diff was incomplete, fall through to

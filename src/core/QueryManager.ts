@@ -1455,7 +1455,7 @@ export class QueryManager<TStore> {
     }
   }
 
-  private fetchConcastWithInfo<TData, TVars extends OperationVariables>(
+  public fetchConcastWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often

@@ -2,22 +2,15 @@ import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from "../cache/index.js";
-import { DeepMerger } from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/index.js";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
 import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
-import {
-  isNonEmptyArray,
-  graphQLResultHasError,
-  canUseWeakMap,
-} from "../utilities/index.js";
+import { graphQLResultHasError, canUseWeakMap } from "../utilities/index.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
-import type { Unmasked } from "../masking/index.js";
 
 export type QueryStoreValue = Pick<
   QueryInfo,
@@ -30,7 +23,7 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
+export const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
   ApolloCache<any>,
   number
 >();
@@ -370,138 +363,6 @@ export class QueryInfo {
       equal(variables, lastWrite.variables) &&
       equal(result.data, lastWrite.result.data)
     );
-  }
-
-  public markResult<T>(
-    result: FetchResult<T>,
-    document: DocumentNode,
-    options: Pick<
-      WatchQueryOptions,
-      "variables" | "fetchPolicy" | "errorPolicy"
-    >,
-    cacheWriteBehavior: CacheWriteBehavior
-  ) {
-    const merger = new DeepMerger();
-    const graphQLErrors =
-      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
-
-    // Cancel the pending notify timeout (if it exists) to prevent extraneous network
-    // requests. To allow future notify timeouts, diff and dirty are reset as well.
-    this.reset();
-
-    if ("incremental" in result && isNonEmptyArray(result.incremental)) {
-      const mergedData = mergeIncrementalData(this.getDiff().result, result);
-      result.data = mergedData;
-
-      // Detect the first chunk of a deferred query and merge it with existing
-      // cache data. This ensures a `cache-first` fetch policy that returns
-      // partial cache data or a `cache-and-network` fetch policy that already
-      // has full data in the cache does not complain when trying to merge the
-      // initial deferred server data with existing cache data.
-    } else if ("hasNext" in result && result.hasNext) {
-      const diff = this.getDiff();
-      result.data = merger.merge(diff.result, result.data);
-    }
-
-    this.graphQLErrors = graphQLErrors;
-
-    if (options.fetchPolicy === "no-cache") {
-      this.updateLastDiff(
-        { result: result.data, complete: true },
-        this.getDiffOptions(options.variables)
-      );
-    } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
-      if (shouldWriteResult(result, options.errorPolicy)) {
-        // Using a transaction here so we have a chance to read the result
-        // back from the cache before the watch callback fires as a result
-        // of writeQuery, so we can store the new diff quietly and ignore
-        // it when we receive it redundantly from the watch callback.
-        this.cache.performTransaction((cache) => {
-          if (this.shouldWrite(result, options.variables)) {
-            cache.writeQuery({
-              query: document,
-              data: result.data as Unmasked<T>,
-              variables: options.variables,
-              overwrite: cacheWriteBehavior === CacheWriteBehavior.OVERWRITE,
-            });
-
-            this.lastWrite = {
-              result,
-              variables: options.variables,
-              dmCount: destructiveMethodCounts.get(this.cache),
-            };
-          } else {
-            // If result is the same as the last result we received from
-            // the network (and the variables match too), avoid writing
-            // result into the cache again. The wisdom of skipping this
-            // cache write is far from obvious, since any cache write
-            // could be the one that puts the cache back into a desired
-            // state, fixing corruption or missing data. However, if we
-            // always write every network result into the cache, we enable
-            // feuds between queries competing to update the same data in
-            // incompatible ways, which can lead to an endless cycle of
-            // cache broadcasts and useless network requests. As with any
-            // feud, eventually one side must step back from the brink,
-            // letting the other side(s) have the last word(s). There may
-            // be other points where we could break this cycle, such as
-            // silencing the broadcast for cache.writeQuery (not a good
-            // idea, since it just delays the feud a bit) or somehow
-            // avoiding the network request that just happened (also bad,
-            // because the server could return useful new data). All
-            // options considered, skipping this cache write seems to be
-            // the least damaging place to break the cycle, because it
-            // reflects the intuition that we recently wrote this exact
-            // result into the cache, so the cache *should* already/still
-            // contain this data. If some other query has clobbered that
-            // data in the meantime, that's too bad, but there will be no
-            // winners if every query blindly reverts to its own version
-            // of the data. This approach also gives the network a chance
-            // to return new data, which will be written into the cache as
-            // usual, notifying only those queries that are directly
-            // affected by the cache updates, as usual. In the future, an
-            // even more sophisticated cache could perhaps prevent or
-            // mitigate the clobbering somehow, but that would make this
-            // particular cache write even less important, and thus
-            // skipping it would be even safer than it is today.
-            if (this.lastDiff && this.lastDiff.diff.complete) {
-              // Reuse data from the last good (complete) diff that we
-              // received, when possible.
-              result.data = this.lastDiff.diff.result;
-              return;
-            }
-            // If the previous this.diff was incomplete, fall through to
-            // re-reading the latest data with cache.diff, below.
-          }
-
-          const diffOptions = this.getDiffOptions(options.variables);
-          const diff = cache.diff<T>(diffOptions);
-
-          // In case the QueryManager stops this QueryInfo before its
-          // results are delivered, it's important to avoid restarting the
-          // cache watch when markResult is called. We also avoid updating
-          // the watch if we are writing a result that doesn't match the current
-          // variables to avoid race conditions from broadcasting the wrong
-          // result.
-          if (!this.stopped && equal(this.variables, options.variables)) {
-            // Any time we're about to update this.diff, we need to make
-            // sure we've started watching the cache.
-            this.updateWatch(options.variables);
-          }
-
-          // If we're allowed to write to the cache, and we can read a
-          // complete result from the cache, update result.data to be the
-          // result from the cache, rather than the raw network result.
-          // Set without setDiff to avoid triggering a notify call, since
-          // we have other ways of notifying for this result.
-          this.updateLastDiff(diff, diffOptions);
-          if (diff.complete) {
-            result.data = diff.result;
-          }
-        });
-      } else {
-        this.lastWrite = void 0;
-      }
-    }
   }
 
   public markReady() {

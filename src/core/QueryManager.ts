@@ -1011,10 +1011,6 @@ export class QueryManager<TStore> {
     return Promise.all(observableQueryPromises);
   }
 
-  public setObservableQuery(observableQuery: ObservableQuery<any, any>) {
-    this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
-  }
-
   public startGraphQLSubscription<T = any>(
     options: SubscriptionOptions
   ): Observable<FetchResult<T>> {

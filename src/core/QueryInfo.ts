@@ -339,7 +339,7 @@ export class QueryInfo {
     }
   }
 
-  private lastWrite?: {
+  public lastWrite?: {
     result: FetchResult<any>;
     variables: WatchQueryOptions["variables"];
     dmCount: number | undefined;

@@ -1345,7 +1345,7 @@ export class QueryManager<TStore> {
     if (options.fetchPolicy === "no-cache") {
       queryInfo["updateLastDiff"](
         { result: result.data, complete: true },
-        queryInfo["getDiffOptions"](options.variables)
+        queryInfo.getDiffOptions(options.variables)
       );
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
@@ -1421,7 +1421,7 @@ export class QueryManager<TStore> {
             // re-reading the latest data with cache.diff, below.
           }
 
-          const diffOptions = queryInfo["getDiffOptions"](options.variables);
+          const diffOptions = queryInfo.getDiffOptions(options.variables);
           const diff = cache.diff<T>(diffOptions);
 
           // In case the QueryManager stops this QueryInfo before its

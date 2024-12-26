@@ -349,11 +349,6 @@ export class QueryInfo {
     this.lastWrite = void 0;
   }
 
-  public markReady() {
-    this.networkError = null;
-    return (this.networkStatus = NetworkStatus.ready);
-  }
-
   public markError(error: ApolloError) {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;

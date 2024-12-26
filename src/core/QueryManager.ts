@@ -1250,7 +1250,7 @@ export class QueryManager<TStore> {
             options,
             cacheWriteBehavior
           );
-          queryInfo.markReady();
+          this.markReady(queryInfo);
         }
 
         const aqr: ApolloQueryResult<TData> = {
@@ -1289,6 +1289,11 @@ export class QueryManager<TStore> {
         throw error;
       }
     );
+  }
+
+  private markReady(queryInfo: QueryInfo) {
+    queryInfo["networkError"] = null;
+    return (queryInfo["networkStatus"] = NetworkStatus.ready);
   }
 
   private markResult<T>(
@@ -1866,7 +1871,7 @@ export class QueryManager<TStore> {
         if (diff.complete) {
           return {
             fromLink: false,
-            sources: [resultsFromCache(diff, queryInfo.markReady())],
+            sources: [resultsFromCache(diff, this.markReady(queryInfo))],
           };
         }
 
@@ -1896,7 +1901,7 @@ export class QueryManager<TStore> {
       case "cache-only":
         return {
           fromLink: false,
-          sources: [resultsFromCache(readCache(), queryInfo.markReady())],
+          sources: [resultsFromCache(readCache(), this.markReady(queryInfo))],
         };
 
       case "network-only":

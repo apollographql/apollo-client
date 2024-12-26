@@ -1325,7 +1325,13 @@ export class QueryManager<TStore> {
 
     if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(
-        queryInfo.getDiff(queryInfo.getDiffOptions()).result,
+        queryInfo.getDiff({
+          query: queryInfo.document!,
+          variables: queryInfo.variables,
+          returnPartialData: true,
+          optimistic: true,
+          canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
+        }).result,
         result
       );
       result.data = mergedData;
@@ -1336,7 +1342,13 @@ export class QueryManager<TStore> {
       // has full data in the cache does not complain when trying to merge the
       // initial deferred server data with existing cache data.
     } else if ("hasNext" in result && result.hasNext) {
-      const diff = queryInfo.getDiff(queryInfo.getDiffOptions());
+      const diff = queryInfo.getDiff({
+        query: queryInfo.document!,
+        variables: queryInfo.variables,
+        returnPartialData: true,
+        optimistic: true,
+        canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
+      });
       result.data = merger.merge(diff.result, result.data);
     }
 
@@ -1345,7 +1357,13 @@ export class QueryManager<TStore> {
     if (options.fetchPolicy === "no-cache") {
       queryInfo["updateLastDiff"](
         { result: result.data, complete: true },
-        queryInfo.getDiffOptions(options.variables)
+        {
+          query: queryInfo.document!,
+          variables: options.variables,
+          returnPartialData: true,
+          optimistic: true,
+          canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
+        }
       );
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
@@ -1421,7 +1439,13 @@ export class QueryManager<TStore> {
             // re-reading the latest data with cache.diff, below.
           }
 
-          const diffOptions = queryInfo.getDiffOptions(options.variables);
+          const diffOptions = {
+            query: queryInfo.document!,
+            variables: options.variables,
+            returnPartialData: true,
+            optimistic: true,
+            canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
+          };
           const diff = cache.diff<T>(diffOptions);
 
           // In case the QueryManager stops this QueryInfo before its
@@ -1589,7 +1613,13 @@ export class QueryManager<TStore> {
         const queryInfo = this.getQuery(queryId);
         includedQueriesById.set(queryId, {
           oq,
-          lastDiff: queryInfo.getDiff(queryInfo.getDiffOptions()),
+          lastDiff: queryInfo.getDiff({
+            query: queryInfo.document!,
+            variables: queryInfo.variables,
+            returnPartialData: true,
+            optimistic: true,
+            canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
+          }),
         });
       });
     }
@@ -1699,7 +1729,13 @@ export class QueryManager<TStore> {
           if (!diff) {
             const info = oq["queryInfo"];
             info.reset(); // Force info.getDiff() to read from cache.
-            diff = info.getDiff(info.getDiffOptions());
+            diff = info.getDiff({
+              query: info.document!,
+              variables: info.variables,
+              returnPartialData: true,
+              optimistic: true,
+              canonizeResults: info.observableQuery?.options.canonizeResults,
+            });
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }
@@ -1800,7 +1836,14 @@ export class QueryManager<TStore> {
       networkStatus,
     });
 
-    const readCache = () => queryInfo.getDiff(queryInfo.getDiffOptions());
+    const readCache = () =>
+      queryInfo.getDiff({
+        query: queryInfo.document!,
+        variables: queryInfo.variables,
+        returnPartialData: true,
+        optimistic: true,
+        canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
+      });
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
@@ -1932,7 +1975,16 @@ export class QueryManager<TStore> {
             // cache.diff, but instead returns a { complete: false } stub result
             // when there is no queryInfo.diff already defined.
             sources: [
-              resultsFromCache(queryInfo.getDiff(queryInfo.getDiffOptions())),
+              resultsFromCache(
+                queryInfo.getDiff({
+                  query: queryInfo.document!,
+                  variables: queryInfo.variables,
+                  returnPartialData: true,
+                  optimistic: true,
+                  canonizeResults:
+                    queryInfo.observableQuery?.options.canonizeResults,
+                })
+              ),
               resultsFromLink(),
             ],
           };

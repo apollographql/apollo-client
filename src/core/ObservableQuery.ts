@@ -275,7 +275,13 @@ export class ObservableQuery<
       // interested in the diff.
       this.queryInfo["updateWatch"]();
     } else {
-      const diff = this.queryInfo.getDiff(this.queryInfo.getDiffOptions());
+      const diff = this.queryInfo.getDiff({
+        query: this.queryInfo.document!,
+        variables: this.queryInfo.variables,
+        returnPartialData: true,
+        optimistic: true,
+        canonizeResults: this.options.canonizeResults,
+      });
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;

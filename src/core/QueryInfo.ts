@@ -170,19 +170,15 @@ export class QueryInfo {
       diff ?
         {
           diff,
-          options: options || this.getDiffOptions(),
+          options: options || {
+            query: this.document!,
+            variables: this.variables,
+            returnPartialData: true,
+            optimistic: true,
+            canonizeResults: this.observableQuery?.options.canonizeResults,
+          },
         }
       : void 0;
-  }
-
-  public getDiffOptions(variables = this.variables): Cache.DiffOptions {
-    return {
-      query: this.document!,
-      variables,
-      returnPartialData: true,
-      optimistic: true,
-      canonizeResults: this.observableQuery?.options.canonizeResults,
-    };
   }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
@@ -227,7 +223,13 @@ export class QueryInfo {
       oq["queryInfo"] = this;
       this.listeners.add(
         (this.oqListener = () => {
-          const diff = this.getDiff(this.getDiffOptions());
+          const diff = this.getDiff({
+            query: this.document!,
+            variables: this.variables,
+            returnPartialData: true,
+            optimistic: true,
+            canonizeResults: oq.options.canonizeResults,
+          });
           if (diff.fromOptimisticTransaction) {
             // If this diff came from an optimistic transaction, deliver the
             // current cache data to the ObservableQuery, but don't perform a
@@ -308,10 +310,11 @@ export class QueryInfo {
     }
 
     const watchOptions: Cache.WatchOptions = {
-      // Although this.getDiffOptions returns Cache.DiffOptions instead of
-      // Cache.WatchOptions, all the overlapping options should be the same, so
-      // we can reuse getDiffOptions here, for consistency.
-      ...this.getDiffOptions(variables),
+      query: this.document!,
+      variables,
+      returnPartialData: true,
+      optimistic: true,
+      canonizeResults: oq?.options.canonizeResults,
       watcher: this,
       callback: (diff) => this.setDiff(diff),
     };

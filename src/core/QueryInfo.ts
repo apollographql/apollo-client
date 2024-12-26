@@ -153,7 +153,7 @@ export class QueryInfo {
     }
 
     const diff = this.cache.diff(options);
-    this.updateLastDiff(diff, options);
+    this.lastDiff = { diff, options };
     return diff;
   }
 
@@ -161,25 +161,6 @@ export class QueryInfo {
     diff: Cache.DiffResult<any>;
     options: Cache.DiffOptions;
   };
-
-  public updateLastDiff(
-    diff: Cache.DiffResult<any> | null,
-    options?: Cache.DiffOptions
-  ) {
-    this.lastDiff =
-      diff ?
-        {
-          diff,
-          options: options || {
-            query: this.document!,
-            variables: this.variables,
-            returnPartialData: true,
-            optimistic: true,
-            canonizeResults: this.observableQuery?.options.canonizeResults,
-          },
-        }
-      : void 0;
-  }
 
   setDiff(diff: Cache.DiffResult<any> | null) {
     const oldDiff = this.lastDiff && this.lastDiff.diff;
@@ -197,7 +178,19 @@ export class QueryInfo {
       return;
     }
 
-    this.updateLastDiff(diff);
+    this.lastDiff =
+      diff ?
+        {
+          diff,
+          options: {
+            query: this.document!,
+            variables: this.variables,
+            returnPartialData: true,
+            optimistic: true,
+            canonizeResults: this.observableQuery?.options.canonizeResults,
+          },
+        }
+      : void 0;
 
     if (!this.dirty && !equal(oldDiff && oldDiff.result, diff && diff.result)) {
       this.dirty = true;

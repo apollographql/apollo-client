@@ -1355,16 +1355,16 @@ export class QueryManager<TStore> {
     queryInfo.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === "no-cache") {
-      queryInfo.updateLastDiff(
-        { result: result.data, complete: true },
-        {
+      queryInfo.lastDiff = {
+        diff: { result: result.data, complete: true },
+        options: {
           query: queryInfo.document!,
           variables: options.variables,
           returnPartialData: true,
           optimistic: true,
           canonizeResults: queryInfo.observableQuery?.options.canonizeResults,
-        }
-      );
+        },
+      };
     } else if (cacheWriteBehavior !== CacheWriteBehavior.FORBID) {
       if (shouldWriteResult(result, options.errorPolicy)) {
         // Using a transaction here so we have a chance to read the result
@@ -1468,7 +1468,7 @@ export class QueryManager<TStore> {
           // result from the cache, rather than the raw network result.
           // Set without setDiff to avoid triggering a notify call, since
           // we have other ways of notifying for this result.
-          queryInfo.updateLastDiff(diff, diffOptions);
+          queryInfo.lastDiff = { diff, options: diffOptions };
           if (diff.complete) {
             result.data = diff.result;
           }

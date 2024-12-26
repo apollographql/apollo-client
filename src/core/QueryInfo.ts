@@ -106,7 +106,6 @@ export class QueryInfo {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus?: NetworkStatus;
-    observableQuery?: ObservableQuery<any, any>;
     lastRequestId?: number;
   }): this {
     let networkStatus = query.networkStatus || NetworkStatus.loading;
@@ -129,10 +128,6 @@ export class QueryInfo {
       graphQLErrors: this.graphQLErrors || [],
       networkStatus,
     });
-
-    if (query.observableQuery) {
-      this.setObservableQuery(query.observableQuery);
-    }
 
     if (query.lastRequestId) {
       this.lastRequestId = query.lastRequestId;

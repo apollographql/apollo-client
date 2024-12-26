@@ -788,9 +788,9 @@ export class QueryManager<TStore> {
     // uses the transformed query instead of the raw query
     queryInfo.init({
       document: query,
-      observableQuery: observable,
       variables: observable.variables,
     });
+    queryInfo.setObservableQuery(observable);
 
     return observable;
   }

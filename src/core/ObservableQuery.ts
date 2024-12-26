@@ -970,7 +970,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
-    this.queryManager["getQuery"](this.queryId).setObservableQuery(this);
+    this.queryManager.getQuery(this.queryId).setObservableQuery(this);
     const { concast, fromLink } = this.queryManager["fetchConcastWithInfo"](
       this.queryId,
       options,

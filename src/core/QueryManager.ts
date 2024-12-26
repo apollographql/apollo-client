@@ -1941,7 +1941,7 @@ export class QueryManager<TStore> {
     }
   }
 
-  private getQuery(queryId: string): QueryInfo {
+  public getQuery(queryId: string): QueryInfo {
     if (queryId && !this.queries.has(queryId)) {
       this.queries.set(queryId, new QueryInfo(this, queryId));
     }

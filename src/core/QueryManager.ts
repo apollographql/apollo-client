@@ -660,8 +660,11 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
-      .promise as TODO;
+    return this.fetchConcastWithInfo(
+      this.getQuery(queryId),
+      options,
+      networkStatus
+    ).concast.promise as TODO;
   }
 
   public getQueryStore() {
@@ -1480,7 +1483,7 @@ export class QueryManager<TStore> {
   }
 
   public fetchConcastWithInfo<TData, TVars extends OperationVariables>(
-    queryId: string,
+    queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
@@ -1489,7 +1492,7 @@ export class QueryManager<TStore> {
     query = options.query
   ): ConcastAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
-    const queryInfo = this.getQuery(queryId);
+    const queryId = queryInfo.queryId;
 
     const defaults = this.defaultOptions.watchQuery;
     let {

@@ -140,9 +140,7 @@ export class QueryInfo {
     this.dirty = false;
   }
 
-  getDiff(): Cache.DiffResult<any> {
-    const options = this.getDiffOptions();
-
+  getDiff(options: Cache.DiffOptions): Cache.DiffResult<any> {
     if (this.lastDiff && equal(options, this.lastDiff.options)) {
       return this.lastDiff.diff;
     }
@@ -177,7 +175,7 @@ export class QueryInfo {
       : void 0;
   }
 
-  private getDiffOptions(variables = this.variables): Cache.DiffOptions {
+  public getDiffOptions(variables = this.variables): Cache.DiffOptions {
     return {
       query: this.document!,
       variables,
@@ -229,7 +227,7 @@ export class QueryInfo {
       oq["queryInfo"] = this;
       this.listeners.add(
         (this.oqListener = () => {
-          const diff = this.getDiff();
+          const diff = this.getDiff(this.getDiffOptions());
           if (diff.fromOptimisticTransaction) {
             // If this diff came from an optimistic transaction, deliver the
             // current cache data to the ObservableQuery, but don't perform a

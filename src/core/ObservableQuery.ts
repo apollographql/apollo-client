@@ -275,7 +275,7 @@ export class ObservableQuery<
       // interested in the diff.
       this.queryInfo["updateWatch"]();
     } else {
-      const diff = this.queryInfo.getDiff();
+      const diff = this.queryInfo.getDiff(this.queryInfo.getDiffOptions());
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;

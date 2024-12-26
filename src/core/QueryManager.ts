@@ -1325,7 +1325,7 @@ export class QueryManager<TStore> {
 
     if ("incremental" in result && isNonEmptyArray(result.incremental)) {
       const mergedData = mergeIncrementalData(
-        queryInfo.getDiff().result,
+        queryInfo.getDiff(queryInfo.getDiffOptions()).result,
         result
       );
       result.data = mergedData;
@@ -1336,7 +1336,7 @@ export class QueryManager<TStore> {
       // has full data in the cache does not complain when trying to merge the
       // initial deferred server data with existing cache data.
     } else if ("hasNext" in result && result.hasNext) {
-      const diff = queryInfo.getDiff();
+      const diff = queryInfo.getDiff(queryInfo.getDiffOptions());
       result.data = merger.merge(diff.result, result.data);
     }
 
@@ -1586,9 +1586,10 @@ export class QueryManager<TStore> {
 
     if (include) {
       this.getObservableQueries(include).forEach((oq, queryId) => {
+        const queryInfo = this.getQuery(queryId);
         includedQueriesById.set(queryId, {
           oq,
-          lastDiff: this.getQuery(queryId).getDiff(),
+          lastDiff: queryInfo.getDiff(queryInfo.getDiffOptions()),
         });
       });
     }
@@ -1698,7 +1699,7 @@ export class QueryManager<TStore> {
           if (!diff) {
             const info = oq["queryInfo"];
             info.reset(); // Force info.getDiff() to read from cache.
-            diff = info.getDiff();
+            diff = info.getDiff(info.getDiffOptions());
           }
           result = onQueryUpdated(oq, diff, lastDiff);
         }
@@ -1799,7 +1800,7 @@ export class QueryManager<TStore> {
       networkStatus,
     });
 
-    const readCache = () => queryInfo.getDiff();
+    const readCache = () => queryInfo.getDiff(queryInfo.getDiffOptions());
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
@@ -1930,7 +1931,10 @@ export class QueryManager<TStore> {
             // Note that queryInfo.getDiff() for no-cache queries does not call
             // cache.diff, but instead returns a { complete: false } stub result
             // when there is no queryInfo.diff already defined.
-            sources: [resultsFromCache(queryInfo.getDiff()), resultsFromLink()],
+            sources: [
+              resultsFromCache(queryInfo.getDiff(queryInfo.getDiffOptions())),
+              resultsFromLink(),
+            ],
           };
         }
 

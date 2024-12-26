@@ -1355,7 +1355,7 @@ export class QueryManager<TStore> {
     queryInfo.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === "no-cache") {
-      queryInfo["updateLastDiff"](
+      queryInfo.updateLastDiff(
         { result: result.data, complete: true },
         {
           query: queryInfo.document!,
@@ -1468,7 +1468,7 @@ export class QueryManager<TStore> {
           // result from the cache, rather than the raw network result.
           // Set without setDiff to avoid triggering a notify call, since
           // we have other ways of notifying for this result.
-          queryInfo["updateLastDiff"](diff, diffOptions);
+          queryInfo.updateLastDiff(diff, diffOptions);
           if (diff.complete) {
             result.data = diff.result;
           }

@@ -162,7 +162,7 @@ export class QueryInfo {
     options: Cache.DiffOptions;
   };
 
-  private updateLastDiff(
+  public updateLastDiff(
     diff: Cache.DiffResult<any> | null,
     options?: Cache.DiffOptions
   ) {

@@ -1234,11 +1234,7 @@ export class QueryManager<TStore> {
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
             // Throwing here effectively calls observer.error.
-            throw queryInfo.markError(
-              new ApolloError({
-                graphQLErrors,
-              })
-            );
+            throw this.markError(queryInfo, new ApolloError({ graphQLErrors }));
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1283,7 +1279,7 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError(error);
+          this.markError(queryInfo, error);
         }
 
         throw error;
@@ -1291,9 +1287,26 @@ export class QueryManager<TStore> {
     );
   }
 
+  private markError(queryInfo: QueryInfo, error: ApolloError) {
+    queryInfo.networkStatus = NetworkStatus.error;
+    queryInfo.lastWrite = void 0;
+
+    queryInfo.reset();
+
+    if (error.graphQLErrors) {
+      queryInfo.graphQLErrors = error.graphQLErrors;
+    }
+
+    if (error.networkError) {
+      queryInfo.networkError = error.networkError;
+    }
+
+    return error;
+  }
+
   private markReady(queryInfo: QueryInfo) {
-    queryInfo["networkError"] = null;
-    return (queryInfo["networkStatus"] = NetworkStatus.ready);
+    queryInfo.networkError = null;
+    return (queryInfo.networkStatus = NetworkStatus.ready);
   }
 
   private markResult<T>(

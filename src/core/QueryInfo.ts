@@ -9,7 +9,6 @@ import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
 import { graphQLResultHasError, canUseWeakMap } from "../utilities/index.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 
 export type QueryStoreValue = Pick<
@@ -347,23 +346,6 @@ export class QueryInfo {
 
   public resetLastWrite() {
     this.lastWrite = void 0;
-  }
-
-  public markError(error: ApolloError) {
-    this.networkStatus = NetworkStatus.error;
-    this.lastWrite = void 0;
-
-    this.reset();
-
-    if (error.graphQLErrors) {
-      this.graphQLErrors = error.graphQLErrors;
-    }
-
-    if (error.networkError) {
-      this.networkError = error.networkError;
-    }
-
-    return error;
   }
 }
 

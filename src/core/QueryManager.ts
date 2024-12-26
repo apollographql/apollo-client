@@ -1340,7 +1340,18 @@ export class QueryManager<TStore> {
         // of writeQuery, so we can store the new diff quietly and ignore
         // it when we receive it redundantly from the watch callback.
         this.cache.performTransaction((cache) => {
-          if (queryInfo["shouldWrite"](result, options.variables)) {
+          const lastWrite = queryInfo["lastWrite"];
+          const shouldWrite = !(
+            lastWrite &&
+            // If cache.evict has been called since the last time we wrote this
+            // data into the cache, there's a chance writing this result into
+            // the cache will repair what was evicted.
+            lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
+            equal(options.variables, lastWrite.variables) &&
+            equal(result.data, lastWrite.result.data)
+          );
+
+          if (shouldWrite) {
             cache.writeQuery({
               query: document,
               data: result.data as Unmasked<T>,

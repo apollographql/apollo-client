@@ -349,22 +349,6 @@ export class QueryInfo {
     this.lastWrite = void 0;
   }
 
-  private shouldWrite(
-    result: FetchResult<any>,
-    variables: WatchQueryOptions["variables"]
-  ) {
-    const { lastWrite } = this;
-    return !(
-      lastWrite &&
-      // If cache.evict has been called since the last time we wrote this
-      // data into the cache, there's a chance writing this result into
-      // the cache will repair what was evicted.
-      lastWrite.dmCount === destructiveMethodCounts.get(this.cache) &&
-      equal(variables, lastWrite.variables) &&
-      equal(result.data, lastWrite.result.data)
-    );
-  }
-
   public markReady() {
     this.networkError = null;
     return (this.networkStatus = NetworkStatus.ready);

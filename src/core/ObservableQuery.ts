@@ -808,22 +808,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return options.fetchPolicy;
   }
 
-  private fetch(
-    options: WatchQueryOptions<TVariables, TData>,
-    newNetworkStatus?: NetworkStatus,
-    query?: DocumentNode
-  ) {
-    // TODO Make sure we update the networkStatus (and infer fetchVariables)
-    // before actually committing to the fetch.
-    this.queryManager["getQuery"](this.queryId).setObservableQuery(this);
-    return this.queryManager["fetchConcastWithInfo"](
-      this.queryId,
-      options,
-      newNetworkStatus,
-      query
-    );
-  }
-
   // Turns polling on or off based on this.options.pollInterval.
   private updatePolling() {
     // Avoid polling in SSR mode
@@ -983,7 +967,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     const variables = options.variables && { ...options.variables };
-    const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
+
+    // TODO Make sure we update the networkStatus (and infer fetchVariables)
+    // before actually committing to the fetch.
+    this.queryManager["getQuery"](this.queryId).setObservableQuery(this);
+    const { concast, fromLink } = this.queryManager["fetchConcastWithInfo"](
+      this.queryId,
+      options,
+      newNetworkStatus,
+      query
+    );
+
     const observer: Observer<ApolloQueryResult<TData>> = {
       next: (result) => {
         if (equal(this.variables, variables)) {

@@ -237,7 +237,7 @@ export class ObservableQuery<
 
   /** @internal */
   public resetDiff() {
-    this.queryInfo.resetDiff();
+    this.queryInfo["lastDiff"] = void 0;
   }
 
   private getCurrentFullResult(

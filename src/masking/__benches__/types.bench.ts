@@ -4,6 +4,7 @@ import { expectTypeOf } from "expect-type";
 import type { DeepPartial } from "../../utilities/index.js";
 
 import { setup } from "@ark/attest";
+import { ContainsFragmentsRefs } from "../internal/types.js";
 
 setup({
   updateSnapshots: !process.env.CI,
@@ -566,7 +567,8 @@ test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
   }).types([6, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as MaybeMasked<Source>;
+    const x = {} as Unmasked<Source>;
+    const y = {} as ContainsFragmentsRefs<Source>;
 
     expectTypeOf(x).branded.toEqualTypeOf<{
       __typename: "Foo";
@@ -575,6 +577,7 @@ test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
       foo: string;
       structuredMetadata: StructuredMetadata;
     }>();
+    expectTypeOf(y).toEqualTypeOf<true>();
   });
 });
 

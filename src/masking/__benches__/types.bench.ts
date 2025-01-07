@@ -4,7 +4,7 @@ import { expectTypeOf } from "expect-type";
 import type { DeepPartial } from "../../utilities/index.js";
 
 import { setup } from "@ark/attest";
-import { ContainsFragmentsRefs } from "../internal/types.js";
+import type { ContainsFragmentsRefs } from "../internal/types.js";
 
 setup({
   updateSnapshots: !process.env.CI,

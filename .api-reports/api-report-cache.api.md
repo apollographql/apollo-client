@@ -772,8 +772,8 @@ export function makeVar<T>(value: T): ReactiveVar<T>;
 type MaybeMasked<TData> = TData extends any ? true extends IsAny<TData> ? TData : TData extends {
     __masked?: true;
 } ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
-    enabled: true;
-} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never;
+    enabled: false;
+} ? true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : TData : never;
 
 // @public (undocumented)
 export interface MergeInfo {

@@ -2619,7 +2619,7 @@ describe.skip("Type Tests", () => {
     }
   });
 
-  test("uses unmasked types when using TypedDocumentNode", async () => {
+  test("uses unmodified types when using TypedDocumentNode", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -2666,12 +2666,12 @@ describe.skip("Type Tests", () => {
       { data, previousData, fetchMore, refetch, subscribeToMore, updateQuery },
     ] = useLazyQuery(query, {
       onCompleted(data) {
-        expectTypeOf(data).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(data).toEqualTypeOf<Query>();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedQuery | undefined>();
-    expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
@@ -2694,7 +2694,7 @@ describe.skip("Type Tests", () => {
     {
       const { data } = await execute();
 
-      expectTypeOf(data).toEqualTypeOf<UnmaskedQuery | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
 
     {
@@ -2708,13 +2708,13 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<UnmaskedQuery>();
+      expectTypeOf(data).toEqualTypeOf<Query>();
     }
 
     {
       const { data } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<UnmaskedQuery>();
+      expectTypeOf(data).toEqualTypeOf<Query>();
     }
   });
 });

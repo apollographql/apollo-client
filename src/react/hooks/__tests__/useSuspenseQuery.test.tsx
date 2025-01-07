@@ -11826,8 +11826,8 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery);
 
-        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
-        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
       }
 
       {
@@ -11880,11 +11880,9 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, { errorPolicy: "ignore" });
 
-        expectTypeOf(data).toEqualTypeOf<
-          UnmaskedVariablesCaseData | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
         expectTypeOf(data).not.toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
+          UnmaskedVariablesCaseData | undefined
         >();
       }
 
@@ -11938,11 +11936,9 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, { errorPolicy: "all" });
 
-        expectTypeOf(data).toEqualTypeOf<
-          UnmaskedVariablesCaseData | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
         expectTypeOf(data).not.toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
+          UnmaskedVariablesCaseData | undefined
         >();
       }
 
@@ -11994,8 +11990,8 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, { errorPolicy: "none" });
 
-        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
-        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
       }
 
       {
@@ -12051,10 +12047,10 @@ describe("useSuspenseQuery", () => {
         >(maskedQuery, { returnPartialData: true });
 
         expectTypeOf(data).toEqualTypeOf<
-          DeepPartial<UnmaskedVariablesCaseData>
+          DeepPartial<MaskedVariablesCaseData>
         >();
         expectTypeOf(data).not.toEqualTypeOf<
-          DeepPartial<MaskedVariablesCaseData>
+          DeepPartial<UnmaskedVariablesCaseData>
         >();
       }
 
@@ -12114,8 +12110,8 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, { returnPartialData: false });
 
-        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
-        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
       }
 
       {
@@ -12180,11 +12176,9 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, { skip: true });
 
-        expectTypeOf(data).toEqualTypeOf<
-          UnmaskedVariablesCaseData | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
         expectTypeOf(data).not.toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
+          UnmaskedVariablesCaseData | undefined
         >();
       }
 
@@ -12259,11 +12253,9 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, options.skip ? skipToken : { variables: { id: "1" } });
 
-        expectTypeOf(data).toEqualTypeOf<
-          UnmaskedVariablesCaseData | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
         expectTypeOf(data).not.toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
+          UnmaskedVariablesCaseData | undefined
         >();
       }
 
@@ -12322,11 +12314,9 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, options.skip ? skipToken : undefined);
 
-        expectTypeOf(data).toEqualTypeOf<
-          UnmaskedVariablesCaseData | undefined
-        >();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData | undefined>();
         expectTypeOf(data).not.toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
+          UnmaskedVariablesCaseData | undefined
         >();
       }
 
@@ -12392,10 +12382,10 @@ describe("useSuspenseQuery", () => {
         >(maskedQuery, options.skip ? skipToken : { returnPartialData: true });
 
         expectTypeOf(data).toEqualTypeOf<
-          DeepPartial<UnmaskedVariablesCaseData> | undefined
+          DeepPartial<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(data).not.toEqualTypeOf<
-          DeepPartial<MaskedVariablesCaseData> | undefined
+          DeepPartial<UnmaskedVariablesCaseData> | undefined
         >();
       }
 
@@ -12455,8 +12445,8 @@ describe("useSuspenseQuery", () => {
           VariablesCaseVariables
         >(maskedQuery, { fetchPolicy: "no-cache" });
 
-        expectTypeOf(data).toEqualTypeOf<UnmaskedVariablesCaseData>();
-        expectTypeOf(data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
       }
 
       {
@@ -12733,10 +12723,10 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(data).toEqualTypeOf<
-          DeepPartial<UnmaskedVariablesCaseData>
+          DeepPartial<MaskedVariablesCaseData>
         >();
         expectTypeOf(data).not.toEqualTypeOf<
-          DeepPartial<MaskedVariablesCaseData>
+          DeepPartial<UnmaskedVariablesCaseData>
         >();
       }
 
@@ -12778,8 +12768,10 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<UnmaskedVariablesCaseData>();
-        expectTypeOf(result.data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(
+          result.data
+        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
       }
     });
 
@@ -12834,8 +12826,10 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<UnmaskedVariablesCaseData>();
-        expectTypeOf(result.data).not.toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(
+          result.data
+        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
       }
     });
 

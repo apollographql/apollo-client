@@ -2443,7 +2443,7 @@ describe.skip("Type Tests", () => {
     expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
   });
 
-  test("uses unmasked types when using TypedDocumentNode", async () => {
+  test("uses unmodified type when using TypedDocumentNode", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -2457,30 +2457,19 @@ describe.skip("Type Tests", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    interface UnmaskedSubscription {
-      userUpdated: {
-        __typename: "User";
-        id: string;
-        name: string;
-        age: number;
-      };
-    }
-
     const subscription: TypedDocumentNode<Subscription> = gql``;
 
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
-        expectTypeOf(data.data).toEqualTypeOf<
-          UnmaskedSubscription | undefined
-        >();
+        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
       },
       onSubscriptionData: ({ subscriptionData }) => {
         expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          UnmaskedSubscription | undefined
+          Subscription | undefined
         >();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedSubscription | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
   });
 });

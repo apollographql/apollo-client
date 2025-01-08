@@ -1518,6 +1518,12 @@ export class QueryManager<TStore> {
       // WatchQueryOptions object.
       normalized.variables = variables;
 
+      queryInfo.init({
+        document: normalized.query,
+        variables: normalized.variables,
+        networkStatus,
+      });
+
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
@@ -1833,12 +1839,6 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus: NetworkStatus
   ): SourcesAndInfo<TData> {
-    queryInfo.init({
-      document: query,
-      variables,
-      networkStatus,
-    });
-
     const readCache = () =>
       queryInfo.getDiff({
         query: queryInfo.document!,

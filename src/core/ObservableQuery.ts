@@ -80,6 +80,10 @@ export class ObservableQuery<
     return this.lastQuery || this.options.query;
   }
 
+  public get networkStatus(): NetworkStatus | undefined {
+    return this.queryInfo.networkStatus;
+  }
+
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
   /**
@@ -247,7 +251,7 @@ export class ObservableQuery<
     const lastResult = this.getLastResult(true);
 
     const networkStatus =
-      this.queryInfo.networkStatus ||
+      this.networkStatus ||
       (lastResult && lastResult.networkStatus) ||
       NetworkStatus.ready;
 
@@ -498,7 +502,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
     const { queryInfo } = this;
-    const originalNetworkStatus = queryInfo.networkStatus;
+    const originalNetworkStatus = this.networkStatus;
     queryInfo.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
       this.observe();
@@ -521,7 +525,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 
-        if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
+        if (this.networkStatus === NetworkStatus.fetchMore) {
           queryInfo.networkStatus = originalNetworkStatus;
         }
 
@@ -849,7 +853,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const maybeFetch = () => {
       if (this.pollingInfo) {
         if (
-          !isNetworkRequestInFlight(this.queryInfo.networkStatus) &&
+          !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
           this.reobserve(

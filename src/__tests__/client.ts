@@ -6046,6 +6046,60 @@ describe("custom document transforms", () => {
   });
 });
 
+test("Resolves client fields in fragments via read functions", async () => {
+  const query = gql`
+    query ($id: ID!) {
+      product(id: $id) {
+        id
+        name
+        ...ProductFields
+      }
+    }
+
+    fragment ProductFields on Product {
+      id
+      checked @client
+    }
+  `;
+  const checkedReadFunction = jest.fn(() => true);
+
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Product: {
+        fields: {
+          checked: {
+            read: checkedReadFunction,
+          },
+        },
+      },
+    },
+  });
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink([
+      {
+        request: { query, variables: { id: "1" } },
+        result: {
+          data: { product: { __typename: "Product", id: "1", name: "Test" } },
+        },
+      },
+    ]),
+  });
+
+  const { data } = await client.query({ query, variables: { id: "1" } });
+
+  expect(data).toEqual({
+    product: {
+      __typename: "Product",
+      id: "1",
+      name: "Test",
+      checked: true,
+    },
+  });
+
+  expect(checkedReadFunction).toHaveBeenCalledTimes(1);
+});
+
 function clientRoundtrip(
   query: DocumentNode,
   data: FormattedExecutionResult,

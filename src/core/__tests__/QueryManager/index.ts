@@ -3810,7 +3810,7 @@ describe("QueryManager", () => {
 
       const queryId = "1";
       queryManager
-        .fetchQuery(queryId, { query })
+        .fetchQuery(queryManager.getQuery(queryId), { query })
         .catch((e) => reject("Exception thrown for stopped query"));
 
       queryManager.removeQuery(queryId);
@@ -3840,7 +3840,7 @@ describe("QueryManager", () => {
           delay: 10000, //i.e. forever
         });
         queryManager
-          .fetchQuery("made up id", { query })
+          .fetchQuery(queryManager.getQuery("made up id"), { query })
           .then(() => {
             reject(new Error("Returned a result."));
           })
@@ -4325,7 +4325,7 @@ describe("QueryManager", () => {
           delay: 100,
         });
         queryManager
-          .fetchQuery("made up id", { query })
+          .fetchQuery(queryManager.getQuery("made up id"), { query })
           .then(resolve)
           .catch((error) => {
             reject(new Error("Should not return an error"));

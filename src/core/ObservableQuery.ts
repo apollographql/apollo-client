@@ -492,6 +492,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     combinedOptions.query = this.transformDocument(combinedOptions.query);
 
     const qid = this.queryManager.generateQueryId();
+    const fetchMoreQueryInfo = this.queryManager.getQuery(qid);
 
     // If a temporary query is passed to `fetchMore`, we don't want to store
     // it as the last query result since it may be an optimized query for
@@ -524,7 +525,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return this.queryManager
-      .fetchQuery(qid, combinedOptions, NetworkStatus.fetchMore)
+      .fetchQuery(fetchMoreQueryInfo, combinedOptions, NetworkStatus.fetchMore)
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 

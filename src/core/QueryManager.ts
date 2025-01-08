@@ -656,15 +656,12 @@ export class QueryManager<TStore> {
   }
 
   public fetchQuery<TData, TVars extends OperationVariables>(
-    queryId: string,
+    queryInfo: QueryInfo,
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(
-      this.getQuery(queryId),
-      options,
-      networkStatus
-    ).concast.promise as TODO;
+    return this.fetchConcastWithInfo(queryInfo, options, networkStatus).concast
+      .promise as TODO;
   }
 
   public getQueryStore() {
@@ -824,8 +821,9 @@ export class QueryManager<TStore> {
     );
 
     const query = this.transform(options.query);
+    const queryInfo = this.getQuery(queryId);
 
-    return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
+    return this.fetchQuery<TData, TVars>(queryInfo, { ...options, query })
       .then(
         (result) =>
           result && {

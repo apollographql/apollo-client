@@ -105,7 +105,7 @@ const defaultHttpOptions: HttpQueryOptions = {
 
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
-  accept: "*/*",
+  accept: "application/graphql-response+json",
   // The content-type header describes the type of the body of the request, and
   // so it typically only is sent with requests that actually have bodies. One
   // could imagine that Apollo Client would remove this header when constructing

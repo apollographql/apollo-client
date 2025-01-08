@@ -710,7 +710,7 @@ describe("HttpLink", () => {
             const headers = fetchMock.lastCall()![1]!.headers as any;
             expect(headers.authorization).toBe("1234");
             expect(headers["content-type"]).toBe("application/json");
-            expect(headers.accept).toBe("*/*");
+            expect(headers.accept).toBe("application/graphql-response+json");
           })
         );
       }
@@ -728,7 +728,7 @@ describe("HttpLink", () => {
           const headers = fetchMock.lastCall()![1]!.headers as any;
           expect(headers.authorization).toBe("1234");
           expect(headers["content-type"]).toBe("application/json");
-          expect(headers.accept).toBe("*/*");
+          expect(headers.accept).toBe("application/graphql-response+json");
         })
       );
     });
@@ -752,7 +752,7 @@ describe("HttpLink", () => {
             const headers = fetchMock.lastCall()![1]!.headers as any;
             expect(headers.authorization).toBe("1234");
             expect(headers["content-type"]).toBe("application/json");
-            expect(headers.accept).toBe("*/*");
+            expect(headers.accept).toBe("application/graphql-response+json");
           })
         );
       }
@@ -776,7 +776,7 @@ describe("HttpLink", () => {
             const headers = fetchMock.lastCall()![1]!.headers as any;
             expect(headers.authorization).toBe("1234");
             expect(headers["content-type"]).toBe("application/json");
-            expect(headers.accept).toBe("*/*");
+            expect(headers.accept).toBe("application/graphql-response+json");
           })
         );
       }
@@ -1911,7 +1911,7 @@ describe("HttpLink", () => {
                 "/graphql",
                 expect.objectContaining({
                   headers: {
-                    accept: "*/*",
+                    accept: "application/graphql-response+json",
                     "content-type": "application/json",
                   },
                 })

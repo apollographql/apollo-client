@@ -84,6 +84,10 @@ export class ObservableQuery<
     return this.queryInfo.networkStatus;
   }
 
+  public set networkStatus(networkStatus: NetworkStatus | undefined) {
+    this.queryInfo.networkStatus = networkStatus;
+  }
+
   // Computed shorthand for this.options.variables, preserved for
   // backwards compatibility.
   /**
@@ -501,9 +505,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
-    const { queryInfo } = this;
     const originalNetworkStatus = this.networkStatus;
-    queryInfo.networkStatus = NetworkStatus.fetchMore;
+    this.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
       this.observe();
     }
@@ -526,7 +529,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.queryManager.removeQuery(qid);
 
         if (this.networkStatus === NetworkStatus.fetchMore) {
-          queryInfo.networkStatus = originalNetworkStatus;
+          this.networkStatus = originalNetworkStatus;
         }
 
         if (isCached) {

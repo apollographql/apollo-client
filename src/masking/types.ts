@@ -44,7 +44,8 @@ export type MaybeMasked<TData> =
     // prevent "Type instantiation is excessively deep and possibly infinite."
     true extends IsAny<TData> ? TData
     : TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
-    : DataMasking extends { enabled: false } ?
+    : DataMasking extends { mode: "preserveTypes" } ? TData
+    : DataMasking extends { mode: "unmask" } ?
       true extends ContainsFragmentsRefs<TData> ?
         Unmasked<TData>
       : TData

@@ -837,11 +837,11 @@ It's important that the parent query or fragment selects any [`keyFields`](../ca
 
 ### Nesting fragments in other fragments
 
-<Note>
-You can nest fragments with or without data masking (for an example, see the section on [colocating fragments](#colocating-fragments).) The following section describes how you can use masking in components with `useFragment`.
-</Note>
-
 As your UI grows in complexity, it is common to split up components into smaller, more reusable chunks. As a result you may end up with more deeply nested components that have their own data requirements. Much like queries, we can nest fragments within other fragments.
+
+<Note>
+You can nest fragments with or without data masking (for an example, see the section on [colocating fragments](#colocating-fragments).) This section describes how you can use masking in components with `useFragment`.
+</Note>
 
 Let's add a `Comment` component that will be used by `PostDetails` to render the `topComment` for the post.
 

@@ -99,9 +99,6 @@ describe("Subscription lifecycles", () => {
     stream.unsubscribe();
 
     await wait(10);
-    // fire off first result
-    link.simulateResult({ result: { data: initialData } });
-    await wait(10);
 
     // step 4, start new Subscription;
     const recycled = resubscribe();

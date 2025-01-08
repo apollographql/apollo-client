@@ -1502,31 +1502,26 @@ export class QueryManager<TStore> {
     } = options;
 
     const normalized = Object.assign({}, options, {
-      query,
       variables,
       fetchPolicy,
       errorPolicy,
       returnPartialData,
       notifyOnNetworkStatusChange,
       context,
-      oldNetworkStatus: queryInfo.networkStatus,
     });
 
     const fromVariables = (variables: TVars) => {
-      // Since normalized is always a fresh copy of options, it's safe to
-      // modify its properties here, rather than creating yet another new
-      // WatchQueryOptions object.
-      normalized.variables = variables;
+      const oldNetworkStatus = queryInfo.networkStatus;
 
       queryInfo.init({
-        document: normalized.query,
-        variables: normalized.variables,
+        document: query,
+        variables,
         networkStatus,
       });
 
       const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
-        normalized,
+        { ...normalized, oldNetworkStatus },
         networkStatus
       );
 
@@ -1822,8 +1817,6 @@ export class QueryManager<TStore> {
   private fetchQueryByPolicy<TData, TVars extends OperationVariables>(
     queryInfo: QueryInfo,
     {
-      query,
-      variables,
       fetchPolicy,
       refetchWritePolicy,
       errorPolicy,
@@ -1831,7 +1824,7 @@ export class QueryManager<TStore> {
       context,
       notifyOnNetworkStatusChange,
       oldNetworkStatus,
-    }: WatchQueryOptions<TVars, TData> & {
+    }: Omit<WatchQueryOptions<TVars, TData>, "query" | "variables"> & {
       oldNetworkStatus: NetworkStatus | undefined;
     },
     // The initial networkStatus for this fetch, most often
@@ -1839,6 +1832,9 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus: NetworkStatus
   ): SourcesAndInfo<TData> {
+    const query = queryInfo.document!;
+    const variables = queryInfo.variables;
+
     const readCache = () =>
       queryInfo.getDiff({
         query: queryInfo.document!,
@@ -1907,7 +1903,7 @@ export class QueryManager<TStore> {
     const resultsFromLink = () =>
       this.getResultsFromLink<TData, TVars>(queryInfo, cacheWriteBehavior, {
         query,
-        variables,
+        variables: variables as TVars,
         context,
         fetchPolicy,
         errorPolicy,

@@ -1509,6 +1509,7 @@ export class QueryManager<TStore> {
       returnPartialData,
       notifyOnNetworkStatusChange,
       context,
+      oldNetworkStatus: queryInfo.networkStatus,
     });
 
     const fromVariables = (variables: TVars) => {
@@ -1823,14 +1824,15 @@ export class QueryManager<TStore> {
       returnPartialData,
       context,
       notifyOnNetworkStatusChange,
-    }: WatchQueryOptions<TVars, TData>,
+      oldNetworkStatus,
+    }: WatchQueryOptions<TVars, TData> & {
+      oldNetworkStatus: NetworkStatus | undefined;
+    },
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus
   ): SourcesAndInfo<TData> {
-    const oldNetworkStatus = queryInfo.networkStatus;
-
     queryInfo.init({
       document: query,
       variables,

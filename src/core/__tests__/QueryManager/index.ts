@@ -96,7 +96,7 @@ describe("QueryManager", () => {
 
   // Helper method that sets up a mockQueryManager and then passes on the
   // results to an observer.
-  const assertWithObserver = ({
+  const getObservableStream = ({
     query,
     variables = {},
     queryOptions = {},
@@ -200,7 +200,7 @@ describe("QueryManager", () => {
   }
 
   it("handles GraphQL errors", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -224,7 +224,7 @@ describe("QueryManager", () => {
   });
 
   it("handles GraphQL errors as data", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -252,7 +252,7 @@ describe("QueryManager", () => {
   });
 
   it("handles GraphQL errors with data returned", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -282,7 +282,7 @@ describe("QueryManager", () => {
   });
 
   it("empty error array (handle non-spec-compliant server) #156", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -321,7 +321,7 @@ describe("QueryManager", () => {
   // Easy to get into this state if you write an incorrect `formatError`
   // function with graphql-server or express-graphql
   it("error array with nulls (handle non-spec-compliant server) #1185", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -344,7 +344,7 @@ describe("QueryManager", () => {
   });
 
   it("handles network errors", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -402,7 +402,7 @@ describe("QueryManager", () => {
   // XXX this looks like a bug in zen-observable but we should figure
   // out a solution for it
   it.skip("handles an unsubscribe action that happens before data returns", async () => {
-    const stream = assertWithObserver({
+    const stream = getObservableStream({
       query: gql`
         query people {
           allPeople(first: 1) {
@@ -4246,7 +4246,7 @@ describe("QueryManager", () => {
     });
 
     it("should be passed to the observer as false if we are returning all the data", async () => {
-      const stream = assertWithObserver({
+      const stream = getObservableStream({
         query: gql`
           query {
             author {

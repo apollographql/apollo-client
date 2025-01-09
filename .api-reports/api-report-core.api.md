@@ -1412,13 +1412,13 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
-export type MaybeMasked<TData> = TData extends any ? true extends IsAny<TData> ? TData : TData extends {
-    __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
-    mode: "preserveTypes";
-} ? TData : DataMasking extends {
+export type MaybeMasked<TData> = DataMasking extends {
     mode: "unmask";
-} ? true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : TData : never;
+} ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
+    __masked?: true;
+} ? Prettify<RemoveMaskedMarker<TData>> : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never : DataMasking extends {
+    mode: "preserveTypes";
+} ? TData : TData;
 
 // @public (undocumented)
 export interface MergeInfo {

@@ -6,7 +6,7 @@ Changes the default behavior of the `MaybeMasked` type to preserve types unless 
 
 A new `mode` option has now been introduced to allow for the old behavior. See the next section on migrating if you wish to maintain the old default behavior after upgrading to this version.
 
-### Migrating from 3.12.4 or below
+### Migrating from <= v3.12.4
 
 If you've adopted data masking and have opted in to using masked types by setting the `enabled` property to `true`, you can remove this configuration entirely:
 

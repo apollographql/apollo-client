@@ -5,6 +5,7 @@ import type { DeepPartial } from "../../utilities/index.js";
 
 import { setup } from "@ark/attest";
 import type { ContainsFragmentsRefs } from "../internal/types.js";
+import type { TypedDocumentNode } from "../../index.js";
 
 setup({
   updateSnapshots: !process.env.CI,
@@ -594,4 +595,35 @@ test("recursive types: no error 'Type instantiation is excessively deep and poss
 
     expectTypeOf(x).branded.toEqualTypeOf<Source>();
   });
+});
+
+test("MaybeMasked can be called with a generic if `mode` is not set to `unmask`", (prefix) => {
+  function withGenericResult<T extends { [key: string]: string }>(
+    arg: TypedDocumentNode<T, {}>
+  ) {
+    bench(prefix + "Result generic - instantiations", () => {
+      const maybeMasked: MaybeMasked<typeof arg> = arg;
+      return maybeMasked;
+    }).types();
+
+    bench(prefix + "Result generic - functionality", () => {
+      const maybeMasked: MaybeMasked<typeof arg> = arg;
+      expectTypeOf(maybeMasked).toEqualTypeOf(arg);
+    });
+  }
+  function withGenericDocument<T extends TypedDocumentNode>(arg: T) {
+    bench(prefix + "Result generic - instantiations", () => {
+      const maybeMasked: MaybeMasked<T> = arg;
+      return maybeMasked;
+    }).types();
+
+    bench(prefix + "Result generic - functionality", () => {
+      const maybeMasked: MaybeMasked<T> = arg;
+      // cannot use unresolved generic with `expectTypeOf` here so we just try an assignment the other way round
+      const test: T = maybeMasked;
+      return test;
+    });
+  }
+  withGenericResult({} as any);
+  withGenericDocument({} as any);
 });

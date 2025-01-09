@@ -25,7 +25,7 @@ import {
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 import { InvariantError } from "../../../utilities/globals";
-import { MaskedDocumentNode } from "../../../masking";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
@@ -2567,12 +2567,12 @@ describe.skip("Type Tests", () => {
       { data, previousData, subscribeToMore, fetchMore, refetch, updateQuery },
     ] = useLazyQuery(query, {
       onCompleted(data) {
-        expectTypeOf(data).toEqualTypeOf<Query>();
+        expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Query | undefined>();
-    expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+    expectTypeOf(previousData).toEqualTypeOf<Masked<Query> | undefined>();
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
@@ -2595,7 +2595,7 @@ describe.skip("Type Tests", () => {
     {
       const { data } = await execute();
 
-      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
     }
 
     {
@@ -2609,13 +2609,13 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Query>();
+      expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
     }
 
     {
       const { data } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Query>();
+      expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
     }
   });
 

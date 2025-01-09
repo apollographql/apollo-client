@@ -20,7 +20,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
-import { MaskedDocumentNode } from "../../../masking";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
@@ -2433,16 +2433,18 @@ describe.skip("Type Tests", () => {
 
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
-        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
+        expectTypeOf(data.data).toEqualTypeOf<
+          Masked<Subscription> | undefined
+        >();
       },
       onSubscriptionData: ({ subscriptionData }) => {
         expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          Subscription | undefined
+          Masked<Subscription> | undefined
         >();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Masked<Subscription> | undefined>();
   });
 
   test("uses unmodified type when using TypedDocumentNode", async () => {

@@ -1168,25 +1168,13 @@ const config: CodegenConfig = {
 
 Additionally, if you use the [generated `useFragment` function](https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#the-usefragment-helper), you must use Apollo Client's [`useFragment`](#usefragment) hook instead.
 
-#### Opting in to use masked types
+<MinVersion version="3.12.5">
+#### Setting a types mode for masked types
+</MinVersion>
 
-<Note>
-We recommend that you opt in to use masked types only after you've [enabled `dataMasking`](#enabling-data-masking) in your `ApolloClient` instance.
-</Note>
+Apollo Client provides different modes to work with operation types throughout your application. You change the mode by modifying the `DataMasking` exported type from the `@apollo/client` package using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) ability. Specifying a mode is optional and only needed when you prefer to use a different mode other than the default.
 
-By default, the client unwraps operation types and provides the full operation result type. To prevent this behavior and have the client use masked types, you need to opt in. This strategy allows for [incremental adoption](#incremental-adoption-in-an-existing-application) in your application and avoids the need to update large parts of your application to satisfy the change in types.
-
-You can opt in to use the masked types in one of two ways.
-
-##### Opting in globally
-
-To turn on masked types for your whole application at once, modify the `DataMasking` exported type from `@apollo/client` using TypeScript's [declaration merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html) ability.
-
-<Tip>
-We recommend this approach for most cases. Use this approach with the [`@unmask` directive](./directives#unmask) for the best path to [incremental adoption](#incremental-adoption-in-an-existing-application).
-</Tip>
-
-First, create a TypeScript file that will be used to modify the `DataMasking` type.
+To modify the data masking mode used in the client, first create a TypeScript file that will be used to modify the `DataMasking` type.
 
 ```ts title="apollo-client.d.ts"
 // This import is necessary to ensure all Apollo Client imports
@@ -1195,7 +1183,7 @@ import '@apollo/client';
 
 declare module "@apollo/client" {
   interface DataMasking {
-    enabled: true;
+    mode: "preserveTypes";
   }
 }
 ```
@@ -1204,9 +1192,25 @@ declare module "@apollo/client" {
 This example uses `apollo-client.d.ts` as the file name to make it easily identifiable. You can name this file as you wish.
 </Note>
 
-With `enabled` set to `true`, any request-based API will type `data` using the masked type and prevent the client from unwrapping it.
+##### Modes
 
-##### Opting in per operation
+<Note>
+Prior to Apollo Client version 3.12.5, the default was to [unmask](#unmask) the types. If you upgrade to 3.12.5 or later and wish to maintain the same default as 3.12.4 or below, set the mode to [`unmask`](#unmask). See pull request [#12252](https://github.com/apollographql/apollo-client/pull/12252) for more details on this change.
+</Note>
+
+###### `preserveTypes` (default)
+
+Setting the mode to `preserveTypes` makes no modification to the operation types regardless of whether the type definitions are masked or unmasked. This provides a simpler upgrade path when you're ready to [incrementally adopt](#incremental-adoption-in-an-existing-application) data masking.
+
+###### `unmask`
+
+Setting the mode to `unmask` will unwrap masked types and provide the full result type. Use this mode when you [generate masked types](#generating-masked-types) but need to maintain access to the full result type, such as using this with [per-operation masked types](#using-per-operation-masked-types).
+
+##### Using per-operation masked types
+
+<Note>
+This is only useful if you have changed the types mode to `unmask`. Using this with `preserveTypes` has no effect.
+</Note>
 
 If you prefer an incremental approach, you can opt in to use masked types per operation. This can be useful when your application creates multiple Apollo Client instances where only a subset enables data masking.
 
@@ -1315,7 +1319,7 @@ In this example, the `GetPosts` query selects enough fields to satisfy the `Post
 On rare occasions, you may need access to the unmasked type of a particular operation. Apollo Client provides the `Unmasked` helper type that unwraps masked types and removes meta information on the type.
 
 <Note>
-This is the same helper type the client uses when unwrapping types while data masking is turned off or for APIs that use the full result.
+This is the same helper type the client uses when unwrapping types while the TypeScript data masking `mode` is set to `unmask` or for APIs that use the full result.
 </Note>
 
 ```ts
@@ -1419,9 +1423,9 @@ new ApolloClient({
 
 > Enabling data masking early in the adoption process makes it much easier to adopt for newly added queries and fragments since masking becomes the default behavior. Ideally data masking is enabled in the same pull request as the `@unmask` changes to ensure that no new queries and fragments are introduced to the codebase without the `@unmask` modifications applied.
 
-#### 3. Generate and opt in to use masked types
+#### 3. Generate masked types
 
-If you are using TypeScript in your application, you will need to update your GraphQL Codegen configuration to [generate masked types](#generating-masked-types). Once you generate masked types, [opt in](#opting-in-to-use-masked-types) to use the masking types with your client.
+If you are using TypeScript in your application, you will need to update your GraphQL Codegen configuration to [generate masked types](#generating-masked-types).
 
 Learn more about using TypeScript with data masking in the ["Using with TypeScript"](#using-with-typescript) section.
 

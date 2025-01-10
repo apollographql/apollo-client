@@ -1695,16 +1695,18 @@ type MaybeAsync<T> = T | PromiseLike<T>;
 // @public (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;
 
-// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
-type MaybeMasked<TData> = TData extends any ? true extends IsAny<TData> ? TData : TData extends {
+type MaybeMasked<TData> = DataMasking extends {
+    mode: "unmask";
+} ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
     __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
-    enabled: true;
-} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never;
+} ? Prettify<RemoveMaskedMarker<TData>> : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never : DataMasking extends {
+    mode: "preserveTypes";
+} ? TData : TData;
 
 // @public (undocumented)
 export function mergeDeep<T extends any[]>(...sources: T): TupleToIntersection<T>;

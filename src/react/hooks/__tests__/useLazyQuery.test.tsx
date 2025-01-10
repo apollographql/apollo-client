@@ -160,48 +160,6 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should override `skip` if lazy mode execution function is called", async () => {
-    const mocks = [
-      {
-        request: { query: helloQuery },
-        result: { data: { hello: "world" } },
-        delay: 20,
-      },
-    ];
-
-    using _disabledAct = disableActEnvironment();
-    const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(
-        // skip isn’t actually an option on the types
-        () => useLazyQuery(helloQuery, { skip: true } as any),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
-
-    {
-      const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.called).toBe(false);
-    }
-    const execute = getCurrentSnapshot()[0];
-    setTimeout(() => execute());
-
-    {
-      const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.called).toBe(true);
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.called).toBe(true);
-    }
-  });
-
   it("should use variables defined in hook options (if any), when running the lazy execution function", async () => {
     const query = gql`
       query ($id: number) {

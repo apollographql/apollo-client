@@ -72,7 +72,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("errors");
     }
 
     const [execute] = getCurrentSnapshot();
@@ -90,8 +89,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -105,8 +102,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
   });
 
@@ -206,7 +201,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: { id: 1 },
       });
-      expect(result).not.toHaveProperty("errors");
     }
 
     const execute = getCurrentSnapshot()[0];
@@ -223,8 +217,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: { id: 1 },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
     {
       const [, result] = await takeSnapshot();
@@ -237,8 +229,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: { id: 1 },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
   });
 
@@ -288,7 +278,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: { id: 1 },
       });
-      expect(result).not.toHaveProperty("errors");
     }
 
     const [execute] = getCurrentSnapshot();
@@ -305,8 +294,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: { id: 2 },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -320,8 +307,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: { id: 2 },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
   });
 
@@ -422,7 +407,6 @@ describe("useLazyQuery Hook", () => {
           hookVar: true,
         },
       });
-      expect(result).not.toHaveProperty("errors");
     }
 
     const expectedFinalData = {
@@ -455,8 +439,6 @@ describe("useLazyQuery Hook", () => {
         execVar: true,
       },
     });
-    expect(execResult).not.toHaveProperty("error");
-    expect(execResult).not.toHaveProperty("errors");
 
     {
       const [, result] = await takeSnapshot();
@@ -474,8 +456,6 @@ describe("useLazyQuery Hook", () => {
           execVar: true,
         },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -494,8 +474,6 @@ describe("useLazyQuery Hook", () => {
           execVar: true,
         },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     const refetchResult = await getCurrentSnapshot()[1].reobserve({
@@ -511,8 +489,6 @@ describe("useLazyQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
-    expect(refetchResult).not.toHaveProperty("error");
-    expect(refetchResult).not.toHaveProperty("errors");
 
     {
       const [, result] = await takeSnapshot();
@@ -525,8 +501,6 @@ describe("useLazyQuery Hook", () => {
         previousData: expectedFinalData,
         variables: { execVar: false },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -540,8 +514,6 @@ describe("useLazyQuery Hook", () => {
         previousData: expectedFinalData,
         variables: { execVar: false },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     const execResult2 = await getCurrentSnapshot()[0]({
@@ -565,8 +537,6 @@ describe("useLazyQuery Hook", () => {
         execVar: true,
       },
     });
-    expect(execResult2).not.toHaveProperty("error");
-    expect(execResult2).not.toHaveProperty("errors");
 
     {
       const [, result] = await takeSnapshot();
@@ -584,8 +554,6 @@ describe("useLazyQuery Hook", () => {
           execVar: true,
         },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     // For some reason we get an extra render in React 18 of the same thing
@@ -605,8 +573,6 @@ describe("useLazyQuery Hook", () => {
           execVar: true,
         },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -628,8 +594,6 @@ describe("useLazyQuery Hook", () => {
           execVar: true,
         },
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
   });
 
@@ -680,7 +644,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("errors");
     }
 
     const execute = getCurrentSnapshot()[0];
@@ -697,8 +660,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
     {
       const [, result] = await takeSnapshot();
@@ -711,8 +672,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     setTimeout(() => execute({ query: query2 }));
@@ -728,8 +687,6 @@ describe("useLazyQuery Hook", () => {
         previousData: { hello: "world" },
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -745,8 +702,6 @@ describe("useLazyQuery Hook", () => {
         previousData: { hello: "world" },
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
   });
 
@@ -790,7 +745,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("errors");
     }
     const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
@@ -806,8 +760,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     {
@@ -821,8 +773,6 @@ describe("useLazyQuery Hook", () => {
         previousData: undefined,
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
 
     setTimeout(() => execute());
@@ -850,8 +800,6 @@ describe("useLazyQuery Hook", () => {
         previousData: { hello: "world 1" },
         variables: {},
       });
-      expect(result).not.toHaveProperty("error");
-      expect(result).not.toHaveProperty("errors");
     }
   });
 

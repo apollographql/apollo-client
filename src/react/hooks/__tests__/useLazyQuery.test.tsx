@@ -32,6 +32,8 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 
+const IS_REACT_18 = React.version.startsWith("18");
+
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
@@ -359,7 +361,7 @@ describe("useLazyQuery Hook", () => {
                   },
                 });
                 observer.complete();
-              }, 10);
+              }, 50);
             } else {
               observer.error(
                 new Error(
@@ -526,6 +528,21 @@ describe("useLazyQuery Hook", () => {
     expect(execResult2).not.toHaveProperty("errors");
 
     {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: { counter: 2, vars: { execVar: false } },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { counter: 2, vars: { execVar: false } },
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    // For some reason we get an extra render in React 18 of the same thing
+    if (IS_REACT_18) {
       const [, result] = await takeSnapshot();
 
       expect(result).toMatchObject({

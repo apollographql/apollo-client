@@ -139,24 +139,24 @@ describe("useLazyQuery Hook", () => {
       });
 
     {
-      const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.called).toBe(false);
+      const [, { loading, called }] = await takeSnapshot();
+      expect(loading).toBe(false);
+      expect(called).toBe(false);
     }
 
     const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
     {
-      const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.called).toBe(true);
+      const [, { loading, called }] = await takeSnapshot();
+      expect(loading).toBe(true);
+      expect(called).toBe(true);
     }
 
     {
-      const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.called).toBe(true);
+      const [, { loading, called }] = await takeSnapshot();
+      expect(loading).toBe(false);
+      expect(called).toBe(true);
     }
   });
 

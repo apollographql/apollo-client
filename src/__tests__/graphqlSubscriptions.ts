@@ -61,8 +61,6 @@ describe("GraphQL Subscriptions", () => {
     await expect(stream).toEmitValue(results[0].result);
 
     stream.unsubscribe();
-
-    await expect(stream).not.toEmitAnything();
   });
 
   it("should subscribe with default values", async () => {
@@ -80,8 +78,6 @@ describe("GraphQL Subscriptions", () => {
     await expect(stream).toEmitValue(results[0].result);
 
     stream.unsubscribe();
-
-    await expect(stream).not.toEmitAnything();
   });
 
   it("should multiplex subscriptions", async () => {

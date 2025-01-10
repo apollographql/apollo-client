@@ -1447,52 +1447,88 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     const executePromise = Promise.resolve().then(() => execute());
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "error 1" }] })
-      );
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        variables: {},
+      });
     }
 
-    await executePromise.then((result) => {
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error!.message).toBe("error 1");
+    expect(await executePromise).toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: undefined,
+      error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+      errors: [{ message: "error 1" }],
+      variables: {},
     });
 
     void execute();
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "error 1" }] })
-      );
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        // TODO: Why is this only populated when in loading state?
+        errors: [{ message: "error 1" }],
+        variables: {},
+      });
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "error 2" }] })
-      );
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+        variables: {},
+      });
     }
   });
 

@@ -2738,7 +2738,7 @@ describe("useLazyQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -2789,26 +2789,40 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result.data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
+      expect(result).toEqualQueryResult({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
         },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
 
       // Loading
       await takeSnapshot();
 
       {
-        const [, { data }] = await takeSnapshot();
+        const [, result] = await takeSnapshot();
 
-        expect(data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
       }
     });

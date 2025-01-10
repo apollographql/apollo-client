@@ -780,33 +780,78 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: false,
+        error: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(result).not.toHaveProperty("errors");
     }
     const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 1" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
 
     setTimeout(() => execute());
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toEqual({ hello: "world 1" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
     }
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 2" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
   });
 

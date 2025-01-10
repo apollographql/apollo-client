@@ -2465,25 +2465,45 @@ describe("useLazyQuery Hook", () => {
 
       {
         const [, result] = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toBeUndefined();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
       }
+
       const execute = getCurrentSnapshot()[0];
       setTimeout(execute);
 
       {
         const [, result] = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.loading);
-        expect(result.data).toBeUndefined();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
       {
         const [, result] = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.error);
-        expect(result.data).toBeUndefined();
-        expect(result.error!.message).toBe("from the network");
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ networkError }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
       }
     }
 

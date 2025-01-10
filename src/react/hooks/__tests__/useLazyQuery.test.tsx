@@ -32,6 +32,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 
+const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
 
 describe("useLazyQuery Hook", () => {
@@ -1674,36 +1675,93 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(query), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    const [execute] = result.current;
+    const [execute] = await peekSnapshot();
 
-    await act(async () => {
-      const promise1 = execute({ variables: { id: "1" } });
-      const promise2 = execute({ variables: { id: "2" } });
+    {
+      const [, result] = await takeSnapshot();
 
-      await expect(promise1).resolves.toMatchObject({
-        ...mocks[0].result,
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
         loading: false,
-        called: true,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {} as Variables,
       });
+    }
 
-      await expect(promise2).resolves.toMatchObject({
-        ...mocks[1].result,
-        loading: false,
-        called: true,
-      });
-    });
+    const promise1 = execute({ variables: { id: "1" } });
+    const promise2 = execute({ variables: { id: "2" } });
 
-    expect(result.current[1]).toMatchObject({
-      ...mocks[1].result,
+    expect(await promise1).toEqualQueryResult({
+      data: mocks[0].result.data,
       loading: false,
       called: true,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "2" },
     });
+
+    expect(await promise2).toEqualQueryResult({
+      data: mocks[1].result.data,
+      loading: false,
+      called: true,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "2" },
+    });
+
+    if (IS_REACT_17) {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: mocks[1].result.data,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("uses the most recent options when the hook rerenders before execution", async () => {
@@ -1737,31 +1795,84 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result, rerender } = renderHook(
-      ({ id }) => useLazyQuery(query, { variables: { id } }),
-      {
-        initialProps: { id: "1" },
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(
+        ({ id }) => useLazyQuery(query, { variables: { id } }),
+        {
+          initialProps: { id: "1" },
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    rerender({ id: "2" });
+    {
+      const [, result] = await takeSnapshot();
 
-    const [execute] = result.current;
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
 
-    let promise: Promise<QueryResult<Data, Variables>>;
-    act(() => {
-      promise = execute();
-    });
+    await rerender({ id: "2" });
 
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual(mocks[1].result.data);
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    await expect(promise!).resolves.toMatchObject({
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+    const promise = execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: mocks[1].result.data,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "2" },
+      });
+    }
+
+    expect(await promise).toEqualQueryResult({
       data: mocks[1].result.data,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "2" },
     });
   });
 

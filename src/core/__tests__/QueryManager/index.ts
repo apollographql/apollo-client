@@ -3239,7 +3239,7 @@ describe("QueryManager", () => {
       expect(queryManager.mutationStore).toEqual({});
     });
 
-    xit("should only refetch once when we store reset", async () => {
+    it.skip("should only refetch once when we store reset", async () => {
       let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {

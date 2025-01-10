@@ -1596,11 +1596,14 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    const queryResult = await promise!;
-
-    expect(queryResult.data).toEqual({ hello: "Greetings" });
-    expect(queryResult.loading).toBe(false);
-    expect(queryResult.networkStatus).toBe(NetworkStatus.ready);
+    expect(await promise!).toEqualQueryResult({
+      data: { hello: "Greetings" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
   });
 
   it("handles resolving multiple in-flight requests when component unmounts", async () => {
@@ -1628,12 +1631,15 @@ describe("useLazyQuery Hook", () => {
 
     const expectedResult = {
       data: { hello: "Greetings" },
+      called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
     };
 
-    await expect(promise1!).resolves.toMatchObject(expectedResult);
-    await expect(promise2!).resolves.toMatchObject(expectedResult);
+    expect(await promise1!).toEqualQueryResult(expectedResult);
+    expect(await promise2!).toEqualQueryResult(expectedResult);
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755

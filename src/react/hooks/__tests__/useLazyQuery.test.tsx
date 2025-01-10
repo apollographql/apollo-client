@@ -2560,93 +2560,77 @@ describe("useLazyQuery Hook", () => {
 
       const defaultFetchPolicy = "network-only";
 
-      const { result } = renderHook(
-        () => {
-          const [exec, query] = useLazyQuery(counterQuery, {
-            defaultOptions: {
-              fetchPolicy: defaultFetchPolicy,
-              notifyOnNetworkStatusChange: true,
-            },
-          });
-          return {
-            exec,
-            query,
-          };
-        },
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => {
+            return useLazyQuery(counterQuery, {
+              defaultOptions: {
+                fetchPolicy: defaultFetchPolicy,
+                notifyOnNetworkStatusChange: true,
+              },
+            });
+          },
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toBeUndefined();
-        },
-        { interval: 1 }
-      );
+      {
+        const [, result] = await takeSnapshot();
 
-      let execPromise: Promise<QueryResult>;
-      await act(async () => {
-        execPromise = result.current.exec();
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const [execute] = getCurrentSnapshot();
+      const execResult = await execute();
+
+      expect(execResult).toEqualQueryResult({
+        data: { counter: 1 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
-      const execResult = await execPromise!;
-      expect(execResult.loading).toBe(false);
-      expect(execResult.called).toBe(true);
-      expect(execResult.data).toEqual({ counter: 1 });
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toMatchObject({ counter: 1 });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(true);
-        },
-        { interval: 1 }
-      );
+      {
+        const [, result] = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.called).toBe(true);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toEqual({ counter: 1 });
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      const { options } = result.current.query.observable;
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { counter: 1 },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const { options } = getCurrentSnapshot()[1].observable;
       expect(options.fetchPolicy).toBe(defaultFetchPolicy);
     });
   });

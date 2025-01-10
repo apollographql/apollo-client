@@ -2160,50 +2160,103 @@ describe("useLazyQuery Hook", () => {
 
     const trackClosureValue = jest.fn();
 
-    const { result, rerender } = renderHook(
-      () => {
-        let count = countRef.current;
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(
+        () => {
+          let count = countRef.current;
 
-        return useLazyQuery(query, {
-          fetchPolicy: "cache-first",
-          variables: { id: "1" },
-          onCompleted: () => {
-            trackClosureValue("onCompleted", count);
-          },
-          onError: () => {
-            trackClosureValue("onError", count);
-          },
-          skipPollAttempt: () => {
-            trackClosureValue("skipPollAttempt", count);
-            return false;
-          },
-          nextFetchPolicy: (currentFetchPolicy) => {
-            trackClosureValue("nextFetchPolicy", count);
-            return currentFetchPolicy;
-          },
-        });
-      },
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+          return useLazyQuery(query, {
+            fetchPolicy: "cache-first",
+            variables: { id: "1" },
+            onCompleted: () => {
+              trackClosureValue("onCompleted", count);
+            },
+            onError: () => {
+              trackClosureValue("onError", count);
+            },
+            skipPollAttempt: () => {
+              trackClosureValue("skipPollAttempt", count);
+              return false;
+            },
+            nextFetchPolicy: (currentFetchPolicy) => {
+              trackClosureValue("nextFetchPolicy", count);
+              return currentFetchPolicy;
+            },
+          });
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    const [originalExecute] = result.current;
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    const [originalExecute] = getCurrentSnapshot();
 
     countRef.current++;
-    rerender();
+    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
+    await rerender(undefined);
 
-    expect(result.current[0]).toBe(originalExecute);
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    let [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
 
     // Check for stale closures with onCompleted
-    await act(() => result.current[0]());
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({
-        user: { id: "1", name: "John Doe" },
+    await execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "1" },
       });
-    });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { user: { id: "1", name: "John Doe" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
 
     // after fetch
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 1);
@@ -2211,17 +2264,55 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     countRef.current++;
-    rerender();
 
-    expect(result.current[0]).toBe(originalExecute);
+    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
+    await rerender(undefined);
+
+    [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
 
     // Check for stale closures with onError
-    await act(() => result.current[0]({ variables: { id: "2" } }));
-    await waitFor(() => {
-      expect(result.current[1].error).toEqual(
-        new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
-      );
-    });
+    await execute({ variables: { id: "2" } });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { user: { id: "1", name: "John Doe" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
+      });
+    }
 
     // variables changed
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 2);
@@ -2231,16 +2322,53 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     countRef.current++;
-    rerender();
+    // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
+    await rerender(undefined);
 
-    expect(result.current[0]).toBe(originalExecute);
+    [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
 
-    await act(() => result.current[0]({ variables: { id: "3" } }));
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({
-        user: { id: "3", name: "Johnny Three" },
+    await execute({ variables: { id: "3" } });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "2" },
       });
-    });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "3" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { user: { id: "3", name: "Johnny Three" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { id: "1", name: "John Doe" } },
+        variables: { id: "3" },
+      });
+    }
 
     // variables changed
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 3);
@@ -2250,9 +2378,9 @@ describe("useLazyQuery Hook", () => {
     trackClosureValue.mockClear();
 
     // Test for stale closures for skipPollAttempt
-    result.current[1].startPolling(20);
+    getCurrentSnapshot()[1].startPolling(20);
     await wait(50);
-    result.current[1].stopPolling();
+    getCurrentSnapshot()[1].stopPolling();
 
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });

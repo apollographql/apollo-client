@@ -594,34 +594,78 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBe(undefined);
-    }
-    const execute = getCurrentSnapshot()[0];
 
+      expect(result).toMatchObject({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
+
+      expect(result).toMatchObject({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world" });
+
+      expect(result).toMatchObject({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
 
     setTimeout(() => execute({ query: query2 }));
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
+
+      expect(result).toMatchObject({
+        data: { hello: "world" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { hello: "world" },
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
 
     {
       const [, result] = await takeSnapshot();
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({ name: "changed" });
+
+      expect(result).toMatchObject({
+        data: { name: "changed" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world" },
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
   });
 

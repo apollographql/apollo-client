@@ -191,7 +191,16 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
+
+      expect(result).toMatchObject({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("errors");
     }
 
     const execute = getCurrentSnapshot()[0];
@@ -199,12 +208,29 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
+
+      expect(result).toMatchObject({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 1" });
+
+      expect(result).toMatchObject({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
     }
   });
 
@@ -228,35 +254,64 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(
-      () =>
-        useLazyQuery(query, {
-          variables: { id: 1 },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(query, {
+            variables: { id: 1 },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    const [execute] = getCurrentSnapshot();
     setTimeout(() => execute({ variables: { id: 2 } }));
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world 2" });
+      expect(result).toMatchObject({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
   });
 
   it("should merge variables from original hook and execution function", async () => {

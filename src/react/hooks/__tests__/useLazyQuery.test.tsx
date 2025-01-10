@@ -2539,14 +2539,14 @@ describe("useLazyQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "GetCounter") {
-                observer.next({
-                  data: {
-                    counter: ++count,
-                  },
-                });
                 setTimeout(() => {
+                  observer.next({
+                    data: {
+                      counter: ++count,
+                    },
+                  });
                   observer.complete();
-                }, 10);
+                }, 20);
               } else {
                 observer.error(
                   new Error(

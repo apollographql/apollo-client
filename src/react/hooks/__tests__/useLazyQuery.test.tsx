@@ -1539,30 +1539,37 @@ describe("useLazyQuery Hook", () => {
         result: {
           errors: [new GraphQLError("error 1")],
         },
+        delay: 20,
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(helloQuery),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    const execute = result.current[0];
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-        void execute();
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toBe(undefined);
-        void execute();
-      },
-      { interval: 1 }
-    );
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    void execute();
 
     // Making sure the rejection triggers a test failure.
     await wait(50);

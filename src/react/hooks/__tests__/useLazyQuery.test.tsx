@@ -2654,9 +2654,18 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
+
     const execute = getCurrentSnapshot()[0];
 
     const promise = execute();
@@ -2664,34 +2673,50 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     await client.clearStore();
 
-    const executionResult = await promise;
-    expect(executionResult.data).toBeUndefined();
-    expect(executionResult.loading).toBe(true);
-    expect(executionResult.error).toEqual(
-      new ApolloError({
+    await expect(promise).resolves.toEqualQueryResult({
+      data: undefined,
+      error: new ApolloError({
         networkError: new InvariantError(
           "Store reset while query was in flight (not completed in link chain)"
         ),
-      })
-    );
+      }),
+      errors: [],
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      called: true,
+      previousData: undefined,
+      variables: {},
+    });
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(
-        new ApolloError({
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({
           networkError: new InvariantError(
             "Store reset while query was in flight (not completed in link chain)"
           ),
-        })
-      );
+        }),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);

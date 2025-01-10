@@ -1892,31 +1892,82 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result, rerender } = renderHook(
-      ({ query }) => useLazyQuery(query),
-      {
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(({ query }) => useLazyQuery(query), {
         initialProps: { query },
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks}>{children}</MockedProvider>
         ),
-      }
-    );
+      });
 
-    rerender({ query: helloQuery });
+    {
+      const [, result] = await takeSnapshot();
 
-    const [execute] = result.current;
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    let promise: Promise<QueryResult<{ hello: string }>>;
-    act(() => {
-      promise = execute();
-    });
+    await rerender({ query: helloQuery });
 
-    await waitFor(() => {
-      expect(result.current[1].data).toEqual({ hello: "Greetings" });
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    await expect(promise!).resolves.toMatchObject({
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    const promise = execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "Greetings" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    expect(await promise).toEqualQueryResult({
       data: { hello: "Greetings" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
     });
   });
 

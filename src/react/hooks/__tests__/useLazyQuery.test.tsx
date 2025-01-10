@@ -351,13 +351,13 @@ describe("useLazyQuery Hook", () => {
         (request) =>
           new Observable((observer) => {
             if (request.operationName === "GetCounter") {
-              observer.next({
-                data: {
-                  counter: ++count,
-                  vars: request.variables,
-                },
-              });
               setTimeout(() => {
+                observer.next({
+                  data: {
+                    counter: ++count,
+                    vars: request.variables,
+                  },
+                });
                 observer.complete();
               }, 10);
             } else {
@@ -371,49 +371,42 @@ describe("useLazyQuery Hook", () => {
       ),
     });
 
-    const { result } = renderHook(
-      () => {
-        const [exec, query] = useLazyQuery(counterQuery, {
-          notifyOnNetworkStatusChange: true,
-          variables: {
-            hookVar: true,
-          },
-          defaultOptions: {
+    using __disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => {
+          return useLazyQuery(counterQuery, {
+            notifyOnNetworkStatusChange: true,
             variables: {
-              localDefaultVar: true,
+              hookVar: true,
             },
-          },
-        });
-        return {
-          exec,
-          query,
-        };
-      },
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+            defaultOptions: {
+              variables: {
+                localDefaultVar: true,
+              },
+            },
+          });
+        },
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.data).toBeUndefined();
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("errors");
+    }
 
     const expectedFinalData = {
       counter: 1,
@@ -425,154 +418,143 @@ describe("useLazyQuery Hook", () => {
       },
     };
 
-    let execResult: QueryResult;
-    await act(async () => {
-      execResult = await result.current.exec({
-        variables: {
-          execVar: true,
-        },
-      });
+    const [execute] = getCurrentSnapshot();
+    const execResult = await execute({
+      variables: {
+        execVar: true,
+      },
     });
 
-    await waitFor(
-      () => {
-        expect(execResult.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.networkStatus).toBe(NetworkStatus.ready);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult.data).toEqual(expectedFinalData);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 10 }
-    );
+    expect(execResult).toMatchObject({
+      data: expectedFinalData,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+    });
+    expect(execResult).not.toHaveProperty("error");
+    expect(execResult).not.toHaveProperty("errors");
 
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toEqual(expectedFinalData);
+    {
+      const [, result] = await takeSnapshot();
 
-    const refetchPromise = result.current.query.reobserve({
+      expect(result).toMatchObject({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: expectedFinalData,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    const refetchResult = await getCurrentSnapshot()[1].reobserve({
       fetchPolicy: "network-only",
       nextFetchPolicy: "cache-first",
       variables: {
         execVar: false,
       },
     });
-    await act(() => refetchPromise);
-    const refetchResult = await refetchPromise;
 
-    expect(refetchResult.loading).toBe(false);
-    expect(refetchResult.data).toEqual({
-      counter: 2,
-      vars: {
-        execVar: false,
-      },
+    expect(refetchResult).toEqual({
+      data: { counter: 2, vars: { execVar: false } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
+    expect(refetchResult).not.toHaveProperty("error");
+    expect(refetchResult).not.toHaveProperty("errors");
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current.query.data).toEqual({
-          counter: 2,
-          vars: {
-            execVar: false,
-          },
-        });
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    let execResult2: QueryResult;
-    await act(async () => {
-      execResult2 = await result.current.exec({
-        fetchPolicy: "cache-and-network",
-        nextFetchPolicy: "cache-first",
-        variables: {
-          execVar: true,
-        },
+      expect(result).toMatchObject({
+        data: expectedFinalData,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: expectedFinalData,
       });
-    });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
 
-    await waitFor(
-      () => {
-        expect(execResult2.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult2.called).toBe(true);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(execResult2.data).toEqual({
-          counter: 3,
-          vars: {
-            ...expectedFinalData.vars,
-            execVar: true,
-          },
-        });
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current.query.called).toBe(true);
-      },
-      { interval: 1 }
-    );
+      expect(result).toMatchObject({
+        data: { counter: 2, vars: { execVar: false } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: expectedFinalData,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current.query.loading).toBe(false);
-      },
-      { interval: 10 }
-    );
-    expect(result.current.query.called).toBe(true);
-    expect(result.current.query.data).toEqual({
-      counter: 3,
-      vars: {
-        ...expectedFinalData.vars,
+    const execResult2 = await getCurrentSnapshot()[0]({
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+      variables: {
         execVar: true,
       },
     });
+
+    expect(execResult2).toMatchObject({
+      data: { counter: 3, vars: { ...expectedFinalData.vars, execVar: true } },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { counter: 2, vars: { execVar: false } },
+    });
+    expect(execResult2).not.toHaveProperty("error");
+    expect(execResult2).not.toHaveProperty("errors");
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: { counter: 2, vars: { execVar: false } },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { counter: 2, vars: { execVar: false } },
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: {
+          counter: 3,
+          vars: { ...expectedFinalData.vars, execVar: true },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { counter: 2, vars: { execVar: false } },
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
   });
 
   it("changing queries", async () => {

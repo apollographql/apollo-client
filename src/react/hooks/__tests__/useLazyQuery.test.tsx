@@ -63,13 +63,14 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: {},
       });
       expect(result).not.toHaveProperty("errors");
     }
@@ -81,12 +82,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
+        variables: {},
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -95,12 +97,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { hello: "world" },
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: {},
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -194,13 +197,14 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: { id: 1 },
       });
       expect(result).not.toHaveProperty("errors");
     }
@@ -211,12 +215,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
+        variables: { id: 1 },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -224,12 +229,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { hello: "world 1" },
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: { id: 1 },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -273,13 +279,14 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: { id: 1 },
       });
       expect(result).not.toHaveProperty("errors");
     }
@@ -290,12 +297,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
+        variables: { id: 2 },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -304,12 +312,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { hello: "world 2" },
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: { id: 2 },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -320,6 +329,7 @@ describe("useLazyQuery Hook", () => {
     const counterQuery: TypedDocumentNode<
       {
         counter: number;
+        vars: Record<string, boolean>;
       },
       {
         hookVar?: boolean;
@@ -399,13 +409,18 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+        },
       });
       expect(result).not.toHaveProperty("errors");
     }
@@ -427,12 +442,18 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    expect(execResult).toMatchObject({
+    expect(execResult).toEqualQueryResult({
       data: expectedFinalData,
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
+      variables: {
+        globalDefaultVar: true,
+        localDefaultVar: true,
+        hookVar: true,
+        execVar: true,
+      },
     });
     expect(execResult).not.toHaveProperty("error");
     expect(execResult).not.toHaveProperty("errors");
@@ -440,12 +461,18 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -454,12 +481,18 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: expectedFinalData,
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -484,12 +517,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: expectedFinalData,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: expectedFinalData,
+        variables: { execVar: false },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -498,12 +532,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { counter: 2, vars: { execVar: false } },
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: expectedFinalData,
+        variables: { execVar: false },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -517,12 +552,18 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    expect(execResult2).toMatchObject({
+    expect(execResult2).toEqualQueryResult({
       data: { counter: 3, vars: { ...expectedFinalData.vars, execVar: true } },
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: { counter: 2, vars: { execVar: false } },
+      variables: {
+        globalDefaultVar: true,
+        localDefaultVar: true,
+        hookVar: true,
+        execVar: true,
+      },
     });
     expect(execResult2).not.toHaveProperty("error");
     expect(execResult2).not.toHaveProperty("errors");
@@ -530,12 +571,18 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { counter: 2, vars: { execVar: false } },
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: { counter: 2, vars: { execVar: false } },
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -545,12 +592,18 @@ describe("useLazyQuery Hook", () => {
     if (IS_REACT_18) {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { counter: 2, vars: { execVar: false } },
         called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: { counter: 2, vars: { execVar: false } },
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -559,7 +612,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: {
           counter: 3,
           vars: { ...expectedFinalData.vars, execVar: true },
@@ -568,6 +621,12 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { counter: 2, vars: { execVar: false } },
+        variables: {
+          globalDefaultVar: true,
+          localDefaultVar: true,
+          hookVar: true,
+          execVar: true,
+        },
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -612,13 +671,14 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: {},
       });
       expect(result).not.toHaveProperty("errors");
     }
@@ -629,12 +689,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
+        variables: {},
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -642,12 +703,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { hello: "world" },
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
+        variables: {},
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -658,12 +720,13 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { hello: "world" },
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { hello: "world" },
+        variables: {},
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");
@@ -674,12 +737,13 @@ describe("useLazyQuery Hook", () => {
       expect(result.loading).toBe(false);
       expect(result.data).toEqual({ name: "changed" });
 
-      expect(result).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: { name: "changed" },
         called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world" },
+        variables: {},
       });
       expect(result).not.toHaveProperty("error");
       expect(result).not.toHaveProperty("errors");

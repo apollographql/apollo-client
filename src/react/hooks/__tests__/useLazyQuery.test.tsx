@@ -2032,7 +2032,7 @@ describe("useLazyQuery Hook", () => {
     "does not issue multiple network calls when calling execute again without variables with a %s fetch policy",
     async (fetchPolicy) => {
       interface Data {
-        user: { id: string; name: string };
+        user: { id: string | null; name: string };
       }
 
       interface Variables {
@@ -2088,8 +2088,13 @@ describe("useLazyQuery Hook", () => {
       expect(fetchCount).toBe(1);
 
       await waitFor(() => {
-        expect(result.current[1].data).toEqual({
-          user: { id: "2", name: "John Doe" },
+        expect(result.current[1]).toEqualQueryResult({
+          data: { user: { id: "2", name: "John Doe" } },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: "2" },
         });
       });
 
@@ -2098,8 +2103,13 @@ describe("useLazyQuery Hook", () => {
       await act(() => result.current[0]());
 
       await waitFor(() => {
-        expect(result.current[1].data).toEqual({
-          user: { id: null, name: "John Default" },
+        expect(result.current[1]).toEqualQueryResult({
+          data: { user: { id: null, name: "John Default" } },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { user: { id: "2", name: "John Doe" } },
+          variables: {},
         });
       });
 

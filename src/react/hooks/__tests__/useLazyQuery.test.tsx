@@ -834,6 +834,7 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
+
       expect(result).toEqualQueryResult({
         data: undefined,
         error: undefined,
@@ -1253,7 +1254,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    expect(await executeResult).toEqualQueryResult({
+    await expect(executeResult).resolves.toEqualQueryResult({
       data: { hello: "world" },
       called: true,
       loading: false,
@@ -1363,7 +1364,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    expect(await executeResult).toEqualQueryResult({
+    await expect(executeResult).resolves.toEqualQueryResult({
       data: {
         countries: {
           code: "PA",
@@ -1406,7 +1407,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    expect(await executeResult).toEqualQueryResult({
+    await expect(executeResult).resolves.toEqualQueryResult({
       data: { countries: { code: "BA", name: "Bahamas" } },
       called: true,
       loading: false,
@@ -1489,7 +1490,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    expect(await executePromise).toEqualQueryResult({
+    await expect(executePromise).resolves.toEqualQueryResult({
       data: undefined,
       called: true,
       loading: false,
@@ -1597,7 +1598,7 @@ describe("useLazyQuery Hook", () => {
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
 
-    expect(await promise!).toEqualQueryResult({
+    await expect(promise!).resolves.toEqualQueryResult({
       data: { hello: "Greetings" },
       called: true,
       loading: false,
@@ -1639,8 +1640,8 @@ describe("useLazyQuery Hook", () => {
       variables: {},
     };
 
-    expect(await promise1!).toEqualQueryResult(expectedResult);
-    expect(await promise2!).toEqualQueryResult(expectedResult);
+    await expect(promise1!).resolves.toEqualQueryResult(expectedResult);
+    await expect(promise2!).resolves.toEqualQueryResult(expectedResult);
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
@@ -1704,7 +1705,7 @@ describe("useLazyQuery Hook", () => {
     const promise1 = execute({ variables: { id: "1" } });
     const promise2 = execute({ variables: { id: "2" } });
 
-    expect(await promise1).toEqualQueryResult({
+    await expect(promise1).resolves.toEqualQueryResult({
       data: mocks[0].result.data,
       loading: false,
       called: true,
@@ -1713,7 +1714,7 @@ describe("useLazyQuery Hook", () => {
       variables: { id: "2" },
     });
 
-    expect(await promise2).toEqualQueryResult({
+    await expect(promise2).resolves.toEqualQueryResult({
       data: mocks[1].result.data,
       loading: false,
       called: true,
@@ -1866,7 +1867,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    expect(await promise).toEqualQueryResult({
+    await expect(promise).resolves.toEqualQueryResult({
       data: mocks[1].result.data,
       called: true,
       loading: false,
@@ -1961,7 +1962,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    expect(await promise).toEqualQueryResult({
+    await expect(promise).resolves.toEqualQueryResult({
       data: { hello: "Greetings" },
       called: true,
       loading: false,

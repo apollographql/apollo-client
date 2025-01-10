@@ -2896,28 +2896,42 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result.data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
-      });
-
-      // Loading
-      await takeSnapshot();
-
-      {
-        const [, { data }] = await takeSnapshot();
-
-        expect(data).toEqual({
+      expect(result).toEqualQueryResult({
+        data: {
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User",
             age: 30,
           },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
       }
     });
@@ -2936,7 +2950,10 @@ describe("useLazyQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<
+        Unmasked<Query>,
+        Record<string, never>
+      > = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -2986,34 +3003,49 @@ describe("useLazyQuery Hook", () => {
       const [execute] = getCurrentSnapshot();
       const result = await execute();
 
-      expect(result.data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
-        },
-      });
-
-      // Loading
-      await takeSnapshot();
-
-      {
-        const [, { data }] = await takeSnapshot();
-
-        expect(data).toEqual({
+      expect(result).toEqualQueryResult({
+        data: {
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User",
             age: 30,
           },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      // Loading
+      await takeSnapshot();
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+              age: 30,
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
       }
     });
 
     it("masks queries updated by the cache", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -3025,7 +3057,7 @@ describe("useLazyQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -3080,14 +3112,21 @@ describe("useLazyQuery Hook", () => {
       await takeSnapshot();
 
       {
-        const [, { data }] = await takeSnapshot();
+        const [, result] = await takeSnapshot();
 
-        expect(data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
       }
 
@@ -3104,24 +3143,30 @@ describe("useLazyQuery Hook", () => {
       });
 
       {
-        const [, { data, previousData }] = await takeSnapshot();
+        const [, result] = await takeSnapshot();
 
-        expect(data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User (updated)",
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (updated)",
+            },
           },
-        });
-
-        expect(previousData).toEqual({
-          currentUser: { __typename: "User", id: 1, name: "Test User" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            currentUser: { __typename: "User", id: 1, name: "Test User" },
+          },
+          variables: {},
         });
       }
     });
 
     it("does not rerender when updating field in named fragment", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -3133,7 +3178,7 @@ describe("useLazyQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -3188,14 +3233,21 @@ describe("useLazyQuery Hook", () => {
       await takeSnapshot();
 
       {
-        const [, { data }] = await takeSnapshot();
+        const [, result] = await takeSnapshot();
 
-        expect(data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
       }
 

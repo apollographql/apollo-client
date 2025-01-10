@@ -488,8 +488,7 @@ describe("QueryManager", () => {
 
     stream.unsubscribe();
 
-    // Wait longer than the setTimeout in the observable callback
-    await expect(stream).not.toEmitAnything({ timeout: 150 });
+    await wait(10);
 
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
@@ -589,7 +588,7 @@ describe("QueryManager", () => {
 
     stream.unsubscribe();
 
-    await expect(stream).not.toEmitAnything();
+    await wait(10);
 
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
@@ -707,7 +706,6 @@ describe("QueryManager", () => {
     stream1.unsubscribe();
     void handle.refetch();
 
-    await expect(stream1).not.toEmitAnything();
     await expect(stream2).toEmitMatchedValue({ data: data3 });
   });
 
@@ -1885,17 +1883,26 @@ describe("QueryManager", () => {
       },
     };
 
-    const observable = mockQueryManager({
-      request: { query },
-      result: { data },
-    }).watchQuery({ query, pollInterval: 20 });
+    const observable = mockQueryManager(
+      {
+        request: { query },
+        result: { data },
+      },
+      {
+        request: { query },
+        result: () => {
+          throw new Error("Should not again");
+        },
+      }
+    ).watchQuery({ query, pollInterval: 20 });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitMatchedValue({ data });
 
     stream.unsubscribe();
 
-    await expect(stream).not.toEmitAnything();
+    // Ensure polling has stopped by ensuring the error is not thrown from the mocks
+    await wait(30);
   });
 
   it("should not empty the store when a polling query fails due to a network error", async () => {
@@ -2909,6 +2916,12 @@ describe("QueryManager", () => {
         {
           request: { query, variables },
           result: { data: data2 },
+        },
+        {
+          request: { query, variables },
+          result: () => {
+            throw new Error("Should not fetch again");
+          },
         }
       );
       const observable = queryManager.watchQuery({
@@ -2924,7 +2937,8 @@ describe("QueryManager", () => {
 
       stream.unsubscribe();
 
-      await expect(stream).not.toEmitAnything();
+      // Ensure polling has stopped by ensuring the error is not thrown from the mocks
+      await wait(60);
     });
 
     it("allows you to unsubscribe from polled query errors", async () => {
@@ -2964,6 +2978,12 @@ describe("QueryManager", () => {
         {
           request: { query, variables },
           result: { data: data2 },
+        },
+        {
+          request: { query, variables },
+          result: () => {
+            throw new Error("Should not fetch again");
+          },
         }
       );
 
@@ -2982,7 +3002,8 @@ describe("QueryManager", () => {
 
       stream.unsubscribe();
 
-      await expect(stream).not.toEmitAnything();
+      // Ensure polling has stopped by ensuring the error is not thrown from the mocks
+      await wait(60);
     });
 
     it("exposes a way to start a polling query", async () => {

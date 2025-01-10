@@ -25,7 +25,7 @@ import {
 import { useLazyQuery } from "../useLazyQuery";
 import { QueryResult } from "../../types/types";
 import { InvariantError } from "../../../utilities/globals";
-import { Masked, MaskedDocumentNode } from "../../../masking";
+import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
@@ -2727,6 +2727,7 @@ describe("useLazyQuery Hook", () => {
   describe("data masking", () => {
     it("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -2829,6 +2830,7 @@ describe("useLazyQuery Hook", () => {
 
     it("does not mask queries when dataMasking is `false`", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -2840,7 +2842,10 @@ describe("useLazyQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<
+        Unmasked<Query>,
+        Record<string, never>
+      > = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -2919,6 +2924,7 @@ describe("useLazyQuery Hook", () => {
 
     it("does not mask queries by default", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 

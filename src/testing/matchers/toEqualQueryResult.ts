@@ -26,7 +26,8 @@ export const toEqualQueryResult: MatcherFunction<
   const hint = this.utils.matcherHint(
     this.isNot ? ".not.toEqualQueryResult" : "toEqualQueryResult",
     "queryResult",
-    "expected"
+    "expected",
+    { isNot: this.isNot, promise: this.promise }
   );
 
   const checkedQueryResult = CHECKED_KEYS.reduce(

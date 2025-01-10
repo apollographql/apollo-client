@@ -71,6 +71,8 @@ interface ApolloCustomMatchers<R = void, T = {}> {
 
   toEqualQueryResult: T extends QueryResult<infer TData, infer TVariables> ?
     (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
+  : T extends Promise<QueryResult<infer TData, infer TVariables>> ?
+    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
   : { error: "matchers needs to be called on a QueryResult" };
 }
 

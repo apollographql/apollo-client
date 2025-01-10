@@ -833,40 +833,71 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBe(undefined);
-      expect(result.previousData).toBe(undefined);
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
     const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute());
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBe(undefined);
-      expect(result.previousData).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 1" });
-      expect(result.previousData).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     const refetch = getCurrentSnapshot()[1].refetch;
     setTimeout(() => refetch!());
+
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toEqual({ hello: "world 1" });
-      expect(result.previousData).toEqual({ hello: "world 1" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
     }
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 2" });
-      expect(result.previousData).toEqual({ hello: "world 1" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
     }
   });
 
@@ -899,8 +930,16 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     await tick();
@@ -908,25 +947,54 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 1" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 2" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
     }
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({ hello: "world 3" });
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world 3" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
     }
 
     getCurrentSnapshot()[1].stopPolling();
@@ -983,39 +1051,70 @@ describe("useLazyQuery Hook", () => {
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBe(undefined);
-      expect(result.previousData).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
     const execute = getCurrentSnapshot()[0];
     setTimeout(() => execute({ variables: { id: 1 } }));
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBe(undefined);
-      expect(result.previousData).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
     }
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual(data1);
-      expect(result.previousData).toBe(undefined);
+
+      expect(result).toEqualQueryResult({
+        data: data1,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
     }
 
     setTimeout(() => execute({ variables: { id: 2 } }));
 
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBe(undefined);
-      expect(result.previousData).toEqual(data1);
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: data1,
+        variables: { id: 2 },
+      });
     }
     {
       const [, result] = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual(data2);
-      expect(result.previousData).toEqual(data1);
+
+      expect(result).toEqualQueryResult({
+        data: data2,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: data1,
+        variables: { id: 2 },
+      });
     }
   });
 
@@ -1034,37 +1133,61 @@ describe("useLazyQuery Hook", () => {
 
     cache.writeQuery({ query: helloQuery, data: { hello: "from cache" } });
 
-    const { result } = renderHook(
-      () => useLazyQuery(helloQuery, { fetchPolicy: "cache-and-network" }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useLazyQuery(helloQuery, { fetchPolicy: "cache-and-network" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    // TODO: FIXME
-    expect(result.current[1].data).toEqual({ hello: "from cache" });
+      expect(result).toEqualQueryResult({
+        // TODO: FIXME
+        data: { hello: "from cache" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "from link" });
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "from link" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "from cache" },
+        variables: {},
+      });
+    }
   });
 
   it("should return a promise from the execution function which resolves with the result", async () => {

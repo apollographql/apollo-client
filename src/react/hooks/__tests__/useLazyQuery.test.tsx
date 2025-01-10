@@ -106,22 +106,19 @@ describe("useLazyQuery Hook", () => {
   });
 
   it("should set `called` to false by default", async () => {
-    const mocks = [
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(helloQuery),
       {
-        request: { query: helloQuery },
-        result: { data: { hello: "world" } },
-        delay: 20,
-      },
-    ];
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={[]}>{children}</MockedProvider>
+        ),
+      }
+    );
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    expect(result.current[1].called).toBe(false);
+    const [, { called }] = await takeSnapshot();
+
+    expect(called).toBe(false);
   });
 
   it("should set `called` to true after calling the lazy execute function", async () => {

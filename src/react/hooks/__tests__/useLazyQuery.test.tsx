@@ -49,31 +49,60 @@ describe("useLazyQuery Hook", () => {
         delay: 50,
       },
     ];
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    const [execute] = getCurrentSnapshot();
+
     setTimeout(() => execute());
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({ hello: "world" });
+      expect(result).toMatchObject({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toMatchObject({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+      });
+      expect(result).not.toHaveProperty("error");
+      expect(result).not.toHaveProperty("errors");
+    }
   });
 
   it("should set `called` to false by default", async () => {

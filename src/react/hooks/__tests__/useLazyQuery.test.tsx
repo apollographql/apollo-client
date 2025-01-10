@@ -1198,39 +1198,67 @@ describe("useLazyQuery Hook", () => {
         delay: 20,
       },
     ];
-    const { result } = renderHook(() => useLazyQuery(helloQuery), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
 
-    const executeResult = new Promise<QueryResult<any, any>>((resolve) => {
-      setTimeout(() => resolve(execute()));
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    let latestRenderResult: QueryResult;
-    await waitFor(() => {
-      latestRenderResult = result.current[1];
-      expect(latestRenderResult.loading).toBe(false);
-    });
-    await waitFor(() => {
-      latestRenderResult = result.current[1];
-      expect(latestRenderResult.data).toEqual({ hello: "world" });
-    });
+    const [execute] = getCurrentSnapshot();
 
-    return executeResult.then((finalResult) => {
-      expect(finalResult).toEqual(latestRenderResult);
+    await tick();
+    const executeResult = execute();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    expect(await executeResult).toEqualQueryResult({
+      data: { hello: "world" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
     });
   });
 
@@ -1281,76 +1309,109 @@ describe("useLazyQuery Hook", () => {
       },
     ];
 
-    const { result } = renderHook(() => useLazyQuery(query), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useLazyQuery(query), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await tick();
+    let executeResult = execute({ variables: { filter: "PA" } });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { filter: "PA" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { countries: { code: "PA", name: "Panama" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { filter: "PA" },
+      });
+    }
+
+    expect(await executeResult).toEqualQueryResult({
+      data: {
+        countries: {
+          code: "PA",
+          name: "Panama",
+        },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { filter: "PA" },
     });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const execute = result.current[0];
-    let executeResult: any;
-    setTimeout(() => {
-      executeResult = execute({ variables: { filter: "PA" } });
-    });
+    await tick();
+    executeResult = execute({ variables: { filter: "BA" } });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(true);
-      },
-      { interval: 1 }
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual({
-      countries: {
-        code: "PA",
-        name: "Panama",
-      },
-    });
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { countries: { code: "PA", name: "Panama" } },
+        variables: { filter: "BA" },
+      });
+    }
 
-    expect(executeResult).toBeInstanceOf(Promise);
-    expect((await executeResult).data).toEqual({
-      countries: {
-        code: "PA",
-        name: "Panama",
-      },
-    });
+    {
+      const [, result] = await takeSnapshot();
 
-    setTimeout(() => {
-      executeResult = execute({ variables: { filter: "BA" } });
-    });
+      expect(result).toEqualQueryResult({
+        data: { countries: { code: "BA", name: "Bahamas" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { countries: { code: "PA", name: "Panama" } },
+        variables: { filter: "BA" },
+      });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    await waitFor(
-      () => {
-        expect(result.current[1].data).toEqual({
-          countries: {
-            code: "BA",
-            name: "Bahamas",
-          },
-        });
-      },
-      { interval: 1 }
-    );
-
-    expect(executeResult).toBeInstanceOf(Promise);
-    expect((await executeResult).data).toEqual({
-      countries: {
-        code: "BA",
-        name: "Bahamas",
-      },
+    expect(await executeResult).toEqualQueryResult({
+      data: { countries: { code: "BA", name: "Bahamas" } },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { countries: { code: "PA", name: "Panama" } },
+      variables: { filter: "BA" },
     });
   });
 

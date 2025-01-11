@@ -240,7 +240,7 @@ describe("optimistic mutation results", () => {
       });
 
       it("handles errors produced by one mutation in a series", async () => {
-        expect.assertions(12);
+        expect.assertions(11);
         const client = await setup(
           {
             request: { query: mutation },
@@ -303,7 +303,7 @@ describe("optimistic mutation results", () => {
       });
 
       it("can run 2 mutations concurrently and handles all intermediate states well", async () => {
-        expect.assertions(36);
+        expect.assertions(35);
         function checkBothMutationsAreApplied(
           expectedText1: any,
           expectedText2: any
@@ -466,7 +466,7 @@ describe("optimistic mutation results", () => {
       });
 
       it("handles errors produced by one mutation in a series", async () => {
-        expect.assertions(12);
+        expect.assertions(11);
         const client = await setup(
           {
             request: { query: mutation },
@@ -528,7 +528,7 @@ describe("optimistic mutation results", () => {
       });
 
       it("can run 2 mutations concurrently and handles all intermediate states well", async () => {
-        expect.assertions(36);
+        expect.assertions(35);
         function checkBothMutationsAreApplied(
           expectedText1: any,
           expectedText2: any
@@ -831,7 +831,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("will use a passed variable in optimisticResponse", async () => {
-      expect.assertions(8);
+      expect.assertions(7);
       const client = await setup({
         request: { query: mutation, variables },
         result: mutationResult,
@@ -893,7 +893,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("will not update optimistically if optimisticResponse returns IGNORE sentinel object", async () => {
-      expect.assertions(7);
+      expect.assertions(6);
 
       const client = await setup({
         request: { query: mutation, variables },
@@ -1068,7 +1068,7 @@ describe("optimistic mutation results", () => {
     };
 
     it("will insert a single itemAsync to the beginning", async () => {
-      expect.assertions(9);
+      expect.assertions(8);
       const client = await setup({
         request: { query: mutation },
         result: mutationResult,
@@ -1116,7 +1116,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("two array insert like mutations", async () => {
-      expect.assertions(11);
+      expect.assertions(10);
       const client = await setup(
         {
           request: { query: mutation },
@@ -1198,7 +1198,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("two mutations, one fails", async () => {
-      expect.assertions(12);
+      expect.assertions(11);
       const client = await setup(
         {
           request: { query: mutation },
@@ -1452,7 +1452,7 @@ describe("optimistic mutation results", () => {
     };
 
     it("will insert a single itemAsync to the beginning", async () => {
-      expect.assertions(8);
+      expect.assertions(7);
       const client = await setup({
         request: { query: mutation },
         delay: 300,
@@ -1510,7 +1510,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("two array insert like mutations", async () => {
-      expect.assertions(11);
+      expect.assertions(10);
       const client = await setup(
         {
           request: { query: mutation },
@@ -1610,7 +1610,7 @@ describe("optimistic mutation results", () => {
     });
 
     it("two mutations, one fails", async () => {
-      expect.assertions(12);
+      expect.assertions(11);
       const client = await setup(
         {
           request: { query: mutation },
@@ -2299,7 +2299,7 @@ describe("optimistic mutation - githunt comments", () => {
   };
 
   it("can post a new comment", async () => {
-    expect.assertions(3);
+    expect.assertions(2);
     const mutationVariables = {
       repoFullName: "org/repo",
       commentContent: "New Comment",

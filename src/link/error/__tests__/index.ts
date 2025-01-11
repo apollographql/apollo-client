@@ -5,10 +5,10 @@ import { execute } from "../../core/execute";
 import { ServerError, throwServerError } from "../../utils/throwServerError";
 import { Observable } from "../../../utilities/observables/Observable";
 import { onError, ErrorLink } from "../";
-import { itAsync } from "../../../testing";
+import { ObservableStream } from "../../../testing/internal";
 
 describe("error handling", () => {
-  itAsync("has an easy way to handle GraphQL errors", (resolve, reject) => {
+  it("has an easy way to handle GraphQL errors", async () => {
     const query = gql`
       {
         foo {
@@ -17,7 +17,7 @@ describe("error handling", () => {
       }
     `;
 
-    let called: boolean;
+    let called = false;
     const errorLink = onError(({ graphQLErrors, networkError }) => {
       expect(graphQLErrors![0].message).toBe("resolver blew up");
       called = true;
@@ -34,47 +34,15 @@ describe("error handling", () => {
     );
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    execute(link, { query }).subscribe((result) => {
-      expect(result.errors![0].message).toBe("resolver blew up");
-      expect(called).toBe(true);
-      resolve();
-    });
+    const result = await stream.takeNext();
+
+    expect(result.errors![0].message).toBe("resolver blew up");
+    expect(called).toBe(true);
   });
-  itAsync(
-    "has an easy way to log client side (network) errors",
-    (resolve, reject) => {
-      const query = gql`
-        query Foo {
-          foo {
-            bar
-          }
-        }
-      `;
 
-      let called: boolean;
-      const errorLink = onError(({ operation, networkError }) => {
-        expect(networkError!.message).toBe("app is crashing");
-        expect(operation.operationName).toBe("Foo");
-        called = true;
-      });
-
-      const mockLink = new ApolloLink((operation) => {
-        throw new Error("app is crashing");
-      });
-
-      const link = errorLink.concat(mockLink);
-
-      execute(link, { query }).subscribe({
-        error: (e) => {
-          expect(e.message).toBe("app is crashing");
-          expect(called).toBe(true);
-          resolve();
-        },
-      });
-    }
-  );
-  itAsync("captures errors within links", (resolve, reject) => {
+  it("has an easy way to log client side (network) errors", async () => {
     const query = gql`
       query Foo {
         foo {
@@ -83,7 +51,36 @@ describe("error handling", () => {
       }
     `;
 
-    let called: boolean;
+    let called = false;
+    const errorLink = onError(({ operation, networkError }) => {
+      expect(networkError!.message).toBe("app is crashing");
+      expect(operation.operationName).toBe("Foo");
+      called = true;
+    });
+
+    const mockLink = new ApolloLink((operation) => {
+      throw new Error("app is crashing");
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    const error = await stream.takeError();
+
+    expect(error.message).toBe("app is crashing");
+    expect(called).toBe(true);
+  });
+
+  it("captures errors within links", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    let called = false;
     const errorLink = onError(({ operation, networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       expect(operation.operationName).toBe("Foo");
@@ -97,89 +94,79 @@ describe("error handling", () => {
     });
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    execute(link, { query }).subscribe({
-      error: (e) => {
-        expect(e.message).toBe("app is crashing");
-        expect(called).toBe(true);
-        resolve();
-      },
-    });
+    const error = await stream.takeError();
+
+    expect(error.message).toBe("app is crashing");
+    expect(called).toBe(true);
   });
-  itAsync(
-    "captures networkError.statusCode within links",
-    (resolve, reject) => {
-      const query = gql`
-        query Foo {
-          foo {
-            bar
-          }
+
+  it("captures networkError.statusCode within links", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
         }
-      `;
+      }
+    `;
 
-      let called: boolean;
-      const errorLink = onError(({ operation, networkError }) => {
-        expect(networkError!.message).toBe("app is crashing");
-        expect(networkError!.name).toBe("ServerError");
-        expect((networkError as ServerError).statusCode).toBe(500);
-        expect((networkError as ServerError).response.ok).toBe(false);
-        expect(operation.operationName).toBe("Foo");
-        called = true;
+    let called = false;
+    const errorLink = onError(({ operation, networkError }) => {
+      expect(networkError!.message).toBe("app is crashing");
+      expect(networkError!.name).toBe("ServerError");
+      expect((networkError as ServerError).statusCode).toBe(500);
+      expect((networkError as ServerError).response.ok).toBe(false);
+      expect(operation.operationName).toBe("Foo");
+      called = true;
+    });
+
+    const mockLink = new ApolloLink((operation) => {
+      return new Observable((obs) => {
+        const response = { status: 500, ok: false } as Response;
+        throwServerError(response, "ServerError", "app is crashing");
       });
+    });
 
-      const mockLink = new ApolloLink((operation) => {
-        return new Observable((obs) => {
-          const response = { status: 500, ok: false } as Response;
-          throwServerError(response, "ServerError", "app is crashing");
-        });
-      });
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-      const link = errorLink.concat(mockLink);
+    const error = await stream.takeError();
 
-      execute(link, { query }).subscribe({
-        error: (e) => {
-          expect(e.message).toBe("app is crashing");
-          expect(called).toBe(true);
-          resolve();
-        },
-      });
-    }
-  );
-  itAsync(
-    "sets graphQLErrors to undefined if networkError.result is an empty string",
-    (resolve, reject) => {
-      const query = gql`
-        query Foo {
-          foo {
-            bar
-          }
+    expect(error.message).toBe("app is crashing");
+    expect(called).toBe(true);
+  });
+
+  it("sets graphQLErrors to undefined if networkError.result is an empty string", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
         }
-      `;
+      }
+    `;
 
-      let called: boolean;
-      const errorLink = onError(({ graphQLErrors }) => {
-        expect(graphQLErrors).toBeUndefined();
-        called = true;
+    let called = false;
+    const errorLink = onError(({ graphQLErrors }) => {
+      expect(graphQLErrors).toBeUndefined();
+      called = true;
+    });
+
+    const mockLink = new ApolloLink((operation) => {
+      return new Observable((obs) => {
+        const response = { status: 500, ok: false } as Response;
+        throwServerError(response, "", "app is crashing");
       });
+    });
 
-      const mockLink = new ApolloLink((operation) => {
-        return new Observable((obs) => {
-          const response = { status: 500, ok: false } as Response;
-          throwServerError(response, "", "app is crashing");
-        });
-      });
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-      const link = errorLink.concat(mockLink);
+    await expect(stream).toEmitError();
+    expect(called).toBe(true);
+  });
 
-      execute(link, { query }).subscribe({
-        error: (e) => {
-          expect(called).toBe(true);
-          resolve();
-        },
-      });
-    }
-  );
-  itAsync("completes if no errors", (resolve, reject) => {
+  it("completes if no errors", async () => {
     const query = gql`
       {
         foo {
@@ -197,12 +184,13 @@ describe("error handling", () => {
     });
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    execute(link, { query }).subscribe({
-      complete: resolve,
-    });
+    await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
   });
-  itAsync("allows an error to be ignored", (resolve, reject) => {
+
+  it("allows an error to be ignored", async () => {
     const query = gql`
       {
         foo {
@@ -225,17 +213,16 @@ describe("error handling", () => {
     });
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    execute(link, { query }).subscribe({
-      next: ({ errors, data }) => {
-        expect(errors).toBe(null);
-        expect(data).toEqual({ foo: { id: 1 } });
-      },
-      complete: resolve,
+    await expect(stream).toEmitValue({
+      errors: null,
+      data: { foo: { id: 1 } },
     });
+    await expect(stream).toComplete();
   });
 
-  itAsync("can be unsubcribed", (resolve, reject) => {
+  it("can be unsubcribed", async () => {
     const query = gql`
       {
         foo {
@@ -258,62 +245,56 @@ describe("error handling", () => {
     });
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    const sub = execute(link, { query }).subscribe({
-      complete: () => {
-        reject("completed");
-      },
-    });
+    stream.unsubscribe();
 
-    sub.unsubscribe();
-
-    setTimeout(resolve, 10);
+    await expect(stream).not.toEmitAnything();
   });
 
-  itAsync(
-    "includes the operation and any data along with a graphql error",
-    (resolve, reject) => {
-      const query = gql`
-        query Foo {
-          foo {
-            bar
-          }
+  it("includes the operation and any data along with a graphql error", async () => {
+    const query = gql`
+      query Foo {
+        foo {
+          bar
         }
-      `;
+      }
+    `;
 
-      let called: boolean;
-      const errorLink = onError(({ graphQLErrors, response, operation }) => {
-        expect(graphQLErrors![0].message).toBe("resolver blew up");
-        expect(response!.data!.foo).toBe(true);
-        expect(operation.operationName).toBe("Foo");
-        expect(operation.getContext().bar).toBe(true);
-        called = true;
-      });
+    let called = false;
+    const errorLink = onError(({ graphQLErrors, response, operation }) => {
+      expect(graphQLErrors![0].message).toBe("resolver blew up");
+      expect(response!.data!.foo).toBe(true);
+      expect(operation.operationName).toBe("Foo");
+      expect(operation.getContext().bar).toBe(true);
+      called = true;
+    });
 
-      const mockLink = new ApolloLink((operation) =>
-        Observable.of({
-          data: { foo: true },
-          errors: [
-            {
-              message: "resolver blew up",
-            },
-          ],
-        } as any)
-      );
+    const mockLink = new ApolloLink((operation) =>
+      Observable.of({
+        data: { foo: true },
+        errors: [
+          {
+            message: "resolver blew up",
+          },
+        ],
+      } as any)
+    );
 
-      const link = errorLink.concat(mockLink);
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(
+      execute(link, { query, context: { bar: true } })
+    );
 
-      execute(link, { query, context: { bar: true } }).subscribe((result) => {
-        expect(result.errors![0].message).toBe("resolver blew up");
-        expect(called).toBe(true);
-        resolve();
-      });
-    }
-  );
+    const result = await stream.takeNext();
+
+    expect(result.errors![0].message).toBe("resolver blew up");
+    expect(called).toBe(true);
+  });
 });
 
 describe("error handling with class", () => {
-  itAsync("has an easy way to handle GraphQL errors", (resolve, reject) => {
+  it("has an easy way to handle GraphQL errors", async () => {
     const query = gql`
       {
         foo {
@@ -322,7 +303,7 @@ describe("error handling with class", () => {
       }
     `;
 
-    let called: boolean;
+    let called = false;
     const errorLink = new ErrorLink(({ graphQLErrors, networkError }) => {
       expect(graphQLErrors![0].message).toBe("resolver blew up");
       called = true;
@@ -339,46 +320,15 @@ describe("error handling with class", () => {
     );
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    execute(link, { query }).subscribe((result) => {
-      expect(result!.errors![0].message).toBe("resolver blew up");
-      expect(called).toBe(true);
-      resolve();
-    });
+    const result = await stream.takeNext();
+
+    expect(result!.errors![0].message).toBe("resolver blew up");
+    expect(called).toBe(true);
   });
-  itAsync(
-    "has an easy way to log client side (network) errors",
-    (resolve, reject) => {
-      const query = gql`
-        {
-          foo {
-            bar
-          }
-        }
-      `;
 
-      let called: boolean;
-      const errorLink = new ErrorLink(({ networkError }) => {
-        expect(networkError!.message).toBe("app is crashing");
-        called = true;
-      });
-
-      const mockLink = new ApolloLink((operation) => {
-        throw new Error("app is crashing");
-      });
-
-      const link = errorLink.concat(mockLink);
-
-      execute(link, { query }).subscribe({
-        error: (e) => {
-          expect(e.message).toBe("app is crashing");
-          expect(called).toBe(true);
-          resolve();
-        },
-      });
-    }
-  );
-  itAsync("captures errors within links", (resolve, reject) => {
+  it("has an easy way to log client side (network) errors", async () => {
     const query = gql`
       {
         foo {
@@ -387,7 +337,35 @@ describe("error handling with class", () => {
       }
     `;
 
-    let called: boolean;
+    let called = false;
+    const errorLink = new ErrorLink(({ networkError }) => {
+      expect(networkError!.message).toBe("app is crashing");
+      called = true;
+    });
+
+    const mockLink = new ApolloLink((operation) => {
+      throw new Error("app is crashing");
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    const error = await stream.takeError();
+
+    expect(error.message).toBe("app is crashing");
+    expect(called).toBe(true);
+  });
+
+  it("captures errors within links", async () => {
+    const query = gql`
+      {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    let called = false;
     const errorLink = new ErrorLink(({ networkError }) => {
       expect(networkError!.message).toBe("app is crashing");
       called = true;
@@ -400,16 +378,15 @@ describe("error handling with class", () => {
     });
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    execute(link, { query }).subscribe({
-      error: (e) => {
-        expect(e.message).toBe("app is crashing");
-        expect(called).toBe(true);
-        resolve();
-      },
-    });
+    const error = await stream.takeError();
+
+    expect(error.message).toBe("app is crashing");
+    expect(called).toBe(true);
   });
-  itAsync("completes if no errors", (resolve, reject) => {
+
+  it("completes if no errors", async () => {
     const query = gql`
       {
         foo {
@@ -428,11 +405,13 @@ describe("error handling with class", () => {
 
     const link = errorLink.concat(mockLink);
 
-    execute(link, { query }).subscribe({
-      complete: resolve,
-    });
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitNext();
+    await expect(stream).toComplete();
   });
-  itAsync("can be unsubcribed", (resolve, reject) => {
+
+  it("can be unsubcribed", async () => {
     const query = gql`
       {
         foo {
@@ -455,16 +434,11 @@ describe("error handling with class", () => {
     });
 
     const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
 
-    const sub = execute(link, { query }).subscribe({
-      complete: () => {
-        reject("completed");
-      },
-    });
+    stream.unsubscribe();
 
-    sub.unsubscribe();
-
-    setTimeout(resolve, 10);
+    await expect(stream).not.toEmitAnything();
   });
 });
 
@@ -491,118 +465,92 @@ describe("support for request retrying", () => {
     message: "some other error",
   };
 
-  itAsync(
-    "returns the retried request when forward(operation) is called",
-    (resolve, reject) => {
-      let errorHandlerCalled = false;
+  it("returns the retried request when forward(operation) is called", async () => {
+    let errorHandlerCalled = false;
 
-      let timesCalled = 0;
-      const mockHttpLink = new ApolloLink((operation) => {
-        if (timesCalled === 0) {
-          timesCalled++;
-          // simulate the first request being an error
-          return new Observable((observer) => {
-            observer.next(ERROR_RESPONSE as any);
-            observer.complete();
-          });
-        } else {
-          return new Observable((observer) => {
-            observer.next(GOOD_RESPONSE);
-            observer.complete();
-          });
+    let timesCalled = 0;
+    const mockHttpLink = new ApolloLink((operation) => {
+      if (timesCalled === 0) {
+        timesCalled++;
+        // simulate the first request being an error
+        return new Observable((observer) => {
+          observer.next(ERROR_RESPONSE as any);
+          observer.complete();
+        });
+      } else {
+        return new Observable((observer) => {
+          observer.next(GOOD_RESPONSE);
+          observer.complete();
+        });
+      }
+    });
+
+    const errorLink = new ErrorLink(
+      ({ graphQLErrors, response, operation, forward }) => {
+        if (graphQLErrors) {
+          errorHandlerCalled = true;
+          expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
+          expect(response!.data).not.toBeDefined();
+          expect(operation.operationName).toBe("Foo");
+          expect(operation.getContext().bar).toBe(true);
+          // retry operation if it resulted in an error
+          return forward(operation);
         }
-      });
+      }
+    );
 
-      const errorLink = new ErrorLink(
-        ({ graphQLErrors, response, operation, forward }) => {
-          try {
-            if (graphQLErrors) {
-              errorHandlerCalled = true;
-              expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
-              expect(response!.data).not.toBeDefined();
-              expect(operation.operationName).toBe("Foo");
-              expect(operation.getContext().bar).toBe(true);
-              // retry operation if it resulted in an error
-              return forward(operation);
-            }
-          } catch (error) {
-            reject(error);
-          }
+    const link = errorLink.concat(mockHttpLink);
+
+    const stream = new ObservableStream(
+      execute(link, { query: QUERY, context: { bar: true } })
+    );
+
+    await expect(stream).toEmitValue(GOOD_RESPONSE);
+    expect(errorHandlerCalled).toBe(true);
+    await expect(stream).toComplete();
+  });
+
+  it("supports retrying when the initial request had networkError", async () => {
+    let errorHandlerCalled = false;
+
+    let timesCalled = 0;
+    const mockHttpLink = new ApolloLink((operation) => {
+      if (timesCalled === 0) {
+        timesCalled++;
+        // simulate the first request being an error
+        return new Observable((observer) => {
+          observer.error(NETWORK_ERROR);
+        });
+      } else {
+        return new Observable((observer) => {
+          observer.next(GOOD_RESPONSE);
+          observer.complete();
+        });
+      }
+    });
+
+    const errorLink = new ErrorLink(
+      ({ networkError, response, operation, forward }) => {
+        if (networkError) {
+          errorHandlerCalled = true;
+          expect(networkError).toEqual(NETWORK_ERROR);
+          return forward(operation);
         }
-      );
+      }
+    );
 
-      const link = errorLink.concat(mockHttpLink);
+    const link = errorLink.concat(mockHttpLink);
 
-      execute(link, { query: QUERY, context: { bar: true } }).subscribe({
-        next(result) {
-          try {
-            expect(errorHandlerCalled).toBe(true);
-            expect(result).toEqual(GOOD_RESPONSE);
-          } catch (error) {
-            return reject(error);
-          }
-        },
-        complete() {
-          resolve();
-        },
-      });
-    }
-  );
+    const stream = new ObservableStream(
+      execute(link, { query: QUERY, context: { bar: true } })
+    );
 
-  itAsync(
-    "supports retrying when the initial request had networkError",
-    (resolve, reject) => {
-      let errorHandlerCalled = false;
+    await expect(stream).toEmitValue(GOOD_RESPONSE);
+    expect(errorHandlerCalled).toBe(true);
+    await expect(stream).toComplete();
+  });
 
-      let timesCalled = 0;
-      const mockHttpLink = new ApolloLink((operation) => {
-        if (timesCalled === 0) {
-          timesCalled++;
-          // simulate the first request being an error
-          return new Observable((observer) => {
-            observer.error(NETWORK_ERROR);
-          });
-        } else {
-          return new Observable((observer) => {
-            observer.next(GOOD_RESPONSE);
-            observer.complete();
-          });
-        }
-      });
-
-      const errorLink = new ErrorLink(
-        ({ networkError, response, operation, forward }) => {
-          try {
-            if (networkError) {
-              errorHandlerCalled = true;
-              expect(networkError).toEqual(NETWORK_ERROR);
-              return forward(operation);
-            }
-          } catch (error) {
-            reject(error);
-          }
-        }
-      );
-
-      const link = errorLink.concat(mockHttpLink);
-
-      execute(link, { query: QUERY, context: { bar: true } }).subscribe({
-        next(result) {
-          try {
-            expect(errorHandlerCalled).toBe(true);
-            expect(result).toEqual(GOOD_RESPONSE);
-          } catch (error) {
-            return reject(error);
-          }
-        },
-        complete() {
-          resolve();
-        },
-      });
-    }
-  );
-
-  itAsync("returns errors from retried requests", (resolve, reject) => {
+  it("returns errors from retried requests", async () => {
     let errorHandlerCalled = false;
 
     let timesCalled = 0;
@@ -623,38 +571,25 @@ describe("support for request retrying", () => {
 
     const errorLink = new ErrorLink(
       ({ graphQLErrors, networkError, response, operation, forward }) => {
-        try {
-          if (graphQLErrors) {
-            errorHandlerCalled = true;
-            expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
-            expect(response!.data).not.toBeDefined();
-            expect(operation.operationName).toBe("Foo");
-            expect(operation.getContext().bar).toBe(true);
-            // retry operation if it resulted in an error
-            return forward(operation);
-          }
-        } catch (error) {
-          reject(error);
+        if (graphQLErrors) {
+          errorHandlerCalled = true;
+          expect(graphQLErrors).toEqual(ERROR_RESPONSE.errors);
+          expect(response!.data).not.toBeDefined();
+          expect(operation.operationName).toBe("Foo");
+          expect(operation.getContext().bar).toBe(true);
+          // retry operation if it resulted in an error
+          return forward(operation);
         }
       }
     );
 
     const link = errorLink.concat(mockHttpLink);
 
-    let observerNextCalled = false;
-    execute(link, { query: QUERY, context: { bar: true } }).subscribe({
-      next(result) {
-        // should not be called
-        observerNextCalled = true;
-      },
-      error(error) {
-        // note that complete will not be after an error
-        // therefore we should end the test here with resolve()
-        expect(errorHandlerCalled).toBe(true);
-        expect(observerNextCalled).toBe(false);
-        expect(error).toEqual(NETWORK_ERROR);
-        resolve();
-      },
-    });
+    const stream = new ObservableStream(
+      execute(link, { query: QUERY, context: { bar: true } })
+    );
+
+    await expect(stream).toEmitError(NETWORK_ERROR);
+    expect(errorHandlerCalled).toBe(true);
   });
 });

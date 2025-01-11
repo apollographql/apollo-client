@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2024-11-04**
+**Last updated: 2025-01-08**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,42 +17,41 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### [3.12.0](https://github.com/apollographql/apollo-client/milestone/42) - November 18, 2024
-_Release candidate - November 11, 2024_
+#### 3.13.0 - January 13, 2024
+_Release candidate - January 7th_
 
-- Data masking
+- `useSuspenseFragment`
+
+#### [4.0.0](https://github.com/apollographql/apollo-client/milestone/31) - TBD
+_Release candidate - TBD_
 
 #### Upcoming features
 
-- Leaner client (under alternate entry point)
-- Better types for `useQuery`/`useMutation`/`useSubscription`
-- Introduce `useSuspenseFragment` that will suspend when the data is not yet loaded (experimental)
-
-#### 4.0
-
-- `Release 4.0` will be our next major release of the Client and is still in early planning.  See Github [4.0 Milestone](https://github.com/apollographql/apollo-client/milestone/31) for more details.
+##### 3.x.x
+- Deprecations and preparations for 4.0
 
 ### GraphQL Testing Library
 
 - New documentation
-- Subscription support (waiting for MSW WebSocket support to land)
+- Subscription support
+
+_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
 
 ### VSCode Extension
 
-- Bug fixes and long-requested features
-- Apollo Client Devtools integration
+_No outstanding work_
 
 ### GraphQL Tag
 
-- Started 3.0 milestone planning
+- `Release 3.0` will be our next major release of `graphql-tag` and is still in planning. See Github [3.0 Milestone](https://github.com/apollographql/graphql-tag/milestone/3) for more details.
 
 ### Apollo Client DevTools
 
-- Ongoing work with fixing error messages shown in devtools
-- Add a memory panel to monitor Apollo Client devtools internal caches
-- Connectors debugger
+_These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
 
-### Apollo Client NextJS
+### Apollo Client React Framework Integrations
 
 - New/more robust documentation
 - Support for `@defer` in RSC
+- Support for Apollo Client Streaming in TanStack Router
+- Support for Apollo Client Streaming in React Router 7

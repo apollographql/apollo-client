@@ -525,8 +525,12 @@ class Concast<T> extends Observable<T> {
 // @public (undocumented)
 type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
+// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-type ContainsFragmentsRefs<TData> = TData extends object ? " $fragmentRefs" extends keyof TData ? true : ContainsFragmentsRefs<TData[keyof TData]> : false;
+type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
 
 // Warning: (ae-forgotten-export) The symbol "PreloadQueryFunction" needs to be exported by the entry point index.d.ts
 //
@@ -714,6 +718,9 @@ interface DocumentTransformOptions {
 
 // @public
 type ErrorPolicy = "none" | "ignore" | "all";
+
+// @public (undocumented)
+type Exact<in out T> = (x: T) => T;
 
 // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResultBase" needs to be exported by the entry point index.d.ts
 //
@@ -949,7 +956,7 @@ export class InternalQueryReference<TData = unknown> {
     // Warning: (ae-forgotten-export) The symbol "FetchMoreOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchMore(options: FetchMoreOptions<TData>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    fetchMore(options: FetchMoreOptions<TData>): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
     readonly key: QueryKey;
     // Warning: (ae-forgotten-export) The symbol "Listener" needs to be exported by the entry point index.d.ts
@@ -961,7 +968,7 @@ export class InternalQueryReference<TData = unknown> {
     // (undocumented)
     promise: QueryRefPromise<TData>;
     // (undocumented)
-    refetch(variables: OperationVariables | undefined): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    refetch(variables: OperationVariables | undefined): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
     reinitialize(): void;
     // (undocumented)
@@ -1105,17 +1112,18 @@ interface MaskOperationOptions<TData> {
 // @public (undocumented)
 type MaybeAsync<T> = T | PromiseLike<T>;
 
-// Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
-type MaybeMasked<TData> = TData extends any ? true extends IsAny<TData> ? TData : TData extends {
+type MaybeMasked<TData> = DataMasking extends {
+    mode: "unmask";
+} ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
     __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : DataMasking extends {
-    enabled: true;
-} ? TData : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never;
+} ? Prettify<RemoveMaskedMarker<TData>> : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never : DataMasking extends {
+    mode: "preserveTypes";
+} ? TData : TData;
 
 // Warning: (ae-forgotten-export) The symbol "CombineIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -1866,6 +1874,11 @@ interface RejectedPromise<TValue> extends Promise<TValue> {
 type RemoveFragmentName<T> = T extends any ? Omit<T, " $fragmentName"> : T;
 
 // @public (undocumented)
+type RemoveIndexSignature<T> = {
+    [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
+};
+
+// @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
 // @public (undocumented)
@@ -2073,7 +2086,7 @@ type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
     " $fragmentRefs"?: infer FragmentRefs;
-} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends Array<infer TItem> ? Array<UnwrapFragmentRefs<TItem>> : TData extends object ? {
+} ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;
 } : TData : never;
 

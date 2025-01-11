@@ -39,15 +39,17 @@ export type FragmentType<TData> =
  * enabled.
  */
 export type MaybeMasked<TData> =
-  // distribute TData - in case of a union, do the next steps for each member
-  TData extends any ?
-    // prevent "Type instantiation is excessively deep and possibly infinite."
-    true extends IsAny<TData> ? TData
-    : TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
-    : DataMasking extends { enabled: true } ? TData
-    : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData>
-    : TData
-  : never;
+  DataMasking extends { mode: "unmask" } ?
+    // distribute TData - in case of a union, do the next steps for each member
+    TData extends any ?
+      // prevent "Type instantiation is excessively deep and possibly infinite."
+      true extends IsAny<TData> ? TData
+      : TData extends { __masked?: true } ? Prettify<RemoveMaskedMarker<TData>>
+      : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData>
+      : TData
+    : never
+  : DataMasking extends { mode: "preserveTypes" } ? TData
+  : TData;
 
 /**
  * Unmasks a type to provide its full result.

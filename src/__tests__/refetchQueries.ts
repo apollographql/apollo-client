@@ -13,6 +13,7 @@ import { ObservableStream } from "../testing/internal";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {
+    expect.assertions(6);
     const client = new ApolloClient({
       cache: new InMemoryCache(),
     });
@@ -114,6 +115,7 @@ describe("client.refetchQueries", () => {
   }
 
   it("includes watched queries affected by updateCache", async () => {
+    expect.assertions(9);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -189,6 +191,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes watched queries named in options.include", async () => {
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -272,6 +275,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes query DocumentNode objects specified in options.include", async () => {
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -356,6 +360,7 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all queries when options.include === "all"', async () => {
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -435,6 +440,7 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all active queries when options.include === "active"', async () => {
+    expect.assertions(15);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -509,6 +515,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes queries named in refetchQueries even if they have no observers", async () => {
+    expect.assertions(13);
     const client = makeClient();
 
     const aObs = client.watchQuery({ query: aQuery });
@@ -576,6 +583,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("should not include unwatched single queries", async () => {
+    expect.assertions(18);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -666,6 +674,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("refetches watched queries if onQueryUpdated not provided", async () => {
+    expect.assertions(7);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -702,6 +711,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("can run updateQuery function against optimistic cache layer", async () => {
+    expect.assertions(12);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -773,6 +783,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return true from onQueryUpdated to choose default refetching behavior", async () => {
+    expect.assertions(14);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -824,6 +835,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return true from onQueryUpdated when using options.updateCache", async () => {
+    expect.assertions(17);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -905,6 +917,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("can return false from onQueryUpdated to skip/ignore a query", async () => {
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 

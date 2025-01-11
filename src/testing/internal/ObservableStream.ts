@@ -33,10 +33,16 @@ export class ObservableStream<T> {
   }
 
   take({ timeout = 100 }: TakeOptions = {}) {
-    return new Promise<ObservableEvent<T>>((resolve, reject) => {
-      this.reader.read().then((result) => resolve(result.value!));
-      setTimeout(reject, timeout, new Error("Timeout waiting for next event"));
-    });
+    return Promise.race([
+      this.reader.read().then((result) => result.value!),
+      new Promise<ObservableEvent<T>>((_, reject) => {
+        setTimeout(
+          reject,
+          timeout,
+          new Error("Timeout waiting for next event")
+        );
+      }),
+    ]);
   }
 
   unsubscribe() {
@@ -57,7 +63,6 @@ export class ObservableStream<T> {
 
   async takeComplete(options?: TakeOptions): Promise<void> {
     const event = await this.take(options);
-
     validateEquals(event, { type: "complete" });
   }
 }

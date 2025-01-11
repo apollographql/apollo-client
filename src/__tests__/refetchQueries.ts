@@ -565,8 +565,6 @@ describe("client.refetchQueries", () => {
           expect(diff.result).toEqual({ a: "A" });
         } else if (obs === bObs) {
           expect(diff.result).toEqual({ b: "B" });
-        } else if (obs === abObs) {
-          expect(diff.result).toEqual({ a: "A", b: "B" });
         } else {
           throw new Error(
             `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`

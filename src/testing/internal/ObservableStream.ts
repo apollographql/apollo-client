@@ -32,11 +32,9 @@ export class ObservableStream<T> {
     }).getReader();
   }
 
-  take<T>({ timeout = 100 }: TakeOptions = {}) {
+  take({ timeout = 100 }: TakeOptions = {}) {
     return new Promise<ObservableEvent<T>>((resolve, reject) => {
-      this.reader
-        .read()
-        .then((result) => resolve(result.value! as ObservableEvent<T>));
+      this.reader.read().then((result) => resolve(result.value!));
       setTimeout(reject, timeout, new Error("Timeout waiting for next event"));
     });
   }

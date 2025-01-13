@@ -55,8 +55,8 @@ export type MaybeMasked<TData> =
  */
 export type Unmasked<TData> =
   true extends IsAny<TData> ? TData
-  : true extends ContainsFragmentsRefs<TData> ?
-    TData extends object ?
+  : TData extends object ?
+    true extends ContainsFragmentsRefs<TData> ?
       UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>>
     : TData
   : TData;

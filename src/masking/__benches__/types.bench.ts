@@ -248,7 +248,7 @@ test("unmasks DeepPartial types", (prefix) => {
 test("Unmasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, Unmasked<{}>>();
-  }).types([108, "instantiations"]);
+  }).types([111, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
@@ -256,7 +256,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, Unmasked<Record<string, any>>>();
-  }).types([112, "instantiations"]);
+  }).types([115, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
@@ -266,7 +266,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, Unmasked<unknown>>();
-  }).types([51, "instantiations"]);
+  }).types([47, "instantiations"]);
 
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<Unmasked<unknown>>().toBeUnknown();

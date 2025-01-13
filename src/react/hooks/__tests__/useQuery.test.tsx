@@ -524,6 +524,8 @@ describe("useQuery Hook", () => {
       expect(called).toBe(false);
     });
 
+    // TODO: Remove this test after PR is reviewed since this is basically a
+    // duplicate of "useQuery produces the expected frames when variables change"
     it("should work with variables", async () => {
       const query = gql`
         query ($id: Int) {
@@ -549,32 +551,65 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ id }) => useQuery(query, { variables: { id } }),
         { wrapper, initialProps: { id: 1 } }
       );
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      {
+        const result = await takeSnapshot();
 
-      rerender({ id: 2 });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 2" });
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
+
+      await rerender({ id: 2 });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: { hello: "world 1" },
+          variables: { id: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: { id: 2 },
+        });
+      }
     });
 
     it("should return the same results for the same variables", async () => {
@@ -602,35 +637,80 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ id }) => useQuery(query, { variables: { id } }),
         { wrapper, initialProps: { id: 1 } }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 1" });
+      {
+        const result = await takeSnapshot();
 
-      rerender({ id: 2 });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 2" });
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
 
-      rerender({ id: 2 });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world 2" });
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
+
+      await rerender({ id: 2 });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: { hello: "world 1" },
+          variables: { id: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: { id: 2 },
+        });
+      }
+
+      await rerender({ id: 2 });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: { id: 2 },
+        });
+      }
     });
 
     it("should work with variables 2", async () => {
@@ -662,44 +742,93 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ name }) => useQuery(query, { variables: { name } }),
         { wrapper, initialProps: { name: "" } }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ names: ["Alice", "Bob", "Eve"] });
+      {
+        const result = await takeSnapshot();
 
-      rerender({ name: "z" });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { name: "" },
+        });
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ names: [] });
+      {
+        const result = await takeSnapshot();
 
-      rerender({ name: "zz" });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+        expect(result).toEqualQueryResult({
+          data: { names: ["Alice", "Bob", "Eve"] },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { name: "" },
+        });
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ names: [] });
+      await rerender({ name: "z" });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: { names: ["Alice", "Bob", "Eve"] },
+          variables: { name: "z" },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { names: [] },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { names: ["Alice", "Bob", "Eve"] },
+          variables: { name: "z" },
+        });
+      }
+
+      await rerender({ name: "zz" });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: { names: [] },
+          variables: { name: "zz" },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { names: [] },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { names: [] },
+          variables: { name: "zz" },
+        });
+      }
     });
 
     // An unsuccessful attempt to reproduce https://github.com/apollographql/apollo-client/issues/9135.

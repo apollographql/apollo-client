@@ -482,12 +482,15 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, unmount } = renderHook(() => useQuery(query), {
-        wrapper,
-      });
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper }
+      );
 
-      expect(result.current.called).toBe(true);
-      unmount();
+      const { called } = await takeSnapshot();
+
+      expect(called).toBe(true);
     });
 
     it("should set called to false when skip option is true", async () => {
@@ -510,13 +513,15 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, unmount } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { skip: true }),
         { wrapper }
       );
 
-      expect(result.current.called).toBe(false);
-      unmount();
+      const { called } = await takeSnapshot();
+
+      expect(called).toBe(false);
     });
 
     it("should work with variables", async () => {

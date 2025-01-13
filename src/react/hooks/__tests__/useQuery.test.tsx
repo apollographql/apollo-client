@@ -412,21 +412,54 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result } = renderHook(() => useQuery(query), { wrapper });
-      expect(result.current.loading).toBe(true);
-      const { refetch, fetchMore, startPolling, stopPolling, subscribeToMore } =
-        result.current;
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        { wrapper }
       );
-      expect(refetch).toBe(result.current.refetch);
-      expect(fetchMore).toBe(result.current.fetchMore);
-      expect(startPolling).toBe(result.current.startPolling);
-      expect(stopPolling).toBe(result.current.stopPolling);
-      expect(subscribeToMore).toBe(result.current.subscribeToMore);
+
+      const {
+        loading,
+        refetch,
+        fetchMore,
+        startPolling,
+        stopPolling,
+        subscribeToMore,
+      } = await takeSnapshot();
+      expect(loading).toBe(true);
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(refetch).toBe(result.refetch);
+        expect(fetchMore).toBe(result.fetchMore);
+        expect(startPolling).toBe(result.startPolling);
+        expect(stopPolling).toBe(result.stopPolling);
+        expect(subscribeToMore).toBe(result.subscribeToMore);
+      }
+
+      await rerender(undefined);
+
+      {
+        const result = await takeSnapshot();
+
+        expect(refetch).toBe(result.refetch);
+        expect(fetchMore).toBe(result.fetchMore);
+        expect(startPolling).toBe(result.startPolling);
+        expect(stopPolling).toBe(result.stopPolling);
+        expect(subscribeToMore).toBe(result.subscribeToMore);
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should set called to true by default", async () => {

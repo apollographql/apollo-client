@@ -9,6 +9,5 @@ export {
   mockObservableLink,
 } from "./mocking/mockSubscriptionLink.js";
 export { createMockClient } from "./mocking/mockClient.js";
-export { itAsync } from "./itAsync.js";
 export { wait, tick } from "./wait.js";
 export * from "./withConsoleSpy.js";

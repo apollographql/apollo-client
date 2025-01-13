@@ -319,6 +319,9 @@ describe("useQuery Hook", () => {
       }
     });
 
+    // TODO: Refactor this test. This test does not test the thing it says it
+    // does as there is no cache interaction in this test. This is essentially
+    // just a repeat of prior tests that rerender and check the result.
     it("should read and write results from the cache", async () => {
       const query = gql`
         {
@@ -339,23 +342,54 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, rerender } = renderHook(() => useQuery(query), {
-        wrapper,
-      });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        {
+          wrapper,
+        }
       );
-      expect(result.current.data).toEqual({ hello: "world" });
 
-      rerender();
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world" });
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await rerender(undefined);
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
     });
 
     it("should preserve functions between renders", async () => {

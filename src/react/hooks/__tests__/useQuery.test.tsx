@@ -1518,6 +1518,7 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    // TODO: Move this to ssr useQuery tests
     it("should use the cache when in ssrMode and fetchPolicy is `network-only`", async () => {
       const query = gql`
         query {
@@ -1563,6 +1564,7 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    // TODO: Move this to ssr useQuery tests
     it("should not hang when ssrMode is true but the cache is not populated for some reason", async () => {
       const query = gql`
         query {

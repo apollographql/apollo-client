@@ -1322,15 +1322,20 @@ describe("useQuery Hook", () => {
         {
           request: { query: query1 },
           result: { data: { hello: "world" } },
+          delay: 20,
         },
         {
           request: { query: query2 },
           result: { data: { hello: "world", name: "world" } },
+          delay: 20,
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
       ];
 
       const cache = new InMemoryCache();
-      const { result, rerender } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ query }) => useQuery(query, { pollInterval: 10 }),
         {
           wrapper: ({ children }) => (
@@ -1342,17 +1347,46 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      rerender({ query: query2 });
-      expect(result.current.loading).toBe(true);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(mocks[1].result.data);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await rerender({ query: query2 });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: mocks[1].result.data,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
     });
 
     it("`cache-and-network` fetch policy", async () => {

@@ -4066,41 +4066,51 @@ describe("useQuery Hook", () => {
 
       const onError = jest.fn();
       const onCompleted = jest.fn();
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { onError, onCompleted, errorPolicy: "all" }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: null },
+          error: new ApolloError({
+            graphQLErrors: [{ message: 'Could not fetch "hello"' }],
+          }),
+          errors: [{ message: 'Could not fetch "hello"' }],
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(
+        new ApolloError({
+          graphQLErrors: [new GraphQLError('Could not fetch "hello"')],
+        })
       );
+      expect(onCompleted).not.toHaveBeenCalled();
 
-      expect(result.current.data).toEqual({ hello: null });
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe('Could not fetch "hello"');
-      expect(result.current.error!.graphQLErrors).toEqual([
-        new GraphQLError('Could not fetch "hello"'),
-      ]);
-
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({
-            graphQLErrors: [new GraphQLError('Could not fetch "hello"')],
-          })
-        );
-      });
-      await waitFor(() => {
-        expect(onCompleted).not.toHaveBeenCalled();
-      });
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("calls `onError` a single time when refetching returns a successful result", async () => {

@@ -3017,60 +3017,87 @@ describe("useQuery Hook", () => {
         </React.StrictMode>
       );
 
-      const { result } = renderHook(
-        () => useQuery(query, { pollInterval: 20 }),
-        { wrapper }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { pollInterval: 20 }),
+          { wrapper }
+        );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      {
+        const result = await takeSnapshot();
 
-      result.current.stopPolling();
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "world 3" });
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
-      result.current.startPolling(20);
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      getCurrentSnapshot().stopPolling();
+
+      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
+
+      getCurrentSnapshot().startPolling(20);
 
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 4" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 3" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 4" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 3" },
+          variables: {},
+        });
+      }
+
       expect(requestSpy).toHaveBeenCalledTimes(4);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
       requestSpy.mockRestore();

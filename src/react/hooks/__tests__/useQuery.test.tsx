@@ -1632,6 +1632,7 @@ describe("useQuery Hook", () => {
       const link = mockSingleLink({
         request: { query },
         result: { data: { hello: "from link" } },
+        delay: 20,
       });
 
       const client = new ApolloClient({
@@ -1639,19 +1640,21 @@ describe("useQuery Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const fetchPolicyLog: (string | undefined)[] = [];
-
       let defaultFetchPolicy: WatchQueryFetchPolicy = "cache-and-network";
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => {
           const result = useQuery(query, {
             defaultOptions: {
               fetchPolicy: defaultFetchPolicy,
             },
           });
-          fetchPolicyLog.push(result.observable.options.fetchPolicy);
-          return result;
+          return {
+            result,
+            fetchPolicy: result.observable.options.fetchPolicy,
+            defaultFetchPolicy,
+          };
         },
         {
           wrapper: ({ children }) => (
@@ -1660,26 +1663,43 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
-      expect(fetchPolicyLog).toEqual(["cache-and-network"]);
+      {
+        const { result, fetchPolicy, defaultFetchPolicy } =
+          await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(fetchPolicy).toBe("cache-and-network");
+        expect(defaultFetchPolicy).toBe("cache-and-network");
+      }
 
       // Change the default fetchPolicy to verify that it is not used the second
       // time useQuery is called.
       defaultFetchPolicy = "network-only";
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      {
+        const { result, fetchPolicy, defaultFetchPolicy } =
+          await takeSnapshot();
 
-      expect(result.current.data).toEqual({ hello: "from link" });
-      expect(fetchPolicyLog).toEqual([
-        "cache-and-network",
-        "cache-and-network",
-      ]);
+        expect(result).toEqualQueryResult({
+          data: { hello: "from link" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(fetchPolicy).toBe("cache-and-network");
+        expect(defaultFetchPolicy).toBe("network-only");
+      }
     });
 
     it("can provide individual default variables", async () => {

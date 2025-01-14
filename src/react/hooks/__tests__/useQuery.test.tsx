@@ -1118,21 +1118,41 @@ describe("useQuery Hook", () => {
         },
       ];
 
-      const { result } = renderHook(() => useQuery(query, { ssr: false }), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { ssr: false }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
       );
-      expect(result.current.data).toEqual({ hello: "world" });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
     });
 
     it("should keep `no-cache` results when the tree is re-rendered", async () => {
@@ -1195,36 +1215,94 @@ describe("useQuery Hook", () => {
 
       {
         const [result0, result1] = await takeSnapshot();
-        expect(result0.loading).toBe(true);
-        expect(result0.data).toStrictEqual(undefined);
-        expect(result1.loading).toBe(true);
-        expect(result1.data).toStrictEqual(undefined);
+
+        expect(result0).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(result1).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
       {
         const [result0, result1] = await takeSnapshot();
-        expect(result0.loading).toBe(false);
-        expect(result0.data).toStrictEqual(allPeopleData);
-        expect(result1.loading).toBe(true);
-        expect(result1.data).toStrictEqual(undefined);
+
+        expect(result0).toEqualQueryResult({
+          data: allPeopleData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(result1).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
       {
         const [result0, result1] = await takeSnapshot();
-        expect(result0.loading).toBe(false);
-        expect(result0.data).toStrictEqual(allPeopleData);
-        expect(result1.loading).toBe(false);
-        expect(result1.data).toStrictEqual(allThingsData);
+
+        expect(result0).toEqualQueryResult({
+          data: allPeopleData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(result1).toEqualQueryResult({
+          data: allThingsData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
       await rerender({});
+
       {
         const [result0, result1] = await takeSnapshot();
-        expect(result0.loading).toBe(false);
-        expect(result0.data).toStrictEqual(allPeopleData);
-        expect(result1.loading).toBe(false);
-        expect(result1.data).toStrictEqual(allThingsData);
+
+        expect(result0).toEqualQueryResult({
+          data: allPeopleData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(result1).toEqualQueryResult({
+          data: allThingsData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
       }
+
       await expect(takeSnapshot).not.toRerender();
     });
 

@@ -1718,12 +1718,14 @@ describe("useQuery Hook", () => {
         link: new ApolloLink(
           (request) =>
             new Observable((observer) => {
-              observer.next({
-                data: {
-                  vars: request.variables,
-                },
-              });
-              observer.complete();
+              setTimeout(() => {
+                observer.next({
+                  data: {
+                    vars: request.variables,
+                  },
+                });
+                observer.complete();
+              }, 20);
             })
         ),
 
@@ -1739,178 +1741,205 @@ describe("useQuery Hook", () => {
         },
       });
 
-      const fetchPolicyLog: (string | undefined)[] = [];
-
-      const { result } = renderHook(
-        () => {
-          const result = useQuery(query, {
-            defaultOptions: {
-              fetchPolicy: "cache-and-network",
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => {
+            const result = useQuery(query, {
+              defaultOptions: {
+                fetchPolicy: "cache-and-network",
+                variables: {
+                  sourceOfVar: "local",
+                  isGlobal: false,
+                } as OperationVariables,
+              },
               variables: {
-                sourceOfVar: "local",
-                isGlobal: false,
-              } as OperationVariables,
-            },
-            variables: {
-              mandatory: true,
-            },
-          });
-          fetchPolicyLog.push(result.observable.options.fetchPolicy);
-          return result;
-        },
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
-      expect(result.current.observable.variables).toEqual({
-        sourceOfVar: "local",
-        isGlobal: false,
-        mandatory: true,
-      });
-
-      expect(result.current.observable.options.fetchPolicy).toBe(
-        "cache-and-network"
-      );
-
-      expect(
-        // The defaultOptions field is for useQuery options (QueryHookOptions),
-        // not the more general WatchQueryOptions that ObservableQuery sees.
-        "defaultOptions" in result.current.observable.options
-      ).toBe(false);
-
-      expect(fetchPolicyLog).toEqual(["cache-and-network"]);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-
-      expect(result.current.data).toEqual({
-        vars: {
-          sourceOfVar: "local",
-          isGlobal: false,
-          mandatory: true,
-        },
-      });
-
-      expect(fetchPolicyLog).toEqual([
-        "cache-and-network",
-        "cache-and-network",
-      ]);
-
-      const reobservePromise = act(() =>
-        result.current.observable
-          .reobserve({
-            fetchPolicy: "network-only",
-            nextFetchPolicy: "cache-first",
-            variables: {
-              // Since reobserve replaces the variables object rather than merging
-              // the individual variables together, we need to include the current
-              // variables manually if we want them to show up in the output below.
-              ...result.current.observable.variables,
-              sourceOfVar: "reobserve",
-            },
-          })
-          .then((finalResult) => {
-            expect(finalResult.loading).toBe(false);
-            expect(finalResult.data).toEqual({
-              vars: {
-                sourceOfVar: "reobserve",
-                isGlobal: false,
                 mandatory: true,
               },
             });
-          })
-      );
 
-      expect(result.current.observable.options.fetchPolicy).toBe("cache-first");
+            return {
+              result,
+              // Provide a snapshot of these values for this render, rather
+              // than checking the mutable value on result.observable.
+              fetchPolicy: result.observable.options.fetchPolicy,
+              variables: result.observable.variables,
+            };
+          },
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      expect(result.current.observable.variables).toEqual({
-        sourceOfVar: "reobserve",
-        isGlobal: false,
-        mandatory: true,
+      {
+        const { result, fetchPolicy, variables } = await takeSnapshot();
+        const { observable } = result;
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {
+            sourceOfVar: "local",
+            isGlobal: false,
+            mandatory: true,
+          },
+        });
+
+        expect(variables).toEqual({
+          sourceOfVar: "local",
+          isGlobal: false,
+          mandatory: true,
+        });
+        expect(fetchPolicy).toBe("cache-and-network");
+        expect(
+          // The defaultOptions field is for useQuery options (QueryHookOptions),
+          // not the more general WatchQueryOptions that ObservableQuery sees.
+          "defaultOptions" in observable.options
+        ).toBe(false);
+      }
+
+      {
+        const { result, fetchPolicy, variables } = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            vars: { sourceOfVar: "local", isGlobal: false, mandatory: true },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {
+            sourceOfVar: "local",
+            isGlobal: false,
+            mandatory: true,
+          },
+        });
+
+        expect(variables).toEqual({
+          sourceOfVar: "local",
+          isGlobal: false,
+          mandatory: true,
+        });
+        expect(fetchPolicy).toBe("cache-and-network");
+      }
+
+      const {
+        result: { observable },
+      } = getCurrentSnapshot();
+      const finalResult = await observable.reobserve({
+        fetchPolicy: "network-only",
+        nextFetchPolicy: "cache-first",
+        variables: {
+          // Since reobserve replaces the variables object rather than merging
+          // the individual variables together, we need to include the current
+          // variables manually if we want them to show up in the output below.
+          ...observable.variables,
+          sourceOfVar: "reobserve",
+        },
       });
 
-      await reobservePromise;
+      expect(finalResult).toEqual({
+        data: {
+          vars: {
+            sourceOfVar: "reobserve",
+            isGlobal: false,
+            mandatory: true,
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      expect(result.current.observable.options.fetchPolicy).toBe("cache-first");
+      {
+        const { result, fetchPolicy, variables } = await takeSnapshot();
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({
-        vars: {
+        expect(result).toEqualQueryResult({
+          data: {
+            vars: {
+              sourceOfVar: "reobserve",
+              isGlobal: false,
+              mandatory: true,
+            },
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            vars: { sourceOfVar: "local", isGlobal: false, mandatory: true },
+          },
+          variables: {
+            sourceOfVar: "reobserve",
+            isGlobal: false,
+            mandatory: true,
+          },
+        });
+
+        expect(variables).toEqual({
           sourceOfVar: "reobserve",
           isGlobal: false,
           mandatory: true,
-        },
+        });
+        expect(fetchPolicy).toBe("cache-first");
+      }
+
+      const finalResultNoVarMerge =
+        await getCurrentSnapshot().result.observable.reobserve({
+          fetchPolicy: "network-only",
+          nextFetchPolicy: "cache-first",
+          variables: {
+            // This reobservation is like the one above, with no variable merging.
+            // ...result.current.observable.variables,
+            sourceOfVar: "reobserve without variable merge",
+          },
+        });
+
+      expect(finalResultNoVarMerge).toEqual({
+        // Since we didn't merge in result.current.observable.variables, we
+        // don't see these variables anymore:
+        // isGlobal: false,
+        // mandatory: true,
+        data: { vars: { sourceOfVar: "reobserve without variable merge" } },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
       });
-      expect(result.current.observable.variables).toEqual(
-        result.current.data!.vars
-      );
 
-      expect(fetchPolicyLog).toEqual([
-        "cache-and-network",
-        "cache-and-network",
-        "cache-first",
-      ]);
+      {
+        const { result, fetchPolicy, variables } = await takeSnapshot();
 
-      const reobserveNoVarMergePromise = act(() =>
-        result.current.observable
-          .reobserve({
-            fetchPolicy: "network-only",
-            nextFetchPolicy: "cache-first",
-            variables: {
-              // This reobservation is like the one above, with no variable merging.
-              // ...result.current.observable.variables,
+        expect(result).toEqualQueryResult({
+          data: {
+            vars: {
               sourceOfVar: "reobserve without variable merge",
             },
-          })
-          .then((finalResult) => {
-            expect(finalResult.loading).toBe(false);
-            expect(finalResult.data).toEqual({
-              vars: {
-                sourceOfVar: "reobserve without variable merge",
-                // Since we didn't merge in result.current.observable.variables, we
-                // don't see these variables anymore:
-                // isGlobal: false,
-                // mandatory: true,
-              },
-            });
-          })
-      );
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            vars: {
+              sourceOfVar: "reobserve",
+              isGlobal: false,
+              mandatory: true,
+            },
+          },
+          variables: {
+            sourceOfVar: "reobserve without variable merge",
+          },
+        });
 
-      expect(result.current.observable.options.fetchPolicy).toBe("cache-first");
-
-      expect(result.current.observable.variables).toEqual({
-        sourceOfVar: "reobserve without variable merge",
-      });
-
-      await reobserveNoVarMergePromise;
-
-      expect(result.current.observable.options.fetchPolicy).toBe("cache-first");
-
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({
-        vars: {
+        expect(variables).toEqual({
           sourceOfVar: "reobserve without variable merge",
-        },
-      });
-      expect(result.current.observable.variables).toEqual(
-        result.current.data!.vars
-      );
+        });
+        expect(fetchPolicy).toBe("cache-first");
+      }
 
-      expect(fetchPolicyLog).toEqual([
-        "cache-and-network",
-        "cache-and-network",
-        "cache-first",
-        "cache-first",
-      ]);
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("defaultOptions do not confuse useQuery when unskipping a query (issue #9635)", async () => {

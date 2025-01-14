@@ -437,14 +437,13 @@ export function maskFragment<TData = unknown>(data: TData, document: TypedDocume
 export function maskOperation<TData = unknown>(data: TData, document: DocumentNode | TypedDocumentNode<TData>, cache: ApolloCache<unknown>): TData;
 
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
 export type MaybeMasked<TData> = DataMasking extends {
     mode: "unmask";
 } ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
     __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never : DataMasking extends {
+} ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
     mode: "preserveTypes";
 } ? TData : TData;
 
@@ -612,11 +611,12 @@ type Transaction<T> = (c: ApolloCache<T>) => void;
 // @public (undocumented)
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
 
+// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
 //
 // @public
-export type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
+export type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
 
 // @public (undocumented)
 type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {

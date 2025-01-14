@@ -1979,89 +1979,127 @@ describe("useQuery Hook", () => {
 
       const defaultFetchPolicy = "network-only";
 
-      const { result } = renderHook(
-        () => {
-          const [skip, setSkip] = useState(true);
-          return {
-            setSkip,
-            query: useQuery(query, {
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => {
+            const [skip, setSkip] = useState(true);
+            const result = useQuery(query, {
               skip,
               defaultOptions: {
                 fetchPolicy: defaultFetchPolicy,
               },
-            }),
-          };
-        },
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+            });
 
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.query.data).toBeUndefined();
-
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.query.data).toEqual({ counter: 1 });
+            return {
+              setSkip,
+              query: result,
+              fetchPolicy: result.observable.options.fetchPolicy,
+            };
           },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      act(() => {
-        result.current.setSkip(false);
-      });
-      expect(result.current.query.loading).toBe(true);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.query.data).toBeUndefined();
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.query.data).toEqual({ counter: 1 });
+      {
+        const { query } = await takeSnapshot();
 
-      const { options } = result.current.query.observable;
-      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+        expect(query).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      act(() => {
-        result.current.setSkip(true);
-      });
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.query.data).toBeUndefined();
+      getCurrentSnapshot().setSkip(false);
 
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.query.data).toEqual({ counter: 1 });
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
+      {
+        const { query } = await takeSnapshot();
 
-      act(() => {
-        result.current.setSkip(false);
-      });
-      expect(result.current.query.loading).toBe(true);
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.query.data).toEqual({ counter: 1 });
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.query.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.query.data).toEqual({ counter: 2 });
+        expect(query).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      expect(options.fetchPolicy).toBe(defaultFetchPolicy);
+      {
+        const { query, fetchPolicy } = await takeSnapshot();
+
+        expect(query).toEqualQueryResult({
+          data: { counter: 1 },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(fetchPolicy).toBe(defaultFetchPolicy);
+      }
+
+      getCurrentSnapshot().setSkip(true);
+
+      {
+        const { query, fetchPolicy } = await takeSnapshot();
+
+        expect(query).toEqualQueryResult({
+          // TODO: wut?
+          data: undefined,
+          // TODO: wut?
+          called: false,
+          error: undefined,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { counter: 1 },
+          variables: {},
+        });
+
+        expect(fetchPolicy).toBe("standby");
+      }
+
+      getCurrentSnapshot().setSkip(false);
+
+      {
+        const { query, fetchPolicy } = await takeSnapshot();
+
+        expect(query).toEqualQueryResult({
+          // TODO: wut?
+          data: { counter: 1 },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: { counter: 1 },
+          variables: {},
+        });
+
+        expect(fetchPolicy).toBe(defaultFetchPolicy);
+      }
+
+      {
+        const { query, fetchPolicy } = await takeSnapshot();
+
+        expect(query).toEqualQueryResult({
+          data: { counter: 2 },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { counter: 1 },
+          variables: {},
+        });
+
+        expect(fetchPolicy).toBe(defaultFetchPolicy);
+      }
     });
   });
 

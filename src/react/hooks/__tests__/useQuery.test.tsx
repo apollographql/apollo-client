@@ -865,6 +865,21 @@ describe("useQuery Hook", () => {
       let setName: any;
 
       using _disabledAct = disableActEnvironment();
+      // TODO: Take a deeper look into this to better understand what this is
+      // trying to test. There are a few problems with this:
+      //
+      // 1. We execute the mutation and a setState at the same time. What is
+      //    that meant to accomplish?
+      // 2. The update callback in the useMutation is writing data for none of
+      //    the results in the mocks. The mutation returns `updateName: true`,
+      //    yet the callback is trying to set a value from `data.updateGreeting`
+      // 3. The update callback in `useMutation` does not use `variables`, so
+      //    the written cache result does not affect any of the queries from the
+      //    `useQuery` returned here.
+      //
+      // My recommendation is to just delete the `useMutation` as part of this
+      // render callback as it doesn't seem to serve much of a purpose for this
+      // test.
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () => {

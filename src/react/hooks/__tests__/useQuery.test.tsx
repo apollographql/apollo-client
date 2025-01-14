@@ -4971,53 +4971,90 @@ describe("useQuery Hook", () => {
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toBe(undefined);
-        expect(result.error).toBe(undefined);
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.data).toBe(undefined);
-        expect(result.error).toBeInstanceOf(ApolloError);
-        expect(result.error!.message).toBe("same error");
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({
+            graphQLErrors: [{ message: "same error" }],
+          }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
       }
+
       await getCurrentSnapshot().refetch();
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toBe(undefined);
-        expect(result.error).toBe(undefined);
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: undefined,
+          variables: {},
+        });
       }
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual({ hello: "world" });
-        expect(result.error).toBe(undefined);
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
       }
-      const catchFn = jest.fn();
-      getCurrentSnapshot().refetch().catch(catchFn);
+
+      await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
+        new ApolloError({ graphQLErrors: [{ message: "same error" }] })
+      );
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toEqual({ hello: "world" });
-        expect(result.error).toBe(undefined);
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: { hello: "world" },
+          variables: {},
+        });
       }
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        // TODO: Is this correct behavior here?
-        expect(result.data).toEqual({ hello: "world" });
-        expect(result.error).toBeInstanceOf(ApolloError);
-        expect(result.error!.message).toBe("same error");
-      }
 
-      expect(catchFn.mock.calls.length).toBe(1);
-      expect(catchFn.mock.calls[0].length).toBe(1);
-      expect(catchFn.mock.calls[0][0]).toBeInstanceOf(ApolloError);
-      expect(catchFn.mock.calls[0][0].message).toBe("same error");
+        expect(result).toEqualQueryResult({
+          // TODO: Is this correct behavior here?
+          data: { hello: "world" },
+          error: new ApolloError({
+            graphQLErrors: [{ message: "same error" }],
+          }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: { hello: "world" },
+          variables: {},
+        });
+      }
     });
 
     it("should call onCompleted when variables change", async () => {

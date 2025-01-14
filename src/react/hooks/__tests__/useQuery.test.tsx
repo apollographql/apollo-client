@@ -2190,41 +2190,55 @@ describe("useQuery Hook", () => {
         ),
       });
 
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            fetchPolicy: "cache-and-network",
-          }),
-        {
-          wrapper: ({ children }) => (
-            <React.StrictMode>
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            </React.StrictMode>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              fetchPolicy: "cache-and-network",
+            }),
+          {
+            wrapper: ({ children }) => (
+              <React.StrictMode>
+                <ApolloProvider client={client}>{children}</ApolloProvider>
+              </React.StrictMode>
+            ),
+          }
+        );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({
-        linkCount: 1,
-      });
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { linkCount: 1 },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
+        const { observable } = getCurrentSnapshot();
         expect(obsQueries.size).toBe(2);
 
-        const activeSet = new Set<typeof result.current.observable>();
-        const inactiveSet = new Set<typeof result.current.observable>();
+        const activeSet = new Set<typeof observable>();
+        const inactiveSet = new Set<typeof observable>();
         obsQueries.forEach((obsQuery) => {
           if (obsQuery.hasObservers()) {
             expect(inactiveSet.has(obsQuery)).toBe(false);
@@ -2247,36 +2261,43 @@ describe("useQuery Hook", () => {
 
       checkObservableQueries(1);
 
-      await act(() =>
-        result.current.reobserve().then((result) => {
-          expect(result.loading).toBe(false);
-          expect(result.loading).toBe(false);
-          expect(result.networkStatus).toBe(NetworkStatus.ready);
-          expect(result.data).toEqual({
-            linkCount: 2,
-          });
-        })
-      );
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
+      await expect(
+        getCurrentSnapshot().observable.reobserve()
+      ).resolves.toEqual({
+        data: { linkCount: 2 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
       });
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            linkCount: 2,
-          });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { linkCount: 1 },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: { linkCount: 1 },
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { linkCount: 2 },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { linkCount: 1 },
+          variables: {},
+        });
+      }
 
       checkObservableQueries(2);
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

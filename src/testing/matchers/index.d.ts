@@ -1,5 +1,6 @@
 import type {
   ApolloClient,
+  ApolloQueryResult,
   DocumentNode,
   OperationVariables,
 } from "../../core/index.js";
@@ -68,6 +69,12 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toEmitMatchedValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEqualApolloQueryResult: T extends ApolloQueryResult<infer TData> ?
+    (expected: ApolloQueryResult<TData>) => R
+  : T extends Promise<ApolloQueryResult<infer TData>> ?
+    (expected: ApolloQueryResult<TData>) => R
+  : { error: "matchers needs to be called on an ApolloQueryResult" };
 
   toEqualQueryResult: T extends QueryResult<infer TData, infer TVariables> ?
     (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R

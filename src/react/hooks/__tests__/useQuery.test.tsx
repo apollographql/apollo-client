@@ -2824,21 +2824,37 @@ describe("useQuery Hook", () => {
         </React.StrictMode>
       );
 
-      const { result, unmount } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () => useQuery(query, { pollInterval: 10 }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 1" });
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
       const requestSpyCallCount = requestSpy.mock.calls.length;
       expect(requestSpy).toHaveBeenCalledTimes(requestSpyCallCount);

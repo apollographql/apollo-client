@@ -3687,28 +3687,43 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { onError, errorPolicy: "ignore" }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      expect(result.current.data).toBeUndefined();
-      expect(result.current.error).toBeUndefined();
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
       await tick();
 
       expect(onError).not.toHaveBeenCalled();
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it('calls `onError` when a network error has occurred while using an `errorPolicy` set to "ignore"', async () => {

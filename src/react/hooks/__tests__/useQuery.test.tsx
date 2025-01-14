@@ -3217,55 +3217,82 @@ describe("useQuery Hook", () => {
           { wrapper }
         );
 
-        expect(result.current.loading).toBe(true);
-        expect(result.current.data).toBe(undefined);
+        expect(result.current).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
 
         await waitFor(
           () => {
-            expect(result.current.data).toEqual({ hello: "world 1" });
+            expect(result.current).toEqualQueryResult({
+              data: { hello: "world 1" },
+              called: true,
+              loading: false,
+              networkStatus: NetworkStatus.ready,
+              previousData: undefined,
+              variables: {},
+            });
           },
           { interval: 1 }
         );
 
-        expect(result.current.loading).toBe(false);
-
-        await waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "world 2" });
-          },
-          { interval: 1 }
-        );
+        await jest.advanceTimersByTimeAsync(12);
+        expect(result.current).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
 
         skipPollAttempt.mockImplementation(() => true);
-        expect(result.current.loading).toBe(false);
 
-        await jest.advanceTimersByTime(12);
-        await waitFor(
-          () => expect(result.current.data).toEqual({ hello: "world 2" }),
-          { interval: 1 }
-        );
+        await jest.advanceTimersByTimeAsync(12);
+        expect(result.current).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
 
-        await jest.advanceTimersByTime(12);
-        await waitFor(
-          () => expect(result.current.data).toEqual({ hello: "world 2" }),
-          { interval: 1 }
-        );
+        await jest.advanceTimersByTimeAsync(12);
+        expect(result.current).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
 
-        await jest.advanceTimersByTime(12);
-        await waitFor(
-          () => expect(result.current.data).toEqual({ hello: "world 2" }),
-          { interval: 1 }
-        );
+        await jest.advanceTimersByTimeAsync(12);
+        expect(result.current).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
 
         skipPollAttempt.mockImplementation(() => false);
-        expect(result.current.loading).toBe(false);
 
-        await waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "world 3" });
-          },
-          { interval: 1 }
-        );
+        await jest.advanceTimersByTimeAsync(12);
+        expect(result.current).toEqualQueryResult({
+          data: { hello: "world 3" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
       });
 
       it("when defined for a single query", async () => {

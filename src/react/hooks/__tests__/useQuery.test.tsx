@@ -2117,10 +2117,12 @@ describe("useQuery Hook", () => {
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
+      // TODO: is this really needed for this test?
       ssrMode: true,
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useQuery(query, { client })
       // We deliberately do not provide the usual ApolloProvider wrapper for
       // this test, since we are providing the client directly to useQuery.
@@ -2133,17 +2135,31 @@ describe("useQuery Hook", () => {
       // }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBeUndefined();
+    {
+      const result = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+      expect(result).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
 
-    expect(result.current.data).toEqual({ hello: "from link" });
+    {
+      const result = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "from link" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
   });
 
   describe("<React.StrictMode>", () => {

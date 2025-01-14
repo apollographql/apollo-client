@@ -729,8 +729,6 @@ type DeepOmitArray<T extends any[], K> = {
     [P in keyof T]: DeepOmit<T[P], K>;
 };
 
-// Warning: (ae-forgotten-export) The symbol "Primitive" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
@@ -2142,7 +2140,7 @@ export type Prettify<T> = {
 export function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T>;
 
 // @public (undocumented)
-type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+export type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
 const print_2: ((ast: ASTNode) => string) & {
@@ -2780,7 +2778,7 @@ type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends
 type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
 
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
+type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
     " $fragmentRefs"?: infer FragmentRefs;
 } ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;

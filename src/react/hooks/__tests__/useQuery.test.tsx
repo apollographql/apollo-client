@@ -4291,6 +4291,7 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    // TODO: Rewrite this test using renderHookToSnapshotStream
     it("should not return partial data from cache on refetch with errorPolicy: none (default) and notifyOnNetworkStatusChange: true", async () => {
       const query = gql`
         {
@@ -4434,6 +4435,7 @@ describe("useQuery Hook", () => {
       expect(screen.queryByText(/partial data rendered/i)).toBeNull();
     });
 
+    // TODO: Rewrite this test using renderHookToSnapshotStream
     it("should return partial data from cache on refetch", async () => {
       const GET_DOG_DETAILS = gql`
         query dog($breed: String!) {

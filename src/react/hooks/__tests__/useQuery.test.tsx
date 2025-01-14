@@ -2394,6 +2394,9 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    // TODO: Refactor the initial state of this test. This test states that
+    // `skip` goes from `true` -> `false`, but it starts out unskipped before
+    // enabling it.
     it("should start polling when skip goes from true to false", async () => {
       const query = gql`
         {

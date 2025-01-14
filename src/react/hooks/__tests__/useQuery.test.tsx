@@ -1477,7 +1477,8 @@ describe("useQuery Hook", () => {
         data: { hello: "from cache" },
       });
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { fetchPolicy: "network-only" }),
         {
           wrapper: ({ children }) => (
@@ -1488,16 +1489,33 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "from link" });
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "from link" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should use the cache when in ssrMode and fetchPolicy is `network-only`", async () => {

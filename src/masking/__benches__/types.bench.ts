@@ -627,3 +627,36 @@ test("MaybeMasked can be called with a generic if `mode` is not set to `unmask`"
   withGenericResult({} as any);
   withGenericDocument({} as any);
 });
+
+test("Unmasked handles branded primitive types", (prefix) => {
+  type Branded<T, Name extends string> = T & { __branded?: Name };
+  type UUID = Branded<string, "UUID">;
+  type Source = {
+    __typename: "Foo";
+    id: UUID;
+    name: string;
+  } & { " $fragmentName"?: "UserFieldsFragment" } & {
+    " $fragmentRefs"?: {
+      FooFragment: FooFragment;
+    };
+  };
+  type FooFragment = {
+    __typename: "Foo";
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      __typename: "Foo";
+      id: UUID;
+      name: string;
+      age: number;
+    }>();
+  });
+});

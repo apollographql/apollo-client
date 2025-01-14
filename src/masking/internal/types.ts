@@ -1,4 +1,8 @@
-import type { Prettify, RemoveIndexSignature } from "../../utilities/index.js";
+import type {
+  Prettify,
+  Primitive,
+  RemoveIndexSignature,
+} from "../../utilities/index.js";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -7,6 +11,8 @@ export type UnwrapFragmentRefs<TData> =
   : TData extends any ?
     // Leave TData alone if it is Record<string, any> and not a specific shape
     string extends keyof TData ? TData
+    : // Ensure tagged/branded types are left alone (i.e. type UUID = string & { ... })
+    TData extends Primitive ? TData
     : // short-circuit on empty object
     keyof TData extends never ? TData
     : TData extends { " $fragmentRefs"?: infer FragmentRefs } ?

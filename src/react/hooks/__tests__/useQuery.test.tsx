@@ -1336,6 +1336,11 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        // TODO: I don't think this needs to be a polling query as it has
+        // nothing to do with this test. This test checks to ensure that
+        // changing queries executes the new query and returns the right value.
+        // We should consider removing the pollling from this test and save it
+        // for a polling-specific test instead.
         ({ query }) => useQuery(query, { pollInterval: 10 }),
         {
           wrapper: ({ children }) => (
@@ -1387,6 +1392,9 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
+
+      // We do not include expect(takeSnapshot).not.toRerender() here because
+      // this is a polling query.
     });
 
     it("`cache-and-network` fetch policy", async () => {

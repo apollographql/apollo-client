@@ -43,6 +43,7 @@ import {
 } from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
+const IS_REACT_18 = React.version.startsWith("18");
 
 describe("useQuery Hook", () => {
   describe("General use", () => {
@@ -862,63 +863,133 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       let setName: any;
-      const { result } = renderHook(
-        () => {
-          const [name, setName1] = React.useState("world 1");
-          setName = setName1;
-          return [
-            useQuery(query, { variables: { name } }),
-            useMutation(mutation, {
-              update(cache, { data }) {
-                cache.writeQuery({
-                  query,
-                  data: { hello: data.updateGreeting },
-                });
-              },
-            }),
-          ] as const;
-        },
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => {
+            const [name, setName1] = React.useState("world 1");
+            setName = setName1;
+            return [
+              useQuery(query, { variables: { name } }),
+              useMutation(mutation, {
+                update(cache, { data }) {
+                  cache.writeQuery({
+                    query,
+                    data: { hello: data.updateGreeting },
+                  });
+                },
+              }),
+            ] as const;
+          },
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks} cache={cache}>
+                {children}
+              </MockedProvider>
+            ),
+          }
+        );
+
+      {
+        const [useQueryResult] = await takeSnapshot();
+
+        expect(useQueryResult).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { name: "world 1" },
+        });
+      }
+
+      {
+        const [useQueryResult] = await takeSnapshot();
+
+        expect(useQueryResult).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { name: "world 1" },
+        });
+      }
+
+      const [, [mutate]] = getCurrentSnapshot();
+
+      void mutate({ variables: { name: "world 2" } });
+      setName("world 2");
+
+      if (IS_REACT_17) {
         {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
+          const [useQueryResult] = await takeSnapshot();
+
+          expect(useQueryResult).toEqualQueryResult({
+            data: { hello: "world 1" },
+            called: true,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            previousData: undefined,
+            variables: { name: "world 1" },
+          });
         }
-      );
 
-      expect(result.current[0].loading).toBe(true);
-      expect(result.current[0].data).toBe(undefined);
-      expect(result.current[0].variables).toEqual({ name: "world 1" });
-      await waitFor(
-        () => {
-          expect(result.current[0].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+        {
+          const [useQueryResult] = await takeSnapshot();
 
-      expect(result.current[0].data).toEqual({ hello: "world 1" });
-      expect(result.current[0].variables).toEqual({ name: "world 1" });
+          expect(useQueryResult).toEqualQueryResult({
+            data: undefined,
+            called: true,
+            loading: true,
+            networkStatus: NetworkStatus.setVariables,
+            previousData: { hello: "world 1" },
+            variables: { name: "world 2" },
+          });
+        }
+      }
 
-      const mutate = result.current[1][0];
-      act(() => {
-        void mutate({ variables: { name: "world 2" } });
-        setName("world 2");
-      });
+      {
+        const [useQueryResult] = await takeSnapshot();
 
-      expect(result.current[0].loading).toBe(true);
-      expect(result.current[0].data).toBe(undefined);
-      expect(result.current[0].variables).toEqual({ name: "world 2" });
+        expect(useQueryResult).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: { hello: "world 1" },
+          variables: { name: "world 2" },
+        });
+      }
 
-      await waitFor(() => {
-        expect(result.current[0].loading).toBe(false);
-      });
-      await waitFor(() => {
-        expect(result.current[0].data).toEqual({ hello: "world 2" });
-      });
-      await waitFor(() => {
-        expect(result.current[0].variables).toEqual({ name: "world 2" });
-      });
+      {
+        const [useQueryResult] = await takeSnapshot();
+
+        expect(useQueryResult).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: { name: "world 2" },
+        });
+      }
+
+      if (IS_REACT_18) {
+        const [useQueryResult] = await takeSnapshot();
+
+        expect(useQueryResult).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: { name: "world 2" },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     // TODO: Rewrite this test

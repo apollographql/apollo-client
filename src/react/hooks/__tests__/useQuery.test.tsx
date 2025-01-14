@@ -4631,7 +4631,8 @@ describe("useQuery Hook", () => {
         },
       ];
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ id }) => useQuery(query, { variables: { id } }),
         {
           wrapper: ({ children }) => (
@@ -4641,48 +4642,90 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
 
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("error");
+      {
+        const result = await takeSnapshot();
 
-      rerender({ id: 2 });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 2" });
-      expect(result.current.error).toBe(undefined);
+      await rerender({ id: 2 });
 
-      rerender({ id: 1 });
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world 1" });
-      expect(result.current.error).toBe(undefined);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: undefined,
+          variables: { id: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: 2 },
+        });
+      }
+
+      await rerender({ id: 1 });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: { hello: "world 2" },
+          variables: { id: 1 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 2" },
+          variables: { id: 1 },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should render multiple errors when refetching", async () => {

@@ -1008,6 +1008,7 @@ describe("useQuery Hook", () => {
     });
 
     // TODO: Rewrite this test
+    // Context: https://legacy.reactjs.org/blog/2020/02/26/react-v16.13.0.html#warnings-for-some-updates-during-render
     it("should not error when forcing an update with React >= 16.13.0", async () => {
       const CAR_QUERY: DocumentNode = gql`
         query {

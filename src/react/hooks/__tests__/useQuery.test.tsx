@@ -1844,7 +1844,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      expect(finalResult).toEqual({
+      expect(finalResult).toEqualApolloQueryResult({
         data: {
           vars: {
             sourceOfVar: "reobserve",
@@ -1899,7 +1899,7 @@ describe("useQuery Hook", () => {
           },
         });
 
-      expect(finalResultNoVarMerge).toEqual({
+      expect(finalResultNoVarMerge).toEqualApolloQueryResult({
         // Since we didn't merge in result.current.observable.variables, we
         // don't see these variables anymore:
         // isGlobal: false,
@@ -2263,7 +2263,7 @@ describe("useQuery Hook", () => {
 
       await expect(
         getCurrentSnapshot().observable.reobserve()
-      ).resolves.toEqual({
+      ).resolves.toEqualApolloQueryResult({
         data: { linkCount: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,

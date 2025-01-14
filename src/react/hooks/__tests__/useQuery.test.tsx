@@ -5083,7 +5083,8 @@ describe("useQuery Hook", () => {
 
       const onCompleted = jest.fn();
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ variables }) => useQuery(query, { variables, onCompleted }),
         {
           wrapper: ({ children }) => (
@@ -5095,40 +5096,83 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data1);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { first: 1 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: data1,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { first: 1 },
+        });
+      }
+
       expect(onCompleted).toHaveBeenLastCalledWith(data1);
 
-      rerender({ variables: { first: 2 } });
-      expect(result.current.loading).toBe(true);
+      await rerender({ variables: { first: 2 } });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(data2);
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: data1,
+          variables: { first: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: data2,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: data1,
+          variables: { first: 2 },
+        });
+      }
+
       expect(onCompleted).toHaveBeenLastCalledWith(data2);
 
-      rerender({ variables: { first: 1 } });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual(data1);
-      await waitFor(
-        () => {
-          expect(onCompleted).toHaveBeenLastCalledWith(data1);
-        },
-        { interval: 1 }
-      );
+      await rerender({ variables: { first: 1 } });
 
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: data1,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: data2,
+          variables: { first: 1 },
+        });
+      }
+
+      expect(onCompleted).toHaveBeenLastCalledWith(data1);
       expect(onCompleted).toHaveBeenCalledTimes(3);
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

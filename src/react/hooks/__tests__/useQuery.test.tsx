@@ -1536,7 +1536,9 @@ describe("useQuery Hook", () => {
       });
 
       const client = new ApolloClient({ link, cache, ssrMode: true });
-      const { result } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { fetchPolicy: "network-only" }),
         {
           wrapper: ({ children }) => (
@@ -1545,17 +1547,20 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "from cache" });
+      {
+        const result = await takeSnapshot();
 
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.data).toEqual({ hello: "from link" });
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
+        expect(result).toEqualQueryResult({
+          data: { hello: "from cache" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should not hang when ssrMode is true but the cache is not populated for some reason", async () => {

@@ -2522,6 +2522,7 @@ describe("useQuery Hook", () => {
       }
     });
 
+    // TODO: Move out of "polling" query tests since this doesn't test polling
     it("should return data from network when clients default fetch policy set to network-only", async () => {
       const query = gql`
         {

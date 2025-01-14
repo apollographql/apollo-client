@@ -3103,6 +3103,10 @@ describe("useQuery Hook", () => {
       requestSpy.mockRestore();
     });
 
+    // TODO: This test does not really check for an error so we should probably
+    // do something different. That said, there are several other tests that
+    // call stopPolling on its own so we should either move this up in the test
+    // suite, or delete it as its tested from other tests.
     it("should not throw an error if stopPolling is called manually", async () => {
       const query = gql`
         {
@@ -3125,24 +3129,40 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, unmount } = renderHook(() => useQuery(query), {
-        wrapper,
-      });
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, unmount } =
+        await renderHookToSnapshotStream(() => useQuery(query), {
+          wrapper,
+        });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      expect(result.current.data).toEqual({ hello: "world" });
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
       unmount();
-      result.current.stopPolling();
+      getCurrentSnapshot().stopPolling();
     });
 
     describe("should prevent fetches when `skipPollAttempt` returns `false`", () => {

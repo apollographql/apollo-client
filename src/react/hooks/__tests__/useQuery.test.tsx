@@ -2632,14 +2632,28 @@ describe("useQuery Hook", () => {
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toBe(undefined);
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual({ hello: "world 1" });
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
         expect(requestSpy).toHaveBeenCalled();
       }
 

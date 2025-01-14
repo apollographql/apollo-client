@@ -3935,36 +3935,47 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { onError, errorPolicy: "all" }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          // TODO: Why does this only populate when errorPolicy is "all"?
+          errors: [{ message: "error" }],
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(
+        new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
       );
 
-      expect(result.current.data).toBeUndefined();
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("error");
-      expect(result.current.error!.graphQLErrors).toEqual([
-        new GraphQLError("error"),
-      ]);
-
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
-        );
-      });
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it('returns partial data when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {

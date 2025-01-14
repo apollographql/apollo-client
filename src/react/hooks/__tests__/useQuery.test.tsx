@@ -3873,33 +3873,43 @@ describe("useQuery Hook", () => {
 
       const onError = jest.fn();
       const onCompleted = jest.fn();
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { onError, onCompleted, errorPolicy: "ignore" }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      expect(result.current.data).toEqual({ hello: null });
-      expect(result.current.error).toBeUndefined();
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(() => {
-        expect(onCompleted).toHaveBeenCalledTimes(1);
-      });
-      await waitFor(() => {
-        expect(onCompleted).toHaveBeenCalledWith({ hello: null });
-      });
-      await waitFor(() => {
-        expect(onError).not.toHaveBeenCalled();
-      });
+        expect(result).toEqualQueryResult({
+          data: { hello: null },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+      expect(onCompleted).toHaveBeenCalledWith({ hello: null });
+      expect(onError).not.toHaveBeenCalled();
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it('calls `onError` when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {

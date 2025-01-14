@@ -3559,36 +3559,47 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const { result } = renderHook(() => useQuery(query, { onError }), {
-        wrapper,
-      });
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { onError }),
+        { wrapper }
       );
 
-      expect(result.current.data).toBeUndefined();
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("Could not fetch");
-      expect(result.current.error!.networkError).toEqual(
-        new Error("Could not fetch")
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({
+            networkError: new Error("Could not fetch"),
+          }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(
+        new ApolloError({ networkError: new Error("Could not fetch") })
       );
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ networkError: new Error("Could not fetch") })
-        );
-      });
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("removes partial data from result when response has errors", async () => {

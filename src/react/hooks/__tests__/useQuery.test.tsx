@@ -1418,7 +1418,8 @@ describe("useQuery Hook", () => {
 
       cache.writeQuery({ query, data: { hello: "from cache" } });
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { fetchPolicy: "cache-and-network" }),
         {
           wrapper: ({ children }) => (
@@ -1428,16 +1429,33 @@ describe("useQuery Hook", () => {
       );
 
       // TODO: FIXME
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toEqual({ hello: "from cache" });
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "from link" });
+        expect(result).toEqualQueryResult({
+          data: { hello: "from cache" },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "from link" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "from cache" },
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should not use the cache when using `network-only`", async () => {

@@ -3497,32 +3497,45 @@ describe("useQuery Hook", () => {
       );
 
       const onError = jest.fn();
-      const { result } = renderHook(() => useQuery(query, { onError }), {
-        wrapper,
-      });
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { onError }),
+        { wrapper }
       );
 
-      expect(result.current.data).toBeUndefined();
-      expect(result.current.error).toBeInstanceOf(ApolloError);
-      expect(result.current.error!.message).toBe("error");
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith(
-          new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
-        );
-      });
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(
+        new ApolloError({ graphQLErrors: [{ message: "error" }] })
+      );
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("calls `onError` when a network error has occurred", async () => {

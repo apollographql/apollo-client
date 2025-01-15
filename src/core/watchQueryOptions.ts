@@ -174,7 +174,7 @@ export type UpdateQueryFn<
     subscriptionData: { data: Unmasked<TSubscriptionData> };
     variables?: TSubscriptionVariables;
   }
-) => Unmasked<TData>;
+) => Unmasked<TData> | undefined;
 
 export type SubscribeToMoreOptions<
   TData = any,

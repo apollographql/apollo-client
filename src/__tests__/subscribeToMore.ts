@@ -241,6 +241,9 @@ describe("subscribeToMore", () => {
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
+        if (!prev) {
+          return prev;
+        }
         expect(prev.entry).not.toContainEqual(nextMutation);
         return {
           entry: [...prev.entry, { value: subscriptionData.data.name }],

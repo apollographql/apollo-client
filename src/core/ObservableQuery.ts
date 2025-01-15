@@ -726,7 +726,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     mapFn: (
       previousQueryResult: Unmasked<TData> | undefined,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData>
+    ) => Unmasked<TData> | undefined
   ): void {
     const { queryManager } = this;
     const { result } = queryManager.cache.diff<Unmasked<TData>>({

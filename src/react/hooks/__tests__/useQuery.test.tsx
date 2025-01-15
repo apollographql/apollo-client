@@ -9125,25 +9125,43 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ skip }) => useQuery(query, { skip }),
         { wrapper, initialProps: { skip: true } }
       );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
-      rerender({ skip: false });
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      await rerender({ skip: false });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBeFalsy();
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world" });
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should not make network requests when `skip` is `true`", async () => {

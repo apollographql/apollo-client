@@ -7611,52 +7611,72 @@ describe("useQuery Hook", () => {
 
         {
           const result = await takeSnapshot();
-          expect(result.loading).toBe(true);
-          expect(result.error).toBe(undefined);
-          expect(result.data).toBe(undefined);
-          expect(typeof result.refetch).toBe("function");
+
+          expect(result).toEqualQueryResult({
+            data: undefined,
+            called: true,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            previousData: undefined,
+            variables: { min: 0, max: 12 },
+          });
         }
         {
           const result = await takeSnapshot();
-          expect(result.loading).toBe(false);
-          expect(result.error).toBeUndefined();
-          expect(result.data).toEqual({ primes: [2, 3, 5, 7, 11] });
+
+          expect(result).toEqualQueryResult({
+            data: { primes: [2, 3, 5, 7, 11] },
+            called: true,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            previousData: undefined,
+            variables: { min: 0, max: 12 },
+          });
           expect(mergeParams.shift()).toEqual([void 0, [2, 3, 5, 7, 11]]);
         }
 
-        const thenFn = jest.fn();
-        await getCurrentSnapshot().refetch({ min: 12, max: 30 }).then(thenFn);
+        await expect(
+          getCurrentSnapshot().refetch({ min: 12, max: 30 })
+        ).resolves.toEqualApolloQueryResult({
+          data: { primes: [13, 17, 19, 23, 29] },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         {
           const result = await takeSnapshot();
-          expect(result.loading).toBe(true);
-          expect(result.error).toBe(undefined);
-          expect(result.data).toEqual({
-            // We get the stale data because we configured keyArgs: false.
-            primes: [2, 3, 5, 7, 11],
+
+          expect(result).toEqualQueryResult({
+            data: {
+              // We get the stale data because we configured keyArgs: false.
+              primes: [2, 3, 5, 7, 11],
+            },
+            called: true,
+            loading: true,
+            // This networkStatus is setVariables instead of refetch because we
+            // called refetch with new variables.
+            networkStatus: NetworkStatus.setVariables,
+            previousData: { primes: [2, 3, 5, 7, 11] },
+            variables: { min: 12, max: 30 },
           });
-          // This networkStatus is setVariables instead of refetch because we
-          // called refetch with new variables.
-          expect(result.networkStatus).toBe(NetworkStatus.setVariables);
         }
 
         {
           const result = await takeSnapshot();
-          expect(result.loading).toBe(false);
-          expect(result.error).toBe(undefined);
-          expect(result.data).toEqual({ primes: [13, 17, 19, 23, 29] });
+
+          expect(result).toEqualQueryResult({
+            data: { primes: [13, 17, 19, 23, 29] },
+            called: true,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            previousData: { primes: [2, 3, 5, 7, 11] },
+            variables: { min: 12, max: 30 },
+          });
           expect(mergeParams.shift()).toEqual(
             // Without refetchWritePolicy: "overwrite", this array will be
             // all 10 primes (2 through 29) together.
             [undefined, [13, 17, 19, 23, 29]]
           );
-
-          expect(thenFn).toHaveBeenCalledTimes(1);
-          expect(thenFn).toHaveBeenCalledWith({
-            loading: false,
-            networkStatus: NetworkStatus.ready,
-            data: { primes: [13, 17, 19, 23, 29] },
-          });
         }
       });
     });

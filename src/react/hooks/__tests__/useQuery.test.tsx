@@ -8179,6 +8179,7 @@ describe("useQuery Hook", () => {
     });
 
     it("onCompleted should fire when polling with notifyOnNetworkStatusChange: true", async () => {
+      jest.useFakeTimers();
       const query = gql`
         {
           hello
@@ -8188,17 +8189,17 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
-          delay: 3,
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
-          delay: 3,
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
-          delay: 3,
+          delay: 20,
         },
       ];
 
@@ -8222,69 +8223,106 @@ describe("useQuery Hook", () => {
         }
       );
 
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
+      jest.advanceTimersByTime(20);
 
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 1" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
 
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 1" },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.poll,
-        previousData: { hello: "world 1" },
-        variables: {},
-      });
+        await expect(promise).resolves.toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
       expect(onCompleted).toHaveBeenCalledTimes(1);
+      // Polling is started with the first request, so we only need to advance
+      // the timer by 180 (200 poll time - 20 result delay)
+      jest.advanceTimersByTime(180);
 
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 2" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world 1" },
-        variables: {},
-      });
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
+
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+      jest.advanceTimersByTime(20);
+
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
+      }
 
       expect(onCompleted).toHaveBeenCalledTimes(2);
+      jest.advanceTimersByTime(200);
 
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 2" },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.poll,
-        previousData: { hello: "world 2" },
-        variables: {},
-      });
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.poll,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
 
       expect(onCompleted).toHaveBeenCalledTimes(2);
+      jest.advanceTimersByTime(20);
 
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 3" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world 2" },
-        variables: {},
-      });
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
+          data: { hello: "world 3" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 2" },
+          variables: {},
+        });
+      }
 
       expect(onCompleted).toHaveBeenCalledTimes(3);
     });

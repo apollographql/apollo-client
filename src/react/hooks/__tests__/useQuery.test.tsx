@@ -9806,7 +9806,7 @@ describe("useQuery Hook", () => {
       });
     });
 
-    it("should not return partial cache data when `returnPartialData` is false", () => {
+    it("should not return partial cache data when `returnPartialData` is false", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
@@ -9858,7 +9858,8 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(partialQuery, { returnPartialData: false }),
         {
           wrapper: ({ children }) => (
@@ -9867,8 +9868,14 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
     });
 
     it("should not return partial cache data when `returnPartialData` is false and new variables are passed in", async () => {

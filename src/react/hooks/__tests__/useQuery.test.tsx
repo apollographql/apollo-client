@@ -9318,39 +9318,39 @@ describe("useQuery Hook", () => {
         link,
       });
 
-      const { result } = renderHook(() => useQuery(query, { skip: true }), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { skip: true }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
 
-      let promise;
-      await waitFor(async () => {
-        promise = result.current.refetch();
-      });
+      const refetchResult = await getCurrentSnapshot().refetch();
 
-      expect(result.current.loading).toBe(false);
-      await waitFor(
-        () => {
-          expect(result.current.data).toBe(undefined);
-        },
-        { interval: 1 }
-      );
-
-      expect(result.current.loading).toBe(false);
-      await waitFor(
-        () => {
-          expect(result.current.data).toBe(undefined);
-        },
-        { interval: 1 }
-      );
-      expect(requestSpy).toHaveBeenCalledTimes(1);
-      requestSpy.mockRestore();
-      await expect(promise).resolves.toEqual({
+      expect(refetchResult).toEqualApolloQueryResult({
         data: { hello: "world" },
         loading: false,
-        networkStatus: 7,
+        networkStatus: NetworkStatus.ready,
       });
+
+      expect(requestSpy).toHaveBeenCalledTimes(1);
+      requestSpy.mockRestore();
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should set correct initialFetchPolicy even if skip:true", async () => {

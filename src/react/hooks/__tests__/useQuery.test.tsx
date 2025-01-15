@@ -9019,53 +9019,69 @@ describe("useQuery Hook", () => {
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { variables: { id: entityId } }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: entityId },
+      });
 
-      expect(result.current.data).toEqual({
-        clientEntity: {
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          clientEntity: {
+            id: entityId,
+            title: shortTitle,
+            titleLength: shortTitle.length,
+            __typename: "ClientData",
+          },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: entityId },
+      });
+
+      void client.mutate({
+        mutation,
+        variables: {
           id: entityId,
-          title: shortTitle,
-          titleLength: shortTitle.length,
-          __typename: "ClientData",
+          title: longerTitle,
         },
       });
 
-      await act(
-        async () =>
-          void client.mutate({
-            mutation,
-            variables: {
-              id: entityId,
-              title: longerTitle,
-            },
-          })
-      );
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            clientEntity: {
-              id: entityId,
-              title: longerTitle,
-              titleLength: longerTitle.length,
-              __typename: "ClientData",
-            },
-          });
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          clientEntity: {
+            id: entityId,
+            title: longerTitle,
+            titleLength: longerTitle.length,
+            __typename: "ClientData",
+          },
         },
-        { interval: 1 }
-      );
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          clientEntity: {
+            id: entityId,
+            title: shortTitle,
+            titleLength: shortTitle.length,
+            __typename: "ClientData",
+          },
+        },
+        variables: { id: entityId },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

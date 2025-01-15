@@ -9179,25 +9179,44 @@ describe("useQuery Hook", () => {
         <ApolloProvider client={client}>{children}</ApolloProvider>
       );
 
-      const { result, rerender } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ skip, variables }) => useQuery(query, { skip, variables }),
         { wrapper, initialProps: { skip: false, variables: undefined as any } }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world" });
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
-      rerender({ skip: true, variables: { someVar: true } });
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
+      await rerender({ skip: true, variables: { someVar: true } });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        // TODO: It seems odd to flip this back to false after it was already
+        // set to true
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world" },
+        variables: { someVar: true },
+      });
+
       expect(linkFn).toHaveBeenCalledTimes(1);
     });
 

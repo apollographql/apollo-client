@@ -8325,6 +8325,9 @@ describe("useQuery Hook", () => {
       }
 
       expect(onCompleted).toHaveBeenCalledTimes(3);
+
+      jest.runOnlyPendingTimers();
+      jest.useRealTimers();
     });
 
     // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794

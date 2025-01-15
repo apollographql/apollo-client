@@ -8652,16 +8652,31 @@ describe("useQuery Hook", () => {
 
       {
         const { query } = await takeSnapshot();
-        expect(query.loading).toBe(true);
-      }
-      const mutate = getCurrentSnapshot().mutation[0];
-      {
-        const { query } = await takeSnapshot();
-        expect(query.loading).toBe(false);
-        expect(query.loading).toBe(false);
-        expect(query.data).toEqual(carsData);
+
+        expect(query).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
+      {
+        const { query } = await takeSnapshot();
+
+        expect(query).toEqualQueryResult({
+          data: carsData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const mutate = getCurrentSnapshot().mutation[0];
       void mutate();
 
       {
@@ -8677,8 +8692,14 @@ describe("useQuery Hook", () => {
           ({ query, mutation } = await takeSnapshot());
         }
         expect(mutation[1].loading).toBe(true);
-        expect(query.loading).toBe(false);
-        expect(query.data).toEqual(allCarsData);
+        expect(query).toEqualQueryResult({
+          data: allCarsData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: carsData,
+          variables: {},
+        });
       }
 
       expect(onError).toHaveBeenCalledTimes(0);
@@ -8687,7 +8708,14 @@ describe("useQuery Hook", () => {
         // The mutation ran and is loading the result. The query stays at
         // not loading as nothing has changed for the query.
         expect(mutation[1].loading).toBe(true);
-        expect(query.loading).toBe(false);
+        expect(query).toEqualQueryResult({
+          data: carsData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: allCarsData,
+          variables: {},
+        });
       }
 
       {
@@ -8695,8 +8723,14 @@ describe("useQuery Hook", () => {
         // The mutation has completely finished, leaving the query with access to
         // the original cache data.
         expect(mutation[1].loading).toBe(false);
-        expect(query.loading).toBe(false);
-        expect(query.data).toEqual(carsData);
+        expect(query).toEqualQueryResult({
+          data: carsData,
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: allCarsData,
+          variables: {},
+        });
       }
 
       expect(onError).toHaveBeenCalledTimes(1);

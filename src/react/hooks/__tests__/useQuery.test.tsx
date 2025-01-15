@@ -10023,40 +10023,51 @@ describe("useQuery Hook", () => {
       );
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { notifyOnNetworkStatusChange: true }),
-        { wrapper }
-      );
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { notifyOnNetworkStatusChange: true }),
+          { wrapper }
+        );
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toBe(undefined);
-        expect(result.previousData).toBe(undefined);
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual(data1);
-        expect(result.previousData).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: data1,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
-        await result.refetch();
-      }
+      await getCurrentSnapshot().refetch();
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toEqual(data1);
-        expect(result.previousData).toEqual(data1);
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: data1,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: data1,
+        variables: {},
+      });
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual(data2);
-        expect(result.previousData).toEqual(data1);
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: data2,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: data1,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should persist result.previousData across multiple results", async () => {

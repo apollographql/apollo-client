@@ -7936,34 +7936,61 @@ describe("useQuery Hook", () => {
       );
 
       const onCompleted = jest.fn();
-      const { result, rerender } = renderHook(
-        () =>
-          useQuery(query, {
-            onCompleted,
-          }),
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        () => useQuery(query, { onCompleted }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
 
-      expect(result.current.data).toEqual({ hello: "world" });
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
       expect(onCompleted).toHaveBeenCalledTimes(1);
       expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
 
-      rerender();
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world" });
+      await rerender(undefined);
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
       expect(onCompleted).toHaveBeenCalledTimes(1);
       expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should not call onCompleted if skip is true", async () => {

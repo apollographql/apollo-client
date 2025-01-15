@@ -9520,18 +9520,17 @@ describe("useQuery Hook", () => {
           expect.any(Number)
         );
       };
-      let nextFetchPolicy: WatchQueryOptions<
+      const nextFetchPolicy: WatchQueryOptions<
         OperationVariables,
         any
-      >["nextFetchPolicy"] = (_, context) => {
+      >["nextFetchPolicy"] = jest.fn((_, context) => {
         if (context.reason === "variables-changed") {
           return "cache-and-network";
         } else if (context.reason === "after-fetch") {
           return "cache-only";
         }
         throw new Error("should never happen");
-      };
-      nextFetchPolicy = jest.fn(nextFetchPolicy);
+      });
 
       const { result, rerender } = renderHook<
         QueryResult,

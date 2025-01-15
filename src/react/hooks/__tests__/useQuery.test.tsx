@@ -1,4 +1,4 @@
-import React, { Fragment, ReactNode, useEffect, useRef, useState } from "react";
+import React, { Fragment, ReactNode, useEffect, useState } from "react";
 import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
 import gql from "graphql-tag";
 import { act } from "@testing-library/react";
@@ -32,7 +32,6 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
-import { useApolloClient } from "../useApolloClient";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
@@ -7739,129 +7738,131 @@ describe("useQuery Hook", () => {
             }
           })
       );
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      const hookResponse = jest.fn().mockReturnValue(null);
-
-      function Component({ children, id }: any) {
-        const result = useQuery(CAR_QUERY_BY_ID, {
-          variables: { id },
-          notifyOnNetworkStatusChange: true,
-          fetchPolicy: "network-only",
-        });
-        const client = useApolloClient();
-        const hasRefetchedRef = useRef(false);
-
-        useEffect(() => {
-          if (
-            result.networkStatus === NetworkStatus.ready &&
-            !hasRefetchedRef.current
-          ) {
-            void client.reFetchObservableQueries();
-            hasRefetchedRef.current = true;
-          }
-        }, [result.networkStatus]);
-
-        return children(result);
-      }
-
-      const { rerender } = render(
-        <Component id={1}>{hookResponse}</Component>,
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ id }) =>
+          useQuery(CAR_QUERY_BY_ID, {
+            variables: { id },
+            notifyOnNetworkStatusChange: true,
+            fetchPolicy: "network-only",
+          }),
         {
+          initialProps: { id: 1 },
           wrapper: ({ children }) => (
-            <MockedProvider link={link}>{children}</MockedProvider>
+            <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         }
       );
 
-      await waitFor(() => {
-        // Resolves as soon as reFetchObservableQueries is
-        // called, but before the result is returned
-        expect(hookResponse).toHaveBeenCalledTimes(3);
-      });
+      {
+        const result = await takeSnapshot();
 
-      rerender(<Component id={2}>{hookResponse}</Component>);
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
 
-      await waitFor(() => {
-        // All results are returned
-        expect(hookResponse).toHaveBeenCalledTimes(5);
-      });
+      {
+        const result = await takeSnapshot();
 
-      expect(hookResponse.mock.calls[0][0] as QueryResult).toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: { id: 1 },
-      });
-      expect(hookResponse.mock.calls[1][0] as QueryResult).toEqualQueryResult({
-        data: {
-          car: {
-            __typename: "Car",
-            make: "Audi",
-            model: "A4",
+        expect(result).toEqualQueryResult({
+          data: {
+            car: {
+              __typename: "Car",
+              make: "Audi",
+              model: "A4",
+            },
           },
-        },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: { id: 1 },
-      });
-      expect(hookResponse.mock.calls[2][0] as QueryResult).toEqualQueryResult({
-        data: {
-          car: {
-            __typename: "Car",
-            make: "Audi",
-            model: "A4",
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { id: 1 },
+        });
+      }
+
+      void client.reFetchObservableQueries();
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            car: {
+              __typename: "Car",
+              make: "Audi",
+              model: "A4",
+            },
           },
-        },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-        previousData: {
-          car: {
-            __typename: "Car",
-            make: "Audi",
-            model: "A4",
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: {
+            car: {
+              __typename: "Car",
+              make: "Audi",
+              model: "A4",
+            },
           },
-        },
-        variables: { id: 1 },
-      });
-      expect(hookResponse.mock.calls[3][0] as QueryResult).toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.setVariables,
-        previousData: {
-          car: {
-            __typename: "Car",
-            make: "Audi",
-            model: "A4",
+          variables: { id: 1 },
+        });
+      }
+
+      // Rerender with new variables before the refetch request completes
+      await rerender({ id: 2 });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.setVariables,
+          previousData: {
+            car: {
+              __typename: "Car",
+              make: "Audi",
+              model: "A4",
+            },
           },
-        },
-        variables: { id: 2 },
-      });
-      expect(hookResponse.mock.calls[4][0] as QueryResult).toEqualQueryResult({
-        data: {
-          car: {
-            __typename: "Car",
-            make: "Audi",
-            model: "RS8",
+          variables: { id: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: {
+            car: {
+              __typename: "Car",
+              make: "Audi",
+              model: "RS8",
+            },
           },
-        },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: {
-          car: {
-            __typename: "Car",
-            make: "Audi",
-            model: "A4",
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            car: {
+              __typename: "Car",
+              make: "Audi",
+              model: "A4",
+            },
           },
-        },
-        variables: { id: 2 },
-      });
+          variables: { id: 2 },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

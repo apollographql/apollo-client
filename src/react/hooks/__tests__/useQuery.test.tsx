@@ -5386,35 +5386,63 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result } = renderHook(
-        () => useQuery(query, { variables: { limit: 2 } }),
-        { wrapper }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { variables: { limit: 2 } }),
+          { wrapper }
+        );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.data).toBe(undefined);
+      {
+        const result = await takeSnapshot();
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.current.data).toEqual({ letters: ab });
-      await act(
-        async () => void result.current.fetchMore({ variables: { limit: 2 } })
-      );
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
 
-      expect(result.current.loading).toBe(false);
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ letters: ab.concat(cd) });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      const fetchMoreResult = await getCurrentSnapshot().fetchMore({
+        variables: { limit: 2 },
+      });
+
+      expect(fetchMoreResult).toEqualApolloQueryResult({
+        data: { letters: cd },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab.concat(cd) },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("fetchMore with concatPagination and notifyOnNetworkStatusChange", async () => {

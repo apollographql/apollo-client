@@ -10074,8 +10074,9 @@ describe("useQuery Hook", () => {
       const query: TypedDocumentNode<
         {
           car: {
-            id: string;
+            id: number;
             make: string;
+            __typename: "Car";
           };
         },
         {
@@ -10094,7 +10095,7 @@ describe("useQuery Hook", () => {
         car: {
           id: 1,
           make: "Venturi",
-          __typename: "Car",
+          __typename: "Car" as const,
         },
       };
 
@@ -10102,7 +10103,7 @@ describe("useQuery Hook", () => {
         car: {
           id: 2,
           make: "Wiesmann",
-          __typename: "Car",
+          __typename: "Car" as const,
         },
       };
 
@@ -10110,7 +10111,7 @@ describe("useQuery Hook", () => {
         car: {
           id: 3,
           make: "Beetle",
-          __typename: "Car",
+          __typename: "Car" as const,
         },
       };
 

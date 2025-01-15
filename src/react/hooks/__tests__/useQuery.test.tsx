@@ -6989,17 +6989,20 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: {
           author: {
             __typename: "Author",
@@ -7007,12 +7010,16 @@ describe("useQuery Hook", () => {
             name: "Author Lee",
             post: {
               __typename: "Post",
+              id: 1,
               title: "Title",
             },
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
     }
 
@@ -7022,7 +7029,7 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: {
           author: {
             __typename: "Author",
@@ -7030,19 +7037,23 @@ describe("useQuery Hook", () => {
             name: "Author Lee",
             post: {
               __typename: "Post",
+              id: 1,
               title: "Title",
             },
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: {
           author: {
             __typename: "Author",
@@ -7054,12 +7065,27 @@ describe("useQuery Hook", () => {
             name: "Author Lee (refetch)",
             post: {
               __typename: "Post",
+              id: 1,
               title: "Title",
             },
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: {
+          author: {
+            __typename: "Author",
+            id: 1,
+            name: "Author Lee",
+            post: {
+              __typename: "Post",
+              id: 1,
+              title: "Title",
+            },
+          },
+        },
+        variables: {},
       });
     }
 

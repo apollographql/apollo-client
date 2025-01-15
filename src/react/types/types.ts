@@ -394,6 +394,8 @@ export declare type MutationFunction<
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
+  // TODO This FetchResult<TData> seems strange here, as opposed to an
+  // ApolloQueryResult<TData>
 ) => Promise<FetchResult<MaybeMasked<TData>>>;
 
 export interface MutationHookOptions<
@@ -418,11 +420,7 @@ export type MutationTuple<
   TContext = DefaultContext,
   TCache extends ApolloCache<any> = ApolloCache<any>,
 > = [
-  mutate: (
-    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-    // TODO This FetchResult<TData> seems strange here, as opposed to an
-    // ApolloQueryResult<TData>
-  ) => Promise<FetchResult<MaybeMasked<TData>>>,
+  mutate: MutationFunction<TData, TVariables, TContext, TCache>,
   result: MutationResult<TData>,
 ];
 

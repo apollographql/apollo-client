@@ -38,7 +38,7 @@ import {
   createRenderStream,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import { MutationTuple, QueryResult } from "../../types/types";
+import { MutationResult, MutationTuple, QueryResult } from "../../types/types";
 import { invariant } from "../../../utilities/globals";
 
 describe("useMutation Hook", () => {
@@ -3388,5 +3388,63 @@ describe.skip("Type Tests", () => {
 
     expectTypeOf(data).toMatchTypeOf<Mutation | null | undefined>();
     expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+  });
+
+  test("should not be able to access result when using ignoreResults", async () => {
+    const mutation = gql`
+      mutation {
+        updateUser {
+          id
+        }
+      }
+    `;
+
+    type Mutation = {
+      updateUser: {
+        __typename: "User";
+        id: string;
+      };
+    };
+
+    // Explicit `true`
+    {
+      const [mutate, result] = useMutation<Mutation>(mutation, {
+        ignoreResults: true,
+      });
+      expectTypeOf(result).toMatchTypeOf<{ reset: () => void }>();
+      expectTypeOf(result).not.toMatchTypeOf<MutationResult<Mutation>>();
+      expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+      const {
+        reset,
+        // @ts-expect-error
+        data,
+        // @ts-expect-error
+        loading,
+        // @ts-expect-error
+        error,
+      } = result;
+      reset;
+      data;
+      loading;
+      error;
+    }
+
+    // Explicit `false`
+    {
+      const [mutate, result] = useMutation<Mutation>(mutation, {
+        ignoreResults: false,
+      });
+      expectTypeOf(result).toMatchTypeOf<MutationResult<Mutation>>();
+      expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    }
+
+    // Unknown boolean
+    {
+      const [mutate, result] = useMutation<Mutation>(mutation, {
+        ignoreResults: Math.random() > 0.5,
+      });
+      expectTypeOf(result).toMatchTypeOf<MutationResult<Mutation>>();
+      expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+    }
   });
 });

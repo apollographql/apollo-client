@@ -2,6 +2,7 @@ import * as React from "rehackt";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
+  MutationFunction,
   MutationFunctionOptions,
   MutationHookOptions,
   MutationResult,
@@ -69,6 +70,38 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
  * @param options - Options to control how the mutation is executed.
  * @returns A tuple in the form of `[mutate, result]`
  */
+export function useMutation<
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+>(
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options: { ignoreResults: true } & MutationHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>,
+    TContext,
+    TCache
+  >
+): [
+  MutationFunction<TData, TVariables, TContext, TCache>,
+  // result is not reliable when ignoreResults is true
+  Pick<MutationResult<TData>, "reset">,
+];
+export function useMutation<
+  TData = any,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache<any> = ApolloCache<any>,
+>(
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  options?: MutationHookOptions<
+    NoInfer<TData>,
+    NoInfer<TVariables>,
+    TContext,
+    TCache
+  >
+): MutationTuple<TData, TVariables, TContext, TCache>;
 export function useMutation<
   TData = any,
   TVariables = OperationVariables,

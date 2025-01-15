@@ -9254,7 +9254,9 @@ describe("useQuery Hook", () => {
           result: { data: { hello: "world" } },
         },
       ];
-      const { result, rerender } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
         ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
         {
           wrapper: ({ children }) => (
@@ -9264,28 +9266,37 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
-      await expect(
-        waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
+      await rerender({ fetchPolicy: "cache-first" });
 
-      rerender({ fetchPolicy: "cache-first" });
-      expect(result.current.data).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBeFalsy();
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world" });
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     // Amusingly, #8270 thinks this is a bug, but #9101 thinks this is not.

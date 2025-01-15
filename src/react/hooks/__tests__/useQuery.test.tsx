@@ -9930,12 +9930,9 @@ describe("useQuery Hook", () => {
         },
       });
 
-      let setId: any;
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => {
-          const [id, setId1] = React.useState(2);
-          setId = setId1;
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ id }) => {
           return useQuery(partialQuery, {
             variables: { id },
             returnPartialData: false,
@@ -9943,6 +9940,7 @@ describe("useQuery Hook", () => {
           });
         },
         {
+          initialProps: { id: 2 },
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
@@ -9965,9 +9963,7 @@ describe("useQuery Hook", () => {
         variables: { id: 2 },
       });
 
-      setTimeout(() => {
-        setId(1);
-      });
+      await rerender({ id: 1 });
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,

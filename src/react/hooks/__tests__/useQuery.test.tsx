@@ -7786,31 +7786,82 @@ describe("useQuery Hook", () => {
         expect(hookResponse).toHaveBeenCalledTimes(5);
       });
 
-      expect(hookResponse.mock.calls.map((call) => call[0].data)).toEqual([
-        undefined,
-        {
+      expect(hookResponse.mock.calls[0][0] as QueryResult).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+      expect(hookResponse.mock.calls[1][0] as QueryResult).toEqualQueryResult({
+        data: {
           car: {
             __typename: "Car",
             make: "Audi",
             model: "A4",
           },
         },
-        {
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+      expect(hookResponse.mock.calls[2][0] as QueryResult).toEqualQueryResult({
+        data: {
           car: {
             __typename: "Car",
             make: "Audi",
             model: "A4",
           },
         },
-        undefined,
-        {
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        previousData: {
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
+          },
+        },
+        variables: { id: 1 },
+      });
+      expect(hookResponse.mock.calls[3][0] as QueryResult).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: {
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
+          },
+        },
+        variables: { id: 2 },
+      });
+      expect(hookResponse.mock.calls[4][0] as QueryResult).toEqualQueryResult({
+        data: {
           car: {
             __typename: "Car",
             make: "Audi",
             model: "RS8",
           },
         },
-      ]);
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          car: {
+            __typename: "Car",
+            make: "Audi",
+            model: "A4",
+          },
+        },
+        variables: { id: 2 },
+      });
     });
   });
 

@@ -8118,7 +8118,9 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
-      const { result } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             onCompleted,
@@ -8133,33 +8135,46 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 1" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
       expect(onCompleted).toHaveBeenCalledTimes(1);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 2" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
       expect(onCompleted).toHaveBeenCalledTimes(1);
 
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world 3" });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 3" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
+
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
 

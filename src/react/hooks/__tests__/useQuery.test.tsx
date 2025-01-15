@@ -7,6 +7,7 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
+  ApolloQueryResult,
   FetchPolicy,
   NetworkStatus,
   OperationVariables,
@@ -6114,37 +6115,49 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: false,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: undefined,
+        error: undefined,
+        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: false,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: undefined,
+        error: undefined,
+        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
@@ -6153,41 +6166,48 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
       // ensure we aren't setting a value on the observable query that contains
       // the partial result
       expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)
-      ).toEqual({
-        data: undefined,
+        snapshot.useQueryResult?.observable.getCurrentResult(false)!
+      ).toEqualApolloQueryResult({
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -6195,13 +6215,18 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
-      });
+        // TODO: Fix ApolloQueryResult type to allow `data` to be an optional property.
+        // This fails without the type case for now even though the runtime
+        // code doesn't include a `data` property.
+      } as unknown as ApolloQueryResult<Query1>);
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
@@ -6210,38 +6235,47 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        loading: false,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
+        loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
       // ensure we aren't setting a value on the observable query that contains
       // the partial result
       expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)
-      ).toEqual({
-        data: undefined,
+        snapshot.useQueryResult?.observable.getCurrentResult(false)!
+      ).toEqualApolloQueryResult({
+        // TODO: Fix TypeScript types to allow for `data` to be `undefined`
+        data: undefined as unknown as Query1,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -6251,11 +6285,13 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 

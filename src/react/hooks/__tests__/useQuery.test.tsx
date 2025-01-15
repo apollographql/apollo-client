@@ -10374,6 +10374,9 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    // TODO: Determine if this test is needed or is already covered by other
+    // tests such as changing variables (since those tests check all returned
+    // hook properties)
     it("should be cleared when variables change causes cache miss", async () => {
       const peopleData = [
         { id: 1, name: "John Smith", gender: "male", __typename: "Person" },

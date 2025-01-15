@@ -6402,37 +6402,49 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: false,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: undefined,
+        error: undefined,
+        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: false,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: undefined,
+        error: undefined,
+        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
@@ -6441,20 +6453,25 @@ describe("useQuery Hook", () => {
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
@@ -6464,17 +6481,19 @@ describe("useQuery Hook", () => {
       // We don't see the update from the cache for one more render cycle, hence
       // why this is still showing the error result even though the result from
       // the other query has finished and re-rendered.
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -6483,15 +6502,18 @@ describe("useQuery Hook", () => {
             lastName: "Doe",
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 
     {
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -6499,12 +6521,14 @@ describe("useQuery Hook", () => {
             firstName: "John",
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult).toMatchObject({
-        called: true,
+      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -6513,8 +6537,11 @@ describe("useQuery Hook", () => {
             lastName: "Doe",
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
     }
 

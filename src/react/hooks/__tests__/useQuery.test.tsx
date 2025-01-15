@@ -8204,6 +8204,7 @@ describe("useQuery Hook", () => {
 
       const cache = new InMemoryCache();
       const onCompleted = jest.fn();
+
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
@@ -8221,41 +8222,71 @@ describe("useQuery Hook", () => {
         }
       );
 
-      {
-        const result = await takeSnapshot();
-        expect(result.data).toEqual(undefined);
-        expect(result.loading).toBe(true);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.data).toEqual({ hello: "world 1" });
-        expect(result.loading).toBe(false);
-        expect(onCompleted).toHaveBeenCalledTimes(1);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.data).toEqual({ hello: "world 1" });
-        expect(result.loading).toBe(true);
-        expect(onCompleted).toHaveBeenCalledTimes(1);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.data).toEqual({ hello: "world 2" });
-        expect(result.loading).toBe(false);
-        expect(onCompleted).toHaveBeenCalledTimes(2);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.data).toEqual({ hello: "world 2" });
-        expect(result.loading).toBe(true);
-        expect(onCompleted).toHaveBeenCalledTimes(2);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.data).toEqual({ hello: "world 3" });
-        expect(result.loading).toBe(false);
-        expect(onCompleted).toHaveBeenCalledTimes(3);
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(0);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.poll,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(2);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.poll,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(2);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world 3" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 2" },
+        variables: {},
+      });
+
+      expect(onCompleted).toHaveBeenCalledTimes(3);
     });
 
     // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794

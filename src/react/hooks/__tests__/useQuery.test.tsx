@@ -8061,38 +8061,37 @@ describe("useQuery Hook", () => {
       );
 
       const onCompleted = jest.fn();
-      let updates = 0;
-      const { result } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => {
-          const pendingResult = useQuery(query, {
+          return useQuery(query, {
             fetchPolicy: "network-only",
             onCompleted,
           });
-          updates++;
-
-          return pendingResult;
         },
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({ hello: "world" });
-      const previousUpdates = updates;
-      await expect(
-        waitFor(
-          () => {
-            expect(updates).not.toEqual(previousUpdates);
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
       expect(onCompleted).toHaveBeenCalledTimes(1);
     });
 

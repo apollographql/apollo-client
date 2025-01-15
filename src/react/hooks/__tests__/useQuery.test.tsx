@@ -9774,7 +9774,8 @@ describe("useQuery Hook", () => {
         }
       `;
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(partialQuery, { returnPartialData: true }),
         {
           wrapper: ({ children }) => (
@@ -9783,19 +9784,25 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toEqual({
-        cars: [
-          {
-            __typename: "Car",
-            repairs: [
-              {
-                __typename: "Repair",
-                date: "2019-05-08",
-              },
-            ],
-          },
-        ],
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          cars: [
+            {
+              __typename: "Car",
+              repairs: [
+                {
+                  __typename: "Repair",
+                  date: "2019-05-08",
+                },
+              ],
+            },
+          ],
+        },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
     });
 

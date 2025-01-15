@@ -5616,23 +5616,33 @@ describe("useQuery Hook", () => {
         );
 
       {
-        const { loading, networkStatus, data } = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(loading).toBe(true);
-        expect(networkStatus).toBe(NetworkStatus.loading);
-        expect(data).toBeUndefined();
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
       }
 
       {
-        const { loading, networkStatus, data } = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(loading).toBe(false);
-        expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data).toStrictEqual({
-          letters: [
-            { __typename: "Letter", letter: "A", position: 1 },
-            { __typename: "Letter", letter: "B", position: 2 },
-          ],
+        expect(result).toEqualQueryResult({
+          data: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+            ],
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { limit: 2 },
         });
       }
 
@@ -5646,35 +5656,54 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { loading, networkStatus, data } = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(loading).toBe(true);
-        expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data).toStrictEqual({
-          letters: [
-            { __typename: "Letter", letter: "A", position: 1 },
-            { __typename: "Letter", letter: "B", position: 2 },
-          ],
+        expect(result).toEqualQueryResult({
+          data: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+            ],
+          },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.fetchMore,
+          previousData: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+            ],
+          },
+          variables: { limit: 2 },
         });
       }
 
       {
-        const { loading, networkStatus, data, observable } =
-          await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(loading).toBe(false);
-        expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data).toEqual({
-          letters: [
-            { __typename: "Letter", letter: "A", position: 1 },
-            { __typename: "Letter", letter: "B", position: 2 },
-            { __typename: "Letter", letter: "C", position: 3 },
-            { __typename: "Letter", letter: "D", position: 4 },
-          ],
+        expect(result).toEqualQueryResult({
+          data: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+              { __typename: "Letter", letter: "C", position: 3 },
+              { __typename: "Letter", letter: "D", position: 4 },
+            ],
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+            ],
+          },
+          variables: { limit: 2 },
         });
 
         // Ensure we store the merged result as the last result
-        expect(observable.getCurrentResult(false).data).toEqual({
+        expect(result.observable.getCurrentResult(false).data).toEqual({
           letters: [
             { __typename: "Letter", letter: "A", position: 1 },
             { __typename: "Letter", letter: "B", position: 2 },
@@ -5684,7 +5713,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(fetchMorePromise).resolves.toStrictEqual({
+      await expect(fetchMorePromise).resolves.toEqualApolloQueryResult({
         data: {
           letters: [
             { __typename: "Letter", letter: "C", position: 3 },
@@ -5703,34 +5732,57 @@ describe("useQuery Hook", () => {
       });
 
       {
-        const { data, loading, networkStatus } = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(loading).toBe(true);
-        expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data).toEqual({
-          letters: [
-            { __typename: "Letter", letter: "A", position: 1 },
-            { __typename: "Letter", letter: "B", position: 2 },
-            { __typename: "Letter", letter: "C", position: 3 },
-            { __typename: "Letter", letter: "D", position: 4 },
-          ],
+        expect(result).toEqualQueryResult({
+          data: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+              { __typename: "Letter", letter: "C", position: 3 },
+              { __typename: "Letter", letter: "D", position: 4 },
+            ],
+          },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.fetchMore,
+          previousData: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+              { __typename: "Letter", letter: "C", position: 3 },
+              { __typename: "Letter", letter: "D", position: 4 },
+            ],
+          },
+          variables: { limit: 2 },
         });
       }
 
       {
-        const { data, loading, networkStatus, observable } =
-          await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(loading).toBe(false);
-        expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data).toEqual({
-          letters: [
-            { __typename: "Letter", letter: "E", position: 5 },
-            { __typename: "Letter", letter: "F", position: 6 },
-          ],
+        expect(result).toEqualQueryResult({
+          data: {
+            letters: [
+              { __typename: "Letter", letter: "E", position: 5 },
+              { __typename: "Letter", letter: "F", position: 6 },
+            ],
+          },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            letters: [
+              { __typename: "Letter", letter: "A", position: 1 },
+              { __typename: "Letter", letter: "B", position: 2 },
+              { __typename: "Letter", letter: "C", position: 3 },
+              { __typename: "Letter", letter: "D", position: 4 },
+            ],
+          },
+          variables: { limit: 2 },
         });
 
-        expect(observable.getCurrentResult(false).data).toEqual({
+        expect(result.observable.getCurrentResult(false).data).toEqual({
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },
@@ -5738,7 +5790,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await expect(fetchMorePromise).resolves.toStrictEqual({
+      await expect(fetchMorePromise).resolves.toEqualApolloQueryResult({
         data: {
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },

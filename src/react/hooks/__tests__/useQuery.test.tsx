@@ -9374,38 +9374,42 @@ describe("useQuery Hook", () => {
       const correctInitialFetchPolicy: WatchQueryFetchPolicy =
         "cache-and-network";
 
-      const { result, rerender } = renderHook<
-        QueryResult,
-        {
-          skip: boolean;
-        }
-      >(
-        ({ skip = true }) =>
-          useQuery(query, {
-            // Skipping equates to using a fetchPolicy of "standby", but that
-            // should not mean we revert to standby whenever we want to go back to
-            // the initial fetchPolicy (e.g. when variables change).
-            skip,
-            fetchPolicy: correctInitialFetchPolicy,
-          }),
-        {
-          initialProps: {
-            skip: true,
-          },
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ skip }) =>
+            useQuery(query, {
+              // Skipping equates to using a fetchPolicy of "standby", but that
+              // should not mean we revert to standby whenever we want to go back to
+              // the initial fetchPolicy (e.g. when variables change).
+              skip,
+              fetchPolicy: correctInitialFetchPolicy,
+            }),
+          {
+            initialProps: {
+              skip: true,
+            },
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBeUndefined();
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
       function check(
         expectedFetchPolicy: WatchQueryFetchPolicy,
         expectedInitialFetchPolicy: WatchQueryFetchPolicy
       ) {
-        const { observable } = result.current;
+        const { observable } = getCurrentSnapshot();
         const { fetchPolicy, initialFetchPolicy } = observable.options;
 
         expect(fetchPolicy).toBe(expectedFetchPolicy);
@@ -9414,56 +9418,68 @@ describe("useQuery Hook", () => {
 
       check("standby", correctInitialFetchPolicy);
 
-      rerender({
-        skip: false,
+      await rerender({ skip: false });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-
-      expect(result.current.data).toEqual({
-        hello: 1,
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: 1 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
 
       check(correctInitialFetchPolicy, correctInitialFetchPolicy);
 
       const reasons: string[] = [];
 
-      const reobservePromise = result.current.observable
-        .reobserve({
-          variables: {
-            newVar: true,
-          },
-          nextFetchPolicy(currentFetchPolicy, context) {
-            expect(currentFetchPolicy).toBe("cache-and-network");
-            expect(context.initialFetchPolicy).toBe("cache-and-network");
-            reasons.push(context.reason);
-            return currentFetchPolicy;
-          },
-        })
-        .then((result) => {
-          expect(result.loading).toBe(false);
-          expect(result.data).toEqual({ hello: 2 });
-        });
-
-      expect(result.current.loading).toBe(false);
-
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            hello: 2,
-          });
+      const result = await getCurrentSnapshot().observable.reobserve({
+        variables: {
+          newVar: true,
         },
-        { interval: 1 }
-      );
+        nextFetchPolicy(currentFetchPolicy, context) {
+          expect(currentFetchPolicy).toBe("cache-and-network");
+          expect(context.initialFetchPolicy).toBe("cache-and-network");
+          reasons.push(context.reason);
+          return currentFetchPolicy;
+        },
+      });
 
-      await reobservePromise;
-
+      expect(result).toEqualApolloQueryResult({
+        data: { hello: 2 },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: 1 },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { hello: 1 },
+        variables: { newVar: true },
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: 2 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: 1 },
+        variables: { newVar: true },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should prioritize a `nextFetchPolicy` function over a `fetchPolicy` option when changing variables", async () => {

@@ -10199,7 +10199,7 @@ describe("useQuery Hook", () => {
         variables: { vin: "ABCDEFG0123456789" },
       });
 
-      await expect(takeSnapshot).not.toRerender()
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should persist result.previousData even if query changes", async () => {

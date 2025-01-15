@@ -5217,9 +5217,6 @@ describe("useQuery Hook", () => {
     ];
 
     it("should fetchMore with updateQuery", async () => {
-      // TODO: Calling fetchMore with an updateQuery callback is deprecated
-      using _warnSpy = spyOnConsole("warn");
-
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
       );

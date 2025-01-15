@@ -7887,7 +7887,9 @@ describe("useQuery Hook", () => {
       );
 
       const onCompleted = jest.fn();
-      const { result } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             fetchPolicy: "cache-only",
@@ -7896,31 +7898,21 @@ describe("useQuery Hook", () => {
         { wrapper }
       );
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ hello: "world" });
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(onCompleted).toHaveBeenCalledTimes(1);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-        },
-        { interval: 1 }
-      );
+      const result = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
       expect(onCompleted).toHaveBeenCalledTimes(1);
+      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("onCompleted is called once despite state changes", async () => {

@@ -169,7 +169,7 @@ export type UpdateQueryFn<
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData,
 > = (
-  previousQueryResult: Unmasked<TData>,
+  previousQueryResult: Unmasked<TData> | undefined,
   options: {
     subscriptionData: { data: Unmasked<TSubscriptionData> };
     variables?: TSubscriptionVariables;

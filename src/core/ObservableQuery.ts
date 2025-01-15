@@ -724,19 +724,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public updateQuery<TVars extends OperationVariables = TVariables>(
     mapFn: (
-      previousQueryResult: Unmasked<TData>,
+      previousQueryResult: Unmasked<TData> | undefined,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
     ) => Unmasked<TData>
   ): void {
     const { queryManager } = this;
-    const { result } = queryManager.cache.diff<TData>({
+    const { result } = queryManager.cache.diff<Unmasked<TData>>({
       query: this.options.query,
       variables: this.variables,
       returnPartialData: true,
       optimistic: false,
     });
 
-    const newResult = mapFn(result! as Unmasked<TData>, {
+    const newResult = mapFn(result, {
       variables: (this as any).variables,
     });
 

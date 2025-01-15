@@ -103,7 +103,7 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
   updateQuery: <TVars extends OperationVariables = TVariables>(
     mapFn: (
-      previousQueryResult: Unmasked<TData>,
+      previousQueryResult: Unmasked<TData> | undefined,
       options: Pick<WatchQueryOptions<TVars, TData>, "variables">
     ) => Unmasked<TData>
   ) => void;

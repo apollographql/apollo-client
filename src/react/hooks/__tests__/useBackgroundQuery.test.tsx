@@ -8380,7 +8380,9 @@ describe.skip("type tests", () => {
       subscribeToMore({
         document: subscription,
         updateQuery: (queryData, { subscriptionData }) => {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+          expectTypeOf(queryData).toEqualTypeOf<
+            UnmaskedVariablesCaseData | undefined
+          >();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           expectTypeOf(
@@ -8412,7 +8414,9 @@ describe.skip("type tests", () => {
       subscribeToMore({
         document: subscription,
         updateQuery: (queryData, { subscriptionData }) => {
-          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData | undefined>();
+          expectTypeOf(queryData).toEqualTypeOf<
+            UnmaskedVariablesCaseData | undefined
+          >();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           expectTypeOf(

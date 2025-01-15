@@ -8388,51 +8388,66 @@ describe("useQuery Hook", () => {
           result: { data: { hello: "bar" } },
         },
       ];
-      const link = new MockLink(mocks);
-      const cache = new InMemoryCache();
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink(mocks),
+      });
       const onCompleted = jest.fn();
 
-      const ChildComponent: React.FC = () => {
-        const { data, client } = useQuery(query, { onCompleted });
-        function refetchQueries() {
-          void client.refetchQueries({ include: "active" });
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { onCompleted }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
         }
-        function writeQuery() {
-          client.writeQuery({ query, data: { hello: "baz" } });
-        }
-        return (
-          <div>
-            <span>Data: {data?.hello}</span>
-            <button onClick={() => refetchQueries()}>Refetch queries</button>
-            <button onClick={() => writeQuery()}>Update word</button>
-          </div>
-        );
-      };
-
-      const ParentComponent: React.FC = () => {
-        return (
-          <MockedProvider link={link} cache={cache}>
-            <div>
-              <ChildComponent />
-            </div>
-          </MockedProvider>
-        );
-      };
-
-      render(<ParentComponent />);
-
-      await screen.findByText("Data: foo");
-      await userEvent.click(
-        screen.getByRole("button", { name: /refetch queries/i })
       );
-      expect(onCompleted).toBeCalledTimes(1);
-      await screen.findByText("Data: bar");
-      await userEvent.click(
-        screen.getByRole("button", { name: /update word/i })
-      );
-      expect(onCompleted).toBeCalledTimes(1);
-      await screen.findByText("Data: baz");
-      expect(onCompleted).toBeCalledTimes(1);
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "foo" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      void client.refetchQueries({ include: "active" });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "bar" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "foo" },
+        variables: {},
+      });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      client.writeQuery({ query, data: { hello: "baz" } });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "baz" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "bar" },
+        variables: {},
+      });
+      expect(onCompleted).toHaveBeenCalledTimes(1);
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("onCompleted should execute on cache writes after initial query execution with notifyOnNetworkStatusChange: true", async () => {

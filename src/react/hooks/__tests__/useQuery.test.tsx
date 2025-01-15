@@ -5196,6 +5196,8 @@ describe("useQuery Hook", () => {
       { name: "D", position: 4 },
     ];
 
+    // TODO: Include an offset variable so that these tests more closely
+    // resemble a real-world paginated API
     const mocks = [
       {
         request: { query, variables: { limit: 2 } },

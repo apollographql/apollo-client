@@ -8014,7 +8014,9 @@ describe("useQuery Hook", () => {
       );
 
       const onCompleted = jest.fn();
-      const { result } = renderHook(
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             skip: true,
@@ -8023,20 +8025,18 @@ describe("useQuery Hook", () => {
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
-
-      await expect(
-        waitFor(
-          () => {
-            expect(onCompleted).toHaveBeenCalledTimes(1);
-          },
-          { interval: 1, timeout: 20 }
-        )
-      ).rejects.toThrow();
-
+      await expect(takeSnapshot).not.toRerender();
       expect(onCompleted).toHaveBeenCalledTimes(0);
     });
 

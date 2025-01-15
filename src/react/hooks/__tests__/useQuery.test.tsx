@@ -9931,7 +9931,8 @@ describe("useQuery Hook", () => {
       });
 
       let setId: any;
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => {
           const [id, setId1] = React.useState(2);
           setId = setId1;
@@ -9948,28 +9949,41 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({
-        car: {
-          __typename: "Car",
-          id: 2,
-          make: "Ford",
-          model: "Pinto",
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          car: {
+            __typename: "Car",
+            id: 2,
+            make: "Ford",
+            model: "Pinto",
+          },
         },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 2 },
       });
 
       setTimeout(() => {
         setId(1);
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(true);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: {
+          car: {
+            __typename: "Car",
+            id: 2,
+            make: "Ford",
+            model: "Pinto",
+          },
         },
-        { interval: 1 }
-      );
-
-      expect(result.current.data).toBe(undefined);
+        variables: { id: 1 },
+      });
     });
   });
 

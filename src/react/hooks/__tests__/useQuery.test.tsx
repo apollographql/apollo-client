@@ -8463,10 +8463,12 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "foo" } },
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "bar" } },
+          delay: 20,
         },
       ];
       const client = new ApolloClient({

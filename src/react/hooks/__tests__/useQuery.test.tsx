@@ -9532,48 +9532,62 @@ describe("useQuery Hook", () => {
         throw new Error("should never happen");
       });
 
-      const { result, rerender } = renderHook<
-        QueryResult,
-        {
-          variables: { id: number };
-        }
-      >(
-        ({ variables }) =>
-          useQuery(query, {
-            fetchPolicy: "network-only",
-            variables,
-            notifyOnNetworkStatusChange: true,
-            nextFetchPolicy,
-          }),
-        {
-          initialProps: {
-            variables: { id: 1 },
-          },
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ variables }) =>
+            useQuery(query, {
+              fetchPolicy: "network-only",
+              variables,
+              notifyOnNetworkStatusChange: true,
+              nextFetchPolicy,
+            }),
+          {
+            initialProps: {
+              variables: { id: 1 },
+            },
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      await tick();
+
       // first network request triggers with initial fetchPolicy
       expectQueryTriggered(1, "network-only");
 
-      await waitFor(() => {
-        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "from link" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
       });
 
       expect(nextFetchPolicy).toHaveBeenCalledTimes(1);
       expect(nextFetchPolicy).toHaveBeenNthCalledWith(
         1,
         "network-only",
-        expect.objectContaining({
-          reason: "after-fetch",
-        })
+        expect.objectContaining({ reason: "after-fetch" })
       );
       // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
       // cache-only
-      expect(result.current.observable.options.fetchPolicy).toBe("cache-only");
+      expect(getCurrentSnapshot().observable.options.fetchPolicy).toBe(
+        "cache-only"
+      );
 
-      rerender({
+      await rerender({
         variables: { id: 2 },
       });
 
@@ -9589,8 +9603,23 @@ describe("useQuery Hook", () => {
       // the return value of `nextFetchPolicy(..., {reason: "variables-changed"})`
       expectQueryTriggered(2, "cache-and-network");
 
-      await waitFor(() => {
-        expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        // TODO: Shouldn't this be undefined?
+        data: { hello: "from link" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: { hello: "from link" },
+        variables: { id: 2 },
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { hello: "from link2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "from link" },
+        variables: { id: 2 },
       });
 
       expect(nextFetchPolicy).toHaveBeenCalledTimes(3);
@@ -9603,7 +9632,11 @@ describe("useQuery Hook", () => {
       );
       // `nextFetchPolicy(..., {reason: "after-fetch"})` changed it to
       // cache-only
-      expect(result.current.observable.options.fetchPolicy).toBe("cache-only");
+      expect(getCurrentSnapshot().observable.options.fetchPolicy).toBe(
+        "cache-only"
+      );
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

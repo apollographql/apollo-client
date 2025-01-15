@@ -7376,76 +7376,90 @@ describe("useQuery Hook", () => {
           </MockedProvider>
         );
 
-        const { result } = renderHook(
-          () =>
-            useQuery(query, {
-              variables: { min: 0, max: 12 },
-              notifyOnNetworkStatusChange: true,
-              // This is the key line in this test.
-              refetchWritePolicy: "overwrite",
-            }),
-          { wrapper }
-        );
+        using _disabledAct = disableActEnvironment();
+        const { takeSnapshot, getCurrentSnapshot } =
+          await renderHookToSnapshotStream(
+            () =>
+              useQuery(query, {
+                variables: { min: 0, max: 12 },
+                notifyOnNetworkStatusChange: true,
+                // This is the key line in this test.
+                refetchWritePolicy: "overwrite",
+              }),
+            { wrapper }
+          );
 
-        expect(result.current.loading).toBe(true);
-        expect(result.current.error).toBe(undefined);
-        expect(result.current.data).toBe(undefined);
-        expect(typeof result.current.refetch).toBe("function");
+        {
+          const result = await takeSnapshot();
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
-        expect(result.current.error).toBeUndefined();
-        expect(result.current.data).toEqual({ primes: [2, 3, 5, 7, 11] });
-        expect(mergeParams).toEqual([[void 0, [2, 3, 5, 7, 11]]]);
+          expect(result).toEqualQueryResult({
+            data: undefined,
+            called: true,
+            loading: true,
+            networkStatus: NetworkStatus.loading,
+            previousData: undefined,
+            variables: { min: 0, max: 12 },
+          });
+        }
 
-        const thenFn = jest.fn();
-        await act(
-          async () =>
-            void result.current.refetch({ min: 12, max: 30 }).then(thenFn)
-        );
+        {
+          const result = await takeSnapshot();
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(true);
-          },
-          { interval: 1 }
-        );
-        expect(result.current.error).toBe(undefined);
-        expect(result.current.data).toEqual({
-          // We get the stale data because we configured keyArgs: false.
-          primes: [2, 3, 5, 7, 11],
+          expect(result).toEqualQueryResult({
+            data: { primes: [2, 3, 5, 7, 11] },
+            called: true,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            previousData: undefined,
+            variables: { min: 0, max: 12 },
+          });
+        }
+
+        expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+        await expect(
+          getCurrentSnapshot().refetch({ min: 12, max: 30 })
+        ).resolves.toEqualApolloQueryResult({
+          data: { primes: [13, 17, 19, 23, 29] },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
         });
 
-        // This networkStatus is setVariables instead of refetch because we
-        // called refetch with new variables.
-        expect(result.current.networkStatus).toBe(NetworkStatus.setVariables);
+        {
+          const result = await takeSnapshot();
 
-        await waitFor(
-          () => {
-            expect(result.current.loading).toBe(false);
-          },
-          { interval: 1 }
-        );
+          expect(result).toEqualQueryResult({
+            // We get the stale data because we configured keyArgs: false.
+            data: { primes: [2, 3, 5, 7, 11] },
+            called: true,
+            loading: true,
+            // This networkStatus is setVariables instead of refetch because we
+            // called refetch with new variables.
+            networkStatus: NetworkStatus.setVariables,
+            previousData: { primes: [2, 3, 5, 7, 11] },
+            variables: { min: 12, max: 30 },
+          });
+        }
 
-        expect(result.current.error).toBe(undefined);
-        expect(result.current.data).toEqual({ primes: [13, 17, 19, 23, 29] });
+        {
+          const result = await takeSnapshot();
+
+          expect(result).toEqualQueryResult({
+            data: { primes: [13, 17, 19, 23, 29] },
+            called: true,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            previousData: { primes: [2, 3, 5, 7, 11] },
+            variables: { min: 12, max: 30 },
+          });
+        }
+
         expect(mergeParams).toEqual([
           [undefined, [2, 3, 5, 7, 11]],
           // Without refetchWritePolicy: "overwrite", this array will be
           // all 10 primes (2 through 29) together.
           [undefined, [13, 17, 19, 23, 29]],
         ]);
-
-        expect(thenFn).toHaveBeenCalledTimes(1);
-        expect(thenFn).toHaveBeenCalledWith({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: { primes: [13, 17, 19, 23, 29] },
-        });
       });
 
       it('should support explicit "merge"', async () => {

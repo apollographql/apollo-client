@@ -7227,46 +7227,96 @@ describe("useQuery Hook", () => {
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toBe(undefined);
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.error).toBe(undefined);
-        expect(result.data).toEqual({ hello: "world 1" });
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
-      await getCurrentSnapshot()
-        .refetch()
-        .catch(() => {});
+      await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
+        new ApolloError({ networkError: new Error("This is an error!") })
+      );
+
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.error).toBe(undefined);
-        expect(result.data).toEqual({ hello: "world 1" });
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
       }
 
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.error).toBeInstanceOf(ApolloError);
-        expect(result.data).toEqual({ hello: "world 1" });
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          error: new ApolloError({
+            networkError: new Error("This is an error!"),
+          }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
       }
 
-      await getCurrentSnapshot().refetch();
+      await expect(
+        getCurrentSnapshot().refetch()
+      ).resolves.toEqualApolloQueryResult({
+        data: { hello: "world 2" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.error).toBe(undefined);
-        expect(result.data).toEqual({ hello: "world 1" });
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 1" },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.refetch,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
       }
       {
         const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.error).toBe(undefined);
-        expect(result.data).toEqual({ hello: "world 2" });
+
+        expect(result).toEqualQueryResult({
+          data: { hello: "world 2" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { hello: "world 1" },
+          variables: {},
+        });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     describe("refetchWritePolicy", () => {

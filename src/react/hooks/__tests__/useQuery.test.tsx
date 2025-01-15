@@ -10271,81 +10271,61 @@ describe("useQuery Hook", () => {
       });
 
       using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
         await renderHookToSnapshotStream(
-          () => {
-            const [query, setQuery] = useState<DocumentNode>(aQuery);
-            return {
-              query,
-              setQuery,
-              useQueryResult: useQuery(query, {
-                fetchPolicy: "cache-and-network",
-                notifyOnNetworkStatusChange: true,
-              }),
-            };
+          ({ query }) => {
+            return useQuery(query, {
+              fetchPolicy: "cache-and-network",
+              notifyOnNetworkStatusChange: true,
+            });
           },
           {
+            initialProps: { query: aQuery as DocumentNode },
             wrapper: ({ children }: any) => (
               <ApolloProvider client={client}>{children}</ApolloProvider>
             ),
           }
         );
 
-      {
-        const { useQueryResult } = await takeSnapshot();
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
-        expect(useQueryResult).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { a: "a" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
-      {
-        const { useQueryResult } = await takeSnapshot();
+      await rerender({ query: abQuery });
 
-        expect(useQueryResult).toEqualQueryResult({
-          data: { a: "a" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { a: "a" },
+        variables: {},
+      });
 
-      getCurrentSnapshot().setQuery(abQuery);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { a: "aa", b: 1 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { a: "a" },
+        variables: {},
+      });
 
-      {
-        const { useQueryResult } = await takeSnapshot();
-
-        expect(useQueryResult).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: { a: "a" },
-          variables: {},
-        });
-      }
-
-      {
-        const { useQueryResult } = await takeSnapshot();
-
-        expect(useQueryResult).toEqualQueryResult({
-          data: { a: "aa", b: 1 },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { a: "a" },
-          variables: {},
-        });
-      }
-
-      const result = await getCurrentSnapshot().useQueryResult.reobserve();
+      const result = await getCurrentSnapshot().reobserve();
 
       expect(result).toEqualApolloQueryResult({
         data: { a: "aaa", b: 2 },
@@ -10353,59 +10333,43 @@ describe("useQuery Hook", () => {
         networkStatus: NetworkStatus.ready,
       });
 
-      {
-        const { useQueryResult } = await takeSnapshot();
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { a: "aa", b: 1 },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { a: "aa", b: 1 },
+        variables: {},
+      });
 
-        expect(useQueryResult).toEqualQueryResult({
-          data: { a: "aa", b: 1 },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: { a: "aa", b: 1 },
-          variables: {},
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { a: "aaa", b: 2 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { a: "aa", b: 1 },
+        variables: {},
+      });
 
-      {
-        const { useQueryResult } = await takeSnapshot();
+      await rerender({ query: bQuery });
 
-        expect(useQueryResult).toEqualQueryResult({
-          data: { a: "aaa", b: 2 },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { a: "aa", b: 1 },
-          variables: {},
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { b: 2 },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: { a: "aaa", b: 2 },
+        variables: {},
+      });
 
-      getCurrentSnapshot().setQuery(bQuery);
-
-      {
-        const { useQueryResult } = await takeSnapshot();
-
-        expect(useQueryResult).toEqualQueryResult({
-          data: { b: 2 },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: { a: "aaa", b: 2 },
-          variables: {},
-        });
-      }
-
-      {
-        const { useQueryResult } = await takeSnapshot();
-
-        expect(useQueryResult).toEqualQueryResult({
-          data: { b: 3 },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { b: 2 },
-          variables: {},
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { b: 3 },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { b: 2 },
+        variables: {},
+      });
 
       await expect(takeSnapshot).not.toRerender();
     });

@@ -9682,22 +9682,29 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(carQuery, { variables: { id: 1 } }),
         { wrapper }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(carData);
-      expect(result.current.error).toBeUndefined();
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: carData,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
 
       expect(consoleSpy.error).toHaveBeenCalled();
       expect(consoleSpy.error).toHaveBeenLastCalledWith(
@@ -9711,6 +9718,8 @@ describe("useQuery Hook", () => {
           __typename: "Car",
         }
       );
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should return partial cache data when `returnPartialData` is true", async () => {

@@ -6773,13 +6773,6 @@ describe("useQuery Hook", () => {
       }
     `;
 
-    using _disabledAct = disableActEnvironment();
-    const renderStream = createRenderStream({
-      initialSnapshot: {
-        useQueryResult: null as QueryResult | null,
-      },
-    });
-
     const client = new ApolloClient({
       link: new MockLink([
         {
@@ -6816,34 +6809,33 @@ describe("useQuery Hook", () => {
       }),
     });
 
-    function App() {
-      const useQueryResult = useQuery(query);
-
-      renderStream.replaceSnapshot({ useQueryResult });
-
-      return null;
-    }
-
-    await renderStream.render(<App />, {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useQuery(query),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
 
     {
-      const { snapshot } = await renderStream.takeRender();
+      const result = await takeSnapshot();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: undefined,
+        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
     }
 
     {
-      const { snapshot } = await renderStream.takeRender();
+      const result = await takeSnapshot();
 
-      expect(snapshot.useQueryResult).toMatchObject({
+      expect(result).toEqualQueryResult({
         data: {
           author: {
             __typename: "Author",
@@ -6851,16 +6843,20 @@ describe("useQuery Hook", () => {
             name: "Author Lee",
             post: {
               __typename: "Post",
+              id: 1,
               title: "Title",
             },
           },
         },
+        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
     }
 
-    await expect(renderStream).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("triggers a network request and rerenders with the new result when a mutation causes a partial cache update due to an incomplete merge function result", async () => {

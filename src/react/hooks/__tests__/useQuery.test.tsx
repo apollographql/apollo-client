@@ -10376,11 +10376,16 @@ describe("useQuery Hook", () => {
 
     it("should be cleared when variables change causes cache miss", async () => {
       const peopleData = [
-        { id: 1, name: "John Smith", gender: "male" },
-        { id: 2, name: "Sara Smith", gender: "female" },
-        { id: 3, name: "Budd Deey", gender: "nonbinary" },
-        { id: 4, name: "Johnny Appleseed", gender: "male" },
-        { id: 5, name: "Ada Lovelace", gender: "female" },
+        { id: 1, name: "John Smith", gender: "male", __typename: "Person" },
+        { id: 2, name: "Sara Smith", gender: "female", __typename: "Person" },
+        { id: 3, name: "Budd Deey", gender: "nonbinary", __typename: "Person" },
+        {
+          id: 4,
+          name: "Johnny Appleseed",
+          gender: "male",
+          __typename: "Person",
+        },
+        { id: 5, name: "Ada Lovelace", gender: "female", __typename: "Person" },
       ];
 
       const link = new ApolloLink((operation) => {
@@ -10403,7 +10408,7 @@ describe("useQuery Hook", () => {
 
       type Person = {
         __typename: string;
-        id: string;
+        id: number;
         name: string;
       };
 
@@ -10435,59 +10440,55 @@ describe("useQuery Hook", () => {
         { wrapper, initialProps: { gender: "all" } }
       );
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.loading);
-        expect(result.data).toBe(undefined);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toEqual({
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { gender: "all" },
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
           people: peopleData.map(({ gender, ...person }) => person),
-        });
-      }
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { gender: "all" },
+      });
 
       await rerender({ gender: "female" });
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-        expect(result.data).toBe(undefined);
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: {
+          people: peopleData.map(({ gender, ...person }) => person),
+        },
+        variables: { gender: "female" },
+      });
 
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toEqual({
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
           people: peopleData
             .filter((person) => person.gender === "female")
             .map(({ gender, ...person }) => person),
-        });
-      }
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          people: peopleData.map(({ gender, ...person }) => person),
+        },
+        variables: { gender: "female" },
+      });
 
-      await rerender({ gender: "nonbinary" });
-
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-        expect(result.data).toBe(undefined);
-      }
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toEqual({
-          people: peopleData
-            .filter((person) => person.gender === "nonbinary")
-            .map(({ gender, ...person }) => person),
-        });
-      }
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

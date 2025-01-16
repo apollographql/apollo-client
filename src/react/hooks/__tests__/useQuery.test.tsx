@@ -11877,7 +11877,8 @@ describe("useQuery Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () => useQuery(query, { errorPolicy: "all" }),
         {
           wrapper: ({ children }) => (
@@ -11886,8 +11887,15 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+
       setTimeout(() => {
         link.simulateResult({
           result: {
@@ -11911,32 +11919,28 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          hero: {
+            name: "R2-D2",
+            heroFriends: [
+              {
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+          },
         },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            hero: {
-              heroFriends: [
-                {
-                  id: "1000",
-                  name: "Luke Skywalker",
-                },
-                {
-                  id: "1003",
-                  name: "Leia Organa",
-                },
-              ],
-              name: "R2-D2",
-            },
-          });
-        },
-        { interval: 1 }
-      );
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
       setTimeout(() => {
         link.simulateResult({
@@ -11974,67 +11978,66 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          hero: {
+            heroFriends: [
+              {
+                // the only difference with the previous test
+                // is that homeWorld is populated since errorPolicy: all
+                // populates both partial data and error.graphQLErrors
+                homeWorld: null,
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                // homeWorld is populated due to errorPolicy: all
+                homeWorld: "Alderaan",
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+            name: "R2-D2",
+          },
         },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          // @ts-ignore
-          expect(result.current.label).toBe(undefined);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          // @ts-ignore
-          expect(result.current.extensions).toBe(undefined);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.error).toBeInstanceOf(ApolloError);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.error!.message).toBe(
-            "homeWorld for character with ID 1000 could not be fetched."
-          );
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          // since default error policy is "all", we *do* return partial results
-          expect(result.current.data).toEqual({
-            hero: {
-              heroFriends: [
-                {
-                  // the only difference with the previous test
-                  // is that homeWorld is populated since errorPolicy: all
-                  // populates both partial data and error.graphQLErrors
-                  homeWorld: null,
-                  id: "1000",
-                  name: "Luke Skywalker",
-                },
-                {
-                  // homeWorld is populated due to errorPolicy: all
-                  homeWorld: "Alderaan",
-                  id: "1003",
-                  name: "Leia Organa",
-                },
-              ],
-              name: "R2-D2",
+        error: new ApolloError({
+          graphQLErrors: [
+            {
+              message:
+                "homeWorld for character with ID 1000 could not be fetched.",
+              path: ["hero", "heroFriends", 0, "homeWorld"],
             },
-          });
+          ],
+        }),
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          hero: {
+            heroFriends: [
+              {
+                id: "1000",
+                name: "Luke Skywalker",
+              },
+              {
+                id: "1003",
+                name: "Leia Organa",
+              },
+            ],
+            name: "R2-D2",
+          },
         },
-        { interval: 1 }
-      );
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it('returns eventually consistent data from deferred queries with data in the cache while using a "cache-and-network" fetch policy', async () => {

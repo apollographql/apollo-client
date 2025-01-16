@@ -10886,19 +10886,44 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.a.loading).toBe(true);
-      expect(result.current.b.loading).toBe(true);
-      expect(result.current.a.data).toBe(undefined);
-      expect(result.current.b.data).toBe(undefined);
+      expect(result.current.a).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(result.current.b).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
       await waitFor(() => {
         expect(result.current.a.loading).toBe(false);
-      });
-      await waitFor(() => {
         expect(result.current.b.loading).toBe(false);
       });
-      expect(result.current.a.data).toEqual(aData);
-      expect(result.current.b.data).toEqual(bData);
+
+      expect(result.current.a).toEqualQueryResult({
+        data: aData,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+      expect(result.current.b).toEqualQueryResult({
+        data: bData,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
     }
 
     // TODO: Eventually move the "check" code back into these test so we can

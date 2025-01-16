@@ -12403,26 +12403,31 @@ describe("useQuery Hook", () => {
 
     await wait(10);
     expect(requests).toBe(1);
-    {
-      const result = await takeSnapshot();
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
-    }
+
+    await expect(takeSnapshot()).resolves.toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
 
     await client.clearStore();
 
-    {
-      const result = await takeSnapshot();
-      expect(result.loading).toBe(false);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toEqual(
-        new ApolloError({
-          networkError: new InvariantError(
-            "Store reset while query was in flight (not completed in link chain)"
-          ),
-        })
-      );
-    }
+    await expect(takeSnapshot()).resolves.toEqualQueryResult({
+      data: undefined,
+      error: new ApolloError({
+        networkError: new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        ),
+      }),
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: undefined,
+      variables: {},
+    });
 
     link.simulateResult({ result: { data: { hello: "Greetings" } } }, true);
     await expect(takeSnapshot).not.toRerender({ timeout: 50 });

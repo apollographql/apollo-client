@@ -12695,15 +12695,23 @@ describe("useQuery Hook", () => {
 
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.result?.data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
+      expect(snapshot.result).toEqualQueryResult({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
         },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
-      expect(snapshot.result?.previousData).toBeUndefined();
+
+      await expect(renderStream).not.toRerender();
     });
 
     it("does not mask query by default", async () => {

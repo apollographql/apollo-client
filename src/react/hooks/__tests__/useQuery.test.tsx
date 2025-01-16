@@ -11422,14 +11422,25 @@ describe("useQuery Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const { result } = renderHook(() => useQuery(query), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
       setTimeout(() => {
         link.simulateResult({
           result: {
@@ -11458,37 +11469,33 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            allProducts: [
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                },
-                id: "apollo-federation",
-                sku: "federation",
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          allProducts: [
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
               },
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                },
-                id: "apollo-studio",
-                sku: "studio",
+              id: "apollo-federation",
+              sku: "federation",
+            },
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
               },
-            ],
-          });
+              id: "apollo-studio",
+              sku: "studio",
+            },
+          ],
         },
-        { interval: 1 }
-      );
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
 
       setTimeout(() => {
         link.simulateResult({
@@ -11516,41 +11523,56 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            allProducts: [
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                  estimatedDelivery: "6/25/2021",
-                  fastestDelivery: "6/24/2021",
-                },
-                id: "apollo-federation",
-                sku: "federation",
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          allProducts: [
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
+                estimatedDelivery: "6/25/2021",
+                fastestDelivery: "6/24/2021",
               },
-              {
-                __typename: "Product",
-                delivery: {
-                  __typename: "DeliveryEstimates",
-                  estimatedDelivery: "6/25/2021",
-                  fastestDelivery: "6/24/2021",
-                },
-                id: "apollo-studio",
-                sku: "studio",
+              id: "apollo-federation",
+              sku: "federation",
+            },
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
+                estimatedDelivery: "6/25/2021",
+                fastestDelivery: "6/24/2021",
               },
-            ],
-          });
+              id: "apollo-studio",
+              sku: "studio",
+            },
+          ],
         },
-        { interval: 1 }
-      );
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          allProducts: [
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
+              },
+              id: "apollo-federation",
+              sku: "federation",
+            },
+            {
+              __typename: "Product",
+              delivery: {
+                __typename: "DeliveryEstimates",
+              },
+              id: "apollo-studio",
+              sku: "studio",
+            },
+          ],
+        },
+        variables: {},
+      });
     });
 
     it("should handle deferred queries with fetch policy no-cache", async () => {

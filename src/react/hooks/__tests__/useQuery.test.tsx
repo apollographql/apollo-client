@@ -11060,14 +11060,28 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
+      expect(result.current).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
 
-      expect(result.current.data).toEqual({ hello: "hello 1" });
+      expect(result.current).toEqualQueryResult({
+        data: { hello: "hello 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
       expect(cache.readQuery({ query })).toEqual({ hello: "hello 1" });
 
       act(() => {
@@ -11078,14 +11092,28 @@ describe("useQuery Hook", () => {
         setShow(true);
       });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBeUndefined();
+      expect(result.current).toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
 
-      expect(result.current.data).toEqual({ hello: "hello 2" });
+      expect(result.current).toEqualQueryResult({
+        data: { hello: "hello 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+
       expect(cache.readQuery({ query })).toEqual({ hello: "hello 2" });
     });
   });

@@ -10613,60 +10613,94 @@ describe("useQuery Hook", () => {
         <MockedProvider cache={cache}>{children}</MockedProvider>
       );
 
-      const { result, rerender } = renderHook(
-        ({ canonizeResults }) =>
-          useQuery(query, {
-            fetchPolicy: "cache-only",
-            canonizeResults,
-          }),
-        { wrapper, initialProps: { canonizeResults: false } }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ canonizeResults }) =>
+            useQuery(query, {
+              fetchPolicy: "cache-only",
+              canonizeResults,
+            }),
+          { wrapper, initialProps: { canonizeResults: false } }
+        );
 
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ results });
-      expect(result.current.data.results.length).toBe(6);
-      let resultSet = new Set(result.current.data.results);
-      // Since canonization is not happening, the duplicate 1 results are
-      // returned as distinct objects.
-      expect(resultSet.size).toBe(6);
-      let values: number[] = [];
-      resultSet.forEach((result: any) => values.push(result.value));
-      expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-      rerender({ canonizeResults: true });
-      await waitFor(() => {
-        results.push({
-          __typename: "Result",
-          value: 8,
-        });
-        // Append another element to the results array, invalidating the
-        // array itself, triggering another render (below).
-        cache.writeQuery({
-          query,
-          overwrite: true,
-          data: { results },
-        });
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { results },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({ results });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data.results.length).toBe(7);
-      resultSet = new Set(result.current.data.results);
-      // Since canonization is happening now, the duplicate 1 results are
-      // returned as identical (===) objects.
-      expect(resultSet.size).toBe(6);
-      values = [];
-      resultSet.forEach((result: any) => values.push(result.value));
-      expect(values).toEqual([0, 1, 2, 3, 5, 8]);
+      {
+        const { data } = getCurrentSnapshot();
+        const resultSet = new Set<(typeof results)[0]>(data.results);
+        const values = Array.from(resultSet).map((result) => result.value);
+
+        expect(data.results.length).toBe(6);
+        // Since canonization is not happening, the duplicate 1 results are
+        // returned as distinct objects.
+        expect(resultSet.size).toBe(6);
+        expect(values).toEqual([0, 1, 1, 2, 3, 5]);
+      }
+
+      await rerender({ canonizeResults: true });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { results },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { results },
+        variables: {},
+      });
+
+      // Check that canonization takes place immediately
+      {
+        const { data } = getCurrentSnapshot();
+        const resultSet = new Set<(typeof results)[0]>(data.results);
+        const values = Array.from(resultSet).map((result) => result.value);
+
+        expect(data.results.length).toBe(6);
+        // Since canonization is happening now, the duplicate 1 results are
+        // returned as identical (===) objects.
+        expect(resultSet.size).toBe(5);
+        expect(values).toEqual([0, 1, 2, 3, 5]);
+      }
+
+      const updatedResults = [...results, { __typename: "Result", value: 8 }];
+
+      // Append another element to the results array, invalidating the
+      // array itself, triggering another render (below).
+      cache.writeQuery({
+        query,
+        overwrite: true,
+        data: { results: updatedResults },
+      });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { results: updatedResults },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { results },
+        variables: {},
+      });
+
+      {
+        const { data } = getCurrentSnapshot();
+        const resultSet = new Set<(typeof results)[0]>(data.results);
+        const values = Array.from(resultSet).map((result) => result.value);
+
+        expect(data.results.length).toBe(7);
+        // Since canonization is happening now, the duplicate 1 results are
+        // returned as identical (===) objects.
+        expect(resultSet.size).toBe(6);
+        expect(values).toEqual([0, 1, 2, 3, 5, 8]);
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

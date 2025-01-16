@@ -12590,22 +12590,33 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.loading).toBe(true);
+        expect(snapshot.result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
       }
 
       {
         const { snapshot } = await renderStream.takeRender();
-        const { result } = snapshot;
 
-        expect(result?.loading).toBe(false);
-        expect(result?.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(snapshot.result).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
-        expect(result?.previousData).toBeUndefined();
       }
     });
 

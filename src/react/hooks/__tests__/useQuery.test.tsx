@@ -12196,7 +12196,8 @@ describe("useQuery Hook", () => {
         });
       }
 
-      const { result } = renderHook(
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
             fetchPolicy: "cache-first",
@@ -12209,13 +12210,18 @@ describe("useQuery Hook", () => {
         }
       );
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-      expect(result.current.data).toEqual({
-        greeting: {
-          __typename: "Greeting",
-          recipient: { __typename: "Person", name: "Cached Alice" },
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
         },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
 
       link.simulateResult({
@@ -12227,30 +12233,25 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
         },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          greeting: {
+            __typename: "Greeting",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
         },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Cached Alice" },
-            },
-          });
-        },
-        { interval: 1 }
-      );
+        variables: {},
+      });
 
       link.simulateResult({
         result: {
@@ -12267,30 +12268,28 @@ describe("useQuery Hook", () => {
         },
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Alice" },
+          },
         },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          greeting: {
+            __typename: "Greeting",
+            message: "Hello world",
+            recipient: { __typename: "Person", name: "Cached Alice" },
+          },
         },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              __typename: "Greeting",
-              message: "Hello world",
-              recipient: { __typename: "Person", name: "Alice" },
-            },
-          });
-        },
-        { interval: 1 }
-      );
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

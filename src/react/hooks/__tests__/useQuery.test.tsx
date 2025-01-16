@@ -10704,6 +10704,8 @@ describe("useQuery Hook", () => {
     });
   });
 
+  // TODO: Delete this test after PR review since this is a duplicate of the
+  // previous one
   describe("canonical cache results", () => {
     it("can be disabled via useQuery options", async () => {
       const cache = new InMemoryCache({

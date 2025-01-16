@@ -11140,14 +11140,25 @@ describe("useQuery Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const { result } = renderHook(() => useQuery(query), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
       setTimeout(() => {
         link.simulateResult({
           result: {
@@ -11162,19 +11173,19 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
         },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual({
-        greeting: {
-          message: "Hello world",
-          __typename: "Greeting",
-        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
       });
-      expect(result.current).not.toContain({ hasNext: true });
 
       setTimeout(() => {
         link.simulateResult({
@@ -11196,27 +11207,30 @@ describe("useQuery Hook", () => {
         });
       });
 
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      await waitFor(
-        () => {
-          expect(result.current.data).toEqual({
-            greeting: {
-              message: "Hello world",
-              __typename: "Greeting",
-              recipient: {
-                name: "Alice",
-                __typename: "Person",
-              },
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: {
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
             },
-          });
+          },
         },
-        { interval: 1 }
-      );
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
+        },
+        variables: {},
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should handle deferred queries in lists", async () => {

@@ -10,6 +10,7 @@ import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitValue } from "./toEmitValue.js";
 import { toEmitValueStrict } from "./toEmitValueStrict.js";
+import { toEqualQueryResult } from "./toEqualQueryResult.js";
 
 expect.extend({
   toComplete,
@@ -19,6 +20,7 @@ expect.extend({
   toEmitNext,
   toEmitValue,
   toEmitValueStrict,
+  toEqualQueryResult,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

@@ -427,6 +427,9 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
+    // TODO: Determine if the return value makes sense. Other fetching functions
+    // (`refetch`, `fetchMore`, etc.) resolve with an `ApolloQueryResult` type
+    // which contain a subset of this data.
     expect(execResult).toEqualQueryResult({
       data: expectedFinalData,
       called: true,

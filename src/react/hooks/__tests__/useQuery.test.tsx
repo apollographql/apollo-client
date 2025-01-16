@@ -35,7 +35,7 @@ import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
-import { Masked, MaskedDocumentNode } from "../../../masking";
+import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
 import {
   createRenderStream,
   renderHookToSnapshotStream,
@@ -12519,6 +12519,7 @@ describe("useQuery Hook", () => {
   describe("data masking", () => {
     it("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -12530,7 +12531,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -12566,16 +12567,13 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Masked<Query>, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<QueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -12590,7 +12588,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result).toEqualQueryResult({
+        expect(snapshot).toEqualQueryResult({
           data: undefined,
           called: true,
           loading: true,
@@ -12603,7 +12601,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result).toEqualQueryResult({
+        expect(snapshot).toEqualQueryResult({
           data: {
             currentUser: {
               __typename: "User",
@@ -12618,10 +12616,13 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(renderStream).not.toRerender();
     });
 
     it("does not mask query when dataMasking is `false`", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -12633,7 +12634,11 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      // We have to use Unmasked here since the default is to preserve types
+      const query: TypedDocumentNode<
+        Unmasked<Query>,
+        Record<string, never>
+      > = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -12669,16 +12674,15 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<
+          QueryResult<Unmasked<Query>, Record<string, never>>
+        >();
 
       function App() {
         const result = useQuery(query);
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -12695,7 +12699,7 @@ describe("useQuery Hook", () => {
 
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.result).toEqualQueryResult({
+      expect(snapshot).toEqualQueryResult({
         data: {
           currentUser: {
             __typename: "User",

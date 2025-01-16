@@ -10901,6 +10901,8 @@ describe("useQuery Hook", () => {
       expect(result.current.b.data).toEqual(bData);
     }
 
+    // TODO: Eventually move the "check" code back into these test so we can
+    // check them render-by-render with renderHookToSnapshotStream
     it("cache-first for both", () => check("cache-first", "cache-first"));
 
     it("cache-first first, cache-and-network second", () =>

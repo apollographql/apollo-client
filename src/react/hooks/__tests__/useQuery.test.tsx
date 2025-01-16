@@ -10955,6 +10955,8 @@ describe("useQuery Hook", () => {
   });
 
   describe("regression test issue #9204", () => {
+    // TODO: See if we can rewrite this with renderHookToSnapshotStream and
+    // check output of hook to ensure its a stable object
     it("should handle a simple query", async () => {
       const query = gql`
         {

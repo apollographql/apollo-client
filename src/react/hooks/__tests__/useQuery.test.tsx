@@ -12470,44 +12470,48 @@ describe("useQuery Hook", () => {
         }
       );
 
-    {
-      const { loading, data, error } = await takeSnapshot();
+    await expect(takeSnapshot()).resolves.toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
 
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(error).toBeUndefined();
-    }
-
-    {
-      const { loading, data, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toBeUndefined();
-      expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
-    }
+    await expect(takeSnapshot()).resolves.toEqualQueryResult({
+      data: undefined,
+      error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: undefined,
+      variables: {},
+    });
 
     const { refetch } = getCurrentSnapshot();
 
     refetch().catch(() => {});
     refetch().catch(() => {});
 
-    {
-      const { loading, networkStatus, data, error } = await takeSnapshot();
+    await expect(takeSnapshot()).resolves.toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.refetch,
+      previousData: undefined,
+      variables: {},
+    });
 
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(networkStatus).toBe(NetworkStatus.refetch);
-      expect(error).toBeUndefined();
-    }
-
-    {
-      const { loading, networkStatus, data, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toBeUndefined();
-      expect(networkStatus).toBe(NetworkStatus.error);
-      expect(error).toEqual(new ApolloError({ graphQLErrors: [graphQLError] }));
-    }
+    await expect(takeSnapshot()).resolves.toEqualQueryResult({
+      data: undefined,
+      error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      previousData: undefined,
+      variables: {},
+    });
 
     await expect(takeSnapshot).not.toRerender({ timeout: 200 });
   });

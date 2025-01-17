@@ -139,6 +139,7 @@ export function addDelayToMocks<T extends MockedResponse<unknown>[]>(
 }
 
 interface Letter {
+  __typename: "Letter";
   letter: string;
   position: number;
 }

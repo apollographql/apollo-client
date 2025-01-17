@@ -12795,15 +12795,21 @@ describe("useQuery Hook", () => {
 
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.data).toEqual({
-        currentUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
-          age: 30,
+      expect(snapshot).toEqualQueryResult({
+        data: {
+          currentUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+            age: 30,
+          },
         },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
       });
-      expect(snapshot.previousData).toBeUndefined();
     });
 
     it("masks queries updated by the cache", async () => {

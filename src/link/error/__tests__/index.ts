@@ -586,6 +586,18 @@ describe("support for request retrying", () => {
     message: "some other error",
   };
 
+  const PROTOCOL_ERROR = {
+    data: null,
+    extensions: {
+      [PROTOCOL_ERRORS_SYMBOL]: [
+        {
+          message: "cannot read message from websocket",
+          extensions: [{ code: "WEBSOCKET_MESSAGE_ERROR" }],
+        },
+      ],
+    },
+  };
+
   it("returns the retried request when forward(operation) is called", async () => {
     let errorHandlerCalled = false;
 
@@ -665,6 +677,45 @@ describe("support for request retrying", () => {
     const stream = new ObservableStream(
       execute(link, { query: QUERY, context: { bar: true } })
     );
+
+    await expect(stream).toEmitValue(GOOD_RESPONSE);
+    expect(errorHandlerCalled).toBe(true);
+    await expect(stream).toComplete();
+  });
+
+  it("supports retrying when the initial request had protocol errors", async () => {
+    let errorHandlerCalled = false;
+
+    let timesCalled = 0;
+    const mockHttpLink = new ApolloLink((operation) => {
+      return new Observable((observer) => {
+        // simulate the first request being an error
+        if (timesCalled === 0) {
+          timesCalled++;
+          observer.next(PROTOCOL_ERROR);
+          observer.complete();
+        } else {
+          observer.next(GOOD_RESPONSE);
+          observer.complete();
+        }
+      });
+    });
+
+    const errorLink = new ErrorLink(
+      ({ protocolErrors, operation, forward }) => {
+        if (protocolErrors) {
+          errorHandlerCalled = true;
+          expect(protocolErrors).toEqual(
+            PROTOCOL_ERROR.extensions[PROTOCOL_ERRORS_SYMBOL]
+          );
+          return forward(operation);
+        }
+      }
+    );
+
+    const link = errorLink.concat(mockHttpLink);
+
+    const stream = new ObservableStream(execute(link, { query: QUERY }));
 
     await expect(stream).toEmitValue(GOOD_RESPONSE);
     expect(errorHandlerCalled).toBe(true);

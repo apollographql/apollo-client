@@ -11,13 +11,22 @@ Use the `onError` link to perform custom logic when a [GraphQL or network error]
 import { onError } from "@apollo/client/link/error";
 
 // Log any GraphQL errors or network error that occurred
-const errorLink = onError(({ graphQLErrors, networkError }) => {
+const errorLink = onError(({ graphQLErrors, networkError, protocolErrors }) => {
   if (graphQLErrors)
     graphQLErrors.forEach(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
     );
+
+  if (protocolErrors) {
+    protocolErrors.forEach(({ message, extensions }) => {
+      console.log(
+        `[Protocol error]: Message: ${message}, Extensions: ${JSON.stringify(extensions)}`
+      );
+    });
+  }
+
   if (networkError) console.log(`[Network error]: ${networkError}`);
 });
 ```

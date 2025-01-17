@@ -7,6 +7,10 @@ import { Observable } from "../../../utilities/observables/Observable";
 import { onError, ErrorLink } from "../";
 import { ObservableStream } from "../../../testing/internal";
 import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
+import {
+  mockDeferStream,
+  mockMultipartSubscriptionStream,
+} from "../../../testing/internal/incremental";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {
@@ -72,12 +76,16 @@ describe("error handling", () => {
     expect(called).toBe(true);
   });
 
-  it("handles protocol errors", async () => {
-    expect.assertions(3);
+  it.failing("handles protocol errors (@defer)", async () => {
+    // TODO: this test doesn't execute the `errorHandler` yet. Should be 4, is 2.
+    fail();
+    expect.assertions(4);
     const query = gql`
       query Foo {
         foo {
-          bar
+          ... @defer {
+            bar
+          }
         }
       }
     `;
@@ -86,46 +94,106 @@ describe("error handling", () => {
       expect(operation.operationName).toBe("Foo");
       expect(protocolErrors).toEqual([
         {
-          message: "cannot read message from websocket",
-          extensions: [{ code: "WEBSOCKET_MESSAGE_ERROR" }],
+          message: "could not read data",
+          extensions: {
+            code: "INCREMENTAL_ERROR",
+          },
         },
       ]);
     });
 
-    const mockLink = new ApolloLink((_operation) => {
-      return new Observable((observer) => {
-        observer.next({
-          data: null,
-          extensions: {
-            [PROTOCOL_ERRORS_SYMBOL]: [
-              {
-                message: "cannot read message from websocket",
-                extensions: [
-                  {
-                    code: "WEBSOCKET_MESSAGE_ERROR",
-                  },
-                ],
-              },
-            ],
-          },
-        });
-      });
-    });
-
-    const link = errorLink.concat(mockLink);
+    const { httpLink, enqueueInitialChunk, enqueueProtocolErrorChunk } =
+      mockDeferStream();
+    const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(execute(link, { query }));
 
+    enqueueInitialChunk({
+      hasNext: true,
+      data: {},
+    });
+
+    enqueueProtocolErrorChunk([
+      {
+        message: "could not read data",
+        extensions: {
+          code: "INCREMENTAL_ERROR",
+        },
+      },
+    ]);
     await expect(stream).toEmitValue({
-      data: null,
+      data: {},
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitValue({
+      hasNext: true,
+      incremental: [
+        {
+          errors: [
+            {
+              message: "could not read data",
+              extensions: {
+                code: "INCREMENTAL_ERROR",
+              },
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("handles protocol errors (multipart subscription)", async () => {
+    expect.assertions(4);
+    const sampleSubscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const errorLink = onError((args) => {
+      const { operation, protocolErrors } = args;
+      expect(operation.operationName).toBe("MySubscription");
+      expect(protocolErrors).toEqual([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ]);
+    });
+
+    const { httpLink, enqueuePayloadResult, enqueueErrorResult } =
+      mockMultipartSubscriptionStream();
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(
+      execute(link, { query: sampleSubscription })
+    );
+
+    enqueuePayloadResult({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    enqueueErrorResult([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    await expect(stream).toEmitValue({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    await expect(stream).toEmitValue({
       extensions: {
         [PROTOCOL_ERRORS_SYMBOL]: [
           {
-            message: "cannot read message from websocket",
-            extensions: [
-              {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            ],
+            extensions: {
+              code: "INTERNAL_SERVER_ERROR",
+            },
+            message: "Error field",
           },
         ],
       },

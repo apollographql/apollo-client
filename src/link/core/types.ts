@@ -53,7 +53,7 @@ export interface ApolloPayloadResult<
   payload: SingleExecutionResult | ExecutionPatchResult | null;
   // Transport layer errors (as distinct from GraphQL or NetworkErrors),
   // these are fatal errors that will include done: true.
-  errors?: ReadonlyArray<Error | string>;
+  errors?: ReadonlyArray<GraphQLFormattedError | string>;
 }
 
 export type ExecutionPatchResult<

@@ -6,6 +6,7 @@ import { ServerError, throwServerError } from "../../utils/throwServerError";
 import { Observable } from "../../../utilities/observables/Observable";
 import { onError, ErrorLink } from "../";
 import { ObservableStream } from "../../../testing/internal";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {
@@ -69,6 +70,66 @@ describe("error handling", () => {
 
     expect(error.message).toBe("app is crashing");
     expect(called).toBe(true);
+  });
+
+  it("handles protocol errors", async () => {
+    expect.assertions(3);
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const errorLink = onError(({ operation, protocolErrors }) => {
+      expect(operation.operationName).toBe("Foo");
+      expect(protocolErrors).toEqual([
+        {
+          message: "cannot read message from websocket",
+          extensions: [{ code: "WEBSOCKET_MESSAGE_ERROR" }],
+        },
+      ]);
+    });
+
+    const mockLink = new ApolloLink((_operation) => {
+      return new Observable((observer) => {
+        observer.next({
+          data: null,
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: [
+              {
+                message: "cannot read message from websocket",
+                extensions: [
+                  {
+                    code: "WEBSOCKET_MESSAGE_ERROR",
+                  },
+                ],
+              },
+            ],
+          },
+        });
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitValue({
+      data: null,
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: [
+          {
+            message: "cannot read message from websocket",
+            extensions: [
+              {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
+            ],
+          },
+        ],
+      },
+    });
   });
 
   it("captures errors within links", async () => {
@@ -354,6 +415,66 @@ describe("error handling with class", () => {
 
     expect(error.message).toBe("app is crashing");
     expect(called).toBe(true);
+  });
+
+  it("handles protocol errors", async () => {
+    expect.assertions(3);
+    const query = gql`
+      query Foo {
+        foo {
+          bar
+        }
+      }
+    `;
+
+    const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
+      expect(operation.operationName).toBe("Foo");
+      expect(protocolErrors).toEqual([
+        {
+          message: "cannot read message from websocket",
+          extensions: [{ code: "WEBSOCKET_MESSAGE_ERROR" }],
+        },
+      ]);
+    });
+
+    const mockLink = new ApolloLink((_operation) => {
+      return new Observable((observer) => {
+        observer.next({
+          data: null,
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: [
+              {
+                message: "cannot read message from websocket",
+                extensions: [
+                  {
+                    code: "WEBSOCKET_MESSAGE_ERROR",
+                  },
+                ],
+              },
+            ],
+          },
+        });
+      });
+    });
+
+    const link = errorLink.concat(mockLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    await expect(stream).toEmitValue({
+      data: null,
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: [
+          {
+            message: "cannot read message from websocket",
+            extensions: [
+              {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
+            ],
+          },
+        ],
+      },
+    });
   });
 
   it("captures errors within links", async () => {

@@ -1,5 +1,13 @@
-import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
+import type {
+  FormattedExecutionResult,
+  GraphQLErrorExtensions,
+  GraphQLFormattedError,
+} from "graphql";
 
+import {
+  graphQLResultHasProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+} from "../../errors/index.js";
 import type { NetworkError } from "../../errors/index.js";
 import { Observable } from "../../utilities/index.js";
 import type { Operation, FetchResult, NextLink } from "../core/index.js";
@@ -8,6 +16,10 @@ import { ApolloLink } from "../core/index.js";
 export interface ErrorResponse {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   networkError?: NetworkError;
+  protocolErrors?: ReadonlyArray<{
+    message: string;
+    extensions?: GraphQLErrorExtensions[];
+  }>;
   response?: FormattedExecutionResult;
   operation: Operation;
   forward: NextLink;
@@ -42,16 +54,24 @@ export function onError(errorHandler: ErrorHandler): ApolloLink {
                 operation,
                 forward,
               });
-
-              if (retriedResult) {
-                retriedSub = retriedResult.subscribe({
-                  next: observer.next.bind(observer),
-                  error: observer.error.bind(observer),
-                  complete: observer.complete.bind(observer),
-                });
-                return;
-              }
+            } else if (graphQLResultHasProtocolErrors(result)) {
+              retriedResult = errorHandler({
+                protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
+                response: result,
+                operation,
+                forward,
+              });
             }
+
+            if (retriedResult) {
+              retriedSub = retriedResult.subscribe({
+                next: observer.next.bind(observer),
+                error: observer.error.bind(observer),
+                complete: observer.complete.bind(observer),
+              });
+              return;
+            }
+
             observer.next(result);
           },
           error: (networkError) => {

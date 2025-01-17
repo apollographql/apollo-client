@@ -12805,8 +12805,8 @@ describe("useQuery Hook", () => {
           },
         },
         called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
         previousData: undefined,
         variables: {},
       });
@@ -12886,14 +12886,20 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
-        expect(snapshot.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -12911,15 +12917,25 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User (updated)",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (updated)",
+            },
           },
-        });
-        expect(snapshot.previousData).toEqual({
-          currentUser: { __typename: "User", id: 1, name: "Test User" },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
+          },
+          variables: {},
         });
       }
     });
@@ -12998,14 +13014,20 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
-        expect(snapshot.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -13116,14 +13138,20 @@ describe("useQuery Hook", () => {
 
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
         });
-        expect(snapshot.previousData).toBeUndefined();
       }
     );
 
@@ -13211,32 +13239,44 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
         });
-        expect(snapshot.previousData).toBeUndefined();
       }
 
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User (server)",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (server)",
+            },
           },
-        });
-        expect(snapshot.previousData).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User",
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User",
+            },
           },
+          variables: {},
         });
       }
     });
@@ -13329,23 +13369,42 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-          },
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+            },
+          } as Query,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
         });
       }
 
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: "Test User (server)",
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: "Test User (server)",
+            },
           },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+            },
+          } as Query,
+          variables: {},
         });
       }
     });
@@ -13360,7 +13419,7 @@ describe("useQuery Hook", () => {
         currentUser: {
           __typename: "User";
           id: number;
-          name: string;
+          name: string | null;
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
@@ -13426,19 +13485,24 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.data).toEqual({
-          currentUser: {
-            __typename: "User",
-            id: 1,
-            name: null,
+        expect(snapshot).toEqualQueryResult({
+          data: {
+            currentUser: {
+              __typename: "User",
+              id: 1,
+              name: null,
+            },
           },
-        });
-
-        expect(snapshot.error).toEqual(
-          new ApolloError({
+          error: new ApolloError({
             graphQLErrors: [new GraphQLError("Couldn't get name")],
-          })
-        );
+          }),
+          errors: [{ message: "Couldn't get name" }],
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
       }
     });
   });

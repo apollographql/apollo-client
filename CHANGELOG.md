@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.12.6
+
+### Patch Changes
+
+- [#12267](https://github.com/apollographql/apollo-client/pull/12267) [`d57429d`](https://github.com/apollographql/apollo-client/commit/d57429df336412bfdce5fc92b8299360c522d121) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Maintain the `TData` type when used with `Unmasked` when `TData` is not a masked type generated from GraphQL Codegen.
+
+- [#12270](https://github.com/apollographql/apollo-client/pull/12270) [`3601246`](https://github.com/apollographql/apollo-client/commit/3601246f6e7b4f8b2937e0d431e6b5a6964f9066) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix handling of tagged/branded primitive types when used as scalar values with `Unmasked`.
+
 ## 3.12.5
 
 ### Patch Changes

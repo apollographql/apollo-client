@@ -729,8 +729,6 @@ type DeepOmitArray<T extends any[], K> = {
     [P in keyof T]: DeepOmit<T[P], K>;
 };
 
-// Warning: (ae-forgotten-export) The symbol "Primitive" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type DeepOmitPrimitive = Primitive | Function;
 
@@ -1697,14 +1695,13 @@ export function maybeDeepFreeze<T>(obj: T): T;
 
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 //
 // @public
 type MaybeMasked<TData> = DataMasking extends {
     mode: "unmask";
 } ? TData extends any ? true extends IsAny<TData> ? TData : TData extends {
     __masked?: true;
-} ? Prettify<RemoveMaskedMarker<TData>> : true extends ContainsFragmentsRefs<TData> ? Unmasked<TData> : TData : never : DataMasking extends {
+} ? Prettify<RemoveMaskedMarker<TData>> : Unmasked<TData> : never : DataMasking extends {
     mode: "preserveTypes";
 } ? TData : TData;
 
@@ -2143,7 +2140,7 @@ export type Prettify<T> = {
 export function preventUnhandledRejection<T>(promise: Promise<T>): Promise<T>;
 
 // @public (undocumented)
-type Primitive = null | undefined | string | number | boolean | symbol | bigint;
+export type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 
 // @public (undocumented)
 const print_2: ((ast: ASTNode) => string) & {
@@ -2769,14 +2766,15 @@ type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) ex
 // @public (undocumented)
 type UnionToIntersection_2<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
+// Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveFragmentName" needs to be exported by the entry point index.d.ts
 //
 // @public
-type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData;
+type Unmasked<TData> = true extends IsAny<TData> ? TData : TData extends object ? true extends ContainsFragmentsRefs<TData> ? UnwrapFragmentRefs<RemoveMaskedMarker<RemoveFragmentName<TData>>> : TData : TData;
 
 // @public (undocumented)
-type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
+type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData extends any ? TData extends Primitive ? TData : string extends keyof TData ? TData : keyof TData extends never ? TData : TData extends {
     " $fragmentRefs"?: infer FragmentRefs;
 } ? UnwrapFragmentRefs<CombineIntersection<Omit<TData, " $fragmentRefs"> | RemoveFragmentName<NonNullable<NonNullable<FragmentRefs>[keyof NonNullable<FragmentRefs>]>>>> : TData extends object ? {
     [K in keyof TData]: UnwrapFragmentRefs<TData[K]>;

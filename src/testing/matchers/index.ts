@@ -10,6 +10,8 @@ import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitValue } from "./toEmitValue.js";
 import { toEmitValueStrict } from "./toEmitValueStrict.js";
+import { toEqualApolloQueryResult } from "./toEqualApolloQueryResult.js";
+import { toEqualQueryResult } from "./toEqualQueryResult.js";
 
 expect.extend({
   toComplete,
@@ -19,6 +21,8 @@ expect.extend({
   toEmitNext,
   toEmitValue,
   toEmitValueStrict,
+  toEqualApolloQueryResult,
+  toEqualQueryResult,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

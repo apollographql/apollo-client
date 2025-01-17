@@ -1,12 +1,14 @@
 import type {
   ApolloClient,
+  ApolloQueryResult,
   DocumentNode,
   OperationVariables,
 } from "../../core/index.js";
-import type { QueryRef } from "../../react/index.js";
+import type { QueryRef, QueryResult } from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
+import { CheckedKeys } from "./toEqualQueryResult.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -67,6 +69,18 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toEmitMatchedValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEqualApolloQueryResult: T extends ApolloQueryResult<infer TData> ?
+    (expected: ApolloQueryResult<TData>) => R
+  : T extends Promise<ApolloQueryResult<infer TData>> ?
+    (expected: ApolloQueryResult<TData>) => R
+  : { error: "matchers needs to be called on an ApolloQueryResult" };
+
+  toEqualQueryResult: T extends QueryResult<infer TData, infer TVariables> ?
+    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
+  : T extends Promise<QueryResult<infer TData, infer TVariables>> ?
+    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
+  : { error: "matchers needs to be called on a QueryResult" };
 }
 
 declare global {

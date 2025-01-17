@@ -35,7 +35,7 @@ import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
 import { useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
-import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
+import { Unmasked } from "../../../masking";
 import {
   createRenderStream,
   renderHookToSnapshotStream,
@@ -12720,6 +12720,7 @@ describe("useQuery Hook", () => {
 
     it("does not mask query by default", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -12731,7 +12732,10 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: TypedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<
+        Unmasked<Query>,
+        Record<string, never>
+      > = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -12766,16 +12770,15 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Query, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<
+          QueryResult<Unmasked<Query>, Record<string, never>>
+        >();
 
       function App() {
         const result = useQuery(query);
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -12792,7 +12795,7 @@ describe("useQuery Hook", () => {
 
       const { snapshot } = await renderStream.takeRender();
 
-      expect(snapshot.result?.data).toEqual({
+      expect(snapshot.data).toEqual({
         currentUser: {
           __typename: "User",
           id: 1,
@@ -12800,11 +12803,12 @@ describe("useQuery Hook", () => {
           age: 30,
         },
       });
-      expect(snapshot.result?.previousData).toBeUndefined();
+      expect(snapshot.previousData).toBeUndefined();
     });
 
     it("masks queries updated by the cache", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -12816,7 +12820,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -12852,16 +12856,13 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Masked<Query>, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<QueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -12879,14 +12880,14 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User",
           },
         });
-        expect(snapshot.result?.previousData).toBeUndefined();
+        expect(snapshot.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -12904,14 +12905,14 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User (updated)",
           },
         });
-        expect(snapshot.result?.previousData).toEqual({
+        expect(snapshot.previousData).toEqual({
           currentUser: { __typename: "User", id: 1, name: "Test User" },
         });
       }
@@ -12919,6 +12920,7 @@ describe("useQuery Hook", () => {
 
     it("does not rerender when updating field in named fragment", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -12930,7 +12932,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -12966,16 +12968,13 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Masked<Query>, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<QueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -12993,14 +12992,14 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User",
           },
         });
-        expect(snapshot.result?.previousData).toBeUndefined();
+        expect(snapshot.previousData).toBeUndefined();
       }
 
       client.writeQuery({
@@ -13031,6 +13030,7 @@ describe("useQuery Hook", () => {
       "masks result from cache when using with %s fetch policy",
       async (fetchPolicy) => {
         type UserFieldsFragment = {
+          __typename: "User";
           age: number;
         } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -13042,7 +13042,7 @@ describe("useQuery Hook", () => {
           } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
         }
 
-        const query: MaskedDocumentNode<Query, never> = gql`
+        const query: TypedDocumentNode<Query, Record<string, never>> = gql`
           query MaskedQuery {
             currentUser {
               id
@@ -13090,16 +13090,13 @@ describe("useQuery Hook", () => {
           },
         });
 
-        const renderStream = createRenderStream({
-          initialSnapshot: {
-            result: null as QueryResult<Masked<Query>, never> | null,
-          },
-        });
+        const renderStream =
+          createRenderStream<QueryResult<Query, Record<string, never>>>();
 
         function App() {
           const result = useQuery(query, { fetchPolicy });
 
-          renderStream.replaceSnapshot({ result });
+          renderStream.replaceSnapshot(result);
 
           return null;
         }
@@ -13113,19 +13110,20 @@ describe("useQuery Hook", () => {
 
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User",
           },
         });
-        expect(snapshot.result?.previousData).toBeUndefined();
+        expect(snapshot.previousData).toBeUndefined();
       }
     );
 
     it("masks cache and network result when using cache-and-network fetch policy", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -13137,7 +13135,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -13186,16 +13184,13 @@ describe("useQuery Hook", () => {
         },
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Masked<Query>, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<QueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query, { fetchPolicy: "cache-and-network" });
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -13210,27 +13205,27 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User",
           },
         });
-        expect(snapshot.result?.previousData).toBeUndefined();
+        expect(snapshot.previousData).toBeUndefined();
       }
 
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
             name: "Test User (server)",
           },
         });
-        expect(snapshot.result?.previousData).toEqual({
+        expect(snapshot.previousData).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
@@ -13254,7 +13249,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -13307,16 +13302,13 @@ describe("useQuery Hook", () => {
         });
       }
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Masked<Query>, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<QueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query, { returnPartialData: true });
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -13331,7 +13323,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
@@ -13342,7 +13334,7 @@ describe("useQuery Hook", () => {
       {
         const { snapshot } = await renderStream.takeRender();
 
-        expect(snapshot.result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
@@ -13354,6 +13346,7 @@ describe("useQuery Hook", () => {
 
     it("masks partial data returned from data on errors with errorPolicy `all`", async () => {
       type UserFieldsFragment = {
+        __typename: "User";
         age: number;
       } & { " $fragmentName"?: "UserFieldsFragment" };
 
@@ -13365,7 +13358,7 @@ describe("useQuery Hook", () => {
         } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
       }
 
-      const query: MaskedDocumentNode<Query, never> = gql`
+      const query: TypedDocumentNode<Query, Record<string, never>> = gql`
         query MaskedQuery {
           currentUser {
             id
@@ -13403,16 +13396,13 @@ describe("useQuery Hook", () => {
         link: new MockLink(mocks),
       });
 
-      const renderStream = createRenderStream({
-        initialSnapshot: {
-          result: null as QueryResult<Masked<Query>, never> | null,
-        },
-      });
+      const renderStream =
+        createRenderStream<QueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query, { errorPolicy: "all" });
 
-        renderStream.replaceSnapshot({ result });
+        renderStream.replaceSnapshot(result);
 
         return null;
       }
@@ -13429,9 +13419,8 @@ describe("useQuery Hook", () => {
 
       {
         const { snapshot } = await renderStream.takeRender();
-        const { result } = snapshot;
 
-        expect(result?.data).toEqual({
+        expect(snapshot.data).toEqual({
           currentUser: {
             __typename: "User",
             id: 1,
@@ -13439,7 +13428,7 @@ describe("useQuery Hook", () => {
           },
         });
 
-        expect(result?.error).toEqual(
+        expect(snapshot.error).toEqual(
           new ApolloError({
             graphQLErrors: [new GraphQLError("Couldn't get name")],
           })

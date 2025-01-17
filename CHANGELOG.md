@@ -1,5 +1,19 @@
 # @apollo/client
 
+## 3.12.7
+
+### Patch Changes
+
+- [`e51ef3e`](https://github.com/apollographql/apollo-client/commit/e51ef3e4a3750343337382862e9559beb5fd0cb1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Make `protocolErrors` from multipart subscriptions available to the error link with the `protocolErrors` property.
+
+  ```js
+  const errorLink = onError(({ protocolErrors }) => {
+    if (protocolErrors) {
+      console.log(protocolErrors);
+    }
+  });
+  ```
+
 ## 3.12.6
 
 ### Patch Changes

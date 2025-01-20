@@ -3414,19 +3414,19 @@ describe.skip("Type Tests", () => {
       expectTypeOf(result).toMatchTypeOf<{ reset: () => void }>();
       expectTypeOf(result).not.toMatchTypeOf<MutationResult<Mutation>>();
       expectTypeOf(mutate()).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
-      const {
-        reset,
-        // @ts-expect-error
-        data,
-        // @ts-expect-error
-        loading,
-        // @ts-expect-error
-        error,
-      } = result;
-      reset;
-      data;
-      loading;
-      error;
+      // Available and reliable in the result
+      result.reset;
+
+      // @ts-expect-error
+      result.called;
+      // @ts-expect-error
+      result.client;
+      // @ts-expect-error
+      result.data;
+      // @ts-expect-error
+      result.error;
+      // @ts-expect-error
+      result.loading;
     }
 
     // Explicit `false`

@@ -218,6 +218,7 @@ export function useMutation<
           return response;
         })
         .catch((error) => {
+          // TODO: Should this be checking for ignoreResults?
           if (mutationId === ref.current.mutationId && ref.current.isMounted) {
             const result = {
               loading: false,

@@ -77,7 +77,7 @@ const generateErrorMessage = (err: ApolloError) => {
  *
  * Use `ReadonlyArray<GraphQLFormattedError>` instead.
  */
-// eslint-disable-next-line @typescript-eslint/ban-types
+// eslint-disable-next-line @typescript-eslint/no-restricted-types
 export type GraphQLErrors = ReadonlyArray<GraphQLError>;
 
 export type NetworkError = Error | ServerParseError | ServerError | null;

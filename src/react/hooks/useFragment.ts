@@ -56,12 +56,13 @@ export function useFragment<TData = any, TVars = OperationVariables>(
 ): UseFragmentResult<TData> {
   return wrapHook(
     "useFragment",
-    _useFragment,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useFragment_,
     useApolloClient(options.client)
   )(options);
 }
 
-function _useFragment<TData = any, TVars = OperationVariables>(
+function useFragment_<TData = any, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const client = useApolloClient(options.client);

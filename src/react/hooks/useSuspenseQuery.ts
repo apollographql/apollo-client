@@ -178,12 +178,13 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
-    _useSuspenseQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
-function _useSuspenseQuery<
+function useSuspenseQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -218,6 +219,7 @@ function _useSuspenseQuery<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
+    // eslint-disable-next-line react-compiler/react-compiler
     current[0] = queryRef.key;
     current[1] = queryRef.promise;
   }

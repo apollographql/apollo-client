@@ -219,6 +219,7 @@ function useSuspenseQuery_<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
+    // eslint-disable-next-line react-compiler/react-compiler
     current[0] = queryRef.key;
     current[1] = queryRef.promise;
   }

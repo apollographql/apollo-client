@@ -43,7 +43,7 @@ export class ApolloLink {
 // @public (undocumented)
 export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
     // (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError | string>;
+    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     payload: SingleExecutionResult | ExecutionPatchResult | null;
 }

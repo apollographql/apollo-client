@@ -43,7 +43,7 @@
         ],
         "@typescript-eslint/consistent-type-exports": ["error"],
         "@typescript-eslint/no-import-type-side-effects": "error",
-        "@typescript-eslint/ban-types": [
+        "@typescript-eslint/no-restricted-types": [
           "error",
           {
             "types": {
@@ -55,8 +55,7 @@
                 "message": "Use FormattedExecutionResult instead",
                 "fixWith": "FormattedExecutionResult"
               }
-            },
-            "extendDefaults": false
+            }
           }
         ],
         "no-restricted-syntax": [

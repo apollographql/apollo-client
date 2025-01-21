@@ -21,7 +21,7 @@ export type {
   SubscribeToMoreOptions,
 } from "./watchQueryOptions.js";
 export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
-export * from "./types.js";
+export type * from "./types.js";
 export type { Resolver, FragmentMatcher } from "./LocalState.js";
 export { isApolloError, ApolloError } from "../errors/index.js";
 /* Cache */
@@ -52,7 +52,7 @@ export {
   makeVar,
 } from "../cache/index.js";
 
-export * from "../cache/inmemory/types.js";
+export type * from "../cache/inmemory/types.js";
 
 /* Link */
 

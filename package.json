@@ -136,7 +136,7 @@
     "@types/hoist-non-react-statics": "3.3.5",
     "@types/jest": "29.5.12",
     "@types/lodash": "4.17.7",
-    "@types/node": "20.16.1",
+    "@types/node": "^22.10.7",
     "@types/node-fetch": "2.6.11",
     "@types/prop-types": "^15.7.14",
     "@types/react": "19.0.0",

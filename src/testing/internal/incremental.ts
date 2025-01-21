@@ -125,7 +125,7 @@ export function mockMultipartSubscriptionStream<
     httpLink,
     streamController: streamController!,
     enqueuePayloadResult(
-      payload: ApolloPayloadResult["payload"],
+      payload: ApolloPayloadResult<TData, TExtensions>["payload"],
       hasNext = true
     ) {
       streamController.enqueue({ payload, [hasNextSymbol]: hasNext });
@@ -133,7 +133,7 @@ export function mockMultipartSubscriptionStream<
     },
     enqueueErrorResult(
       errors: ApolloPayloadResult["errors"],
-      payload: ApolloPayloadResult["payload"] = null
+      payload: ApolloPayloadResult<TData, TExtensions>["payload"] = null
     ) {
       streamController.enqueue({ payload, errors, [hasNextSymbol]: false });
       streamController.close();

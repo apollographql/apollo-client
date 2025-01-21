@@ -284,7 +284,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult | ExecutionPatchResult | null;
+    payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // Warning: (ae-forgotten-export) The symbol "ApolloProviderProps" needs to be exported by the entry point index.d.ts

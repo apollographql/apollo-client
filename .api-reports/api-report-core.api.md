@@ -261,7 +261,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
-    payload: SingleExecutionResult | ExecutionPatchResult | null;
+    payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)

@@ -44,8 +44,10 @@ export class ApolloLink {
 export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = Record<string, any>> {
     // (undocumented)
     errors?: ReadonlyArray<GraphQLFormattedError>;
+    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    payload: SingleExecutionResult | ExecutionPatchResult | null;
+    payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)
@@ -106,8 +108,6 @@ export const from: typeof ApolloLink.from;
 
 // @public (undocumented)
 export interface GraphQLRequest<TVariables = Record<string, any>> {
-    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     context?: DefaultContext;
     // (undocumented)

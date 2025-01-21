@@ -318,7 +318,7 @@ interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = Record<
     // Warning: (ae-forgotten-export) The symbol "ExecutionPatchResult" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    payload: SingleExecutionResult | ExecutionPatchResult | null;
+    payload: SingleExecutionResult<TData, DefaultContext, TExtensions> | ExecutionPatchResult<TData, TExtensions> | null;
 }
 
 // @public (undocumented)

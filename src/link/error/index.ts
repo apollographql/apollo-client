@@ -14,8 +14,20 @@ import type { Operation, FetchResult, NextLink } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 
 export interface ErrorResponse {
+  /**
+   * Errors returned in the `errors` property of the GraphQL response.
+   */
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
+  /**
+   * Errors thrown during a network request. This is usually an error thrown
+   * during a `fetch` call or an error while parsing the response from the
+   * network.
+   */
   networkError?: NetworkError;
+  /**
+   * Fatal transport-level errors from multipart subscriptions.
+   * See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
+   */
   protocolErrors?: ReadonlyArray<{
     message: string;
     extensions?: GraphQLErrorExtensions[];

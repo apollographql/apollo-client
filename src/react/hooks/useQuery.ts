@@ -148,12 +148,13 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
-    _useQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
 }
 
-function _useQuery<
+function useQuery_<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(

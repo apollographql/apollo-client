@@ -178,12 +178,13 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
-    _useSuspenseQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
-function _useSuspenseQuery<
+function useSuspenseQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(

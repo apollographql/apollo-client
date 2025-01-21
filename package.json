@@ -193,7 +193,7 @@
     "ts-api-utils": "^2.0.0",
     "ts-jest": "29.2.3",
     "ts-jest-resolver": "2.0.1",
-    "ts-morph": "22.0.0",
+    "ts-morph": "^25.0.0",
     "ts-node": "10.9.2",
     "tsx": "^4.19.2",
     "typedoc": "0.25.0",

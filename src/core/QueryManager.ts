@@ -780,7 +780,9 @@ export class QueryManager<TStore> {
     });
     observable["lastQuery"] = query;
 
-    this.queries.set(observable.queryId, queryInfo);
+    if (!options.inactiveBeforeSubscription) {
+      this.queries.set(observable.queryId, queryInfo);
+    }
 
     // We give queryInfo the transformed query to ensure the first cache diff
     // uses the transformed query instead of the raw query

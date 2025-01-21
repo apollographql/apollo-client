@@ -2235,7 +2235,7 @@ describe("useQuery Hook", () => {
       function checkObservableQueries(expectedLinkCount: number) {
         const obsQueries = client.getObservableQueries("all");
         const { observable } = getCurrentSnapshot();
-        expect(obsQueries.size).toBe(2);
+        expect(obsQueries.size).toBe(1);
 
         const activeSet = new Set<typeof observable>();
         const inactiveSet = new Set<typeof observable>();

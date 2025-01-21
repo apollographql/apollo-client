@@ -614,6 +614,8 @@ export function createMakeWatchQueryOptions<
         getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
     }
 
+    watchQueryOptions.inactiveBeforeSubscription = true;
+
     return watchQueryOptions;
   };
 }

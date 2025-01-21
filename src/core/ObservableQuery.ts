@@ -121,7 +121,13 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
+    let startedInactive = options.inactiveBeforeSubscription;
     super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
+      if (startedInactive && !queryManager["queries"].has(this.queryId)) {
+        queryManager["queries"].set(this.queryId, queryInfo);
+        startedInactive = false;
+      }
+
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {

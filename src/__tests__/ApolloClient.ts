@@ -20,7 +20,6 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "../utilities/globals";
 import { expectTypeOf } from "expect-type";
 import { Masked } from "../masking";
-import { MockSubscriptionLink } from "../testing";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -2468,11 +2467,7 @@ describe("ApolloClient", () => {
 
     it("supports the @includes directive with `variables` - parallel cache modification", async () => {
       const cache = new InMemoryCache();
-      const link = new MockSubscriptionLink();
-      const client = new ApolloClient({
-        cache,
-        link,
-      });
+      const client = new ApolloClient({ cache });
 
       const FullFragment = gql`
         fragment ItemFragment on Item {

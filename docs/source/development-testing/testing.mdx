@@ -21,7 +21,8 @@ Let's say we want to test the following `Dog` component, which executes a basic 
 
 ```jsx title="dog.jsx"
 import React from "react";
-import { gql, useQuery } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 
 // Make sure that both the query and the component are exported
 export const GET_DOG_QUERY = gql`
@@ -55,7 +56,7 @@ A basic rendering test for the component looks like this (minus mocked responses
 ```jsx title="dog.test.js"
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { GET_DOG_QUERY, Dog } from "./dog";
 
 const mocks = []; // We'll fill this in next
@@ -119,7 +120,7 @@ Combining our code above, we get the following complete test:
 ```jsx title="dog.test.js"
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { GET_DOG_QUERY, Dog } from "./dog";
 
 const mocks = [
@@ -317,7 +318,8 @@ The following `DeleteButton` component executes the `DELETE_DOG_MUTATION` to del
 
 ```jsx title="delete-dog.jsx"
 import React from "react";
-import { gql, useMutation } from "@apollo/client";
+import { gql } from "@apollo/client";
+import { useMutation } from "@apollo/client/react";
 
 export const DELETE_DOG_MUTATION = gql`
   mutation deleteDog($name: String!) {
@@ -350,7 +352,7 @@ We can test the initial rendering of this component just like we [tested our `Do
 import '@testing-library/jest-dom';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { DeleteButton, DELETE_DOG_MUTATION } from "./delete-dog";
 
 it("should render without error", () => {

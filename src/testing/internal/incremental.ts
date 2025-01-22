@@ -32,10 +32,6 @@ export function mockIncrementalStream<Chunks>({
     [];
 
   function processQueue(streamController: StreamController) {
-    if (!streamController) {
-      throw new Error("Cannot process queue. Stream controller not created.");
-    }
-
     let chunk;
     while ((chunk = queue.shift())) {
       if (chunk === CLOSE) {

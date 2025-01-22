@@ -102,7 +102,6 @@
     "optimism": "^0.18.0",
     "prop-types": "^15.7.2",
     "rehackt": "^0.1.0",
-    "response-iterator": "^0.2.6",
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.3",
     "tslib": "^2.3.0",

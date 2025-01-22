@@ -138,7 +138,7 @@ export function mockDeferStream<
           hasNext: true,
           incremental: [
             {
-              // eslint-disable-next-line @typescript-eslint/ban-types
+              // eslint-disable-next-line @typescript-eslint/no-restricted-types
               errors: errors as GraphQLError[],
             },
           ],

@@ -307,7 +307,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
             latestDiff &&
             equalByQuery(
               query,
-              { data: latestDiff?.result },
+              { data: latestDiff.result },
               { data },
               // TODO: Fix the type on WatchFragmentOptions so that TVars
               // extends OperationVariables

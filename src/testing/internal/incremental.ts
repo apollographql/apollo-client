@@ -19,14 +19,12 @@ export function mockIncrementalStream<Chunks>({
 }: {
   responseHeaders: Headers;
 }) {
+  type Payload = Chunks & { [hasNextSymbol]: boolean };
   const CLOSE = Symbol();
-  let streamController: ReadableStreamDefaultController<
-    Chunks & { [hasNextSymbol]: boolean }
-  > | null = null;
+  let streamController: ReadableStreamDefaultController<Payload> | null = null;
   let sentInitialChunk = false;
 
-  const queue: Array<(Chunks & { [hasNextSymbol]: boolean }) | typeof CLOSE> =
-    [];
+  const queue: Array<Payload | typeof CLOSE> = [];
 
   function processQueue() {
     if (!streamController) {
@@ -80,9 +78,7 @@ export function mockIncrementalStream<Chunks>({
     },
   });
 
-  function queueNext(
-    event: (Chunks & { [hasNextSymbol]: boolean }) | typeof CLOSE
-  ) {
+  function queueNext(event: Payload | typeof CLOSE) {
     queue.push(event);
 
     if (streamController) {

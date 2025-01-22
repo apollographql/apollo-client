@@ -20,6 +20,7 @@ const scriptEntries = Array.from(
 
 /** @type{import('knip').KnipConfig}*/
 const config = {
+  exclude: ["optionalPeerDependencies"],
   entry: []
     .concat(packageEntries)
     .concat(scriptEntries)
@@ -30,8 +31,8 @@ const config = {
     ]),
   project: ["src/**/*.ts", "config/*.js"],
   ignore: ["integration-tests/**/*", ".yalc/**/*"],
+  ignoreBinaries: ["jq"],
   ignoreDependencies: [
-    "@microsoft/api-extractor",
     /@size-limit\/.*/,
     /@typescript-eslint\/.*/,
     /eslint-.*/,
@@ -43,8 +44,6 @@ const config = {
     "terser",
     // used as a reporter by the `test:coverage` script
     "jest-junit",
-    // used by `eslint-local-rules`
-    "@tsconfig/node20",
   ],
   jest: {
     config: "config/jest.config.js",
@@ -52,7 +51,15 @@ const config = {
       "src/config/jest/setup.ts",
       "src/testing/matchers/index.d.ts",
       "**/__tests__/**/*.[jt]s?(x)",
+      "**/*.test.[jt]s?(x)",
       "src/**/__benches__/*.bench.ts",
+    ],
+  },
+  typescript: {
+    config: [
+      "tsconfig.json",
+      "src/tsconfig.json",
+      "eslint-local-rules/tsconfig.json",
     ],
   },
 };

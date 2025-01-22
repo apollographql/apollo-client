@@ -2466,89 +2466,86 @@ describe("ApolloClient", () => {
       }
     });
 
-    it.failing(
-      "supports the @includes directive with `variables` - parallel cache modification",
-      async () => {
-        const cache = new InMemoryCache();
-        const link = new MockSubscriptionLink();
-        const client = new ApolloClient({
-          cache,
-          link,
-        });
+    it("supports the @includes directive with `variables` - parallel cache modification", async () => {
+      const cache = new InMemoryCache();
+      const link = new MockSubscriptionLink();
+      const client = new ApolloClient({
+        cache,
+        link,
+      });
 
-        const FullFragment = gql`
-          fragment ItemFragment on Item {
-            id
-            text
-          }
-        `;
+      const FullFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
 
-        const ItemFragment = gql`
-          fragment ItemFragment on Item {
-            id
-            ...IncludedFragment @include(if: $withText)
-          }
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          ...IncludedFragment @include(if: $withText)
+        }
 
-          fragment IncludedFragment on Item {
-            id
-            text
-          }
-        `;
+        fragment IncludedFragment on Item {
+          id
+          text
+        }
+      `;
 
-        cache.writeFragment({
-          fragment: FullFragment,
+      cache.writeFragment({
+        fragment: FullFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+        variables: { withText: true },
+        fragmentName: "ItemFragment",
+      });
+
+      const stream = new ObservableStream(observable);
+
+      {
+        const result = await stream.takeNext();
+
+        expect(result).toStrictEqual({
           data: {
             __typename: "Item",
             id: 5,
             text: "Item #5",
           },
+          complete: true,
         });
+      }
 
-        const observable = client.watchFragment({
-          fragment: ItemFragment,
-          from: { __typename: "Item", id: 5 },
-          variables: { withText: true },
-          fragmentName: "ItemFragment",
-        });
+      client.writeFragment({
+        fragment: FullFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "changed Item #5",
+        },
+      });
 
-        const stream = new ObservableStream(observable);
+      {
+        const result = await stream.takeNext();
 
-        {
-          const result = await stream.takeNext();
-
-          expect(result).toStrictEqual({
-            data: {
-              __typename: "Item",
-              id: 5,
-              text: "Item #5",
-            },
-            complete: true,
-          });
-        }
-
-        client.writeFragment({
-          fragment: FullFragment,
+        expect(result).toStrictEqual({
           data: {
             __typename: "Item",
             id: 5,
             text: "changed Item #5",
           },
+          complete: true,
         });
-
-        {
-          const result = await stream.takeNext();
-
-          expect(result).toStrictEqual({
-            data: {
-              __typename: "Item",
-              id: 5,
-              text: "changed Item #5",
-            },
-            complete: true,
-          });
-        }
       }
-    );
+    });
 
     it("works with nested fragments", async () => {
       const cache = new InMemoryCache();

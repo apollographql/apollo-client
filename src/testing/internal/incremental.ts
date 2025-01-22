@@ -20,9 +20,6 @@ export function mockIncrementalStream<Chunks>({
   responseHeaders: Headers;
 }) {
   const CLOSE = Symbol();
-  type StreamController = ReadableStreamDefaultController<
-    Chunks & { [hasNextSymbol]: boolean }
-  >;
   let streamController: ReadableStreamDefaultController<
     Chunks & { [hasNextSymbol]: boolean }
   > | null = null;
@@ -31,7 +28,11 @@ export function mockIncrementalStream<Chunks>({
   const queue: Array<(Chunks & { [hasNextSymbol]: boolean }) | typeof CLOSE> =
     [];
 
-  function processQueue(streamController: StreamController) {
+  function processQueue() {
+    if (!streamController) {
+      throw new Error("Cannot process queue without stream controller");
+    }
+
     let chunk;
     while ((chunk = queue.shift())) {
       if (chunk === CLOSE) {
@@ -46,7 +47,7 @@ export function mockIncrementalStream<Chunks>({
     return new NodeReadableStream<Chunks & { [hasNextSymbol]: boolean }>({
       start(c) {
         streamController = c;
-        processQueue(c);
+        processQueue();
       },
     })
       .pipeThrough(
@@ -79,25 +80,25 @@ export function mockIncrementalStream<Chunks>({
     },
   });
 
-  function close() {
+  function queueNext(
+    event: (Chunks & { [hasNextSymbol]: boolean }) | typeof CLOSE
+  ) {
+    queue.push(event);
+
     if (streamController) {
-      streamController.close();
-    } else {
-      queue.push(CLOSE);
+      processQueue();
     }
+  }
+
+  function close() {
+    queueNext(CLOSE);
 
     streamController = null;
     sentInitialChunk = false;
   }
 
   function enqueue(chunk: Chunks, hasNext: boolean) {
-    const payload = { ...chunk, [hasNextSymbol]: hasNext };
-
-    if (streamController) {
-      streamController.enqueue(payload);
-    } else {
-      queue.push(payload);
-    }
+    queueNext({ ...chunk, [hasNextSymbol]: hasNext });
 
     if (!hasNext) {
       close();

@@ -168,6 +168,9 @@ export function mockMultipartSubscriptionStream<
 
   return {
     httpLink,
+    enqueueHeartbeat() {
+      enqueue({} as any, true);
+    },
     enqueuePayloadResult(
       payload: ApolloPayloadResult<TData, TExtensions>["payload"],
       hasNext = true

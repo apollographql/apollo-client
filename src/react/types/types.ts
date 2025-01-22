@@ -358,7 +358,10 @@ export interface BaseMutationOptions<
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
+  /**
+   * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
+   * @deprecated This property will be removed in the next major version of Apollo Client
+   */
   ignoreResults?: boolean;
 }
 

@@ -46,7 +46,7 @@ export function useReadQuery<TData>(
 
   return wrapHook(
     "useReadQuery",
-    _useReadQuery,
+    useReadQuery_,
     unwrapped ?
       unwrapped["observable"]
       // in the case of a "transported" queryRef object, we need to use the
@@ -61,7 +61,7 @@ export function useReadQuery<TData>(
   )(queryRef);
 }
 
-function _useReadQuery<TData>(
+function useReadQuery_<TData>(
   queryRef: QueryRef<TData>
 ): UseReadQueryResult<TData> {
   assertWrappedQueryRef(queryRef);

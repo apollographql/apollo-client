@@ -190,12 +190,13 @@ export function useBackgroundQuery<
 ] {
   return wrapHook(
     "useBackgroundQuery",
-    _useBackgroundQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useBackgroundQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
-function _useBackgroundQuery<
+function useBackgroundQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(

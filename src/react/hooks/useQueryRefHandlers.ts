@@ -58,7 +58,7 @@ export function useQueryRefHandlers<
 
   return wrapHook(
     "useQueryRefHandlers",
-    _useQueryRefHandlers,
+    useQueryRefHandlers_,
     unwrapped ?
       unwrapped["observable"]
       // in the case of a "transported" queryRef object, we need to use the
@@ -73,7 +73,7 @@ export function useQueryRefHandlers<
   )(queryRef);
 }
 
-function _useQueryRefHandlers<
+function useQueryRefHandlers_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(

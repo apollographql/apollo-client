@@ -5,7 +5,7 @@ import {
   invariant,
 } from "../invariantWrappers";
 
-function withDev() {
+function withDev(): typeof import("../../../dev") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];
   window[ApolloErrorMessageHandler] = undefined;
   let dev: typeof import("../../../dev");

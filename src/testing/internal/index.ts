@@ -28,3 +28,8 @@ export {
 export { actAsync } from "./rtl/actAsync.js";
 export { renderAsync } from "./rtl/renderAsync.js";
 export { renderHookAsync } from "./rtl/renderHookAsync.js";
+export {
+  mockIncrementalStream,
+  mockDeferStream,
+  mockMultipartSubscriptionStream,
+} from "./incremental.js";

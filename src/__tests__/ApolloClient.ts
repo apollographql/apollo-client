@@ -2465,6 +2465,75 @@ describe("ApolloClient", () => {
       }
     });
 
+    it("supports the @includes directive with `variables` - parallel cache modification", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({ cache });
+
+      const FullFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          ...IncludedFragment @include(if: $withText)
+        }
+
+        fragment IncludedFragment on Item {
+          id
+          text
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: FullFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+        variables: { withText: true },
+        fragmentName: "ItemFragment",
+      });
+
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitValueStrict({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        complete: true,
+      });
+
+      client.writeFragment({
+        fragment: FullFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "changed Item #5",
+        },
+      });
+
+      await expect(stream).toEmitValueStrict({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "changed Item #5",
+        },
+        complete: true,
+      });
+    });
+
     it("works with nested fragments", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({

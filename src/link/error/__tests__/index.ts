@@ -650,18 +650,6 @@ describe("support for request retrying", () => {
     message: "some other error",
   };
 
-  const PROTOCOL_ERROR = {
-    data: null,
-    extensions: {
-      [PROTOCOL_ERRORS_SYMBOL]: [
-        {
-          message: "cannot read message from websocket",
-          extensions: [{ code: "WEBSOCKET_MESSAGE_ERROR" }],
-        },
-      ],
-    },
-  };
-
   it("returns the retried request when forward(operation) is called", async () => {
     let errorHandlerCalled = false;
 
@@ -750,38 +738,56 @@ describe("support for request retrying", () => {
   it("supports retrying when the initial request had protocol errors", async () => {
     let errorHandlerCalled = false;
 
-    let timesCalled = 0;
-    const mockHttpLink = new ApolloLink((operation) => {
-      return new Observable((observer) => {
-        // simulate the first request being an error
-        if (timesCalled === 0) {
-          timesCalled++;
-          observer.next(PROTOCOL_ERROR);
-          observer.complete();
-        } else {
-          observer.next(GOOD_RESPONSE);
-          observer.complete();
-        }
-      });
-    });
+    const { httpLink, enqueuePayloadResult, enqueueErrorResult } =
+      mockMultipartSubscriptionStream();
 
     const errorLink = new ErrorLink(
       ({ protocolErrors, operation, forward }) => {
         if (protocolErrors) {
           errorHandlerCalled = true;
-          expect(protocolErrors).toEqual(
-            PROTOCOL_ERROR.extensions[PROTOCOL_ERRORS_SYMBOL]
-          );
+          expect(protocolErrors).toEqual([
+            {
+              message: "cannot read message from websocket",
+              extensions: {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
+            },
+          ]);
           return forward(operation);
         }
       }
     );
 
-    const link = errorLink.concat(mockHttpLink);
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          subscription Foo {
+            foo {
+              bar
+            }
+          }
+        `,
+      })
+    );
 
-    const stream = new ObservableStream(execute(link, { query: QUERY }));
+    enqueuePayloadResult({ data: { foo: { bar: true } } });
 
-    await expect(stream).toEmitValue(GOOD_RESPONSE);
+    await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
+
+    enqueueErrorResult([
+      {
+        message: "cannot read message from websocket",
+        extensions: {
+          code: "WEBSOCKET_MESSAGE_ERROR",
+        },
+      },
+    ]);
+
+    enqueuePayloadResult({ data: { foo: { bar: true } } }, false);
+
+    // Ensure the error result is not emitted but rather the retried result
+    await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
     expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
   });

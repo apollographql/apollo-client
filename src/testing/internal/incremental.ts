@@ -174,11 +174,8 @@ export function mockMultipartSubscriptionStream<
     ) {
       enqueue({ payload }, hasNext);
     },
-    enqueueErrorResult(
-      errors: ApolloPayloadResult["errors"],
-      payload: ApolloPayloadResult<TData, TExtensions>["payload"] = null
-    ) {
-      enqueue({ payload, errors }, false);
+    enqueueProtocolErrors(errors: ApolloPayloadResult["errors"]) {
+      enqueue({ payload: null, errors }, false);
     },
   };
 }

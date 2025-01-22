@@ -167,7 +167,7 @@ describe("error handling", () => {
       ]);
     });
 
-    const { httpLink, enqueuePayloadResult, enqueueErrorResult } =
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(
@@ -178,7 +178,7 @@ describe("error handling", () => {
       data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
     });
 
-    enqueueErrorResult([
+    enqueueProtocolErrors([
       { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
     ]);
 
@@ -499,8 +499,11 @@ describe("error handling with class", () => {
       }
     `;
 
-    const { httpLink, enqueuePayloadResult, enqueueErrorResult } =
-      mockMultipartSubscriptionStream();
+    const {
+      httpLink,
+      enqueuePayloadResult,
+      enqueueProtocolErrors: enqueueErrorResult,
+    } = mockMultipartSubscriptionStream();
 
     const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
       expect(operation.operationName).toBe("MySubscription");
@@ -738,7 +741,7 @@ describe("support for request retrying", () => {
   it("supports retrying when the initial request had protocol errors", async () => {
     let errorHandlerCalled = false;
 
-    const { httpLink, enqueuePayloadResult, enqueueErrorResult } =
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
       mockMultipartSubscriptionStream();
 
     const errorLink = new ErrorLink(
@@ -775,7 +778,7 @@ describe("support for request retrying", () => {
 
     await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
 
-    enqueueErrorResult([
+    enqueueProtocolErrors([
       {
         message: "cannot read message from websocket",
         extensions: {

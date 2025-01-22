@@ -1,5 +1,21 @@
 # @apollo/client
 
+## 3.12.7
+
+### Patch Changes
+
+- [#12281](https://github.com/apollographql/apollo-client/pull/12281) [`d638ec3`](https://github.com/apollographql/apollo-client/commit/d638ec317b7d21c2246251ef1b9d773588277b39) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Make fatal [tranport-level errors](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) from multipart subscriptions available to the error link with the `protocolErrors` property.
+
+  ```js
+  const errorLink = onError(({ protocolErrors }) => {
+    if (protocolErrors) {
+      console.log(protocolErrors);
+    }
+  });
+  ```
+
+- [#12281](https://github.com/apollographql/apollo-client/pull/12281) [`d638ec3`](https://github.com/apollographql/apollo-client/commit/d638ec317b7d21c2246251ef1b9d773588277b39) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the array type for the `errors` field on the `ApolloPayloadResult` type. This type was always in the shape of the GraphQL error format, per the [multipart subscriptions protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) and never a plain string or a JavaScript error object.
+
 ## 3.12.6
 
 ### Patch Changes

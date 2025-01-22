@@ -27,14 +27,13 @@ const config = {
     .concat([
       "src/cache/inmemory/fixPolyfills.native.ts",
       "src/react/types/types.documentation.ts",
-      "eslint-local-rules/require-using-disposable.ts",
+      "eslint-local-rules/index.js",
     ]),
-  project: ["src/**/*.ts", "config/*.js"],
+  project: ["src/**/*.ts", "config/*.[jt]s", "eslint-local-rules/*.[jt]s"],
   ignore: ["integration-tests/**/*", ".yalc/**/*"],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [
     /@size-limit\/.*/,
-    /@typescript-eslint\/.*/,
     /eslint-.*/,
     // used by `recast`
     "@babel/parser",

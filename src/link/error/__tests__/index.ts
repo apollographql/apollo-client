@@ -102,7 +102,7 @@ describe("error handling", () => {
       ]);
     });
 
-    const { httpLink, enqueueInitialChunk, enqueueProtocolErrorChunk } =
+    const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
       mockDeferStream();
     const link = errorLink.concat(httpLink);
     const stream = new ObservableStream(execute(link, { query }));
@@ -112,7 +112,7 @@ describe("error handling", () => {
       data: {},
     });
 
-    enqueueProtocolErrorChunk([
+    enqueueErrorChunk([
       {
         message: "could not read data",
         extensions: {

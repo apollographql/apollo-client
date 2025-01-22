@@ -135,7 +135,7 @@ export function mockDeferStream<
     ) {
       enqueue(chunk, chunk.hasNext);
     },
-    enqueueProtocolErrorChunk(errors: GraphQLFormattedError[]) {
+    enqueueErrorChunk(errors: GraphQLFormattedError[]) {
       enqueue(
         {
           hasNext: true,

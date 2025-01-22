@@ -19,25 +19,38 @@ export function mockIncrementalStream<Chunks>({
 }: {
   responseHeaders: Headers;
 }) {
+  const CLOSE = Symbol();
   type StreamController = ReadableStreamDefaultController<
     Chunks & { [hasNextSymbol]: boolean }
   >;
+  let streamController: ReadableStreamDefaultController<
+    Chunks & { [hasNextSymbol]: boolean }
+  > | null = null;
   let sentInitialChunk = false;
-  let resolve!: (streamController: StreamController) => void;
-  let promise!: Promise<StreamController>;
 
-  createPromise();
+  const queue: Array<(Chunks & { [hasNextSymbol]: boolean }) | typeof CLOSE> =
+    [];
 
-  function createPromise() {
-    promise = new Promise((res) => {
-      resolve = res;
-    });
+  function processQueue(streamController: StreamController) {
+    if (!streamController) {
+      throw new Error("Cannot process queue. Stream controller not created.");
+    }
+
+    let chunk;
+    while ((chunk = queue.shift())) {
+      if (chunk === CLOSE) {
+        streamController.close();
+      } else {
+        streamController.enqueue(chunk);
+      }
+    }
   }
 
   function createStream() {
     return new NodeReadableStream<Chunks & { [hasNextSymbol]: boolean }>({
       start(c) {
-        resolve(c);
+        streamController = c;
+        processQueue(c);
       },
     })
       .pipeThrough(
@@ -70,31 +83,28 @@ export function mockIncrementalStream<Chunks>({
     },
   });
 
-  async function close() {
-    const streamController = await promise;
-    streamController.close();
+  function close() {
+    if (streamController) {
+      streamController.close();
+    } else {
+      queue.push(CLOSE);
+    }
+
+    streamController = null;
     sentInitialChunk = false;
-    createPromise();
   }
 
-  async function enqueue(
-    chunk: Chunks,
-    hasNext: boolean,
-    { timeout = 100 }: { timeout?: number } = {}
-  ) {
-    const streamController = await Promise.race([
-      promise,
-      new Promise<StreamController>((_, reject) => {
-        setTimeout(() => {
-          reject("Timeout waiting for creation of ReadableStream controller");
-        }, timeout);
-      }),
-    ]);
+  function enqueue(chunk: Chunks, hasNext: boolean) {
+    const payload = { ...chunk, [hasNextSymbol]: hasNext };
 
-    streamController.enqueue({ ...chunk, [hasNextSymbol]: hasNext });
+    if (streamController) {
+      streamController.enqueue(payload);
+    } else {
+      queue.push(payload);
+    }
 
     if (!hasNext) {
-      await close();
+      close();
     }
   }
 
@@ -158,22 +168,21 @@ export function mockMultipartSubscriptionStream<
     }),
   });
 
+  enqueue({} as any, true);
+
   return {
     httpLink,
-    async enqueueInitial() {
-      await enqueue({} as any, true);
-    },
-    async enqueuePayloadResult(
+    enqueuePayloadResult(
       payload: ApolloPayloadResult<TData, TExtensions>["payload"],
       hasNext = true
     ) {
-      await enqueue({ payload }, hasNext);
+      enqueue({ payload }, hasNext);
     },
-    async enqueueErrorResult(
+    enqueueErrorResult(
       errors: ApolloPayloadResult["errors"],
       payload: ApolloPayloadResult<TData, TExtensions>["payload"] = null
     ) {
-      await enqueue({ payload, errors }, false);
+      enqueue({ payload, errors }, false);
     },
   };
 }

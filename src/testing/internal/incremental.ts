@@ -19,35 +19,48 @@ export function mockIncrementalStream<Chunks>({
 }: {
   responseHeaders: Headers;
 }) {
-  let streamController: ReadableStreamDefaultController<
+  type StreamController = ReadableStreamDefaultController<
     Chunks & { [hasNextSymbol]: boolean }
   >;
   let sentInitialChunk = false;
-  const stream = new NodeReadableStream<Chunks & { [hasNextSymbol]: boolean }>({
-    start(c) {
-      streamController = c;
-    },
-  })
-    .pipeThrough(
-      new TransformStream<Chunks & { [hasNextSymbol]: boolean }, string>({
-        transform: (chunk, controller) => {
-          controller.enqueue(
-            (!sentInitialChunk ? "\r\n---\r\n" : "") +
-              "content-type: application/json; charset=utf-8\r\n\r\n" +
-              JSON.stringify(chunk) +
-              (chunk[hasNextSymbol] ? "\r\n---\r\n" : "\r\n-----\r\n")
-          );
-          sentInitialChunk = true;
-        },
-      })
-    )
-    .pipeThrough(new TextEncoderStream());
+  let resolve!: (streamController: StreamController) => void;
+  let promise!: Promise<StreamController>;
+
+  createPromise();
+
+  function createPromise() {
+    promise = new Promise((res) => {
+      resolve = res;
+    });
+  }
+
+  function createStream() {
+    return new NodeReadableStream<Chunks & { [hasNextSymbol]: boolean }>({
+      start(c) {
+        resolve(c);
+      },
+    })
+      .pipeThrough(
+        new TransformStream<Chunks & { [hasNextSymbol]: boolean }, string>({
+          transform: (chunk, controller) => {
+            controller.enqueue(
+              (!sentInitialChunk ? "\r\n---\r\n" : "") +
+                "content-type: application/json; charset=utf-8\r\n\r\n" +
+                JSON.stringify(chunk) +
+                (chunk[hasNextSymbol] ? "\r\n---\r\n" : "\r\n-----\r\n")
+            );
+            sentInitialChunk = true;
+          },
+        })
+      )
+      .pipeThrough(new TextEncoderStream());
+  }
 
   const httpLink = new HttpLink({
     fetch(input, init) {
       return Promise.resolve(
         new Response(
-          stream satisfies NodeReadableStream<Uint8Array> as ReadableStream<Uint8Array>,
+          createStream() satisfies NodeReadableStream<Uint8Array> as ReadableStream<Uint8Array>,
           {
             status: 200,
             headers: responseHeaders,
@@ -56,9 +69,39 @@ export function mockIncrementalStream<Chunks>({
       );
     },
   });
+
+  async function close() {
+    const streamController = await promise;
+    streamController.close();
+    sentInitialChunk = false;
+    createPromise();
+  }
+
+  async function enqueue(
+    chunk: Chunks,
+    hasNext: boolean,
+    { timeout = 100 }: { timeout?: number } = {}
+  ) {
+    const streamController = await Promise.race([
+      promise,
+      new Promise<StreamController>((_, reject) => {
+        setTimeout(() => {
+          reject("Timeout waiting for creation of ReadableStream controller");
+        }, timeout);
+      }),
+    ]);
+
+    streamController.enqueue({ ...chunk, [hasNextSymbol]: hasNext });
+
+    if (!hasNext) {
+      await close();
+    }
+  }
+
   return {
     httpLink,
-    streamController: streamController!,
+    enqueue,
+    close,
   };
 }
 
@@ -66,7 +109,7 @@ export function mockDeferStream<
   TData = Record<string, unknown>,
   TExtensions = Record<string, unknown>,
 >() {
-  const { httpLink, streamController } = mockIncrementalStream<
+  const { httpLink, enqueue } = mockIncrementalStream<
     | InitialIncrementalExecutionResult<TData, TExtensions>
     | SubsequentIncrementalExecutionResult<TData, TExtensions>
   >({
@@ -76,32 +119,29 @@ export function mockDeferStream<
   });
   return {
     httpLink,
-    streamController: streamController!,
     enqueueInitialChunk(
       chunk: InitialIncrementalExecutionResult<TData, TExtensions>
     ) {
-      streamController.enqueue({ ...chunk, [hasNextSymbol]: chunk.hasNext });
-      if (!chunk.hasNext) streamController.close();
+      enqueue(chunk, chunk.hasNext);
     },
     enqueueSubsequentChunk(
       chunk: SubsequentIncrementalExecutionResult<TData, TExtensions>
     ) {
-      streamController.enqueue({ ...chunk, [hasNextSymbol]: chunk.hasNext });
-      if (!chunk.hasNext) streamController.close();
+      enqueue(chunk, chunk.hasNext);
     },
     enqueueProtocolErrorChunk(errors: GraphQLFormattedError[]) {
-      streamController.enqueue({
-        hasNext: true,
-        [hasNextSymbol]: true,
-        incremental: [
-          {
-            // eslint-disable-next-line @typescript-eslint/ban-types
-            errors: errors as GraphQLError[],
-          },
-        ],
-      } satisfies SubsequentIncrementalExecutionResult<TData, TExtensions> & {
-        [hasNextSymbol]: boolean;
-      });
+      enqueue(
+        {
+          hasNext: true,
+          incremental: [
+            {
+              // eslint-disable-next-line @typescript-eslint/ban-types
+              errors: errors as GraphQLError[],
+            },
+          ],
+        } satisfies SubsequentIncrementalExecutionResult<TData, TExtensions>,
+        true
+      );
     },
   };
 }
@@ -110,7 +150,7 @@ export function mockMultipartSubscriptionStream<
   TData = Record<string, unknown>,
   TExtensions = Record<string, unknown>,
 >() {
-  const { httpLink, streamController } = mockIncrementalStream<
+  const { httpLink, enqueue } = mockIncrementalStream<
     ApolloPayloadResult<TData, TExtensions>
   >({
     responseHeaders: new Headers({
@@ -118,25 +158,22 @@ export function mockMultipartSubscriptionStream<
     }),
   });
 
-  // send initial empty chunk back
-  streamController.enqueue({} as any);
-
   return {
     httpLink,
-    streamController: streamController!,
-    enqueuePayloadResult(
+    async enqueueInitial() {
+      await enqueue({} as any, true);
+    },
+    async enqueuePayloadResult(
       payload: ApolloPayloadResult<TData, TExtensions>["payload"],
       hasNext = true
     ) {
-      streamController.enqueue({ payload, [hasNextSymbol]: hasNext });
-      if (!hasNext) streamController.close();
+      await enqueue({ payload }, hasNext);
     },
-    enqueueErrorResult(
+    async enqueueErrorResult(
       errors: ApolloPayloadResult["errors"],
       payload: ApolloPayloadResult<TData, TExtensions>["payload"] = null
     ) {
-      streamController.enqueue({ payload, errors, [hasNextSymbol]: false });
-      streamController.close();
+      await enqueue({ payload, errors }, false);
     },
   };
 }

@@ -350,6 +350,7 @@ type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariab
 interface BaseMutationOptions<TData = any, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
     // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     client?: ApolloClient<object>;
+    // @deprecated
     ignoreResults?: boolean;
     notifyOnNetworkStatusChange?: boolean;
     onCompleted?: (data: MaybeMasked<TData>, clientOptions?: BaseMutationOptions) => void;

@@ -21,7 +21,6 @@ import { Observable, Reference, concatPagination } from "../../../utilities";
 import { ApolloLink } from "../../../link/core";
 import {
   MockLink,
-  MockedProvider,
   MockSubscriptionLink,
   mockSingleLink,
   tick,
@@ -41,6 +40,7 @@ import {
   renderHookToSnapshotStream,
   disableActEnvironment,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

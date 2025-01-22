@@ -14,7 +14,6 @@ import {
   UseFragmentResult,
   useFragment,
 } from "../useFragment";
-import { MockedProvider } from "../../../testing";
 import { ApolloProvider } from "../../context";
 import {
   InMemoryCache,
@@ -41,6 +40,7 @@ import {
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

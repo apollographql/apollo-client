@@ -55,8 +55,6 @@ import type { MissingTree } from "../core/types/common.js";
 import { MissingFieldError } from "../core/types/common.js";
 import { ObjectCanon } from "./object-canon.js";
 
-export type VariableMap = { [name: string]: any };
-
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
@@ -65,7 +63,7 @@ interface ReadContext extends ReadMergeModifyContext {
   lookupFragment: FragmentMapFunction;
 }
 
-export type ExecResult<R = any> = {
+type ExecResult<R = any> = {
   result: R;
   missing?: MissingTree;
 };
@@ -84,7 +82,7 @@ type ExecSubSelectedArrayOptions = {
   context: ReadContext;
 };
 
-export interface StoreReaderConfig {
+interface StoreReaderConfig {
   cache: InMemoryCache;
   addTypename?: boolean;
   resultCacheMaxSize?: number;

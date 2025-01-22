@@ -67,7 +67,7 @@ type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
 >;
 
 function noop() {}
-export const lastWatchOptions = Symbol();
+const lastWatchOptions = Symbol();
 
 export interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
@@ -87,11 +87,6 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   observable: ObsQueryWithMeta<TData, TVariables>;
   resultData: InternalResult<TData, TVariables>;
 }
-
-export type UpdateInternalState<
-  TData,
-  TVariables extends OperationVariables,
-> = (state: InternalState<TData, TVariables>) => void;
 
 interface Callbacks<TData> {
   // Defining these methods as no-ops on the prototype allows us to call

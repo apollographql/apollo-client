@@ -101,7 +101,6 @@
     "graphql-tag": "^2.12.6",
     "optimism": "^0.18.0",
     "rehackt": "^0.1.0",
-    "response-iterator": "^0.2.6",
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.3",
     "tslib": "^2.3.0",
@@ -136,7 +135,6 @@
     "@types/lodash": "4.17.7",
     "@types/node": "^22.10.7",
     "@types/node-fetch": "2.6.11",
-    "@types/prop-types": "15.7.14",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "@types/relay-runtime": "14.1.24",
@@ -146,11 +144,8 @@
     "@typescript-eslint/rule-tester": "8.21.0",
     "@typescript-eslint/types": "8.21.0",
     "@typescript-eslint/utils": "8.21.0",
-    "acorn": "8.12.1",
-    "ajv": "8.17.1",
     "blob-polyfill": "7.0.20220408",
     "bytes": "3.1.2",
-    "cross-fetch": "4.0.0",
     "eslint": "9.18.0",
     "eslint-import-resolver-typescript": "3.7.0",
     "eslint-plugin-import": "npm:@phryneas/eslint-plugin-import@2.27.5-pr.2813.2817.199971c",
@@ -173,7 +168,6 @@
     "patch-package": "8.0.0",
     "pkg-pr-new": "0.0.24",
     "prettier": "3.1.1",
-    "prop-types": "^15.7.2",
     "react": "19.0.0",
     "react-17": "npm:react@^17",
     "react-18": "npm:react@^18",
@@ -182,7 +176,6 @@
     "react-dom-18": "npm:react-dom@^18",
     "react-error-boundary": "4.0.13",
     "recast": "0.23.9",
-    "resolve": "1.22.8",
     "rimraf": "5.0.9",
     "rollup": "2.79.2",
     "rollup-plugin-cleanup": "3.2.1",
@@ -200,8 +193,7 @@
     "typedoc": "0.25.0",
     "typescript": "^5.7.3",
     "wait-for-observables": "1.0.3",
-    "web-streams-polyfill": "4.0.0",
-    "whatwg-fetch": "3.6.20"
+    "web-streams-polyfill": "4.0.0"
   },
   "publishConfig": {
     "access": "public"

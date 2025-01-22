@@ -31,7 +31,7 @@ import {
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 
-export function isNullish(value: any): value is null | undefined {
+function isNullish(value: any): value is null | undefined {
   return value === null || value === void 0;
 }
 

@@ -164,13 +164,15 @@ export function mockMultipartSubscriptionStream<
     }),
   });
 
-  enqueue({} as any, true);
+  enqueueHeartbeat();
+
+  function enqueueHeartbeat() {
+    enqueue({} as any, true);
+  }
 
   return {
     httpLink,
-    enqueueHeartbeat() {
-      enqueue({} as any, true);
-    },
+    enqueueHeartbeat,
     enqueuePayloadResult(
       payload: ApolloPayloadResult<TData, TExtensions>["payload"],
       hasNext = true

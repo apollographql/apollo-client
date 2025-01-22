@@ -499,11 +499,8 @@ describe("error handling with class", () => {
       }
     `;
 
-    const {
-      httpLink,
-      enqueuePayloadResult,
-      enqueueProtocolErrors: enqueueErrorResult,
-    } = mockMultipartSubscriptionStream();
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
 
     const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
       expect(operation.operationName).toBe("MySubscription");
@@ -522,7 +519,7 @@ describe("error handling with class", () => {
       data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
     });
 
-    enqueueErrorResult([
+    enqueueProtocolErrors([
       { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
     ]);
 

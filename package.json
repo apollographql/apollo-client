@@ -100,7 +100,6 @@
     "graphql-tag": "^2.12.6",
     "optimism": "^0.18.0",
     "rehackt": "^0.1.0",
-    "response-iterator": "^0.2.6",
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.3",
     "tslib": "^2.3.0",

@@ -6,6 +6,11 @@ import { ServerError, throwServerError } from "../../utils/throwServerError";
 import { Observable } from "../../../utilities/observables/Observable";
 import { onError, ErrorLink } from "../";
 import { ObservableStream } from "../../../testing/internal";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
+import {
+  mockDeferStream,
+  mockMultipartSubscriptionStream,
+} from "../../../testing/internal/incremental";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {
@@ -69,6 +74,130 @@ describe("error handling", () => {
 
     expect(error.message).toBe("app is crashing");
     expect(called).toBe(true);
+  });
+
+  it.failing("handles protocol errors (@defer)", async () => {
+    // TODO: this test doesn't execute the `errorHandler` yet. Should be 4, is 2.
+    fail();
+    expect.assertions(4);
+    const query = gql`
+      query Foo {
+        foo {
+          ... @defer {
+            bar
+          }
+        }
+      }
+    `;
+
+    const errorLink = onError(({ operation, protocolErrors }) => {
+      expect(operation.operationName).toBe("Foo");
+      expect(protocolErrors).toEqual([
+        {
+          message: "could not read data",
+          extensions: {
+            code: "INCREMENTAL_ERROR",
+          },
+        },
+      ]);
+    });
+
+    const { httpLink, enqueueInitialChunk, enqueueErrorChunk } =
+      mockDeferStream();
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(execute(link, { query }));
+
+    enqueueInitialChunk({
+      hasNext: true,
+      data: {},
+    });
+
+    enqueueErrorChunk([
+      {
+        message: "could not read data",
+        extensions: {
+          code: "INCREMENTAL_ERROR",
+        },
+      },
+    ]);
+    await expect(stream).toEmitValue({
+      data: {},
+      hasNext: true,
+    });
+
+    await expect(stream).toEmitValue({
+      hasNext: true,
+      incremental: [
+        {
+          errors: [
+            {
+              message: "could not read data",
+              extensions: {
+                code: "INCREMENTAL_ERROR",
+              },
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("handles protocol errors (multipart subscription)", async () => {
+    expect.assertions(4);
+    const sampleSubscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const errorLink = onError((args) => {
+      const { operation, protocolErrors } = args;
+      expect(operation.operationName).toBe("MySubscription");
+      expect(protocolErrors).toEqual([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ]);
+    });
+
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(
+      execute(link, { query: sampleSubscription })
+    );
+
+    enqueuePayloadResult({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    enqueueProtocolErrors([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    await expect(stream).toEmitValue({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    await expect(stream).toEmitValue({
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: [
+          {
+            extensions: {
+              code: "INTERNAL_SERVER_ERROR",
+            },
+            message: "Error field",
+          },
+        ],
+      },
+    });
   });
 
   it("captures errors within links", async () => {
@@ -356,6 +485,62 @@ describe("error handling with class", () => {
     expect(called).toBe(true);
   });
 
+  it("handles protocol errors (multipart subscription)", async () => {
+    expect.assertions(4);
+    const subscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+
+    const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
+      expect(operation.operationName).toBe("MySubscription");
+      expect(protocolErrors).toEqual([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ]);
+    });
+
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(execute(link, { query: subscription }));
+
+    enqueuePayloadResult({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    enqueueProtocolErrors([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    await expect(stream).toEmitValue({
+      data: { aNewDieWasCreated: { die: { color: "red", roll: 1, sides: 4 } } },
+    });
+
+    await expect(stream).toEmitValue({
+      extensions: {
+        [PROTOCOL_ERRORS_SYMBOL]: [
+          {
+            extensions: {
+              code: "INTERNAL_SERVER_ERROR",
+            },
+            message: "Error field",
+          },
+        ],
+      },
+    });
+  });
+
   it("captures errors within links", async () => {
     const query = gql`
       {
@@ -546,6 +731,63 @@ describe("support for request retrying", () => {
     );
 
     await expect(stream).toEmitValue(GOOD_RESPONSE);
+    expect(errorHandlerCalled).toBe(true);
+    await expect(stream).toComplete();
+  });
+
+  it("supports retrying when the initial request had protocol errors", async () => {
+    let errorHandlerCalled = false;
+
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+
+    const errorLink = new ErrorLink(
+      ({ protocolErrors, operation, forward }) => {
+        if (protocolErrors) {
+          errorHandlerCalled = true;
+          expect(protocolErrors).toEqual([
+            {
+              message: "cannot read message from websocket",
+              extensions: {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
+            },
+          ]);
+          return forward(operation);
+        }
+      }
+    );
+
+    const link = errorLink.concat(httpLink);
+    const stream = new ObservableStream(
+      execute(link, {
+        query: gql`
+          subscription Foo {
+            foo {
+              bar
+            }
+          }
+        `,
+      })
+    );
+
+    enqueuePayloadResult({ data: { foo: { bar: true } } });
+
+    await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
+
+    enqueueProtocolErrors([
+      {
+        message: "cannot read message from websocket",
+        extensions: {
+          code: "WEBSOCKET_MESSAGE_ERROR",
+        },
+      },
+    ]);
+
+    enqueuePayloadResult({ data: { foo: { bar: true } } }, false);
+
+    // Ensure the error result is not emitted but rather the retried result
+    await expect(stream).toEmitValue({ data: { foo: { bar: true } } });
     expect(errorHandlerCalled).toBe(true);
     await expect(stream).toComplete();
   });

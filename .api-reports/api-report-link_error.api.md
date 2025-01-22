@@ -6,6 +6,7 @@
 
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
+import type { GraphQLErrorExtensions } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
@@ -80,14 +81,15 @@ export class ErrorLink extends ApolloLink {
 export interface ErrorResponse {
     // (undocumented)
     forward: NextLink;
-    // (undocumented)
     graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
     // Warning: (ae-forgotten-export) The symbol "NetworkError" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
     networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
+    protocolErrors?: ReadonlyArray<{
+        message: string;
+        extensions?: GraphQLErrorExtensions[];
+    }>;
     // (undocumented)
     response?: FormattedExecutionResult;
 }

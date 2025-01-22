@@ -147,12 +147,13 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
-    _useQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
 }
 
-function _useQuery<
+function useQuery_<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -340,6 +341,7 @@ function useObservableSubscriptionResult<
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
+    // eslint-disable-next-line react-compiler/react-compiler
     callbackRef.current = callbacks;
   });
 

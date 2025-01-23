@@ -51,8 +51,6 @@ export interface LazyQueryHookOptions<
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  // TODO: Determine if we should allow this or force startPolling which
-  // provides this value
   pollInterval?: number;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */

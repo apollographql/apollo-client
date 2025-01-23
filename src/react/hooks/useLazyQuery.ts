@@ -4,15 +4,15 @@ import * as React from "rehackt";
 
 import type {
   ApolloClient,
+  ApolloError,
   ApolloQueryResult,
+  MaybeMasked,
   OperationVariables,
   WatchQueryOptions,
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import type {
-  LazyQueryHookExecOptions,
-  LazyQueryHookOptions,
-  LazyQueryResultTuple,
+  BaseQueryOptions,
   NoInfer,
   QueryHookOptions,
   QueryResult,
@@ -26,6 +26,41 @@ import {
   useQueryInternals,
 } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+
+export interface LazyQueryHookOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> extends BaseQueryOptions<TVariables, TData> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  onCompleted?: (data: MaybeMasked<TData>) => void;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  onError?: (error: ApolloError) => void;
+
+  /** @internal */
+  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+}
+
+export interface LazyQueryHookExecOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> extends LazyQueryHookOptions<TData, TVariables> {
+  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+}
+
+export type LazyQueryExecFunction<
+  TData,
+  TVariables extends OperationVariables,
+> = (
+  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
+) => Promise<QueryResult<TData, TVariables>>;
+
+export type LazyQueryResultTuple<
+  TData,
+  TVariables extends OperationVariables,
+> = [
+  execute: LazyQueryExecFunction<TData, TVariables>,
+  result: QueryResult<TData, TVariables>,
+];
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.

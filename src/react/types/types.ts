@@ -176,25 +176,6 @@ export interface QueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {}
 
-export interface LazyQueryHookOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: MaybeMasked<TData>) => void;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
-  onError?: (error: ApolloError) => void;
-
-  /** @internal */
-  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
-}
-export interface LazyQueryHookExecOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends LazyQueryHookOptions<TData, TVariables> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
 export type SuspenseQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"
@@ -311,29 +292,6 @@ export type LazyQueryResult<
   TData,
   TVariables extends OperationVariables,
 > = QueryResult<TData, TVariables>;
-
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export type QueryTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = LazyQueryResultTuple<TData, TVariables>;
-
-export type LazyQueryExecFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = (
-  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
-) => Promise<QueryResult<TData, TVariables>>;
-
-export type LazyQueryResultTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = [
-  execute: LazyQueryExecFunction<TData, TVariables>,
-  result: QueryResult<TData, TVariables>,
-];
 
 /* Mutation types */
 

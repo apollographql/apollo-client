@@ -1608,7 +1608,7 @@ describe("useLazyQuery Hook", () => {
       called: true,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      variables: { id: "2" },
+      variables: { id: "1" },
     });
 
     await expect(promise2).resolves.toEqualQueryResult({

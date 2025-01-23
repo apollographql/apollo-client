@@ -161,6 +161,7 @@ export type LazyQueryExecFunction<
   TVariables extends OperationVariables,
 > = (
   options?: LazyQueryHookExecOptions<TData, TVariables>
+  // TODO: Should this be a Promise<ApolloQueryResult<TData>> type instead?
 ) => Promise<QueryResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<

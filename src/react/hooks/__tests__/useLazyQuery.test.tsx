@@ -869,7 +869,7 @@ describe("useLazyQuery Hook", () => {
     }
 
     const refetch = getCurrentSnapshot()[1].refetch;
-    setTimeout(() => refetch!());
+    setTimeout(() => refetch());
 
     {
       const [, result] = await takeSnapshot();

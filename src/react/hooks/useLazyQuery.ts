@@ -83,9 +83,6 @@ export interface LazyQueryHookOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
-
-  /** @internal */
-  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
 export interface LazyQueryHookExecOptions<
@@ -145,9 +142,6 @@ export interface LazyQueryHookExecOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
-
-  /** @internal */
-  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }

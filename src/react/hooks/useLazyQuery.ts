@@ -81,6 +81,9 @@ export interface LazyQueryHookOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
 }
 
 export interface LazyQueryHookExecOptions<

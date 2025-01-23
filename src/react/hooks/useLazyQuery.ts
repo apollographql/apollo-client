@@ -159,7 +159,7 @@ export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,
 > = (
-  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
+  options?: LazyQueryHookExecOptions<TData, TVariables>
 ) => Promise<QueryResult<TData, TVariables>>;
 
 export type LazyQueryResultTuple<

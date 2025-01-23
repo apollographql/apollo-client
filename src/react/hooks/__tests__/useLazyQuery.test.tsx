@@ -66,7 +66,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -195,7 +194,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -272,7 +270,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -397,7 +394,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -641,7 +637,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -741,7 +736,6 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         called: false,
-        error: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -838,7 +832,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -936,7 +929,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1057,7 +1049,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1152,7 +1143,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1215,7 +1205,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1325,7 +1314,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1453,7 +1441,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1563,7 +1550,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1694,7 +1680,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1814,7 +1799,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1830,7 +1814,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1908,7 +1891,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1924,7 +1906,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2200,7 +2181,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2220,7 +2200,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2471,7 +2450,6 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: undefined,
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2586,7 +2564,6 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: undefined,
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2660,7 +2637,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,

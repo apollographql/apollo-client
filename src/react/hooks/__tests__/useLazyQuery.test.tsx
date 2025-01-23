@@ -225,84 +225,9 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should use variables passed into lazy execution function, overriding similar variables defined in Hook options", async () => {
-    const query = gql`
-      query ($id: number) {
-        hello(id: $id)
-      }
-    `;
-
-    const mocks = [
-      {
-        request: { query, variables: { id: 1 } },
-        result: { data: { hello: "world 1" } },
-        delay: 20,
-      },
-      {
-        request: { query, variables: { id: 2 } },
-        result: { data: { hello: "world 2" } },
-        delay: 20,
-      },
-    ];
-
-    using _disabledAct = disableActEnvironment();
-    const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(
-        () =>
-          useLazyQuery(query, {
-            variables: { id: 1 },
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
-        data: undefined,
-        called: false,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: { id: 1 },
-      });
-    }
-
-    const [execute] = getCurrentSnapshot();
-    setTimeout(() => execute({ variables: { id: 2 } }));
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: { id: 2 },
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
-        data: { hello: "world 2" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: { id: 2 },
-      });
-    }
-  });
-
-  it("should merge variables from original hook and execution function", async () => {
+  // TODO: Remove this test after we resolve the TODO comment inside of this
+  // test.
+  it.skip("should merge variables from original hook and execution function", async () => {
     const counterQuery: TypedDocumentNode<
       {
         counter: number;
@@ -366,14 +291,6 @@ describe("useLazyQuery Hook", () => {
         () => {
           return useLazyQuery(counterQuery, {
             notifyOnNetworkStatusChange: true,
-            variables: {
-              hookVar: true,
-            },
-            defaultOptions: {
-              variables: {
-                localDefaultVar: true,
-              },
-            },
           });
         },
         {

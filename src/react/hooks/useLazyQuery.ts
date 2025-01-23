@@ -6,17 +6,14 @@ import type {
   ApolloClient,
   ApolloError,
   ApolloQueryResult,
+  DefaultContext,
   MaybeMasked,
   OperationVariables,
+  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
-import type {
-  BaseQueryOptions,
-  NoInfer,
-  QueryHookOptions,
-  QueryResult,
-} from "../types/types.js";
+import type { NoInfer, QueryHookOptions, QueryResult } from "../types/types.js";
 import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,
@@ -26,13 +23,67 @@ import {
   useQueryInternals,
 } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import type {
+  ErrorPolicy,
+  NextFetchPolicyContext,
+  RefetchWritePolicy,
+} from "../../core/watchQueryOptions.js";
 
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables, TData> {
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+  nextFetchPolicy?:
+    | WatchQueryFetchPolicy
+    | ((
+        this: WatchQueryOptions<TVariables, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVariables>
+      ) => WatchQueryFetchPolicy);
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+  pollInterval?: number;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
+  canonizeResults?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+  skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+  ssr?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient<any>;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
   onCompleted?: (data: MaybeMasked<TData>) => void;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 

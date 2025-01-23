@@ -1953,7 +1953,6 @@ describe("useLazyQuery Hook", () => {
 
           return useLazyQuery(query, {
             fetchPolicy: "cache-first",
-            variables: { id: "1" },
             onCompleted: () => {
               trackClosureValue("onCompleted", count);
             },
@@ -1986,7 +1985,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: "1" },
+        variables: undefined,
       });
     }
 
@@ -2005,7 +2004,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: "1" },
+        variables: undefined,
       });
     }
 
@@ -2013,7 +2012,7 @@ describe("useLazyQuery Hook", () => {
     expect(execute).toBe(originalExecute);
 
     // Check for stale closures with onCompleted
-    await execute();
+    await execute({ variables: { id: "1" } });
 
     {
       const [, result] = await takeSnapshot();

@@ -51,9 +51,6 @@ export interface LazyQueryHookOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
   refetchWritePolicy?: RefetchWritePolicy;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
 

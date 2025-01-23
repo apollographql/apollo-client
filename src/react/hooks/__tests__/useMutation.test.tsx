@@ -19,7 +19,6 @@ import {
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import {
-  MockedProvider,
   MockSubscriptionLink,
   mockSingleLink,
   MockedResponse,
@@ -40,6 +39,7 @@ import {
 } from "@testing-library/react-render-stream";
 import { MutationTuple, QueryResult } from "../../types/types";
 import { invariant } from "../../../utilities/globals";
+import { MockedProvider } from "../../../testing/react";
 
 describe("useMutation Hook", () => {
   interface Todo {

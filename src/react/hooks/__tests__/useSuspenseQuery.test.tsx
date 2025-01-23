@@ -38,7 +38,6 @@ import {
   offsetLimitPagination,
 } from "../../../utilities";
 import {
-  MockedProvider,
   MockedResponse,
   MockSubscriptionLink,
   MockLink,
@@ -66,6 +65,7 @@ import {
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

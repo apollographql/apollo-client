@@ -1,7 +1,13 @@
 import "../../utilities/globals/index.js";
 
 export * from "./useApolloClient.js";
-export * from "./useLazyQuery.js";
+export type {
+  LazyQueryHookExecOptions,
+  LazyQueryExecFunction,
+  LazyQueryHookOptions,
+  LazyQueryResultTuple,
+} from "./useLazyQuery.js";
+export { useLazyQuery } from "./useLazyQuery.js";
 export * from "./useMutation.js";
 export { useQuery } from "./useQuery.js";
 export * from "./useSubscription.js";

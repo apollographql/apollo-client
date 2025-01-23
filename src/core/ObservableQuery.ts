@@ -184,6 +184,7 @@ export class ObservableQuery<
 
     this.options = {
       ...options,
+      variables: equal(options.variables, {}) ? undefined : options.variables,
 
       // Remember the initial options.fetchPolicy so we can revert back to this
       // policy when variables change. This information can also be specified

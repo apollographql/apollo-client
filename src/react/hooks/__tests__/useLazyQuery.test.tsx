@@ -808,6 +808,8 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
+  // TODO: Determine if we allow `pollInterval` as an option, or if we should
+  // explicitly require `startPolling`.
   it("should allow for the query to start with polling", async () => {
     const mocks = [
       {

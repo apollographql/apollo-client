@@ -3164,15 +3164,6 @@ describe.skip("Type Tests", () => {
   });
 });
 
-test.todo(
-  "Maintains fetchPolicy for individual function executions when executed in parallel"
-);
-test.todo(
-  "Maintains errorPolicy for individual function executions when executed in parallel"
-);
-
-test.todo(
-  "Options passed to execute function do not override hook options for subsquent calls"
-);
-
+test.todo("throws when variables are used in hook and execute function");
+test.todo("throws when context is used in hook and execute function");
 test.todo("context is completely replaced when passed to execute function");

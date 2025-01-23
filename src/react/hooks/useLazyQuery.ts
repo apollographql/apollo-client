@@ -55,6 +55,8 @@ export interface LazyQueryHookOptions<
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+  // TODO: Determine if we should allow this or force startPolling which
+  // provides this value
   pollInterval?: number;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
@@ -93,6 +95,7 @@ export interface LazyQueryHookExecOptions<
   fetchPolicy?: WatchQueryFetchPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+  // TODO: Possibly remove?
   nextFetchPolicy?:
     | WatchQueryFetchPolicy
     | ((
@@ -102,6 +105,7 @@ export interface LazyQueryHookExecOptions<
       ) => WatchQueryFetchPolicy);
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+  // TODO: Determine why we need/want this
   initialFetchPolicy?: WatchQueryFetchPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
@@ -114,21 +118,26 @@ export interface LazyQueryHookExecOptions<
   errorPolicy?: ErrorPolicy;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+  // TODO: Possibly remove?
   pollInterval?: number;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+  // TODO: Possibly remove?
   notifyOnNetworkStatusChange?: boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  // TODO: Possibly remove?
   returnPartialData?: boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+  // TODO: Possibly remove?
   skipPollAttempt?: () => boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+  // TODO: Possibly remove?
   ssr?: boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
@@ -138,9 +147,11 @@ export interface LazyQueryHookExecOptions<
   context?: DefaultContext;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  // TODO: Possibly remove?
   onCompleted?: (data: MaybeMasked<TData>) => void;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  // TODO: Possibly remove?
   onError?: (error: ApolloError) => void;
 
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;

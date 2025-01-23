@@ -85,80 +85,20 @@ export interface LazyQueryHookOptions<
 }
 
 export interface LazyQueryHookExecOptions<
-  TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: WatchQueryFetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
-  // TODO: Possibly remove?
-  nextFetchPolicy?:
-    | WatchQueryFetchPolicy
-    | ((
-        this: WatchQueryOptions<TVariables, TData>,
-        currentFetchPolicy: WatchQueryFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVariables>
-      ) => WatchQueryFetchPolicy);
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
-  // TODO: Determine why we need/want this
-  initialFetchPolicy?: WatchQueryFetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  // TODO: Possibly remove?
-  pollInterval?: number;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  // TODO: Possibly remove?
-  notifyOnNetworkStatusChange?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  // TODO: Possibly remove?
-  returnPartialData?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
-  // TODO: Possibly remove?
-  skipPollAttempt?: () => boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
-  // TODO: Possibly remove?
-  ssr?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient<any>;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  // TODO: Possibly remove?
-  onCompleted?: (data: MaybeMasked<TData>) => void;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
-  // TODO: Possibly remove?
-  onError?: (error: ApolloError) => void;
-
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,
 > = (
-  options?: LazyQueryHookExecOptions<TData, TVariables>
+  options?: LazyQueryHookExecOptions<TVariables>
   // TODO: Should this be a Promise<ApolloQueryResult<TData>> type instead?
 ) => Promise<QueryResult<TData, TVariables>>;
 

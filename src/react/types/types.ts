@@ -360,7 +360,10 @@ export interface BaseMutationOptions<
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
   /**
    * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
-   * @deprecated This property will be removed in the next major version of Apollo Client
+   *
+   * @deprecated This property will be removed in the next major version of Apollo Client.
+   * Once this option is removed, existing code still using it might see increase in re-renders.
+   * Instead, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
    */
   ignoreResults?: boolean;
 }

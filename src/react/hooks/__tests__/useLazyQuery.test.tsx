@@ -2948,13 +2948,16 @@ describe("useLazyQuery Hook", () => {
 describe.skip("Type Tests", () => {
   test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
-    const [_, { variables }] = useLazyQuery(typedNode, {
+    const [execute, { variables }] = useLazyQuery(typedNode);
+
+    void execute({
       variables: {
         bar: 4,
         // @ts-expect-error
         nonExistingVariable: "string",
       },
     });
+
     variables?.bar;
     // @ts-expect-error
     variables?.nonExistingVariable;

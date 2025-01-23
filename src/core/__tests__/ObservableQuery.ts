@@ -108,6 +108,186 @@ describe("ObservableQuery", () => {
     );
   };
 
+  describe("variables", () => {
+    it("returns undefined with no variables", () => {
+      const query = gql`
+        query {
+          hello
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.variables).toBeUndefined();
+    });
+
+    it("returns variable passed to options", () => {
+      const query = gql`
+        query ($id: ID!) {
+          item(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({ query, variables: { id: 1 } });
+
+      expect(observable.variables).toEqual({ id: 1 });
+    });
+
+    it("returns default variables from the query", () => {
+      const query = gql`
+        query ($id: ID! = 1) {
+          item(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({ query });
+
+      expect(observable.variables).toEqual({ id: 1 });
+    });
+
+    it("merges variables with default variables in the query", () => {
+      const query = gql`
+        query ($userId: ID!, $sort: String! = "asc") {
+          itemsForUser(id: $userId, sort: $sort) {
+            id
+            name
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { userId: 1 },
+      });
+
+      expect(observable.variables).toEqual({ userId: 1, sort: "asc" });
+    });
+
+    it("overrides defaults from the query", () => {
+      const query = gql`
+        query ($sort: String! = "asc") {
+          items(sort: $sort) {
+            id
+            name
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { sort: "desc" },
+      });
+
+      expect(observable.variables).toEqual({ sort: "desc" });
+    });
+
+    it("returns current variables when changing them with setVariables", () => {
+      const query = gql`
+        query ($id: ID!) {
+          item(id: $id) {
+            id
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+
+      void observable.setVariables({ id: 2 });
+      expect(observable.variables).toEqual({ id: 2 });
+    });
+
+    it("returns current variables when changing them with refetch", () => {
+      const query = gql`
+        query ($id: ID!) {
+          item(id: $id) {
+            id
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+
+      void observable.refetch({ id: 2 });
+      expect(observable.variables).toEqual({ id: 2 });
+    });
+
+    it("returns current variables when changing them with reobserve", () => {
+      const query = gql`
+        query ($id: ID!) {
+          item(id: $id) {
+            id
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+
+      void observable.reobserve({ variables: { id: 2 } });
+      expect(observable.variables).toEqual({ id: 2 });
+    });
+
+    it("returns current variables when changing them with setOptions", () => {
+      const query = gql`
+        query ($id: ID!) {
+          item(id: $id) {
+            id
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { id: 1 },
+      });
+
+      void observable.setOptions({ variables: { id: 2 } });
+      expect(observable.variables).toEqual({ id: 2 });
+    });
+
+    it("does not update variables with fetchMore", () => {
+      const query = gql`
+        query ($offset: Int!) {
+          items(offset: $offset) {
+            id
+          }
+        }
+      `;
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      const observable = client.watchQuery({
+        query,
+        variables: { offset: 0 },
+      });
+
+      void observable.fetchMore({ variables: { offset: 2 } }).catch(() => {});
+      expect(observable.variables).toEqual({ offset: 0 });
+    });
+  });
+
   describe("setOptions", () => {
     describe("to change pollInterval", () => {
       it("starts polling if goes from 0 -> something", async () => {

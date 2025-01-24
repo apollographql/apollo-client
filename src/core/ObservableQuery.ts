@@ -281,7 +281,7 @@ export class ObservableQuery<
         result.data = diff.result;
       }
 
-      if (equal(result.data, {})) {
+      if (result.data === null) {
         result.data = void 0 as any;
       }
 

@@ -17,7 +17,6 @@ import {
   defaultCacheSizes,
   getFragmentDefinition,
   getFragmentQueryDocument,
-  mergeDeepArray,
 } from "../../utilities/index.js";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
@@ -323,12 +322,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
           } as WatchFragmentResult<TData>;
 
           if (diff.missing) {
-            result.missing = mergeDeepArray(
-              diff.missing.map((error) => error.missing)
-            );
+            result.missing = diff.missing.missing;
           }
 
-          latestDiff = { ...diff, result: data };
+          latestDiff = { ...diff, result: data } as DataProxy.DiffResult<TData>;
           observer.next(result);
         },
       });

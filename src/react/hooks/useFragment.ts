@@ -38,6 +38,8 @@ export interface UseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
+// TODO: Update this to return `null` when there is no data returned from the
+// fragment.
 export type UseFragmentResult<TData> =
   | {
       data: MaybeMasked<TData>;
@@ -111,7 +113,9 @@ function useFragment_<TData = any, TVars = OperationVariables>(
         result: client["queryManager"].maskFragment({
           fragment,
           fragmentName,
-          data: diff.result,
+          // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+          // valid return value
+          data: diff.result === null ? {} : diff.result,
         }),
       } as Cache.DiffResult<TData>),
     };

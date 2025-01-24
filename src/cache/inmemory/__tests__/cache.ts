@@ -10,7 +10,7 @@ import {
   isReference,
   DocumentNode,
 } from "../../../core";
-import { Cache } from "../../../cache";
+import { Cache, MissingFieldError } from "../../../cache";
 import { InMemoryCache } from "../inMemoryCache";
 import { InMemoryCacheConfig } from "../types";
 
@@ -1622,7 +1622,7 @@ describe("Cache", () => {
       expect(abInfo.diffs.length).toBe(1);
       expect(last(abInfo.diffs)).toEqual({
         complete: false,
-        missing: expect.any(Array),
+        missing: expect.any(MissingFieldError),
         result: {
           a: "ay",
         },

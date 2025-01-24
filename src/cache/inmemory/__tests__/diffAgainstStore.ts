@@ -538,6 +538,12 @@ describe("diffing queries against the store", () => {
     expect(cache.identify(result.c.e[4])).toEqual("e:5");
   });
 
+  // TODO: Remove these tests on the 4.0 branch. Support for the
+  // `previousResult` option was removed in https://github.com/apollographql/apollo-client/pull/5644
+  // so there is no referential equality in the way these tests are making them.
+  // We should remove support for `previousResult` entirely from the TypeScript
+  // types and eliminate any use in the codebase since this option is completely
+  // ignored within `diffQueryAgainstStore`.
   describe("referential equality preservation", () => {
     it("will return the previous result if there are no changes", () => {
       const query = gql`

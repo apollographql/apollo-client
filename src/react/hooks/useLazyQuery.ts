@@ -242,16 +242,27 @@ export function useLazyQuery<
     calledRef.current = true;
     previousDataRef.current = observableResult.data;
 
-    if (observableResult === INITIAL_RESULT) {
-      setObservableResult(observable.getCurrentResult());
-    }
-
-    return observable.reobserve({
+    const options: Partial<WatchQueryOptions<TVariables, TData>> = {
       fetchPolicy:
         stableOptions?.fetchPolicy ||
         client.defaultOptions.watchQuery?.fetchPolicy ||
         "cache-first",
-    });
+    };
+
+    if (executeOptions?.variables) {
+      options.variables = executeOptions.variables;
+    }
+
+    const promise = observable.reobserve(options);
+
+    // Call setObservableResult after calling reobserve due to the timing of
+    // rerendering in React 17. Without this, the `variables` value is returned
+    // with the previous set of variables.
+    if (observableResult === INITIAL_RESULT) {
+      setObservableResult(observable.getCurrentResult());
+    }
+
+    return promise;
     // execOptionsRef.current =
     //   executeOptions ?
     //     {

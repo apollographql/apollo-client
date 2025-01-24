@@ -4,6 +4,7 @@ import { promises as fs } from "fs";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser as minify } from "rollup-plugin-terser";
 import cleanup from "rollup-plugin-cleanup";
+import type { RollupOptions } from "rollup";
 
 import * as entryPoints from "./entryPoints.ts";
 const distDir = "./dist";
@@ -55,7 +56,7 @@ function toPosixPath(p) {
   return p;
 }
 
-function prepareCJS(input, output) {
+function prepareCJS(input, output): RollupOptions {
   return {
     input,
     external(id, parentId) {
@@ -72,7 +73,7 @@ function prepareCJS(input, output) {
   };
 }
 
-function prepareCJSMinified(input) {
+function prepareCJSMinified(input): RollupOptions {
   return {
     input,
     output: {
@@ -102,7 +103,7 @@ function prepareBundle({
   dirs,
   bundleName = dirs[dirs.length - 1],
   extensions,
-}) {
+}): RollupOptions {
   const dir = path.join(distDir, ...dirs);
   const inputFile = `${dir}/index.js`;
   const outputFile = `${dir}/${bundleName}.cjs`;

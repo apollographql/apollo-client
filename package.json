@@ -67,8 +67,17 @@
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json"
   },
-  "engines": {
-    "npm": "^7.20.3 || ^8.0.0 || ^9.0.0 || ^10.0.0"
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": ">=22.6.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error",
+      "version": ">=10.8.2"
+    }
   },
   "peerDependencies": {
     "graphql": "^15.0.0 || ^16.0.0",

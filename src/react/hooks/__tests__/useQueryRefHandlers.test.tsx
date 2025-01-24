@@ -2095,7 +2095,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
       subscriptionData: {
         data: { greetingUpdated: "Subscription hello" },
       },
-      variables: {},
+      variables: undefined,
     }
   );
 });

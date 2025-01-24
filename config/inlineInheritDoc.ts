@@ -24,7 +24,7 @@
 /** End file docs */
 
 // @ts-ignore
-import { buildDocEntryPoints } from "./entryPoints.js";
+import { buildDocEntryPoints } from "./entryPoints.ts";
 // @ts-ignore
 import { Project, ts, printNode, Node } from "ts-morph";
 import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";

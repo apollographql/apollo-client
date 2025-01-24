@@ -19,7 +19,7 @@ const distRoot = `${import.meta.dirname}/../dist`;
 /* @apollo/client */
 
 import packageJson from "../package.json" with { type: "json" };
-import * as entryPoints from "./entryPoints.js";
+import * as entryPoints from "./entryPoints.ts";
 
 // Enable default interpretation of .js files as ECMAScript modules. We don't
 // put this in the source ../package.json file because it interferes with tools

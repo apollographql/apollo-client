@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 import fs from "node:fs";
 
 // @ts-ignore
-import { map, buildDocEntryPoints } from "./entryPoints.js";
+import { map, buildDocEntryPoints } from "./entryPoints.ts";
 import { readFileSync } from "fs";
 
 const parsed = parseArgs({

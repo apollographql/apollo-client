@@ -1,5 +1,12 @@
 import path from "path";
+import __dirname from "./dirname.cjs";
 
+type EntryPoint = {
+  dirs: string[];
+  bundleName?: string;
+  extensions?: string[];
+  sideEffects?: boolean;
+};
 const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ["cache"] },
@@ -34,7 +41,7 @@ const entryPoints = [
   { dirs: ["utilities", "subscriptions", "relay"] },
   { dirs: ["utilities", "subscriptions", "urql"] },
   { dirs: ["utilities", "globals"], sideEffects: true },
-];
+] satisfies EntryPoint[];
 
 const lookupTrie = Object.create(null);
 entryPoints.forEach((info) => {
@@ -46,15 +53,21 @@ entryPoints.forEach((info) => {
   node.isEntry = true;
 });
 
-export const forEach = function (callback, context) {
+export const forEach = function (
+  callback: (value: EntryPoint, index: number, array: EntryPoint[]) => void,
+  context?: any
+) {
   entryPoints.forEach(callback, context);
 };
 
-export const map = function map(callback, context) {
+export const map = function map<U>(
+  callback: (value: EntryPoint, index: number, array: EntryPoint[]) => U,
+  context?: any
+) {
   return entryPoints.map(callback, context);
 };
 
-export const check = function (id, parentId) {
+export const check = function (id: string, parentId: string) {
   const resolved = path.resolve(path.dirname(parentId), id);
   const importedParts = partsAfterDist(resolved);
 
@@ -91,7 +104,7 @@ export const check = function (id, parentId) {
   return false;
 };
 
-function partsAfterDist(id) {
+function partsAfterDist(id: string) {
   const parts = id.split(path.sep);
   const distIndex = parts.lastIndexOf("dist");
   if (/^index.jsx?$/.test(parts[parts.length - 1])) {
@@ -102,13 +115,13 @@ function partsAfterDist(id) {
   }
 }
 
-export const getEntryPointDirectory = function (file) {
+export const getEntryPointDirectory = function (file: string) {
   const parts = partsAfterDist(file) || file.split(path.sep);
   const len = lengthOfLongestEntryPoint(parts);
   if (len >= 0) return parts.slice(0, len).join(path.sep);
 };
 
-function lengthOfLongestEntryPoint(parts) {
+function lengthOfLongestEntryPoint(parts: string[]) {
   let node = lookupTrie;
   let longest = -1;
   for (let i = 0; node && i < parts.length; ++i) {
@@ -129,7 +142,7 @@ function arraysEqualUpTo(a, b, end) {
 }
 
 export const buildDocEntryPoints = () => {
-  const dist = path.resolve(import.meta.dirname, "../dist");
+  const dist = path.resolve(__dirname, "../dist");
   const entryPoints = map((entryPoint) => {
     return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
   });

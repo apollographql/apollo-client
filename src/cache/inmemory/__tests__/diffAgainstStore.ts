@@ -166,12 +166,15 @@ describe("diffing queries against the store", () => {
       }
     `;
 
-    const { complete } = reader.diffQueryAgainstStore({
+    const { result, complete } = reader.diffQueryAgainstStore({
       store,
       query: secondQuery,
     });
 
-    expect(complete).toBeTruthy();
+    expect(complete).toBe(true);
+    expect(result).toEqual({
+      people_one: { __typename: "Person", id: "1", name: "Luke Skywalker" },
+    });
     expect((store as any).lookup('Person:{"id":"1"}')).toEqual({
       __typename: "Person",
       id: "1",

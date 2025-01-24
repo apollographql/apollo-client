@@ -23,7 +23,7 @@ import {
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { invariant } from "../utilities/globals";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
-import { DeepPartial, isSubscriptionOperation } from "../utilities";
+import { isSubscriptionOperation } from "../utilities";
 import { MaskedDocumentNode } from "../masking";
 
 const NO_CACHE_WARNING =
@@ -5838,7 +5838,7 @@ describe("client.mutate", () => {
 
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return { result: {} as DeepPartial<T>, complete: false };
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {

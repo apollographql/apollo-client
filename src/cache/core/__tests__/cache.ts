@@ -3,7 +3,6 @@ import { ApolloCache } from "../cache";
 import { Cache, DataProxy } from "../..";
 import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
-import { DeepPartial } from "../../../utilities";
 
 class TestCache extends ApolloCache<unknown> {
   constructor() {
@@ -11,7 +10,7 @@ class TestCache extends ApolloCache<unknown> {
   }
 
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return { result: {} as DeepPartial<T>, complete: false };
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {

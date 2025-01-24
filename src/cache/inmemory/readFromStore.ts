@@ -272,20 +272,14 @@ export class StoreReader {
       },
     });
 
-    let missing: MissingFieldError[] | undefined;
+    let missing: MissingFieldError | undefined;
     if (execResult.missing) {
-      // For backwards compatibility we still report an array of
-      // MissingFieldError objects, even though there will only ever be at most
-      // one of them, now that all missing field error messages are grouped
-      // together in the execResult.missing tree.
-      missing = [
-        new MissingFieldError(
-          firstMissing(execResult.missing)!,
-          execResult.missing,
-          query,
-          variables
-        ),
-      ];
+      missing = new MissingFieldError(
+        firstMissing(execResult.missing)!,
+        execResult.missing,
+        query,
+        variables
+      );
     }
 
     const complete = !missing;

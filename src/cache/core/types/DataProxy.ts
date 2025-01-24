@@ -131,7 +131,7 @@ export namespace DataProxy {
   export type DiffResult<T> = {
     result?: T;
     complete?: boolean;
-    missing?: MissingFieldError[];
+    missing?: MissingFieldError;
     fromOptimisticTransaction?: boolean;
   };
 }

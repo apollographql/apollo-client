@@ -14,10 +14,10 @@ jobs:
         with:
           # Fetch entire git history so we have the parent commit to compare against
           fetch-depth: 0
-      - name: Setup Node.js 20.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: ">=22.6.0"
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 

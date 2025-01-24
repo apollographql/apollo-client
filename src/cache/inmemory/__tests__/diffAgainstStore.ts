@@ -250,13 +250,14 @@ describe("diffing queries against the store", () => {
           }
         }
       `;
-      const { complete } = reader.diffQueryAgainstStore({
+      const { complete, result } = reader.diffQueryAgainstStore({
         store,
         query: unionQuery,
         returnPartialData: false,
       });
 
       expect(complete).toBe(true);
+      expect(result).toEqual(firstResult);
     });
   });
 
@@ -300,12 +301,15 @@ describe("diffing queries against the store", () => {
       }
     `;
 
-    const { complete } = reader.diffQueryAgainstStore({
+    const { complete, result } = reader.diffQueryAgainstStore({
       store,
       query: unionQuery,
     });
 
     expect(complete).toBe(true);
+    expect(result).toEqual({
+      person: { __typename: "Author", firstName: "John" },
+    });
   });
 
   it("throws an error on a query with fields missing from matching named fragments", () => {

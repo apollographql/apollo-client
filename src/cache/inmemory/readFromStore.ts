@@ -288,7 +288,7 @@ export class StoreReader {
       result: complete || returnPartialData ? execResult.result : null,
       complete,
       missing,
-    };
+    } as Cache.DiffResult<T>;
   }
 
   public isFresh(

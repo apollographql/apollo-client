@@ -623,7 +623,7 @@ describe("reading from the store", () => {
     expect(reader["executeSubSelectedArray"].size).toBe(1);
   });
 
-  it("throws on a missing field", () => {
+  it("returns null on a missing field", () => {
     const result = {
       id: "abcd",
       stringField: "This is a string!",
@@ -633,17 +633,17 @@ describe("reading from the store", () => {
 
     const store = defaultNormalizedCacheFactory({ ROOT_QUERY: result });
 
-    expect(() => {
-      readQueryFromStore(reader, {
-        store,
-        query: gql`
-          {
-            stringField
-            missingField
-          }
-        `,
-      });
-    }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
+    const cacheResult = readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          missingField
+        }
+      `,
+    });
+
+    expect(cacheResult).toBeNull();
   });
 
   it("readQuery supports returnPartialData", () => {

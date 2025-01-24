@@ -426,6 +426,7 @@ describe("diffing queries against the store", () => {
       query: simpleQuery,
     });
 
+    expect(simpleDiff.complete).toBe(false);
     expect(simpleDiff.result).toEqual({
       people_one: {
         __typename: "Person",
@@ -438,6 +439,7 @@ describe("diffing queries against the store", () => {
       query: inlineFragmentQuery,
     });
 
+    expect(inlineDiff.complete).toBe(false);
     expect(inlineDiff.result).toEqual({
       people_one: {
         __typename: "Person",
@@ -450,6 +452,7 @@ describe("diffing queries against the store", () => {
       query: namedFragmentQuery,
     });
 
+    expect(namedDiff.complete).toBe(false);
     expect(namedDiff.result).toEqual({
       people_one: {
         __typename: "Person",

@@ -3096,9 +3096,9 @@ describe("@connection", () => {
     `;
     // Passing cache-only as the fetchPolicy allows the { c: "see" }
     // result to be delivered even though networkStatus is still loading.
-    const cResults = watch(cQuery, "cache-only");
+    const cStream = watch(cQuery, "cache-only");
 
-    await expect(cResults).toEmitValue({
+    await expect(cStream).toEmitValue({
       data: {},
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3117,7 +3117,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cResults).toEmitValue({
+    await expect(cStream).toEmitValue({
       data: { c: "see" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3135,7 +3135,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cResults).toEmitValue({
+    await expect(cStream).toEmitValue({
       data: { c: "saw" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3146,7 +3146,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cResults).toEmitValue({
+    await expect(cStream).toEmitValue({
       data: {},
       loading: false,
       networkStatus: NetworkStatus.ready,

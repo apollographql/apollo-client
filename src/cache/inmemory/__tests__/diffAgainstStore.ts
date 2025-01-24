@@ -210,7 +210,7 @@ describe("diffing queries against the store", () => {
         store,
         query: unionQuery,
       });
-    }).toThrowError(/No fragment/);
+    }).toThrow(/No fragment/);
   });
 
   it("does not error on a correct query with union typed fragments", () => {

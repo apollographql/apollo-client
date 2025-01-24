@@ -11,16 +11,15 @@
 // - Create a new `package.json` for each sub-set bundle we support, and
 //   store it in the appropriate dist sub-directory.
 
-const fs = require("fs");
-const path = require("path");
-const recast = require("recast");
+import fs from "node:fs";
+import path from "node:path";
 
-const distRoot = `${__dirname}/../dist`;
+const distRoot = `${import.meta.dirname}/../dist`;
 
 /* @apollo/client */
 
-const packageJson = require("../package.json");
-const entryPoints = require("./entryPoints.js");
+import packageJson from "../package.json" with { type: "json" };
+import * as entryPoints from "./entryPoints.js";
 
 // Enable default interpretation of .js files as ECMAScript modules. We don't
 // put this in the source ../package.json file because it interferes with tools
@@ -60,7 +59,7 @@ const distPackageJson =
 fs.writeFileSync(`${distRoot}/package.json`, distPackageJson);
 
 // Copy supporting files into "dist"
-const srcDir = `${__dirname}/..`;
+const srcDir = `${import.meta.dirname}/..`;
 const destDir = `${srcDir}/dist`;
 fs.copyFileSync(`${srcDir}/README.md`, `${destDir}/README.md`);
 fs.copyFileSync(`${srcDir}/LICENSE`, `${destDir}/LICENSE`);

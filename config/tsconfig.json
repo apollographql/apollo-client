@@ -1,25 +1,11 @@
 {
   "compilerOptions": {
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noUnusedParameters": false,
-    "noUnusedLocals": true,
-    "skipLibCheck": true,
-    "moduleResolution": "node",
-    "importHelpers": true,
-    "target": "es5",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "sourceMap": true,
-    "inlineSourceMap": false,
+    "target": "esnext",
+    "module": "nodenext",
+    "allowJs": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
-    // This option should cause sourcesContent to be included in the
-    // source map JSON, so we don't have to rely on the (nonexistent)
-    // relative paths in the sources array, but it appears tsc does not
-    // respect this option unless the source maps are inlined into the
-    // source files, which we definitely do not want. Instead, we use the
-    // config/rewriteSourceMaps.ts script to add sourcesContent.
-    "inlineSources": true
+    "rewriteRelativeImportExtensions": true,
+    "verbatimModuleSyntax": true
   }
 }

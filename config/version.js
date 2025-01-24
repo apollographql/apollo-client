@@ -1,9 +1,13 @@
-const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-const distRoot = path.join(__dirname, "..", "dist");
+import assert from "assert";
+import fs from "fs";
+import path from "path";
+import { createRequire } from "node:module";
+
+const distRoot = path.join(import.meta.dirname, "..", "dist");
 const versionPath = path.join(distRoot, "version.js");
-const pkgJsonPath = path.join(__dirname, "..", "package.json");
+const pkgJsonPath = path.join(import.meta.dirname, "..", "package.json");
+
+const require = createRequire(import.meta.url);
 
 const { version } = JSON.parse(fs.readFileSync(pkgJsonPath));
 assert.strictEqual(

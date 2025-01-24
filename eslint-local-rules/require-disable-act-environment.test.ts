@@ -1,5 +1,5 @@
-import { rule } from "./require-disable-act-environment";
-import { ruleTester } from "./testSetup";
+import { rule } from "./require-disable-act-environment.ts";
+import { ruleTester } from "./testSetup.ts";
 
 ruleTester.run("require-disable-act-environment", rule, {
   valid: [

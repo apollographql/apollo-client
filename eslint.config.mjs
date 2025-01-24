@@ -1,6 +1,20 @@
+if (!process.features.typescript) {
+  throw new Error(
+    `
+    This configuration requires TypeScript support.
+    Run node with --experimental-strip-types.
+
+    If using VSCode, add the following to your settings.json
+    and reload the window (restarting the ESLint Server might not be enough):
+      "eslint.runtime": "/opt/homebrew/bin/node",
+      "eslint.execArgv": [ "--experimental-strip-types" ]
+    `
+  );
+}
+
 import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import _import from "eslint-plugin-import";
-import localRules from "eslint-plugin-local-rules";
+import localRules from "./eslint-local-rules/index.mjs";
 import { fixupPluginRules, fixupConfigRules } from "@eslint/compat";
 import globals from "globals";
 import tsParser from "@typescript-eslint/parser";
@@ -23,7 +37,9 @@ export default [
     plugins: {
       "@typescript-eslint": typescriptEslint,
       import: fixupPluginRules(_import),
-      "local-rules": localRules,
+      "local-rules": {
+        rules: localRules,
+      },
     },
 
     languageOptions: {
@@ -75,6 +91,8 @@ export default [
       parserOptions: {
         project: [
           "./tsconfig.json",
+          "./config/tsconfig.json",
+          "./eslint-local-rules/tsconfig.json",
           "./scripts/codemods/data-masking/tsconfig.json",
         ],
       },
@@ -159,7 +177,10 @@ export default [
       sourceType: "script",
 
       parserOptions: {
-        project: "./tsconfig.tests.json",
+        project: [
+          "./tsconfig.tests.json",
+          "./eslint-local-rules/tsconfig.json",
+        ],
       },
     },
 

@@ -17,8 +17,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const distRoot = `${__dirname}/../dist`;
-const srcDir = `${__dirname}/..`;
+const distRoot = `${import.meta.dirname}/../dist`;
+const srcDir = `${import.meta.dirname}/..`;
 const destDir = `${srcDir}/dist`;
 
 // recursive copy function

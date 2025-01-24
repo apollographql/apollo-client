@@ -1,3 +1,5 @@
+import path from "path";
+
 const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ["cache"] },
@@ -44,17 +46,15 @@ entryPoints.forEach((info) => {
   node.isEntry = true;
 });
 
-exports.forEach = function (callback, context) {
+export const forEach = function (callback, context) {
   entryPoints.forEach(callback, context);
 };
 
-exports.map = function map(callback, context) {
+export const map = function map(callback, context) {
   return entryPoints.map(callback, context);
 };
 
-const path = require("path").posix;
-
-exports.check = function (id, parentId) {
+export const check = function (id, parentId) {
   const resolved = path.resolve(path.dirname(parentId), id);
   const importedParts = partsAfterDist(resolved);
 
@@ -102,7 +102,7 @@ function partsAfterDist(id) {
   }
 }
 
-exports.getEntryPointDirectory = function (file) {
+export const getEntryPointDirectory = function (file) {
   const parts = partsAfterDist(file) || file.split(path.sep);
   const len = lengthOfLongestEntryPoint(parts);
   if (len >= 0) return parts.slice(0, len).join(path.sep);
@@ -128,9 +128,9 @@ function arraysEqualUpTo(a, b, end) {
   return true;
 }
 
-exports.buildDocEntryPoints = () => {
-  const dist = path.resolve(__dirname, "../dist");
-  const entryPoints = exports.map((entryPoint) => {
+export const buildDocEntryPoints = () => {
+  const dist = path.resolve(import.meta.dirname, "../dist");
+  const entryPoints = map((entryPoint) => {
     return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
   });
   entryPoints.push(

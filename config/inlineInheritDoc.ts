@@ -28,7 +28,7 @@ import { buildDocEntryPoints } from "./entryPoints.js";
 // @ts-ignore
 import { Project, ts, printNode, Node } from "ts-morph";
 import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
-import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference";
+import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
 
 import fs from "node:fs";
@@ -77,10 +77,13 @@ function loadApiModel() {
 
     // Load and parse the api-extractor.json file
     const configObjectFullPath = path.resolve(
-      __dirname,
+      import.meta.dirname,
       "../api-extractor.json"
     );
-    const packageJsonFullPath = path.resolve(__dirname, "../package.json");
+    const packageJsonFullPath = path.resolve(
+      import.meta.dirname,
+      "../package.json"
+    );
     const tempModelFile = path.join(tempDir, "client.api.json");
 
     const configObject = ExtractorConfig.loadFile(configObjectFullPath);

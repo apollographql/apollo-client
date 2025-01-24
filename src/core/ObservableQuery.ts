@@ -1195,7 +1195,7 @@ function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
 }
 
 export function logMissingFieldErrors(
-  missing: MissingFieldError[] | MissingTree | undefined
+  missing: MissingFieldError | MissingTree | undefined
 ) {
   if (__DEV__ && missing) {
     invariant.debug(`Missing cache result fields: %o`, missing);

@@ -200,8 +200,13 @@ export function useLazyQuery<
     return observable;
   });
 
-  const [observableResult, setObservableResult] =
-    React.useState<ApolloQueryResult<TData>>(INITIAL_RESULT);
+  const [observableResult, setObservableResult] = React.useState<
+    ApolloQueryResult<TData | undefined>
+  >({
+    data: undefined,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
 
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
@@ -254,16 +259,7 @@ export function useLazyQuery<
       options.variables = executeOptions.variables;
     }
 
-    const promise = observable.reobserve(options);
-
-    // Call setObservableResult after calling reobserve due to the timing of
-    // rerendering in React 17. Without this, the `variables` value is returned
-    // with the previous set of variables.
-    if (observableResult === INITIAL_RESULT) {
-      setObservableResult(observable.getCurrentResult());
-    }
-
-    return promise;
+    return observable.reobserve(options);
     // execOptionsRef.current =
     //   executeOptions ?
     //     {

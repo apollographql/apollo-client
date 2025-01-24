@@ -82,19 +82,6 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: undefined,
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
         data: { hello: "world" },
         called: true,
         loading: false,

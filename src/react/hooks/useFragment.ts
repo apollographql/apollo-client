@@ -166,7 +166,7 @@ function diffToResult<TData>(
   } as UseFragmentResult<TData>;
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
+    result.missing = diff.missing.missing;
   }
 
   return result;

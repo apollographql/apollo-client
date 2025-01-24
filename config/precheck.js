@@ -1,6 +1,7 @@
-import { lockfileVersion } from "../package-lock.json" with { type: "json" };
+import lockfile from "../package-lock.json" with { type: "json" };
+const { lockfileVersion } = lockfile;
 
-const expectedVersion = 2;
+const expectedVersion = 3;
 
 if (typeof lockfileVersion !== "number" || lockfileVersion < expectedVersion) {
   throw new Error(

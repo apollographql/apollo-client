@@ -1,4 +1,4 @@
-const { lockfileVersion } = require("../package-lock.json");
+import { lockfileVersion } from "../package-lock.json" with { type: "json" };
 
 const expectedVersion = 2;
 

@@ -5,7 +5,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import { terser as minify } from "rollup-plugin-terser";
 import cleanup from "rollup-plugin-cleanup";
 
-const entryPoints = require("./entryPoints");
+import * as entryPoints from "./entryPoints.js";
 const distDir = "./dist";
 
 const removeComments = cleanup({

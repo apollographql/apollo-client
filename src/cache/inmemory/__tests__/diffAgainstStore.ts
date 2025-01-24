@@ -21,7 +21,7 @@ describe("diffing queries against the store", () => {
   const writer = new StoreWriter(cache);
 
   it(
-    "expects named fragments to return complete as true when diffd against " +
+    "expects named fragments to return complete as false when diffd against " +
       "the store",
     () => {
       const store = defaultNormalizedCacheFactory({});
@@ -49,7 +49,7 @@ describe("diffing queries against the store", () => {
   );
 
   it(
-    "expects inline fragments to return complete as true when diffd against " +
+    "expects inline fragments to return complete as false when diffd against " +
       "the store",
     () => {
       const store = defaultNormalizedCacheFactory();

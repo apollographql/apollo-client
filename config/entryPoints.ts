@@ -104,7 +104,7 @@ export const check = function (id: string, parentId: string) {
   return false;
 };
 
-function partsAfterDist(id: string) {
+function partsAfterDist(id: string): string[] {
   const parts = id.split(path.sep);
   const distIndex = parts.lastIndexOf("dist");
   if (/^index.jsx?$/.test(parts[parts.length - 1])) {
@@ -113,6 +113,7 @@ function partsAfterDist(id: string) {
   if (distIndex >= 0) {
     return parts.slice(distIndex + 1);
   }
+  return [];
 }
 
 export const getEntryPointDirectory = function (file: string) {
@@ -134,7 +135,7 @@ function lengthOfLongestEntryPoint(parts: string[]) {
   return longest;
 }
 
-function arraysEqualUpTo(a, b, end) {
+function arraysEqualUpTo(a: unknown[], b: unknown[], end: number) {
   for (let i = 0; i < end; ++i) {
     if (a[i] !== b[i]) return false;
   }

@@ -105,7 +105,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it.skip("should set `called` to false by default", async () => {
+  it("should set `called` to false by default", async () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useLazyQuery(helloQuery),

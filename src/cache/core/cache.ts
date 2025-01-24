@@ -296,10 +296,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         ...diffOptions,
         immediate: true,
         callback: (diff) => {
-          const data =
+          let data =
             dataMasking ?
               maskFragment(diff.result, fragment, this, fragmentName)
             : diff.result;
+
+          // TODO: Remove this once `watchFragment` supports `null` as valid
+          // value emitted
+          if (data === null) {
+            data = {} as any;
+          }
 
           if (
             // Always ensure we deliver the first result

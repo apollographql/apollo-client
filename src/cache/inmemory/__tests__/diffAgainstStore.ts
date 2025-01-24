@@ -92,6 +92,9 @@ describe("diffing queries against the store", () => {
     }
   );
 
+  // TODO: Determine what this means. `complete` is `true` and the result is the
+  // written result, so I'm not sure what the "nothing" is referring to or what
+  // it means for the store to be "enough".
   it("returns nothing when the store is enough", () => {
     const query = gql`
       {

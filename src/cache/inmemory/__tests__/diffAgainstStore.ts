@@ -576,6 +576,8 @@ describe("diffing queries against the store", () => {
         previousResult,
       });
 
+      expect(result).not.toBe(queryResult);
+      expect(result).not.toBe(previousResult);
       expect(result).toEqual(queryResult);
       expect(result).toEqual(previousResult);
     });

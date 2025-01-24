@@ -678,7 +678,7 @@ describe("reading from the store", () => {
         query: bQuery,
         returnPartialData: true,
       })
-    ).toEqual({});
+    ).toEqual(null);
 
     expect(
       cache.readQuery({

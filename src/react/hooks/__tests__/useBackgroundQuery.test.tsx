@@ -7193,7 +7193,7 @@ describe("fetchMore", () => {
         subscriptionData: {
           data: { greetingUpdated: "Subscription hello" },
         },
-        variables: {},
+        variables: undefined,
       }
     );
   });

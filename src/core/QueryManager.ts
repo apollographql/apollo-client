@@ -1662,11 +1662,18 @@ export class QueryManager<TStore> {
           ...(diff.complete ? null : { partial: true }),
         } as ApolloQueryResult<TData>);
 
-      if (data && this.getDocumentInfo(query).hasForcedResolvers) {
+      if (this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState
           .runResolvers({
             document: query,
-            remoteResult: { data },
+            // TODO: Update remoteResult to handle `null`. In v3 the `if`
+            // statement contained a check against `data`, but this value was
+            // always `{}` if nothing was in the cache, which meant the check
+            // above always succeeded when there were forced resolvers. Now that
+            // `data` is nullable, this `remoteResult` needs to be an empty
+            // object. Ideally we can pass in `null` here and the resolvers
+            // would be able to handle this the same way.
+            remoteResult: { data: data || ({} as any) },
             context,
             variables,
             onlyRunForcedResolvers: true,

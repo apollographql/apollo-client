@@ -158,6 +158,7 @@ workflows:
                 - dual-module-test-standard
                 - vite
                 - vite-swc
+                - wrapping-library
                 # -browser-esm would need a package publish to npm/CDNs
               react:
                 - latest

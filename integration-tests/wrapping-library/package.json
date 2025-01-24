@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.12.7"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "true"
+  }
+}

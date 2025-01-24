@@ -254,6 +254,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public diff<TData, TVariables extends OperationVariables = any>(
+    options: Cache.DiffOptions<TData, TVariables> & { returnPartialData: false }
+  ): Cache.DiffResult<TData | null>;
+
+  public diff<TData, TVariables extends OperationVariables = any>(
+    options: Cache.DiffOptions<TData, TVariables>
+  ): Cache.DiffResult<TData>;
+
+  public diff<TData, TVariables extends OperationVariables = any>(
     options: Cache.DiffOptions<TData, TVariables>
   ): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({

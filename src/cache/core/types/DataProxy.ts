@@ -136,7 +136,7 @@ export namespace DataProxy {
         fromOptimisticTransaction?: boolean;
       }
     | {
-        result: DeepPartial<T> | null;
+        result: null extends T ? null : DeepPartial<T>;
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;

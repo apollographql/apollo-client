@@ -183,7 +183,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   public read<T>(
     options: Cache.ReadOptions & { returnPartialData: true }
-  ): T | DeepPartial<T>;
+  ): T | DeepPartial<T> | null;
 
   public read<T>(options: Cache.ReadOptions): T | null;
 

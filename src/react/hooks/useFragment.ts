@@ -1,6 +1,5 @@
 import * as React from "rehackt";
 import type { DeepPartial } from "../../utilities/index.js";
-import { mergeDeepArray } from "../../utilities/index.js";
 import type {
   Cache,
   Reference,
@@ -91,9 +90,9 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     if (from === null) {
       return {
         result: diffToResult({
-          result: {} as TData,
+          result: {},
           complete: false,
-        }),
+        } as Cache.DiffResult<TData>),
       };
     }
 
@@ -114,7 +113,7 @@ function useFragment_<TData = any, TVars = OperationVariables>(
           fragmentName,
           data: diff.result,
         }),
-      }),
+      } as Cache.DiffResult<TData>),
     };
   }, [client, stableOptions]);
 

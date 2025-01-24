@@ -173,7 +173,7 @@ export class QueryInfo {
 
     const oq = this.observableQuery;
     if (oq && oq.options.fetchPolicy === "no-cache") {
-      return { complete: false };
+      return { result: {}, complete: false };
     }
 
     const diff = this.cache.diff(options);

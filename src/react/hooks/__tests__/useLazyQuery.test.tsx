@@ -71,7 +71,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -88,7 +88,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -101,7 +101,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
   });
@@ -646,7 +646,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -662,7 +662,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
     {
@@ -674,7 +674,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -689,7 +689,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { hello: "world" },
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -702,7 +702,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world" },
-        variables: {},
+        variables: undefined,
       });
     }
   });
@@ -745,7 +745,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
     const execute = getCurrentSnapshot()[0];
@@ -760,7 +760,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -773,7 +773,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -788,7 +788,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { hello: "world 1" },
-        variables: {},
+        variables: undefined,
       });
     }
     {
@@ -800,7 +800,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
-        variables: {},
+        variables: undefined,
       });
     }
   });
@@ -843,7 +843,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
     const execute = getCurrentSnapshot()[0];
@@ -858,7 +858,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -871,7 +871,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -887,7 +887,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.refetch,
         previousData: { hello: "world 1" },
-        variables: {},
+        variables: undefined,
       });
     }
     {
@@ -899,7 +899,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
-        variables: {},
+        variables: undefined,
       });
     }
   });
@@ -941,7 +941,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -957,7 +957,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -970,7 +970,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -983,7 +983,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -996,7 +996,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 2" },
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1062,7 +1062,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
     const execute = getCurrentSnapshot()[0];
@@ -1157,7 +1157,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1175,7 +1175,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1188,7 +1188,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "from cache" },
-        variables: {},
+        variables: undefined,
       });
     }
   });
@@ -1220,7 +1220,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1238,7 +1238,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1251,7 +1251,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1261,7 +1261,7 @@ describe("useLazyQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      variables: {},
+      variables: undefined,
     });
   });
 
@@ -1330,7 +1330,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1458,7 +1458,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1473,7 +1473,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1487,7 +1487,7 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1499,7 +1499,7 @@ describe("useLazyQuery Hook", () => {
       previousData: undefined,
       error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
       errors: [{ message: "error 1" }],
-      variables: {},
+      variables: undefined,
     });
 
     void execute();
@@ -1516,7 +1516,7 @@ describe("useLazyQuery Hook", () => {
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
         // TODO: Why is this only populated when in loading state?
         errors: [{ message: "error 1" }],
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1530,7 +1530,7 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
-        variables: {},
+        variables: undefined,
       });
     }
   });
@@ -1568,7 +1568,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1605,7 +1605,7 @@ describe("useLazyQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      variables: {},
+      variables: undefined,
     });
   });
 
@@ -1638,7 +1638,7 @@ describe("useLazyQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      variables: {},
+      variables: undefined,
     };
 
     await expect(promise1!).resolves.toEqualQueryResult(expectedResult);
@@ -1699,7 +1699,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {} as Variables,
+        variables: undefined,
       });
     }
 
@@ -1913,7 +1913,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1929,7 +1929,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1946,7 +1946,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1959,7 +1959,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -1969,7 +1969,7 @@ describe("useLazyQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: undefined,
-      variables: {},
+      variables: undefined,
     });
   });
 
@@ -2112,7 +2112,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { user: { id: "2", name: "John Doe" } },
-          variables: {},
+          variables: undefined,
         });
       });
 
@@ -2476,7 +2476,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
 
@@ -2492,7 +2492,7 @@ describe("useLazyQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
       {
@@ -2505,7 +2505,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
     }
@@ -2591,7 +2591,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
 
@@ -2604,7 +2604,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
 
       {
@@ -2616,7 +2616,7 @@ describe("useLazyQuery Hook", () => {
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
 
@@ -2629,7 +2629,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
 
@@ -2665,7 +2665,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -2683,7 +2683,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -2701,7 +2701,7 @@ describe("useLazyQuery Hook", () => {
       networkStatus: NetworkStatus.loading,
       called: true,
       previousData: undefined,
-      variables: {},
+      variables: undefined,
     });
 
     {
@@ -2718,7 +2718,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
     }
 
@@ -2805,7 +2805,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
 
       // Loading
@@ -2826,7 +2826,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
     });
@@ -2912,7 +2912,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
 
       // Loading
@@ -2934,7 +2934,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
     });
@@ -3019,7 +3019,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
 
       // Loading
@@ -3041,7 +3041,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
     });
@@ -3129,7 +3129,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
 
@@ -3162,7 +3162,7 @@ describe("useLazyQuery Hook", () => {
           previousData: {
             currentUser: { __typename: "User", id: 1, name: "Test User" },
           },
-          variables: {},
+          variables: undefined,
         });
       }
     });
@@ -3250,7 +3250,7 @@ describe("useLazyQuery Hook", () => {
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
-          variables: {},
+          variables: undefined,
         });
       }
 

@@ -1688,7 +1688,7 @@ export class QueryManager<TStore> {
       if (
         errorPolicy === "none" &&
         networkStatus === NetworkStatus.refetch &&
-        Array.isArray(diff.missing)
+        diff.missing
       ) {
         return fromData(void 0);
       }

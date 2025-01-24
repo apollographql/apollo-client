@@ -1348,7 +1348,9 @@ describe("Cache", () => {
         query,
         optimistic: true,
         callback(diff) {
-          results.push(diff.result!);
+          if (diff.complete) {
+            results.push(diff.result);
+          }
         },
       });
 
@@ -2338,7 +2340,9 @@ describe("InMemoryCache#broadcastWatches", function () {
       optimistic: true,
       immediate: true,
       callback(diff: Diff) {
-        addDiff(diff.result!.object.name, diff);
+        if (diff.complete) {
+          addDiff(diff.result.object.name, diff);
+        }
       },
     };
 

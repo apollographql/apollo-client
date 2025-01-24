@@ -3,7 +3,6 @@ import { invariant, newInvariantError } from "../utilities/globals/index.js";
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
-import { equal } from "@wry/equality";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
@@ -1651,7 +1650,7 @@ export class QueryManager<TStore> {
     ) => {
       const data = diff.result;
 
-      if (__DEV__ && !returnPartialData && !equal(data, {})) {
+      if (__DEV__ && !returnPartialData && data !== null) {
         logMissingFieldErrors(diff.missing);
       }
 

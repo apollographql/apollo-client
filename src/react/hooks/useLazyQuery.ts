@@ -6,7 +6,6 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   DefaultContext,
-  DefaultOptions,
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
@@ -39,6 +38,7 @@ import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type { RenderPromises } from "../ssr/index.js";
 import { invariant } from "../../utilities/globals/index.js";
 import equal from "@wry/equality";
+import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface LazyQueryHookOptions<
@@ -112,8 +112,7 @@ export type LazyQueryExecFunction<
   TVariables extends OperationVariables,
 > = (
   options?: LazyQueryHookExecOptions<TVariables>
-  // TODO: Should this be a Promise<ApolloQueryResult<TData>> type instead?
-) => Promise<QueryResult<TData, TVariables>>;
+) => Promise<ApolloQueryResult<TData>>;
 
 export type LazyQueryResultTuple<
   TData,
@@ -134,6 +133,12 @@ const EAGER_METHODS = [
   "stopPolling",
   "subscribeToMore",
 ] as const;
+
+const INITIAL_RESULT: ApolloQueryResult<any> = Object.freeze({
+  data: undefined,
+  loading: false,
+  networkStatus: NetworkStatus.ready,
+});
 
 /**
  * A hook for imperatively executing queries in an Apollo application, e.g. in response to user interaction.
@@ -177,111 +182,106 @@ export function useLazyQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const execOptionsRef =
-    React.useRef<Partial<LazyQueryHookExecOptions<TData, TVariables>>>(void 0);
-  const optionsRef =
-    React.useRef<LazyQueryHookOptions<TData, TVariables>>(void 0);
-  const queryRef = React.useRef<
-    DocumentNode | TypedDocumentNode<TData, TVariables>
-  >(void 0);
-  const merged = mergeOptions(options, execOptionsRef.current || {});
-  const document = merged?.query ?? query;
+  const client = useApolloClient(options?.client);
+  const calledRef = React.useRef(false);
+  const previousDataRef = React.useRef<TData>(undefined);
+  const stableOptions = useDeepMemo(() => options, [options]);
 
-  // Use refs to track options and the used query to ensure the `execute`
-  // function remains referentially stable between renders.
-  optionsRef.current = options;
-  queryRef.current = document;
+  const [observable] = React.useState(() => {
+    const observable = client.watchQuery({
+      ...stableOptions,
+      query,
+      initialFetchPolicy: options?.fetchPolicy,
+      fetchPolicy: "standby",
+    });
 
-  const queryHookOptions = {
-    ...merged,
-    skip: !execOptionsRef.current,
-  };
-  const {
-    obsQueryFields,
-    result: useQueryResult,
-    client,
-    resultData,
-    observable,
-    onQueryExecuted,
-  } = useQueryInternals(document, queryHookOptions);
+    observable["queryInfo"].networkStatus = NetworkStatus.ready;
 
-  const initialFetchPolicy =
-    observable.options.initialFetchPolicy ||
-    client.defaultOptions.watchQuery?.fetchPolicy ||
-    "cache-first";
+    return observable;
+  });
 
-  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+  const [observableResult, setObservableResult] =
+    React.useState<ApolloQueryResult<TData>>(INITIAL_RESULT);
+
+  const obsQueryFields = React.useMemo<
+    Omit<ObservableQueryFields<TData, TVariables>, "variables">
+  >(() => bindObservableMethods(observable), [observable]);
+
+  React.useEffect(() => {
+    const subscription = observable.subscribe({
+      next: (value) => {
+        setObservableResult((previous) => {
+          const current = observable.getCurrentResult();
+
+          return equal(previous, current) ? previous : current;
+        });
+      },
+    });
+
+    return () => subscription.unsubscribe();
+  }, [observable]);
+
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       const method = obsQueryFields[key];
       eagerMethods[key] = function () {
-        if (!execOptionsRef.current) {
-          execOptionsRef.current = Object.create(null);
-          // Only the first time populating execOptionsRef.current matters here.
-          forceUpdateState();
-        }
+        calledRef.current = true;
         // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
       };
     }
 
     return eagerMethods as typeof obsQueryFields;
-  }, [forceUpdateState, obsQueryFields]);
+  }, [obsQueryFields]);
 
-  const called = !!execOptionsRef.current;
-  const result = React.useMemo(
-    () => ({
-      ...useQueryResult,
-      ...eagerMethods,
-      called,
-    }),
-    [useQueryResult, eagerMethods, called]
-  );
+  const execute: LazyQueryExecFunction<TData, TVariables> = (
+    executeOptions
+  ) => {
+    calledRef.current = true;
+    previousDataRef.current = observableResult.data;
 
-  const execute = React.useCallback<LazyQueryResultTuple<TData, TVariables>[0]>(
-    (executeOptions) => {
-      execOptionsRef.current =
-        executeOptions ?
-          {
-            ...executeOptions,
-            fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
-          }
-        : {
-            fetchPolicy: initialFetchPolicy,
-          };
+    if (observableResult === INITIAL_RESULT) {
+      setObservableResult(observable.getCurrentResult());
+    }
 
-      const options = mergeOptions(optionsRef.current, {
-        query: queryRef.current,
-        ...execOptionsRef.current,
-      });
-
-      const promise = executeQuery(
-        resultData,
-        observable,
-        client,
-        document,
-        { ...options, skip: false },
-        onQueryExecuted
-      ).then((queryResult) => Object.assign(queryResult, eagerMethods));
-
-      // Because the return value of `useLazyQuery` is usually floated, we need
-      // to catch the promise to prevent unhandled rejections.
-      promise.catch(() => {});
-
-      return promise;
-    },
-    [
-      client,
-      document,
-      eagerMethods,
-      initialFetchPolicy,
-      observable,
-      resultData,
-      onQueryExecuted,
-    ]
-  );
+    return observable.reobserve({
+      fetchPolicy:
+        stableOptions?.fetchPolicy ||
+        client.defaultOptions.watchQuery?.fetchPolicy ||
+        "cache-first",
+    });
+    // execOptionsRef.current =
+    //   executeOptions ?
+    //     {
+    //       ...executeOptions,
+    //       fetchPolicy: executeOptions.fetchPolicy || initialFetchPolicy,
+    //     }
+    //   : {
+    //       fetchPolicy: initialFetchPolicy,
+    //     };
+    //
+    // const options = mergeOptions(optionsRef.current, {
+    //   query: queryRef.current,
+    //   ...execOptionsRef.current,
+    // });
+    //
+    // const promise = executeQuery(
+    //   resultData,
+    //   observable,
+    //   client,
+    //   document,
+    //   { ...options, skip: false },
+    //   onQueryExecuted
+    // ).then((queryResult) => Object.assign(queryResult, eagerMethods));
+    //
+    // // Because the return value of `useLazyQuery` is usually floated, we need
+    // // to catch the promise to prevent unhandled rejections.
+    // promise.catch(() => {});
+    //
+    // return promise;
+  };
 
   const executeRef = React.useRef(execute);
   useIsomorphicLayoutEffect(() => {
@@ -292,7 +292,87 @@ export function useLazyQuery<
     (...args) => executeRef.current(...args),
     []
   );
+
+  const result = React.useMemo(() => {
+    return {
+      ...observableResult,
+      ...eagerMethods,
+      // TODO: Ensure the `data` key is set from the core API regardless of
+      // whether the value is undefined.
+      data: observableResult.data,
+      // loading: called ? observableResult.loading : false,
+      // networkStatus:
+      //   called ? observableResult.networkStatus : NetworkStatus.ready,
+      client,
+      observable,
+      called: calledRef.current,
+      previousData: previousDataRef.current,
+      variables:
+        equal(observable.variables, {}) ? undefined : observable.variables,
+    };
+  }, [observableResult, eagerMethods, client, observable]);
+
   return [stableExecute, result];
+}
+
+function createMakeWatchQueryOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  client: ApolloClient<object>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  {
+    skip,
+    ssr,
+    onCompleted,
+    onError,
+    defaultOptions,
+    // The above options are useQuery-specific, so this ...otherOptions spread
+    // makes otherOptions almost a WatchQueryOptions object, except for the
+    // query property that we add below.
+    ...otherOptions
+  }: QueryHookOptions<TData, TVariables> = {},
+  isSyncSSR: boolean
+) {
+  return (
+    observable?: ObservableQuery<TData, TVariables>
+  ): WatchQueryOptions<TVariables, TData> => {
+    // This Object.assign is safe because otherOptions is a fresh ...rest object
+    // that did not exist until just now, so modifications are still allowed.
+    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
+      Object.assign(otherOptions, { query });
+
+    if (
+      isSyncSSR &&
+      (watchQueryOptions.fetchPolicy === "network-only" ||
+        watchQueryOptions.fetchPolicy === "cache-and-network")
+    ) {
+      // this behavior was added to react-apollo without explanation in this PR
+      // https://github.com/apollographql/react-apollo/pull/1579
+      watchQueryOptions.fetchPolicy = "cache-first";
+    }
+
+    if (!watchQueryOptions.variables) {
+      watchQueryOptions.variables = {} as TVariables;
+    }
+
+    if (skip) {
+      // When skipping, we set watchQueryOptions.fetchPolicy initially to
+      // "standby", but we also need/want to preserve the initial non-standby
+      // fetchPolicy that would have been used if not skipping.
+      watchQueryOptions.initialFetchPolicy =
+        watchQueryOptions.initialFetchPolicy ||
+        watchQueryOptions.fetchPolicy ||
+        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+      watchQueryOptions.fetchPolicy = "standby";
+    } else if (!watchQueryOptions.fetchPolicy) {
+      watchQueryOptions.fetchPolicy =
+        observable?.options.initialFetchPolicy ||
+        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+    }
+
+    return watchQueryOptions;
+  };
 }
 
 function useQueryInternals<
@@ -605,7 +685,7 @@ function useObservableSubscriptionResult<
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
-    // eslint-disable-next-line react-compiler/react-compiler
+
     callbackRef.current = callbacks;
   });
 
@@ -900,75 +980,4 @@ function toQueryResult<TData, TVariables extends OperationVariables>(
     previousData,
   };
   return queryResult;
-}
-
-function createMakeWatchQueryOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  client: ApolloClient<object>,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  {
-    skip,
-    ssr,
-    onCompleted,
-    onError,
-    defaultOptions,
-    // The above options are useQuery-specific, so this ...otherOptions spread
-    // makes otherOptions almost a WatchQueryOptions object, except for the
-    // query property that we add below.
-    ...otherOptions
-  }: QueryHookOptions<TData, TVariables> = {},
-  isSyncSSR: boolean
-) {
-  return (
-    observable?: ObservableQuery<TData, TVariables>
-  ): WatchQueryOptions<TVariables, TData> => {
-    // This Object.assign is safe because otherOptions is a fresh ...rest object
-    // that did not exist until just now, so modifications are still allowed.
-    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(otherOptions, { query });
-
-    if (
-      isSyncSSR &&
-      (watchQueryOptions.fetchPolicy === "network-only" ||
-        watchQueryOptions.fetchPolicy === "cache-and-network")
-    ) {
-      // this behavior was added to react-apollo without explanation in this PR
-      // https://github.com/apollographql/react-apollo/pull/1579
-      watchQueryOptions.fetchPolicy = "cache-first";
-    }
-
-    if (!watchQueryOptions.variables) {
-      watchQueryOptions.variables = {} as TVariables;
-    }
-
-    if (skip) {
-      // When skipping, we set watchQueryOptions.fetchPolicy initially to
-      // "standby", but we also need/want to preserve the initial non-standby
-      // fetchPolicy that would have been used if not skipping.
-      watchQueryOptions.initialFetchPolicy =
-        watchQueryOptions.initialFetchPolicy ||
-        watchQueryOptions.fetchPolicy ||
-        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
-      watchQueryOptions.fetchPolicy = "standby";
-    } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy =
-        observable?.options.initialFetchPolicy ||
-        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
-    }
-
-    return watchQueryOptions;
-  };
-}
-
-function getDefaultFetchPolicy<TData, TVariables extends OperationVariables>(
-  queryHookDefaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-  clientDefaultOptions?: DefaultOptions
-): WatchQueryFetchPolicy {
-  return (
-    queryHookDefaultOptions?.fetchPolicy ||
-    clientDefaultOptions?.watchQuery?.fetchPolicy ||
-    "cache-first"
-  );
 }

@@ -4831,7 +4831,7 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
-        variables: {},
+        variables: undefined,
         subscriptionData: {
           data: {
             addedComment: {
@@ -4958,7 +4958,7 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
-        variables: {},
+        variables: undefined,
         subscriptionData: {
           data: {
             addedComment: {
@@ -5087,7 +5087,7 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
-        variables: {},
+        variables: undefined,
         subscriptionData: {
           data: {
             addedComment: {

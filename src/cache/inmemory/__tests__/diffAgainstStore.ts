@@ -45,6 +45,7 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
+      expect(queryResult.result).toEqual({});
     }
   );
 
@@ -87,6 +88,7 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
+      expect(queryResult.result).toEqual({});
     }
   );
 
@@ -111,12 +113,13 @@ describe("diffing queries against the store", () => {
       query,
     });
 
-    expect(
-      reader.diffQueryAgainstStore({
-        store,
-        query,
-      }).complete
-    ).toBeTruthy();
+    const queryResult = reader.diffQueryAgainstStore({
+      store,
+      query,
+    });
+
+    expect(queryResult.complete).toBe(true);
+    expect(queryResult.result).toEqual(result);
   });
 
   it("caches root queries both under the ID of the node and the query name", () => {

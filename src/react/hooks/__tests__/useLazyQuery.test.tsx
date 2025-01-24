@@ -418,7 +418,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it.skip("should persist previous data when a query is re-run", async () => {
+  it("should persist previous data when a query is re-run", async () => {
     const mocks = [
       {
         request: { query: helloQuery },

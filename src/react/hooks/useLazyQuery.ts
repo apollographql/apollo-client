@@ -228,13 +228,14 @@ export function useLazyQuery<
       const method = obsQueryFields[key];
       eagerMethods[key] = function () {
         calledRef.current = true;
+        previousDataRef.current = observableResult.data;
         // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);
       };
     }
 
     return eagerMethods as typeof obsQueryFields;
-  }, [obsQueryFields]);
+  }, [obsQueryFields, observableResult.data]);
 
   const execute: LazyQueryExecFunction<TData, TVariables> = (
     executeOptions

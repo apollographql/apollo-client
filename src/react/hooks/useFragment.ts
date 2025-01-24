@@ -160,7 +160,7 @@ function diffToResult<TData>(
   diff: Cache.DiffResult<TData>
 ): UseFragmentResult<TData> {
   const result = {
-    data: diff.result!,
+    data: diff.result,
     complete: !!diff.complete,
   } as UseFragmentResult<TData>;
 

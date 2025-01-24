@@ -1946,7 +1946,7 @@ describe("optimistic mutation results", () => {
         {
           complete: false,
           missing: expect.anything(),
-          result: {},
+          result: null,
         },
       ]);
 
@@ -2137,7 +2137,7 @@ describe("optimistic mutation results", () => {
         {
           complete: false,
           missing: expect.anything(),
-          result: {},
+          result: null,
         },
         {
           complete: true,

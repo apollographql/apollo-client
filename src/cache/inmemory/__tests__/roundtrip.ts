@@ -263,7 +263,9 @@ describe("roundtrip", () => {
             fortuneCookie @skip(if: true)
           }
         `,
-        {}
+        {},
+        {},
+        null
       );
     });
 

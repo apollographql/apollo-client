@@ -254,9 +254,14 @@ interface DataMasking {
 export namespace DataProxy {
     // (undocumented)
     export type DiffResult<T> = {
-        result?: T;
-        complete?: boolean;
-        missing?: MissingFieldError[];
+        result: T;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: DeepPartial<T> | null;
+        complete: false;
+        missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
     };
     // (undocumented)
@@ -324,8 +329,6 @@ export interface DataProxy {
 // @public (undocumented)
 type DeepPartial<T> = T extends DeepPartialPrimitive ? T : T extends Map<infer TKey, infer TValue> ? DeepPartialMap<TKey, TValue> : T extends ReadonlyMap<infer TKey, infer TValue> ? DeepPartialReadonlyMap<TKey, TValue> : T extends Set<infer TItem> ? DeepPartialSet<TItem> : T extends ReadonlySet<infer TItem> ? DeepPartialReadonlySet<TItem> : T extends (...args: any[]) => unknown ? T | undefined : T extends object ? T extends (ReadonlyArray<infer TItem>) ? TItem[] extends (T) ? readonly TItem[] extends T ? ReadonlyArray<DeepPartial<TItem | undefined>> : Array<DeepPartial<TItem | undefined>> : DeepPartialObject<T> : DeepPartialObject<T> : unknown;
 
-// Warning: (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 type DeepPartialMap<TKey, TValue> = {} & Map<DeepPartial<TKey>, DeepPartial<TValue>>;
 
@@ -660,6 +663,10 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     performTransaction(update: (cache: InMemoryCache) => any, optimisticId?: string | null): any;
     // (undocumented)
     readonly policies: Policies;
+    // (undocumented)
+    read<T>(options: Cache_2.ReadOptions & {
+        returnPartialData: true;
+    }): T | DeepPartial<T> | null;
     // (undocumented)
     read<T>(options: Cache_2.ReadOptions): T | null;
     // (undocumented)
@@ -1182,7 +1189,8 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/cache.ts:92:7 - (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
+// src/cache/core/cache.ts:91:7 - (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:152:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:93:3 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

@@ -633,9 +633,14 @@ interface DataMasking {
 namespace DataProxy {
     // (undocumented)
     type DiffResult<T> = {
-        result?: T;
-        complete?: boolean;
-        missing?: MissingFieldError[];
+        result: T;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+    } | {
+        result: DeepPartial<T> | null;
+        complete: false;
+        missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
     };
     // (undocumented)
@@ -1403,6 +1408,10 @@ class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     performTransaction(update: (cache: InMemoryCache) => any, optimisticId?: string | null): any;
     // (undocumented)
     readonly policies: Policies;
+    // (undocumented)
+    read<T>(options: Cache_2.ReadOptions & {
+        returnPartialData: true;
+    }): T | DeepPartial<T> | null;
     // (undocumented)
     read<T>(options: Cache_2.ReadOptions): T | null;
     // (undocumented)
@@ -2869,7 +2878,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:147:7 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:154:7 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:58:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts

@@ -22,6 +22,7 @@ import { canonicalStringify } from "../cache/index.js";
 import type {
   ObservableSubscription,
   ConcastSourcesArray,
+  DeepPartial,
 } from "../utilities/index.js";
 import {
   getDefaultValues,
@@ -1654,7 +1655,7 @@ export class QueryManager<TStore> {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | undefined) =>
+      const fromData = (data: TData | DeepPartial<TData> | undefined) =>
         Observable.of({
           data,
           loading: isNetworkRequestInFlight(networkStatus),
@@ -1686,7 +1687,7 @@ export class QueryManager<TStore> {
         return fromData(void 0);
       }
 
-      return fromData(data);
+      return fromData(data || undefined);
     };
 
     const cacheWriteBehavior =

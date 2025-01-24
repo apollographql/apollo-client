@@ -286,14 +286,13 @@ export class StoreReader {
           variables
         ),
       ];
-      if (!returnPartialData) {
-        throw missing[0];
-      }
     }
 
+    const complete = !missing;
+
     return {
-      result: execResult.result,
-      complete: !missing,
+      result: complete || returnPartialData ? execResult.result : null,
+      complete,
       missing,
     };
   }

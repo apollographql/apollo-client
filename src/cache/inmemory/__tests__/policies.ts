@@ -3244,19 +3244,44 @@ describe("type policies", function () {
         })
       ).toBe(null);
 
-      expect(() =>
-        cache.diff({
-          optimistic: true,
-          returnPartialData: false,
-          query: gql`
+      const diff = cache.diff({
+        optimistic: true,
+        returnPartialData: false,
+        query: gql`
+          query {
+            me {
+              secret
+            }
+          }
+        `,
+      });
+
+      const missingFieldErrorMessage = `Can't find field 'secret' on object ${JSON.stringify(
+        {
+          __typename: "Person",
+          name: "Ben Newman",
+        },
+        null,
+        2
+      )}`;
+
+      expect(diff.complete).toBe(false);
+      expect(diff.result).toBeNull();
+      expect(diff.missing).toEqual([
+        new MissingFieldError(
+          missingFieldErrorMessage,
+          {
+            me: { secret: missingFieldErrorMessage },
+          },
+          gql`
             query {
               me {
                 secret
               }
             }
-          `,
-        })
-      ).toThrowError("Can't find field 'secret' ");
+          `
+        ),
+      ]);
 
       expect(secretReadAttempted).toBe(true);
     });

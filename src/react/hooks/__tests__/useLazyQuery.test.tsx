@@ -225,6 +225,9 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
+  // TODO: Update this test to ensure result only gets run when execute function
+  // is called. This needs to change queries via rerendering rather than passing
+  // the value into the execute function.
   it.skip("changing queries", async () => {
     const query1 = gql`
       query {

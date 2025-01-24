@@ -54,6 +54,7 @@ import type { InMemoryCache } from "./inMemoryCache.js";
 import type { MissingTree } from "../core/types/common.js";
 import { MissingFieldError } from "../core/types/common.js";
 import { ObjectCanon } from "./object-canon.js";
+import equal from "@wry/equality";
 
 export type VariableMap = { [name: string]: any };
 
@@ -283,9 +284,14 @@ export class StoreReader {
     }
 
     const complete = !missing;
+    const { result } = execResult;
 
     return {
-      result: complete || returnPartialData ? execResult.result : null,
+      result:
+        complete || returnPartialData ?
+          equal(result, {}) ? null
+          : result
+        : null,
       complete,
       missing,
     } as Cache.DiffResult<T>;

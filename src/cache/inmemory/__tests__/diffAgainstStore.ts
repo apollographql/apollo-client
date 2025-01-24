@@ -46,7 +46,7 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
-      expect(queryResult.result).toEqual({});
+      expect(queryResult.result).toEqual(null);
     }
   );
 
@@ -89,7 +89,7 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
-      expect(queryResult.result).toEqual({});
+      expect(queryResult.result).toEqual(null);
     }
   );
 

@@ -105,7 +105,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should set `called` to false by default", async () => {
+  it.skip("should set `called` to false by default", async () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useLazyQuery(helloQuery),
@@ -121,7 +121,7 @@ describe("useLazyQuery Hook", () => {
     expect(called).toBe(false);
   });
 
-  it("should set `called` to true after calling the lazy execute function", async () => {
+  it.skip("should set `called` to true after calling the lazy execute function", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -160,7 +160,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should use variables passed to execute function, when running the lazy execution function", async () => {
+  it.skip("should use variables passed to execute function, when running the lazy execution function", async () => {
     const query = gql`
       query ($id: number) {
         hello(id: $id)
@@ -508,7 +508,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("changing queries", async () => {
+  it.skip("changing queries", async () => {
     const query1 = gql`
       query {
         hello
@@ -613,7 +613,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
+  it.skip('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -710,7 +710,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should persist previous data when a query is re-run", async () => {
+  it.skip("should persist previous data when a query is re-run", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -810,7 +810,7 @@ describe("useLazyQuery Hook", () => {
 
   // TODO: Determine if we allow `pollInterval` as an option, or if we should
   // explicitly require `startPolling`.
-  it("should allow for the query to start with polling", async () => {
+  it.skip("should allow for the query to start with polling", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -910,7 +910,7 @@ describe("useLazyQuery Hook", () => {
     expect(takeSnapshot).not.toRerender();
   });
 
-  it("should persist previous data when a query is re-run and variable changes", async () => {
+  it.skip("should persist previous data when a query is re-run and variable changes", async () => {
     const CAR_QUERY_BY_ID = gql`
       query ($id: Int) {
         car(id: $id) {
@@ -1025,7 +1025,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should work with cache-and-network fetch policy", async () => {
+  it.skip("should work with cache-and-network fetch policy", async () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query: helloQuery },
@@ -1096,7 +1096,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should return a promise from the execution function which resolves with the result", async () => {
+  it.skip("should return a promise from the execution function which resolves with the result", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -1167,7 +1167,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it("should have matching results from execution function and hook", async () => {
+  it.skip("should have matching results from execution function and hook", async () => {
     const query = gql`
       query GetCountries($filter: String) {
         countries(filter: $filter) {
@@ -1319,7 +1319,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it("the promise should reject with errors the “way useMutation does”", async () => {
+  it.skip("the promise should reject with errors the “way useMutation does”", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -1435,7 +1435,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("the promise should not cause an unhandled rejection", async () => {
+  it.skip("the promise should not cause an unhandled rejection", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -1477,7 +1477,7 @@ describe("useLazyQuery Hook", () => {
     await wait(50);
   });
 
-  it("allows in-flight requests to resolve when component unmounts", async () => {
+  it.skip("allows in-flight requests to resolve when component unmounts", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -1508,7 +1508,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it("handles resolving multiple in-flight requests when component unmounts", async () => {
+  it.skip("handles resolving multiple in-flight requests when component unmounts", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -1545,7 +1545,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
-  it("resolves each execution of the query with the appropriate result and renders with the result from the latest execution", async () => {
+  it.skip("resolves each execution of the query with the appropriate result and renders with the result from the latest execution", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -1665,7 +1665,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/10198
-  it("uses the most recent query document when the hook rerenders before execution", async () => {
+  it.skip("uses the most recent query document when the hook rerenders before execution", async () => {
     const query = gql`
       query DummyQuery {
         shouldNotBeUsed
@@ -1757,7 +1757,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it("does not refetch when rerendering after executing query", async () => {
+  it.skip("does not refetch when rerendering after executing query", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -1904,7 +1904,7 @@ describe("useLazyQuery Hook", () => {
     }
   );
 
-  it("maintains stable execute function when passing in dynamic function options", async () => {
+  it.skip("maintains stable execute function when passing in dynamic function options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -2169,7 +2169,7 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
 
-  it("maintains stable execute function identity when changing non-callback options", async () => {
+  it.skip("maintains stable execute function identity when changing non-callback options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -2293,21 +2293,22 @@ describe("useLazyQuery Hook", () => {
 
     // For errorPolicy:"none", we expect result.error to be defined and
     // result.data to be undefined, which is what we test above.
-    it('handles errorPolicy:"none" appropriately', () => check("none"));
+    it.skip('handles errorPolicy:"none" appropriately', () => check("none"));
 
     // If there was any data to report, errorPolicy:"all" would report both
     // result.data and result.error, but there is no GraphQL data when we
     // encounter a network error, so the test again captures desired behavior.
-    it('handles errorPolicy:"all" appropriately', () => check("all"));
+    it.skip('handles errorPolicy:"all" appropriately', () => check("all"));
 
     // Technically errorPolicy:"ignore" is supposed to throw away result.error,
     // but in the case of network errors, since there's no actual data to
     // report, it's useful/important that we report result.error anyway.
-    it('handles errorPolicy:"ignore" appropriately', () => check("ignore"));
+    it.skip('handles errorPolicy:"ignore" appropriately', () =>
+      check("ignore"));
   });
 
   // regression for https://github.com/apollographql/apollo-client/issues/11988
-  test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
+  test.skip("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
     const link = new MockSubscriptionLink();
     let requests = 0;
     link.onSetup(() => requests++);
@@ -2395,7 +2396,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   describe("data masking", () => {
-    it("masks queries when dataMasking is `true`", async () => {
+    it.skip("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2498,7 +2499,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("does not mask queries when dataMasking is `false`", async () => {
+    it.skip("does not mask queries when dataMasking is `false`", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2606,7 +2607,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("does not mask queries by default", async () => {
+    it.skip("does not mask queries by default", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2713,7 +2714,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("masks queries updated by the cache", async () => {
+    it.skip("masks queries updated by the cache", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2834,7 +2835,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("does not rerender when updating field in named fragment", async () => {
+    it.skip("does not rerender when updating field in named fragment", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;

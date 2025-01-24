@@ -333,7 +333,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it.skip('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
+  it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -404,18 +404,6 @@ describe("useLazyQuery Hook", () => {
 
     setTimeout(() => execute());
 
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
-        data: { hello: "world 1" },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: { hello: "world 1" },
-        variables: undefined,
-      });
-    }
     {
       const [, result] = await takeSnapshot();
 

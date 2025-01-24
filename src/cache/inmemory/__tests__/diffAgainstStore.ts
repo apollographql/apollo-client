@@ -313,7 +313,7 @@ describe("diffing queries against the store", () => {
     });
   });
 
-  it("throws an error on a query with fields missing from matching named fragments", () => {
+  it("returns null result on a query with fields missing from matching named fragments", () => {
     const firstQuery = gql`
       query {
         person {
@@ -368,7 +368,7 @@ describe("diffing queries against the store", () => {
 
     expect(complete).toBe(false);
     expect(result).toBe(null);
-    expect(missing).toEqual([
+    expect(missing).toEqual(
       new MissingFieldError(
         missingFieldErrorMessage,
         {
@@ -376,9 +376,10 @@ describe("diffing queries against the store", () => {
             address: missingFieldErrorMessage,
           },
         },
-        unionQuery
-      ),
-    ]);
+        unionQuery,
+        {}
+      )
+    );
   });
 
   it("returns available fields if returnPartialData is true", () => {
@@ -490,13 +491,14 @@ describe("diffing queries against the store", () => {
 
     expect(complete).toBe(false);
     expect(result).toBeNull();
-    expect(missing).toEqual([
+    expect(missing).toEqual(
       new MissingFieldError(
         missingFieldErrorMessage,
         { people_one: { age: missingFieldErrorMessage } },
-        simpleQuery
-      ),
-    ]);
+        simpleQuery,
+        {}
+      )
+    );
   });
 
   it("will add a private id property", () => {

@@ -430,6 +430,8 @@ describe("no-cache", () => {
       await expect(stream).toEmitValue({
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        // TODO: Since we did not set `returnPartialData` on `watchQuery`, this
+        // property should not be here.
         partial: true,
       });
 

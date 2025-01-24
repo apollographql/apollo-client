@@ -1084,17 +1084,14 @@ describe("diffing queries against the store", () => {
         },
       });
 
-      try {
+      expect(() => {
         reader.diffQueryAgainstStore({
           store,
           query: invalidQuery,
         });
-        throw new Error("should have thrown");
-      } catch (e) {
-        expect((e as Error).message).toEqual(
-          "Missing selection set for object of type Message returned for query field messageList"
-        );
-      }
+      }).toThrow(
+        "Missing selection set for object of type Message returned for query field messageList"
+      );
     });
   });
 

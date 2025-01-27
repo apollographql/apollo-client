@@ -1080,10 +1080,16 @@ describe("QueryManager", () => {
       ]),
     });
 
-    const handle = client.watchQuery(request);
-    handle.subscribe({});
+    const observable = client.watchQuery(request);
+    const stream = new ObservableStream(observable);
 
-    const result = await handle.refetch();
+    await expect(stream).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    const result = await observable.refetch();
 
     expect(result.data).toEqual(data2);
   });

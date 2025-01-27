@@ -230,7 +230,7 @@ describe("QueryManager", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
       networkStatus: 8,
@@ -291,8 +291,7 @@ describe("QueryManager", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
-      errors: undefined,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         allPeople: {
           people: {
@@ -300,7 +299,7 @@ describe("QueryManager", () => {
           },
         },
       },
-      networkStatus: 7,
+      networkStatus: NetworkStatus.ready,
       loading: false,
     });
   });
@@ -689,18 +688,38 @@ describe("QueryManager", () => {
     const stream1 = new ObservableStream(observable);
     const stream2 = new ObservableStream(observable);
 
-    await expect(stream1).toEmitMatchedValue({ data: data1 });
-    await expect(stream2).toEmitMatchedValue({ data: data1 });
+    await expect(stream1).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    await expect(stream2).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     void observable.refetch();
 
-    await expect(stream1).toEmitMatchedValue({ data: data2 });
-    await expect(stream2).toEmitMatchedValue({ data: data2 });
+    await expect(stream1).toEmitApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    await expect(stream2).toEmitApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     stream1.unsubscribe();
     void observable.refetch();
 
-    await expect(stream2).toEmitMatchedValue({ data: data3 });
+    await expect(stream2).toEmitApolloQueryResult({
+      data: data3,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("resolves all queries when one finishes after another", async () => {
@@ -790,9 +809,21 @@ describe("QueryManager", () => {
     const stream2 = new ObservableStream(ob2);
     const stream3 = new ObservableStream(ob3);
 
-    await expect(stream1).toEmitMatchedValue({ data: data1 });
-    await expect(stream2).toEmitMatchedValue({ data: data2 });
-    await expect(stream3).toEmitMatchedValue({ data: data3 });
+    await expect(stream1).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    await expect(stream2).toEmitApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    await expect(stream3).toEmitApolloQueryResult({
+      data: data3,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("allows you to refetch queries", async () => {

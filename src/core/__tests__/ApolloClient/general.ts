@@ -24,6 +24,7 @@ import mockQueryManager, {
 import mockWatchQuery from "../../../testing/core/mocking/mockWatchQuery";
 import {
   MockApolloLink,
+  MockLink,
   mockSingleLink,
 } from "../../../testing/core/mocking/mockLink";
 
@@ -111,15 +112,15 @@ describe("QueryManager", () => {
     result?: FetchResult;
     delay?: number;
   }) => {
-    const queryManager = mockQueryManager({
-      request: { query, variables },
-      result,
-      error,
-      delay,
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        { request: { query, variables }, result, error, delay },
+      ]),
     });
 
     return new ObservableStream(
-      queryManager.watchQuery<any>(assign({ query, variables }, queryOptions))
+      client.watchQuery({ query, variables, ...queryOptions })
     );
   };
 

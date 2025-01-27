@@ -1072,13 +1072,15 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockRefetch({
-      request,
-      firstResult: { data: data1 },
-      secondResult: { data: data2 },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        { request, result: { data: data1 } },
+        { request, result: { data: data2 } },
+      ]),
     });
 
-    const handle = queryManager.watchQuery<any>(request);
+    const handle = client.watchQuery(request);
     handle.subscribe({});
 
     const result = await handle.refetch();

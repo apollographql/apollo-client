@@ -817,13 +817,15 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockRefetch({
-      request,
-      firstResult: { data: data1 },
-      secondResult: { data: data2 },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        { request, result: { data: data1 } },
+        { request, result: { data: data2 } },
+      ]),
     });
 
-    const observable = queryManager.watchQuery<any>(request);
+    const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitMatchedValue({ data: data1 });

@@ -1454,25 +1454,31 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockQueryManager({
-      request: { query: primeQuery },
-      result: { data: data1 },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        { request: { query: primeQuery }, result: { data: data1 } },
+      ]),
     });
 
     // First, prime the cache
-    await queryManager.query<any>({
-      query: primeQuery,
-    });
+    await client.query({ query: primeQuery });
 
-    const handle = queryManager.watchQuery<any>({
+    const handle = client.watchQuery({
       query: complexQuery,
       fetchPolicy: "cache-only",
     });
 
     const result = await handle.result();
 
-    expect(result.data["luke"].name).toBe("Luke Skywalker");
-    expect(result.data).not.toHaveProperty("vader");
+    // TODO: We should only return partial data when returnPartialData is true
+    // for cache-only queries. Update for v4.
+    expect(result).toEqualApolloQueryResult({
+      data: { luke: { name: "Luke Skywalker" } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
   });
 
   it("runs a mutation", async () => {

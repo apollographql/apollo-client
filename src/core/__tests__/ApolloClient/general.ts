@@ -21,7 +21,6 @@ import {
 import mockQueryManager, {
   getDefaultOptionsForQueryManagerTests,
 } from "../../../testing/core/mocking/mockQueryManager";
-import mockWatchQuery from "../../../testing/core/mocking/mockWatchQuery";
 import {
   MockApolloLink,
   MockLink,

@@ -976,12 +976,12 @@ describe("QueryManager", () => {
       d: { e: 3, f: { g: 4 } },
     };
 
-    const queryManager = mockQueryManager({
-      request,
-      result: { data: data1 },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([{ request, result: { data: data1 } }]),
     });
 
-    const observable = queryManager.watchQuery<any>(request);
+    const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
 
     const { data } = await stream.takeNext();

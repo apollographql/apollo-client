@@ -187,19 +187,6 @@ describe("QueryManager", () => {
     return mockQueryManager(...args);
   };
 
-  function getCurrentQueryResult<TData, TVars extends object>(
-    observableQuery: ObservableQuery<TData, TVars>
-  ): {
-    data?: TData;
-    partial: boolean;
-  } {
-    const result = observableQuery.getCurrentResult();
-    return {
-      data: result.data as TData,
-      partial: !!result.partial,
-    };
-  }
-
   it("handles GraphQL errors", async () => {
     const stream = getObservableStream({
       query: gql`
@@ -2584,23 +2571,30 @@ describe("QueryManager", () => {
     const streamB = new ObservableStream(observableB);
 
     await expect(streamA).toEmitNext();
-    expect(getCurrentQueryResult(observableA)).toEqual({
+    expect(observableA.getCurrentResult()).toEqualApolloQueryResult({
       data: dataA,
-      partial: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
-    expect(getCurrentQueryResult(observableB)).toEqual({
-      data: undefined,
+    // @ts-ignore ApolloQueryResult expects `data` key to be available, but the
+    // runtime behavior does not provide it. This test fails by including a
+    // check for the data key.
+    expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
+      loading: true,
+      networkStatus: NetworkStatus.loading,
       partial: true,
     });
 
     await expect(streamB).toEmitNext();
-    expect(getCurrentQueryResult(observableA)).toEqual({
+    expect(observableA.getCurrentResult()).toEqualApolloQueryResult({
       data: dataA,
-      partial: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
-    expect(getCurrentQueryResult(observableB)).toEqual({
+    expect(observableB.getCurrentResult()).toEqual({
       data: dataB,
-      partial: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -3240,13 +3234,16 @@ describe("QueryManager", () => {
 
       await resetStore(queryManager);
 
-      const result = getCurrentQueryResult(observable);
-      expect(result.partial).toBe(false);
-      expect(result.data).toEqual(dataChanged);
-
-      const result2 = getCurrentQueryResult(observable2);
-      expect(result2.partial).toBe(false);
-      expect(result2.data).toEqual(data2Changed);
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataChanged,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
+        data: data2Changed,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("should change the store state to an empty state", () => {
@@ -3722,13 +3719,16 @@ describe("QueryManager", () => {
 
       await queryManager.reFetchObservableQueries();
 
-      const result = getCurrentQueryResult(observable);
-      expect(result.partial).toBe(false);
-      expect(result.data).toEqual(dataChanged);
-
-      const result2 = getCurrentQueryResult(observable2);
-      expect(result2.partial).toBe(false);
-      expect(result2.data).toEqual(data2Changed);
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataChanged,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
+        data: data2Changed,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("should only refetch once when we refetch observable queries", async () => {
@@ -4184,13 +4184,16 @@ describe("QueryManager", () => {
 
       await Promise.all(results);
 
-      const result = getCurrentQueryResult(observable);
-      expect(result.partial).toBe(false);
-      expect(result.data).toEqual(dataChanged);
-
-      const result2 = getCurrentQueryResult(observable2);
-      expect(result2.partial).toBe(false);
-      expect(result2.data).toEqual(data2Changed);
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataChanged,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
+        data: data2Changed,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
   });
 
@@ -5892,8 +5895,11 @@ describe("QueryManager", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      const currentResult = getCurrentQueryResult(observable);
-      expect(currentResult.data).toEqual(data);
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
   });
 

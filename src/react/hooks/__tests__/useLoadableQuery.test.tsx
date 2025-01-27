@@ -40,10 +40,7 @@ import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryRef } from "../../../react";
-import {
-  FetchMoreFunction,
-  RefetchFunction,
-} from "../useSuspenseQuery";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   SimpleCaseData,

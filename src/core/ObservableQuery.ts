@@ -733,9 +733,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       optimistic: false,
     });
 
+    let maybeCompletedResult = result;
     const completeSymbol = Symbol("complete");
-    if (complete) {
-      Object.defineProperty(result, "complete", {
+    if (complete && result) {
+      maybeCompletedResult = { ...result };
+      Object.defineProperty(maybeCompletedResult, "complete", {
         value: completeSymbol,
         writable: false,
         enumerable: false,
@@ -743,16 +745,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       });
     }
 
-    const newResult = mapFn(result as any, {
+    const newResult = mapFn(maybeCompletedResult as any, {
       variables: (this as any).variables,
     });
 
-    if (newResult) {
+    if (newResult && newResult !== maybeCompletedResult) {
       queryManager.cache.writeQuery({
         query: this.options.query,
-        // Spread the new result to ensure that the complete property is not
-        // included in the result since it's not enumerable.
-        data: newResult === result ? { ...newResult } : newResult,
+        data: newResult,
         variables: this.variables,
       });
 

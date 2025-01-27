@@ -532,26 +532,24 @@ describe("QueryManager", () => {
       });
     });
 
-    const mockedQueryManger = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link: mockedSingleLink,
-        cache: new InMemoryCache({ addTypename: false }),
-        defaultOptions: {
-          watchQuery: {
-            fetchPolicy: "cache-and-network",
-            returnPartialData: false,
-            partialRefetch: true,
-            notifyOnNetworkStatusChange: true,
-          },
-          query: {
-            fetchPolicy: "network-only",
-          },
+    const client = new ApolloClient({
+      link: mockedSingleLink,
+      cache: new InMemoryCache({ addTypename: false }),
+      defaultOptions: {
+        watchQuery: {
+          fetchPolicy: "cache-and-network",
+          returnPartialData: false,
+          partialRefetch: true,
+          notifyOnNetworkStatusChange: true,
         },
-        queryDeduplication: false,
-      })
-    );
+        query: {
+          fetchPolicy: "network-only",
+        },
+      },
+      queryDeduplication: false,
+    });
 
-    const observableQuery = mockedQueryManger.watchQuery<
+    const observableQuery = client.watchQuery<
       (typeof expResult)["data"],
       { offset?: number | undefined }
     >({

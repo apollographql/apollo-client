@@ -756,24 +756,27 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockQueryManager(
-      {
-        request,
-        result: { data: data1 },
-        delay: 10,
-      },
-      {
-        request: request2,
-        result: { data: data2 },
-        // make the second request the slower one
-        delay: 100,
-      },
-      {
-        request: request3,
-        result: { data: data3 },
-        delay: 10,
-      }
-    );
+    const queryManager = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request,
+          result: { data: data1 },
+          delay: 10,
+        },
+        {
+          request: request2,
+          result: { data: data2 },
+          // make the second request the slower one
+          delay: 100,
+        },
+        {
+          request: request3,
+          result: { data: data3 },
+          delay: 10,
+        },
+      ]),
+    });
 
     const ob1 = queryManager.watchQuery(request);
     const ob2 = queryManager.watchQuery(request2);

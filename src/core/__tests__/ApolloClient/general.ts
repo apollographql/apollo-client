@@ -617,6 +617,10 @@ describe("QueryManager", () => {
       ) as unknown as Observable<any>
     );
 
+    // TODO: Determine if we can find another way to test that the value went
+    // through the rxjs `map` function. Ideally we can replace this matcher with
+    // `toEmitApolloQueryResult`, but the `fromRx` value is not a valid
+    // `ApolloQueryResult` so TypeScript complains.
     await expect(stream).toEmitValue({
       fromRx: true,
       loading: false,

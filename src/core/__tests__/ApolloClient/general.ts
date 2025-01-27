@@ -1420,7 +1420,11 @@ describe("QueryManager", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
     expect(observable.getCurrentResult().data).toEqual(data);
   });
 

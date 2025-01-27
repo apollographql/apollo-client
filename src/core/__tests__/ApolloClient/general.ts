@@ -1219,25 +1219,28 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query: query },
-        result: { data: data1 },
-      },
-      {
-        request: { query: query },
-        result: { data: data2 },
-      }
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: query },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query },
+          result: { data: data2 },
+        },
+      ]),
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       notifyOnNetworkStatusChange: false,
     });
     const stream = new ObservableStream(observable);
-    const originalOptions = assign({}, observable.options);
+    const originalOptions = { ...observable.options };
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,

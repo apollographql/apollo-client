@@ -19,9 +19,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
       - name: add label
-        uses: actions-ecosystem/action-add-labels@v1
+        uses: actions/github-script@v4
         with:
-          labels: auto-cleanup
+          script: |
+            const script = (await import('${{ github.workspace }}/.github/workflows/cleanup-checks.mjs')).setup(...arguments)
+            await script.add_cleanup_label()
 
   cleanup:
     if: |

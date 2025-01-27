@@ -35,6 +35,8 @@ function copyDir(src: string, dest: string) {
   }
 }
 
-fs.copyFileSync(`${srcDir}/CHANGELOG.md`, `${destDir}/CHANGELOG.md`);
-copyDir(`${srcDir}/.changeset`, `${destDir}/.changeset`);
-fs.writeFileSync(`${destDir}/.npmignore`, `.changeset\nCHANGELOG.md`);
+export async function prepareChangesetsRelease() {
+  fs.copyFileSync(`${srcDir}/CHANGELOG.md`, `${destDir}/CHANGELOG.md`);
+  copyDir(`${srcDir}/.changeset`, `${destDir}/.changeset`);
+  fs.writeFileSync(`${destDir}/.npmignore`, `.changeset\nCHANGELOG.md`);
+}

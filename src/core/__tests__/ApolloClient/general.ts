@@ -1030,7 +1030,7 @@ describe("QueryManager", () => {
     const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1038,12 +1038,12 @@ describe("QueryManager", () => {
 
     void observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: data1,
       loading: true,
       networkStatus: NetworkStatus.refetch,
     });
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,

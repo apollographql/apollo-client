@@ -459,14 +459,12 @@ describe("QueryManager", () => {
       });
     });
 
-    const mockedQueryManger = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link: mockedSingleLink,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link: mockedSingleLink,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    const observableQuery = mockedQueryManger.watchQuery({
+    const observableQuery = client.watchQuery({
       query: request.query,
       variables: request.variables,
       notifyOnNetworkStatusChange: false,

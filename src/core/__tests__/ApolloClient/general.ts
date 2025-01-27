@@ -828,9 +828,17 @@ describe("QueryManager", () => {
     const observable = client.watchQuery(request);
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ data: data1 });
+    await expect(stream).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
     void observable.refetch();
-    await expect(stream).toEmitMatchedValue({ data: data2 });
+    await expect(stream).toEmitApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("will return referentially equivalent data if nothing changed in a refetch", async () => {

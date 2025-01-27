@@ -1091,7 +1091,11 @@ describe("QueryManager", () => {
 
     const result = await observable.refetch();
 
-    expect(result.data).toEqual(data2);
+    expect(result).toEqualApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("allows you to refetch queries with new variables", async () => {

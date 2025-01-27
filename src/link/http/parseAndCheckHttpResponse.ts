@@ -119,7 +119,7 @@ export async function readMultipartBody<
   }
 }
 
-export function parseHeaders(headerText: string): Record<string, string> {
+function parseHeaders(headerText: string): Record<string, string> {
   const headersInit: Record<string, string> = {};
   headerText.split("\n").forEach((line) => {
     const i = line.indexOf(":");
@@ -133,7 +133,7 @@ export function parseHeaders(headerText: string): Record<string, string> {
   return headersInit;
 }
 
-export function parseJsonBody<T>(response: Response, bodyText: string): T {
+function parseJsonBody<T>(response: Response, bodyText: string): T {
   if (response.status >= 300) {
     // Network error
     const getResult = (): Record<string, unknown> | string => {

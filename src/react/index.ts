@@ -5,7 +5,6 @@ export {
   ApolloProvider,
   ApolloConsumer,
   getApolloContext,
-  resetApolloContext,
 } from "./context/index.js";
 
 export * from "./hooks/index.js";

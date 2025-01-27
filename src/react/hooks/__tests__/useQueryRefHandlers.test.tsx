@@ -9,6 +9,7 @@ import {
   gql,
   split,
 } from "../../../core";
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
 import {
   MockLink,
   MockSubscriptionLink,
@@ -23,7 +24,6 @@ import {
 } from "../../../testing/internal";
 import { useQueryRefHandlers } from "../useQueryRefHandlers";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
-import type { SubscribeToMoreFunction } from "../useSuspenseQuery";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
 import userEvent from "@testing-library/user-event";

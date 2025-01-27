@@ -19,7 +19,6 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
-  SubscribeToMoreOptions,
   ApolloQueryResult,
   FetchMoreQueryOptions,
   ErrorPolicy,
@@ -28,6 +27,8 @@ import type {
 import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
+  SubscribeToMoreFunction,
+  UpdateQueryFn,
 } from "../../core/watchQueryOptions.js";
 import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
@@ -90,23 +91,9 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
   stopPolling: () => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: <
-    TSubscriptionData = TData,
-    TSubscriptionVariables extends OperationVariables = TVariables,
-  >(
-    options: SubscribeToMoreOptions<
-      TData,
-      TSubscriptionVariables,
-      TSubscriptionData
-    >
-  ) => () => void;
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: <TVars extends OperationVariables = TVariables>(
-    mapFn: (
-      previousQueryResult: Unmasked<TData> | undefined,
-      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData>
-  ) => void;
+  updateQuery: UpdateQueryFn<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>

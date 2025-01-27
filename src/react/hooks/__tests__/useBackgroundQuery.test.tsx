@@ -42,6 +42,7 @@ import equal from "@wry/equality";
 import {
   RefetchWritePolicy,
   SubscribeToMoreOptions,
+  SubscribeToMoreFunction,
 } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
 import {
@@ -57,7 +58,6 @@ import {
   spyOnConsole,
   addDelayToMocks,
 } from "../../../testing/internal";
-import { SubscribeToMoreFunction } from "../useSuspenseQuery";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
@@ -8364,9 +8364,12 @@ describe.skip("type tests", () => {
     {
       const [, { subscribeToMore }] = useBackgroundQuery(query);
 
-      const subscription: MaskedDocumentNode<Subscription, never> = gql`
-        subscription {
-          pushLetter {
+      const subscription: MaskedDocumentNode<
+        Subscription,
+        { letterId: string }
+      > = gql`
+        subscription LetterPushed($letterId: ID!) {
+          pushLetter(letterId: $letterId) {
             id
             ...CharacterFragment
           }
@@ -8379,9 +8382,13 @@ describe.skip("type tests", () => {
 
       subscribeToMore({
         document: subscription,
-        updateQuery: (queryData, { subscriptionData }) => {
+        updateQuery: (
+          queryData,
+          { subscriptionData, subscriptionVariables, variables }
+        ) => {
           expectTypeOf(queryData).toEqualTypeOf<
-            UnmaskedVariablesCaseData | undefined
+            | (Partial<UnmaskedVariablesCaseData> & { complete?: undefined })
+            | (UnmaskedVariablesCaseData & { complete: Symbol })
           >();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
@@ -8389,6 +8396,14 @@ describe.skip("type tests", () => {
             subscriptionData.data
           ).toEqualTypeOf<UnmaskedSubscription>();
           expectTypeOf(subscriptionData.data).not.toEqualTypeOf<Subscription>();
+
+          expectTypeOf(subscriptionVariables).toEqualTypeOf<
+            { letterId: string } | undefined
+          >();
+
+          expectTypeOf(variables).toEqualTypeOf<
+            VariablesCaseVariables | undefined
+          >();
 
           return {} as UnmaskedVariablesCaseData;
         },
@@ -8413,9 +8428,13 @@ describe.skip("type tests", () => {
 
       subscribeToMore({
         document: subscription,
-        updateQuery: (queryData, { subscriptionData }) => {
+        updateQuery: (
+          queryData,
+          { subscriptionData, subscriptionVariables, variables }
+        ): UnmaskedVariablesCaseData => {
           expectTypeOf(queryData).toEqualTypeOf<
-            UnmaskedVariablesCaseData | undefined
+            | (Partial<UnmaskedVariablesCaseData> & { complete?: undefined })
+            | (UnmaskedVariablesCaseData & { complete: Symbol })
           >();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
@@ -8424,7 +8443,20 @@ describe.skip("type tests", () => {
           ).toEqualTypeOf<UnmaskedSubscription>();
           expectTypeOf(subscriptionData.data).not.toEqualTypeOf<Subscription>();
 
-          return {} as UnmaskedVariablesCaseData;
+          expectTypeOf(subscriptionVariables).toEqualTypeOf<undefined>();
+
+          expectTypeOf(variables).toEqualTypeOf<
+            VariablesCaseVariables | undefined
+          >();
+
+          if (queryData.complete) {
+            expectTypeOf(queryData).toEqualTypeOf<
+              UnmaskedVariablesCaseData & { complete: Symbol }
+            >();
+            return queryData;
+          }
+          // @ts-expect-error -- The incomplete data cannot be returned
+          return queryData;
         },
       });
     }

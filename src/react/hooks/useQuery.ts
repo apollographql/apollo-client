@@ -146,12 +146,14 @@ export function useQuery<
     NoInfer<TVariables>
   > = Object.create(null)
 ): QueryResult<TData, TVariables> {
-  return wrapHook(
+  const hookResult = wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
+
+  return hookResult;
 }
 
 function useQuery_<
@@ -289,9 +291,11 @@ export function useQueryInternals<
     watchQueryOptions
   );
 
-  const obsQueryFields = React.useMemo<
-    Omit<ObservableQueryFields<TData, TVariables>, "variables">
-  >(() => bindObservableMethods(observable), [observable]);
+  const obsQueryFields = React.useMemo(
+    (): Omit<ObservableQueryFields<TData, TVariables>, "variables"> =>
+      bindObservableMethods(observable),
+    [observable]
+  );
 
   useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
 
@@ -825,7 +829,7 @@ const skipStandbyResult = maybeDeepFreeze({
 
 function bindObservableMethods<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>
-) {
+): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
   return {
     refetch: observable.refetch.bind(observable),
     reobserve: observable.reobserve.bind(observable),

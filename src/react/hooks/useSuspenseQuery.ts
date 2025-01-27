@@ -11,6 +11,7 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { ApolloError, NetworkStatus } from "../../core/index.js";
+import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import { isNonEmptyArray } from "../../utilities/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -57,11 +58,6 @@ export type RefetchFunction<
   TData,
   TVariables extends OperationVariables,
 > = ObservableQueryFields<TData, TVariables>["refetch"];
-
-export type SubscribeToMoreFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>["subscribeToMore"];
 
 export function useSuspenseQuery<
   TData,
@@ -277,7 +273,8 @@ function useSuspenseQuery_<
     [queryRef]
   );
 
-  const subscribeToMore = queryRef.observable.subscribeToMore;
+  const subscribeToMore = queryRef.observable
+    .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
     UseSuspenseQueryResult<TData | undefined, TVariables>

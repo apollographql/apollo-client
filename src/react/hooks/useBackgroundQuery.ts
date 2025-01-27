@@ -6,6 +6,7 @@ import type {
   TypedDocumentNode,
   WatchQueryOptions,
 } from "../../core/index.js";
+import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
   getSuspenseCache,
@@ -17,11 +18,7 @@ import type { CacheKey, QueryRef } from "../internal/index.js";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type {
-  FetchMoreFunction,
-  RefetchFunction,
-  SubscribeToMoreFunction,
-} from "./useSuspenseQuery.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import type { SkipToken } from "./constants.js";
@@ -188,12 +185,14 @@ export function useBackgroundQuery<
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
-  return wrapHook(
+  const hookResult = wrapHook(
     "useBackgroundQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useBackgroundQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
+
+  return hookResult;
 }
 
 function useBackgroundQuery_<
@@ -293,7 +292,8 @@ function useBackgroundQuery_<
     {
       fetchMore,
       refetch,
-      subscribeToMore: queryRef.observable.subscribeToMore,
+      subscribeToMore: queryRef.observable
+        .subscribeToMore as any as SubscribeToMoreFunction<TData, TVariables>,
     },
   ];
 }

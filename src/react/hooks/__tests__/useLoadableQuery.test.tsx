@@ -18,6 +18,7 @@ import {
   SubscribeToMoreOptions,
   split,
 } from "../../../core";
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
 import {
   MockedProvider,
   MockedProviderProps,
@@ -42,7 +43,6 @@ import { QueryRef } from "../../../react";
 import {
   FetchMoreFunction,
   RefetchFunction,
-  SubscribeToMoreFunction,
 } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {

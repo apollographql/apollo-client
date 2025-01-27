@@ -3219,16 +3219,24 @@ describe("ApolloClient", () => {
       >();
 
       observableQuery.updateQuery((previousData) => {
-        expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery | undefined>();
-        expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+        expectTypeOf(previousData).toMatchTypeOf<Partial<UnmaskedQuery>>();
+        if (previousData.complete) {
+          expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
+          expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+        } else {
+          expectTypeOf(previousData).toMatchTypeOf<Partial<UnmaskedQuery>>();
+          expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+        }
 
-        return {} as UnmaskedQuery;
+        return undefined;
       });
 
       observableQuery.subscribeToMore({
         document: subscription,
         updateQuery(queryData, { subscriptionData }) {
-          expectTypeOf(queryData).toMatchTypeOf<UnmaskedQuery | undefined>();
+          expectTypeOf(queryData).toMatchTypeOf<
+            UnmaskedQuery | Partial<UnmaskedQuery>
+          >();
           expectTypeOf(queryData).not.toMatchTypeOf<Query>();
 
           expectTypeOf(

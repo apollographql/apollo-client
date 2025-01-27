@@ -164,31 +164,79 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   context?: DefaultContext;
 }
 
-export type UpdateQueryFn<
-  TData = any,
-  TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData,
-> = (
-  previousQueryResult: Unmasked<TData> | undefined,
-  options: {
-    subscriptionData: { data: Unmasked<TSubscriptionData> };
-    variables?: TSubscriptionVariables;
-  }
-) => Unmasked<TData> | undefined;
+export interface UpdateQueryFn<
+  TData,
+  TVars extends OperationVariables,
+  TOptions = {},
+> {
+  (mapFn: UpdateQueryMapFn<TData, TVars, TOptions>): void;
+}
 
-export type SubscribeToMoreOptions<
+export interface UpdateQueryMapFn<
   TData = any,
-  TSubscriptionVariables = OperationVariables,
+  TVars extends OperationVariables = OperationVariables,
+  TOptions = {},
+> {
+  (
+    previousQueryResult: // DeepPartial is more accurate, but causes typescript to stop on
+    // "Type instantiation is excessively deep and possibly infinite."
+    // | (DeepPartial<Unmasked<TData>> & { complete?: undefined })
+    | (Partial<Unmasked<TData>> & { complete?: undefined })
+      | (Unmasked<TData> & { complete: Symbol }),
+    options: TOptions & { variables?: TVars }
+  ): Unmasked<TData> | undefined;
+}
+
+export type SubscribeToMoreUpdateQueryFn<
+  TData = any,
+  TVars extends OperationVariables = OperationVariables,
+  TSubscriptionVariables extends OperationVariables = TVars,
   TSubscriptionData = TData,
-> = {
+> = UpdateQueryMapFn<
+  TData,
+  TVars,
+  {
+    subscriptionData: { data: Unmasked<TSubscriptionData> };
+    subscriptionVariables: TSubscriptionVariables | undefined;
+  }
+>;
+
+export interface SubscribeToMoreOptions<
+  TData = any,
+  TSubscriptionVariables extends OperationVariables = OperationVariables,
+  TSubscriptionData = TData,
+  TVars extends OperationVariables = TSubscriptionVariables,
+> {
   document:
     | DocumentNode
     | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
   variables?: TSubscriptionVariables;
-  updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
+  updateQuery?: SubscribeToMoreUpdateQueryFn<
+    TData,
+    TVars,
+    TSubscriptionVariables,
+    TSubscriptionData
+  >;
   onError?: (error: Error) => void;
   context?: DefaultContext;
-};
+}
+
+export interface SubscribeToMoreFunction<
+  TData,
+  TVars extends OperationVariables = OperationVariables,
+> {
+  <
+    TSubscriptionData = TData,
+    TSubscriptionVariables extends OperationVariables = TVars,
+  >(
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData,
+      TVars
+    >
+  ): () => void;
+}
 
 export interface SubscriptionOptions<
   TVariables = OperationVariables,

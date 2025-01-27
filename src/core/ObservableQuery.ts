@@ -31,6 +31,7 @@ import type {
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
   WatchQueryFetchPolicy,
+  UpdateQueryMapFn,
 } from "./watchQueryOptions.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
@@ -619,7 +620,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options: SubscribeToMoreOptions<
       TData,
       TSubscriptionVariables,
-      TSubscriptionData
+      TSubscriptionData,
+      TVariables
     >
   ) {
     const subscription = this.queryManager
@@ -632,12 +634,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
-            this.updateQuery<TSubscriptionVariables>(
-              (previous, { variables }) =>
-                updateQuery(previous, {
-                  subscriptionData,
-                  variables,
-                })
+            this.updateQuery((previous, { variables }) =>
+              updateQuery(previous, {
+                subscriptionData,
+                subscriptionVariables: options.variables,
+                variables,
+              })
             );
           }
         },
@@ -722,28 +724,35 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    *
    * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
    */
-  public updateQuery<TVars extends OperationVariables = TVariables>(
-    mapFn: (
-      previousQueryResult: Unmasked<TData> | undefined,
-      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData> | undefined
-  ): void {
+  public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
     const { queryManager } = this;
-    const { result } = queryManager.cache.diff<Unmasked<TData>>({
+    const { result, complete } = queryManager.cache.diff<Unmasked<TData>>({
       query: this.options.query,
       variables: this.variables,
       returnPartialData: true,
       optimistic: false,
     });
 
-    const newResult = mapFn(result, {
+    const completeSymbol = Symbol("complete");
+    if (complete) {
+      Object.defineProperty(result, "complete", {
+        value: completeSymbol,
+        writable: false,
+        enumerable: false,
+        configurable: false,
+      });
+    }
+
+    const newResult = mapFn(result as any, {
       variables: (this as any).variables,
     });
 
     if (newResult) {
       queryManager.cache.writeQuery({
         query: this.options.query,
-        data: newResult,
+        // Spread the new result to ensure that the complete property is not
+        // included in the result since it's not enumerable.
+        data: newResult === result ? { ...newResult } : newResult,
         variables: this.variables,
       });
 

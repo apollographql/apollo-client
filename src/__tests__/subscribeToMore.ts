@@ -241,10 +241,14 @@ describe("subscribeToMore", () => {
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
-        expect(prev).toBeTruthy();
-        expect(prev!.entry).not.toContainEqual(nextMutation);
+        expect(prev.complete).toBe(true);
+        // Type guard
+        if (!prev.complete) {
+          return undefined;
+        }
+        expect(prev.entry).not.toContainEqual(nextMutation);
         return {
-          entry: [...prev!.entry, { value: subscriptionData.data.name }],
+          entry: [...prev.entry, { value: subscriptionData.data.name }],
         };
       },
     });

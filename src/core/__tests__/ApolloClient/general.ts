@@ -1248,7 +1248,7 @@ describe("QueryManager", () => {
 
     void observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,

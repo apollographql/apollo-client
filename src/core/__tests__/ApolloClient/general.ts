@@ -1,7 +1,6 @@
 // externals
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
-import { assign } from "lodash";
 import gql from "graphql-tag";
 import { DocumentNode, GraphQLError } from "graphql";
 import { InvariantError, setVerbosity } from "ts-invariant";
@@ -612,7 +611,7 @@ describe("QueryManager", () => {
 
     const stream = new ObservableStream(
       observable.pipe(
-        map((result) => assign({ fromRx: true }, result))
+        map((result: any) => ({ fromRx: true, ...result }))
       ) as unknown as Observable<any>
     );
 
@@ -1254,7 +1253,7 @@ describe("QueryManager", () => {
       networkStatus: NetworkStatus.ready,
     });
 
-    const updatedOptions = assign({}, observable.options);
+    const updatedOptions = { ...observable.options };
     delete originalOptions.variables;
     delete updatedOptions.variables;
     expect(updatedOptions).toEqual(originalOptions);

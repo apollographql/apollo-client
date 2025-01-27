@@ -18,11 +18,8 @@ Let's take a look at an example:
 
 ```tsx {5,38,40,45-47}
 import { Suspense } from 'react';
-import {
-  gql,
-  TypedDocumentNode,
-  useSuspenseQuery
-} from '@apollo/client';
+import { gql, TypedDocumentNode } from '@apollo/client';
+import { useSuspenseQuery } from '@apollo/client/react';
 
 interface Data {
   dog: {
@@ -407,7 +404,7 @@ import {
   useBackgroundQuery,
   useReadQuery,
   useSuspenseQuery,
-} from '@apollo/client';
+} from '@apollo/client/react';
 
 function App() {
   // We can start the request here, even though `Dog`
@@ -489,7 +486,7 @@ Let's update our example to start loading the dog's details as a result of selec
 import {
   // ...
   useLoadableQuery
-} from '@apollo/client';
+} from '@apollo/client/react';
 
 function App() {
   const { data } = useSuspenseQuery(GET_DOGS_QUERY);
@@ -554,7 +551,7 @@ Let's update our example to start loading the `GET_DOGS_QUERY` before our app is
 import {
   // ...
   createQueryPreloader
-} from '@apollo/client';
+} from '@apollo/client/react';
 
 // This `preloadQuery` function does not have to be created each time you
 // need to preload a new query. You may prefer to export this function
@@ -685,14 +682,13 @@ Let's update our example by adding the ability to refetch breeds. We destructure
 
 ```tsx {1,12-15,18-20,49,57,62}
 import { Suspense, useTransition } from "react";
+import { gql, TypedDocumentNode } from "@apollo/client";
 import {
   useSuspenseQuery,
   useBackgroundQuery,
   useReadQuery,
-  gql,
-  TypedDocumentNode,
   QueryRef,
-} from "@apollo/client";
+} from "@apollo/client/react";
 
 function App() {
   const [isPending, startTransition] = useTransition();
@@ -770,7 +766,7 @@ Let's update our example to preload our `GET_BREEDS_QUERY` outside React and use
 import {
   // ...
   useQueryRefHandlers,
-} from "@apollo/client";
+} from "@apollo/client/react";
 
 const queryRef = preloadQuery(GET_BREEDS_QUERY);
 
@@ -868,7 +864,7 @@ It should not be used in the long term.
 Instead, you should use [`skipToken`](/react/api/react/hooks#skiptoken):
 
 ```js title="Recommended usage of skipToken with useSuspenseQuery"
-import { skipToken, useSuspenseQuery } from '@apollo/client';
+import { skipToken, useSuspenseQuery } from '@apollo/client/react';
 const { data } = useSuspenseQuery(
   query,
   id ? { variables: { id } } : skipToken
@@ -876,7 +872,7 @@ const { data } = useSuspenseQuery(
 ```
 
 ```js title="Recommended usage of skipToken with useBackgroundQuery"
-import { skipToken, useBackgroundQuery } from '@apollo/client';
+import { skipToken, useBackgroundQuery } from '@apollo/client/react';
 const [queryRef] = useBackgroundQuery(
   query,
   id ? { variables: { id } } : skipToken

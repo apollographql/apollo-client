@@ -4,13 +4,10 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloConsumer",
   "ApolloError",
   "ApolloLink",
-  "ApolloProvider",
   "Cache",
   "DocumentTransform",
-  "DocumentType",
   "HttpLink",
   "InMemoryCache",
   "MissingFieldError",
@@ -20,7 +17,6 @@ Array [
   "checkFetcher",
   "concat",
   "createHttpLink",
-  "createQueryPreloader",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
   "defaultPrinter",
@@ -33,7 +29,6 @@ Array [
   "from",
   "fromError",
   "fromPromise",
-  "getApolloContext",
   "gql",
   "isApolloError",
   "isNetworkRequestSettled",
@@ -41,9 +36,7 @@ Array [
   "makeReference",
   "makeVar",
   "mergeOptions",
-  "operationName",
   "parseAndCheckHttpResponse",
-  "parser",
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
@@ -51,22 +44,9 @@ Array [
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
-  "skipToken",
   "split",
   "throwServerError",
   "toPromise",
-  "useApolloClient",
-  "useBackgroundQuery",
-  "useFragment",
-  "useLazyQuery",
-  "useLoadableQuery",
-  "useMutation",
-  "useQuery",
-  "useQueryRefHandlers",
-  "useReactiveVar",
-  "useReadQuery",
-  "useSubscription",
-  "useSuspenseQuery",
 ]
 `;
 
@@ -355,7 +335,6 @@ exports[`exports of public entry points @apollo/client/testing 1`] = `
 Array [
   "MockLink",
   "MockSubscriptionLink",
-  "MockedProvider",
   "createMockClient",
   "mockObservableLink",
   "mockSingleLink",
@@ -386,6 +365,12 @@ exports[`exports of public entry points @apollo/client/testing/experimental 1`] 
 Array [
   "createSchemaFetch",
   "createTestSchema",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/react 1`] = `
+Array [
+  "MockedProvider",
 ]
 `;
 

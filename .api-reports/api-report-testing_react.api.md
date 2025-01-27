@@ -14,6 +14,7 @@ import type { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
+import * as React_2 from 'react';
 import type { Subscriber } from 'zen-observable-ts';
 import type { Subscription } from 'zen-observable-ts';
 import { Trie } from '@wry/trie';
@@ -486,12 +487,6 @@ type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? 
 type CovariantUnaryFunction<out Arg, out Ret> = {
     fn(arg: Arg): Ret;
 }["fn"];
-
-// Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "NormalizedCacheObject" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function createMockClient<TData>(data: TData, query: DocumentNode, variables?: {}): ApolloClient<NormalizedCacheObject>;
 
 // @public (undocumented)
 interface DataMasking {
@@ -1042,14 +1037,54 @@ type MissingTree = string | {
     readonly [key: string]: MissingTree;
 };
 
+// Warning: (ae-forgotten-export) The symbol "MockedProviderState" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-interface MockApolloLink extends ApolloLink {
+export class MockedProvider extends React_2.Component<MockedProviderProps, MockedProviderState> {
+    constructor(props: MockedProviderProps);
     // (undocumented)
-    operation?: Operation;
+    componentWillUnmount(): void;
+    // (undocumented)
+    static defaultProps: MockedProviderProps;
+    // (undocumented)
+    render(): React_2.JSX.Element | null;
 }
 
 // @public (undocumented)
-export interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
+export interface MockedProviderProps<TSerializedCache = {}> {
+    // (undocumented)
+    addTypename?: boolean;
+    // (undocumented)
+    cache?: ApolloCache<TSerializedCache>;
+    // (undocumented)
+    childProps?: object;
+    // (undocumented)
+    children?: any;
+    connectToDevTools?: boolean;
+    // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    defaultOptions?: DefaultOptions;
+    // (undocumented)
+    link?: ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "MockedResponse" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    mocks?: ReadonlyArray<MockedResponse<any, any>>;
+    // (undocumented)
+    resolvers?: Resolvers;
+    // (undocumented)
+    showWarnings?: boolean;
+}
+
+// @public (undocumented)
+interface MockedProviderState {
+    // (undocumented)
+    client: ApolloClient<any>;
+}
+
+// @public (undocumented)
+interface MockedResponse<out TData = Record<string, any>, out TVariables = Record<string, any>> {
     // (undocumented)
     delay?: number;
     // (undocumented)
@@ -1060,74 +1095,14 @@ export interface MockedResponse<out TData = Record<string, any>, out TVariables 
     newData?: ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
     // (undocumented)
     request: GraphQLRequest<TVariables>;
+    // Warning: (ae-forgotten-export) The symbol "ResultFunction" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     result?: FetchResult<Unmasked<TData>> | ResultFunction<FetchResult<Unmasked<TData>>, TVariables>;
     // Warning: (ae-forgotten-export) The symbol "VariableMatcher" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     variableMatcher?: VariableMatcher<TVariables>;
-}
-
-// @public (undocumented)
-interface MockedSubscriptionResult {
-    // (undocumented)
-    delay?: number;
-    // (undocumented)
-    error?: Error;
-    // (undocumented)
-    result?: FetchResult;
-}
-
-// @public (undocumented)
-export class MockLink extends ApolloLink {
-    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, addTypename?: Boolean, options?: MockLinkOptions);
-    // (undocumented)
-    addMockedResponse(mockedResponse: MockedResponse): void;
-    // (undocumented)
-    addTypename: Boolean;
-    // (undocumented)
-    operation: Operation;
-    // (undocumented)
-    request(operation: Operation): Observable<FetchResult> | null;
-    // (undocumented)
-    showWarnings: boolean;
-}
-
-// @public (undocumented)
-export interface MockLinkOptions {
-    // (undocumented)
-    showWarnings?: boolean;
-}
-
-// @public (undocumented)
-export function mockObservableLink(): MockSubscriptionLink;
-
-// Warning: (ae-forgotten-export) The symbol "MockApolloLink" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink;
-
-// @public (undocumented)
-export class MockSubscriptionLink extends ApolloLink {
-    constructor();
-    // (undocumented)
-    onSetup(listener: any): void;
-    // (undocumented)
-    onUnsubscribe(listener: any): void;
-    // (undocumented)
-    operation?: Operation;
-    // (undocumented)
-    request(operation: Operation): Observable<FetchResult>;
-    // (undocumented)
-    setups: any[];
-    // (undocumented)
-    simulateComplete(): void;
-    // Warning: (ae-forgotten-export) The symbol "MockedSubscriptionResult" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    simulateResult(result: MockedSubscriptionResult, complete?: boolean): void;
-    // (undocumented)
-    unsubscribers: any[];
 }
 
 // Warning: (ae-forgotten-export) The symbol "ModifierDetails" needs to be exported by the entry point index.d.ts
@@ -1260,16 +1235,6 @@ type NextResultListener = (method: "next" | "error" | "complete", arg?: any) => 
 
 // @public
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
-
-// @public
-interface NormalizedCacheObject {
-    // (undocumented)
-    [dataId: string]: StoreObject | undefined;
-    // (undocumented)
-    __META?: {
-        extraRootIds: string[];
-    };
-}
 
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
@@ -1449,8 +1414,6 @@ class QueryManager<TStore> {
     readonly dataMasking: boolean;
     // (undocumented)
     readonly defaultContext: Partial<DefaultContext>;
-    // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     defaultOptions: DefaultOptions;
     // (undocumented)
@@ -1698,7 +1661,7 @@ interface Resolvers {
 // Warning: (ae-forgotten-export) The symbol "CovariantUnaryFunction" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<V, T>;
+type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<V, T>;
 
 // @public (undocumented)
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
@@ -1797,9 +1760,6 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
 type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never> extends ((x: infer U) => 0) ? U : never;
 
 // @public (undocumented)
-export function tick(): Promise<void>;
-
-// @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
 
 // @public (undocumented)
@@ -1871,9 +1831,6 @@ interface UriFunction {
 // @public (undocumented)
 type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<V, boolean>;
 
-// @public (undocumented)
-export function wait(ms: number): Promise<void>;
-
 // @public
 interface WatchFragmentOptions<TData, TVars> {
     fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
@@ -1905,15 +1862,6 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-// @public @deprecated (undocumented)
-export function withErrorSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
-
-// @public @deprecated (undocumented)
-export function withLogSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
-
-// @public @deprecated (undocumented)
-export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs) => TResult, ...args: TArgs): TResult;
-
 // Warnings were encountered during analysis:
 //
 // src/cache/core/types/DataProxy.ts:147:7 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
@@ -1923,6 +1871,7 @@ export function withWarningSpy<TArgs extends any[], TResult>(it: (...args: TArgs
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
+// src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:121:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts

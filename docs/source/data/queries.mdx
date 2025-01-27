@@ -2,8 +2,8 @@
 title: Queries
 description: Fetch data with the useQuery hook
 api_doc:
-  - "@apollo/client!QueryHookOptions:interface"
-  - "@apollo/client!QueryResult:interface"
+  - "@apollo/client/react!QueryHookOptions:interface"
+  - "@apollo/client/react!QueryResult:interface"
 ---
 
 import { PropertySignatureTable } from '../../shared/ApiDoc';
@@ -27,7 +27,8 @@ The `useQuery` [React hook](https://react.dev/reference/react) is the primary AP
 Let's look at an example. First, we'll create a GraphQL query named `GET_DOGS`. Remember to wrap query strings in the `gql` function to parse them into query documents:
 
 ```js title="index.js"
-import { gql, useQuery } from '@apollo/client';
+import { gql } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 
 const GET_DOGS = gql`
   query GetDogs {
@@ -246,7 +247,7 @@ Here's an example:
 
 ```jsx {2,5,13} title="index.js"
 import React from 'react';
-import { useLazyQuery } from '@apollo/client';
+import { useLazyQuery } from '@apollo/client/react';
 
 function DelayedQuery() {
   const [getDog, { loading, error, data }] = useLazyQuery(GET_DOG_PHOTO);
@@ -512,13 +513,13 @@ Most calls to `useQuery` can omit the majority of these options, but it's useful
 
 The `useQuery` hook accepts the following options:
 
-<PropertySignatureTable canonicalReference="@apollo/client!QueryHookOptions:interface" idPrefix="queryhookoptions-interface" />
+<PropertySignatureTable canonicalReference="@apollo/client/react!QueryHookOptions:interface" idPrefix="queryhookoptions-interface" />
 
 ### Result
 
 After being called, the `useQuery` hook returns a result object with the following properties. This object contains your query result, plus some helpful functions for refetching, dynamic polling, and pagination.
 
-<PropertySignatureTable canonicalReference="@apollo/client!QueryResult:interface" idPrefix="queryresult-interface" />
+<PropertySignatureTable canonicalReference="@apollo/client/react!QueryResult:interface" idPrefix="queryresult-interface" />
 
 ## Next steps
 

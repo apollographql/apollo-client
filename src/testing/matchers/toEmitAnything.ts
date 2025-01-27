@@ -8,7 +8,7 @@ export const toEmitAnything: MatcherFunction<[options?: TakeOptions]> =
     const hint = this.utils.matcherHint("toEmitAnything", "stream", "");
 
     try {
-      const value = await stream.take(options);
+      const value = await stream.peek(options);
 
       return {
         pass: true,

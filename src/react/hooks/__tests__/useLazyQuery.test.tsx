@@ -15,7 +15,6 @@ import {
 import { Observable } from "../../../utilities";
 import { ApolloProvider } from "../../../react";
 import {
-  MockedProvider,
   mockSingleLink,
   wait,
   tick,
@@ -31,6 +30,7 @@ import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

@@ -59,10 +59,6 @@ describe("@apollo/client/apollo-client.cjs", () => {
     assert.strictEqual(typeof bundle.ApolloClient, "function");
     assert.strictEqual(typeof bundle.InMemoryCache, "function");
 
-    // TODO This will change in AC4 when we move all React exports to the
-    // @apollo/client/react entry point (see issue #8190).
-    assert.strictEqual(typeof bundle.ApolloProvider, "function");
-
     // The CommonJS bundles referred to by the "main" fields in the various
     // package.json files that we generate during `npm run build` are all
     // independent, non-overlapping bundles, but apollo-client.cjs is its own

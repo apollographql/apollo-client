@@ -23,7 +23,6 @@ import {
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
-  MockedProvider,
   wait,
 } from "../../../testing";
 import {
@@ -70,6 +69,7 @@ import {
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 afterEach(() => {
   jest.useRealTimers();

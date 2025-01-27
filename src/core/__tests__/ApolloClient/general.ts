@@ -365,12 +365,12 @@ describe("QueryManager", () => {
     `;
     const error = new Error("Network error");
 
-    const queryManager = mockQueryManager({
-      request: { query },
-      error,
+    const client = new ApolloClient({
+      link: new MockLink([{ request: { query }, error }]),
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
-    const observable = queryManager.watchQuery<any>({ query });
+    const observable = client.watchQuery({ query });
     observable.subscribe({
       next: () => {
         throw new Error("Should not have been called");

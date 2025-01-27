@@ -109,6 +109,18 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public abstract write<TData = any, TVariables = any>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
+
+  /**
+   * Returns data read from the cache for a given query along with information
+   * about the cache result such as whether the result is complete and details
+   * about missing fields.
+   *
+   * Will return `complete` as `true` if it can fulfill the full cache result or
+   * `false` if not. When no data can be fulfilled from the cache, `null` is
+   * returned. When `returnPartialData` is `true`, non-null partial results are
+   * returned if it contains at least one field that can be fulfilled from the
+   * cache.
+   */
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>

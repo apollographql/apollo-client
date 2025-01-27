@@ -779,7 +779,7 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = new ApolloClient({
+    const client = new ApolloClient({
       cache: new InMemoryCache({ addTypename: false }),
       link: new MockLink([
         {
@@ -801,9 +801,9 @@ describe("QueryManager", () => {
       ]),
     });
 
-    const ob1 = queryManager.watchQuery(request);
-    const ob2 = queryManager.watchQuery(request2);
-    const ob3 = queryManager.watchQuery(request3);
+    const ob1 = client.watchQuery(request);
+    const ob2 = client.watchQuery(request2);
+    const ob3 = client.watchQuery(request3);
 
     const stream1 = new ObservableStream(ob1);
     const stream2 = new ObservableStream(ob2);

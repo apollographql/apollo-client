@@ -1413,11 +1413,11 @@ describe("QueryManager", () => {
       }
     `;
     const data = { list: [null, { value: 1 }] };
-    const queryManager = mockQueryManager({
-      request: { query },
-      result: { data },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([{ request: { query }, result: { data } }]),
     });
-    const observable = queryManager.watchQuery({ query });
+    const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
     await expect(stream).toEmitMatchedValue({ data });

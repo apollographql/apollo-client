@@ -1464,16 +1464,16 @@ describe("QueryManager", () => {
     // First, prime the cache
     await client.query({ query: primeQuery });
 
-    const handle = client.watchQuery({
+    const observable = client.watchQuery({
       query: complexQuery,
       fetchPolicy: "cache-only",
     });
 
-    const result = await handle.result();
+    const stream = new ObservableStream(observable);
 
     // TODO: We should only return partial data when returnPartialData is true
-    // for cache-only queries. Update for v4.
-    expect(result).toEqualApolloQueryResult({
+    // for cache-only queries, otherwise return `undefined`. Update for v4.
+    await expect(stream).toEmitApolloQueryResult({
       data: { luke: { name: "Luke Skywalker" } },
       loading: false,
       networkStatus: NetworkStatus.ready,

@@ -591,19 +591,23 @@ describe("QueryManager", () => {
       },
     };
 
-    const handle = mockWatchQuery({
-      request: {
-        query: gql`
-          query people {
-            allPeople(first: 1) {
-              people {
-                name
-              }
-            }
+    const query = gql`
+      query people {
+        allPeople(first: 1) {
+          people {
+            name
           }
-        `,
-      },
-      result: expResult,
+        }
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([{ request: { query }, result: expResult }]),
+    });
+    const handle = client.watchQuery({
+      query,
+      notifyOnNetworkStatusChange: false,
     });
 
     const observable = from(handle as any);

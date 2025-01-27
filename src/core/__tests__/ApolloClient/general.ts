@@ -657,42 +657,45 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockQueryManager(
-      {
-        request,
-        result: { data: data1 },
-      },
-      {
-        request,
-        result: { data: data2 },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request,
+          result: { data: data1 },
+        },
+        {
+          request,
+          result: { data: data2 },
 
-        // Wait for both to subscribe
-        delay: 100,
-      },
-      {
-        request,
-        result: { data: data3 },
-      }
-    );
+          // Wait for both to subscribe
+          delay: 100,
+        },
+        {
+          request,
+          result: { data: data3 },
+        },
+      ]),
+    });
 
     // pre populate data to avoid contention
-    await queryManager.query<any>(request);
+    await client.query(request);
 
-    const handle = queryManager.watchQuery<any>(request);
+    const observable = client.watchQuery(request);
 
-    const stream1 = new ObservableStream(handle);
-    const stream2 = new ObservableStream(handle);
+    const stream1 = new ObservableStream(observable);
+    const stream2 = new ObservableStream(observable);
 
     await expect(stream1).toEmitMatchedValue({ data: data1 });
     await expect(stream2).toEmitMatchedValue({ data: data1 });
 
-    void handle.refetch();
+    void observable.refetch();
 
     await expect(stream1).toEmitMatchedValue({ data: data2 });
     await expect(stream2).toEmitMatchedValue({ data: data2 });
 
     stream1.unsubscribe();
-    void handle.refetch();
+    void observable.refetch();
 
     await expect(stream2).toEmitMatchedValue({ data: data3 });
   });

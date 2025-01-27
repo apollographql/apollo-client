@@ -42,6 +42,12 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  toEmitApolloQueryResult: T extends ObservableStream<infer QueryResult> ?
+    QueryResult extends ApolloQueryResult<infer TData> ?
+      (value: ApolloQueryResult<TData>, options?: TakeOptions) => Promise<R>
+    : { error: "matcher needs to be matched with an ApolloQueryResult" }
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
   toEmitAnything: T extends ObservableStream<any> ?
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };

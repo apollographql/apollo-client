@@ -4,6 +4,7 @@ import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.j
 import { toBeGarbageCollected } from "./toBeGarbageCollected.js";
 import { toBeDisposed } from "./toBeDisposed.js";
 import { toComplete } from "./toComplete.js";
+import { toEmitApolloQueryResult } from "./toEmitApolloQueryResult.js";
 import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
@@ -15,6 +16,7 @@ import { toEqualQueryResult } from "./toEqualQueryResult.js";
 
 expect.extend({
   toComplete,
+  toEmitApolloQueryResult,
   toEmitAnything,
   toEmitError,
   toEmitMatchedValue,

@@ -39,14 +39,16 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 
-console.log(
-  "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
-);
+export function inlineInheritDoc() {
+  console.log(
+    "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
+  );
 
-const model = loadApiModel();
-processComments();
+  const model = loadApiModel();
+  processComments(model);
+}
 
-function getCommentFor(canonicalReference: string) {
+function getCommentFor(canonicalReference: string, model: ApiModel) {
   const apiItem = model.resolveDeclarationReference(
     DeclarationReference.parse(canonicalReference),
     undefined
@@ -132,7 +134,7 @@ function loadApiModel() {
   }
 }
 
-function processComments() {
+function processComments(model: ApiModel) {
   const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
 
   const project = new Project({
@@ -158,7 +160,7 @@ function processComments() {
           newText = newText.replace(
             inheritDocRegex,
             (_, canonicalReference) => {
-              return getCommentFor(canonicalReference) || "";
+              return getCommentFor(canonicalReference, model) || "";
             }
           );
         }

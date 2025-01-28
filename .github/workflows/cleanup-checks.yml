@@ -23,7 +23,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            const script = (await import('${{ github.workspace }}/.github/workflows/cleanup-checks.mjs')).setup(...arguments)
+            const script = (await import('${{ github.workspace }}/.github/workflows/cleanup-checks.mjs')).setup({context,core,github,exec,glob,io})
             await script.add_cleanup_label()
 
   cleanup:

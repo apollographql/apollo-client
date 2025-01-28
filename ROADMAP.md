@@ -1,6 +1,6 @@
 # 🔮 Apollo Client Ecosystem Roadmap
 
-**Last updated: 2025-01-08**
+**Last updated: 2025-01-22**
 
 For up to date release notes, refer to the project's [Changelog](https://github.com/apollographql/apollo-client/blob/main/CHANGELOG.md).
 
@@ -17,8 +17,8 @@ For up to date release notes, refer to the project's [Changelog](https://github.
 
 ### Apollo Client
 
-#### 3.13.0 - January 13, 2024
-_Release candidate - January 7th_
+#### 3.13.0 - February 3, 2024
+_Release candidate - January 27th_
 
 - `useSuspenseFragment`
 
@@ -47,11 +47,13 @@ _No outstanding work_
 
 ### Apollo Client DevTools
 
+- Memory panel
+
 _These changes will take longer than anticipated due to prioritization on Apollo Client 4.0_
 
 ### Apollo Client React Framework Integrations
 
 - New/more robust documentation
-- Support for `@defer` in RSC
+- Support for `@defer` with `PreloadQuery`
 - Support for Apollo Client Streaming in TanStack Router
-- Support for Apollo Client Streaming in React Router 7
+- Support for Apollo Client Streaming in React Router 7 (merged)

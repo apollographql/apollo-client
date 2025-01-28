@@ -108,16 +108,18 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     });
 
     return {
-      result: diffToResult({
-        ...diff,
-        result: client["queryManager"].maskFragment({
-          fragment,
-          fragmentName,
-          // TODO: Revert to `diff.result` once `useFragment` supports `null` as
-          // valid return value
-          data: diff.result === null ? {} : diff.result,
-        }),
-      } as Cache.DiffResult<TData>),
+      result: diffToResult(
+        {
+          ...diff,
+          result: client["queryManager"].maskFragment({
+            fragment,
+            fragmentName,
+            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+            // valid return value
+            data: diff.result === null ? {} : diff.result,
+          }),
+        } as Cache.DiffResult<TData> // TODO: Remove assertion
+      ),
     };
   }, [client, stableOptions]);
 
@@ -166,7 +168,7 @@ function diffToResult<TData>(
   const result = {
     data: diff.result,
     complete: !!diff.complete,
-  } as UseFragmentResult<TData>;
+  } as UseFragmentResult<TData>; // TODO: Remove assertion once useFragment returns null
 
   if (diff.missing) {
     result.missing = diff.missing.missing;

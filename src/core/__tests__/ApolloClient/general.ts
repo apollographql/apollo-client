@@ -1482,14 +1482,23 @@ describe("QueryManager", () => {
   });
 
   it("runs a mutation", async () => {
-    const { result } = await mockMutation({
-      mutation: gql`
-        mutation makeListPrivate {
-          makeListPrivate(id: "5")
-        }
-      `,
-      data: { makeListPrivate: true },
+    const mutation = gql`
+      mutation makeListPrivate {
+        makeListPrivate(id: "5")
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data: { makeListPrivate: true } },
+        },
+      ]),
     });
+
+    const result = await client.mutate({ mutation });
 
     expect(result.data).toEqual({ makeListPrivate: true });
   });

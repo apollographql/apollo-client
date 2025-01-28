@@ -6082,9 +6082,25 @@ describe("useQuery Hook", () => {
         errors: [new GraphQLError("Partial pagination error")],
         networkStatus: NetworkStatus.error,
       });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab.concat(cd) },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
-    it("fetchMore does not inherits errorPolicy 'all' from original query if 'query' is defined as a parameter in fetchMore", async () => {
+    // TODO: This test is intended to document the existing behavior. However, we should revisit to determine if this is the desired behavior
+    it("fetchMore does not inherit errorPolicy 'all' from original query if 'query' is defined as a parameter in fetchMore", async () => {
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocksWithPartialPaginationError}>
           {children}
@@ -6137,9 +6153,11 @@ describe("useQuery Hook", () => {
           }),
         })
       ).rejects.toThrow("Partial pagination error");
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
-    it("fetchMore applies specified errorPolicy if 'query' is defined as a parameter", async () => {
+    it("fetchMore applies specified errorPolicy if 'query' is defined as a parameter in fetchMore", async () => {
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocksWithPartialPaginationError}>
           {children}
@@ -6184,6 +6202,7 @@ describe("useQuery Hook", () => {
       }
 
       const fetchMoreResult = await getCurrentSnapshot().fetchMore({
+        query,
         variables: { limit: 2 },
         errorPolicy: "all",
         updateQuery: (prev, { fetchMoreResult }) => ({
@@ -6197,6 +6216,21 @@ describe("useQuery Hook", () => {
         errors: [new GraphQLError("Partial pagination error")],
         networkStatus: NetworkStatus.error,
       });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab.concat(cd) },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

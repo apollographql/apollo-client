@@ -2,6 +2,7 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   DocumentNode,
+  FetchResult,
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef, QueryResult } from "../../react/index.js";
@@ -87,6 +88,16 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : T extends Promise<QueryResult<infer TData, infer TVariables>> ?
     (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
   : { error: "matchers needs to be called on a QueryResult" };
+
+  toEqualFetchResult: T extends (
+    FetchResult<infer TData, infer TContext, infer TExtensions>
+  ) ?
+    (expected: FetchResult<TData, TContext, TExtensions>) => R
+  : T extends (
+    Promise<FetchResult<infer TData, infer TContext, infer TExtensions>>
+  ) ?
+    (expected: FetchResult<TData, TContext, TExtensions>) => R
+  : { error: "matchers needs to be called on a FetchResult" };
 }
 
 declare global {

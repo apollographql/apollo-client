@@ -108,7 +108,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
-    "@actions/github-script": "github:actions/github-script#v7",
+    "@actions/github-script": "github:actions/github-script#v7.0.1",
     "@arethetypeswrong/cli": "0.15.3",
     "@ark/attest": "0.28.0",
     "@babel/parser": "7.25.0",

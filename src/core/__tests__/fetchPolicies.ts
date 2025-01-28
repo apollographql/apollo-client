@@ -430,6 +430,8 @@ describe("no-cache", () => {
       await expect(stream).toEmitValue({
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        // TODO: Since we did not set `returnPartialData` on `watchQuery`, this
+        // property should not be here.
         partial: true,
       });
 
@@ -501,7 +503,7 @@ describe("cache-first", () => {
     );
 
     await expect(stream).toEmitValue({
-      data: {},
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -710,9 +712,11 @@ describe("cache-and-network", function () {
     await observable.setVariables({ id: "2" });
 
     await expect(stream).toEmitValue({
-      data: {},
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
+      // TODO: This field should not be present since returnPartialData is not
+      // set.
       partial: true,
     });
 
@@ -739,9 +743,11 @@ describe("cache-and-network", function () {
     await observable.refetch({ id: "3" });
 
     await expect(stream).toEmitValue({
-      data: {},
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
+      // TODO: This field should not be present since returnPartialData is not
+      // set.
       partial: true,
     });
 

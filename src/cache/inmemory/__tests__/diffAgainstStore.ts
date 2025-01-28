@@ -10,6 +10,7 @@ import {
   writeQueryToStore,
   withError,
 } from "./helpers";
+import { MissingFieldError } from "../../../core";
 
 disableFragmentWarnings();
 
@@ -45,7 +46,7 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
-      expect(queryResult.result).toEqual({});
+      expect(queryResult.result).toEqual(null);
     }
   );
 
@@ -88,7 +89,7 @@ describe("diffing queries against the store", () => {
       });
 
       expect(queryResult.complete).toEqual(false);
-      expect(queryResult.result).toEqual({});
+      expect(queryResult.result).toEqual(null);
     }
   );
 
@@ -312,7 +313,7 @@ describe("diffing queries against the store", () => {
     });
   });
 
-  it("throws an error on a query with fields missing from matching named fragments", () => {
+  it("returns null result on a query with fields missing from matching named fragments", () => {
     const firstQuery = gql`
       query {
         person {
@@ -352,13 +353,33 @@ describe("diffing queries against the store", () => {
         jedi
       }
     `;
-    expect(() => {
-      reader.diffQueryAgainstStore({
-        store,
-        query: unionQuery,
-        returnPartialData: false,
-      });
-    }).toThrow();
+
+    const { complete, result, missing } = reader.diffQueryAgainstStore({
+      store,
+      query: unionQuery,
+      returnPartialData: false,
+    });
+
+    const missingFieldErrorMessage = `Can't find field 'address' on object ${JSON.stringify(
+      firstResult.person,
+      null,
+      2
+    )}`;
+
+    expect(complete).toBe(false);
+    expect(result).toBe(null);
+    expect(missing).toEqual(
+      new MissingFieldError(
+        missingFieldErrorMessage,
+        {
+          person: {
+            address: missingFieldErrorMessage,
+          },
+        },
+        unionQuery,
+        {}
+      )
+    );
   });
 
   it("returns available fields if returnPartialData is true", () => {
@@ -460,13 +481,24 @@ describe("diffing queries against the store", () => {
       },
     });
 
-    expect(function () {
-      reader.diffQueryAgainstStore({
-        store,
-        query: simpleQuery,
-        returnPartialData: false,
-      });
-    }).toThrow();
+    const { complete, result, missing } = reader.diffQueryAgainstStore({
+      store,
+      query: simpleQuery,
+      returnPartialData: false,
+    });
+
+    const missingFieldErrorMessage = `Can't find field 'age' on Person:lukeId object`;
+
+    expect(complete).toBe(false);
+    expect(result).toBeNull();
+    expect(missing).toEqual(
+      new MissingFieldError(
+        missingFieldErrorMessage,
+        { people_one: { age: missingFieldErrorMessage } },
+        simpleQuery,
+        {}
+      )
+    );
   });
 
   it("will add a private id property", () => {

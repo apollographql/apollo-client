@@ -117,12 +117,6 @@ function partsAfterDist(id: string): string[] {
   return [];
 }
 
-export const getEntryPointDirectory = function (file: string) {
-  const parts = partsAfterDist(file) || file.split(path.sep);
-  const len = lengthOfLongestEntryPoint(parts);
-  if (len >= 0) return parts.slice(0, len).join(path.sep);
-};
-
 function lengthOfLongestEntryPoint(parts: string[]) {
   let node = lookupTrie;
   let longest = -1;

@@ -4,13 +4,14 @@ on:
   pull_request:
   pull_request_review:
     types: [submitted, edited]
+  pull_request_review_comment:
+    types: [created, edited]
 
 jobs:
   add_cleanup_label:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-a-workflow-when-a-pull-request-is-approved
     if: |
       github.repository == 'apollographql/apollo-client' &&
-      github.event.review.state == 'APPROVED' &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
     runs-on: ubuntu-latest
     permissions:

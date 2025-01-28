@@ -37,7 +37,7 @@
     "extract-api": "npm run buildScript -- --step=typescript --step=inlineInheritDoc && node --experimental-strip-types config/apiExtractor.ts --generate apiReport",
     "clean": "rimraf dist coverage lib temp",
     "check:format": "prettier --check .",
-    "ci:precheck": "node --experimental-strip-types config/precheck.js",
+    "ci:precheck": "node --experimental-strip-types config/precheck.ts",
     "format": "prettier --write .",
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
     "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.js",

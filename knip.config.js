@@ -29,7 +29,7 @@ const config = {
       "src/react/types/types.documentation.ts",
       "eslint-local-rules/index.js",
     ]),
-  project: ["src/**/*.ts", "config/*.[jt]s", "eslint-local-rules/*.[jt]s"],
+  project: ["src/**/*.ts{,x}", "config/*.[jt]s", "eslint-local-rules/*.[jt]s"],
   ignore: ["integration-tests/**/*", ".yalc/**/*"],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [

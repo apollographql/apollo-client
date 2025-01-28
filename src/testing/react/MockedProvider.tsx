@@ -27,7 +27,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
   connectToDevTools?: boolean;
 }
 
-export interface MockedProviderState {
+interface MockedProviderState {
   client: ApolloClient<any>;
 }
 

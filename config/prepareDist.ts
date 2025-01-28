@@ -18,8 +18,14 @@ const distRoot = `${import.meta.dirname}/../dist`;
 
 /* @apollo/client */
 
-import packageJson from "../package.json" with { type: "json" };
+import pkg from "../package.json" with { type: "json" };
 import * as entryPoints from "./entryPoints.ts";
+import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
+
+// the generated `Person` type is a bit weird - `author` as a string is valid
+const packageJson: Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {
+  author: string;
+} = pkg;
 
 export function prepareDist() {
   // Enable default interpretation of .js files as ECMAScript modules. We don't
@@ -37,6 +43,7 @@ export function prepareDist() {
   delete packageJson.scripts;
   delete packageJson.bundlesize;
   delete packageJson.engines;
+  delete packageJson.devDependencies;
 
   // The root package.json points to the CJS/ESM source in "dist", to support
   // on-going package development (e.g. running tests, supporting npm link, etc.).

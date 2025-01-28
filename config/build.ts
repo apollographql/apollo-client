@@ -7,7 +7,7 @@ import { updateVersion, verifyVersion } from "./version.js";
 import { processInvariants } from "./processInvariants.ts";
 import { rewriteSourceMaps } from "./rewriteSourceMaps.ts";
 import { rollup } from "./rollup.ts";
-import { prepareDist } from "./prepareDist.js";
+import { prepareDist } from "./prepareDist.ts";
 import { postprocessDist } from "./postprocessDist.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 

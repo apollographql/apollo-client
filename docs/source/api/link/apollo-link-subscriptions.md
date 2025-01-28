@@ -33,7 +33,7 @@ const link = new GraphQLWsLink(
 
 The `GraphQLWsLink` constructor takes a single argument, which is a `Client` returned from the `graphql-ws` `createClient` function.
 
-The `createClient` function can take many options, described in the [`graphql-ws` docs for `ClientOptions`](https://the-guild.dev/graphql/ws/docs/interfaces/client.ClientOptions). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws), which is named `uri` instead of `url`.)
+The `createClient` function can take many options, described in the [`graphql-ws` docs for `ClientOptions`](https://the-guild.dev/graphql/ws/docs/client/interfaces/ClientOptions). The one required option is `url`, which is the URL (typically starting with `ws://` or `wss://`, which are the equivalents of `http://` and `https://` respectively) to your WebSocket server. (Note that this differs from the [older link's URL option](./apollo-link-ws), which is named `uri` instead of `url`.)
 
 ## Usage
 

@@ -1,5 +1,5 @@
 import path from "path";
-import __dirname from "./dirname.cjs";
+import __dirname from "./dirname.cts";
 
 type EntryPoint = {
   dirs: string[];

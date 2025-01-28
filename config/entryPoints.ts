@@ -1,5 +1,6 @@
 import path from "path";
-import __dirname from "./dirname.cts";
+// @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
+import { __dirname } from "./dirname.cts";
 
 type EntryPoint = {
   dirs: string[];

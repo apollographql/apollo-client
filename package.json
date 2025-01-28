@@ -47,7 +47,7 @@
     "test:watch": "jest --config ./config/jest.config.ts --watch",
     "test:memory": "npm i && npm run build && cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
-    "coverage": "node --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.ts --logHeapUsage --coverage --watchAll=false",
+    "coverage": "node --experimental-strip-types --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.ts --logHeapUsage --coverage --watchAll=false",
     "bundlesize": "npm run build && node --experimental-strip-types ./config/bundlesize.ts",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",

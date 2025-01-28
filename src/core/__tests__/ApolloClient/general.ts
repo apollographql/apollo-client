@@ -1504,17 +1504,28 @@ describe("QueryManager", () => {
   });
 
   it("runs a mutation even when errors is empty array #2912", async () => {
-    const { result } = await mockMutation({
-      mutation: gql`
-        mutation makeListPrivate {
-          makeListPrivate(id: "5")
-        }
-      `,
-      errors: [],
-      data: { makeListPrivate: true },
+    const mutation = gql`
+      mutation makeListPrivate {
+        makeListPrivate(id: "5")
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data: { makeListPrivate: true }, errors: [] },
+        },
+      ]),
     });
 
-    expect(result.data).toEqual({ makeListPrivate: true });
+    const result = await client.mutate({ mutation });
+
+    expect(result).toEqualFetchResult({
+      data: { makeListPrivate: true },
+      errors: [],
+    });
   });
 
   it('runs a mutation with default errorPolicy equal to "none"', async () => {

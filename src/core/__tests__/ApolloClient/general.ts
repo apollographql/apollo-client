@@ -1500,7 +1500,7 @@ describe("QueryManager", () => {
 
     const result = await client.mutate({ mutation });
 
-    expect(result.data).toEqual({ makeListPrivate: true });
+    expect(result).toEqualFetchResult({ data: { makeListPrivate: true } });
   });
 
   it("runs a mutation even when errors is empty array #2912", async () => {

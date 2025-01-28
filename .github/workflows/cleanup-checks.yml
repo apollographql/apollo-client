@@ -12,6 +12,8 @@ jobs:
     # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-a-workflow-when-a-pull-request-is-approved
     if: |
       github.repository == 'apollographql/apollo-client' &&
+      github.event.review.state == 'APPROVED' &&
+      github.event.review.author_association == 'MEMBER' &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
     runs-on: ubuntu-latest
     permissions:

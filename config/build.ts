@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { parseArgs } from "node:util";
 
 import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-import { updateVersion, verifyVersion } from "./version.js";
+import { updateVersion, verifyVersion } from "./version.ts";
 import { processInvariants } from "./processInvariants.ts";
 import { rewriteSourceMaps } from "./rewriteSourceMaps.ts";
 import { rollup } from "./rollup.ts";

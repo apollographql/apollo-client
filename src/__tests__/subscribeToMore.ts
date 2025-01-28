@@ -241,7 +241,8 @@ describe("subscribeToMore", () => {
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
-        expect(prev.complete).toBe(true);
+        expect(prev.complete).toBeTruthy();
+        expect(typeof prev.complete).toBe("symbol");
         // Type guard
         if (!prev.complete) {
           return undefined;

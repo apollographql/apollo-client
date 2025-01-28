@@ -158,7 +158,7 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   context?: DefaultContext;
 }
 
-export type UpdateQueryFn<
+type UpdateQueryFn<
   TData = any,
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData,
@@ -207,7 +207,7 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-export interface MutationBaseOptions<
+interface MutationBaseOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,

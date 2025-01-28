@@ -1705,9 +1705,6 @@ class RenderPromises {
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
-// @public @deprecated (undocumented)
-export const resetApolloContext: typeof getApolloContext;
-
 // @public (undocumented)
 type Resolver = (rootValue?: any, args?: any, context?: any, info?: {
     field: FieldNode;

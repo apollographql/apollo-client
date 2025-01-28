@@ -31,7 +31,7 @@ export type ResultFunction<T, V = Record<string, any>> = CovariantUnaryFunction<
   T
 >;
 
-export type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
+type VariableMatcher<V = Record<string, any>> = CovariantUnaryFunction<
   V,
   boolean
 >;

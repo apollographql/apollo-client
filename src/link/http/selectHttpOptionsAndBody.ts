@@ -3,7 +3,7 @@ import { print } from "../../utilities/index.js";
 
 import type { Operation } from "../core/index.js";
 
-export interface Printer {
+interface Printer {
   (node: ASTNode, originalPrint: typeof print): string;
 }
 
@@ -84,13 +84,13 @@ export interface HttpOptions {
   print?: Printer;
 }
 
-export interface HttpQueryOptions {
+interface HttpQueryOptions {
   includeQuery?: boolean;
   includeExtensions?: boolean;
   preserveHeaderCase?: boolean;
 }
 
-export interface HttpConfig {
+interface HttpConfig {
   http?: HttpQueryOptions;
   options?: any;
   headers?: Record<string, string>;

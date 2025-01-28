@@ -259,7 +259,6 @@ Array [
   "getApolloContext",
   "operationName",
   "parser",
-  "resetApolloContext",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -281,7 +280,6 @@ Array [
   "ApolloConsumer",
   "ApolloProvider",
   "getApolloContext",
-  "resetApolloContext",
 ]
 `;
 

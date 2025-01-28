@@ -19,6 +19,7 @@ type ObservableEvent<T> =
 export class ObservableStream<T> {
   private reader: ReadableStreamDefaultReader<ObservableEvent<T>>;
   private subscription!: ObservableSubscription;
+  private readerQueue: Array<Promise<ObservableEvent<T>>> = [];
 
   constructor(observable: Observable<T>) {
     this.reader = new ReadableStream<ObservableEvent<T>>({
@@ -32,9 +33,36 @@ export class ObservableStream<T> {
     }).getReader();
   }
 
+  peek({ timeout = 100 }: TakeOptions = {}) {
+    // Calling `peek` multiple times in a row should not advance the reader
+    // multiple times until this value has been consumed.
+    let readerPromise = this.readerQueue[0];
+
+    if (!readerPromise) {
+      // Since this.reader.read() advances the reader in the stream, we don't
+      // want to consume this promise entirely, otherwise we will miss it when
+      // calling `take`. Instead, we push it into a queue that can be consumed
+      // by `take` the next time its called so that we avoid advancing the
+      // reader until we are finished processing all peeked values.
+      readerPromise = this.readNextValue();
+      this.readerQueue.push(readerPromise);
+    }
+
+    return Promise.race([
+      readerPromise,
+      new Promise<ObservableEvent<T>>((_, reject) => {
+        setTimeout(
+          reject,
+          timeout,
+          new Error("Timeout waiting for next event")
+        );
+      }),
+    ]);
+  }
+
   take({ timeout = 100 }: TakeOptions = {}) {
     return Promise.race([
-      this.reader.read().then((result) => result.value!),
+      this.readerQueue.shift() || this.readNextValue(),
       new Promise<ObservableEvent<T>>((_, reject) => {
         setTimeout(
           reject,
@@ -64,6 +92,10 @@ export class ObservableStream<T> {
   async takeComplete(options?: TakeOptions): Promise<void> {
     const event = await this.take(options);
     validateEquals(event, { type: "complete" });
+  }
+
+  private async readNextValue() {
+    return this.reader.read().then((result) => result.value!);
   }
 }
 

@@ -42,7 +42,7 @@ export function prepareDist() {
   // Remove package.json items that we don't need to publish
   delete packageJson.scripts;
   delete packageJson.bundlesize;
-  delete packageJson.engines;
+  delete packageJson.devEngines;
   delete packageJson.devDependencies;
 
   // The root package.json points to the CJS/ESM source in "dist", to support

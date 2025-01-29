@@ -1901,15 +1901,17 @@ describe("QueryManager", () => {
       },
     };
 
-    const result = await createQueryManager({
-      link: mockSingleLink({
-        request: { query: transformedMutation },
-        result: { data: transformedMutationResult },
-      }),
-      config: { addTypename: true },
+    const result = await new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query: transformedMutation },
+          result: { data: transformedMutationResult },
+        },
+      ]),
     }).mutate({ mutation: mutation });
 
-    expect(result.data).toEqual(transformedMutationResult);
+    expect(result).toEqualFetchResult({ data: transformedMutationResult });
   });
 
   it("should reject a query promise given a network error", async () => {

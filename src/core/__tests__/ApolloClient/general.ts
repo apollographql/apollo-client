@@ -47,7 +47,7 @@ export function resetStore(qm: QueryManager<any>) {
     .then(() => qm.reFetchObservableQueries());
 }
 
-describe("QueryManager", () => {
+describe("ApolloClient", () => {
   // Standard "get id from object" method.
   const dataIdFromObject = (object: any) => {
     if (object.__typename && object.id) {

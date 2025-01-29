@@ -2655,16 +2655,18 @@ describe("QueryManager", () => {
       errors: [new GraphQLError("This is not the person you are looking for.")],
     };
 
-    const queryManager = mockRefetch({
-      request,
-      firstResult,
-      secondResult,
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        { request, result: firstResult },
+        { request, result: secondResult },
+      ]),
     });
 
-    const handle = queryManager.watchQuery<any>(request);
+    const handle = client.watchQuery(request);
     const stream = new ObservableStream(handle);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: firstResult.data,
       loading: false,
       networkStatus: NetworkStatus.ready,

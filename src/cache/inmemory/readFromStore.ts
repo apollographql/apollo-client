@@ -270,30 +270,29 @@ export class StoreReader {
       },
     });
 
-    let missing: MissingFieldError[] | undefined;
+    let missing: MissingFieldError | undefined;
     if (execResult.missing) {
-      // For backwards compatibility we still report an array of
-      // MissingFieldError objects, even though there will only ever be at most
-      // one of them, now that all missing field error messages are grouped
-      // together in the execResult.missing tree.
-      missing = [
-        new MissingFieldError(
-          firstMissing(execResult.missing)!,
-          execResult.missing,
-          query,
-          variables
-        ),
-      ];
-      if (!returnPartialData) {
-        throw missing[0];
-      }
+      missing = new MissingFieldError(
+        firstMissing(execResult.missing)!,
+        execResult.missing,
+        query,
+        variables
+      );
     }
 
+    const complete = !missing;
+    const { result } = execResult;
+
     return {
-      result: execResult.result,
-      complete: !missing,
+      result:
+        complete || returnPartialData ?
+          Object.keys(result).length === 0 ?
+            null
+          : result
+        : null,
+      complete,
       missing,
-    };
+    } as Cache.DiffResult<T>;
   }
 
   public isFresh(

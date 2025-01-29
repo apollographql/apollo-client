@@ -2916,7 +2916,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
-            pollInterval: 10,
+            pollInterval: 25,
             fetchPolicy: "cache-and-network",
           }),
         {
@@ -2955,7 +2955,7 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      await wait(10);
+      await wait(25);
 
       {
         const result = await takeSnapshot();

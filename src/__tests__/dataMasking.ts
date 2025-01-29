@@ -5838,7 +5838,7 @@ describe("client.mutate", () => {
 
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return {};
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {

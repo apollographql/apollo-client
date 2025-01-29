@@ -10,7 +10,7 @@ import {
   isReference,
   DocumentNode,
 } from "../../../core";
-import { Cache } from "../../../cache";
+import { Cache, MissingFieldError } from "../../../cache";
 import { InMemoryCache } from "../inMemoryCache";
 import { InMemoryCacheConfig } from "../types";
 
@@ -1348,7 +1348,9 @@ describe("Cache", () => {
         query,
         optimistic: true,
         callback(diff) {
-          results.push(diff.result!);
+          if (diff.complete) {
+            results.push(diff.result);
+          }
         },
       });
 
@@ -1620,7 +1622,7 @@ describe("Cache", () => {
       expect(abInfo.diffs.length).toBe(1);
       expect(last(abInfo.diffs)).toEqual({
         complete: false,
-        missing: expect.any(Array),
+        missing: expect.any(MissingFieldError),
         result: {
           a: "ay",
         },
@@ -2338,7 +2340,9 @@ describe("InMemoryCache#broadcastWatches", function () {
       optimistic: true,
       immediate: true,
       callback(diff: Diff) {
-        addDiff(diff.result!.object.name, diff);
+        if (diff.complete) {
+          addDiff(diff.result.object.name, diff);
+        }
       },
     };
 

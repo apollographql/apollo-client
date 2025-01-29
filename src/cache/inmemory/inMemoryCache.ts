@@ -14,8 +14,11 @@ import { equal } from "@wry/equality";
 
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
-import { MissingFieldError } from "../core/types/common.js";
-import type { StoreObject, Reference } from "../../utilities/index.js";
+import type {
+  StoreObject,
+  Reference,
+  DeepPartial,
+} from "../../utilities/index.js";
 import {
   addTypenameToDocument,
   isReference,
@@ -178,7 +181,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return (optimistic ? this.optimisticData : this.data).extract();
   }
 
-  public read<T>(options: Cache.ReadOptions): T | null {
+  public read<T>(
+    options: Cache.ReadOptions & { returnPartialData: true }
+  ): T | DeepPartial<T> | null;
+
+  public read<T>(options: Cache.ReadOptions): T | null;
+
+  public read<T>(options: Cache.ReadOptions): T | DeepPartial<T> | null {
     const {
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the
@@ -189,26 +198,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // specified explicitly.
       returnPartialData = false,
     } = options;
-    try {
-      return (
-        this.storeReader.diffQueryAgainstStore<T>({
-          ...options,
-          store: options.optimistic ? this.optimisticData : this.data,
-          config: this.config,
-          returnPartialData,
-        }).result || null
-      );
-    } catch (e) {
-      if (e instanceof MissingFieldError) {
-        // Swallow MissingFieldError and return null, so callers do not need to
-        // worry about catching "normal" exceptions resulting from incomplete
-        // cache data. Unexpected errors will be re-thrown. If you need more
-        // information about which fields were missing, use cache.diff instead,
-        // and examine diffResult.missing.
-        return null;
-      }
-      throw e;
-    }
+
+    return this.storeReader.diffQueryAgainstStore<T>({
+      ...options,
+      store: options.optimistic ? this.optimisticData : this.data,
+      config: this.config,
+      returnPartialData,
+    }).result;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {

@@ -3099,7 +3099,7 @@ describe("@connection", () => {
     const cStream = watch(cQuery, "cache-only");
 
     await expect(cStream).toEmitValue({
-      data: {},
+      data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3147,7 +3147,7 @@ describe("@connection", () => {
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitValue({
-      data: {},
+      data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,

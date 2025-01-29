@@ -17,7 +17,6 @@ import {
   defaultCacheSizes,
   getFragmentDefinition,
   getFragmentQueryDocument,
-  mergeDeepArray,
 } from "../../utilities/index.js";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
@@ -110,6 +109,18 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public abstract write<TData = any, TVariables = any>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
+
+  /**
+   * Returns data read from the cache for a given query along with information
+   * about the cache result such as whether the result is complete and details
+   * about missing fields.
+   *
+   * Will return `complete` as `true` if it can fulfill the full cache result or
+   * `false` if not. When no data can be fulfilled from the cache, `null` is
+   * returned. When `returnPartialData` is `true`, non-null partial results are
+   * returned if it contains at least one field that can be fulfilled from the
+   * cache.
+   */
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>
@@ -297,10 +308,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         ...diffOptions,
         immediate: true,
         callback: (diff) => {
-          const data =
+          let data =
             dataMasking ?
               maskFragment(diff.result, fragment, this, fragmentName)
             : diff.result;
+
+          // TODO: Remove this once `watchFragment` supports `null` as valid
+          // value emitted
+          if (data === null) {
+            data = {} as any;
+          }
 
           if (
             // Always ensure we deliver the first result
@@ -323,12 +340,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
           } as WatchFragmentResult<TData>;
 
           if (diff.missing) {
-            result.missing = mergeDeepArray(
-              diff.missing.map((error) => error.missing)
-            );
+            result.missing = diff.missing.missing;
           }
 
-          latestDiff = { ...diff, result: data };
+          latestDiff = { ...diff, result: data } as DataProxy.DiffResult<TData>;
           observer.next(result);
         },
       });

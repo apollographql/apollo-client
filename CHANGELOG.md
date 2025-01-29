@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.12.8
+
+### Patch Changes
+
+- [#12292](https://github.com/apollographql/apollo-client/pull/12292) [`3abd944`](https://github.com/apollographql/apollo-client/commit/3abd944e4adde5d94d91133f2bf6ed1c7744f8c5) Thanks [@phryneas](https://github.com/phryneas)! - Remove unused dependency `response-iterator`
+
+- [#12287](https://github.com/apollographql/apollo-client/pull/12287) [`bf313a3`](https://github.com/apollographql/apollo-client/commit/bf313a39d342a73dc3e9b3db9415c71c2573db3f) Thanks [@phryneas](https://github.com/phryneas)! - Fixes an issue where `client.watchFragment`/`useFragment` with `@includes` crashes when a separate cache update writes to the conditionally included fields.
+
 ## 3.12.7
 
 ### Patch Changes

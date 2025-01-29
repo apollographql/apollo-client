@@ -14,20 +14,12 @@ jobs:
       github.event.review.author_association == 'MEMBER' &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: github-actions-bot-app-token
-        with:
-          app-id: 819772
-          private-key: ${{ secrets.APOLLO_GITHUB_ACTIONS_BOT_PRIVATE_KEY }}
       - name: Checkout repo
         uses: actions/checkout@v4
       - name: add label
         uses: actions/github-script@v7.0.1
         with:
-          github-token: ${{ steps.github-actions-bot-app-token.outputs.token }}
           script: |
             const script = (await import('${{ github.workspace }}/.github/workflows/cleanup-checks.mjs')).setup({context,core,github,exec,glob,io})
             await script.add_cleanup_label()

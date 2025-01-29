@@ -2108,24 +2108,34 @@ describe("QueryManager", () => {
         lastName: "Smith",
       },
     };
-    const queryManager = mockQueryManager(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        result: { data },
-      }
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          result: { data },
+        },
+      ]),
+    });
 
-    const observable = queryManager.watchQuery<any>({ query });
+    const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
-    const result = await queryManager.query<any>({ query });
-    expect(result.data).toEqual(data);
+    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     await expect(stream).not.toEmitAnything();
   });

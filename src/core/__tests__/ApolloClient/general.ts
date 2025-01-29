@@ -2759,6 +2759,9 @@ describe("ApolloClient", () => {
     });
   });
 
+  // TODO: Rewrite this test to avoid testing so many internal implementation
+  // details. We should test the effect that lastRequestId has on the system
+  // instead.
   it('only increments "queryInfo.lastRequestId" when fetching data from network', async () => {
     const query = gql`
       query query($id: ID!) {
@@ -2780,13 +2783,17 @@ describe("ApolloClient", () => {
       },
     ];
 
-    const queryManager = mockQueryManager(...mockedResponses);
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink(mockedResponses),
+    });
+    const queryManager = client["queryManager"];
     const queryOptions: WatchQueryOptions<any> = {
       query,
       variables,
       fetchPolicy: "cache-and-network",
     };
-    const observable = queryManager.watchQuery(queryOptions);
+    const observable = client.watchQuery(queryOptions);
 
     const mocks = mockFetchQuery(queryManager);
     const queryId = "1";

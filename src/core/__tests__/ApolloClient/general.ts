@@ -1803,23 +1803,25 @@ describe("QueryManager", () => {
   });
 
   it("warns if you forget the template literal tag", async () => {
-    const queryManager = mockQueryManager();
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+    });
     expect(() => {
-      void queryManager.query<any>({
+      void client.query({
         // Bamboozle TypeScript into letting us do this
         query: "string" as any as DocumentNode,
       });
     }).toThrowError(/wrap the query string in a "gql" tag/);
 
     await expect(
-      queryManager.mutate({
+      client.mutate({
         // Bamboozle TypeScript into letting us do this
         mutation: "string" as any as DocumentNode,
       })
     ).rejects.toThrow(/wrap the query string in a "gql" tag/);
 
     expect(() => {
-      queryManager.watchQuery<any>({
+      client.watchQuery({
         // Bamboozle TypeScript into letting us do this
         query: "string" as any as DocumentNode,
       });

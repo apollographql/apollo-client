@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.12.7",
+  "version": "3.12.8",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -199,7 +199,6 @@
     "tsx": "4.19.2",
     "typedoc": "0.25.0",
     "typescript": "5.7.3",
-    "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "4.0.0",
     "whatwg-fetch": "3.6.20"
   },

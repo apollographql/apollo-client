@@ -2114,10 +2114,7 @@ describe("QueryManager", () => {
         {
           request: { query },
           result: { data },
-        },
-        {
-          request: { query },
-          result: { data },
+          maxUsageCount: 2,
         },
       ]),
     });

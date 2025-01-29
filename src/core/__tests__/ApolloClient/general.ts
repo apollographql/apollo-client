@@ -9,7 +9,7 @@ import {
   Observable,
   Observer,
 } from "../../../utilities/observables/Observable";
-import { ApolloLink, GraphQLRequest, FetchResult } from "../../../link/core";
+import { ApolloLink, FetchResult } from "../../../link/core";
 import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
 import { NormalizedCacheObject } from "../../../cache/inmemory/types";
 
@@ -109,37 +109,6 @@ describe("ApolloClient", () => {
     return new ObservableStream(
       client.watchQuery({ query, variables, ...queryOptions })
     );
-  };
-
-  // Helper method that takes a query with a first response and a second response.
-  // Used to assert stuff about refetches.
-  const mockRefetch = ({
-    request,
-    firstResult,
-    secondResult,
-    thirdResult,
-  }: {
-    request: GraphQLRequest;
-    firstResult: FetchResult;
-    secondResult: FetchResult;
-    thirdResult?: FetchResult;
-  }) => {
-    const args = [
-      {
-        request,
-        result: firstResult,
-      },
-      {
-        request,
-        result: secondResult,
-      },
-    ];
-
-    if (thirdResult) {
-      args.push({ request, result: thirdResult });
-    }
-
-    return mockQueryManager(...args);
   };
 
   it("handles GraphQL errors", async () => {

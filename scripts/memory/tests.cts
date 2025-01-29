@@ -1,4 +1,6 @@
-const assert = require("assert");
+const assert = require("node:assert");
+const { describe, it } = require("node:test");
+
 const {
   ApolloClient,
   InMemoryCache,
@@ -318,7 +320,7 @@ describe("garbage collection", () => {
     assert.strictEqual(typeof getDataFromTree, "function");
 
     const expectedKeys = new Set(["cache", "queryInfo1"]);
-    const renderPromisesSet = new Set();
+    const renderPromisesSet = new Set<any>();
     const registry = makeRegistry((key) => {
       // By retaining the RenderPromises object in a Set in the scope of
       // this callback function, we artificially ensure the RenderPromises

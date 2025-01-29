@@ -3256,24 +3256,31 @@ describe("ApolloClient", () => {
         },
       };
 
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: data1 },
-        },
-        {
-          request: { query, variables },
-          result: { data: data2 },
-        }
-      );
-      const observable = queryManager.watchQuery<any>({
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: data1 },
+          },
+          {
+            request: { query, variables },
+            result: { data: data2 },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({
         query,
         variables,
         pollInterval: 50,
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data: data1 });
+      await expect(stream).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       observable.stopPolling();
 

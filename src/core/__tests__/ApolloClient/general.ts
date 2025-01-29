@@ -1926,9 +1926,9 @@ describe("QueryManager", () => {
     const networkError = new Error("Network error");
 
     await expect(
-      mockQueryManager({
-        request: { query },
-        error: networkError,
+      new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([{ request: { query }, error: networkError }]),
       }).query({ query })
     ).rejects.toEqual(new ApolloError({ networkError }));
   });

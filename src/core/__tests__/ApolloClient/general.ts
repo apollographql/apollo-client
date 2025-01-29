@@ -3197,18 +3197,21 @@ describe("ApolloClient", () => {
         },
       };
 
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: data1 },
-        },
-        {
-          request: { query, variables },
-          result: { data: data2 },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: data1 },
+          },
+          {
+            request: { query, variables },
+            result: { data: data2 },
+          },
+        ]),
+      });
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         variables,
         notifyOnNetworkStatusChange: false,
@@ -3216,8 +3219,16 @@ describe("ApolloClient", () => {
       observable.startPolling(50);
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data: data1 });
-      await expect(stream).toEmitMatchedValue({ data: data2 });
+      await expect(stream).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("exposes a way to stop a polling query", async () => {

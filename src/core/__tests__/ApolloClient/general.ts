@@ -2460,14 +2460,14 @@ describe("QueryManager", () => {
 
     const stream = new ObservableStream(obs);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {},
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -2479,14 +2479,14 @@ describe("QueryManager", () => {
 
     cache.evict({ fieldName: "info" });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {},
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -2504,14 +2504,14 @@ describe("QueryManager", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {},
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {

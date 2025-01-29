@@ -2879,28 +2879,26 @@ describe("ApolloClient", () => {
         },
       };
 
-      const queryManager = new QueryManager<NormalizedCacheObject>(
-        getDefaultOptionsForQueryManagerTests({
-          link: mockSingleLink(
-            {
-              request: { query, variables },
-              result: { data: data1 },
-            },
-            {
-              request: { query, variables },
-              result: { data: data2 },
-            },
-            {
-              request: { query, variables },
-              result: { data: data2 },
-            }
-          ),
-          cache: new InMemoryCache({ addTypename: false }),
-          ssrMode: true,
-        })
-      );
+      const client = new ApolloClient({
+        ssrMode: true,
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: data1 },
+          },
+          {
+            request: { query, variables },
+            result: { data: data2 },
+          },
+          {
+            request: { query, variables },
+            result: { data: data2 },
+          },
+        ]),
+      });
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         variables,
         pollInterval: 10,
@@ -2908,7 +2906,11 @@ describe("ApolloClient", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data: data1 });
+      await expect(stream).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       await expect(stream).not.toEmitAnything();
     });
 

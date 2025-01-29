@@ -2364,21 +2364,21 @@ describe("QueryManager", () => {
     const aStream = new ObservableStream(obsA);
     const bStream = new ObservableStream(obsB);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {},
       partial: true,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {},
       partial: true,
     });
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -2388,7 +2388,7 @@ describe("QueryManager", () => {
       },
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
@@ -2398,7 +2398,7 @@ describe("QueryManager", () => {
       },
     });
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {
@@ -2407,7 +2407,7 @@ describe("QueryManager", () => {
       partial: true,
     });
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {

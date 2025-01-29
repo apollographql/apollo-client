@@ -11,10 +11,7 @@ import {
 } from "../../../utilities/observables/Observable";
 import { ApolloLink, GraphQLRequest, FetchResult } from "../../../link/core";
 import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
-import {
-  ApolloReducerConfig,
-  NormalizedCacheObject,
-} from "../../../cache/inmemory/types";
+import { NormalizedCacheObject } from "../../../cache/inmemory/types";
 
 // mocks
 import mockQueryManager, {
@@ -41,14 +38,6 @@ import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
 import { ObservableStream, spyOnConsole } from "../../../testing/internal";
-
-interface MockedMutation {
-  mutation: DocumentNode;
-  data?: Object;
-  errors?: GraphQLError[];
-  variables?: Object;
-  config?: ApolloReducerConfig;
-}
 
 export function resetStore(qm: QueryManager<any>) {
   return qm
@@ -120,38 +109,6 @@ describe("QueryManager", () => {
     return new ObservableStream(
       client.watchQuery({ query, variables, ...queryOptions })
     );
-  };
-
-  const mockMutation = ({
-    mutation,
-    data,
-    errors,
-    variables = {},
-    config = {},
-  }: MockedMutation) => {
-    const link = mockSingleLink({
-      request: { query: mutation, variables },
-      result: { data, errors },
-    });
-
-    const queryManager = createQueryManager({
-      link,
-      config,
-    });
-
-    return new Promise<{
-      result: FetchResult;
-      queryManager: QueryManager<NormalizedCacheObject>;
-    }>((resolve, reject) => {
-      queryManager
-        .mutate({ mutation, variables })
-        .then((result: any) => {
-          resolve({ result, queryManager });
-        })
-        .catch((error) => {
-          reject(error);
-        });
-    });
   };
 
   // Helper method that takes a query with a first response and a second response.

@@ -1529,21 +1529,25 @@ describe("QueryManager", () => {
   });
 
   it('runs a mutation with default errorPolicy equal to "none"', async () => {
+    const mutation = gql`
+      mutation makeListPrivate {
+        makeListPrivate(id: "5")
+      }
+    `;
     const errors = [new GraphQLError("foo")];
 
-    await expect(
-      mockMutation({
-        mutation: gql`
-          mutation makeListPrivate {
-            makeListPrivate(id: "5")
-          }
-        `,
-        errors,
-      })
-    ).rejects.toThrow(
-      expect.objectContaining({
-        graphQLErrors: errors,
-      })
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { errors },
+        },
+      ]),
+    });
+
+    await expect(client.mutate({ mutation })).rejects.toThrow(
+      new ApolloError({ graphQLErrors: errors })
     );
   });
 

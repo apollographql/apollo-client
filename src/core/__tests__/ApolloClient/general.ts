@@ -2964,37 +2964,40 @@ describe("ApolloClient", () => {
           name: "Josey Smith",
         },
       };
-      const queryManager = mockQueryManager(
-        {
-          request: { query: query1 },
-          result: { data: data11 },
-        },
-        {
-          request: { query: query1 },
-          result: { data: data12 },
-        },
-        {
-          request: { query: query1 },
-          result: { data: data13 },
-        },
-        {
-          request: { query: query1 },
-          result: { data: data14 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data21 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data22 },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query: query1 },
+            result: { data: data11 },
+          },
+          {
+            request: { query: query1 },
+            result: { data: data12 },
+          },
+          {
+            request: { query: query1 },
+            result: { data: data13 },
+          },
+          {
+            request: { query: query1 },
+            result: { data: data14 },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data21 },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data22 },
+          },
+        ]),
+      });
       let handle1Count = 0;
       let handleCount = 0;
       let setMilestone = false;
 
-      const subscription1 = queryManager
+      const subscription1 = client
         .watchQuery({
           query: query1,
           pollInterval: 150,
@@ -3010,7 +3013,7 @@ describe("ApolloClient", () => {
           },
         });
 
-      const subscription2 = queryManager
+      const subscription2 = client
         .watchQuery({
           query: query2,
           pollInterval: 2000,

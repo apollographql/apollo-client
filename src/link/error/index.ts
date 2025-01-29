@@ -1,8 +1,4 @@
-import type {
-  FormattedExecutionResult,
-  GraphQLErrorExtensions,
-  GraphQLFormattedError,
-} from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import {
   graphQLResultHasProtocolErrors,

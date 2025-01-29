@@ -296,11 +296,9 @@ describe("GraphQL Subscriptions", () => {
         protocolErrors: [
           {
             message: "cannot read message from websocket",
-            extensions: [
-              {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            ],
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
           },
         ],
       })
@@ -411,11 +409,9 @@ describe("GraphQL Subscriptions", () => {
         protocolErrors: [
           {
             message: "cannot read message from websocket",
-            extensions: [
-              {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            ],
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
           },
         ],
       })

@@ -1552,17 +1552,28 @@ describe("QueryManager", () => {
   });
 
   it("runs a mutation with variables", async () => {
-    const { result } = await mockMutation({
-      mutation: gql`
-        mutation makeListPrivate($listId: ID!) {
-          makeListPrivate(id: $listId)
-        }
-      `,
-      variables: { listId: "1" },
-      data: { makeListPrivate: true },
+    const mutation = gql`
+      mutation makeListPrivate($listId: ID!) {
+        makeListPrivate(id: $listId)
+      }
+    `;
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: mutation, variables: { listId: "1" } },
+          result: { data: { makeListPrivate: true } },
+        },
+      ]),
     });
 
-    expect(result.data).toEqual({ makeListPrivate: true });
+    const result = await client.mutate({
+      mutation,
+      variables: { listId: "1" },
+    });
+
+    expect(result).toEqualFetchResult({ data: { makeListPrivate: true } });
   });
 
   const getIdField = (obj: any) => obj.id;

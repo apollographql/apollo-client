@@ -1971,27 +1971,32 @@ describe("QueryManager", () => {
         lastName: "Pandya",
       },
     };
-    const queryManager = mockQueryManager(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        error: new Error("Network error ocurred"),
-      }
-    );
-    const result = await queryManager.query<any>({ query });
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          error: new Error("Network error ocurred"),
+        },
+      ]),
+    });
+    const result = await client.query({ query });
 
-    expect(result.data).toEqual(data);
+    expect(result).toEqualApolloQueryResult({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     await expect(
-      queryManager.query<any>({ query, fetchPolicy: "network-only" })
+      client.query({ query, fetchPolicy: "network-only" })
     ).rejects.toThrow();
 
-    expect(queryManager.cache.extract().ROOT_QUERY!.author).toEqual(
-      data.author
-    );
+    expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
   });
 
   it("should be able to unsubscribe from a polling query subscription", async () => {

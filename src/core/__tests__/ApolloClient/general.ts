@@ -2015,21 +2015,28 @@ describe("QueryManager", () => {
       },
     };
 
-    const observable = mockQueryManager(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        result: () => {
-          throw new Error("Should not again");
+    const observable = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data },
         },
-      }
-    ).watchQuery({ query, pollInterval: 20 });
+        {
+          request: { query },
+          result: () => {
+            throw new Error("Should not again");
+          },
+        },
+      ]),
+    }).watchQuery({ query, pollInterval: 20 });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ data });
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     stream.unsubscribe();
 
@@ -2052,34 +2059,37 @@ describe("QueryManager", () => {
         lastName: "Smith",
       },
     };
-    const queryManager = mockQueryManager(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        error: new Error("Network error occurred."),
-      }
-    );
-    const observable = queryManager.watchQuery<any>({
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+        {
+          request: { query },
+          error: new Error("Network error occurred."),
+        },
+      ]),
+    });
+    const observable = client.watchQuery({
       query,
       pollInterval: 20,
       notifyOnNetworkStatusChange: false,
     });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ data });
-    expect(queryManager.cache.extract().ROOT_QUERY!.author).toEqual(
-      data.author
-    );
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
 
     await expect(stream).toEmitError(
       new ApolloError({ networkError: new Error("Network error occurred.") })
     );
-    expect(queryManager.cache.extract().ROOT_QUERY!.author).toEqual(
-      data.author
-    );
+    expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
   });
 
   it("should not fire next on an observer if there is no change in the result", async () => {

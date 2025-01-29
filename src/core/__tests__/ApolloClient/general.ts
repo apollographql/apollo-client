@@ -1619,30 +1619,39 @@ describe("QueryManager", () => {
   });
 
   it("runs a mutation and puts the result in the store", async () => {
+    const mutation = gql`
+      mutation makeListPrivate {
+        makeListPrivate(id: "5") {
+          id
+          isPrivate
+        }
+      }
+    `;
     const data = {
       makeListPrivate: {
         id: "5",
         isPrivate: true,
       },
     };
-
-    const { result, queryManager } = await mockMutation({
-      mutation: gql`
-        mutation makeListPrivate {
-          makeListPrivate(id: "5") {
-            id
-            isPrivate
-          }
-        }
-      `,
-      data,
-      config: { dataIdFromObject: getIdField },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        addTypename: false,
+        dataIdFromObject: getIdField,
+      }),
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data },
+        },
+      ]),
     });
 
-    expect(result.data).toEqual(data);
+    const result = await client.mutate({ mutation });
+
+    expect(result).toEqualFetchResult({ data });
 
     // Make sure we updated the store with the new data
-    expect(queryManager.cache.extract()["5"]).toEqual({
+    expect(client.cache.extract()["5"]).toEqual({
       id: "5",
       isPrivate: true,
     });

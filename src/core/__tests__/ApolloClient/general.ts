@@ -1857,15 +1857,21 @@ describe("QueryManager", () => {
 
     //make sure that the query is transformed within the query
     //manager
-    const result = await createQueryManager({
-      link: mockSingleLink({
-        request: { query: transformedQuery },
-        result: { data: transformedQueryResult },
-      }),
-      config: { addTypename: true },
-    }).query({ query: query });
+    const result = await new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query: transformedQuery },
+          result: { data: transformedQueryResult },
+        },
+      ]),
+    }).query({ query });
 
-    expect(result.data).toEqual(transformedQueryResult);
+    expect(result).toEqualApolloQueryResult({
+      data: transformedQueryResult,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("should transform mutations correctly", async () => {

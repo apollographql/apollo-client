@@ -2182,9 +2182,9 @@ describe("QueryManager", () => {
         __typename: "Author",
       },
     };
-    const reducerConfig = { dataIdFromObject };
-    const queryManager = createQueryManager({
-      link: mockSingleLink(
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false, dataIdFromObject }),
+      link: new MockLink([
         {
           request: { query: query1 },
           result: { data: data1 },
@@ -2196,23 +2196,22 @@ describe("QueryManager", () => {
         {
           request: { query: query1 },
           result: { data: data1 },
-        }
-      ),
-      config: reducerConfig,
+        },
+      ]),
     });
 
-    const observable1 = queryManager.watchQuery<any>({ query: query1 });
-    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+    const observable1 = client.watchQuery({ query: query1 });
+    const observable2 = client.watchQuery({ query: query2 });
 
     const stream1 = new ObservableStream(observable1);
     const stream2 = new ObservableStream(observable2);
 
-    await expect(stream1).toEmitValue({
+    await expect(stream1).toEmitApolloQueryResult({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
-    await expect(stream2).toEmitValue({
+    await expect(stream2).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,

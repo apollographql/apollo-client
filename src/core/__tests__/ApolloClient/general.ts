@@ -1684,26 +1684,37 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query: query1 },
-        result: { data: data1 },
-        delay: 10,
-      },
-      {
-        request: { query: query2 },
-        result: { data: data2 },
-      }
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+          delay: 10,
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+        },
+      ]),
+    });
 
-    const observable1 = queryManager.watchQuery<any>({ query: query1 });
-    const observable2 = queryManager.watchQuery<any>({ query: query2 });
+    const observable1 = client.watchQuery({ query: query1 });
+    const observable2 = client.watchQuery({ query: query2 });
 
     const stream1 = new ObservableStream(observable1);
     const stream2 = new ObservableStream(observable2);
 
-    await expect(stream1).toEmitMatchedValue({ data: data1 });
-    await expect(stream2).toEmitMatchedValue({ data: data2 });
+    await expect(stream1).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    await expect(stream2).toEmitApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("updates result of previous query if the result of a new query overlaps", async () => {

@@ -1944,9 +1944,14 @@ describe("QueryManager", () => {
     `;
     const graphQLErrors = [new GraphQLError("GraphQL error")];
     await expect(
-      mockQueryManager({
-        request: { query },
-        result: { errors: graphQLErrors },
+      new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { errors: graphQLErrors },
+          },
+        ]),
       }).query({ query })
     ).rejects.toEqual(new ApolloError({ graphQLErrors }));
   });

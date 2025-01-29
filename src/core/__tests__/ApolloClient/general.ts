@@ -1760,26 +1760,33 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = mockQueryManager(
-      {
-        request: { query: query1 },
-        result: { data: data1 },
-      },
-      {
-        request: { query: query2 },
-        result: { data: data2 },
-        delay: 10,
-      }
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query: query1 },
+          result: { data: data1 },
+        },
+        {
+          request: { query: query2 },
+          result: { data: data2 },
+          delay: 10,
+        },
+      ]),
+    });
 
-    const observable = queryManager.watchQuery<any>({ query: query1 });
+    const observable = client.watchQuery({ query: query1 });
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitMatchedValue({ data: data1 });
+    await expect(stream).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
-    await queryManager.query<any>({ query: query2 });
+    await client.query({ query: query2 });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         people_one: {
           __typename: "Human",
@@ -1788,6 +1795,8 @@ describe("QueryManager", () => {
           age: 50,
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
 
     await expect(stream).not.toEmitAnything();

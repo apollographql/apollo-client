@@ -2717,23 +2717,17 @@ describe("QueryManager", () => {
         age: "32",
       },
     };
-    const queryManager = new QueryManager<NormalizedCacheObject>(
-      getDefaultOptionsForQueryManagerTests({
-        link: mockSingleLink(
-          { request: { query: queryA }, result: { data: dataA } },
-          { request: { query: queryB }, result: { data: dataB }, delay: 20 }
-        ),
-        cache: new InMemoryCache({}),
-        ssrMode: true,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({}),
+      link: new MockLink([
+        { request: { query: queryA }, result: { data: dataA } },
+        { request: { query: queryB }, result: { data: dataB }, delay: 20 },
+      ]),
+      ssrMode: true,
+    });
 
-    const observableA = queryManager.watchQuery({
-      query: queryA,
-    });
-    const observableB = queryManager.watchQuery({
-      query: queryB,
-    });
+    const observableA = client.watchQuery({ query: queryA });
+    const observableB = client.watchQuery({ query: queryB });
     const streamA = new ObservableStream(observableA);
     const streamB = new ObservableStream(observableB);
 
@@ -2758,7 +2752,7 @@ describe("QueryManager", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
-    expect(observableB.getCurrentResult()).toEqual({
+    expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
       data: dataB,
       loading: false,
       networkStatus: NetworkStatus.ready,

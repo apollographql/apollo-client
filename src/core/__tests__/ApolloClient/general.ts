@@ -2572,18 +2572,9 @@ describe("QueryManager", () => {
     };
 
     let mergeCount = 0;
-    const queryManager = createQueryManager({
-      link: mockSingleLink(
-        {
-          request: { query: queryWithoutId },
-          result: { data: dataWithoutId },
-        },
-        {
-          request: { query: queryWithId },
-          result: { data: dataWithId },
-        }
-      ),
-      config: {
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -2612,22 +2603,35 @@ describe("QueryManager", () => {
             },
           },
         },
-      },
+      }),
+      link: new MockLink([
+        {
+          request: { query: queryWithoutId },
+          result: { data: dataWithoutId },
+        },
+        {
+          request: { query: queryWithId },
+          result: { data: dataWithId },
+        },
+      ]),
     });
 
-    const observableWithId = queryManager.watchQuery<any>({
-      query: queryWithId,
-    });
-
-    const observableWithoutId = queryManager.watchQuery<any>({
-      query: queryWithoutId,
-    });
+    const observableWithId = client.watchQuery({ query: queryWithId });
+    const observableWithoutId = client.watchQuery({ query: queryWithoutId });
 
     const stream1 = new ObservableStream(observableWithoutId);
     const stream2 = new ObservableStream(observableWithId);
 
-    await expect(stream1).toEmitMatchedValue({ data: dataWithoutId });
-    await expect(stream2).toEmitMatchedValue({ data: dataWithId });
+    await expect(stream1).toEmitApolloQueryResult({
+      data: dataWithoutId,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+    await expect(stream2).toEmitApolloQueryResult({
+      data: dataWithId,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("exposes errors on a refetch as a rejection", async () => {

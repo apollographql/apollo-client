@@ -1631,20 +1631,25 @@ describe("QueryManager", () => {
       },
     };
 
-    const queryManager = createQueryManager({
-      link: mockSingleLink({
-        request: { query: mutation },
-        result: { data },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({
+        addTypename: false,
+        dataIdFromObject: getIdField,
       }),
-      config: { dataIdFromObject: getIdField },
+      link: new MockLink([
+        {
+          request: { query: mutation },
+          result: { data },
+        },
+      ]),
     });
 
-    const result = await queryManager.mutate({ mutation });
+    const result = await client.mutate({ mutation });
 
-    expect(result.data).toEqual(data);
+    expect(result).toEqualFetchResult({ data });
 
     // Make sure we updated the store with the new data
-    expect(queryManager.cache.extract()["5"]).toEqual({
+    expect(client.cache.extract()["5"]).toEqual({
       id: "5",
       isPrivate: true,
     });

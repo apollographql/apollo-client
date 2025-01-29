@@ -1811,7 +1811,7 @@ describe("QueryManager", () => {
         // Bamboozle TypeScript into letting us do this
         query: "string" as any as DocumentNode,
       });
-    }).toThrowError(/wrap the query string in a "gql" tag/);
+    }).toThrow(/wrap the query string in a "gql" tag/);
 
     await expect(
       client.mutate({
@@ -1825,7 +1825,7 @@ describe("QueryManager", () => {
         // Bamboozle TypeScript into letting us do this
         query: "string" as any as DocumentNode,
       });
-    }).toThrowError(/wrap the query string in a "gql" tag/);
+    }).toThrow(/wrap the query string in a "gql" tag/);
   });
 
   it("should transform queries correctly when given a QueryTransformer", async () => {

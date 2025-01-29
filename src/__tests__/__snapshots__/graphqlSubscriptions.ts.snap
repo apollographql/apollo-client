@@ -40,11 +40,9 @@ ApolloError {
 exports[`GraphQL Subscriptions should throw an error if the result has protocolErrors on it 1`] = `
 ApolloError {
   "cause": Object {
-    "extensions": Array [
-      Object {
-        "code": "WEBSOCKET_MESSAGE_ERROR",
-      },
-    ],
+    "extensions": Object {
+      "code": "WEBSOCKET_MESSAGE_ERROR",
+    },
     "message": "cannot read message from websocket",
   },
   "clientErrors": Array [],
@@ -55,11 +53,9 @@ ApolloError {
   "networkError": null,
   "protocolErrors": Array [
     Object {
-      "extensions": Array [
-        Object {
-          "code": "WEBSOCKET_MESSAGE_ERROR",
-        },
-      ],
+      "extensions": Object {
+        "code": "WEBSOCKET_MESSAGE_ERROR",
+      },
       "message": "cannot read message from websocket",
     },
   ],

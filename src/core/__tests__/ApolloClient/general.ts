@@ -6201,22 +6201,25 @@ describe("ApolloClient", () => {
 
       const variables = { id: "1234" };
 
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: queryData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        },
-        {
-          request: { query, variables },
-          result: { data: secondReqData },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: queryData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+          {
+            request: { query, variables },
+            result: { data: secondReqData },
+          },
+        ]),
+      });
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         variables,
         notifyOnNetworkStatusChange: false,
@@ -6224,9 +6227,13 @@ describe("ApolloClient", () => {
       const stream = new ObservableStream(observable);
       let mutationComplete = false;
 
-      await expect(stream).toEmitMatchedValue({ data: queryData });
+      await expect(stream).toEmitApolloQueryResult({
+        data: queryData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      void queryManager
+      void client
         .mutate({
           mutation,
           refetchQueries: ["getAuthors"],
@@ -6236,8 +6243,16 @@ describe("ApolloClient", () => {
           mutationComplete = true;
         });
 
-      await expect(stream).toEmitMatchedValue({ data: secondReqData });
-      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      await expect(stream).toEmitApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(mutationComplete).toBe(false);
     });
 

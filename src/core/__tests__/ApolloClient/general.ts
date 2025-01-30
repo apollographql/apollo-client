@@ -34,14 +34,6 @@ import { Concast, print } from "../../../utilities";
 import { ObservableStream, spyOnConsole } from "../../../testing/internal";
 
 describe("ApolloClient", () => {
-  // Standard "get id from object" method.
-  const dataIdFromObject = (object: any) => {
-    if (object.__typename && object.id) {
-      return object.__typename + "__" + object.id;
-    }
-    return undefined;
-  };
-
   const getObservableStream = ({
     query,
     variables = {},
@@ -2110,7 +2102,15 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false, dataIdFromObject }),
+      cache: new InMemoryCache({
+        addTypename: false,
+        dataIdFromObject: (object) => {
+          if (object.__typename && object.id) {
+            return object.__typename + "__" + object.id;
+          }
+          return undefined;
+        },
+      }),
       link: new MockLink([
         {
           request: { query: query1 },

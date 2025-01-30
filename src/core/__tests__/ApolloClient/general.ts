@@ -4724,35 +4724,41 @@ describe("ApolloClient", () => {
         a: { x1: 1, y1: 2, z1: 3 },
         b: { x2: 3, y2: 2, z2: 1 },
       };
-      const queryManager = mockQueryManager(
-        {
-          request: { query: query1 },
-          result: { data: data1 },
-        },
-        {
-          request: { query: query2 },
-          result: { data: data2 },
-          delay: 5,
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query: query1 },
+            result: { data: data1 },
+          },
+          {
+            request: { query: query2 },
+            result: { data: data2 },
+            delay: 5,
+          },
+        ]),
+      });
 
-      const result1 = await queryManager.query({ query: query1 });
-      expect(result1.loading).toBe(false);
-      expect(result1.data).toEqual(data1);
+      const result1 = await client.query({ query: query1 });
+      expect(result1).toEqualApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: query2,
         returnPartialData: true,
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: data1,
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,

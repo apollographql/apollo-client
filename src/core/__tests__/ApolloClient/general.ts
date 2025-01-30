@@ -5788,27 +5788,30 @@ describe("ApolloClient", () => {
 
     const variables = { id: "1234" };
 
-    function makeQueryManager() {
-      return mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data },
-        },
-        {
-          request: { query, variables },
-          result: { data: secondReqData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        }
-      );
+    function makeClient() {
+      return new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data },
+          },
+          {
+            request: { query, variables },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+        ]),
+      });
     }
 
     it("should refetch the right query when a result is successfully returned", async () => {
-      const queryManager = makeQueryManager();
+      const client = makeClient();
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         variables,
         notifyOnNetworkStatusChange: false,
@@ -5817,9 +5820,13 @@ describe("ApolloClient", () => {
 
       let finishedRefetch = false;
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      await queryManager.mutate({
+      await client.mutate({
         mutation,
 
         update(cache) {
@@ -5845,12 +5852,20 @@ describe("ApolloClient", () => {
       });
 
       expect(finishedRefetch).toBe(true);
-      await expect(stream).toEmitMatchedValue({ data: secondReqData });
-      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      await expect(stream).toEmitApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("should refetch using the original query context (if any)", async () => {
-      const queryManager = makeQueryManager();
+      const queryManager = makeClient();
 
       const headers = {
         someHeader: "some value",
@@ -5897,7 +5912,7 @@ describe("ApolloClient", () => {
     });
 
     it("should refetch using the specified context, if provided", async () => {
-      const queryManager = makeQueryManager();
+      const queryManager = makeClient();
 
       const observable = queryManager.watchQuery<any>({
         query,

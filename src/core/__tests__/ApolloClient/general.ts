@@ -34,14 +34,6 @@ import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
 import { ObservableStream, spyOnConsole } from "../../../testing/internal";
 
-export function resetStore(qm: QueryManager<any>) {
-  return qm
-    .clearStore({
-      discardWatches: false,
-    })
-    .then(() => qm.reFetchObservableQueries());
-}
-
 describe("ApolloClient", () => {
   // Standard "get id from object" method.
   const dataIdFromObject = (object: any) => {

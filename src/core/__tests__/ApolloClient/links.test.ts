@@ -240,14 +240,12 @@ describe("Link interactions", () => {
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    void queryManager.mutate({ mutation });
+    void client.mutate({ mutation });
   });
 
   it("includes passed context in the context for mutations", (done) => {

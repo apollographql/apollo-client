@@ -11,7 +11,7 @@ import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
 import { MockSubscriptionLink } from "../../../testing/core";
 
 import { QueryManager } from "../../QueryManager";
-import { NextLink, Operation, Reference } from "../../../core";
+import { ApolloClient, NextLink, Operation, Reference } from "../../../core";
 import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 
 describe("Link interactions", () => {
@@ -52,14 +52,12 @@ describe("Link interactions", () => {
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
     });

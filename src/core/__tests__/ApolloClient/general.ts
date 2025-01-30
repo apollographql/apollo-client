@@ -4083,7 +4083,7 @@ describe("ApolloClient", () => {
       };
 
       let timesFired = 0;
-      const link: ApolloLink = ApolloLink.from([
+      const link = ApolloLink.from([
         () =>
           new Observable((observer) => {
             timesFired += 1;

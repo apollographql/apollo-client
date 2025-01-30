@@ -3741,15 +3741,20 @@ describe("ApolloClient", () => {
           lastName: "Smith",
         },
       };
-      const queryManager = mockQueryManager({
-        request: { query },
-        result: { data },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+          },
+        ]),
       });
-      const obs = queryManager.watchQuery<any>({ query });
+      const obs = client.watchQuery({ query });
       obs.subscribe({});
       obs.refetch = jest.fn();
 
-      void resetStore(queryManager);
+      void client.resetStore();
 
       await wait(0);
 

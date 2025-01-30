@@ -4466,8 +4466,9 @@ describe("ApolloClient", () => {
         },
       };
 
-      const queryManager = createQueryManager({
-        link: mockSingleLink(
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
           {
             request: { query },
             result: { data },
@@ -4483,27 +4484,30 @@ describe("ApolloClient", () => {
           {
             request: { query: query2 },
             result: { data: data2Changed },
-          }
-        ),
+          },
+        ]),
       });
 
-      const observable = queryManager.watchQuery<any>({ query });
-      const observable2 = queryManager.watchQuery<any>({ query: query2 });
+      const observable = client.watchQuery({ query });
+      const observable2 = client.watchQuery({ query: query2 });
 
       const stream = new ObservableStream(observable);
       const stream2 = new ObservableStream(observable2);
 
-      await expect(stream).toEmitMatchedValue({ data });
-      await expect(stream2).toEmitMatchedValue({ data: data2 });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      await expect(stream2).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      const results: any[] = [];
-      queryManager
-        .refetchQueries({
-          include: ["GetAuthor", "GetAuthor2"],
-        })
-        .forEach((result) => results.push(result));
-
-      await Promise.all(results);
+      await client.refetchQueries({
+        include: ["GetAuthor", "GetAuthor2"],
+      });
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataChanged,

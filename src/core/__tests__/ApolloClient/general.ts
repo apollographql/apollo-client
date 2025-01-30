@@ -5198,39 +5198,54 @@ describe("ApolloClient", () => {
 
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data },
-          delay: 10,
-        },
-        {
-          request: { query, variables },
-          result: { data: secondReqData },
-          delay: 100,
-        },
-        {
-          request: { query: mutation, variables: mutationVariables },
-          result: { data: mutationData },
-          delay: 10,
-        }
-      );
-      const observable = queryManager.watchQuery<any>({ query, variables });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data },
+            delay: 10,
+          },
+          {
+            request: { query, variables },
+            result: { data: secondReqData },
+            delay: 100,
+          },
+          {
+            request: { query: mutation, variables: mutationVariables },
+            result: { data: mutationData },
+            delay: 10,
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      await queryManager.mutate({
+      await client.mutate({
         mutation,
         variables: mutationVariables,
         refetchQueries: [{ query, variables }],
       });
 
-      await expect(stream).toEmitMatchedValue(
-        { data: secondReqData },
+      await expect(stream).toEmitApolloQueryResult(
+        {
+          data: secondReqData,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        },
         { timeout: 150 }
       );
-      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

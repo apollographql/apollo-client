@@ -3460,15 +3460,18 @@ describe("ApolloClient", () => {
     });
 
     it("should change the store state to an empty state", () => {
-      const queryManager = createQueryManager({
-        link: mockSingleLink(),
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([]),
       });
 
-      void resetStore(queryManager);
+      void client.resetStore();
 
-      expect(queryManager.cache.extract()).toEqual({});
-      expect(queryManager.getQueryStore()).toEqual({});
-      expect(queryManager.mutationStore).toEqual({});
+      expect(client.cache.extract()).toEqual({});
+      // TODO: Determine if we can drop this check against internal state and
+      // replace it with something user-facing.
+      expect(client["queryManager"].getQueryStore()).toEqual({});
+      expect(client["queryManager"].mutationStore).toEqual({});
     });
 
     it.skip("should only refetch once when we store reset", async () => {

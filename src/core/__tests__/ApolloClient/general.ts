@@ -4813,33 +4813,48 @@ describe("ApolloClient", () => {
         },
       };
       const variables = { id: "1234" };
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data },
-        },
-        {
-          request: { query, variables },
-          result: { data: secondReqData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        }
-      );
-      const observable = queryManager.watchQuery<any>({
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data },
+          },
+          {
+            request: { query, variables },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({
         query,
         variables,
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      void queryManager.mutate({ mutation, refetchQueries: ["getAuthors"] });
+      void client.mutate({ mutation, refetchQueries: ["getAuthors"] });
 
-      await expect(stream).toEmitMatchedValue({ data: secondReqData });
-      expect(observable.getCurrentResult().data).toEqual(secondReqData);
+      await expect(stream).toEmitApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("should not warn and continue when an unknown query name is asked to refetch", async () => {

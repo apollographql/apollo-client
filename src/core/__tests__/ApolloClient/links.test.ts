@@ -269,14 +269,12 @@ describe("Link interactions", () => {
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    void queryManager.mutate({ mutation, context: { planet: "Tatooine" } });
+    void client.mutate({ mutation, context: { planet: "Tatooine" } });
   });
 
   it("includes getCacheKey function on the context for cache resolvers", async () => {

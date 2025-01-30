@@ -4892,34 +4892,45 @@ describe("ApolloClient", () => {
           lastName: "Johnson",
         },
       };
-      const queryManager = mockQueryManager(
-        {
-          request: { query },
-          result: { data },
-        },
-        {
-          request: { query },
-          result: { data: secondReqData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        }
-      );
-      const observable = queryManager.watchQuery<any>({
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({
         query,
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      void queryManager.mutate({
+      void client.mutate({
         mutation,
         refetchQueries: ["fakeQuery", "getAuthors"],
       });
 
-      await expect(stream).toEmitMatchedValue({ data: secondReqData });
+      await expect(stream).toEmitApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(consoleWarnSpy).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "fakeQuery"

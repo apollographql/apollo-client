@@ -1,4 +1,3 @@
-// externals
 import gql from "graphql-tag";
 import { print } from "graphql";
 
@@ -9,10 +8,8 @@ import {
 import { ApolloLink } from "../../../link/core";
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
 
-// mocks
 import { MockSubscriptionLink } from "../../../testing/core";
 
-// core
 import { QueryManager } from "../../QueryManager";
 import { NextLink, Operation, Reference } from "../../../core";
 import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";

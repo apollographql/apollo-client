@@ -6613,13 +6613,18 @@ describe("ApolloClient", () => {
         },
       };
 
-      const queryManager = mockQueryManager({
-        request: { query: query1 },
-        result: { data: data1 },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query: query1 },
+            result: { data: data1 },
+          },
+        ]),
       });
 
-      const observable1 = queryManager.watchQuery<any>({ query: query1 });
-      const observable2 = queryManager.watchQuery<any>({
+      const observable1 = client.watchQuery({ query: query1 });
+      const observable2 = client.watchQuery({
         query: query2,
         fetchPolicy: "cache-only",
         returnPartialData,
@@ -6627,7 +6632,7 @@ describe("ApolloClient", () => {
 
       const stream1 = new ObservableStream(observable1);
 
-      await expect(stream1).toEmitValue({
+      await expect(stream1).toEmitApolloQueryResult({
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -6637,7 +6642,7 @@ describe("ApolloClient", () => {
 
       const stream2 = new ObservableStream(observable2);
 
-      await expect(stream2).toEmitMatchedValue({
+      await expect(stream2).toEmitApolloQueryResult({
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,

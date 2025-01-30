@@ -4532,13 +4532,21 @@ describe("ApolloClient", () => {
       const data = {
         fortuneCookie: "Buy it",
       };
-      const result = await mockQueryManager({
-        request: { query },
-        result: { data },
+      const result = await new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+          },
+        ]),
       }).query({ query });
 
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual(data);
+      expect(result).toEqualApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("should be passed to the observer as true if we are returning partial data", async () => {
@@ -4562,33 +4570,36 @@ describe("ApolloClient", () => {
       `;
       const fullData = { fortuneCookie, author };
 
-      const queryManager = mockQueryManager(
-        {
-          request: { query },
-          result: { data: fullData },
-          delay: 5,
-        },
-        {
-          request: { query: primeQuery },
-          result: { data: primeData },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data: fullData },
+            delay: 5,
+          },
+          {
+            request: { query: primeQuery },
+            result: { data: primeData },
+          },
+        ]),
+      });
 
-      await queryManager.query<any>({ query: primeQuery });
+      await client.query({ query: primeQuery });
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         returnPartialData: true,
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: primeData,
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: fullData,
         loading: false,
         networkStatus: NetworkStatus.ready,

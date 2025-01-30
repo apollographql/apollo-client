@@ -6536,22 +6536,30 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const queryManager = createQueryManager({
-        link: mockSingleLink({
-          request: { query },
-          result: {
-            data: {
-              author: { firstName: "John" },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: {
+              data: {
+                author: { firstName: "John" },
+              },
             },
           },
-        }),
+        ]),
         queryDeduplication: true,
       });
 
-      queryManager.query({ query, context: { queryDeduplication: false } });
+      void client.query({ query, context: { queryDeduplication: false } });
 
+      // TODO: Determine if there is a better way to assert this behavior
+      // without checking internal state
       expect(
-        queryManager["inFlightLinkObservables"].peek(print(query), "{}")
+        client["queryManager"]["inFlightLinkObservables"].peek(
+          print(query),
+          "{}"
+        )
       ).toBeUndefined();
     });
   });

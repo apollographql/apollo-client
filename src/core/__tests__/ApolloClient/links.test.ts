@@ -340,10 +340,9 @@ describe("Link interactions", () => {
 
     await client.query({ query });
 
-    return client.query({ query: shouldHitCacheResolver }).then(({ data }) => {
-      expect(data).toMatchObject({
-        book: { title: "Woo", __typename: "Book" },
-      });
+    const { data } = await client.query({ query: shouldHitCacheResolver });
+    expect(data).toMatchObject({
+      book: { title: "Woo", __typename: "Book" },
     });
   });
 

@@ -275,11 +275,9 @@ describe("GraphQL Subscriptions", () => {
           [PROTOCOL_ERRORS_SYMBOL]: [
             {
               message: "cannot read message from websocket",
-              extensions: [
-                {
-                  code: "WEBSOCKET_MESSAGE_ERROR",
-                },
-              ],
+              extensions: {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
             } as any,
           ],
         },
@@ -296,11 +294,9 @@ describe("GraphQL Subscriptions", () => {
         protocolErrors: [
           {
             message: "cannot read message from websocket",
-            extensions: [
-              {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            ],
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
           },
         ],
       })
@@ -390,12 +386,10 @@ describe("GraphQL Subscriptions", () => {
           [PROTOCOL_ERRORS_SYMBOL]: [
             {
               message: "cannot read message from websocket",
-              extensions: [
-                {
-                  code: "WEBSOCKET_MESSAGE_ERROR",
-                },
-              ],
-            } as any,
+              extensions: {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
+            },
           ],
         },
       },
@@ -411,11 +405,9 @@ describe("GraphQL Subscriptions", () => {
         protocolErrors: [
           {
             message: "cannot read message from websocket",
-            extensions: [
-              {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            ],
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
           },
         ],
       })
@@ -486,12 +478,10 @@ describe("GraphQL Subscriptions", () => {
           [PROTOCOL_ERRORS_SYMBOL]: [
             {
               message: "cannot read message from websocket",
-              extensions: [
-                {
-                  code: "WEBSOCKET_MESSAGE_ERROR",
-                },
-              ],
-            } as any,
+              extensions: {
+                code: "WEBSOCKET_MESSAGE_ERROR",
+              },
+            },
           ],
         },
       },

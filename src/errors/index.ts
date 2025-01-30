@@ -22,10 +22,7 @@ type FetchResultWithSymbolExtensions<T> = FetchResult<T> & {
 
 export interface ApolloErrorOptions {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-  protocolErrors?: ReadonlyArray<{
-    message: string;
-    extensions?: GraphQLErrorExtensions[];
-  }>;
+  protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
   clientErrors?: ReadonlyArray<Error>;
   networkError?: Error | ServerParseError | ServerError | null;
   errorMessage?: string;
@@ -86,10 +83,7 @@ export class ApolloError extends Error {
   public name: string;
   public message: string;
   public graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
-  public protocolErrors: ReadonlyArray<{
-    message: string;
-    extensions?: GraphQLErrorExtensions[];
-  }>;
+  public protocolErrors: ReadonlyArray<GraphQLFormattedError>;
   public clientErrors: ReadonlyArray<Error>;
   public networkError: Error | ServerParseError | ServerError | null;
   /**

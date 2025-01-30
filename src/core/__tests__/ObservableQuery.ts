@@ -32,10 +32,17 @@ import mockQueryManager, {
 } from "../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
 
-import { resetStore } from "./QueryManager";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
+
+function resetStore(qm: QueryManager<any>) {
+  return qm
+    .clearStore({
+      discardWatches: false,
+    })
+    .then(() => qm.reFetchObservableQueries());
+}
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];

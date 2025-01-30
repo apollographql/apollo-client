@@ -169,14 +169,12 @@ describe("Link interactions", () => {
     };
 
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
     });

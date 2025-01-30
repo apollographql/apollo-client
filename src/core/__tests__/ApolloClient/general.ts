@@ -13,13 +13,10 @@ import { ApolloLink, FetchResult } from "../../../link/core";
 import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
 
 // mocks
-import mockQueryManager, {
-  getDefaultOptionsForQueryManagerTests,
-} from "../../../testing/core/mocking/mockQueryManager";
+import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 import {
   MockApolloLink,
   MockLink,
-  mockSingleLink,
 } from "../../../testing/core/mocking/mockLink";
 
 // core

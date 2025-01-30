@@ -4654,19 +4654,22 @@ describe("ApolloClient", () => {
           lastName: "Smith 2",
         },
       };
-      const queryManager = mockQueryManager(
-        {
-          request: { query: testQuery },
-          result: { data: data1 },
-        },
-        {
-          request: { query: testQuery },
-          result: { data: data2 },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query: testQuery },
+            result: { data: data1 },
+          },
+          {
+            request: { query: testQuery },
+            result: { data: data2 },
+          },
+        ]),
+      });
 
       const stream = new ObservableStream(
-        queryManager.watchQuery({
+        client.watchQuery({
           query: testQuery,
           notifyOnNetworkStatusChange: false,
         })
@@ -4679,7 +4682,7 @@ describe("ApolloClient", () => {
       });
 
       await wait(0);
-      void resetStore(queryManager);
+      void client.resetStore();
 
       await expect(stream).toEmitValue({
         data: data2,

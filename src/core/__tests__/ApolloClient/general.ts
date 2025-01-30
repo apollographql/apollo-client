@@ -3807,8 +3807,9 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const queryManager = createQueryManager({
-        link: mockSingleLink(),
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([]),
       });
 
       const options = {
@@ -3818,14 +3819,14 @@ describe("ApolloClient", () => {
 
       let refetchCount = 0;
 
-      const obs = queryManager.watchQuery(options);
+      const obs = client.watchQuery(options);
       obs.subscribe({});
       obs.refetch = () => {
         ++refetchCount;
         return null as never;
       };
 
-      void resetStore(queryManager);
+      void client.resetStore();
 
       await wait(50);
 

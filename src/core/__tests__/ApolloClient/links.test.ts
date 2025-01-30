@@ -309,46 +309,42 @@ describe("Link interactions", () => {
       return Observable.of({ data: bookData });
     });
 
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({
-          typePolicies: {
-            Query: {
-              fields: {
-                book(_, { args, toReference, readField }) {
-                  if (!args) {
-                    throw new Error("arg must never be null");
-                  }
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              book(_, { args, toReference, readField }) {
+                if (!args) {
+                  throw new Error("arg must never be null");
+                }
 
-                  const ref = toReference({ __typename: "Book", id: args.id });
-                  if (!ref) {
-                    throw new Error("ref must never be null");
-                  }
+                const ref = toReference({ __typename: "Book", id: args.id });
+                if (!ref) {
+                  throw new Error("ref must never be null");
+                }
 
-                  expect(ref).toEqual({ __ref: `Book:${args.id}` });
-                  const found = readField<Reference[]>("books")!.find(
-                    (book) => book.__ref === ref.__ref
-                  );
-                  expect(found).toBeTruthy();
-                  return found;
-                },
+                expect(ref).toEqual({ __ref: `Book:${args.id}` });
+                const found = readField<Reference[]>("books")!.find(
+                  (book) => book.__ref === ref.__ref
+                );
+                expect(found).toBeTruthy();
+                return found;
               },
             },
           },
-        }),
-      })
-    );
+        },
+      }),
+    });
 
-    await queryManager.query({ query });
+    await client.query({ query });
 
-    return queryManager
-      .query({ query: shouldHitCacheResolver })
-      .then(({ data }) => {
-        expect(data).toMatchObject({
-          book: { title: "Woo", __typename: "Book" },
-        });
+    return client.query({ query: shouldHitCacheResolver }).then(({ data }) => {
+      expect(data).toMatchObject({
+        book: { title: "Woo", __typename: "Book" },
       });
+    });
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {

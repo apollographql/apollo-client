@@ -4972,28 +4972,35 @@ describe("ApolloClient", () => {
           lastName: "Johnson",
         },
       };
-      const queryManager = mockQueryManager(
-        {
-          request: { query },
-          result: { data },
-        },
-        {
-          request: { query },
-          result: { data: secondReqData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+        ]),
+      });
 
-      const observable = queryManager.watchQuery<any>({ query });
+      const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       stream.unsubscribe();
-      await queryManager.mutate({
+      await client.mutate({
         mutation,
         refetchQueries: ["getAuthors"],
       });

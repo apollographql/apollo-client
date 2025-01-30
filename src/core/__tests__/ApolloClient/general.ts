@@ -11,7 +11,6 @@ import {
 } from "../../../utilities/observables/Observable";
 import { ApolloLink, FetchResult } from "../../../link/core";
 import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
-import { NormalizedCacheObject } from "../../../cache/inmemory/types";
 
 // mocks
 import mockQueryManager, {
@@ -6373,25 +6372,20 @@ describe("ApolloClient", () => {
         }
       `;
 
-      const link = mockSingleLink(
+      const link = new MockLink([
         { request: { query: query1 }, result: { data: { one: 1 } } },
         { request: { query: query2 }, result: { data: { two: 2 } } },
         { request: { query: query3 }, result: { data: { three: 3 } } },
-        { request: { query: query4 }, result: { data: { four: 4 } } }
-      );
+        { request: { query: query4 }, result: { data: { four: 4 } } },
+      ]);
       const cache = new InMemoryCache();
 
-      const queryManager = new QueryManager<NormalizedCacheObject>(
-        getDefaultOptionsForQueryManagerTests({
-          link,
-          cache,
-        })
-      );
+      const client = new ApolloClient({ cache, link });
 
-      await queryManager.query({ query: query1 });
-      await queryManager.query({ query: query2 });
-      await queryManager.query({ query: query3 });
-      await queryManager.query({ query: query4 });
+      await client.query({ query: query1 });
+      await client.query({ query: query2 });
+      await client.query({ query: query3 });
+      await client.query({ query: query4 });
       await wait(10);
 
       expect(cache["watches"].size).toBe(0);

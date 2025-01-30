@@ -3699,17 +3699,25 @@ describe("ApolloClient", () => {
           lastName: "Smith",
         },
       };
-      const queryManager = mockQueryManager({
-        request: { query },
-        result: { data },
-        delay: 10000, //i.e. forever
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+            delay: 10000, //i.e. forever
+          },
+        ]),
       });
-      const promise = queryManager.fetchQuery("made up id", { query });
+      // TODO: Determine if there is a better way to test this.
+      const promise = client["queryManager"].fetchQuery("made up id", {
+        query,
+      });
 
       // Need to delay the reset at least until the fetchRequest method
       // has had a chance to enter this request into fetchQueryRejectFns.
       await wait(100);
-      void resetStore(queryManager);
+      void client.resetStore();
 
       await expect(promise).rejects.toThrow(
         new InvariantError(

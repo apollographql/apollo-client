@@ -3644,7 +3644,6 @@ describe("ApolloClient", () => {
     });
 
     it("should not error on a stopped query()", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
           author {
@@ -3668,14 +3667,19 @@ describe("ApolloClient", () => {
           })
       );
 
-      queryManager = createQueryManager({ link });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
 
       const queryId = "1";
-      const promise = queryManager.fetchQuery(queryId, { query });
+      // TODO: Determine if there is a better way to test this without digging
+      // into implementation details
+      const promise = client["queryManager"].fetchQuery(queryId, { query });
 
-      queryManager.removeQuery(queryId);
+      client["queryManager"].removeQuery(queryId);
 
-      await resetStore(queryManager);
+      await client.resetStore();
       // Ensure the promise doesn't reject
       await Promise.race([wait(50), promise]);
     });

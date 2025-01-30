@@ -3616,20 +3616,31 @@ describe("ApolloClient", () => {
         ),
       ]);
 
-      const queryManager = createQueryManager({ link });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(timesFired).toBe(1);
 
-      void resetStore(queryManager);
+      void client.resetStore();
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(timesFired).toBe(2);
     });
 

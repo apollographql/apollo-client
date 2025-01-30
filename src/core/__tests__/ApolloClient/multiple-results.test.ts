@@ -228,14 +228,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
       errorPolicy: "all",
@@ -245,7 +243,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -256,7 +254,7 @@ describe("mutiple results", () => {
       error: new Error("defer failed"),
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -265,7 +263,7 @@ describe("mutiple results", () => {
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitValueStrict({
+    await expect(stream).toEmitApolloQueryResult({
       data: laterData,
       loading: false,
       networkStatus: 7,

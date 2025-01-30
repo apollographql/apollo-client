@@ -383,14 +383,12 @@ describe("Link interactions", () => {
       });
     });
 
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    await queryManager.query({ query });
+    await client.query({ query });
 
     expect(print(result.current!.query)).toEqual(print(expectedQuery));
   });

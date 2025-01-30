@@ -5865,13 +5865,13 @@ describe("ApolloClient", () => {
     });
 
     it("should refetch using the original query context (if any)", async () => {
-      const queryManager = makeClient();
+      const client = makeClient();
 
       const headers = {
         someHeader: "some value",
       };
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         variables,
         context: {
@@ -5881,9 +5881,13 @@ describe("ApolloClient", () => {
       });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      void queryManager.mutate({
+      void client.mutate({
         mutation,
 
         update(cache) {
@@ -5902,11 +5906,13 @@ describe("ApolloClient", () => {
         },
       });
 
-      await expect(stream).toEmitMatchedValue({ data: secondReqData });
+      await expect(stream).toEmitApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      const context = (
-        queryManager.link as MockApolloLink
-      ).operation!.getContext();
+      const context = (client.link as MockApolloLink).operation!.getContext();
       expect(context.headers).not.toBeUndefined();
       expect(context.headers.someHeader).toEqual(headers.someHeader);
     });

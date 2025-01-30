@@ -3474,7 +3474,7 @@ describe("ApolloClient", () => {
       expect(client["queryManager"].mutationStore).toEqual({});
     });
 
-    it.skip("should only refetch once when we store reset", async () => {
+    it("should only refetch once when we store reset", async () => {
       let client: ApolloClient<NormalizedCacheObject>;
       const query = gql`
         query {

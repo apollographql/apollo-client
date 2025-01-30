@@ -16,6 +16,7 @@ import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/moc
 
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {
+    expect.assertions(3);
     const query = gql`
       query CachedLuke {
         people_one(id: 1) {

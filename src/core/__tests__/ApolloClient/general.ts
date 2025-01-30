@@ -3895,7 +3895,11 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      await expect(client.query({ query })).rejects.toBeTruthy();
+      await expect(client.query({ query })).rejects.toThrow(
+        new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        )
+      );
     });
   });
 

@@ -6694,7 +6694,7 @@ describe("ApolloClient", () => {
       expect(() => {
         // @ts-ignore
         client.defaultContext = { query: { fetchPolicy: "cache-only" } };
-      }).toThrowError(/Cannot set property defaultContext/);
+      }).toThrow(/Cannot set property defaultContext/);
     });
 
     it.each([

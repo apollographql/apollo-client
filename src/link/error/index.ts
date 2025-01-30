@@ -1,8 +1,4 @@
-import type {
-  FormattedExecutionResult,
-  GraphQLErrorExtensions,
-  GraphQLFormattedError,
-} from "graphql";
+import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
 import {
   graphQLResultHasProtocolErrors,
@@ -28,10 +24,7 @@ export interface ErrorResponse {
    * Fatal transport-level errors from multipart subscriptions.
    * See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
    */
-  protocolErrors?: ReadonlyArray<{
-    message: string;
-    extensions?: GraphQLErrorExtensions[];
-  }>;
+  protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
   response?: FormattedExecutionResult;
   operation: Operation;
   forward: NextLink;

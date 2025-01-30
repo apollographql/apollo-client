@@ -6458,22 +6458,25 @@ describe("ApolloClient", () => {
         },
       };
 
-      const link = mockSingleLink({
-        request: { query },
-        result: { data },
-      });
+      const link = new MockLink([
+        {
+          request: { query },
+          result: { data },
+        },
+      ]);
 
       const clientAwareness = {
         name: "Test",
         version: "1.0.0",
       };
 
-      const queryManager = createQueryManager({
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
         link,
-        clientAwareness,
+        ...clientAwareness,
       });
 
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         fetchPolicy: "no-cache",
       });

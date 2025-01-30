@@ -4185,13 +4185,21 @@ describe("ApolloClient", () => {
           lastName: "Smith",
         },
       };
-      const queryManager = mockQueryManager({
-        request: { query },
-        result: { data },
-        delay: 100,
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+            delay: 100,
+          },
+        ]),
       });
-      const promise = queryManager.fetchQuery("made up id", { query });
-      void queryManager.reFetchObservableQueries();
+      // TODO: Determine if there is a better way to test this
+      const promise = client["queryManager"].fetchQuery("made up id", {
+        query,
+      });
+      void client.reFetchObservableQueries();
 
       await expect(promise).resolves.toBeTruthy();
     });

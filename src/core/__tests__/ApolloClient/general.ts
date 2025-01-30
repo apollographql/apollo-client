@@ -5613,25 +5613,28 @@ describe("ApolloClient", () => {
         },
       };
       const variables = { id: "1234" };
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data },
-        },
-        {
-          request: { query, variables },
-          result: { data: secondReqData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data },
+          },
+          {
+            request: { query, variables },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+        ]),
+      });
 
       const headers = {
         someHeader: "some value",
       };
-      const observable = queryManager.watchQuery<any>({
+      const observable = client.watchQuery({
         query,
         variables,
         context: {
@@ -5643,16 +5646,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitNext();
 
-      void queryManager.mutate({
+      void client.mutate({
         mutation,
         refetchQueries: ["getAuthors"],
       });
 
       await expect(stream).toEmitNext();
 
-      const context = (
-        queryManager.link as MockApolloLink
-      ).operation!.getContext();
+      const context = (client.link as MockApolloLink).operation!.getContext();
       expect(context.headers).not.toBeUndefined();
       expect(context.headers.someHeader).toEqual(headers.someHeader);
     });

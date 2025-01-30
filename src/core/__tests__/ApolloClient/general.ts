@@ -25,7 +25,6 @@ import {
 
 // core
 import { NetworkStatus } from "../../networkStatus";
-import { ObservableQuery } from "../../ObservableQuery";
 import { WatchQueryOptions } from "../../watchQueryOptions";
 import { QueryManager } from "../../QueryManager";
 

@@ -5536,34 +5536,45 @@ describe("ApolloClient", () => {
           lastName: "Johnson",
         },
       };
-      const queryManager = mockQueryManager(
-        {
-          request: { query },
-          result: { data },
-        },
-        {
-          request: { query },
-          result: { data: secondReqData },
-        },
-        {
-          request: { query: mutation },
-          result: { data: mutationData },
-        }
-      );
-      const observable = queryManager.watchQuery<any>({ query });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query },
+            result: { data },
+          },
+          {
+            request: { query },
+            result: { data: secondReqData },
+          },
+          {
+            request: { query: mutation },
+            result: { data: mutationData },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       const conditional = jest.fn(() => [{ query }]);
-      await queryManager.mutate({ mutation, refetchQueries: conditional });
+      await client.mutate({ mutation, refetchQueries: conditional });
 
       expect(conditional).toHaveBeenCalledTimes(1);
       expect(conditional).toHaveBeenCalledWith(
         expect.objectContaining({ data: mutationData })
       );
 
-      await expect(stream).toEmitMatchedValue({ data: secondReqData });
+      await expect(stream).toEmitApolloQueryResult({
+        data: secondReqData,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("should refetch using the original query context (if any)", async () => {

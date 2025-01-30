@@ -42,8 +42,6 @@ describe("ApolloClient", () => {
     return undefined;
   };
 
-  // Helper method that sets up a mockQueryManager and then passes on the
-  // results to an observer.
   const getObservableStream = ({
     query,
     variables = {},

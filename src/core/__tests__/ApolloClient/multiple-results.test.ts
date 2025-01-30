@@ -1,14 +1,7 @@
-// externals
 import gql from "graphql-tag";
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
-
-// mocks
 import { MockSubscriptionLink, wait } from "../../../testing/core";
-
-// core
-import { QueryManager } from "../../QueryManager";
 import { GraphQLError } from "graphql";
-import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 import { ObservableStream } from "../../../testing/internal";
 import { ApolloError } from "../../../errors";
 import { ApolloClient } from "../../ApolloClient";

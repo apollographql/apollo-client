@@ -3475,7 +3475,6 @@ describe("ApolloClient", () => {
     });
 
     it("should only refetch once when we store reset", async () => {
-      let client: ApolloClient<NormalizedCacheObject>;
       const query = gql`
         query {
           author {
@@ -3512,7 +3511,7 @@ describe("ApolloClient", () => {
             return;
           })
       );
-      client = new ApolloClient({
+      const client = new ApolloClient({
         cache: new InMemoryCache({ addTypename: false }),
         link,
       });

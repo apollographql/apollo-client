@@ -3541,8 +3541,6 @@ describe("ApolloClient", () => {
     });
 
     it("should not refetch torn-down queries", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
-      let observable: ObservableQuery<any>;
       const query = gql`
         query {
           author {
@@ -3567,17 +3565,24 @@ describe("ApolloClient", () => {
           }),
       ]);
 
-      queryManager = createQueryManager({ link });
-      observable = queryManager.watchQuery({ query });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
+      const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       stream.unsubscribe();
 
       expect(timesFired).toBe(1);
 
-      void resetStore(queryManager);
+      void client.resetStore();
       await wait(50);
 
       expect(timesFired).toBe(1);

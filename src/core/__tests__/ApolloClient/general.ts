@@ -4384,7 +4384,6 @@ describe("ApolloClient", () => {
     });
 
     it("should NOT throw an error on an inflight query() if the observed queries are refetched", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
           author {
@@ -4404,15 +4403,18 @@ describe("ApolloClient", () => {
         () =>
           new Observable((observer) => {
             // refetch observed queries as soon as we hear about the query
-            void queryManager.reFetchObservableQueries();
+            void client.reFetchObservableQueries();
             observer.next({ data });
             observer.complete();
           })
       );
 
-      queryManager = createQueryManager({ link });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
 
-      await expect(queryManager.query<any>({ query })).resolves.toBeTruthy();
+      await expect(client.query({ query })).resolves.toBeTruthy();
     });
   });
 

@@ -290,14 +290,12 @@ describe("mutiple results", () => {
     };
 
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
       // errorPolicy: 'none', // this is the default
@@ -325,7 +323,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,

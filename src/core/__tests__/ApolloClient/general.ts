@@ -3868,7 +3868,6 @@ describe("ApolloClient", () => {
     });
 
     it("should throw an error on an inflight query() if the store is reset", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
       const query = gql`
         query {
           author {
@@ -3888,15 +3887,15 @@ describe("ApolloClient", () => {
         () =>
           new Observable((observer) => {
             // reset the store as soon as we hear about the query
-            void resetStore(queryManager);
+            void client.resetStore();
             observer.next({ data });
             return;
           })
       );
 
-      queryManager = createQueryManager({ link });
+      const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-      await expect(queryManager.query<any>({ query })).rejects.toBeTruthy();
+      await expect(client.query({ query })).rejects.toBeTruthy();
     });
   });
 

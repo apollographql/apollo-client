@@ -3475,7 +3475,7 @@ describe("ApolloClient", () => {
     });
 
     it.skip("should only refetch once when we store reset", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
+      let client: ApolloClient<NormalizedCacheObject>;
       const query = gql`
         query {
           author {
@@ -3512,18 +3512,29 @@ describe("ApolloClient", () => {
             return;
           })
       );
-      queryManager = createQueryManager({ link });
-      const observable = queryManager.watchQuery<any>({ query });
+      client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
+      const observable = client.watchQuery({ query });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitMatchedValue({ data });
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(timesFired).toBe(1);
 
       // reset the store after data has returned
-      void resetStore(queryManager);
+      void client.resetStore();
 
       // only refetch once and make sure data has changed
-      await expect(stream).toEmitMatchedValue({ data: data2 });
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(timesFired).toBe(2);
 
       await expect(stream).not.toEmitAnything();

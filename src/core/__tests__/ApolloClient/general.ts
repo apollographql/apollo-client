@@ -10,10 +10,9 @@ import {
   Observer,
 } from "../../../utilities/observables/Observable";
 import { ApolloLink, FetchResult } from "../../../link/core";
-import { InMemoryCache, InMemoryCacheConfig } from "../../../cache";
+import { InMemoryCache } from "../../../cache";
 
 // mocks
-import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 import {
   MockApolloLink,
   MockLink,
@@ -41,32 +40,6 @@ describe("ApolloClient", () => {
       return object.__typename + "__" + object.id;
     }
     return undefined;
-  };
-
-  // Helper method that serves as the constructor method for
-  // QueryManager but has defaults that make sense for these
-  // tests.
-  const createQueryManager = ({
-    link,
-    config = {},
-    clientAwareness = {},
-    queryDeduplication = false,
-  }: {
-    link: ApolloLink;
-    config?: Partial<InMemoryCacheConfig>;
-    clientAwareness?: { [key: string]: string };
-    queryDeduplication?: boolean;
-  }) => {
-    return new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false, ...config }),
-        clientAwareness,
-        queryDeduplication,
-        // Enable client.queryManager.mutationStore tracking.
-        onBroadcast() {},
-      })
-    );
   };
 
   // Helper method that sets up a mockQueryManager and then passes on the

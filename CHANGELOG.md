@@ -1,5 +1,21 @@
 # @apollo/client
 
+## 3.13.0-alpha.0
+
+### Minor Changes
+
+- [#12174](https://github.com/apollographql/apollo-client/pull/12174) [`ba5cc33`](https://github.com/apollographql/apollo-client/commit/ba5cc330f8734a989eef71e883861f848388ac0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure errors thrown in the `onCompleted` callback from `useMutation` don't call `onError`.
+
+- [#12174](https://github.com/apollographql/apollo-client/pull/12174) [`ba5cc33`](https://github.com/apollographql/apollo-client/commit/ba5cc330f8734a989eef71e883861f848388ac0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reject the mutation promise if errors are thrown in the `onCompleted` callback of `useMutation`.
+
+### Patch Changes
+
+- [#12321](https://github.com/apollographql/apollo-client/pull/12321) [`daa4f33`](https://github.com/apollographql/apollo-client/commit/daa4f3303cfb81e8dca66c21ce3f3dc24946cafb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `extensions` in `protocolErrors` for `ApolloError` and the `onError` link. According to the [multipart HTTP subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol), fatal tranport errors follow the [GraphQL error format](https://spec.graphql.org/draft/#sec-Errors.Error-Result-Format) which require `extensions` to be a map as its value instead of an array.
+
+- [#12296](https://github.com/apollographql/apollo-client/pull/12296) [`2422df2`](https://github.com/apollographql/apollo-client/commit/2422df202a7ec71365d5a8ab5b3b554fcf60e4af) Thanks [@Cellule](https://github.com/Cellule)! - Deprecate option `ignoreResults` in `useMutation`.
+  Once this option is removed, existing code still using it might see increase in re-renders.
+  If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
+
 ## 3.12.8
 
 ### Patch Changes

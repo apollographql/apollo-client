@@ -4,5 +4,10 @@
   "initialVersions": {
     "@apollo/client": "3.12.2"
   },
-  "changesets": []
+  "changesets": [
+    "curvy-seahorses-walk",
+    "fluffy-worms-fail",
+    "khaki-cars-develop",
+    "sharp-windows-switch"
+  ]
 }

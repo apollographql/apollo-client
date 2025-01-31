@@ -1755,53 +1755,53 @@ describe("ObservableQuery", () => {
           };
         }
 
-        const observableWithoutVariables = mockWatchQuery(
-          makeMock("a", "b", "c"),
-          makeMock("d", "e")
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
+        });
+        const observableWithoutVariables = client.watchQuery({
+          query: queryWithoutVariables,
+          variables: { variables: ["a", "b", "c"] },
+        });
 
         const stream = new ObservableStream(observableWithoutVariables);
 
-        {
-          const result = await stream.takeNext();
-
-          expect(result.error).toBeUndefined();
-          expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
             getVars: [
               { __typename: "Var", name: "a" },
               { __typename: "Var", name: "b" },
               { __typename: "Var", name: "c" },
             ],
-          });
-        }
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         await observableWithoutVariables.refetch({
           variables: ["d", "e"],
         });
 
-        {
-          const result = await stream.takeNext();
-
-          expect(result.error).toBeUndefined();
-          expect(result.loading).toBe(false);
-          expect(result.data).toEqual({
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
             getVars: [
               { __typename: "Var", name: "d" },
               { __typename: "Var", name: "e" },
             ],
-          });
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
-          expect(console.warn).toHaveBeenCalledTimes(1);
-          expect(console.warn).toHaveBeenCalledWith(
-            [
-              "Called refetch(%o) for query %o, which does not declare a $variables variable.",
-              "Did you mean to call refetch(variables) instead of refetch({ variables })?",
-            ].join("\n"),
-            { variables: ["d", "e"] },
-            "QueryWithoutVariables"
-          );
-        }
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(console.warn).toHaveBeenCalledWith(
+          [
+            "Called refetch(%o) for query %o, which does not declare a $variables variable.",
+            "Did you mean to call refetch(variables) instead of refetch({ variables })?",
+          ].join("\n"),
+          { variables: ["d", "e"] },
+          "QueryWithoutVariables"
+        );
 
         await expect(stream).not.toEmitAnything();
       });

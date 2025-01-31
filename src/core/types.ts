@@ -155,10 +155,11 @@ export interface ApolloQueryResult<T> {
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
-  // If result.data was read from the cache with missing fields,
-  // result.partial will be true. Otherwise, result.partial will be falsy
-  // (usually because the property is absent from the result object).
-  partial?: boolean;
+  /**
+   * Describes whether `data` is a complete or partial result. This flag is only
+   * set when `returnPartialData` is `true` in query options.
+   */
+  complete?: boolean;
 }
 
 // This is part of the public API, people write these functions in `updateQueries`.

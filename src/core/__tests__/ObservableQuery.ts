@@ -2048,19 +2048,17 @@ describe("ObservableQuery", () => {
         pets: petData.slice(0, 3),
       };
 
-      const ni = mockSingleLink(
-        {
-          request: { query: queryWithFragment, variables },
-          result: { data: dataOneWithTypename },
-        },
-        {
-          request: { query: queryWithFragment, variables },
-          result: { data: dataTwoWithTypename },
-        }
-      );
-
       const client = new ApolloClient({
-        link: ni,
+        link: new MockLink([
+          {
+            request: { query: queryWithFragment, variables },
+            result: { data: dataOneWithTypename },
+          },
+          {
+            request: { query: queryWithFragment, variables },
+            result: { data: dataTwoWithTypename },
+          },
+        ]),
         cache: new InMemoryCache({
           possibleTypes: {
             Creature: ["Pet"],

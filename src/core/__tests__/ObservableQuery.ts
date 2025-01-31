@@ -435,32 +435,39 @@ describe("ObservableQuery", () => {
     });
 
     it("if query is refetched, and an error is returned, no other observer callbacks will be called", async () => {
-      const observable = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { errors: [error] },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        }
-      );
-
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { errors: [error] },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      {
-        const { data } = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(data).toEqual(dataOne);
-      }
+      await expect(observable.refetch()).rejects.toThrow(
+        new ApolloError({ graphQLErrors: [error] })
+      );
 
-      await observable.refetch().catch(() => {});
-
-      await stream.takeError();
+      await expect(stream).toEmitError(
+        new ApolloError({ graphQLErrors: [error] })
+      );
 
       await observable.refetch();
 

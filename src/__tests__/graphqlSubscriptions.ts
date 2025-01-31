@@ -393,7 +393,8 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitFetchResult(results[0].result);
+
     expect(link.operation?.getContext().someVar).toEqual(
       options.context.someVar
     );

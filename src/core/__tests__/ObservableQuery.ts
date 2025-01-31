@@ -2231,8 +2231,15 @@ describe("ObservableQuery", () => {
       const currentResult = observable.getCurrentResult();
       const currentResult2 = observable.getCurrentResult();
 
-      expect(currentResult.loading).toBe(false);
-      expect(currentResult.error!.graphQLErrors).toEqual([error]);
+      // @ts-expect-error ApolloQueryResult expects a `data` property to be returned
+      expect(currentResult).toEqualApolloQueryResult({
+        error: new ApolloError({ graphQLErrors: [error] }),
+        errors: [error],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
       expect(currentResult.error === currentResult2.error).toBe(true);
     });
 

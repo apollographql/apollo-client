@@ -7,6 +7,7 @@ import { toComplete } from "./toComplete.js";
 import { toEmitApolloQueryResult } from "./toEmitApolloQueryResult.js";
 import { toEmitAnything } from "./toEmitAnything.js";
 import { toEmitError } from "./toEmitError.js";
+import { toEmitFetchResult } from "./toEmitFetchResult.js";
 import { toEmitMatchedValue } from "./toEmitMatchedValue.js";
 import { toEmitNext } from "./toEmitNext.js";
 import { toEmitValue } from "./toEmitValue.js";
@@ -20,6 +21,7 @@ expect.extend({
   toEmitApolloQueryResult,
   toEmitAnything,
   toEmitError,
+  toEmitFetchResult,
   toEmitMatchedValue,
   toEmitNext,
   toEmitValue,

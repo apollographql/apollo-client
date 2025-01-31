@@ -2486,46 +2486,49 @@ describe("ObservableQuery", () => {
     });
 
     it("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+        ]),
+      });
 
-      await queryManager.query({ query, variables });
+      await client.query({ query, variables });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query,
         variables,
         fetchPolicy: "no-cache",
       });
 
-      expect(observable.getCurrentResult()).toEqual({
-        data: undefined,
+      // TODO: Fix this issue
+      // @ts-expect-error `ApolloQueryResult` expects a `data` property
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         loading: true,
-        networkStatus: 1,
+        networkStatus: NetworkStatus.loading,
       });
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
-
-        expect(result).toEqual({
-          data: undefined,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-        });
-        expect(current.data).toBeUndefined();
-        expect(current.loading).toBe(true);
-        expect(current.networkStatus).toBe(NetworkStatus.loading);
-      }
+      // TODO: Fix this issue
+      // @ts-expect-error `ApolloQueryResult` expects a `data` property
+      await expect(stream).toEmitApolloQueryResult({
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+      // TODO: Fix this issue
+      // @ts-expect-error `ApolloQueryResult` expects a `data` property
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
 
       {
         const result = await stream.takeNext();

@@ -636,8 +636,6 @@ describe("ObservableQuery", () => {
     });
 
     it("can set queries to standby and will not fetch when doing so", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
-      let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
           author {
@@ -664,8 +662,11 @@ describe("ObservableQuery", () => {
           });
         },
       ]);
-      queryManager = createQueryManager({ link });
-      observable = queryManager.watchQuery({
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
+      const observable = client.watchQuery({
         query: testQuery,
         fetchPolicy: "cache-first",
         notifyOnNetworkStatusChange: false,
@@ -673,18 +674,18 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data);
-        expect(timesFired).toBe(1);
-      }
-
-      await observable.setOptions({ query, fetchPolicy: "standby" });
-      // make sure the query didn't get fired again.
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
       expect(timesFired).toBe(1);
 
+      await observable.setOptions({ query, fetchPolicy: "standby" });
+
+      // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();
+      expect(timesFired).toBe(1);
     });
 
     it("will not fetch when setting a cache-only query to standby", async () => {

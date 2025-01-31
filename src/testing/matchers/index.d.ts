@@ -57,6 +57,12 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (error?: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  toEmitFetchResult: T extends ObservableStream<FetchResult<infer TData>> ?
+    (value: FetchResult<TData>, options?: TakeOptions) => Promise<R>
+  : {
+      error: "matcher needs to be called on an ObservableStream<FetchResult<TData>> instance";
+    };
+
   /**
    * Used to determine if the observable stream emitted a `next` event. Use
    * `toEmitValue` to check if the `next` event emitted a specific value.

@@ -2993,54 +2993,73 @@ describe("ObservableQuery", () => {
       };
 
       it("returns optimistic mutation results from the store", async () => {
-        const queryManager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query: mutation },
-            result: { data: mutationData },
-          }
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([
+            {
+              request: { query, variables },
+              result: { data: dataOne },
+            },
+            {
+              request: { query: mutation },
+              result: { data: mutationData },
+            },
+          ]),
+        });
 
-        const observable = queryManager.watchQuery({
+        const observable = client.watchQuery({
           query,
           variables,
         });
 
         const stream = new ObservableStream(observable);
 
-        {
-          const result = await stream.takeNext();
+        await expect(stream).toEmitApolloQueryResult({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+        expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
-          expect(result).toEqual({
-            data: dataOne,
-            loading: false,
-            networkStatus: 7,
-          });
-          expect(observable.getCurrentResult()).toEqual(result);
-        }
-
-        void queryManager.mutate({
+        void client.mutate({
           mutation,
           optimisticResponse,
           updateQueries,
         });
 
-        {
-          const result = await stream.takeNext();
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
+            people_one: optimisticResponse,
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+        expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+          data: {
+            people_one: optimisticResponse,
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
-          expect(observable.getCurrentResult()).toEqual(result);
-          expect(result.data.people_one).toEqual(optimisticResponse);
-        }
-
-        {
-          const result = await stream.takeNext();
-
-          expect(observable.getCurrentResult()).toEqual(result);
-          expect(result.data.people_one).toEqual(mutationData);
-        }
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
+            people_one: mutationData,
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+        expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+          data: {
+            people_one: mutationData,
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         await expect(stream).not.toEmitAnything();
       });

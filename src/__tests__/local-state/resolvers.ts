@@ -16,8 +16,6 @@ import { ApolloLink } from "../../link/core";
 import { ObservableStream } from "../../testing/internal";
 import { MockLink } from "../../testing";
 
-// Helper method that sets up a mockQueryManager and then passes on the
-// results to an observer.
 const setupTestWithResolvers = ({
   resolvers,
   query,

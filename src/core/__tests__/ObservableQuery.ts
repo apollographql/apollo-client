@@ -277,7 +277,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -406,7 +405,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -563,7 +561,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        partial: true,
       });
 
       expect(timesFired).toBe(1);
@@ -615,7 +612,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        partial: true,
       });
       expect(timesFired).toBe(0);
 
@@ -822,12 +818,9 @@ describe("ObservableQuery", () => {
       await observable.setVariables(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error `ApolloQueryResult` needs to be updated to allow for `undefined` and this value needs to emit undefined instead of empty object
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -987,22 +980,16 @@ describe("ObservableQuery", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Need to update ApolloQueryResult type to allow for undefined
         data: undefined,
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Need to update ApolloQueryResult type to allow for undefined
         data: undefined,
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This is not present on the emitted result so this should match
-        partial: true,
       });
 
       await observable.setVariables(differentVariables);
@@ -1066,12 +1053,9 @@ describe("ObservableQuery", () => {
       await observable.setVariables(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Ensure ApolloQueryResult allows for undefined and fix this value to match
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -1117,12 +1101,9 @@ describe("ObservableQuery", () => {
       await observable.refetch(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Need to update ApolloQueryResult to allow undefined and fix this value
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -1454,7 +1435,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -1568,7 +1548,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        partial: true,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1689,13 +1668,14 @@ describe("ObservableQuery", () => {
         data: { counter: 1 },
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
+        complete: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: { counter: 2, name: "Ben" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
       });
 
       const oldLinkObs = linkObservable;
@@ -1710,6 +1690,7 @@ describe("ObservableQuery", () => {
         data: { counter: 3, name: "Ben" },
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        complete: true,
       });
 
       await expect(stream).toEmitError(intentionalNetworkFailure);
@@ -1726,6 +1707,7 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2140,22 +2122,18 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      // TODO: Fix this error
-      // @ts-expect-error ApolloQueryResult expects a `data` property, but the value returned from `getCurrentResult` does not include it
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
       });
 
       await tick();
 
-      // TODO: Fix this error
-      // @ts-expect-error ApolloQueryResult expects a `data` property, but the value returned from `getCurrentResult` does not include it
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
       });
 
       await stream.takeNext();
@@ -2212,14 +2190,12 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitError(
         new ApolloError({ graphQLErrors: [error] })
       );
-      // TODO: Fix this error
-      // @ts-expect-error ApolloQueryResult expects `data` property to be defined but it is not returned here
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({ graphQLErrors: [error] }),
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        partial: true,
       });
     });
 
@@ -2243,13 +2219,12 @@ describe("ObservableQuery", () => {
       const currentResult = observable.getCurrentResult();
       const currentResult2 = observable.getCurrentResult();
 
-      // @ts-expect-error ApolloQueryResult expects a `data` property to be returned
       expect(currentResult).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({ graphQLErrors: [error] }),
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        partial: true,
       });
 
       expect(currentResult.error === currentResult2.error).toBe(true);
@@ -2411,7 +2386,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
+        complete: false,
       });
 
       const stream = new ObservableStream(observable);
@@ -2420,24 +2395,26 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
+        complete: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        partial: true,
+        complete: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2472,18 +2449,16 @@ describe("ObservableQuery", () => {
         fetchPolicy: "network-only",
       });
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
       });
 
       const stream = new ObservableStream(observable);
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
       });
@@ -2520,24 +2495,21 @@ describe("ObservableQuery", () => {
         fetchPolicy: "no-cache",
       });
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
       });
 
       const stream = new ObservableStream(observable);
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
       });
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
       });
@@ -2612,9 +2584,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This should not be there since the observable did not emit this
-        // property.
-        partial: true,
       });
 
       link.simulateResult(
@@ -2689,7 +2658,7 @@ describe("ObservableQuery", () => {
     });
 
     {
-      type Result = Partial<ApolloQueryResult<{ hello: string }>>;
+      type Result = ApolloQueryResult<{ hello: string }>;
 
       const cacheValues = {
         initial: { hello: "world (initial)" },
@@ -2774,12 +2743,15 @@ describe("ObservableQuery", () => {
       const linkOnly: TestDetails = {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
@@ -2807,21 +2779,27 @@ describe("ObservableQuery", () => {
         ...linkOnly,
         resultBeforeSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterLinkNext: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
+          data: undefined,
         },
         // like linkOnly:
         // resultAfterRefetchNext
@@ -2832,12 +2810,15 @@ describe("ObservableQuery", () => {
         ...cacheAndLink,
         resultBeforeSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
+          data: undefined,
         },
         // like cacheAndLink:
         // resultAfterLinkNext

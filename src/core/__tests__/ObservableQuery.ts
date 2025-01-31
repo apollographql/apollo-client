@@ -832,37 +832,46 @@ describe("ObservableQuery", () => {
     });
 
     it("does invalidate the currentResult data if the variables change", async () => {
-      const observable = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-          delay: 25,
-        }
-      );
-
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables: differentVariables },
+            result: { data: dataTwo },
+            delay: 25,
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(dataOne);
-        expect(observable.getCurrentResult().data).toEqual(dataOne);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.setVariables(differentVariables);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toEqual(false);
-        expect(result.data).toEqual(dataTwo);
-        expect(observable.getCurrentResult().data).toEqual(dataTwo);
-        expect(observable.getCurrentResult().loading).toBe(false);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

@@ -3148,10 +3148,16 @@ describe("ObservableQuery", () => {
     it("should remove any GraphQLError's stored in the query store", async () => {
       const graphQLError = new GraphQLError("oh no!");
 
-      const observable = mockWatchQuery({
-        request: { query, variables },
-        result: { errors: [graphQLError] },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { errors: [graphQLError] },
+          },
+        ]),
       });
+      const observable = client.watchQuery({ query, variables });
 
       await new Promise<void>((resolve) => {
         observable.subscribe({

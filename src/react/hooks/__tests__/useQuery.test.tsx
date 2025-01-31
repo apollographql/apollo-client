@@ -7,7 +7,6 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
-  ApolloQueryResult,
   FetchPolicy,
   NetworkStatus,
   OperationVariables,
@@ -6214,17 +6213,14 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
         errors: [new GraphQLError("Intentional error")],
         loading: false,
         networkStatus: NetworkStatus.error,
-        partial: true,
-        // TODO: Fix ApolloQueryResult type to allow `data` to be an optional property.
-        // This fails without the type case for now even though the runtime
-        // code doesn't include a `data` property.
-      } as unknown as ApolloQueryResult<Query1>);
+      });
 
       expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
@@ -6280,15 +6276,13 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
-        // TODO: Fix TypeScript types to allow for `data` to be `undefined`
-        data: undefined as unknown as Query1,
+        data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
         errors: [new GraphQLError("Intentional error")],
         loading: false,
         networkStatus: NetworkStatus.error,
-        partial: true,
       });
 
       expect(snapshot.useLazyQueryResult!).toEqualQueryResult({

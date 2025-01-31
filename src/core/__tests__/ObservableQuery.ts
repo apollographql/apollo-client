@@ -2123,25 +2123,27 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      expect(observable.getCurrentResult()).toEqual({
+      // TODO: Fix this error
+      // @ts-expect-error ApolloQueryResult expects a `data` property, but the value returned from `getCurrentResult` does not include it
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         loading: true,
-        data: undefined,
-        networkStatus: 1,
+        networkStatus: NetworkStatus.loading,
         partial: true,
       });
 
       await tick();
 
-      expect(observable.getCurrentResult()).toEqual({
+      // TODO: Fix this error
+      // @ts-expect-error ApolloQueryResult expects a `data` property, but the value returned from `getCurrentResult` does not include it
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         loading: true,
-        data: undefined,
-        networkStatus: 1,
+        networkStatus: NetworkStatus.loading,
         partial: true,
       });
 
       await stream.takeNext();
 
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: 7,

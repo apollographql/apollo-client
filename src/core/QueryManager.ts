@@ -1656,6 +1656,7 @@ export class QueryManager<TStore> {
 
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
         const result: ApolloQueryResult<TData> = {
+          // TODO: Handle partial data
           data: data as TData | undefined,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,

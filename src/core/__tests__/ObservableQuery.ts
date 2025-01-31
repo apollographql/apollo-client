@@ -2325,12 +2325,17 @@ describe("ObservableQuery", () => {
     });
 
     it("ignores errors with data if errorPolicy is ignore", async () => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { errors: [error], data: dataOne },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { errors: [error], data: dataOne },
+          },
+        ]),
       });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query,
         variables,
         errorPolicy: "ignore",
@@ -2339,11 +2344,16 @@ describe("ObservableQuery", () => {
       const result = await observable.result();
       const currentResult = observable.getCurrentResult();
 
-      expect(result.data).toEqual(dataOne);
-      expect(result.errors).toBeUndefined();
-      expect(currentResult.loading).toBe(false);
-      expect(currentResult.errors).toBeUndefined();
-      expect(currentResult.error).toBeUndefined();
+      expect(result).toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(currentResult).toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("returns partial data from the store immediately", async () => {

@@ -6536,10 +6536,7 @@ describe("ApolloClient", () => {
       spy.mockRestore();
     });
 
-    async function validateWarnings(
-      returnPartialData: boolean,
-      expectedWarnCount: number
-    ) {
+    it("should show missing cache result fields warning when returnPartialData is false", async () => {
       const query1 = gql`
         query {
           car {
@@ -6586,7 +6583,7 @@ describe("ApolloClient", () => {
       const observable2 = client.watchQuery({
         query: query2,
         fetchPolicy: "cache-only",
-        returnPartialData,
+        returnPartialData: false,
       });
 
       const stream1 = new ObservableStream(observable1);
@@ -6605,17 +6602,79 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        partial: true,
       });
-      expect(spy).toHaveBeenCalledTimes(expectedWarnCount);
-    }
-
-    it("should show missing cache result fields warning when returnPartialData is false", async () => {
-      await validateWarnings(false, 1);
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it("should not show missing cache result fields warning when returnPartialData is true", async () => {
-      await validateWarnings(true, 0);
+      const query1 = gql`
+        query {
+          car {
+            make
+            model
+            id
+            __typename
+          }
+        }
+      `;
+
+      const query2 = gql`
+        query {
+          car {
+            make
+            model
+            vin
+            id
+            __typename
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          make: "Ford",
+          model: "Pinto",
+          id: 123,
+          __typename: "Car",
+        },
+      };
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query: query1 },
+            result: { data: data1 },
+          },
+        ]),
+      });
+
+      const observable1 = client.watchQuery({ query: query1 });
+      const observable2 = client.watchQuery({
+        query: query2,
+        fetchPolicy: "cache-only",
+        returnPartialData: true,
+      });
+
+      const stream1 = new ObservableStream(observable1);
+
+      await expect(stream1).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      stream1.unsubscribe();
+
+      const stream2 = new ObservableStream(observable2);
+
+      await expect(stream2).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        complete: false,
+      });
+      expect(spy).toHaveBeenCalledTimes(0);
     });
   });
 

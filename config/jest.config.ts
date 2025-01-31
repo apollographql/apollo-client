@@ -24,6 +24,7 @@ const defaults = {
         diagnostics: {
           warnOnly: process.env.TEST_ENV !== "ci",
         },
+        tsconfig: import.meta.dirname + "/../tsconfig.tests.json",
       },
     ],
   },

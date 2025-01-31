@@ -1,3 +1,7 @@
 {
-  "extends": "./src/tsconfig.json"
+  "extends": "./src/tsconfig.json",
+  "compilerOptions": {
+    "useDefineForClassFields": false,
+    "verbatimModuleSyntax": false
+  }
 }

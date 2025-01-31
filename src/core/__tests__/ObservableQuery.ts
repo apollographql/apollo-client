@@ -1839,13 +1839,6 @@ describe("ObservableQuery", () => {
           };
         }
 
-        // We construct the queryManager manually here rather than using
-        // `mockWatchQuery` because we need to silence console warnings for
-        // unmatched variables since. This test checks for calls to
-        // `console.warn` and unfortunately `mockSingleLink` (used by
-        // `mockWatchQuery`) does not support the ability to disable warnings
-        // without introducing a breaking change. Instead we construct this
-        // manually to be able to turn off warnings for this test.
         const mocks = [makeMock("a", "b", "c"), makeMock("d", "e")];
         const firstRequest = mocks[0].request;
         const client = new ApolloClient({

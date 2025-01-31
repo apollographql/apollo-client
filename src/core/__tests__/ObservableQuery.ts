@@ -2280,12 +2280,17 @@ describe("ObservableQuery", () => {
     });
 
     it("errors out if errorPolicy is none", async () => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { data: dataOne, errors: [error] },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne, errors: [error] },
+          },
+        ]),
       });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query,
         variables,
         errorPolicy: "none",

@@ -1123,22 +1123,27 @@ describe("ObservableQuery", () => {
     });
 
     it("does not rerun query if variables do not change", async () => {
-      const observable = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        }
-      );
-
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      const result = await stream.takeNext();
-
-      expect(result.data).toEqual(dataOne);
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.setVariables(variables);
 

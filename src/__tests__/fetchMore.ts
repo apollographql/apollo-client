@@ -293,7 +293,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -314,12 +314,12 @@ describe("fetchMore on an observable query", () => {
 
         // This is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(combinedComments).toHaveLength(20);
 
@@ -354,7 +354,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -365,12 +365,12 @@ describe("fetchMore on an observable query", () => {
 
         // This is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -400,7 +400,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -417,7 +417,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        const fetchMoreComments = fetchMoreResult.data.entry.comments;
+        const fetchMoreComments = fetchMoreResult.data!.entry.comments;
 
         expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreComments).toHaveLength(10);
@@ -428,7 +428,7 @@ describe("fetchMore on an observable query", () => {
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -467,7 +467,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -477,12 +477,12 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10); // this is the server result
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10); // this is the server result
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -1181,7 +1181,7 @@ describe("fetchMore on an observable query", () => {
       const result = await stream.takeNext();
 
       expect(result.loading).toBe(false);
-      expect(result.data.entry.comments).toHaveLength(10);
+      expect(result.data!.entry.comments).toHaveLength(10);
     }
 
     {
@@ -1199,12 +1199,12 @@ describe("fetchMore on an observable query", () => {
       });
 
       expect(fetchMoreResult.loading).toBe(false);
-      expect(fetchMoreResult.data.comments).toHaveLength(10);
+      expect(fetchMoreResult.data!.comments).toHaveLength(10);
     }
 
     {
       const result = await stream.takeNext();
-      const combinedComments = result.data.entry.comments;
+      const combinedComments = result.data!.entry.comments;
 
       expect(result.loading).toBe(false);
       expect(combinedComments).toHaveLength(20);
@@ -1252,7 +1252,7 @@ describe("fetchMore on an observable query", () => {
       const { data, networkStatus } = await stream.takeNext();
 
       expect(networkStatus).toBe(NetworkStatus.ready);
-      expect(data.entry.comments.length).toBe(10);
+      expect(data!.entry.comments.length).toBe(10);
 
       const error = await observable
         .fetchMore({
@@ -1315,7 +1315,7 @@ describe("fetchMore on an observable query", () => {
       const { data, networkStatus } = await stream.takeNext();
 
       expect(networkStatus).toBe(NetworkStatus.ready);
-      expect(data.entry.comments.length).toBe(10);
+      expect(data!.entry.comments.length).toBe(10);
 
       const error = await observable
         .fetchMore({
@@ -1574,7 +1574,7 @@ describe("fetchMore on an observable query with connection", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -1590,13 +1590,13 @@ describe("fetchMore on an observable query with connection", () => {
           },
         });
 
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
         expect(fetchMoreResult.loading).toBe(false);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(combinedComments).toHaveLength(20);
         combinedComments.forEach((comment, i) => {
@@ -1633,7 +1633,7 @@ describe("fetchMore on an observable query with connection", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -1644,13 +1644,13 @@ describe("fetchMore on an observable query with connection", () => {
 
         // this is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
 
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
         expect(combinedComments).toHaveLength(20);
         combinedComments.forEach((comment, i) => {
           expect(comment.text).toBe(`comment ${i + 1}`);
@@ -1693,7 +1693,7 @@ describe("fetchMore on an observable query with connection", () => {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data.entry.comments.length).toBe(10);
+        expect(data!.entry.comments.length).toBe(10);
       }
 
       void observable.fetchMore({
@@ -1712,7 +1712,7 @@ describe("fetchMore on an observable query with connection", () => {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data.entry.comments.length).toBe(10);
+        expect(data!.entry.comments.length).toBe(10);
       }
 
       {
@@ -1775,14 +1775,14 @@ describe("fetchMore on an observable query with connection", () => {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data.entry.comments.length).toBe(10);
+        expect(data!.entry.comments.length).toBe(10);
       }
 
       {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data.entry.comments.length).toBe(20);
+        expect(data!.entry.comments.length).toBe(20);
       }
 
       await expect(stream).not.toEmitAnything();

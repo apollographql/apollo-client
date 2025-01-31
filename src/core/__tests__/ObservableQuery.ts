@@ -2212,12 +2212,17 @@ describe("ObservableQuery", () => {
     });
 
     it("returns referentially equal errors", async () => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { errors: [error] },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { errors: [error] },
+          },
+        ]),
       });
 
-      const observable = queryManager.watchQuery({ query, variables });
+      const observable = client.watchQuery({ query, variables });
 
       await expect(observable.result()).rejects.toThrow(
         new ApolloError({ graphQLErrors: [error] })

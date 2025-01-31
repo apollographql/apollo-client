@@ -295,27 +295,20 @@ describe("GraphQL Subscriptions", () => {
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
+    const stream = new ObservableStream(obs);
 
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
-
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
-    });
-
-    const errorResult = {
-      result: {
-        data: null,
-        errors: [new GraphQLError("This is an error")],
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          errors: [new GraphQLError("This is an error")],
+        },
       },
-    };
+      true
+    );
 
-    link.simulateResult(errorResult, true);
-
-    await expect(promise).resolves.toEqual([{ data: null }]);
+    await expect(stream).toEmitFetchResult({ data: null });
+    await expect(stream).toComplete();
   });
 
   it('throws protocol errors when `errorPolicy` is "ignore"', async () => {

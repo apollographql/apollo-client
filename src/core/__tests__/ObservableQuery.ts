@@ -118,22 +118,25 @@ describe("ObservableQuery", () => {
   describe("setOptions", () => {
     describe("to change pollInterval", () => {
       it("starts polling if goes from 0 -> something", async () => {
-        const manager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          }
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([
+            {
+              request: { query, variables },
+              result: { data: dataOne },
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+            },
+          ]),
+        });
 
-        const observable = manager.watchQuery({
+        const observable = client.watchQuery({
           query,
           variables,
           notifyOnNetworkStatusChange: false,

@@ -124,7 +124,7 @@ interface MaskOperationOptions<TData> {
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-export interface QueryManagerOptions<TStore> {
+interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
   link: ApolloLink;
   defaultOptions: DefaultOptions;

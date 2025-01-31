@@ -6,7 +6,6 @@
 
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
-import type { GraphQLErrorExtensions } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
@@ -86,10 +85,7 @@ export interface ErrorResponse {
     networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
-    protocolErrors?: ReadonlyArray<{
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    }>;
+    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     response?: FormattedExecutionResult;
 }

@@ -1854,19 +1854,17 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observableWithVarsVar);
 
-        {
-          const result = await stream.takeNext();
-
-          expect(result.loading).toBe(false);
-          expect(result.error).toBeUndefined();
-          expect(result.data).toEqual({
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
             getVars: [
               { __typename: "Var", name: "a" },
               { __typename: "Var", name: "b" },
               { __typename: "Var", name: "c" },
             ],
-          });
-        }
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         // It's a common mistake to call refetch({ variables }) when you meant
         // to call refetch(variables).
@@ -1875,13 +1873,13 @@ describe("ObservableQuery", () => {
           variables: { vars: ["d", "e"] },
         });
 
-        {
-          const error = await stream.takeError();
-
-          expect(error.message).toMatch(
-            "No more mocked responses for the query: query QueryWithVarsVar($vars: [String!])"
-          );
-        }
+        await expect(stream).toEmitError(
+          expect.objectContaining({
+            message: expect.stringMatching(
+              /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
+            ),
+          })
+        );
 
         await expect(promise).rejects.toEqual(
           expect.objectContaining({
@@ -1902,6 +1900,7 @@ describe("ObservableQuery", () => {
 
         await expect(stream).not.toEmitAnything();
       });
+
       it("should not warn if passed { variables } and query declares $variables", async () => {
         using _ = spyOnConsole("warn");
 

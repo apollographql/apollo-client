@@ -1936,43 +1936,44 @@ describe("ObservableQuery", () => {
           };
         }
 
-        const observableWithVariablesVar = mockWatchQuery(
-          makeMock("a", "b", "c"),
-          makeMock("d", "e")
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
+        });
+
+        const observableWithVariablesVar = client.watchQuery({
+          query: queryWithVariablesVar,
+          variables: { variables: ["a", "b", "c"] },
+        });
 
         const stream = new ObservableStream(observableWithVariablesVar);
 
-        {
-          const result = await stream.takeNext();
-
-          expect(result.loading).toBe(false);
-          expect(result.error).toBeUndefined();
-          expect(result.data).toEqual({
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
             getVars: [
               { __typename: "Var", name: "a" },
               { __typename: "Var", name: "b" },
               { __typename: "Var", name: "c" },
             ],
-          });
-        }
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         await observableWithVariablesVar.refetch({ variables: ["d", "e"] });
 
-        {
-          const result = await stream.takeNext();
-
-          expect(result.loading).toBe(false);
-          expect(result.error).toBeUndefined();
-          expect(result.data).toEqual({
+        await expect(stream).toEmitApolloQueryResult({
+          data: {
             getVars: [
               { __typename: "Var", name: "d" },
               { __typename: "Var", name: "e" },
             ],
-          });
+          },
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
-          expect(console.warn).not.toHaveBeenCalled();
-        }
+        expect(console.warn).not.toHaveBeenCalled();
 
         await expect(stream).not.toEmitAnything();
       });

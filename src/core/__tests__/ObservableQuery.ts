@@ -734,28 +734,51 @@ describe("ObservableQuery", () => {
     });
 
     it("returns a promise which eventually returns data", async () => {
-      const observable = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        }
-      );
-
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+        ]),
+      });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual(dataOne);
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       const res = await observable.setOptions({
         fetchPolicy: "cache-and-network",
       });
 
-      expect(res.data).toEqual(dataTwo);
+      expect(res).toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
   });
 

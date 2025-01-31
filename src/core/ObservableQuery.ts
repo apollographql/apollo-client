@@ -251,11 +251,12 @@ export class ObservableQuery<
       (lastResult && lastResult.networkStatus) ||
       NetworkStatus.ready;
 
-    const result = {
+    const result: ApolloQueryResult<TData> = {
+      data: undefined,
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-    } as ApolloQueryResult<TData>;
+    };
 
     const { fetchPolicy = "cache-first" } = this.options;
     if (

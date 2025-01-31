@@ -2129,12 +2129,17 @@ describe("ObservableQuery", () => {
     });
 
     it("returns the current query status immediately", async () => {
-      const observable = mockWatchQuery({
-        request: { query, variables },
-        result: { data: dataOne },
-        delay: 100,
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+            delay: 100,
+          },
+        ]),
       });
-
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
       // TODO: Fix this error

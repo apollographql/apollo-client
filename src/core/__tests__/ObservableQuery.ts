@@ -20,13 +20,7 @@ import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache } from "../../cache";
 import { ApolloError } from "../../errors";
 
-import {
-  MockLink,
-  mockSingleLink,
-  MockSubscriptionLink,
-  tick,
-  wait,
-} from "../../testing";
+import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
 import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
 
@@ -3083,11 +3077,11 @@ describe("ObservableQuery", () => {
       }) {
         const cache = new InMemoryCache();
         const client = new ApolloClient({
-          link: mockSingleLink(
+          link: new MockLink([
             { request: queryOptions, result: { data: { value: 1 } } },
             { request: queryOptions, result: { data: { value: 2 } } },
-            { request: queryOptions, result: { data: { value: 3 } } }
-          ).setOnError((error) => {
+            { request: queryOptions, result: { data: { value: 3 } } },
+          ]).setOnError((error) => {
             throw error;
           }),
           assumeImmutableResults,

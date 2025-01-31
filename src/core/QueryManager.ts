@@ -1721,6 +1721,12 @@ export class QueryManager<TStore> {
         context,
         fetchPolicy,
         errorPolicy,
+      }).map((result) => {
+        if (returnPartialData) {
+          result.complete = true;
+        }
+
+        return result;
       });
 
     const shouldNotify =

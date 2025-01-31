@@ -368,21 +368,18 @@ describe("GraphQL Subscriptions", () => {
     );
   });
 
-  it("should call complete handler when the subscription completes", () => {
+  it("should call complete handler when the subscription completes", async () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return new Promise<void>((resolve) => {
-      client.subscribe(defaultOptions).subscribe({
-        complete() {
-          resolve();
-        },
-      });
-      setTimeout(() => link.simulateComplete(), 100);
-    });
+    const stream = new ObservableStream(client.subscribe(defaultOptions));
+
+    setTimeout(() => link.simulateComplete(), 50);
+
+    await expect(stream).toComplete();
   });
 
   it("should pass a context object through the link execution chain", async () => {

@@ -79,7 +79,7 @@ interface TestSchemaOptions {
 // Warnings were encountered during analysis:
 //
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:205:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/testing/experimental/createTestSchema.ts:10:23 - (ae-forgotten-export) The symbol "Resolvers" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

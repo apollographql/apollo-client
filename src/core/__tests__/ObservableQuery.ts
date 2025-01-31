@@ -21,7 +21,6 @@ import { InMemoryCache } from "../../cache";
 import { ApolloError } from "../../errors";
 
 import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
-import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
 
 import { SubscriptionObserver } from "zen-observable-ts";
@@ -3398,15 +3397,21 @@ describe("ObservableQuery", () => {
   });
 
   it("ObservableQuery#map respects Symbol.species", async () => {
-    const observable = mockWatchQuery({
-      request: { query, variables },
-      result: { data: dataOne },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+      ]),
     });
+    const observable = client.watchQuery({ query, variables });
     expect(observable).toBeInstanceOf(Observable);
     expect(observable).toBeInstanceOf(ObservableQuery);
 
     const mapped = observable.map((result) => {
-      expect(result).toEqual({
+      expect(result).toEqualApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: dataOne,

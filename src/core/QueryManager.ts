@@ -1654,13 +1654,19 @@ export class QueryManager<TStore> {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | DeepPartial<TData> | undefined) =>
-        Observable.of({
-          data,
+      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
+        const result: ApolloQueryResult<TData> = {
+          data: data as TData | undefined,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
-          ...(diff.complete ? null : { partial: true }),
-        } as ApolloQueryResult<TData>);
+        };
+
+        if (returnPartialData) {
+          result.complete = diff.complete;
+        }
+
+        return Observable.of(result);
+      };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState

@@ -2075,33 +2075,41 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOneWithTypename,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toEqual(NetworkStatus.ready);
-        expect(result.data).toEqual(dataOneWithTypename);
-        expect(observable.getCurrentResult()).toEqual(result);
-      }
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataOneWithTypename,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       void observable.refetch();
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOneWithTypename,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
+      expect(observable.getCurrentResult()).toEqual({
+        data: dataOneWithTypename,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toEqual(NetworkStatus.refetch);
-        expect(observable.getCurrentResult()).toEqual(result);
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toEqual(NetworkStatus.ready);
-        expect(result.data).toEqual(dataTwoWithTypename);
-        expect(observable.getCurrentResult()).toEqual(result);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwoWithTypename,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqual({
+        data: dataTwoWithTypename,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

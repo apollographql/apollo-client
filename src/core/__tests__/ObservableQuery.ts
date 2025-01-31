@@ -377,54 +377,61 @@ describe("ObservableQuery", () => {
       const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
       const variables2 = { first: 1 };
 
-      const observable: ObservableQuery<any> = mockWatchQuery(
-        {
-          request: {
-            query,
-            variables,
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data },
           },
-          result: { data },
-        },
-        {
-          request: {
-            query,
-            variables: variables2,
+          {
+            request: { query, variables: variables2 },
+            result: { data: data2 },
           },
-          result: { data: data2 },
-        }
-      );
-
+        ]),
+      });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data);
-        expect(result.loading).toBe(false);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.setOptions({
         variables: variables2,
         notifyOnNetworkStatusChange: true,
       });
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: {},
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual(data2);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       // go back to first set of variables
       const current = await observable.reobserve({ variables });
-      expect(current.data).toEqual(data);
+      expect(current).toEqualApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
 
     it("if query is refetched, and an error is returned, no other observer callbacks will be called", async () => {

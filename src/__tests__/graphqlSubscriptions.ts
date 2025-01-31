@@ -1,13 +1,11 @@
 import gql from "graphql-tag";
 
-import { ApolloClient, FetchResult } from "../core";
+import { ApolloClient } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "../errors";
-import { QueryManager } from "../core/QueryManager";
 import { mockObservableLink } from "../testing";
 import { GraphQLError } from "graphql";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { getDefaultOptionsForQueryManagerTests } from "../testing/core/mocking/mockQueryManager";
 
 describe("GraphQL Subscriptions", () => {
   const results = [
@@ -58,7 +56,7 @@ describe("GraphQL Subscriptions", () => {
     const stream = new ObservableStream(client.subscribe(defaultOptions));
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue(results[0].result);
+    await expect(stream).toEmitFetchResult(results[0].result);
 
     stream.unsubscribe();
   });
@@ -75,51 +73,45 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue(results[0].result);
+    await expect(stream).toEmitFetchResult(results[0].result);
 
     stream.unsubscribe();
   });
 
   it("should multiplex subscriptions", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    const obs = queryManager.startGraphQLSubscription(options);
+    const obs = client.subscribe(options);
     const stream1 = new ObservableStream(obs);
     const stream2 = new ObservableStream(obs);
 
     link.simulateResult(results[0]);
 
-    await expect(stream1).toEmitValue(results[0].result);
-    await expect(stream2).toEmitValue(results[0].result);
+    await expect(stream1).toEmitFetchResult(results[0].result);
+    await expect(stream2).toEmitFetchResult(results[0].result);
   });
 
   it("should receive multiple results for a subscription", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    const stream = new ObservableStream(
-      queryManager.startGraphQLSubscription(options)
-    );
+    const stream = new ObservableStream(client.subscribe(options));
 
     for (let i = 0; i < 4; i++) {
       link.simulateResult(results[i]);
     }
 
-    await expect(stream).toEmitValue(results[0].result);
-    await expect(stream).toEmitValue(results[1].result);
-    await expect(stream).toEmitValue(results[2].result);
-    await expect(stream).toEmitValue(results[3].result);
+    await expect(stream).toEmitFetchResult(results[0].result);
+    await expect(stream).toEmitFetchResult(results[1].result);
+    await expect(stream).toEmitFetchResult(results[2].result);
+    await expect(stream).toEmitFetchResult(results[3].result);
     await expect(stream).not.toEmitAnything();
   });
 
@@ -142,30 +134,17 @@ describe("GraphQL Subscriptions", () => {
     expect(cache.extract()).toEqual({});
   });
 
-  it("should throw an error if the result has errors on it", () => {
+  it("should throw an error if the result has errors on it", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
-
-    const obs = queryManager.startGraphQLSubscription(options);
-
-    const promise = new Promise<void>((resolve, reject) => {
-      obs.subscribe({
-        next(result) {
-          reject("Should have hit the error block");
-        },
-        error(error) {
-          expect(error).toMatchSnapshot();
-          resolve();
-        },
-      });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
-    const errorResult = {
+    const obs = client.subscribe(options);
+    const stream = new ObservableStream(obs);
+
+    link.simulateResult({
       result: {
         data: null,
         errors: [
@@ -181,10 +160,24 @@ describe("GraphQL Subscriptions", () => {
           } as any,
         ],
       },
-    };
+    });
 
-    link.simulateResult(errorResult);
-    return Promise.resolve(promise);
+    await expect(stream).toEmitError(
+      new ApolloError({
+        graphQLErrors: [
+          {
+            message: "This is an error",
+            locations: [
+              {
+                column: 3,
+                line: 2,
+              },
+            ],
+            path: ["result"],
+          },
+        ],
+      })
+    );
   });
 
   it('returns errors in next result when `errorPolicy` is "all"', async () => {
@@ -196,44 +189,34 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache(),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-    const obs = queryManager.startGraphQLSubscription({
+    const obs = client.subscribe({
       query,
       variables: { name: "Iron Man" },
       errorPolicy: "all",
     });
+    const stream = new ObservableStream(obs);
 
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          errors: [new GraphQLError("This is an error")],
+        },
+      },
+      true
+    );
 
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
+    await expect(stream).toEmitFetchResult({
+      data: null,
+      errors: [new GraphQLError("This is an error")],
     });
 
-    const errorResult = {
-      result: {
-        data: null,
-        errors: [new GraphQLError("This is an error")],
-      },
-    };
-
-    link.simulateResult(errorResult, true);
-
-    await expect(promise).resolves.toEqual([
-      {
-        data: null,
-        errors: [new GraphQLError("This is an error")],
-      },
-    ]);
+    await expect(stream).toComplete();
   });
 
   it('throws protocol errors when `errorPolicy` is "all"', async () => {
@@ -245,51 +228,41 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache(),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-    const obs = queryManager.startGraphQLSubscription({
+    const obs = client.subscribe({
       query,
       variables: { name: "Iron Man" },
       errorPolicy: "all",
     });
-
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
-
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
-    });
-
-    const errorResult = {
-      result: {
-        data: null,
-        extensions: {
-          [PROTOCOL_ERRORS_SYMBOL]: [
-            {
-              message: "cannot read message from websocket",
-              extensions: {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            } as any,
-          ],
-        },
-      },
-    };
+    const stream = new ObservableStream(obs);
 
     // Silence expected warning about missing field for cache write
     using _consoleSpy = spyOnConsole("warn");
 
-    link.simulateResult(errorResult, true);
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: [
+              {
+                message: "cannot read message from websocket",
+                extensions: {
+                  code: "WEBSOCKET_MESSAGE_ERROR",
+                },
+              },
+            ],
+          },
+        },
+      },
+      true
+    );
 
-    await expect(promise).rejects.toEqual(
+    await expect(stream).toEmitError(
       new ApolloError({
         protocolErrors: [
           {
@@ -312,39 +285,30 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache(),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-    const obs = queryManager.startGraphQLSubscription({
+    const obs = client.subscribe({
       query,
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
+    const stream = new ObservableStream(obs);
 
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
-
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
-    });
-
-    const errorResult = {
-      result: {
-        data: null,
-        errors: [new GraphQLError("This is an error")],
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          errors: [new GraphQLError("This is an error")],
+        },
       },
-    };
+      true
+    );
 
-    link.simulateResult(errorResult, true);
-
-    await expect(promise).resolves.toEqual([{ data: null }]);
+    await expect(stream).toEmitFetchResult({ data: null });
+    await expect(stream).toComplete();
   });
 
   it('throws protocol errors when `errorPolicy` is "ignore"', async () => {
@@ -356,51 +320,41 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache(),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-    const obs = queryManager.startGraphQLSubscription({
+    const obs = client.subscribe({
       query,
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
-
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
-
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
-    });
-
-    const errorResult = {
-      result: {
-        data: null,
-        extensions: {
-          [PROTOCOL_ERRORS_SYMBOL]: [
-            {
-              message: "cannot read message from websocket",
-              extensions: {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            },
-          ],
-        },
-      },
-    };
+    const stream = new ObservableStream(obs);
 
     // Silence expected warning about missing field for cache write
     using _consoleSpy = spyOnConsole("warn");
 
-    link.simulateResult(errorResult, true);
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: [
+              {
+                message: "cannot read message from websocket",
+                extensions: {
+                  code: "WEBSOCKET_MESSAGE_ERROR",
+                },
+              },
+            ],
+          },
+        },
+      },
+      true
+    );
 
-    await expect(promise).rejects.toEqual(
+    await expect(stream).toEmitError(
       new ApolloError({
         protocolErrors: [
           {
@@ -414,21 +368,18 @@ describe("GraphQL Subscriptions", () => {
     );
   });
 
-  it("should call complete handler when the subscription completes", () => {
+  it("should call complete handler when the subscription completes", async () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache({ addTypename: false }),
     });
 
-    return new Promise<void>((resolve) => {
-      client.subscribe(defaultOptions).subscribe({
-        complete() {
-          resolve();
-        },
-      });
-      setTimeout(() => link.simulateComplete(), 100);
-    });
+    const stream = new ObservableStream(client.subscribe(defaultOptions));
+
+    setTimeout(() => link.simulateComplete(), 50);
+
+    await expect(stream).toComplete();
   });
 
   it("should pass a context object through the link execution chain", async () => {
@@ -442,7 +393,8 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitNext();
+    await expect(stream).toEmitFetchResult(results[0].result);
+
     expect(link.operation?.getContext().someVar).toEqual(
       options.context.someVar
     );
@@ -450,28 +402,18 @@ describe("GraphQL Subscriptions", () => {
 
   it("should throw an error if the result has protocolErrors on it", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
-
-    const obs = queryManager.startGraphQLSubscription(options);
-
-    const promise = new Promise<void>((resolve, reject) => {
-      obs.subscribe({
-        next(result) {
-          reject("Should have hit the error block");
-        },
-        error(error) {
-          expect(error).toMatchSnapshot();
-          resolve();
-        },
-      });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
     });
 
-    const errorResult = {
+    const obs = client.subscribe(options);
+    const stream = new ObservableStream(obs);
+
+    // Silence expected warning about missing field for cache write
+    using _consoleSpy = spyOnConsole("warn");
+
+    link.simulateResult({
       result: {
         data: null,
         extensions: {
@@ -485,13 +427,19 @@ describe("GraphQL Subscriptions", () => {
           ],
         },
       },
-    };
+    });
 
-    // Silence expected warning about missing field for cache write
-    using _consoleSpy = spyOnConsole("warn");
-
-    link.simulateResult(errorResult);
-
-    await promise;
+    await expect(stream).toEmitError(
+      new ApolloError({
+        protocolErrors: [
+          {
+            message: "cannot read message from websocket",
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
+          },
+        ],
+      })
+    );
   });
 });

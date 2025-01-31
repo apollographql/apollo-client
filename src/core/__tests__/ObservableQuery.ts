@@ -490,34 +490,36 @@ describe("ObservableQuery", () => {
     });
 
     it("does a network request if fetchPolicy becomes networkOnly", async () => {
-      const observable = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+        ]),
+      });
 
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      {
-        const { data, loading } = await stream.takeNext();
-
-        expect(loading).toEqual(false);
-        expect(data).toEqual(dataOne);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.setOptions({ fetchPolicy: "network-only" });
 
-      {
-        const { data, loading } = await stream.takeNext();
-
-        expect(loading).toEqual(false);
-        expect(data).toEqual(dataTwo);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

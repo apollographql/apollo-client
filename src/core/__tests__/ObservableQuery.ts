@@ -1673,31 +1673,18 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: { counter: 1 },
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
-        expect(result).toEqual({
-          data: {
-            counter: 1,
-          },
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          partial: true,
-        });
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: {
-            counter: 2,
-            name: "Ben",
-          },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        });
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: { counter: 2, name: "Ben" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       const oldLinkObs = linkObservable;
       // Make the next network request fail.
@@ -1707,40 +1694,27 @@ describe("ObservableQuery", () => {
         intentionalNetworkFailure
       );
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: { counter: 3, name: "Ben" },
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
 
-        expect(result).toEqual({
-          data: {
-            counter: 3,
-            name: "Ben",
-          },
-          loading: true,
-          networkStatus: NetworkStatus.refetch,
-        });
-      }
-
-      {
-        const error = await stream.takeError();
-
-        expect(error).toBe(intentionalNetworkFailure);
-      }
+      await expect(stream).toEmitError(intentionalNetworkFailure);
 
       // Switch back from errorObservable.
       linkObservable = oldLinkObs;
 
-      {
-        const result = await observable.refetch();
+      const result = await observable.refetch();
 
-        expect(result).toEqual({
-          data: {
-            counter: 5,
-            name: "Ben",
-          },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        });
-      }
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          counter: 5,
+          name: "Ben",
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

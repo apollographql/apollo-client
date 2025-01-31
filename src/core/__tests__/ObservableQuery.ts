@@ -144,19 +144,19 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
-        {
-          const { data } = await stream.takeNext();
-
-          expect(data).toEqual(dataOne);
-        }
+        await expect(stream).toEmitApolloQueryResult({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         await observable.setOptions({ query, pollInterval: 10 });
 
-        {
-          const { data } = await stream.takeNext();
-
-          expect(data).toEqual(dataTwo);
-        }
+        await expect(stream).toEmitApolloQueryResult({
+          data: dataTwo,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         observable.stopPolling();
 

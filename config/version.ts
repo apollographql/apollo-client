@@ -33,7 +33,7 @@ export function updateVersion() {
 
 export function verifyVersion() {
   const { ApolloClient, InMemoryCache } = require(
-    path.join(distRoot, "core", "core.cjs")
+    path.join(distRoot, "index.js")
   );
 
   // Though this may seem like overkill, verifying that ApolloClient is

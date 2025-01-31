@@ -201,14 +201,15 @@ describe("GraphQL Subscriptions", () => {
     });
     const stream = new ObservableStream(obs);
 
-    const errorResult = {
-      result: {
-        data: null,
-        errors: [new GraphQLError("This is an error")],
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          errors: [new GraphQLError("This is an error")],
+        },
       },
-    };
-
-    link.simulateResult(errorResult, true);
+      true
+    );
 
     await expect(stream).toEmitFetchResult({
       data: null,

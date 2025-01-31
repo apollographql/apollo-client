@@ -733,7 +733,7 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
-  const { data, partial, ...resultWithoutPartial } = result;
+  const { data, complete, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {
     data, // Ensure always defined, even if result.data is missing.
     ...resultWithoutPartial,

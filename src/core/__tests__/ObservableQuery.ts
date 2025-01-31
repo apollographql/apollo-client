@@ -1281,17 +1281,15 @@ describe("ObservableQuery", () => {
 
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
       const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
-      const queryManager = new QueryManager(
-        getDefaultOptionsForQueryManagerTests({
-          cache: new InMemoryCache(),
-          link: new ApolloLink((operation, forward) => {
-            return new Observable((observer) => {
-              observers.push(observer);
-            });
-          }),
-        })
-      );
-      const observableQuery = queryManager.watchQuery({
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = client.watchQuery({
         query,
         variables: { id: 1 },
       });
@@ -1300,14 +1298,11 @@ describe("ObservableQuery", () => {
       observers[0].next({ data: dataOne });
       observers[0].complete();
 
-      {
-        const result = await stream.takeNext();
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: dataOne,
-        });
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       void observableQuery.refetch({ id: 2 });
       void observableQuery.refetch({ id: 3 });
@@ -1324,18 +1319,17 @@ describe("ObservableQuery", () => {
       });
       observers[2].complete();
 
-      {
-        const result = await stream.takeNext();
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            people_one: {
-              name: "SomeOneElse",
-            },
+      await expect(stream).toEmitApolloQueryResult({
+        data: {
+          people_one: {
+            name: "SomeOneElse",
           },
-        });
-      }
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
 
     it("calls fetchRequest with fetchPolicy `no-cache` when using `no-cache` fetch policy", async () => {

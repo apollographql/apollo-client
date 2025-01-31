@@ -2197,12 +2197,18 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      const theError = await stream.takeError();
-      const currentResult = observable.getCurrentResult();
-
-      expect(theError.graphQLErrors).toEqual([error]);
-      expect(currentResult.loading).toBe(false);
-      expect(currentResult.error!.graphQLErrors).toEqual([error]);
+      await expect(stream).toEmitError(
+        new ApolloError({ graphQLErrors: [error] })
+      );
+      // TODO: Fix this error
+      // @ts-expect-error ApolloQueryResult expects `data` property to be defined but it is not returned here
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        error: new ApolloError({ graphQLErrors: [error] }),
+        errors: [error],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
     });
 
     it("returns referentially equal errors", async () => {

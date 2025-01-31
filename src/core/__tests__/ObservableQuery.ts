@@ -17,7 +17,7 @@ import {
   removeDirectivesFromDocument,
 } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
-import { InMemoryCache, NormalizedCacheObject } from "../../cache";
+import { InMemoryCache } from "../../cache";
 import { ApolloError } from "../../errors";
 
 import {
@@ -94,18 +94,6 @@ describe("ObservableQuery", () => {
   const wrappedError = new ApolloError({
     graphQLErrors: [error],
   });
-
-  const createQueryManager = ({ link }: { link: ApolloLink }) => {
-    return new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        assumeImmutableResults: true,
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
-      })
-    );
-  };
 
   describe("setOptions", () => {
     describe("to change pollInterval", () => {
@@ -689,8 +677,6 @@ describe("ObservableQuery", () => {
     });
 
     it("will not fetch when setting a cache-only query to standby", async () => {
-      let queryManager: QueryManager<NormalizedCacheObject>;
-      let observable: ObservableQuery<any>;
       const testQuery = gql`
         query {
           author {
@@ -717,11 +703,14 @@ describe("ObservableQuery", () => {
           });
         },
       ]);
-      queryManager = createQueryManager({ link });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
 
-      await queryManager.query({ query: testQuery });
+      await client.query({ query: testQuery });
 
-      observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: testQuery,
         fetchPolicy: "cache-first",
         notifyOnNetworkStatusChange: false,
@@ -729,18 +718,19 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result.data).toEqual(data);
-        expect(timesFired).toBe(1);
-      }
-
-      await observable.setOptions({ query, fetchPolicy: "standby" });
-      // make sure the query didn't get fired again.
       expect(timesFired).toBe(1);
 
+      await observable.setOptions({ query, fetchPolicy: "standby" });
+
+      // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();
+      expect(timesFired).toBe(1);
     });
 
     it("returns a promise which eventually returns data", async () => {

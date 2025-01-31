@@ -285,11 +285,11 @@ export class ObservableQuery<
         result.data = void 0 as any;
       }
 
-      if (diff.complete) {
-        // Similar to setting result.partial to false, but taking advantage of the
-        // falsiness of missing fields.
-        delete result.partial;
+      if (this.options.returnPartialData) {
+        result.complete = diff.complete;
+      }
 
+      if (diff.complete) {
         // If the diff is complete, and we're using a FetchPolicy that
         // terminates after a complete cache read, we can assume the next result
         // we receive will have NetworkStatus.ready and !loading.
@@ -301,8 +301,6 @@ export class ObservableQuery<
           result.networkStatus = NetworkStatus.ready;
           result.loading = false;
         }
-      } else {
-        result.partial = true;
       }
 
       if (

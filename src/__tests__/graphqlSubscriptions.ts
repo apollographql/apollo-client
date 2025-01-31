@@ -58,7 +58,7 @@ describe("GraphQL Subscriptions", () => {
     const stream = new ObservableStream(client.subscribe(defaultOptions));
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue(results[0].result);
+    await expect(stream).toEmitFetchResult(results[0].result);
 
     stream.unsubscribe();
   });
@@ -75,7 +75,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue(results[0].result);
+    await expect(stream).toEmitFetchResult(results[0].result);
 
     stream.unsubscribe();
   });
@@ -114,10 +114,10 @@ describe("GraphQL Subscriptions", () => {
       link.simulateResult(results[i]);
     }
 
-    await expect(stream).toEmitValue(results[0].result);
-    await expect(stream).toEmitValue(results[1].result);
-    await expect(stream).toEmitValue(results[2].result);
-    await expect(stream).toEmitValue(results[3].result);
+    await expect(stream).toEmitFetchResult(results[0].result);
+    await expect(stream).toEmitFetchResult(results[1].result);
+    await expect(stream).toEmitFetchResult(results[2].result);
+    await expect(stream).toEmitFetchResult(results[3].result);
     await expect(stream).not.toEmitAnything();
   });
 

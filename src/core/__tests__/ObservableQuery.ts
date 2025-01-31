@@ -2373,62 +2373,60 @@ describe("ObservableQuery", () => {
         },
       };
 
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query: superQuery, variables },
-          result: { data: superDataOne },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query: superQuery, variables },
+            result: { data: superDataOne },
+          },
+        ]),
+      });
 
-      await queryManager.query({ query, variables });
+      await client.query({ query, variables });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: superQuery,
         variables,
         returnPartialData: true,
       });
 
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: true,
-        networkStatus: 1,
+        networkStatus: NetworkStatus.loading,
         partial: true,
       });
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataOne,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
 
-        expect(result).toEqual({
-          data: dataOne,
-          loading: true,
-          networkStatus: 1,
-          partial: true,
-        });
-        expect(current.data).toEqual(dataOne);
-        expect(current.loading).toEqual(true);
-        expect(current.networkStatus).toEqual(1);
-      }
-
-      {
-        const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
-
-        expect(result).toEqual({
-          data: superDataOne,
-          loading: false,
-          networkStatus: 7,
-        });
-        expect(current.data).toEqual(superDataOne);
-        expect(current.loading).toEqual(false);
-        expect(current.networkStatus).toEqual(7);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: superDataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: superDataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

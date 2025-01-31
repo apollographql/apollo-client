@@ -6,5 +6,5 @@
   "files.insertFinalNewline": true,
   "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.enableFiletypes": ["mdx"],
-  "jest.jestCommandLine": "node --expose-gc  node_modules/.bin/jest --config ./config/jest.config.js --ignoreProjects 'ReactDOM 17' --runInBand"
+  "jest.jestCommandLine": "node --expose-gc  node_modules/.bin/jest --config ./config/jest.config.ts --ignoreProjects 'ReactDOM 17' --runInBand"
 }

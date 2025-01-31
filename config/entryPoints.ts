@@ -1,3 +1,13 @@
+import path from "path";
+// @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
+import { __dirname } from "./dirname.cts";
+
+type EntryPoint = {
+  dirs: string[];
+  bundleName?: string;
+  extensions?: string[];
+  sideEffects?: boolean;
+};
 const entryPoints = [
   { dirs: [], bundleName: "main" },
   { dirs: ["cache"] },
@@ -32,7 +42,7 @@ const entryPoints = [
   { dirs: ["utilities", "subscriptions", "relay"] },
   { dirs: ["utilities", "subscriptions", "urql"] },
   { dirs: ["utilities", "globals"], sideEffects: true },
-];
+] satisfies EntryPoint[];
 
 const lookupTrie = Object.create(null);
 entryPoints.forEach((info) => {
@@ -44,17 +54,21 @@ entryPoints.forEach((info) => {
   node.isEntry = true;
 });
 
-exports.forEach = function (callback, context) {
+export const forEach = function (
+  callback: (value: EntryPoint, index: number, array: EntryPoint[]) => void,
+  context?: any
+) {
   entryPoints.forEach(callback, context);
 };
 
-exports.map = function map(callback, context) {
+export const map = function map<U>(
+  callback: (value: EntryPoint, index: number, array: EntryPoint[]) => U,
+  context?: any
+) {
   return entryPoints.map(callback, context);
 };
 
-const path = require("path").posix;
-
-exports.check = function (id, parentId) {
+export const check = function (id: string, parentId: string) {
   const resolved = path.resolve(path.dirname(parentId), id);
   const importedParts = partsAfterDist(resolved);
 
@@ -91,7 +105,7 @@ exports.check = function (id, parentId) {
   return false;
 };
 
-function partsAfterDist(id) {
+function partsAfterDist(id: string): string[] {
   const parts = id.split(path.sep);
   const distIndex = parts.lastIndexOf("dist");
   if (/^index.jsx?$/.test(parts[parts.length - 1])) {
@@ -100,15 +114,10 @@ function partsAfterDist(id) {
   if (distIndex >= 0) {
     return parts.slice(distIndex + 1);
   }
+  return [];
 }
 
-exports.getEntryPointDirectory = function (file) {
-  const parts = partsAfterDist(file) || file.split(path.sep);
-  const len = lengthOfLongestEntryPoint(parts);
-  if (len >= 0) return parts.slice(0, len).join(path.sep);
-};
-
-function lengthOfLongestEntryPoint(parts) {
+function lengthOfLongestEntryPoint(parts: string[]) {
   let node = lookupTrie;
   let longest = -1;
   for (let i = 0; node && i < parts.length; ++i) {
@@ -121,16 +130,16 @@ function lengthOfLongestEntryPoint(parts) {
   return longest;
 }
 
-function arraysEqualUpTo(a, b, end) {
+function arraysEqualUpTo(a: unknown[], b: unknown[], end: number) {
   for (let i = 0; i < end; ++i) {
     if (a[i] !== b[i]) return false;
   }
   return true;
 }
 
-exports.buildDocEntryPoints = () => {
+export const buildDocEntryPoints = () => {
   const dist = path.resolve(__dirname, "../dist");
-  const entryPoints = exports.map((entryPoint) => {
+  const entryPoints = map((entryPoint) => {
     return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
   });
   entryPoints.push(

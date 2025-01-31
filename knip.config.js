@@ -29,8 +29,16 @@ const config = {
       "src/react/types/types.documentation.ts",
       "eslint-local-rules/index.js",
     ]),
-  project: ["src/**/*.ts{,x}", "config/*.[jt]s", "eslint-local-rules/*.[jt]s"],
-  ignore: ["integration-tests/**/*", ".yalc/**/*"],
+  project: [
+    "src/**/*.ts{,x}",
+    "config/*.{,c}[jt]s",
+    "eslint-local-rules/*.[jt]s",
+  ],
+  ignore: [
+    "integration-tests/**/*",
+    ".yalc/**/*",
+    "config/schema.package.json.ts",
+  ],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [
     /@size-limit\/.*/,
@@ -59,6 +67,7 @@ const config = {
       "tsconfig.json",
       "src/tsconfig.json",
       "eslint-local-rules/tsconfig.json",
+      "config/tsconfig.json",
     ],
   },
 };

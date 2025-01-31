@@ -11,7 +11,7 @@
         "${workspaceRoot}/node_modules/.bin/jest",
         "${relativeFile}",
         "--config",
-        "./config/jest.config.js",
+        "./config/jest.config.ts",
         "--runInBand",
         "--watch"
       ],

@@ -1,15 +1,15 @@
 import * as path from "path";
+import type { IConfigFile } from "@microsoft/api-extractor";
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
-  IConfigFile,
 } from "@microsoft/api-extractor";
 import { parseArgs } from "node:util";
 import fs from "node:fs";
 
 // @ts-ignore
-import { map, buildDocEntryPoints } from "./entryPoints.js";
+import { map, buildDocEntryPoints } from "./entryPoints.ts";
 import { readFileSync } from "fs";
 
 const parsed = parseArgs({
@@ -35,9 +35,15 @@ if (
 }
 
 // Load and parse the api-extractor.json file
-const configObjectFullPath = path.resolve(__dirname, "../api-extractor.json");
+const configObjectFullPath = path.resolve(
+  import.meta.dirname,
+  "../api-extractor.json"
+);
 const baseConfig = ExtractorConfig.loadFile(configObjectFullPath);
-const packageJsonFullPath = path.resolve(__dirname, "../package.json");
+const packageJsonFullPath = path.resolve(
+  import.meta.dirname,
+  "../package.json"
+);
 
 process.exitCode = 0;
 

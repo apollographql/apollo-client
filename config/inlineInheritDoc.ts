@@ -24,11 +24,11 @@
 /** End file docs */
 
 // @ts-ignore
-import { buildDocEntryPoints } from "./entryPoints.js";
+import { buildDocEntryPoints } from "./entryPoints.ts";
 // @ts-ignore
 import { Project, ts, printNode, Node } from "ts-morph";
 import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
-import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference";
+import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
 
 import fs from "node:fs";
@@ -39,14 +39,16 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 
-console.log(
-  "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
-);
+export function inlineInheritDoc() {
+  console.log(
+    "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
+  );
 
-const model = loadApiModel();
-processComments();
+  const model = loadApiModel();
+  processComments(model);
+}
 
-function getCommentFor(canonicalReference: string) {
+function getCommentFor(canonicalReference: string, model: ApiModel) {
   const apiItem = model.resolveDeclarationReference(
     DeclarationReference.parse(canonicalReference),
     undefined
@@ -77,10 +79,13 @@ function loadApiModel() {
 
     // Load and parse the api-extractor.json file
     const configObjectFullPath = path.resolve(
-      __dirname,
+      import.meta.dirname,
       "../api-extractor.json"
     );
-    const packageJsonFullPath = path.resolve(__dirname, "../package.json");
+    const packageJsonFullPath = path.resolve(
+      import.meta.dirname,
+      "../package.json"
+    );
     const tempModelFile = path.join(tempDir, "client.api.json");
 
     const configObject = ExtractorConfig.loadFile(configObjectFullPath);
@@ -129,7 +134,7 @@ function loadApiModel() {
   }
 }
 
-function processComments() {
+function processComments(model: ApiModel) {
   const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
 
   const project = new Project({
@@ -155,7 +160,7 @@ function processComments() {
           newText = newText.replace(
             inheritDocRegex,
             (_, canonicalReference) => {
-              return getCommentFor(canonicalReference) || "";
+              return getCommentFor(canonicalReference, model) || "";
             }
           );
         }

@@ -31,46 +31,44 @@
   "homepage": "https://www.apollographql.com/docs/react/",
   "scripts": {
     "prebuild": "npm run clean",
-    "build": "tsc",
-    "postbuild": "npm run update-version && npm run inline-inherit-doc && npm run invariants && npm run sourcemaps && npm run rollup && npm run prepdist && npm run postprocess-dist && npm run verify-version",
+    "build": "node config/build.ts",
     "postinstall": "patch-package",
-    "update-version": "node config/version.js update",
-    "verify-version": "node config/version.js verify",
-    "invariants": "ts-node-script config/processInvariants.ts",
-    "sourcemaps": "ts-node-script config/rewriteSourceMaps.ts",
-    "rollup": "rollup -c ./config/rollup.config.js",
-    "prepdist": "node ./config/prepareDist.js",
-    "prepdist:changesets": "ts-node-script config/prepareChangesetsRelease.ts",
-    "postprocess-dist": "ts-node-script config/postprocessDist.ts",
-    "extract-api": "npm run build && ts-node-script config/apiExtractor.ts --generate apiReport",
+    "extract-api": "node config/build.ts --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --generate apiReport",
     "clean": "rimraf dist coverage lib temp",
     "check:format": "prettier --check .",
-    "ci:precheck": "node config/precheck.js",
+    "ci:precheck": "node config/precheck.ts",
     "format": "prettier --write .",
     "lint": "eslint 'src/**/*.{[jt]s,[jt]sx}'",
-    "inline-inherit-doc": "ts-node-script config/inlineInheritDoc.ts",
-    "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.js",
+    "test": "node --expose-gc ./node_modules/jest/bin/jest.js --config ./config/jest.config.ts",
     "test:type-benches": "find src -name '*.bench.ts' | xargs -n1 tsx",
-    "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.js --runInBand --testTimeout 99999 --logHeapUsage",
+    "test:debug": "node --inspect-brk node_modules/.bin/jest --config ./config/jest.config.ts --runInBand --testTimeout 99999 --logHeapUsage",
     "test:ci": "TEST_ENV=ci npm run test:coverage -- --logHeapUsage",
-    "test:watch": "jest --config ./config/jest.config.js --watch",
+    "test:watch": "jest --config ./config/jest.config.ts --watch",
     "test:memory": "npm i && npm run build && cd scripts/memory && npm i && npm test",
     "test:coverage": "npm run coverage -- --ci --runInBand --reporters=default --reporters=jest-junit",
-    "coverage": "node --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.js --logHeapUsage --coverage --watchAll=false",
-    "bundlesize": "npm run build && ts-node-script ./config/bundlesize.ts",
-    "predeploy": "npm run build",
+    "coverage": "node --no-compilation-cache --expose-gc --max_old_space_size=4096 node_modules/.bin/jest --config ./config/jest.config.ts --logHeapUsage --coverage --watchAll=false",
+    "bundlesize": "npm run build && node ./config/bundlesize.ts",
     "deploy": "cd dist && npm publish --tag next",
     "typedoc": "typedoc src/index.ts --json docs/public/docs.json",
-    "docmodel": "tsc && npm run inline-inherit-doc && ts-node-script config/apiExtractor.ts --main-only --generate docModel",
-    "changeset-publish": "npm run build && npm run prepdist:changesets && cd dist && changeset publish",
+    "docmodel": "node config/build.ts --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --main-only --generate docModel",
+    "changeset-publish": "node config/build.ts --step=build --step=prepareChangesetsRelease && cd dist && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "pkg-pr-new-publish": "npm run build && cd dist && pkg-pr-new publish --no-template --compact",
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
     "knip": "knip"
   },
-  "engines": {
-    "npm": "^7.20.3 || ^8.0.0 || ^9.0.0 || ^10.0.0"
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "onFail": "error",
+      "version": ">=23.6.0"
+    },
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error",
+      "version": ">=10.8.2"
+    }
   },
   "peerDependencies": {
     "graphql": "^15.0.0 || ^16.0.0",
@@ -131,7 +129,6 @@
     "@testing-library/react": "16.1.0",
     "@testing-library/react-render-stream": "2.0.0",
     "@testing-library/user-event": "14.5.2",
-    "@tsconfig/node20": "20.1.4",
     "@types/bytes": "3.1.4",
     "@types/fetch-mock": "7.3.8",
     "@types/glob": "8.1.0",
@@ -195,12 +192,12 @@
     "ts-jest": "29.2.3",
     "ts-jest-resolver": "2.0.1",
     "ts-morph": "25.0.0",
-    "ts-node": "10.9.2",
     "tsx": "4.19.2",
     "typedoc": "0.25.0",
     "typescript": "^5.7.3",
     "wait-for-observables": "1.0.3",
-    "web-streams-polyfill": "4.0.0"
+    "web-streams-polyfill": "4.0.0",
+    "zx": "^8.3.0"
   },
   "publishConfig": {
     "access": "public"

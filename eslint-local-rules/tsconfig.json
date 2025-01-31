@@ -1,7 +1,12 @@
 {
-  "extends": "@tsconfig/node20/tsconfig.json",
   "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
     "allowJs": true,
-    "noEmit": true
-  }
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["**/*.ts"]
 }

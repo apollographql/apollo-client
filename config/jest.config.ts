@@ -1,7 +1,11 @@
+import { fileURLToPath } from "node:url";
+
 const defaults = {
   rootDir: "src",
   preset: "ts-jest",
-  testEnvironment: require.resolve("./FixJSDOMEnvironment.js"),
+  testEnvironment: fileURLToPath(
+    import.meta.resolve("./FixJSDOMEnvironment.js")
+  ),
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
   globals: {
     __DEV__: true,
@@ -81,7 +85,7 @@ const standardReact17Config = {
   },
 };
 
-module.exports = {
+export default {
   projects: [
     tsStandardConfig,
     standardReact17Config,

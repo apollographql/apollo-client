@@ -21,7 +21,6 @@ import { InMemoryCache } from "../../cache";
 import { ApolloError } from "../../errors";
 
 import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
-import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
 
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";

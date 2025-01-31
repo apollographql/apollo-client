@@ -603,9 +603,12 @@ describe("ObservableQuery", () => {
         },
       ]);
 
-      const queryManager = createQueryManager({ link });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: testQuery,
         fetchPolicy: "cache-only",
         notifyOnNetworkStatusChange: false,
@@ -613,24 +616,22 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual({});
-        expect(timesFired).toBe(0);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: {},
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+      expect(timesFired).toBe(0);
 
       await observable.setOptions({ fetchPolicy: "cache-first" });
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual(data);
-        expect(timesFired).toBe(1);
-      }
-
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(timesFired).toBe(1);
       await expect(stream).not.toEmitAnything();
     });
 

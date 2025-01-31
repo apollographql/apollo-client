@@ -815,6 +815,7 @@ describe("ObservableQuery", () => {
       await observable.setVariables(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
+        // TODO: Fix this error
         // @ts-expect-error `ApolloQueryResult` needs to be updated to allow for `undefined` and this value needs to emit undefined instead of empty object
         data: {},
         loading: true,
@@ -979,6 +980,7 @@ describe("ObservableQuery", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitApolloQueryResult({
+        // TODO: Fix this error
         // @ts-expect-error Need to update ApolloQueryResult type to allow for undefined
         data: undefined,
         errors: [error],
@@ -986,6 +988,7 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.error,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        // TODO: Fix this error
         // @ts-expect-error Need to update ApolloQueryResult type to allow for undefined
         data: undefined,
         errors: [error],
@@ -1056,6 +1059,7 @@ describe("ObservableQuery", () => {
       await observable.setVariables(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
+        // TODO: Fix this error
         // @ts-expect-error Ensure ApolloQueryResult allows for undefined and fix this value to match
         data: {},
         loading: true,
@@ -1106,6 +1110,7 @@ describe("ObservableQuery", () => {
       await observable.refetch(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
+        // TODO: Fix this error
         // @ts-expect-error Need to update ApolloQueryResult to allow undefined and fix this value
         data: {},
         loading: true,

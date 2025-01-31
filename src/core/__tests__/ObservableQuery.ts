@@ -2530,19 +2530,18 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.loading,
       });
 
-      {
-        const result = await stream.takeNext();
-        const current = observable.getCurrentResult();
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result).toEqual({
-          data: dataTwo,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        });
-        expect(current.data).toEqual(dataTwo);
-        expect(current.loading).toBe(false);
-        expect(current.networkStatus).toBe(NetworkStatus.ready);
-      }
+      await expect(stream).not.toEmitAnything();
     });
 
     it("handles multiple calls to getCurrentResult without losing data", async () => {

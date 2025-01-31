@@ -1848,14 +1848,12 @@ describe("ObservableQuery", () => {
         // manually to be able to turn off warnings for this test.
         const mocks = [makeMock("a", "b", "c"), makeMock("d", "e")];
         const firstRequest = mocks[0].request;
-        const queryManager = new QueryManager(
-          getDefaultOptionsForQueryManagerTests({
-            cache: new InMemoryCache({ addTypename: false }),
-            link: new MockLink(mocks, true, { showWarnings: false }),
-          })
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink(mocks, true, { showWarnings: false }),
+        });
 
-        const observableWithVarsVar = queryManager.watchQuery({
+        const observableWithVarsVar = client.watchQuery({
           query: firstRequest.query,
           variables: firstRequest.variables,
           notifyOnNetworkStatusChange: false,

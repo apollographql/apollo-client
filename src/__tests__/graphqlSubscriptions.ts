@@ -134,7 +134,7 @@ describe("GraphQL Subscriptions", () => {
     expect(cache.extract()).toEqual({});
   });
 
-  it("should throw an error if the result has errors on it", () => {
+  it("should throw an error if the result has errors on it", async () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
@@ -142,20 +142,9 @@ describe("GraphQL Subscriptions", () => {
     });
 
     const obs = client.subscribe(options);
+    const stream = new ObservableStream(obs);
 
-    const promise = new Promise<void>((resolve, reject) => {
-      obs.subscribe({
-        next(result) {
-          reject("Should have hit the error block");
-        },
-        error(error) {
-          expect(error).toMatchSnapshot();
-          resolve();
-        },
-      });
-    });
-
-    const errorResult = {
+    link.simulateResult({
       result: {
         data: null,
         errors: [
@@ -171,10 +160,24 @@ describe("GraphQL Subscriptions", () => {
           } as any,
         ],
       },
-    };
+    });
 
-    link.simulateResult(errorResult);
-    return Promise.resolve(promise);
+    await expect(stream).toEmitError(
+      new ApolloError({
+        graphQLErrors: [
+          {
+            message: "This is an error",
+            locations: [
+              {
+                column: 3,
+                line: 2,
+              },
+            ],
+            path: ["result"],
+          },
+        ],
+      })
+    );
   });
 
   it('returns errors in next result when `errorPolicy` is "all"', async () => {

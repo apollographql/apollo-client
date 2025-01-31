@@ -3,7 +3,12 @@ import { DocumentNode, ExecutionResult } from "graphql";
 
 import { LocalState } from "../../core/LocalState";
 
-import { ApolloClient, ApolloQueryResult, Resolvers } from "../../core";
+import {
+  ApolloClient,
+  ApolloQueryResult,
+  NetworkStatus,
+  Resolvers,
+} from "../../core";
 
 import { InMemoryCache, isReference } from "../../cache";
 import { Observable } from "../../utilities";
@@ -69,7 +74,13 @@ describe("Basic resolver capabilities", () => {
 
     const stream = setupTestWithResolvers({ resolvers, query });
 
-    await expect(stream).toEmitMatchedValue({ data: { foo: { bar: true } } });
+    await expect(stream).toEmitApolloQueryResult({
+      data: { foo: { bar: true } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should handle queries with a mix of @client and server fields", async () => {
@@ -105,12 +116,16 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true } } },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         foo: { bar: true },
         bar: { baz: true },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should handle a mix of @client fields with fragments and server fields", async () => {
@@ -151,12 +166,16 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true, __typename: "Bar" } } },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         foo: { bar: true, __typename: "ClientData" },
         bar: { baz: true },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should handle @client fields inside fragments", async () => {
@@ -208,12 +227,16 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should have access to query variables when running @client resolvers", async () => {
@@ -240,7 +263,13 @@ describe("Basic resolver capabilities", () => {
       variables: { id: 1 },
     });
 
-    await expect(stream).toEmitMatchedValue({ data: { foo: { bar: 1 } } });
+    await expect(stream).toEmitApolloQueryResult({
+      data: { foo: { bar: 1 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should pass context to @client resolvers", async () => {
@@ -267,7 +296,13 @@ describe("Basic resolver capabilities", () => {
       queryOptions: { context: { id: 1 } },
     });
 
-    await expect(stream).toEmitMatchedValue({ data: { foo: { bar: 1 } } });
+    await expect(stream).toEmitApolloQueryResult({
+      data: { foo: { bar: 1 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should combine local @client resolver results with server results, for the same field", async () => {
@@ -318,7 +353,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           name: "John Smith",
@@ -328,7 +363,11 @@ describe("Basic resolver capabilities", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("should handle resolvers that work with booleans properly", async () => {
@@ -350,9 +389,13 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    const { data } = await client.query({ query, fetchPolicy: "network-only" });
+    const result = await client.query({ query, fetchPolicy: "network-only" });
 
-    expect(data).toMatchObject({ isInCart: false });
+    expect(result).toEqualApolloQueryResult({
+      data: { isInCart: false },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("should handle nested asynchronous @client resolvers (issue #4841)", () => {
@@ -513,15 +556,17 @@ describe("Basic resolver capabilities", () => {
       serverResult: { data: { bar: { baz: true } } },
     });
 
-    await expect(stream).toEmitMatchedValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { foo: { bar: true }, bar: { baz: true } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
     expect(barResolver).not.toHaveBeenCalled();
   });
 });
 
 describe("Writing cache data from resolvers", () => {
-  it("should let you write to the cache with a mutation", () => {
+  it("should let you write to the cache with a mutation", async () => {
     const query = gql`
       {
         field @client
@@ -547,15 +592,17 @@ describe("Writing cache data from resolvers", () => {
       },
     });
 
-    return client
-      .mutate({ mutation })
-      .then(() => client.query({ query }))
-      .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ field: 1 });
-      });
+    await client.mutate({ mutation });
+    const result = await client.query({ query });
+
+    expect(result).toEqualApolloQueryResult({
+      data: { field: 1 },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
-  it("should let you write to the cache with a mutation using an ID", () => {
+  it("should let you write to the cache with a mutation using an ID", async () => {
     const query = gql`
       {
         obj @client {
@@ -601,15 +648,18 @@ describe("Writing cache data from resolvers", () => {
       },
     });
 
-    return client
-      .mutate({ mutation })
-      .then(() => client.query({ query }))
-      .then(({ data }: any) => {
-        expect(data.obj.field).toEqual(2);
-      });
+    await client.mutate({ mutation });
+
+    const result = await client.query({ query });
+
+    expect(result).toEqualApolloQueryResult({
+      data: { obj: { __typename: "Object", field: 2 } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
-  it("should not overwrite __typename when writing to the cache with an id", () => {
+  it("should not overwrite __typename when writing to the cache with an id", async () => {
     const query = gql`
       {
         obj @client {
@@ -663,14 +713,20 @@ describe("Writing cache data from resolvers", () => {
       },
     });
 
-    return client
-      .mutate({ mutation })
-      .then(() => client.query({ query }))
-      .then(({ data }: any) => {
-        expect(data.obj.__typename).toEqual("Object");
-        expect(data.obj.field.__typename).toEqual("Field");
-      })
-      .catch((e) => console.log(e));
+    await client.mutate({ mutation });
+    const result = await client.query({ query });
+
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        obj: {
+          __typename: "Object",
+          field: { __typename: "Field", field2: 2 },
+          id: "uniqueId",
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 });
 
@@ -703,11 +759,15 @@ describe("Resolving field aliases", () => {
       },
     });
 
-    const { data } = await client.query({ query });
+    const result = await client.query({ query });
 
-    expect(data).toEqual({
-      foo: { bar: true, __typename: "Foo" },
-      baz: { foo: true, __typename: "Baz" },
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        foo: { bar: true, __typename: "Foo" },
+        baz: { foo: true, __typename: "Baz" },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -732,9 +792,13 @@ describe("Resolving field aliases", () => {
       },
     });
 
-    const { data } = await client.query({ query: aliasedQuery });
+    const result = await client.query({ query: aliasedQuery });
 
-    expect(data).toEqual({ fie: { bar: true, __typename: "Foo" } });
+    expect(result).toEqualApolloQueryResult({
+      data: { fie: { bar: true, __typename: "Foo" } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
     expect(fie).not.toHaveBeenCalled();
   });
 
@@ -766,11 +830,15 @@ describe("Resolving field aliases", () => {
       },
     });
 
-    const { data } = await client.query({ query: aliasedQuery });
+    const result = await client.query({ query: aliasedQuery });
 
-    expect(data).toEqual({
-      fie: { fum: true, __typename: "Foo" },
-      baz: { foo: true, __typename: "Baz" },
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        fie: { fum: true, __typename: "Foo" },
+        baz: { foo: true, __typename: "Baz" },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -807,10 +875,12 @@ describe("Resolving field aliases", () => {
       },
     });
 
-    const { data } = await client.query({ query });
+    const result = await client.query({ query });
 
-    expect({ ...data }).toMatchObject({
-      fie: { bar: "yo", __typename: "Foo" },
+    expect(result).toEqualApolloQueryResult({
+      data: { fie: { bar: "yo", __typename: "Foo" } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
   });
 
@@ -867,19 +937,21 @@ describe("Resolving field aliases", () => {
       },
     });
 
-    {
-      const { data } = await client.query({ query });
-      // `isInCart` resolver is fired, returning `true` (which is then
-      // stored in the cache).
-      expect(data.launch.isInCart).toBe(true);
-    }
+    // `isInCart` resolver is fired, returning `true` (which is then
+    // stored in the cache).
+    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+      data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
-    {
-      const { data } = await client.query({ query });
-      // When the same query fires again, `isInCart` should be pulled from
-      // the cache and have a value of `true`.
-      expect(data.launch.isInCart).toBe(true);
-    }
+    // When the same query fires again, `isInCart` should be pulled from
+    // the cache and have a value of `true`.
+    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+      data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 });
 
@@ -914,8 +986,13 @@ describe("Force local resolvers", () => {
 
     // When the resolver isn't defined, there isn't anything to force, so
     // make sure the query resolves from the cache properly.
-    const { data: data1 } = await client.query({ query });
-    expect(data1.author.isLoggedIn).toEqual(false);
+    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+      data: {
+        author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
 
     client.addResolvers({
       Author: {
@@ -928,8 +1005,13 @@ describe("Force local resolvers", () => {
     // A resolver is defined, so make sure it's forced, and the result
     // resolves properly as a combination of cache and local resolver
     // data.
-    const { data: data2 } = await client.query({ query });
-    expect(data2.author.isLoggedIn).toEqual(true);
+    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+      data: {
+        author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("should avoid running forced resolvers a second time when loading results over the network (so not from the cache)", async () => {
@@ -967,8 +1049,17 @@ describe("Force local resolvers", () => {
       },
     });
 
-    const { data } = await client.query({ query });
-    expect(data.author.isLoggedIn).toEqual(true);
+    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+      data: {
+        author: {
+          __typename: "Author",
+          isLoggedIn: true,
+          name: "John Smith",
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
     expect(count).toEqual(1);
   });
 
@@ -1095,13 +1186,17 @@ describe("Force local resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result.data).toEqual({
-      userData: {
-        __typename: "User",
-        firstName: "Ben",
-        lastName: "Newman",
-        fullName: "Ben Newman",
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        userData: {
+          __typename: "User",
+          firstName: "Ben",
+          lastName: "Newman",
+          fullName: "Ben Newman",
+        },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
     });
   });
 });
@@ -1125,11 +1220,13 @@ describe("Async resolvers", () => {
       },
     });
 
-    const {
-      data: { isLoggedIn },
-    } = await client.query({ query })!;
+    const result = await client.query({ query })!;
 
-    expect(isLoggedIn).toBe(true);
+    expect(result).toEqualApolloQueryResult({
+      data: { isLoggedIn: true },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 
   it("should support async @client resolvers mixed with remotely resolved data", async () => {
@@ -1175,13 +1272,20 @@ describe("Async resolvers", () => {
       },
     });
 
-    const {
-      data: { member },
-    } = await client.query({ query })!;
+    const result = await client.query({ query })!;
 
-    expect(member.name).toBe(testMember.name);
-    expect(member.isLoggedIn).toBe(testMember.isLoggedIn);
-    expect(member.sessionCount).toBe(testMember.sessionCount);
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        member: {
+          name: testMember.name,
+          isLoggedIn: testMember.isLoggedIn,
+          sessionCount: testMember.sessionCount,
+          __typename: "Member",
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+    });
   });
 });
 

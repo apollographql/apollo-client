@@ -202,22 +202,25 @@ describe("ObservableQuery", () => {
       });
 
       it("can change from x>0 to y>0", async () => {
-        const manager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          }
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([
+            {
+              request: { query, variables },
+              result: { data: dataOne },
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+            },
+          ]),
+        });
 
-        const observable = manager.watchQuery({
+        const observable = client.watchQuery({
           query,
           variables,
           pollInterval: 100,
@@ -226,19 +229,19 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
-        {
-          const { data } = await stream.takeNext();
-
-          expect(data).toEqual(dataOne);
-        }
+        await expect(stream).toEmitApolloQueryResult({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         await observable.setOptions({ query, pollInterval: 10 });
 
-        {
-          const { data } = await stream.takeNext();
-
-          expect(data).toEqual(dataTwo);
-        }
+        await expect(stream).toEmitApolloQueryResult({
+          data: dataTwo,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         observable.stopPolling();
 

@@ -20,7 +20,6 @@ const buildSteps = {
   inlineInheritDoc,
   processInvariants,
   rewriteSourceMaps,
-  rollup,
   prepareDist,
   postprocessDist,
   verifyVersion,

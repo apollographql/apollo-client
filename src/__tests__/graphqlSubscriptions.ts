@@ -1,6 +1,6 @@
 import gql from "graphql-tag";
 
-import { ApolloClient, FetchResult } from "../core";
+import { ApolloClient } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "../errors";
 import { mockObservableLink } from "../testing";
@@ -330,39 +330,31 @@ describe("GraphQL Subscriptions", () => {
       variables: { name: "Iron Man" },
       errorPolicy: "ignore",
     });
-
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
-
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
-    });
-
-    const errorResult = {
-      result: {
-        data: null,
-        extensions: {
-          [PROTOCOL_ERRORS_SYMBOL]: [
-            {
-              message: "cannot read message from websocket",
-              extensions: {
-                code: "WEBSOCKET_MESSAGE_ERROR",
-              },
-            },
-          ],
-        },
-      },
-    };
+    const stream = new ObservableStream(obs);
 
     // Silence expected warning about missing field for cache write
     using _consoleSpy = spyOnConsole("warn");
 
-    link.simulateResult(errorResult, true);
+    link.simulateResult(
+      {
+        result: {
+          data: null,
+          extensions: {
+            [PROTOCOL_ERRORS_SYMBOL]: [
+              {
+                message: "cannot read message from websocket",
+                extensions: {
+                  code: "WEBSOCKET_MESSAGE_ERROR",
+                },
+              },
+            ],
+          },
+        },
+      },
+      true
+    );
 
-    await expect(promise).rejects.toEqual(
+    await expect(stream).toEmitError(
       new ApolloError({
         protocolErrors: [
           {

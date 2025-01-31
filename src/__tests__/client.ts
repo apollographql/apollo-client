@@ -2999,19 +2999,19 @@ describe("@connection", () => {
       }
     `);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       data: { a: 123 },
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       data: { b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 123, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3019,7 +3019,7 @@ describe("@connection", () => {
 
     aVar(aVar() + 111);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       data: { a: 234 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3027,7 +3027,7 @@ describe("@connection", () => {
 
     await expect(bStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3037,13 +3037,13 @@ describe("@connection", () => {
 
     await expect(aStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       data: { b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3052,19 +3052,19 @@ describe("@connection", () => {
     aVar(aVar() + 222);
     bVar("oyez");
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       data: { a: 456 },
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       data: { b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 456, b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3098,11 +3098,10 @@ describe("@connection", () => {
     // result to be delivered even though networkStatus is still loading.
     const cStream = watch(cQuery, "cache-only");
 
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      partial: true,
     });
 
     // Now try writing directly to the cache, rather than calling
@@ -3117,7 +3116,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitApolloQueryResult({
       data: { c: "see" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3135,7 +3134,7 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitApolloQueryResult({
       data: { c: "saw" },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3146,11 +3145,10 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      partial: true,
     });
   });
 

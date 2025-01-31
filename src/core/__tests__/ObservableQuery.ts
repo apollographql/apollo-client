@@ -1197,54 +1197,51 @@ describe("ObservableQuery", () => {
         },
       ];
 
-      const queryManager = mockQueryManager(...mockedResponses);
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink(mockedResponses),
+      });
       const firstRequest = mockedResponses[0].request;
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
         fetchPolicy: "cache-first",
       });
 
-      const mocks = mockFetchQuery(queryManager);
+      // TODO: Determine if we can test this without reaching into internal
+      // implementation details
+      const mocks = mockFetchQuery(client["queryManager"]);
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: dataOne,
-        });
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.refetch(differentVariables);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result).toEqual({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: dataTwo,
-        });
+      const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
+      expect(fqbpCalls.length).toBe(2);
+      expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
+      expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
 
-        const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
-        expect(fqbpCalls.length).toBe(2);
-        expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
-        expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
+      const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
+      expect(fqoCalls.length).toBe(2);
+      expect(fqoCalls[0][1].fetchPolicy).toEqual("cache-first");
+      expect(fqoCalls[1][1].fetchPolicy).toEqual("network-only");
 
-        const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
-        expect(fqoCalls.length).toBe(2);
-        expect(fqoCalls[0][1].fetchPolicy).toEqual("cache-first");
-        expect(fqoCalls[1][1].fetchPolicy).toEqual("network-only");
-
-        // Although the options.fetchPolicy we passed just now to
-        // fetchQueryByPolicy should have been network-only,
-        // observable.options.fetchPolicy should now be updated to
-        // cache-first, thanks to options.nextFetchPolicy.
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
+      // Although the options.fetchPolicy we passed just now to
+      // fetchQueryByPolicy should have been network-only,
+      // observable.options.fetchPolicy should now be updated to
+      // cache-first, thanks to options.nextFetchPolicy.
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
       await expect(stream).not.toEmitAnything();
     });

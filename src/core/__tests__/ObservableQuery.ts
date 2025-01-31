@@ -1084,9 +1084,12 @@ describe("ObservableQuery", () => {
         },
       ];
 
-      const queryManager = mockQueryManager(...mockedResponses);
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink(mockedResponses),
+      });
       const firstRequest = mockedResponses[0].request;
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
         notifyOnNetworkStatusChange: true,
@@ -1094,30 +1097,27 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual(dataOne);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.refetch(differentVariables);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        // @ts-expect-error Need to update ApolloQueryResult to allow undefined and fix this value
+        data: {},
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.data).toEqual(dataTwo);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

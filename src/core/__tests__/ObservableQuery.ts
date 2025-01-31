@@ -712,7 +712,7 @@ describe("ObservableQuery", () => {
 
       const observable = client.watchQuery({
         query: testQuery,
-        fetchPolicy: "cache-first",
+        fetchPolicy: "cache-only",
         notifyOnNetworkStatusChange: false,
       });
 

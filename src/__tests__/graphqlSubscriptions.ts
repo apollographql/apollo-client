@@ -199,16 +199,7 @@ describe("GraphQL Subscriptions", () => {
       variables: { name: "Iron Man" },
       errorPolicy: "all",
     });
-
-    const promise = new Promise<FetchResult[]>((resolve, reject) => {
-      const results: FetchResult[] = [];
-
-      obs.subscribe({
-        next: (result) => results.push(result),
-        complete: () => resolve(results),
-        error: reject,
-      });
-    });
+    const stream = new ObservableStream(obs);
 
     const errorResult = {
       result: {
@@ -219,12 +210,12 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(errorResult, true);
 
-    await expect(promise).resolves.toEqual([
-      {
-        data: null,
-        errors: [new GraphQLError("This is an error")],
-      },
-    ]);
+    await expect(stream).toEmitFetchResult({
+      data: null,
+      errors: [new GraphQLError("This is an error")],
+    });
+
+    await expect(stream).toComplete();
   });
 
   it('throws protocol errors when `errorPolicy` is "all"', async () => {

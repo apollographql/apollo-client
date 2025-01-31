@@ -2184,12 +2184,17 @@ describe("ObservableQuery", () => {
     });
 
     it("returns errors from the store immediately", async () => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { errors: [error] },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { errors: [error] },
+          },
+        ]),
       });
 
-      const observable = queryManager.watchQuery({ query, variables });
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
       const theError = await stream.takeError();

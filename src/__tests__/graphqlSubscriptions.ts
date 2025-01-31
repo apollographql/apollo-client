@@ -408,20 +408,12 @@ describe("GraphQL Subscriptions", () => {
     });
 
     const obs = client.subscribe(options);
+    const stream = new ObservableStream(obs);
 
-    const promise = new Promise<void>((resolve, reject) => {
-      obs.subscribe({
-        next(result) {
-          reject("Should have hit the error block");
-        },
-        error(error) {
-          expect(error).toMatchSnapshot();
-          resolve();
-        },
-      });
-    });
+    // Silence expected warning about missing field for cache write
+    using _consoleSpy = spyOnConsole("warn");
 
-    const errorResult = {
+    link.simulateResult({
       result: {
         data: null,
         extensions: {
@@ -435,13 +427,19 @@ describe("GraphQL Subscriptions", () => {
           ],
         },
       },
-    };
+    });
 
-    // Silence expected warning about missing field for cache write
-    using _consoleSpy = spyOnConsole("warn");
-
-    link.simulateResult(errorResult);
-
-    await promise;
+    await expect(stream).toEmitError(
+      new ApolloError({
+        protocolErrors: [
+          {
+            message: "cannot read message from websocket",
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
+          },
+        ],
+      })
+    );
   });
 });

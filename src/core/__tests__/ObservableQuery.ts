@@ -2156,22 +2156,27 @@ describe("ObservableQuery", () => {
     });
 
     it("returns results from the store immediately", async () => {
-      const queryManager = mockQueryManager({
-        request: { query, variables },
-        result: { data: dataOne },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+        ]),
       });
 
-      const result = await queryManager.query({ query, variables });
+      const result = await client.query({ query, variables });
 
-      expect(result).toEqual({
+      expect(result).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: 7,
       });
 
-      const observable = queryManager.watchQuery({ query, variables });
+      const observable = client.watchQuery({ query, variables });
 
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,

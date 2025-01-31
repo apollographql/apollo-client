@@ -1013,8 +1013,11 @@ describe("ObservableQuery", () => {
 
     it("does not perform a query when unsubscribed if variables change", async () => {
       // Note: no responses, will throw if a query is made
-      const queryManager = mockQueryManager();
-      const observable = queryManager.watchQuery({ query, variables });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([]),
+      });
+      const observable = client.watchQuery({ query, variables });
 
       await observable.setVariables(differentVariables);
     });

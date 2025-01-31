@@ -15,7 +15,7 @@ $.cwd = join(import.meta.dirname, "..");
 $.verbose = true;
 
 const buildSteps = {
-  typescript: () => $`npx tsc`,
+  typescript: () => $`npx tsc --verbatimModuleSyntax false`,
   updateVersion,
   inlineInheritDoc,
   processInvariants,

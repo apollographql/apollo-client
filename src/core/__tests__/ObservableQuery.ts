@@ -36,14 +36,6 @@ import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
 
-function resetStore(qm: QueryManager<any>) {
-  return qm
-    .clearStore({
-      discardWatches: false,
-    })
-    .then(() => qm.reFetchObservableQueries());
-}
-
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
@@ -550,32 +542,36 @@ describe("ObservableQuery", () => {
           }),
       ]);
 
-      const queryManager = createQueryManager({ link });
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link,
+      });
       // fetch first data from server
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: testQuery,
       });
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result.data).toEqual(data);
-        expect(timesFired).toBe(1);
-      }
+      expect(timesFired).toBe(1);
 
       await observable.setOptions({ fetchPolicy: "cache-only" });
-      await resetStore(queryManager);
+      await client.resetStore();
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: {},
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
 
-        expect(result.data).toEqual({});
-        expect(result.loading).toBe(false);
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(timesFired).toBe(1);
-      }
+      expect(timesFired).toBe(1);
 
       await expect(stream).not.toEmitAnything();
     });

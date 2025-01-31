@@ -440,6 +440,7 @@ This is the default fetch policy.
 
 Apollo Client executes the query _only_ against the cache. It never queries your server in this case.
 
+
 A `cache-only` query throws an error if the cache does not contain data for all requested fields.
 
 </td>
@@ -455,6 +456,7 @@ A `cache-only` query throws an error if the cache does not contain data for all 
 
 Apollo Client executes the full query against both the cache _and_ your GraphQL server. The query automatically updates if the result of the server-side query modifies cached fields.
 
+
 Provides a fast response while also helping to keep cached data consistent with server data.
 
 </td>
@@ -469,6 +471,7 @@ Provides a fast response while also helping to keep cached data consistent with 
 <td>
 
 Apollo Client executes the full query against your GraphQL server, _without_ first checking the cache. The query's result _is_ stored in the cache.
+
 
 Prioritizes consistency with server data, but can't provide a near-instantaneous response when cached data is available.
 

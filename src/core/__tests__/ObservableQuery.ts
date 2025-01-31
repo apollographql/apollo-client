@@ -551,7 +551,7 @@ describe("ObservableQuery", () => {
       {
         const result = await stream.takeNext();
 
-        expect(result.data).toEqual({});
+        expect(result.data).toEqual(undefined);
         expect(result.loading).toBe(false);
         expect(result.networkStatus).toBe(NetworkStatus.ready);
         expect(timesFired).toBe(1);
@@ -601,7 +601,7 @@ describe("ObservableQuery", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data).toEqual({});
+        expect(result.data).toEqual(undefined);
         expect(timesFired).toBe(0);
       }
 

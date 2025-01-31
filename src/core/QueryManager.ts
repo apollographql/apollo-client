@@ -3,7 +3,6 @@ import { invariant, newInvariantError } from "../utilities/globals/index.js";
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
-import { equal } from "@wry/equality";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
@@ -22,6 +21,7 @@ import { canonicalStringify } from "../cache/index.js";
 import type {
   ObservableSubscription,
   ConcastSourcesArray,
+  DeepPartial,
 } from "../utilities/index.js";
 import {
   getDefaultValues,
@@ -1650,11 +1650,11 @@ export class QueryManager<TStore> {
     ) => {
       const data = diff.result;
 
-      if (__DEV__ && !returnPartialData && !equal(data, {})) {
+      if (__DEV__ && !returnPartialData && data !== null) {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | undefined) =>
+      const fromData = (data: TData | DeepPartial<TData> | undefined) =>
         Observable.of({
           data,
           loading: isNetworkRequestInFlight(networkStatus),
@@ -1662,11 +1662,18 @@ export class QueryManager<TStore> {
           ...(diff.complete ? null : { partial: true }),
         } as ApolloQueryResult<TData>);
 
-      if (data && this.getDocumentInfo(query).hasForcedResolvers) {
+      if (this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState
           .runResolvers({
             document: query,
-            remoteResult: { data },
+            // TODO: Update remoteResult to handle `null`. In v3 the `if`
+            // statement contained a check against `data`, but this value was
+            // always `{}` if nothing was in the cache, which meant the check
+            // above always succeeded when there were forced resolvers. Now that
+            // `data` is nullable, this `remoteResult` needs to be an empty
+            // object. Ideally we can pass in `null` here and the resolvers
+            // would be able to handle this the same way.
+            remoteResult: { data: data || ({} as any) },
             context,
             variables,
             onlyRunForcedResolvers: true,
@@ -1681,12 +1688,12 @@ export class QueryManager<TStore> {
       if (
         errorPolicy === "none" &&
         networkStatus === NetworkStatus.refetch &&
-        Array.isArray(diff.missing)
+        diff.missing
       ) {
         return fromData(void 0);
       }
 
-      return fromData(data);
+      return fromData(data || undefined);
     };
 
     const cacheWriteBehavior =

@@ -30,9 +30,8 @@ const config = {
       "eslint-local-rules/index.js",
     ]),
   project: [
-    "src/**/*.ts",
-    "config/*.[jt]s",
-    "config/*.c[jt]s",
+    "src/**/*.ts{,x}",
+    "config/*.{,c}[jt]s",
     "eslint-local-rules/*.[jt]s",
   ],
   ignore: [

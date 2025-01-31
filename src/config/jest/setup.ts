@@ -8,6 +8,7 @@ import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";
 import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
+import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 
 // Turn off warnings for repeated fragment names
 gql.disableFragmentWarnings();
@@ -35,4 +36,8 @@ if (!Symbol.asyncDispose) {
 }
 
 // @ts-ignore
-expect.addEqualityTesters([areApolloErrorsEqual, areGraphQLErrorsEqual]);
+expect.addEqualityTesters([
+  areApolloErrorsEqual,
+  areGraphQLErrorsEqual,
+  areMissingFieldErrorsEqual,
+]);

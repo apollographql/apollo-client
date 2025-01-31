@@ -1,6 +1,5 @@
 import * as React from "rehackt";
 import type { DeepPartial } from "../../utilities/index.js";
-import { mergeDeepArray } from "../../utilities/index.js";
 import type {
   Cache,
   Reference,
@@ -39,6 +38,8 @@ export interface UseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
+// TODO: Update this to return `null` when there is no data returned from the
+// fragment.
 export type UseFragmentResult<TData> =
   | {
       data: MaybeMasked<TData>;
@@ -91,9 +92,9 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     if (from === null) {
       return {
         result: diffToResult({
-          result: {} as TData,
+          result: {},
           complete: false,
-        }),
+        } as Cache.DiffResult<TData>),
       };
     }
 
@@ -107,14 +108,18 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     });
 
     return {
-      result: diffToResult({
-        ...diff,
-        result: client["queryManager"].maskFragment({
-          fragment,
-          fragmentName,
-          data: diff.result,
-        }),
-      }),
+      result: diffToResult(
+        {
+          ...diff,
+          result: client["queryManager"].maskFragment({
+            fragment,
+            fragmentName,
+            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+            // valid return value
+            data: diff.result === null ? {} : diff.result,
+          }),
+        } as Cache.DiffResult<TData> // TODO: Remove assertion
+      ),
     };
   }, [client, stableOptions]);
 
@@ -161,12 +166,12 @@ function diffToResult<TData>(
   diff: Cache.DiffResult<TData>
 ): UseFragmentResult<TData> {
   const result = {
-    data: diff.result!,
+    data: diff.result,
     complete: !!diff.complete,
-  } as UseFragmentResult<TData>;
+  } as UseFragmentResult<TData>; // TODO: Remove assertion once useFragment returns null
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
+    result.missing = diff.missing.missing;
   }
 
   return result;

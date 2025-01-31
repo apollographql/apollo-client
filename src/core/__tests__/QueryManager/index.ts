@@ -2138,7 +2138,7 @@ describe("QueryManager", () => {
     const stream2 = new ObservableStream(observable2);
 
     await expect(stream1).toEmitValue({
-      data: {},
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -2217,14 +2217,14 @@ describe("QueryManager", () => {
     await expect(aStream).toEmitValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
     await expect(bStream).toEmitValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2313,7 +2313,7 @@ describe("QueryManager", () => {
     await expect(stream).toEmitValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2332,7 +2332,7 @@ describe("QueryManager", () => {
     await expect(stream).toEmitValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2357,7 +2357,7 @@ describe("QueryManager", () => {
     await expect(stream).toEmitValue({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 

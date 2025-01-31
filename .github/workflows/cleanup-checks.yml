@@ -13,6 +13,8 @@ jobs:
       github.event.review.state == 'APPROVED' &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4

@@ -3322,12 +3322,17 @@ describe("ObservableQuery", () => {
   });
 
   it("QueryInfo does not notify for !== but deep-equal results", async () => {
-    const queryManager = mockQueryManager({
-      request: { query, variables },
-      result: { data: dataOne },
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link: new MockLink([
+        {
+          request: { query, variables },
+          result: { data: dataOne },
+        },
+      ]),
     });
 
-    const observable = queryManager.watchQuery({
+    const observable = client.watchQuery({
       query,
       variables,
       // If we let the cache return canonical results, it will be harder to
@@ -3344,12 +3349,10 @@ describe("ObservableQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    const result = await stream.takeNext();
-
-    expect(result).toEqual({
+    await expect(stream).toEmitApolloQueryResult({
+      data: dataOne,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      data: dataOne,
     });
 
     let invalidateCount = 0;
@@ -3389,7 +3392,7 @@ describe("ObservableQuery", () => {
     expect(notifySpy).not.toHaveBeenCalled();
     expect(invalidateCount).toBe(1);
     expect(onWatchUpdatedCount).toBe(1);
-    queryManager.stop();
+    client.stop();
 
     await expect(stream).not.toEmitAnything();
   });

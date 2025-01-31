@@ -2656,6 +2656,8 @@ describe("ObservableQuery", () => {
         networkStatus: NetworkStatus.ready,
       });
 
+      // This 2nd identical check is intentional to ensure calling this function
+      // more than once returns the right value.
       expect(obs.getCurrentResult()).toEqualApolloQueryResult({
         data: {
           greeting: {

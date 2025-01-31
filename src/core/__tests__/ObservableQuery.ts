@@ -164,22 +164,25 @@ describe("ObservableQuery", () => {
       });
 
       it("stops polling if goes from something -> 0", async () => {
-        const manager = mockQueryManager(
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          },
-          {
-            request: { query, variables },
-            result: { data: dataTwo },
-          }
-        );
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([
+            {
+              request: { query, variables },
+              result: { data: dataOne },
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+            },
+            {
+              request: { query, variables },
+              result: { data: dataTwo },
+            },
+          ]),
+        });
 
-        const observable = manager.watchQuery({
+        const observable = client.watchQuery({
           query,
           variables,
           pollInterval: 10,
@@ -187,11 +190,11 @@ describe("ObservableQuery", () => {
 
         const stream = new ObservableStream(observable);
 
-        {
-          const { data } = await stream.takeNext();
-
-          expect(data).toEqual(dataOne);
-        }
+        await expect(stream).toEmitApolloQueryResult({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
 
         await observable.setOptions({ query, pollInterval: 0 });
 

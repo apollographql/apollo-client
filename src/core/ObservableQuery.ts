@@ -1080,9 +1080,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // because the query may be using the @nonreactive directive, and we want to
     // save the the latest version of any nonreactive subtrees (in case
     // getCurrentResult is called), even though we skip broadcasting changes.
-    if (lastError || !result.partial || this.options.returnPartialData) {
-      this.updateLastResult(result, variables);
-    }
+    this.updateLastResult(result, variables);
     if (lastError || isDifferent) {
       iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }

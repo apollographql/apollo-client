@@ -337,24 +337,27 @@ describe("ObservableQuery", () => {
 
       const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
 
-      const queryManager = mockQueryManager(
-        {
-          request: {
-            query,
-            variables,
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: {
+              query,
+              variables,
+            },
+            result: { data },
           },
-          result: { data },
-        },
-        {
-          request: {
-            query,
-            variables,
+          {
+            request: {
+              query,
+              variables,
+            },
+            result: { data: data2 },
           },
-          result: { data: data2 },
-        }
-      );
+        ]),
+      });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query,
         variables,
         notifyOnNetworkStatusChange: true,
@@ -362,28 +365,25 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toEqual(false);
-        expect(result.data).toEqual(data);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await observable.refetch();
 
-      {
-        const { loading, networkStatus } = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+      });
 
-        expect(loading).toEqual(true);
-        expect(networkStatus).toEqual(NetworkStatus.refetch);
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.loading).toEqual(false);
-        expect(result.data).toEqual(data2);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

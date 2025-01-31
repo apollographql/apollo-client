@@ -2580,28 +2580,29 @@ describe("ObservableQuery", () => {
         },
       });
 
-      {
-        const result = await stream.takeNext();
-        expect(result.data).toEqual({
+      await expect(stream).toEmitApolloQueryResult({
+        data: {
           greeting: {
             message: "Hello world",
             __typename: "Greeting",
           },
-        });
-      }
-
-      expect(obs.getCurrentResult().data).toEqual({
-        greeting: {
-          message: "Hello world",
-          __typename: "Greeting",
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
       });
 
-      expect(obs.getCurrentResult().data).toEqual({
-        greeting: {
-          message: "Hello world",
-          __typename: "Greeting",
+      expect(obs.getCurrentResult()).toEqualApolloQueryResult({
+        data: {
+          greeting: {
+            message: "Hello world",
+            __typename: "Greeting",
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        // TODO: This should not be there since the observable did not emit this
+        // property.
+        partial: true,
       });
 
       link.simulateResult(
@@ -2625,9 +2626,8 @@ describe("ObservableQuery", () => {
         true
       );
 
-      {
-        const result = await stream.takeNext();
-        expect(result.data).toEqual({
+      await expect(stream).toEmitApolloQueryResult({
+        data: {
           greeting: {
             message: "Hello world",
             recipient: {
@@ -2636,30 +2636,42 @@ describe("ObservableQuery", () => {
             },
             __typename: "Greeting",
           },
-        });
-      }
-
-      expect(obs.getCurrentResult().data).toEqual({
-        greeting: {
-          message: "Hello world",
-          recipient: {
-            name: "Alice",
-            __typename: "Person",
-          },
-          __typename: "Greeting",
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
       });
 
-      expect(obs.getCurrentResult().data).toEqual({
-        greeting: {
-          message: "Hello world",
-          recipient: {
-            name: "Alice",
-            __typename: "Person",
+      expect(obs.getCurrentResult()).toEqualApolloQueryResult({
+        data: {
+          greeting: {
+            message: "Hello world",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
+            },
+            __typename: "Greeting",
           },
-          __typename: "Greeting",
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
       });
+
+      expect(obs.getCurrentResult()).toEqualApolloQueryResult({
+        data: {
+          greeting: {
+            message: "Hello world",
+            recipient: {
+              name: "Alice",
+              __typename: "Person",
+            },
+            __typename: "Greeting",
+          },
+        },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+
+      await expect(stream).not.toEmitAnything();
     });
 
     {

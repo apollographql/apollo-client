@@ -469,7 +469,11 @@ describe("ObservableQuery", () => {
         new ApolloError({ graphQLErrors: [error] })
       );
 
-      await observable.refetch();
+      await expect(observable.refetch()).resolves.toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

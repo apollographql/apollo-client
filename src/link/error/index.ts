@@ -47,7 +47,7 @@ export namespace ErrorLink {
 }
 
 // For backwards compatibility.
-export import ErrorHandler = ErrorLink.ErrorHandler;
+export type ErrorHandler = ErrorLink.ErrorHandler;
 
 export function onError(errorHandler: ErrorHandler): ApolloLink {
   return new ApolloLink((operation, forward) => {

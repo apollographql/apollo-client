@@ -44,7 +44,7 @@ export type {
   WatchFragmentResult,
 } from "../cache/index.js";
 export {
-  Cache,
+  type Cache,
   ApolloCache,
   InMemoryCache,
   MissingFieldError,

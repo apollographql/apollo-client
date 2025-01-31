@@ -28,7 +28,7 @@ export namespace WebSocketLink {
 }
 
 // For backwards compatibility.
-export import WebSocketParams = WebSocketLink.Configuration;
+export type WebSocketParams = WebSocketLink.Configuration;
 
 export class WebSocketLink extends ApolloLink {
   private subscriptionClient: SubscriptionClient;

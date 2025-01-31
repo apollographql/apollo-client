@@ -1,4 +1,4 @@
-import { DataProxy } from "./DataProxy.js";
+import type { DataProxy } from "./DataProxy.js";
 import type { AllFieldsModifier, Modifiers } from "./common.js";
 import type { ApolloCache } from "../cache.js";
 import type { Unmasked } from "../../../masking/index.js";
@@ -105,12 +105,23 @@ export namespace Cache {
     ) => any;
   }
 
-  export import DiffResult = DataProxy.DiffResult;
-  export import ReadQueryOptions = DataProxy.ReadQueryOptions;
-  export import ReadFragmentOptions = DataProxy.ReadFragmentOptions;
-  export import WriteQueryOptions = DataProxy.WriteQueryOptions;
-  export import WriteFragmentOptions = DataProxy.WriteFragmentOptions;
-  export import UpdateQueryOptions = DataProxy.UpdateQueryOptions;
-  export import UpdateFragmentOptions = DataProxy.UpdateFragmentOptions;
-  export import Fragment = DataProxy.Fragment;
+  export type DiffResult<T> = DataProxy.DiffResult<T>;
+  export type ReadQueryOptions<TData, TVariables> = DataProxy.ReadQueryOptions<
+    TData,
+    TVariables
+  >;
+  export type ReadFragmentOptions<TData, TVariables> =
+    DataProxy.ReadFragmentOptions<TData, TVariables>;
+  export type WriteQueryOptions<TData, TVariables> =
+    DataProxy.WriteQueryOptions<TData, TVariables>;
+  export type WriteFragmentOptions<TData, TVariables> =
+    DataProxy.WriteFragmentOptions<TData, TVariables>;
+  export type UpdateQueryOptions<TData, TVariables> =
+    DataProxy.UpdateQueryOptions<TData, TVariables>;
+  export type UpdateFragmentOptions<TData, TVariables> =
+    DataProxy.UpdateFragmentOptions<TData, TVariables>;
+  export type Fragment<TVariables, TData> = DataProxy.Fragment<
+    TVariables,
+    TData
+  >;
 }

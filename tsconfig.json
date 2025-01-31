@@ -17,7 +17,9 @@
     "outDir": "./dist",
     "lib": ["es2015", "esnext.asynciterable"],
     "jsx": "react",
-    "strict": true
+    "strict": true,
+    "useDefineForClassFields": true,
+    "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["src/**/__tests__/**/*"]

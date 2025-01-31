@@ -2925,17 +2925,17 @@ describe("ObservableQuery", () => {
             nextFetchPolicy,
           });
 
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultBeforeSubscribe
           );
 
           observableQuery.subscribe({});
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterSubscribe
           );
 
           cache.writeQuery({ query, data: cacheValues.update1 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate1
           );
 
@@ -2945,21 +2945,21 @@ describe("ObservableQuery", () => {
           }
           await waitFor(
             () =>
-              void expect(observableQuery.getCurrentResult()).toStrictEqual(
-                resultAfterLinkNext
-              ),
+              void expect(
+                observableQuery.getCurrentResult()
+              ).toEqualApolloQueryResult(resultAfterLinkNext),
             { interval: 1 }
           );
 
           cache.writeQuery({ query, data: cacheValues.update2 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate2
           );
 
           void observableQuery.refetch();
 
           cache.writeQuery({ query, data: cacheValues.update3 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate3
           );
 
@@ -2969,14 +2969,14 @@ describe("ObservableQuery", () => {
           }
           await waitFor(
             () =>
-              void expect(observableQuery.getCurrentResult()).toStrictEqual(
-                resultAfterRefetchNext
-              ),
+              void expect(
+                observableQuery.getCurrentResult()
+              ).toEqualApolloQueryResult(resultAfterRefetchNext),
             { interval: 1 }
           );
 
           cache.writeQuery({ query, data: cacheValues.update4 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate4
           );
         }

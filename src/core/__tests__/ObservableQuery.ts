@@ -27,9 +27,7 @@ import {
   tick,
   wait,
 } from "../../testing";
-import mockQueryManager, {
-  getDefaultOptionsForQueryManagerTests,
-} from "../../testing/core/mocking/mockQueryManager";
+import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
 
 import { SubscriptionObserver } from "zen-observable-ts";
@@ -2906,10 +2904,8 @@ describe("ObservableQuery", () => {
           const cache = new InMemoryCache({});
           cache.writeQuery({ query, data: cacheValues.initial });
 
-          const queryManager = new QueryManager(
-            getDefaultOptionsForQueryManagerTests({ link, cache })
-          );
-          const observableQuery = queryManager.watchQuery({
+          const client = new ApolloClient({ link, cache });
+          const observableQuery = client.watchQuery({
             query,
             fetchPolicy,
             nextFetchPolicy,

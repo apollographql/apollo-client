@@ -885,7 +885,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    // TODO: Determine how this test differs from he previous one
+    // TODO: Determine how this test differs from the previous one
     it("does invalidate the currentResult data if the variables change", async () => {
       // Standard data for all these tests
       const query = gql`

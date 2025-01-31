@@ -82,21 +82,19 @@ describe("GraphQL Subscriptions", () => {
 
   it("should multiplex subscriptions", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    const obs = queryManager.startGraphQLSubscription(options);
+    const obs = client.subscribe(options);
     const stream1 = new ObservableStream(obs);
     const stream2 = new ObservableStream(obs);
 
     link.simulateResult(results[0]);
 
-    await expect(stream1).toEmitValue(results[0].result);
-    await expect(stream2).toEmitValue(results[0].result);
+    await expect(stream1).toEmitFetchResult(results[0].result);
+    await expect(stream2).toEmitFetchResult(results[0].result);
   });
 
   it("should receive multiple results for a subscription", async () => {

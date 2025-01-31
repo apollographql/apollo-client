@@ -2263,11 +2263,20 @@ describe("ObservableQuery", () => {
       const result = await observable.result();
       const currentResult = observable.getCurrentResult();
 
-      expect(result.data).toEqual(dataOne);
-      expect(result.errors).toEqual([error]);
-      expect(currentResult.loading).toBe(false);
-      expect(currentResult.errors).toEqual([error]);
-      expect(currentResult.error).toBeUndefined();
+      expect(result).toEqualApolloQueryResult({
+        data: dataOne,
+        errors: [error],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+      });
+      expect(currentResult).toEqualApolloQueryResult({
+        data: dataOne,
+        errors: [error],
+        loading: false,
+        // TODO: The networkStatus returned here is different than the one
+        // returned from `observable.result()`. These should match
+        networkStatus: NetworkStatus.ready,
+      });
     });
 
     it("errors out if errorPolicy is none", async () => {

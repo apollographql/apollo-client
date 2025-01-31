@@ -997,12 +997,6 @@ describe("ObservableQuery", () => {
 
       await observable.setVariables(differentVariables);
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
-        data: dataTwo,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-      });
-
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,

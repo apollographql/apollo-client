@@ -1486,39 +1486,42 @@ describe("ObservableQuery", () => {
       const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
       const variables2 = { first: 1 };
 
-      const queryManager = mockQueryManager(
-        {
-          request: {
-            query: queryWithVars,
-            variables: variables1,
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: {
+              query: queryWithVars,
+              variables: variables1,
+            },
+            result: { data },
           },
-          result: { data },
-        },
-        {
-          request: {
-            query: queryWithVars,
-            variables: variables2,
+          {
+            request: {
+              query: queryWithVars,
+              variables: variables2,
+            },
+            result: { data: data2 },
           },
-          result: { data: data2 },
-        },
-        {
-          request: {
-            query: queryWithVars,
-            variables: variables1,
+          {
+            request: {
+              query: queryWithVars,
+              variables: variables1,
+            },
+            result: { data },
           },
-          result: { data },
-        },
-        {
-          request: {
-            query: queryWithVars,
-            variables: variables2,
+          {
+            request: {
+              query: queryWithVars,
+              variables: variables2,
+            },
+            result: { data: data2 },
           },
-          result: { data: data2 },
-        }
-      );
+        ]),
+      });
 
       const usedFetchPolicies: WatchQueryFetchPolicy[] = [];
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: queryWithVars,
         variables: variables1,
         fetchPolicy: "cache-and-network",
@@ -1540,84 +1543,79 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data);
-        expect(result.loading).toBe(false);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
       await observable.refetch(variables2);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: {},
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data2);
-        expect(result.loading).toBe(false);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
       {
         const result = await observable.setOptions({ variables: variables1 });
 
-        expect(result.data).toEqual(data);
+        expect(result).toEqualApolloQueryResult({
+          data,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data);
-        expect(result.loading).toBe(false);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
       {
         const result = await observable.reobserve({ variables: variables2 });
 
-        expect(result.data).toEqual(data2);
+        expect(result).toEqualApolloQueryResult({
+          data: data2,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
-        expect(result.data).toEqual(data2);
-        expect(result.loading).toBe(true);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data2);
-        expect(result.loading).toBe(false);
-        expect(result.error).toBeUndefined();
-        expect(observable.options.fetchPolicy).toBe("cache-first");
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
+      expect(observable.options.fetchPolicy).toBe("cache-first");
 
       expect(usedFetchPolicies).toEqual([
         "cache-and-network",

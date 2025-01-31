@@ -12783,7 +12783,7 @@ describe("useSuspenseQuery", () => {
         const result = await refetch();
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12795,7 +12795,9 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
@@ -12827,7 +12829,7 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12855,7 +12857,9 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();

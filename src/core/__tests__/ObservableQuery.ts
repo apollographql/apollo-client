@@ -3165,6 +3165,8 @@ describe("ObservableQuery", () => {
     });
   });
 
+  // TODO: Determine if this API is useful. This clears out internal state not
+  // accessible to the end user.
   describe("resetQueryStoreErrors", () => {
     it("should remove any GraphQLError's stored in the query store", async () => {
       const graphQLError = new GraphQLError("oh no!");

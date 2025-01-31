@@ -274,8 +274,7 @@ describe("ObservableQuery", () => {
       await observable.refetch(variables2);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Ensure this value is undefined instead of an empty object
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -404,7 +403,7 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -561,7 +560,7 @@ describe("ObservableQuery", () => {
       await client.resetStore();
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -825,7 +824,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         // TODO: Fix this error
         // @ts-expect-error `ApolloQueryResult` needs to be updated to allow for `undefined` and this value needs to emit undefined instead of empty object
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1069,7 +1068,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         // TODO: Fix this error
         // @ts-expect-error Ensure ApolloQueryResult allows for undefined and fix this value to match
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1120,7 +1119,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         // TODO: Fix this error
         // @ts-expect-error Need to update ApolloQueryResult to allow undefined and fix this value
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1452,7 +1451,7 @@ describe("ObservableQuery", () => {
       await observable.refetch(variables2);
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1566,7 +1565,7 @@ describe("ObservableQuery", () => {
       await observable.refetch(variables2);
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,

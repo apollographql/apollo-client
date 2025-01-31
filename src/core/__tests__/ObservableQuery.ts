@@ -3200,10 +3200,16 @@ describe("ObservableQuery", () => {
     it("should remove network error's stored in the query store", async () => {
       const networkError = new Error("oh no!");
 
-      const observable = mockWatchQuery({
-        request: { query, variables },
-        result: { data: dataOne },
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+        ]),
       });
+      const observable = client.watchQuery({ query, variables });
 
       const stream = new ObservableStream(observable);
 

@@ -1344,15 +1344,20 @@ describe("ObservableQuery", () => {
         },
       ];
 
-      const queryManager = mockQueryManager(...mockedResponses);
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink(mockedResponses),
+      });
       const firstRequest = mockedResponses[0].request;
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query: firstRequest.query,
         variables: firstRequest.variables,
         fetchPolicy: "no-cache",
       });
 
-      const mocks = mockFetchQuery(queryManager);
+      // TODO: Determine how we can test this without looking at internal
+      // implementation details
+      const mocks = mockFetchQuery(client["queryManager"]);
       const stream = new ObservableStream(observable);
 
       await stream.takeNext();

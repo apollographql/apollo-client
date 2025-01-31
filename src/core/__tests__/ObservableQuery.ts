@@ -2432,58 +2432,55 @@ describe("ObservableQuery", () => {
     });
 
     it("returns loading even if full data is available when using network-only fetchPolicy", async () => {
-      const queryManager = mockQueryManager(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-        {
-          request: { query, variables },
-          result: { data: dataTwo },
-        }
-      );
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+          {
+            request: { query, variables },
+            result: { data: dataTwo },
+          },
+        ]),
+      });
 
-      const result = await queryManager.query({ query, variables });
+      const result = await client.query({ query, variables });
 
-      expect(result).toEqual({
+      expect(result).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
       });
 
-      const observable = queryManager.watchQuery({
+      const observable = client.watchQuery({
         query,
         variables,
         fetchPolicy: "network-only",
       });
 
-      expect(observable.getCurrentResult()).toEqual({
-        data: undefined,
+      // TODO: Fix this issue
+      // @ts-expect-error `ApolloQueryResult` expects a `data` property
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.loading,
       });
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      // TODO: Fix this issue
+      // @ts-expect-error `ApolloQueryResult` expects a `data` property
+      await expect(stream).toEmitApolloQueryResult({
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      });
 
-        expect(result).toEqual({
-          loading: true,
-          data: undefined,
-          networkStatus: NetworkStatus.loading,
-        });
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result).toEqual({
-          data: dataTwo,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-        });
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

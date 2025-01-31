@@ -434,14 +434,12 @@ describe("GraphQL Subscriptions", () => {
 
   it("should throw an error if the result has protocolErrors on it", async () => {
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    const obs = queryManager.startGraphQLSubscription(options);
+    const obs = client.subscribe(options);
 
     const promise = new Promise<void>((resolve, reject) => {
       obs.subscribe({

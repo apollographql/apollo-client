@@ -3424,25 +3424,15 @@ describe("ObservableQuery", () => {
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(ObservableQuery);
 
-    await new Promise<void>((resolve, reject) => {
-      const sub = mapped.subscribe({
-        next(result) {
-          sub.unsubscribe();
-          try {
-            expect(result).toEqual({
-              loading: false,
-              networkStatus: NetworkStatus.ready,
-              data: { mapped: true },
-            });
-          } catch (error) {
-            reject(error);
-            return;
-          }
-          resolve();
-        },
-        error: reject,
-      });
+    const stream = new ObservableStream(mapped);
+
+    await expect(stream).toEmitApolloQueryResult({
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      data: { mapped: true },
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 });
 

@@ -188,14 +188,12 @@ describe("GraphQL Subscriptions", () => {
       }
     `;
     const link = mockObservableLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache(),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
 
-    const obs = queryManager.startGraphQLSubscription({
+    const obs = client.subscribe({
       query,
       variables: { name: "Iron Man" },
       errorPolicy: "all",

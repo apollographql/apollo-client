@@ -3,11 +3,9 @@ import gql from "graphql-tag";
 import { ApolloClient, FetchResult } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "../errors";
-import { QueryManager } from "../core/QueryManager";
 import { mockObservableLink } from "../testing";
 import { GraphQLError } from "graphql";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { getDefaultOptionsForQueryManagerTests } from "../testing/core/mocking/mockQueryManager";
 
 describe("GraphQL Subscriptions", () => {
   const results = [

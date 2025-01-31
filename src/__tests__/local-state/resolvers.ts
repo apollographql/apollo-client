@@ -8,8 +8,8 @@ import { ApolloClient, ApolloQueryResult, Resolvers } from "../../core";
 import { InMemoryCache, isReference } from "../../cache";
 import { Observable } from "../../utilities";
 import { ApolloLink } from "../../link/core";
-import mockQueryManager from "../../testing/core/mocking/mockQueryManager";
 import { ObservableStream } from "../../testing/internal";
+import { MockLink } from "../../testing";
 
 // Helper method that sets up a mockQueryManager and then passes on the
 // results to an observer.
@@ -32,17 +32,22 @@ const setupTestWithResolvers = ({
   serverResult?: ExecutionResult;
   delay?: number;
 }) => {
-  const queryManager = mockQueryManager({
-    request: { query: serverQuery || query, variables },
-    result: serverResult,
-    error,
-    delay,
+  const client = new ApolloClient({
+    cache: new InMemoryCache({ addTypename: false }),
+    link: new MockLink([
+      {
+        request: { query: serverQuery || query, variables },
+        result: serverResult,
+        error,
+        delay,
+      },
+    ]),
   });
 
-  queryManager.getLocalState().addResolvers(resolvers);
+  client.addResolvers(resolvers);
 
   return new ObservableStream(
-    queryManager.watchQuery<any>({ query, variables, ...queryOptions })
+    client.watchQuery<any>({ query, variables, ...queryOptions })
   );
 };
 

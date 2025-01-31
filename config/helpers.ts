@@ -1,7 +1,13 @@
 import * as path from "path";
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
+import * as tsParser from "recast/parsers/typescript.js";
 import glob from "glob";
+import { glob as nodeGlob } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
+// @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
+// eslint-disable-next-line import/no-unresolved
+import * as sorcery from "sorcery";
 
 export const distDir = path.resolve(import.meta.dirname, "..", "dist");
 
@@ -50,4 +56,74 @@ export function reparse(source: string) {
 
 export function reprint(ast: ReturnType<typeof reparse>) {
   return recast.print(ast).code;
+}
+
+export async function applyRecast({
+  glob,
+  transformStep,
+}: {
+  glob: string;
+  transformStep: (
+    ast: recast.types.ASTNode,
+    sourceName: string
+  ) => { ast: recast.types.ASTNode; targetFileName?: string };
+}) {
+  for await (let sourceFile of nodeGlob(glob, { withFileTypes: true })) {
+    const baseDir = sourceFile.parentPath;
+    const sourceFileName = sourceFile.name;
+    const sourcePath = path.join(baseDir, sourceFile.name);
+    const source = await readFile(sourcePath, { encoding: "utf8" });
+    const sourceMapName = source.match(/\/\/# sourceMappingURL=(.*)$/)?.[1];
+    if (!sourceMapName) {
+      throw new Error("No source map found for file " + sourceFileName);
+    }
+    const sourceMapPath = path.join(baseDir, sourceMapName);
+    const sourceMapContents = JSON.parse(
+      await readFile(sourceMapPath, {
+        encoding: "utf8",
+      })
+    );
+
+    // from now on, we're treating this data as if it were from an "intermediate" file instead
+    // we might want to override the original source file after all
+    // we place this in a "parallel folder" so relative paths have the same depth
+    const intermediateName = path.join("../intermediate", sourceFileName);
+    const intermediateNamePath = path.join(baseDir, intermediateName);
+
+    const ast = recast.parse(source, {
+      parser: tsParser,
+      sourceFileName: intermediateName,
+    });
+    const transformResult = transformStep(ast, sourceFileName);
+    const targetFileName = transformResult.targetFileName || sourceFileName;
+    const targetFilePath = path.join(baseDir, targetFileName);
+
+    const result = recast.print(transformResult.ast, {
+      sourceMapName: `${targetFileName}.map`,
+    });
+
+    if (targetFileName !== sourceFileName) {
+      // we are renaming the files - as we won't be overriding in place,
+      // delete the old files
+      await rm(sourcePath);
+      await rm(sourceMapPath);
+    }
+
+    // load the resulting "targetFileName" and the intermediate file into sorcery
+    // it will read the original .ts source from the file system
+    const virtualFiles = {
+      content: {
+        [intermediateNamePath]: source,
+        [targetFilePath]: result.code,
+      },
+      sourcemaps: {
+        [intermediateNamePath]: sourceMapContents,
+        [targetFilePath]: result.map,
+      },
+    };
+    // we use sorcery to combine all these source maps back into one
+    const chain = await sorcery.load(targetFilePath, virtualFiles);
+    // save everything back to the file system, applying the source map changes of the transformation
+    await chain.write();
+  }
 }

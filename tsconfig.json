@@ -10,15 +10,23 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
-    "target": "es5",
-    "module": "es2015",
+    "target": "ESNext",
+    "module": "ESNext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable"],
+    "lib": [
+      "es2015",
+      "esnext.asynciterable"
+    ],
     "jsx": "react",
     "strict": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/__tests__/**/*"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "src/**/__tests__/**/*"
+  ]
 }

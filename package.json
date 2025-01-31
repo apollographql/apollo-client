@@ -186,6 +186,7 @@
     "rollup-plugin-terser": "7.0.2",
     "rxjs": "7.8.1",
     "size-limit": "11.1.4",
+    "sorcery": "^1.0.0",
     "subscriptions-transport-ws": "0.11.0",
     "terser": "5.31.3",
     "ts-api-utils": "2.0.0",

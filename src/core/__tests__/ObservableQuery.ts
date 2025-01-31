@@ -1248,17 +1248,15 @@ describe("ObservableQuery", () => {
 
     it("calling refetch with different variables before the query itself resolved will only yield the result for the new variables", async () => {
       const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
-      const queryManager = new QueryManager(
-        getDefaultOptionsForQueryManagerTests({
-          cache: new InMemoryCache(),
-          link: new ApolloLink((operation, forward) => {
-            return new Observable((observer) => {
-              observers.push(observer);
-            });
-          }),
-        })
-      );
-      const observableQuery = queryManager.watchQuery({
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink((operation, forward) => {
+          return new Observable((observer) => {
+            observers.push(observer);
+          });
+        }),
+      });
+      const observableQuery = client.watchQuery({
         query,
         variables: { id: 1 },
       });
@@ -1272,12 +1270,10 @@ describe("ObservableQuery", () => {
       observers[1].next({ data: dataTwo });
       observers[1].complete();
 
-      const result = await stream.takeNext();
-
-      expect(result).toEqual({
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        data: dataTwo,
       });
 
       await expect(stream).not.toEmitAnything();

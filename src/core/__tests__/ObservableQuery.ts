@@ -1151,31 +1151,34 @@ describe("ObservableQuery", () => {
     });
 
     it("handles variables changing while a query is in-flight", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+            delay: 20,
+          },
+          {
+            request: { query, variables: differentVariables },
+            result: { data: dataTwo },
+            delay: 20,
+          },
+        ]),
+      });
       // The expected behavior is that the original variables are forgotten
       // and the query stays in loading state until the result for the new variables
       // has returned.
-      const observable = mockWatchQuery(
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-          delay: 20,
-        },
-        {
-          request: { query, variables: differentVariables },
-          result: { data: dataTwo },
-          delay: 20,
-        }
-      );
-
+      const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
       await observable.setVariables(differentVariables);
 
-      const result = await stream.takeNext();
-
-      expect(result.networkStatus).toBe(NetworkStatus.ready);
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual(dataTwo);
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

@@ -1430,42 +1430,42 @@ describe("ObservableQuery", () => {
 
       const stream = new ObservableStream(observable);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result.data).toEqual(data);
-        expect(result.loading).toBe(false);
-        await observable.refetch(variables2);
-      }
+      await observable.refetch(variables2);
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data: {},
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        partial: true,
+      });
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data: data2,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-      {
-        const result = await stream.takeNext();
+      await observable.refetch(variables1);
 
-        expect(result.data).toEqual(data2);
-        expect(result.loading).toBe(false);
-        await observable.refetch(variables1);
-      }
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+      });
 
-      {
-        const result = await stream.takeNext();
+      await expect(stream).toEmitApolloQueryResult({
+        data,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
-        expect(result.loading).toBe(true);
-        expect(result.networkStatus).toBe(NetworkStatus.setVariables);
-      }
-
-      {
-        const result = await stream.takeNext();
-
-        expect(result.data).toEqual(data);
-        expect(result.loading).toBe(false);
-      }
+      await expect(stream).not.toEmitAnything();
     });
 
     it("resets fetchPolicy when variables change when using nextFetchPolicy", async () => {

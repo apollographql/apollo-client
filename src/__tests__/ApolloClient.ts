@@ -2542,6 +2542,7 @@ describe("ApolloClient", () => {
         expect(result).toStrictEqual({
           data: {},
           complete: false,
+          missing: "Unable to identify object",
         });
       }
     });

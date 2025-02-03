@@ -69,8 +69,9 @@ if (wrongSteps.length) {
 console.log("Running build steps: %s", runSteps.join(", "));
 
 for (const buildStepOptions of [
-  // { type: "esm", baseDir: "dist/esm" },
-  { type: "cjs", baseDir: "dist/cjs" },
+  // this order is important so that globs on the esm build don't accidentally match the cjs build
+  { type: "esm", baseDir: "dist" },
+  { type: "cjs", baseDir: "dist/__cjs" },
 ])
   for (const step of runSteps) {
     console.log("--- Step %s: running ---", step);

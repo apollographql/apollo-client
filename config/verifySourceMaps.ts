@@ -6,7 +6,9 @@ import * as assert from "node:assert";
 import { join } from "node:path";
 
 export const verifySourceMaps: BuildStep = async (options) => {
-  for await (const file of glob(`${options.baseDir}/**/*.{js,ts,cjs,cts}`, {
+  // this only checks source maps for JavaScript files, not TypeScript declarations
+  // as we won't ship declaration maps in the end
+  for await (const file of glob(`${options.baseDir}/**/*.{js,cjs}`, {
     withFileTypes: true,
   })) {
     const filePath = join(file.parentPath, file.name);
@@ -16,21 +18,37 @@ export const verifySourceMaps: BuildStep = async (options) => {
       continue;
     }
 
-    const rawSourceMap = await readFile(filePath + ".map", "utf-8");
+    const sourceMapPath = filePath + ".map";
+    const rawSourceMap = await readFile(sourceMapPath, "utf-8");
     const sourceMap = JSON.parse(rawSourceMap);
     const parsed = new SourceMapConsumer(sourceMap);
 
     const originalFileName = sourceMap.sources[0];
     const originalFilePath = join(file.parentPath, originalFileName);
     const originalFileContents = await readFile(originalFilePath, "utf-8");
-    assert.equal(
-      parsed.sourceContentFor(originalFileName, true),
-      originalFileContents
+    const parsedContents = parsed.sourceContentFor(originalFileName, true);
+
+    assert.notEqual(
+      parsedContents,
+      null,
+      `No original contents for ${originalFileName} found in ${sourceMapPath}`
     );
 
+    assert.equal(
+      parsed.sourceContentFor(originalFileName, true),
+      originalFileContents,
+      `Original file contents in source map for ${originalFileName} do not match actual file contents`
+    );
+
+    // sourcemap-validator really just does a basic sanity check,
+    // it doesn't actually compare the original file contents
+    // or anything like that - but it's the best tool I could find.
     validate(
       await readFile(filePath, { encoding: "utf-8" }),
-      await readFile(filePath + ".map", { encoding: "utf-8" })
+      await readFile(filePath + ".map", { encoding: "utf-8" }),
+      {
+        [originalFileName]: originalFileContents,
+      }
     );
   }
 };

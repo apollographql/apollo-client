@@ -8,6 +8,7 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "sourceMap": true,
+    "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
     "target": "ESNext",

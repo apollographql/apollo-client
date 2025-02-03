@@ -1,5 +1,26 @@
 # @apollo/client
 
+## 3.12.9
+
+### Patch Changes
+
+- [#12321](https://github.com/apollographql/apollo-client/pull/12321) [`daa4f33`](https://github.com/apollographql/apollo-client/commit/daa4f3303cfb81e8dca66c21ce3f3dc24946cafb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `extensions` in `protocolErrors` for `ApolloError` and the `onError` link. According to the [multipart HTTP subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol), fatal tranport errors follow the [GraphQL error format](https://spec.graphql.org/draft/#sec-Errors.Error-Result-Format) which require `extensions` to be a map as its value instead of an array.
+
+- [#12318](https://github.com/apollographql/apollo-client/pull/12318) [`b17968b`](https://github.com/apollographql/apollo-client/commit/b17968b61f0e35b1ba20d081dacee66af8225491) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `RetryLink` to retry an operation when fatal [transport-level errors](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) are emitted from multipart subscriptions.
+
+  ```js
+  const retryLink = new RetryLink({
+    attempts: (count, operation, error) => {
+      if (error instanceof ApolloError) {
+        // errors available on the `protocolErrors` field in `ApolloError`
+        console.log(error.protocolErrors);
+      }
+
+      return true;
+    },
+  });
+  ```
+
 ## 3.12.8
 
 ### Patch Changes

@@ -27,6 +27,7 @@ const packageJson: Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {
   author: string;
 } = pkg;
 
+prepareDist.runOnce = "trailing" as const;
 export function prepareDist() {
   // Enable default interpretation of .js files as ECMAScript modules. We don't
   // put this in the source ../package.json file because it interferes with tools

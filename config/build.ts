@@ -6,7 +6,7 @@ import { compileTs } from "./compileTs.ts";
 // import { inlineInheritDoc } from "./inlineInheritDoc.ts";
 // import { updateVersion, verifyVersion } from "./version.ts";
 import { processInvariants } from "./processInvariants.ts";
-// import { prepareDist } from "./prepareDist.ts";
+import { prepareDist } from "./prepareDist.ts";
 // import { postprocessDist } from "./postprocessDist.ts";
 import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
@@ -17,7 +17,11 @@ export interface BuildStepOptions {
   jsExt: "js" | "cjs";
   tsExt: "ts" | "cts";
 }
-export type BuildStep = (options: BuildStepOptions) => void | Promise<void>;
+export type BuildStep = {
+  (options: BuildStepOptions): void | Promise<void>;
+  // some build steps only need to run once as they don't need to be run for each build type
+  runOnce?: "leading" | "trailing";
+};
 type BuildSteps = Record<string, BuildStep>;
 
 $.cwd = join(import.meta.dirname, "..");
@@ -28,10 +32,10 @@ const buildSteps = {
   // updateVersion,
   // inlineInheritDoc,
   processInvariants,
-  // prepareDist,
   // postprocessDist,
   // verifyVersion,
   verifySourceMaps,
+  prepareDist,
 } satisfies BuildSteps;
 const additionalSteps = {
   prepareChangesetsRelease,
@@ -68,13 +72,22 @@ if (wrongSteps.length) {
 
 console.log("Running build steps: %s", runSteps.join(", "));
 
-for (const buildStepOptions of [
+const buildStepOptions = [
   // this order is important so that globs on the esm build don't accidentally match the cjs build
   { type: "esm", baseDir: "dist", jsExt: "js", tsExt: "ts" },
   { type: "cjs", baseDir: "dist/__cjs", jsExt: "cjs", tsExt: "cts" },
-] satisfies BuildStepOptions[])
+] satisfies BuildStepOptions[];
+for (const options of buildStepOptions)
   for (const step of runSteps) {
+    const buildStep: BuildStep = allSteps[step];
+    if (
+      (buildStep.runOnce === "leading" && options !== buildStepOptions.at(0)) ||
+      (buildStep.runOnce === "trailing" && options !== buildStepOptions.at(-1))
+    ) {
+      continue;
+    }
+
     console.log("--- Step %s: running ---", step);
-    await allSteps[step](buildStepOptions);
+    await buildStep(options);
     console.log("--- Step %s: done ---", step);
   }

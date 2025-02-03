@@ -1,6 +1,6 @@
 {
   "mode": "pre",
-  "tag": "alpha",
+  "tag": "rc",
   "initialVersions": {
     "@apollo/client": "3.12.2"
   },

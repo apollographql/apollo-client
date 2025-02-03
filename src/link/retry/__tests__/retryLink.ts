@@ -5,7 +5,11 @@ import { execute } from "../../core/execute";
 import { Observable } from "../../../utilities/observables/Observable";
 import { fromError } from "../../utils/fromError";
 import { RetryLink } from "../retryLink";
-import { ObservableStream } from "../../../testing/internal";
+import {
+  mockMultipartSubscriptionStream,
+  ObservableStream,
+} from "../../../testing/internal";
+import { ApolloError } from "../../../core";
 
 const query = gql`
   {
@@ -209,5 +213,65 @@ describe("RetryLink", () => {
       [2, operation, standardError],
       [3, operation, standardError],
     ]);
+  });
+
+  it("handles protocol errors from multipart subscriptions", async () => {
+    const subscription = gql`
+      subscription MySubscription {
+        aNewDieWasCreated {
+          die {
+            roll
+            sides
+            color
+          }
+        }
+      }
+    `;
+
+    const attemptStub = jest.fn();
+    attemptStub.mockReturnValueOnce(true);
+
+    const retryLink = new RetryLink({
+      delay: { initial: 1 },
+      attempts: attemptStub,
+    });
+
+    const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
+      mockMultipartSubscriptionStream();
+    const link = ApolloLink.from([retryLink, httpLink]);
+    const stream = new ObservableStream(execute(link, { query: subscription }));
+
+    enqueueProtocolErrors([
+      { message: "Error field", extensions: { code: "INTERNAL_SERVER_ERROR" } },
+    ]);
+
+    enqueuePayloadResult({
+      data: {
+        aNewDieWasCreated: { die: { color: "blue", roll: 2, sides: 6 } },
+      },
+    });
+
+    await expect(stream).toEmitValue({
+      data: {
+        aNewDieWasCreated: { die: { color: "blue", roll: 2, sides: 6 } },
+      },
+    });
+
+    expect(attemptStub).toHaveBeenCalledTimes(1);
+    expect(attemptStub).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        operationName: "MySubscription",
+        query: subscription,
+      }),
+      new ApolloError({
+        protocolErrors: [
+          {
+            message: "Error field",
+            extensions: { code: "INTERNAL_SERVER_ERROR" },
+          },
+        ],
+      })
+    );
   });
 });

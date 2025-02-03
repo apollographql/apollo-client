@@ -34,7 +34,8 @@ export async function processInvariants(options: BuildStepOptions) {
   ];
 
   await applyRecast({
-    glob: `${options.baseDir}/**/*.${options.jsExt}`,
+    cwd: options.baseDir,
+    glob: `**/*.${options.jsExt}`,
     transformStep: transform,
   });
 
@@ -131,7 +132,13 @@ export async function processInvariants(options: BuildStepOptions) {
     }
   }
 
-  function transform(ast: recast.types.ASTNode, relativeFilePath: string) {
+  function transform({
+    ast,
+    relativeSourcePath,
+  }: {
+    ast: recast.types.ASTNode;
+    relativeSourcePath: string;
+  }) {
     recast.visit(ast, {
       visitCallExpression(path) {
         this.traverse(path);
@@ -142,7 +149,7 @@ export async function processInvariants(options: BuildStepOptions) {
           newArgs.splice(
             1,
             1,
-            getErrorCode(relativeFilePath, node, "errorCodes")
+            getErrorCode(relativeSourcePath, node, "errorCodes")
           );
 
           return b.callExpression.from({
@@ -156,7 +163,7 @@ export async function processInvariants(options: BuildStepOptions) {
           newArgs.splice(
             0,
             1,
-            getErrorCode(relativeFilePath, node, "errorCodes")
+            getErrorCode(relativeSourcePath, node, "errorCodes")
           );
 
           return b.callExpression.from({
@@ -180,7 +187,7 @@ export async function processInvariants(options: BuildStepOptions) {
               0,
               1,
               getErrorCode(
-                relativeFilePath,
+                relativeSourcePath,
                 node,
                 ("dev" + capitalize(prop.name)) as ExportName
               )
@@ -201,9 +208,9 @@ export async function processInvariants(options: BuildStepOptions) {
 
     if (
       ![
-        osPathJoin("utilities", "globals", "index.js"),
-        osPathJoin("config", "jest", "setup.js"),
-      ].includes(relativeFilePath)
+        osPathJoin("utilities", "globals", `index.${options.jsExt}`),
+        osPathJoin("config", "jest", `setup.js`),
+      ].includes(relativeSourcePath)
     )
       recast.visit(ast, {
         visitIdentifier(path) {

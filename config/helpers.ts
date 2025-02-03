@@ -9,6 +9,7 @@ import * as assert from "node:assert";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
 // eslint-disable-next-line import/no-unresolved
 import * as sorcery from "sorcery";
+import { relative } from "node:path";
 
 export const distDir = path.resolve(import.meta.dirname, "..", "dist");
 
@@ -61,15 +62,18 @@ export function reprint(ast: ReturnType<typeof reparse>) {
 
 export async function applyRecast({
   glob,
+  cwd,
   transformStep,
 }: {
   glob: string;
-  transformStep: (
-    ast: recast.types.ASTNode,
-    sourceName: string
-  ) => { ast: recast.types.ASTNode; targetFileName?: string };
+  cwd: string;
+  transformStep: (options: {
+    ast: recast.types.ASTNode;
+    sourceName: string;
+    relativeSourcePath: string;
+  }) => { ast: recast.types.ASTNode; targetFileName?: string };
 }) {
-  for await (let sourceFile of nodeGlob(glob, { withFileTypes: true })) {
+  for await (let sourceFile of nodeGlob(glob, { withFileTypes: true, cwd })) {
     const baseDir = sourceFile.parentPath;
     const sourceFileName = sourceFile.name;
     const sourcePath = path.join(baseDir, sourceFile.name);
@@ -96,7 +100,11 @@ export async function applyRecast({
       parser: tsParser,
       sourceFileName: intermediateName,
     });
-    const transformResult = transformStep(ast, sourceFileName);
+    const transformResult = transformStep({
+      ast,
+      sourceName: sourceFileName,
+      relativeSourcePath: relative(cwd, sourcePath),
+    });
     const targetFileName = transformResult.targetFileName || sourceFileName;
     const targetFilePath = path.join(baseDir, targetFileName);
 

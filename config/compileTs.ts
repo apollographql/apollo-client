@@ -9,8 +9,9 @@ export const compileTs: BuildStep = async (options) => {
   } else {
     await $`npx tsc --outDir ${options.baseDir} --module commonjs`;
     await applyRecast({
-      glob: `${options.baseDir}/**/*.{js,d.ts}`,
-      transformStep(ast, source) {
+      glob: `**/*.{js,d.ts}`,
+      cwd: options.baseDir,
+      transformStep({ ast, sourceName }) {
         return {
           ast: visit(ast, {
             visitCallExpression(path) {
@@ -55,7 +56,7 @@ export const compileTs: BuildStep = async (options) => {
               this.traverse(path);
             },
           }),
-          targetFileName: source
+          targetFileName: sourceName
             .replace(/\.js$/, ".cjs")
             .replace(/\.d\.ts$/, ".d.cts"),
         };

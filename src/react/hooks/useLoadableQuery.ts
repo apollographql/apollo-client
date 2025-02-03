@@ -6,7 +6,10 @@ import type {
   TypedDocumentNode,
   WatchQueryOptions,
 } from "../../core/index.js";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
+import type {
+  SubscribeToMoreFunction,
+  SubscribeToMoreOptions,
+} from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
   assertWrappedQueryRef,
@@ -266,7 +269,10 @@ export function useLoadableQuery<
           "The query has not been loaded. Please load the query."
         );
 
-        return internalQueryRef.observable.subscribeToMore(options as any);
+        return internalQueryRef.observable.subscribeToMore(
+          // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
+          options as any as SubscribeToMoreOptions<TData, OperationVariables>
+        );
       },
       [internalQueryRef]
     );

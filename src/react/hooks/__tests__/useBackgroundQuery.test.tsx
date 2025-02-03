@@ -8386,10 +8386,7 @@ describe.skip("type tests", () => {
           queryData,
           { subscriptionData, subscriptionVariables, variables }
         ) => {
-          expectTypeOf(queryData).toEqualTypeOf<
-            | (Partial<UnmaskedVariablesCaseData> & { complete?: undefined })
-            | (UnmaskedVariablesCaseData & { complete: Symbol })
-          >();
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           expectTypeOf(
@@ -8432,10 +8429,7 @@ describe.skip("type tests", () => {
           queryData,
           { subscriptionData, subscriptionVariables, variables }
         ): UnmaskedVariablesCaseData => {
-          expectTypeOf(queryData).toEqualTypeOf<
-            | (Partial<UnmaskedVariablesCaseData> & { complete?: undefined })
-            | (UnmaskedVariablesCaseData & { complete: Symbol })
-          >();
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
 
           expectTypeOf(
@@ -8449,13 +8443,6 @@ describe.skip("type tests", () => {
             VariablesCaseVariables | undefined
           >();
 
-          if (queryData.complete) {
-            expectTypeOf(queryData).toEqualTypeOf<
-              UnmaskedVariablesCaseData & { complete: Symbol }
-            >();
-            return queryData;
-          }
-          // @ts-expect-error -- The incomplete data cannot be returned
           return queryData;
         },
       });

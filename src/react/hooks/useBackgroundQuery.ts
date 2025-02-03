@@ -185,14 +185,12 @@ export function useBackgroundQuery<
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
 ] {
-  const hookResult = wrapHook(
+  return wrapHook(
     "useBackgroundQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useBackgroundQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
-
-  return hookResult;
 }
 
 function useBackgroundQuery_<
@@ -292,6 +290,7 @@ function useBackgroundQuery_<
     {
       fetchMore,
       refetch,
+      // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
       subscribeToMore: queryRef.observable
         .subscribeToMore as any as SubscribeToMoreFunction<TData, TVariables>,
     },

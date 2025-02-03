@@ -3352,7 +3352,7 @@ describe.skip("Type Tests", () => {
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
       updateQuery(queryData, { subscriptionData }) {
-        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery | undefined>();
+        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
         expectTypeOf(
           subscriptionData.data
         ).toEqualTypeOf<UnmaskedSubscription>();
@@ -3362,7 +3362,7 @@ describe.skip("Type Tests", () => {
     });
 
     updateQuery((previousData) => {
-      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery | undefined>();
+      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
 
       return {} as UnmaskedQuery;
     });
@@ -3451,7 +3451,7 @@ describe.skip("Type Tests", () => {
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
       updateQuery(queryData, { subscriptionData }) {
-        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery | undefined>();
+        expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
         expectTypeOf(
           subscriptionData.data
         ).toEqualTypeOf<UnmaskedSubscription>();
@@ -3461,7 +3461,7 @@ describe.skip("Type Tests", () => {
     });
 
     updateQuery((previousData) => {
-      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery | undefined>();
+      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
 
       return {} as UnmaskedQuery;
     });

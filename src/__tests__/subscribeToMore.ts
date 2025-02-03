@@ -241,12 +241,6 @@ describe("subscribeToMore", () => {
         }
       `,
       updateQuery: (prev, { subscriptionData }) => {
-        expect(prev.complete).toBeTruthy();
-        expect(typeof prev.complete).toBe("symbol");
-        // Type guard
-        if (!prev.complete) {
-          return undefined;
-        }
         expect(prev.entry).not.toContainEqual(nextMutation);
         return {
           entry: [...prev.entry, { value: subscriptionData.data.name }],

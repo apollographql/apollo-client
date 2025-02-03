@@ -146,14 +146,12 @@ export function useQuery<
     NoInfer<TVariables>
   > = Object.create(null)
 ): QueryResult<TData, TVariables> {
-  const hookResult = wrapHook(
+  return wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler
     useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
-
-  return hookResult;
 }
 
 function useQuery_<

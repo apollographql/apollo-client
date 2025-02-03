@@ -1892,12 +1892,6 @@ describe("client.watchQuery", () => {
 
     const updateQuery: Parameters<typeof observable.updateQuery>[0] = jest.fn(
       (previousResult) => {
-        expect(previousResult.complete).toBeTruthy();
-        expect(typeof previousResult.complete).toBe("symbol");
-        // Type guard
-        if (!previousResult.complete) {
-          return undefined;
-        }
         return { user: { ...previousResult.user, name: "User (updated)" } };
       }
     );

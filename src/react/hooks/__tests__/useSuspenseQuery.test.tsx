@@ -12904,10 +12904,7 @@ describe("useSuspenseQuery", () => {
         subscribeToMore({
           document: subscription,
           updateQuery: (queryData, { subscriptionData }) => {
-            expectTypeOf(queryData).toEqualTypeOf<
-              | (Partial<UnmaskedVariablesCaseData> & { complete?: undefined })
-              | (UnmaskedVariablesCaseData & { complete: Symbol })
-            >();
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
             expectTypeOf(
               queryData
             ).not.toEqualTypeOf<MaskedVariablesCaseData>();
@@ -12943,10 +12940,7 @@ describe("useSuspenseQuery", () => {
         subscribeToMore({
           document: subscription,
           updateQuery: (queryData, { subscriptionData }) => {
-            expectTypeOf(queryData).toEqualTypeOf<
-              | (Partial<UnmaskedVariablesCaseData> & { complete?: undefined })
-              | (UnmaskedVariablesCaseData & { complete: Symbol })
-            >();
+            expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
             expectTypeOf(
               queryData
             ).not.toEqualTypeOf<MaskedVariablesCaseData>();

@@ -118,6 +118,7 @@ function useQueryRefHandlers_<
   return {
     refetch,
     fetchMore,
+    // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
     subscribeToMore: internalQueryRef.observable
       .subscribeToMore as any as SubscribeToMoreFunction<TData, TVariables>,
   };

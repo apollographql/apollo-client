@@ -2,10 +2,7 @@
 
 export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
 export { ApolloClient, mergeOptions } from "./ApolloClient.js";
-export type {
-  FetchMoreOptions,
-  UpdateQueryOptions,
-} from "./ObservableQuery.js";
+export type { FetchMoreOptions } from "./ObservableQuery.js";
 export { ObservableQuery } from "./ObservableQuery.js";
 export type {
   QueryOptions,
@@ -21,7 +18,9 @@ export type {
   SubscribeToMoreOptions,
   SubscribeToMoreFunction,
   UpdateQueryFn,
+  UpdateQueryFnOptions,
   UpdateQueryMapFn,
+  UpdateQueryOptions,
 } from "./watchQueryOptions.js";
 export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
 export type * from "./types.js";

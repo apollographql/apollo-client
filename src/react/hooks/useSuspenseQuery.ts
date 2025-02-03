@@ -273,6 +273,7 @@ function useSuspenseQuery_<
     [queryRef]
   );
 
+  // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
   const subscribeToMore = queryRef.observable
     .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 

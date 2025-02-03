@@ -32,6 +32,7 @@ import type {
   NextFetchPolicyContext,
   WatchQueryFetchPolicy,
   UpdateQueryMapFn,
+  UpdateQueryFnOptions,
 } from "./watchQueryOptions.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
@@ -53,10 +54,6 @@ export interface FetchMoreOptions<
       variables?: TVariables;
     }
   ) => TData;
-}
-
-export interface UpdateQueryOptions<TVariables> {
-  variables?: TVariables;
 }
 
 interface Last<TData, TVariables> {
@@ -623,7 +620,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       TSubscriptionData,
       TVariables
     >
-  ) {
+  ): () => void {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
@@ -634,12 +631,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
-            this.updateQuery((previous, { variables }) =>
-              updateQuery(previous, {
-                subscriptionData,
-                subscriptionVariables: options.variables,
-                variables,
-              })
+            this.updateQuery(
+              (previous, { variables, complete }) =>
+                updateQuery(previous, {
+                  subscriptionData,
+                  subscriptionVariables: options.variables,
+                  variables,
+                  complete,
+                }),
+              options.updateQueryOptions
             );
           }
         },
@@ -724,7 +724,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    *
    * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
    */
-  public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
+  public updateQuery(
+    mapFn: UpdateQueryMapFn<TData, TVariables>,
+    options?: UpdateQueryFnOptions | undefined
+  ): void {
+    const updateQueryOnPartialPreviousResult =
+      options?.updateQueryOnPartialPreviousResult ?? true;
     const { queryManager } = this;
     const { result, complete } = queryManager.cache.diff<Unmasked<TData>>({
       query: this.options.query,
@@ -733,23 +738,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       optimistic: false,
     });
 
-    let maybeCompletedResult = result;
-    const completeSymbol = Symbol("complete");
-    if (complete && result) {
-      maybeCompletedResult = { ...result };
-      Object.defineProperty(maybeCompletedResult, "complete", {
-        value: completeSymbol,
-        writable: false,
-        enumerable: false,
-        configurable: false,
-      });
+    if ((!complete || !result) && !updateQueryOnPartialPreviousResult) {
+      return;
     }
 
-    const newResult = mapFn(maybeCompletedResult as any, {
+    const newResult = mapFn(result!, {
       variables: (this as any).variables,
+      complete: !!complete,
     });
 
-    if (newResult && newResult !== maybeCompletedResult) {
+    if (newResult) {
       queryManager.cache.writeQuery({
         query: this.options.query,
         data: newResult,

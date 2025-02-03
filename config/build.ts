@@ -9,6 +9,7 @@ import { compileTs } from "./compileTs.ts";
 // import { rewriteSourceMaps } from "./rewriteSourceMaps.ts";
 // import { prepareDist } from "./prepareDist.ts";
 // import { postprocessDist } from "./postprocessDist.ts";
+import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 
 export interface BuildStepOptions {
@@ -30,6 +31,7 @@ const buildSteps = {
   // prepareDist,
   // postprocessDist,
   // verifyVersion,
+  verifySourceMaps,
 } satisfies BuildSteps;
 const additionalSteps = {
   prepareChangesetsRelease,
@@ -67,7 +69,7 @@ if (wrongSteps.length) {
 console.log("Running build steps: %s", runSteps.join(", "));
 
 for (const buildStepOptions of [
-  { type: "esm", baseDir: "dist/esm" },
+  // { type: "esm", baseDir: "dist/esm" },
   { type: "cjs", baseDir: "dist/cjs" },
 ])
   for (const step of runSteps) {

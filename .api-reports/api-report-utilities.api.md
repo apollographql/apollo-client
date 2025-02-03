@@ -248,10 +248,7 @@ class ApolloError extends Error {
     // (undocumented)
     networkError: Error | ServerParseError | ServerError | null;
     // (undocumented)
-    protocolErrors: ReadonlyArray<{
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    }>;
+    protocolErrors: ReadonlyArray<GraphQLFormattedError>;
 }
 
 // @public (undocumented)
@@ -267,10 +264,7 @@ interface ApolloErrorOptions {
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
-    protocolErrors?: ReadonlyArray<{
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    }>;
+    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
 // @public (undocumented)

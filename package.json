@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.12.7",
+  "version": "3.12.9",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -108,6 +108,7 @@
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {
+    "@actions/github-script": "github:actions/github-script#v7.0.1",
     "@arethetypeswrong/cli": "0.15.3",
     "@ark/attest": "0.28.0",
     "@babel/parser": "7.25.0",
@@ -198,7 +199,6 @@
     "tsx": "4.19.2",
     "typedoc": "0.25.0",
     "typescript": "5.7.3",
-    "wait-for-observables": "1.0.3",
     "web-streams-polyfill": "4.0.0",
     "whatwg-fetch": "3.6.20"
   },

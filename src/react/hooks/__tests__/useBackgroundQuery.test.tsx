@@ -339,7 +339,7 @@ it("will resubscribe after disposed when mounting useReadQuery", async () => {
   }
 
   // Wait long enough for auto dispose to kick in
-  await wait(50);
+  await wait(80);
 
   expect(client.getObservableQueries().size).toBe(0);
   expect(client).not.toHaveSuspenseCacheEntryUsing(query);

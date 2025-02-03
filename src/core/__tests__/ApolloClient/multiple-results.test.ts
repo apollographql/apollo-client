@@ -1,16 +1,10 @@
-// externals
 import gql from "graphql-tag";
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
-
-// mocks
 import { MockSubscriptionLink, wait } from "../../../testing/core";
-
-// core
-import { QueryManager } from "../../QueryManager";
 import { GraphQLError } from "graphql";
-import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
 import { ObservableStream } from "../../../testing/internal";
 import { ApolloError } from "../../../errors";
+import { ApolloClient } from "../../ApolloClient";
 
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {
@@ -40,14 +34,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
     });
@@ -56,7 +48,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -64,7 +56,7 @@ describe("mutiple results", () => {
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -98,14 +90,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
       errorPolicy: "ignore",
@@ -115,7 +105,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -125,7 +115,7 @@ describe("mutiple results", () => {
       result: { errors: [new GraphQLError("defer failed")] },
     });
 
-    await expect(stream).toEmitValueStrict({
+    await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
       networkStatus: 7,
@@ -134,7 +124,7 @@ describe("mutiple results", () => {
     await wait(20);
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -168,14 +158,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
       errorPolicy: "ignore",
@@ -185,7 +173,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -199,7 +187,7 @@ describe("mutiple results", () => {
       },
     });
 
-    await expect(stream).toEmitValueStrict({
+    await expect(stream).toEmitApolloQueryResult({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -233,14 +221,12 @@ describe("mutiple results", () => {
       },
     };
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
       errorPolicy: "all",
@@ -250,7 +236,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -261,7 +247,7 @@ describe("mutiple results", () => {
       error: new Error("defer failed"),
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,
@@ -270,7 +256,7 @@ describe("mutiple results", () => {
 
     link.simulateResult({ result: { data: laterData } });
 
-    await expect(stream).toEmitValueStrict({
+    await expect(stream).toEmitApolloQueryResult({
       data: laterData,
       loading: false,
       networkStatus: 7,
@@ -297,14 +283,12 @@ describe("mutiple results", () => {
     };
 
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
       // errorPolicy: 'none', // this is the default
@@ -332,7 +316,7 @@ describe("mutiple results", () => {
     // fire off first result
     link.simulateResult({ result: { data: initialData } });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       loading: false,
       networkStatus: 7,

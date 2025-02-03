@@ -27,7 +27,6 @@ const buildSteps = {
   // updateVersion,
   // inlineInheritDoc,
   // processInvariants,
-  // rewriteSourceMaps,
   // prepareDist,
   // postprocessDist,
   // verifyVersion,

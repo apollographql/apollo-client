@@ -10,14 +10,23 @@ Use the `onError` link to perform custom logic when a [GraphQL or network error]
 ```js
 import { onError } from "@apollo/client/link/error";
 
-// Log any GraphQL errors or network error that occurred
-const errorLink = onError(({ graphQLErrors, networkError }) => {
+// Log any GraphQL errors, protocol errors, or network error that occurred
+const errorLink = onError(({ graphQLErrors, networkError, protocolErrors }) => {
   if (graphQLErrors)
     graphQLErrors.forEach(({ message, locations, path }) =>
       console.log(
         `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
       )
     );
+
+  if (protocolErrors) {
+    protocolErrors.forEach(({ message, extensions }) => {
+      console.log(
+        `[Protocol error]: Message: ${message}, Extensions: ${JSON.stringify(extensions)}`
+      );
+    });
+  }
+
   if (networkError) console.log(`[Network error]: ${networkError}`);
 });
 ```
@@ -96,6 +105,20 @@ An array of [GraphQL errors](../../data/error-handling/#graphql-errors) that occ
 <td>
 
 A network error that occurred while attempting to execute the operation, if any.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `protocolErrors`
+
+`ReadonlyArray<{ message: string; extensions?: GraphQLErrorExtensions[]; }>`
+</td>
+<td>
+
+Fatal transport-level errors from multipart subscriptions. See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
 
 </td>
 </tr>

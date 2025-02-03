@@ -4,6 +4,8 @@ import { expectTypeOf } from "expect-type";
 import type { DeepPartial } from "../../utilities/index.js";
 
 import { setup } from "@ark/attest";
+import type { ContainsFragmentsRefs } from "../internal/types.js";
+import type { TypedDocumentNode } from "../../index.js";
 
 setup({
   updateSnapshots: !process.env.CI,
@@ -246,7 +248,7 @@ test("unmasks DeepPartial types", (prefix) => {
 test("Unmasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, Unmasked<{}>>();
-  }).types([80, "instantiations"]);
+  }).types([111, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<Unmasked<{}>>().toEqualTypeOf<{}>();
@@ -254,7 +256,7 @@ test("Unmasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, Unmasked<Record<string, any>>>();
-  }).types([99, "instantiations"]);
+  }).types([115, "instantiations"]);
 
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<Unmasked<Record<string, any>>>().toEqualTypeOf<
@@ -282,7 +284,7 @@ test("Unmasked handles odd types", (prefix) => {
 test("MaybeMasked handles odd types", (prefix) => {
   bench(prefix + "empty type instantiations", () => {
     attest<{}, MaybeMasked<{}>>();
-  }).types([76, "instantiations"]);
+  }).types([41, "instantiations"]);
 
   bench(prefix + "empty type functionality", () => {
     expectTypeOf<MaybeMasked<{}>>().toEqualTypeOf<{}>();
@@ -290,7 +292,7 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "generic record type instantiations", () => {
     attest<Record<string, any>, MaybeMasked<Record<string, any>>>();
-  }).types([93, "instantiations"]);
+  }).types([46, "instantiations"]);
   bench(prefix + "generic record type functionality", () => {
     expectTypeOf<MaybeMasked<Record<string, any>>>().toEqualTypeOf<
       Record<string, any>
@@ -299,14 +301,14 @@ test("MaybeMasked handles odd types", (prefix) => {
 
   bench(prefix + "unknown instantiations", () => {
     attest<unknown, MaybeMasked<unknown>>();
-  }).types([54, "instantiations"]);
+  }).types([41, "instantiations"]);
   bench(prefix + "unknown functionality", () => {
     expectTypeOf<MaybeMasked<unknown>>().toBeUnknown();
   });
 
   bench(prefix + "any instantiations", () => {
     attest<any, MaybeMasked<any>>();
-  }).types([49, "instantiations"]);
+  }).types([43, "instantiations"]);
   bench(prefix + "any functionality", () => {
     expectTypeOf<MaybeMasked<any>>().toBeAny();
   });
@@ -319,13 +321,13 @@ test("distributed members on MaybeMasked", (prefix) => {
         [MaybeMasked<T> | null | undefined],
         [MaybeMasked<T | null | undefined>]
       >();
-    }).types([55, "instantiations"]);
+    }).types([49, "instantiations"]);
   })();
 
   (function unresolvedGenerics<T, V>() {
     bench(prefix + "two unresolved generics distribute", () => {
       attest<[MaybeMasked<T> | MaybeMasked<V>], [MaybeMasked<T | V>]>();
-    }).types([61, "instantiations"]);
+    }).types([50, "instantiations"]);
   })();
 });
 
@@ -473,7 +475,7 @@ test("does not detect `$fragmentRefs` if type contains `any`", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as MaybeMasked<Source>;
-  }).types([6, "instantiations"]);
+  }).types([1, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as MaybeMasked<Source>;
@@ -512,7 +514,7 @@ test("does not detect `$fragmentRefs` if type is a record type", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as MaybeMasked<Source>;
-  }).types([6, "instantiations"]);
+  }).types([1, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as MaybeMasked<Source>;
@@ -530,7 +532,7 @@ test("does not detect `$fragmentRefs` on types with index signatures", (prefix) 
 
   bench(prefix + "instantiations", () => {
     return {} as MaybeMasked<Source>;
-  }).types([6, "instantiations"]);
+  }).types([1, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as MaybeMasked<Source>;
@@ -563,10 +565,11 @@ test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
 
   bench(prefix + "instantiations", () => {
     return {} as MaybeMasked<Source>;
-  }).types([6, "instantiations"]);
+  }).types([1, "instantiations"]);
 
   bench(prefix + "functionality", () => {
-    const x = {} as MaybeMasked<Source>;
+    const x = {} as Unmasked<Source>;
+    const y = {} as ContainsFragmentsRefs<Source>;
 
     expectTypeOf(x).branded.toEqualTypeOf<{
       __typename: "Foo";
@@ -575,6 +578,7 @@ test("detects `$fragmentRefs` on types with index signatures", (prefix) => {
       foo: string;
       structuredMetadata: StructuredMetadata;
     }>();
+    expectTypeOf(y).toEqualTypeOf<true>();
   });
 });
 
@@ -584,11 +588,75 @@ test("recursive types: no error 'Type instantiation is excessively deep and poss
 
   bench(prefix + "instantiations", () => {
     return {} as MaybeMasked<Source>;
-  }).types([6, "instantiations"]);
+  }).types([1, "instantiations"]);
 
   bench(prefix + "functionality", () => {
     const x = {} as MaybeMasked<Source>;
 
     expectTypeOf(x).branded.toEqualTypeOf<Source>();
+  });
+});
+
+test("MaybeMasked can be called with a generic if `mode` is not set to `unmask`", (prefix) => {
+  function withGenericResult<T extends { [key: string]: string }>(
+    arg: TypedDocumentNode<T, {}>
+  ) {
+    bench(prefix + "Result generic - instantiations", () => {
+      const maybeMasked: MaybeMasked<typeof arg> = arg;
+      return maybeMasked;
+    }).types([1, "instantiations"]);
+
+    bench(prefix + "Result generic - functionality", () => {
+      const maybeMasked: MaybeMasked<typeof arg> = arg;
+      expectTypeOf(maybeMasked).toEqualTypeOf(arg);
+    });
+  }
+  function withGenericDocument<T extends TypedDocumentNode>(arg: T) {
+    bench(prefix + "Result generic - instantiations", () => {
+      const maybeMasked: MaybeMasked<T> = arg;
+      return maybeMasked;
+    }).types([1, "instantiations"]);
+
+    bench(prefix + "Result generic - functionality", () => {
+      const maybeMasked: MaybeMasked<T> = arg;
+      // cannot use unresolved generic with `expectTypeOf` here so we just try an assignment the other way round
+      const test: T = maybeMasked;
+      return test;
+    });
+  }
+  withGenericResult({} as any);
+  withGenericDocument({} as any);
+});
+
+test("Unmasked handles branded primitive types", (prefix) => {
+  type Branded<T, Name extends string> = T & { __branded?: Name };
+  type UUID = Branded<string, "UUID">;
+  type Source = {
+    __typename: "Foo";
+    id: UUID;
+    name: string;
+  } & { " $fragmentName"?: "UserFieldsFragment" } & {
+    " $fragmentRefs"?: {
+      FooFragment: FooFragment;
+    };
+  };
+  type FooFragment = {
+    __typename: "Foo";
+    age: number;
+  } & { " $fragmentName"?: "UserFieldsFragment" };
+
+  bench(prefix + "instantiations", () => {
+    return {} as Unmasked<Source>;
+  }).types([5, "instantiations"]);
+
+  bench(prefix + "functionality", () => {
+    const x = {} as Unmasked<Source>;
+
+    expectTypeOf(x).branded.toEqualTypeOf<{
+      __typename: "Foo";
+      id: UUID;
+      name: string;
+      age: number;
+    }>();
   });
 });

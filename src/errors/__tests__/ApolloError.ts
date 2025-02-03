@@ -9,11 +9,9 @@ describe("ApolloError", () => {
     const protocolErrors = [
       {
         message: "cannot read message from websocket",
-        extensions: [
-          {
-            code: "WEBSOCKET_MESSAGE_ERROR",
-          },
-        ],
+        extensions: {
+          code: "WEBSOCKET_MESSAGE_ERROR",
+        },
       },
     ];
     const networkError = new Error("Network error");
@@ -80,11 +78,9 @@ describe("ApolloError", () => {
     const protocolErrors = [
       {
         message: "cannot read message from websocket",
-        extensions: [
-          {
-            code: "WEBSOCKET_MESSAGE_ERROR",
-          },
-        ],
+        extensions: {
+          code: "WEBSOCKET_MESSAGE_ERROR",
+        },
       },
     ];
     const apolloError = new ApolloError({

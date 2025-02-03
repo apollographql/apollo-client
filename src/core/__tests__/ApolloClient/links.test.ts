@@ -1,24 +1,17 @@
-// externals
 import gql from "graphql-tag";
 import { print } from "graphql";
-
 import {
   Observable,
   ObservableSubscription,
 } from "../../../utilities/observables/Observable";
 import { ApolloLink } from "../../../link/core";
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
-
-// mocks
 import { MockSubscriptionLink } from "../../../testing/core";
-
-// core
-import { QueryManager } from "../../QueryManager";
-import { NextLink, Operation, Reference } from "../../../core";
-import { getDefaultOptionsForQueryManagerTests } from "../../../testing/core/mocking/mockQueryManager";
+import { ApolloClient, NextLink, Operation, Reference } from "../../../core";
 
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {
+    expect.assertions(3);
     const query = gql`
       query CachedLuke {
         people_one(id: 1) {
@@ -55,14 +48,12 @@ describe("Link interactions", () => {
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
     });
@@ -101,14 +92,12 @@ describe("Link interactions", () => {
     };
 
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
     });
@@ -175,14 +164,12 @@ describe("Link interactions", () => {
     };
 
     const link = new MockSubscriptionLink();
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    const observable = queryManager.watchQuery<any>({
+    const observable = client.watchQuery({
       query,
       variables: {},
     });
@@ -248,14 +235,12 @@ describe("Link interactions", () => {
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    void queryManager.mutate({ mutation });
+    void client.mutate({ mutation });
   });
 
   it("includes passed context in the context for mutations", (done) => {
@@ -279,14 +264,12 @@ describe("Link interactions", () => {
 
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        cache: new InMemoryCache({ addTypename: false }),
-        link,
-      })
-    );
+    const client = new ApolloClient({
+      cache: new InMemoryCache({ addTypename: false }),
+      link,
+    });
 
-    void queryManager.mutate({ mutation, context: { planet: "Tatooine" } });
+    void client.mutate({ mutation, context: { planet: "Tatooine" } });
   });
 
   it("includes getCacheKey function on the context for cache resolvers", async () => {
@@ -321,46 +304,41 @@ describe("Link interactions", () => {
       return Observable.of({ data: bookData });
     });
 
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({
-          typePolicies: {
-            Query: {
-              fields: {
-                book(_, { args, toReference, readField }) {
-                  if (!args) {
-                    throw new Error("arg must never be null");
-                  }
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({
+        typePolicies: {
+          Query: {
+            fields: {
+              book(_, { args, toReference, readField }) {
+                if (!args) {
+                  throw new Error("arg must never be null");
+                }
 
-                  const ref = toReference({ __typename: "Book", id: args.id });
-                  if (!ref) {
-                    throw new Error("ref must never be null");
-                  }
+                const ref = toReference({ __typename: "Book", id: args.id });
+                if (!ref) {
+                  throw new Error("ref must never be null");
+                }
 
-                  expect(ref).toEqual({ __ref: `Book:${args.id}` });
-                  const found = readField<Reference[]>("books")!.find(
-                    (book) => book.__ref === ref.__ref
-                  );
-                  expect(found).toBeTruthy();
-                  return found;
-                },
+                expect(ref).toEqual({ __ref: `Book:${args.id}` });
+                const found = readField<Reference[]>("books")!.find(
+                  (book) => book.__ref === ref.__ref
+                );
+                expect(found).toBeTruthy();
+                return found;
               },
             },
           },
-        }),
-      })
-    );
+        },
+      }),
+    });
 
-    await queryManager.query({ query });
+    await client.query({ query });
 
-    return queryManager
-      .query({ query: shouldHitCacheResolver })
-      .then(({ data }) => {
-        expect(data).toMatchObject({
-          book: { title: "Woo", __typename: "Book" },
-        });
-      });
+    const { data } = await client.query({ query: shouldHitCacheResolver });
+    expect(data).toMatchObject({
+      book: { title: "Woo", __typename: "Book" },
+    });
   });
 
   it("removes @client fields from the query before it reaches the link", async () => {
@@ -400,14 +378,12 @@ describe("Link interactions", () => {
       });
     });
 
-    const queryManager = new QueryManager(
-      getDefaultOptionsForQueryManagerTests({
-        link,
-        cache: new InMemoryCache({ addTypename: false }),
-      })
-    );
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache({ addTypename: false }),
+    });
 
-    await queryManager.query({ query });
+    await client.query({ query });
 
     expect(print(result.current!.query)).toEqual(print(expectedQuery));
   });

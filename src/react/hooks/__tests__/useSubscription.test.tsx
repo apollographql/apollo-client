@@ -12,7 +12,7 @@ import {
 import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink } from "../../../testing";
+import { MockSubscriptionLink, wait } from "../../../testing";
 import { useSubscription } from "../useSubscription";
 import { spyOnConsole } from "../../../testing/internal";
 import { SubscriptionHookOptions } from "../../types/types";
@@ -20,7 +20,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
-import { MaskedDocumentNode } from "../../../masking";
+import { Masked, MaskedDocumentNode } from "../../../masking";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
@@ -1961,6 +1961,7 @@ describe("ignoreResults", () => {
       }
     );
     if (!IS_REACT_17) {
+      await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
     }
 
@@ -2034,6 +2035,7 @@ describe("ignoreResults", () => {
       }
     );
     if (!IS_REACT_17) {
+      await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
     }
 
@@ -2431,19 +2433,21 @@ describe.skip("Type Tests", () => {
 
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
-        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
+        expectTypeOf(data.data).toEqualTypeOf<
+          Masked<Subscription> | undefined
+        >();
       },
       onSubscriptionData: ({ subscriptionData }) => {
         expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          Subscription | undefined
+          Masked<Subscription> | undefined
         >();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Masked<Subscription> | undefined>();
   });
 
-  test("uses unmasked types when using TypedDocumentNode", async () => {
+  test("uses unmodified type when using TypedDocumentNode", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -2457,30 +2461,19 @@ describe.skip("Type Tests", () => {
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
-    interface UnmaskedSubscription {
-      userUpdated: {
-        __typename: "User";
-        id: string;
-        name: string;
-        age: number;
-      };
-    }
-
     const subscription: TypedDocumentNode<Subscription> = gql``;
 
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
-        expectTypeOf(data.data).toEqualTypeOf<
-          UnmaskedSubscription | undefined
-        >();
+        expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
       },
       onSubscriptionData: ({ subscriptionData }) => {
         expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          UnmaskedSubscription | undefined
+          Subscription | undefined
         >();
       },
     });
 
-    expectTypeOf(data).toEqualTypeOf<UnmaskedSubscription | undefined>();
+    expectTypeOf(data).toEqualTypeOf<Subscription | undefined>();
   });
 });

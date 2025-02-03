@@ -1,5 +1,78 @@
 # @apollo/client
 
+## 3.12.8
+
+### Patch Changes
+
+- [#12292](https://github.com/apollographql/apollo-client/pull/12292) [`3abd944`](https://github.com/apollographql/apollo-client/commit/3abd944e4adde5d94d91133f2bf6ed1c7744f8c5) Thanks [@phryneas](https://github.com/phryneas)! - Remove unused dependency `response-iterator`
+
+- [#12287](https://github.com/apollographql/apollo-client/pull/12287) [`bf313a3`](https://github.com/apollographql/apollo-client/commit/bf313a39d342a73dc3e9b3db9415c71c2573db3f) Thanks [@phryneas](https://github.com/phryneas)! - Fixes an issue where `client.watchFragment`/`useFragment` with `@includes` crashes when a separate cache update writes to the conditionally included fields.
+
+## 3.12.7
+
+### Patch Changes
+
+- [#12281](https://github.com/apollographql/apollo-client/pull/12281) [`d638ec3`](https://github.com/apollographql/apollo-client/commit/d638ec317b7d21c2246251ef1b9d773588277b39) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Make fatal [tranport-level errors](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) from multipart subscriptions available to the error link with the `protocolErrors` property.
+
+  ```js
+  const errorLink = onError(({ protocolErrors }) => {
+    if (protocolErrors) {
+      console.log(protocolErrors);
+    }
+  });
+  ```
+
+- [#12281](https://github.com/apollographql/apollo-client/pull/12281) [`d638ec3`](https://github.com/apollographql/apollo-client/commit/d638ec317b7d21c2246251ef1b9d773588277b39) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix the array type for the `errors` field on the `ApolloPayloadResult` type. This type was always in the shape of the GraphQL error format, per the [multipart subscriptions protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) and never a plain string or a JavaScript error object.
+
+## 3.12.6
+
+### Patch Changes
+
+- [#12267](https://github.com/apollographql/apollo-client/pull/12267) [`d57429d`](https://github.com/apollographql/apollo-client/commit/d57429df336412bfdce5fc92b8299360c522d121) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Maintain the `TData` type when used with `Unmasked` when `TData` is not a masked type generated from GraphQL Codegen.
+
+- [#12270](https://github.com/apollographql/apollo-client/pull/12270) [`3601246`](https://github.com/apollographql/apollo-client/commit/3601246f6e7b4f8b2937e0d431e6b5a6964f9066) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix handling of tagged/branded primitive types when used as scalar values with `Unmasked`.
+
+## 3.12.5
+
+### Patch Changes
+
+- [#12252](https://github.com/apollographql/apollo-client/pull/12252) [`cb9cd4e`](https://github.com/apollographql/apollo-client/commit/cb9cd4ea251aab225adf5e4e4f3f69e1bbacee52) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Changes the default behavior of the `MaybeMasked` type to preserve types unless otherwise specified. This change makes it easier to upgrade from older versions of the client where types could have unexpectedly changed in the application due to the default of trying to unwrap types into unmasked types. This change also fixes the compilation performance regression experienced when simply upgrading the client since types are now preserved by default.
+
+  A new `mode` option has now been introduced to allow for the old behavior. See the next section on migrating if you wish to maintain the old default behavior after upgrading to this version.
+
+  ### Migrating from <= v3.12.4
+
+  If you've adopted data masking and have opted in to using masked types by setting the `enabled` property to `true`, you can remove this configuration entirely:
+
+  ```diff
+  -declare module "@apollo/client" {
+  -  interface DataMasking {
+  -    mode: "unmask"
+  -  }
+  -}
+  ```
+
+  If you prefer to specify the behavior explicitly, change the property from `enabled: true`, to `mode: "preserveTypes"`:
+
+  ```diff
+  declare module "@apollo/client" {
+    interface DataMasking {
+  -    enabled: true
+  +    mode: "preserveTypes"
+    }
+  }
+  ```
+
+  If you rely on the default behavior in 3.12.4 or below and would like to continue to use unmasked types by default, set the `mode` to `unmask`:
+
+  ```ts
+  declare module "@apollo/client" {
+    interface DataMasking {
+      mode: "unmask";
+    }
+  }
+  ```
+
 ## 3.12.4
 
 ### Patch Changes

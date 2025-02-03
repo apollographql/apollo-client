@@ -237,6 +237,7 @@ export function useMutation<
 
   React.useEffect(() => {
     const current = ref.current;
+    // eslint-disable-next-line react-compiler/react-compiler
     current.isMounted = true;
 
     return () => {

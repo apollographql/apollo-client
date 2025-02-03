@@ -23,6 +23,6 @@ jobs:
 
       - name: Run comparison script
         id: attw
-        run: ./config/compare-build-output-to.sh $(git merge-base HEAD origin/${{ github.base_ref }}) > $GITHUB_STEP_SUMMARY
+        run: ./config/compare-build-output-to.sh $(git merge-base HEAD origin/${{ github.base_ref }}) | tee $GITHUB_STEP_SUMMARY
         env:
           RUNNER_TEMP: ${{ runner.temp }}

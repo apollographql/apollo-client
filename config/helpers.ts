@@ -5,6 +5,7 @@ import * as tsParser from "recast/parsers/typescript.js";
 import glob from "glob";
 import { glob as nodeGlob } from "node:fs/promises";
 import { readFile, rm } from "node:fs/promises";
+import * as assert from "node:assert";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
 // eslint-disable-next-line import/no-unresolved
 import * as sorcery from "sorcery";
@@ -73,10 +74,11 @@ export async function applyRecast({
     const sourceFileName = sourceFile.name;
     const sourcePath = path.join(baseDir, sourceFile.name);
     const source = await readFile(sourcePath, { encoding: "utf8" });
-    const sourceMapName = source.match(/\/\/# sourceMappingURL=(.*)$/)?.[1];
-    if (!sourceMapName) {
-      throw new Error("No source map found for file " + sourceFileName);
-    }
+    const sourceMapName = source.match(/\/\/# sourceMappingURL=(.*)$/m)?.[1];
+    assert.ok(
+      sourceMapName,
+      `No source map found for file ${sourcePath} in ${source}`
+    );
     const sourceMapPath = path.join(baseDir, sourceMapName);
     const sourceMapContents = JSON.parse(
       await readFile(sourceMapPath, {

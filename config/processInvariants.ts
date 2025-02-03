@@ -1,16 +1,17 @@
 import * as fs from "fs";
 import { posix, join as osPathJoin } from "path";
-import { distDir, eachFile, reparse, reprint } from "./helpers.ts";
+import { applyRecast, reprint } from "./helpers.ts";
 import type { ExpressionKind } from "ast-types/lib/gen/kinds";
 
 import * as recast from "recast";
+import type { BuildStepOptions } from "./build.ts";
 const b = recast.types.builders;
 const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;
 type CallExpression = recast.types.namedTypes.CallExpression;
 type NewExpression = recast.types.namedTypes.NewExpression;
 
-export async function processInvariants() {
+export async function processInvariants(options: BuildStepOptions) {
   const program = b.program([]);
   let nextErrorCode = 1;
 
@@ -32,16 +33,13 @@ export async function processInvariants() {
     b.commentLine(" This file is not meant to be imported manually.", true),
   ];
 
-  await eachFile(distDir, (file, relPath) => {
-    const source = fs.readFileSync(file, "utf8");
-    const output = transform(source, relPath);
-    if (source !== output) {
-      fs.writeFileSync(file, output, "utf8");
-    }
+  await applyRecast({
+    glob: `${options.baseDir}/**/*.${options.jsExt}`,
+    transformStep: transform,
   });
 
   fs.writeFileSync(
-    osPathJoin(distDir, "invariantErrorCodes.js"),
+    osPathJoin(options.baseDir, `invariantErrorCodes.${options.jsExt}`),
     recast.print(program, {
       tabWidth: 2,
     }).code + "\n"
@@ -124,7 +122,7 @@ export async function processInvariants() {
         return numLit;
       } else {
         throw new Error(`invariant minification error: node cannot have dynamical error argument!
-        file: ${posix.join(distDir, file)}:${expr.loc?.start.line}
+        file: ${posix.join(options.baseDir, file)}:${expr.loc?.start.line}
         code:
 
         ${reprint(message)}
@@ -133,9 +131,7 @@ export async function processInvariants() {
     }
   }
 
-  function transform(code: string, relativeFilePath: string) {
-    const ast = reparse(code);
-
+  function transform(ast: recast.types.ASTNode, relativeFilePath: string) {
     recast.visit(ast, {
       visitCallExpression(path) {
         this.traverse(path);
@@ -227,7 +223,7 @@ export async function processInvariants() {
         },
       });
 
-    return reprint(ast);
+    return { ast };
   }
 
   function isIdWithName(node: Node | null | undefined, ...names: string[]) {

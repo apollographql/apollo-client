@@ -168,7 +168,7 @@ export interface UpdateQueryFnOptions {
   /**
    * If true, the mapFn will be called even if there is no previous query result.
    *
-   * @default `true` Will change to `false` in v4
+   * default: `true` Will change to `false` in v4
    */
   updateQueryOnPartialPreviousResult?: boolean;
 }

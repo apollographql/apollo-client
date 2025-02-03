@@ -1900,7 +1900,7 @@ describe("client.watchQuery", () => {
 
     expect(updateQuery).toHaveBeenCalledWith(
       { user: { __typename: "User", id: 1, name: "User 1", age: 30 } },
-      { variables: { id: 1 } }
+      { variables: { id: 1 }, complete: true }
     );
 
     {
@@ -4831,6 +4831,7 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
+        complete: true,
         variables: {},
         subscriptionData: {
           data: {
@@ -4842,6 +4843,7 @@ describe("observableQuery.subscribeToMore", () => {
             },
           },
         },
+        subscriptionVariables: undefined,
       }
     );
 
@@ -4958,6 +4960,7 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
+        complete: true,
         variables: {},
         subscriptionData: {
           data: {
@@ -4969,6 +4972,7 @@ describe("observableQuery.subscribeToMore", () => {
             },
           },
         },
+        subscriptionVariables: undefined,
       }
     );
 
@@ -5006,8 +5010,8 @@ describe("observableQuery.subscribeToMore", () => {
     `;
 
     const subscription = gql`
-      subscription NewCommentSubscription {
-        addedComment {
+      subscription NewCommentSubscription($id: ID!) {
+        addedComment(id: $id) {
           id
           ...CommentFields
         }
@@ -5060,7 +5064,11 @@ describe("observableQuery.subscribeToMore", () => {
       return { recentComment: subscriptionData.data.addedComment };
     });
 
-    observable.subscribeToMore({ document: subscription, updateQuery });
+    observable.subscribeToMore({
+      document: subscription,
+      updateQuery,
+      variables: { id: 1 },
+    });
 
     subscriptionLink.simulateResult({
       result: {
@@ -5087,6 +5095,7 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
+        complete: true,
         variables: {},
         subscriptionData: {
           data: {
@@ -5098,6 +5107,7 @@ describe("observableQuery.subscribeToMore", () => {
             },
           },
         },
+        subscriptionVariables: { id: 1 },
       }
     );
 

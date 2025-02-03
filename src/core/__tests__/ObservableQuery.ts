@@ -3183,6 +3183,56 @@ describe("ObservableQuery", () => {
     });
   });
 
+  describe("updateQuqery", () => {
+    it("should respect updateQueryOnPartialPreviousResult", () => {
+      const queryManager = mockQueryManager({
+        request: { query, variables },
+        result: { data: dataOne },
+      });
+
+      const observable = queryManager.watchQuery({
+        query,
+        variables,
+      });
+
+      let updateQuerySpy = jest.fn();
+      observable.updateQuery(
+        (previous, { complete }) => {
+          updateQuerySpy();
+          expect(previous).toEqual({});
+          expect(complete).toBe(false);
+          return undefined;
+        }
+        // Default behavior
+        // { updateQueryOnPartialPreviousResult: true }
+      );
+
+      observable.updateQuery(
+        (previous, { complete }) => {
+          updateQuerySpy();
+          expect(previous).toEqual({});
+          expect(complete).toBe(false);
+          return undefined;
+        },
+        // Explicitly set to true
+        { updateQueryOnPartialPreviousResult: true }
+      );
+
+      observable.updateQuery(
+        () => {
+          // Should not be called because complete is false
+          updateQuerySpy();
+          expect(null).toBe(false);
+          return undefined;
+        },
+        // Explicitly set to false
+        { updateQueryOnPartialPreviousResult: false }
+      );
+
+      expect(updateQuerySpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it("QueryInfo does not notify for !== but deep-equal results", async () => {
     const queryManager = mockQueryManager({
       request: { query, variables },

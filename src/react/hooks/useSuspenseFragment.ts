@@ -86,12 +86,13 @@ export function useSuspenseFragment<
 ): UseSuspenseFragmentResult<TData | null> {
   return wrapHook(
     "useSuspenseFragment",
-    _useSuspenseFragment,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useSuspenseFragment_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(options);
 }
 
-function _useSuspenseFragment<
+function useSuspenseFragment_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(

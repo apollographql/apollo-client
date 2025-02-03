@@ -4,12 +4,14 @@ import {
   ApolloClient,
   InMemoryCache,
   NetworkStatus,
-  SubscribeToMoreOptions,
   TypedDocumentNode,
   gql,
   split,
 } from "../../../core";
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
+import {
+  SubscribeToMoreFunction,
+  SubscribeToMoreUpdateQueryFn,
+} from "../../../core/watchQueryOptions";
 import {
   MockLink,
   MockSubscriptionLink,
@@ -1960,12 +1962,11 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
     greetingUpdated: string;
   }
 
-  type UpdateQueryFn = NonNullable<
-    SubscribeToMoreOptions<
-      SimpleCaseData,
-      Record<string, never>,
-      SubscriptionData
-    >["updateQuery"]
+  type UpdateQueryFn = SubscribeToMoreUpdateQueryFn<
+    SimpleCaseData,
+    Record<string, never>,
+    Record<string, never>,
+    SubscriptionData
   >;
 
   const subscription: TypedDocumentNode<
@@ -2092,10 +2093,13 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   expect(updateQuery).toHaveBeenCalledWith(
     { greeting: "Hello" },
     {
+      complete: true,
+      previousQueryResult: { greeting: "Hello" },
       subscriptionData: {
         data: { greetingUpdated: "Subscription hello" },
       },
       variables: {},
+      subscriptionVariables: undefined,
     }
   );
 });

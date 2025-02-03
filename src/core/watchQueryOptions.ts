@@ -14,7 +14,7 @@ import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { Unmasked } from "../masking/index.js";
-import type { NoInfer } from "../utilities/index.js";
+import type { DeepPartial, NoInfer } from "../utilities/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -164,33 +164,33 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   context?: DefaultContext;
 }
 
-export interface UpdateQueryFnOptions {
-  /**
-   * If true, the mapFn will be called even if there is no previous query result.
-   *
-   * default: `true` Will change to `false` in v4
-   */
-  updateQueryOnPartialPreviousResult?: boolean;
-}
-
 export interface UpdateQueryFn<
   TData,
   TVariables extends OperationVariables,
   TOptions = {},
 > {
-  (
-    mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>,
-    options?: UpdateQueryFnOptions
-  ): void;
+  (mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>): void;
 }
 
-export interface UpdateQueryOptions<TVariables> {
+export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;
-  /**
-   * Indicate if the previous query result has been found fully in the cache.
-   */
-  complete: boolean;
-}
+} & (
+  | {
+      /**
+       * Indicate if the previous query result has been found fully in the cache.
+       */
+      complete: true;
+      previousQueryResult: Unmasked<TData>;
+    }
+  | {
+      /**
+       * Indicate if the previous query result has not been found fully in the cache.
+       * Might have partial or missing data.
+       */
+      complete: false;
+      previousQueryResult: DeepPartial<Unmasked<TData>> | undefined;
+    }
+);
 
 export interface UpdateQueryMapFn<
   TData = any,
@@ -198,8 +198,11 @@ export interface UpdateQueryMapFn<
   TOptions = {},
 > {
   (
+    /**
+     * @deprecated Use `options.previousQueryResult` instead.
+     */
     previousQueryResult: Unmasked<TData>,
-    options: TOptions & UpdateQueryOptions<TVariables>
+    options: TOptions & UpdateQueryOptions<TData, TVariables>
   ): Unmasked<TData> | undefined;
 }
 
@@ -233,7 +236,6 @@ export interface SubscribeToMoreOptions<
     TSubscriptionVariables,
     TSubscriptionData
   >;
-  updateQueryOptions?: UpdateQueryFnOptions;
   onError?: (error: Error) => void;
   context?: DefaultContext;
 }

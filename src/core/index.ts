@@ -18,7 +18,6 @@ export type {
   SubscribeToMoreOptions,
   SubscribeToMoreFunction,
   UpdateQueryFn,
-  UpdateQueryFnOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
 } from "./watchQueryOptions.js";

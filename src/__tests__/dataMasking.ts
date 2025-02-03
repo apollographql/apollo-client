@@ -1891,8 +1891,16 @@ describe("client.watchQuery", () => {
     }
 
     const updateQuery: Parameters<typeof observable.updateQuery>[0] = jest.fn(
-      (previousResult) => {
-        return { user: { ...previousResult.user, name: "User (updated)" } };
+      (previousResult, { complete, previousQueryResult }) => {
+        expect(complete).toBe(true);
+        expect(previousQueryResult).toStrictEqual(previousResult);
+        // Type Guard
+        if (!complete) {
+          return undefined;
+        }
+        return {
+          user: { ...previousQueryResult.user, name: "User (updated)" },
+        };
       }
     );
 
@@ -1900,7 +1908,13 @@ describe("client.watchQuery", () => {
 
     expect(updateQuery).toHaveBeenCalledWith(
       { user: { __typename: "User", id: 1, name: "User 1", age: 30 } },
-      { variables: { id: 1 }, complete: true }
+      {
+        variables: { id: 1 },
+        complete: true,
+        previousQueryResult: {
+          user: { __typename: "User", id: 1, name: "User 1", age: 30 },
+        },
+      }
     );
 
     {
@@ -4833,6 +4847,14 @@ describe("observableQuery.subscribeToMore", () => {
       {
         complete: true,
         variables: {},
+        previousQueryResult: {
+          recentComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Recent comment",
+            author: "Test User",
+          },
+        },
         subscriptionData: {
           data: {
             addedComment: {
@@ -4962,6 +4984,14 @@ describe("observableQuery.subscribeToMore", () => {
       {
         complete: true,
         variables: {},
+        previousQueryResult: {
+          recentComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Recent comment",
+            author: "Test User",
+          },
+        },
         subscriptionData: {
           data: {
             addedComment: {
@@ -5097,6 +5127,14 @@ describe("observableQuery.subscribeToMore", () => {
       {
         complete: true,
         variables: {},
+        previousQueryResult: {
+          recentComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Recent comment",
+            author: "Test User",
+          },
+        },
         subscriptionData: {
           data: {
             addedComment: {

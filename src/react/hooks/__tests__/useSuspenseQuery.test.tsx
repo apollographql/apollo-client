@@ -9636,10 +9636,13 @@ describe("useSuspenseQuery", () => {
     expect(updateQuery).toHaveBeenCalledWith(
       { greeting: "Hello" },
       {
+        complete: true,
+        previousQueryResult: { greeting: "Hello" },
         subscriptionData: {
           data: { greetingUpdated: "Subscription hello" },
         },
         variables: {},
+        subscriptionVariables: undefined,
       }
     );
 
@@ -12939,11 +12942,31 @@ describe("useSuspenseQuery", () => {
 
         subscribeToMore({
           document: subscription,
-          updateQuery: (queryData, { subscriptionData }) => {
+          updateQuery: (
+            queryData,
+            { subscriptionData, complete, previousQueryResult }
+          ) => {
             expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
             expectTypeOf(
               queryData
             ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+            expectTypeOf(complete).toEqualTypeOf<boolean>();
+            expectTypeOf(previousQueryResult).toEqualTypeOf<
+              | UnmaskedVariablesCaseData
+              | DeepPartial<UnmaskedVariablesCaseData>
+              | undefined
+            >();
+
+            if (complete) {
+              expectTypeOf(
+                previousQueryResult
+              ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            } else {
+              expectTypeOf(previousQueryResult).toEqualTypeOf<
+                DeepPartial<UnmaskedVariablesCaseData> | undefined
+              >();
+            }
 
             expectTypeOf(
               subscriptionData.data

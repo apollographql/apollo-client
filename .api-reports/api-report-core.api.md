@@ -1733,7 +1733,7 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     startPolling(pollInterval: number): void;
     stopPolling(): void;
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
-    updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>, options?: UpdateQueryFnOptions | undefined): void;
+    updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
     get variables(): TVariables | undefined;
 }
 
@@ -2341,8 +2341,6 @@ export interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables exte
     // (undocumented)
     updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionVariables, TSubscriptionData>;
     // (undocumented)
-    updateQueryOptions?: UpdateQueryFnOptions;
-    // (undocumented)
     variables?: TSubscriptionVariables;
 }
 
@@ -2452,26 +2450,26 @@ type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 // @public (undocumented)
 export interface UpdateQueryFn<TData, TVariables extends OperationVariables, TOptions = {}> {
     // (undocumented)
-    (mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>, options?: UpdateQueryFnOptions): void;
-}
-
-// @public (undocumented)
-export interface UpdateQueryFnOptions {
-    updateQueryOnPartialPreviousResult?: boolean;
+    (mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>): void;
 }
 
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables, TOptions = {}> {
     // (undocumented)
-    (previousQueryResult: Unmasked<TData>, options: TOptions & UpdateQueryOptions<TVariables>): Unmasked<TData> | undefined;
+    (
+    previousQueryResult: Unmasked<TData>, options: TOptions & UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | undefined;
 }
 
 // @public (undocumented)
-export interface UpdateQueryOptions<TVariables> {
-    complete: boolean;
-    // (undocumented)
+export type UpdateQueryOptions<TData, TVariables> = {
     variables?: TVariables;
-}
+} & ({
+    complete: true;
+    previousQueryResult: Unmasked<TData>;
+} | {
+    complete: false;
+    previousQueryResult: DeepPartial<Unmasked<TData>> | undefined;
+});
 
 // @public (undocumented)
 export interface UriFunction {
@@ -2547,8 +2545,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts

@@ -7,6 +7,7 @@ import type {
   Concast,
   Observer,
   ObservableSubscription,
+  DeepPartial,
 } from "../utilities/index.js";
 import {
   cloneDeep,
@@ -32,7 +33,7 @@ import type {
   NextFetchPolicyContext,
   WatchQueryFetchPolicy,
   UpdateQueryMapFn,
-  UpdateQueryFnOptions,
+  UpdateQueryOptions,
 } from "./watchQueryOptions.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
@@ -536,6 +537,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     optimistic: false,
                   },
                   (previous) =>
+                    // REVIEW: Code smell here with the `!` and cast, is it possible for previous to be null or have partial data ?
                     updateQuery(previous! as any, {
                       fetchMoreResult: fetchMoreResult.data as any,
                       variables: combinedOptions.variables as TFetchVars,
@@ -631,15 +633,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
-            this.updateQuery(
-              (previous, { variables, complete }) =>
-                updateQuery(previous, {
-                  subscriptionData,
-                  subscriptionVariables: options.variables,
-                  variables,
-                  complete,
-                }),
-              options.updateQueryOptions
+            this.updateQuery((previous, updateOptions) =>
+              updateQuery(previous, {
+                subscriptionData,
+                subscriptionVariables: options.variables,
+                ...updateOptions,
+              })
             );
           }
         },
@@ -724,12 +723,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    *
    * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
    */
-  public updateQuery(
-    mapFn: UpdateQueryMapFn<TData, TVariables>,
-    options?: UpdateQueryFnOptions | undefined
-  ): void {
-    const updateQueryOnPartialPreviousResult =
-      options?.updateQueryOnPartialPreviousResult ?? true;
+  public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
     const { queryManager } = this;
     const { result, complete } = queryManager.cache.diff<Unmasked<TData>>({
       query: this.options.query,
@@ -738,14 +732,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       optimistic: false,
     });
 
-    if ((!complete || !result) && !updateQueryOnPartialPreviousResult) {
-      return;
+    const variables = (this as any).variables;
+    let updateOptions: UpdateQueryOptions<TData, TVariables>;
+    if (complete && result) {
+      updateOptions = {
+        variables,
+        complete: true,
+        previousQueryResult: result,
+      };
+    } else {
+      updateOptions = {
+        variables,
+        complete: false,
+        previousQueryResult: result as DeepPartial<Unmasked<TData>>,
+      };
     }
 
-    const newResult = mapFn(result!, {
-      variables: (this as any).variables,
-      complete: !!complete,
-    });
+    const newResult = mapFn(result!, updateOptions);
 
     if (newResult) {
       queryManager.cache.writeQuery({

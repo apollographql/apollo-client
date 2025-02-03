@@ -12,6 +12,7 @@ import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
 import {
+  DeepPartial,
   DocumentTransform,
   Observable,
   removeDirectivesFromDocument,
@@ -31,6 +32,7 @@ import mockQueryManager, {
   getDefaultOptionsForQueryManagerTests,
 } from "../../testing/core/mocking/mockQueryManager";
 import mockWatchQuery from "../../testing/core/mocking/mockWatchQuery";
+import { expectTypeOf } from "expect-type";
 
 import { resetStore } from "./QueryManager";
 import { SubscriptionObserver } from "zen-observable-ts";
@@ -3183,8 +3185,8 @@ describe("ObservableQuery", () => {
     });
   });
 
-  describe("updateQuqery", () => {
-    it("should respect updateQueryOnPartialPreviousResult", () => {
+  describe("updateQuery", () => {
+    it("should be able to determine if the previous result is complete", async () => {
       const queryManager = mockQueryManager({
         request: { query, variables },
         result: { data: dataOne },
@@ -3196,38 +3198,47 @@ describe("ObservableQuery", () => {
       });
 
       let updateQuerySpy = jest.fn();
-      observable.updateQuery(
-        (previous, { complete }) => {
-          updateQuerySpy();
-          expect(previous).toEqual({});
-          expect(complete).toBe(false);
-          return undefined;
+      observable.updateQuery((previous, { complete, previousQueryResult }) => {
+        updateQuerySpy();
+        expect(previous).toEqual({});
+        expect(complete).toBe(false);
+        expect(previousQueryResult).toStrictEqual(previous);
+
+        if (complete) {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<typeof dataOne>();
+        } else {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<
+            DeepPartial<typeof previous> | undefined
+          >();
         }
-        // Default behavior
-        // { updateQueryOnPartialPreviousResult: true }
-      );
+        return undefined;
+      });
 
-      observable.updateQuery(
-        (previous, { complete }) => {
-          updateQuerySpy();
-          expect(previous).toEqual({});
-          expect(complete).toBe(false);
-          return undefined;
-        },
-        // Explicitly set to true
-        { updateQueryOnPartialPreviousResult: true }
-      );
+      observable.subscribe(jest.fn());
 
-      observable.updateQuery(
-        () => {
-          // Should not be called because complete is false
-          updateQuerySpy();
-          expect(null).toBe(false);
-          return undefined;
-        },
-        // Explicitly set to false
-        { updateQueryOnPartialPreviousResult: false }
-      );
+      await waitFor(() => {
+        expect(observable.getCurrentResult(false)).toEqual({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+      });
+
+      observable.updateQuery((previous, { complete, previousQueryResult }) => {
+        updateQuerySpy();
+        expect(previous).toEqual(dataOne);
+        expect(complete).toBe(true);
+        expect(previousQueryResult).toStrictEqual(previous);
+
+        if (complete) {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<typeof dataOne>();
+        } else {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<
+            DeepPartial<typeof previous> | undefined
+          >();
+        }
+        return undefined;
+      });
 
       expect(updateQuerySpy).toHaveBeenCalledTimes(2);
     });

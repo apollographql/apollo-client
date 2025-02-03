@@ -2,8 +2,6 @@
 "@apollo/client": patch
 ---
 
-Added option to skip updateQuery when cache has partial or no data.
-Will become default behavior in v4.
-
+Provide more accurate type safe previousQueryResult in updateQuery's callback by checking if the query result is complete.
 Fixed typescript type of `variables` in query.subscribeToMore's callback's options.
 Added `subscriptionVariables` to the options to access the subscription's variables.

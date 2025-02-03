@@ -1308,8 +1308,7 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreOptions" needs to be exported by the entry point index.d.ts
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
     // Warning: (ae-forgotten-export) The symbol "UpdateQueryMapFn" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryFnOptions" needs to be exported by the entry point index.d.ts
-    updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>, options?: UpdateQueryFnOptions | undefined): void;
+    updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
     get variables(): TVariables | undefined;
 }
 
@@ -1816,8 +1815,6 @@ interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends Ope
     // (undocumented)
     updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionVariables, TSubscriptionData>;
     // (undocumented)
-    updateQueryOptions?: UpdateQueryFnOptions;
-    // (undocumented)
     variables?: TSubscriptionVariables;
 }
 
@@ -1902,12 +1899,7 @@ type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 // @public (undocumented)
 interface UpdateQueryFn<TData, TVariables extends OperationVariables, TOptions = {}> {
     // (undocumented)
-    (mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>, options?: UpdateQueryFnOptions): void;
-}
-
-// @public (undocumented)
-interface UpdateQueryFnOptions {
-    updateQueryOnPartialPreviousResult?: boolean;
+    (mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>): void;
 }
 
 // @public (undocumented)
@@ -1915,15 +1907,20 @@ interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = 
     // Warning: (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    (previousQueryResult: Unmasked<TData>, options: TOptions & UpdateQueryOptions<TVariables>): Unmasked<TData> | undefined;
+    (
+    previousQueryResult: Unmasked<TData>, options: TOptions & UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | undefined;
 }
 
 // @public (undocumented)
-interface UpdateQueryOptions<TVariables> {
-    complete: boolean;
-    // (undocumented)
+type UpdateQueryOptions<TData, TVariables> = {
     variables?: TVariables;
-}
+} & ({
+    complete: true;
+    previousQueryResult: Unmasked<TData>;
+} | {
+    complete: false;
+    previousQueryResult: DeepPartial<Unmasked<TData>> | undefined;
+});
 
 // @public (undocumented)
 interface UriFunction {
@@ -1986,8 +1983,8 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

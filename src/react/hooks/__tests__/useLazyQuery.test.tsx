@@ -12,7 +12,7 @@ import {
   NetworkStatus,
   TypedDocumentNode,
 } from "../../../core";
-import { Observable } from "../../../utilities";
+import { DeepPartial, Observable } from "../../../utilities";
 import { ApolloProvider } from "../../../react";
 import {
   MockedProvider,
@@ -3351,8 +3351,23 @@ describe.skip("Type Tests", () => {
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
-      updateQuery(queryData, { subscriptionData }) {
+      updateQuery(
+        queryData,
+        { subscriptionData, complete, previousQueryResult }
+      ) {
         expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(complete).toEqualTypeOf<boolean>();
+        expectTypeOf(previousQueryResult).toEqualTypeOf<
+          UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+        >();
+
+        if (complete) {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+        } else {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<
+            DeepPartial<UnmaskedQuery> | undefined
+          >();
+        }
         expectTypeOf(
           subscriptionData.data
         ).toEqualTypeOf<UnmaskedSubscription>();
@@ -3361,8 +3376,12 @@ describe.skip("Type Tests", () => {
       },
     });
 
-    updateQuery((previousData) => {
+    updateQuery((previousData, { complete, previousQueryResult }) => {
       expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+      expectTypeOf(complete).toEqualTypeOf<boolean>();
+      expectTypeOf(previousQueryResult).toEqualTypeOf<
+        UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+      >();
 
       return {} as UnmaskedQuery;
     });
@@ -3450,18 +3469,44 @@ describe.skip("Type Tests", () => {
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
-      updateQuery(queryData, { subscriptionData }) {
+      updateQuery(
+        queryData,
+        { subscriptionData, complete, previousQueryResult }
+      ) {
         expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(previousQueryResult).toEqualTypeOf<
+          UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+        >();
         expectTypeOf(
           subscriptionData.data
         ).toEqualTypeOf<UnmaskedSubscription>();
+
+        if (complete) {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+        } else {
+          expectTypeOf(previousQueryResult).toEqualTypeOf<
+            DeepPartial<UnmaskedQuery> | undefined
+          >();
+        }
 
         return {} as UnmaskedQuery;
       },
     });
 
-    updateQuery((previousData) => {
+    updateQuery((previousData, { complete, previousQueryResult }) => {
       expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+      expectTypeOf(complete).toEqualTypeOf<boolean>();
+      expectTypeOf(previousQueryResult).toEqualTypeOf<
+        UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
+      >();
+
+      if (complete) {
+        expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+      } else {
+        expectTypeOf(previousQueryResult).toEqualTypeOf<
+          DeepPartial<UnmaskedQuery> | undefined
+        >();
+      }
 
       return {} as UnmaskedQuery;
     });

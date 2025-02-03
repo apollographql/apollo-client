@@ -7190,9 +7190,12 @@ describe("fetchMore", () => {
     expect(updateQuery).toHaveBeenCalledWith(
       { greeting: "Hello" },
       {
+        complete: true,
+        previousQueryResult: { greeting: "Hello" },
         subscriptionData: {
           data: { greetingUpdated: "Subscription hello" },
         },
+        subscriptionVariables: undefined,
         variables: {},
       }
     );
@@ -8384,10 +8387,35 @@ describe.skip("type tests", () => {
         document: subscription,
         updateQuery: (
           queryData,
-          { subscriptionData, subscriptionVariables, variables }
+          {
+            subscriptionData,
+            subscriptionVariables,
+            variables,
+            complete,
+            previousQueryResult,
+          }
         ) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+          expectTypeOf(previousQueryResult).toEqualTypeOf<
+            | UnmaskedVariablesCaseData
+            | DeepPartial<UnmaskedVariablesCaseData>
+            | undefined
+          >();
+
+          if (complete) {
+            // Should narrow the type
+            expectTypeOf(
+              previousQueryResult
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              previousQueryResult
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+          } else {
+            expectTypeOf(previousQueryResult).toEqualTypeOf<
+              DeepPartial<UnmaskedVariablesCaseData> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data
@@ -8427,10 +8455,36 @@ describe.skip("type tests", () => {
         document: subscription,
         updateQuery: (
           queryData,
-          { subscriptionData, subscriptionVariables, variables }
+          {
+            subscriptionData,
+            subscriptionVariables,
+            variables,
+            complete,
+            previousQueryResult,
+          }
         ): UnmaskedVariablesCaseData => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+          expectTypeOf(previousQueryResult).toEqualTypeOf<
+            | UnmaskedVariablesCaseData
+            | DeepPartial<UnmaskedVariablesCaseData>
+            | undefined
+          >();
+
+          if (complete) {
+            // Should narrow the type
+            expectTypeOf(
+              previousQueryResult
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              previousQueryResult
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+          } else {
+            expectTypeOf(previousQueryResult).toEqualTypeOf<
+              DeepPartial<UnmaskedVariablesCaseData> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data

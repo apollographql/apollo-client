@@ -11,7 +11,7 @@ import {
 } from "../core";
 import { Kind } from "graphql";
 
-import { Observable } from "../utilities";
+import { DeepPartial, Observable } from "../utilities";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
@@ -3218,18 +3218,39 @@ describe("ApolloClient", () => {
         UnmaskedQuery | undefined
       >();
 
-      observableQuery.updateQuery((previousData) => {
-        expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
-        expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+      observableQuery.updateQuery(
+        (previousData, { complete, previousQueryResult }) => {
+          expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(previousData).not.toMatchTypeOf<Query>();
 
-        return undefined;
-      });
+          if (complete) {
+            expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+          } else {
+            expectTypeOf(previousQueryResult).toEqualTypeOf<
+              DeepPartial<UnmaskedQuery> | undefined
+            >();
+          }
+
+          return undefined;
+        }
+      );
 
       observableQuery.subscribeToMore({
         document: subscription,
-        updateQuery(queryData, { subscriptionData }) {
+        updateQuery(
+          queryData,
+          { subscriptionData, complete, previousQueryResult }
+        ) {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
           expectTypeOf(queryData).not.toMatchTypeOf<Query>();
+
+          if (complete) {
+            expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+          } else {
+            expectTypeOf(previousQueryResult).toEqualTypeOf<
+              DeepPartial<UnmaskedQuery> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data

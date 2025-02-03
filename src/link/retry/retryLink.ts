@@ -7,6 +7,11 @@ import { buildDelayFunction } from "./delayFunction.js";
 import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 import type { SubscriptionObserver } from "zen-observable-ts";
+import {
+  ApolloError,
+  graphQLResultHasProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+} from "../../errors/index.js";
 
 export namespace RetryLink {
   export interface Options {
@@ -54,7 +59,21 @@ class RetryableOperation {
 
   private try() {
     this.currentSubscription = this.forward(this.operation).subscribe({
-      next: this.observer.next.bind(this.observer),
+      next: (result) => {
+        if (graphQLResultHasProtocolErrors(result)) {
+          this.onError(
+            new ApolloError({
+              protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
+            })
+          );
+          // Unsubscribe from the current subscription to prevent the `complete`
+          // handler to be called as a result of the stream closing.
+          this.currentSubscription?.unsubscribe();
+          return;
+        }
+
+        this.observer.next(result);
+      },
       error: this.onError,
       complete: this.observer.complete.bind(this.observer),
     });

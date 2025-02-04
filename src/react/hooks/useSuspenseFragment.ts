@@ -13,6 +13,14 @@ import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
+import type { NoInfer } from "../types/types.js";
+
+type From<TData> =
+  | StoreObject
+  | Reference
+  | FragmentType<NoInfer<TData>>
+  | string
+  | null;
 
 export interface UseSuspenseFragmentOptions<TData, TVars>
   extends Omit<
@@ -23,7 +31,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
       Cache.ReadFragmentOptions<TData, TVars>,
       "id" | "variables" | "returnPartialData"
     > {
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
+  from: From<TData>;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
   /**
@@ -37,8 +45,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
-type From<TData, TVars> = UseSuspenseFragmentOptions<TData, TVars>["from"];
-type NonNullFrom<TData, TVars> = Exclude<From<TData, TVars>, null>;
+type NonNullFrom<TData> = Exclude<From<TData>, null>;
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 
@@ -52,7 +59,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: NonNullFrom<TData, TVariables>;
+    from: NonNullFrom<TData>;
   }
 ): UseSuspenseFragmentResult<TData>;
 
@@ -70,7 +77,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: From<TData, TVariables>;
+    from: From<TData>;
   }
 ): UseSuspenseFragmentResult<TData | null>;
 

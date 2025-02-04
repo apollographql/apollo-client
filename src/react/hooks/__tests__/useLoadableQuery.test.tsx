@@ -5094,10 +5094,13 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   expect(updateQuery).toHaveBeenCalledWith(
     { greeting: "Hello" },
     {
+      complete: true,
+      previousQueryResult: { greeting: "Hello" },
       subscriptionData: {
         data: { greetingUpdated: "Subscription hello" },
       },
       variables: {},
+      subscriptionVariables: undefined
     }
   );
 });

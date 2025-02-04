@@ -159,7 +159,7 @@ export interface ApolloQueryResult<T> {
    * Describes whether `data` is a complete or partial result. This flag is only
    * set when `returnPartialData` is `true` in query options.
    */
-  complete?: boolean;
+  complete: boolean;
 }
 
 // This is part of the public API, people write these functions in `updateQueries`.

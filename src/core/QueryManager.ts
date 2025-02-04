@@ -1264,6 +1264,7 @@ export class QueryManager<TStore> {
           data: result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
         };
 
         // In the case we start multiple network requests simulatenously, we
@@ -1660,11 +1661,8 @@ export class QueryManager<TStore> {
           data: data as TData | undefined,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
+          complete: diff.complete,
         };
-
-        if (returnPartialData) {
-          result.complete = diff.complete;
-        }
 
         return Observable.of(result);
       };
@@ -1721,12 +1719,6 @@ export class QueryManager<TStore> {
         context,
         fetchPolicy,
         errorPolicy,
-      }).map((result) => {
-        if (returnPartialData) {
-          result.complete = true;
-        }
-
-        return result;
       });
 
     const shouldNotify =

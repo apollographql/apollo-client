@@ -1805,7 +1805,7 @@ describe.skip("type tests", () => {
     }
   });
 
-  test("returns TData | null when from is null", () => {
+  test("returns null when from is null", () => {
     type Data = { foo: string };
     type Vars = Record<string, never>;
     const fragment: TypedDocumentNode<Data, Vars> = gql``;

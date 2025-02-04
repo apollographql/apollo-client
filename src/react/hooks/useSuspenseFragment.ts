@@ -37,6 +37,9 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
+type From<TData, TVars> = UseSuspenseFragmentOptions<TData, TVars>["from"];
+type NonNullFrom<TData, TVars> = Exclude<From<TData, TVars>, null>;
+
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 
 const NULL_PLACEHOLDER = [] as unknown as [
@@ -49,7 +52,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: {};
+    from: NonNullFrom<TData, TVariables>;
   }
 ): UseSuspenseFragmentResult<TData>;
 
@@ -67,7 +70,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: {} | null;
+    from: From<TData, TVariables>;
   }
 ): UseSuspenseFragmentResult<TData | null>;
 

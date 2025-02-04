@@ -45,8 +45,6 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
-type NonNullFrom<TData> = Exclude<From<TData>, null>;
-
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 
 const NULL_PLACEHOLDER = [] as unknown as [
@@ -59,7 +57,7 @@ export function useSuspenseFragment<
   TVariables extends OperationVariables = OperationVariables,
 >(
   options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: NonNullFrom<TData>;
+    from: NonNullable<From<TData>>;
   }
 ): UseSuspenseFragmentResult<TData>;
 

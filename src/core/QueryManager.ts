@@ -1265,6 +1265,7 @@ export class QueryManager<TStore> {
           loading: false,
           networkStatus: NetworkStatus.ready,
           complete: true,
+          partial: false,
         };
 
         // In the case we start multiple network requests simulatenously, we
@@ -1662,6 +1663,7 @@ export class QueryManager<TStore> {
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           complete: diff.complete,
+          partial: !diff.complete,
         };
 
         return Observable.of(result);

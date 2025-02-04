@@ -254,6 +254,7 @@ export class ObservableQuery<
     const result: ApolloQueryResult<TData> = {
       data: undefined,
       complete: false,
+      partial: true,
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
@@ -280,6 +281,7 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       result.complete = diff.complete;
+      result.partial = !diff.complete;
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;

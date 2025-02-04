@@ -118,6 +118,8 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await observable.setOptions({ query, pollInterval: 10 });
@@ -126,6 +128,8 @@ describe("ObservableQuery", () => {
           data: dataTwo,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         observable.stopPolling();
@@ -164,6 +168,8 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await observable.setOptions({ query, pollInterval: 0 });
@@ -203,6 +209,8 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await observable.setOptions({ query, pollInterval: 10 });
@@ -211,6 +219,8 @@ describe("ObservableQuery", () => {
           data: dataTwo,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         observable.stopPolling();
@@ -269,6 +279,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.refetch(variables2);
@@ -277,12 +289,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -337,6 +353,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.refetch();
@@ -345,12 +363,16 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -394,6 +416,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.setOptions({
@@ -405,12 +429,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       // go back to first set of variables
@@ -419,12 +447,16 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -455,6 +487,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(observable.refetch()).rejects.toThrow(
@@ -469,6 +503,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -496,6 +532,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.setOptions({ fetchPolicy: "network-only" });
@@ -504,6 +542,8 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -550,6 +590,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(timesFired).toBe(1);
@@ -561,6 +603,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
 
       expect(timesFired).toBe(1);
@@ -612,6 +656,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
       expect(timesFired).toBe(0);
 
@@ -621,6 +667,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(timesFired).toBe(1);
       await expect(stream).not.toEmitAnything();
@@ -669,6 +717,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -725,6 +775,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(timesFired).toBe(1);
@@ -757,6 +809,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       const res = await observable.setOptions({
@@ -767,18 +821,24 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -813,6 +873,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
@@ -821,12 +883,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -854,11 +920,15 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
@@ -867,11 +937,15 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -933,11 +1007,15 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
@@ -946,11 +1024,15 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -984,12 +1066,16 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
+        complete: false,
+        partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
 
       await observable.setVariables(differentVariables);
@@ -998,11 +1084,15 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1048,6 +1138,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
@@ -1056,12 +1148,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1096,6 +1192,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
 
       await observable.refetch(differentVariables);
@@ -1104,12 +1202,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1136,6 +1238,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
 
       await observable.setVariables(variables);
@@ -1171,6 +1275,8 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1210,6 +1316,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.refetch(differentVariables);
@@ -1218,6 +1326,8 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
@@ -1267,6 +1377,8 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1295,6 +1407,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       void observableQuery.refetch({ id: 2 });
@@ -1320,6 +1434,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1427,6 +1543,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.refetch(variables2);
@@ -1435,12 +1553,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await observable.refetch(variables1);
@@ -1449,12 +1571,16 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1539,6 +1665,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1548,6 +1676,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1555,6 +1685,8 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1565,6 +1697,8 @@ describe("ObservableQuery", () => {
           data,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
@@ -1573,6 +1707,8 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: true,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1580,6 +1716,8 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1590,6 +1728,8 @@ describe("ObservableQuery", () => {
           data: data2,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
@@ -1598,6 +1738,8 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: true,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1605,6 +1747,8 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1669,6 +1813,7 @@ describe("ObservableQuery", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -1676,6 +1821,7 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         complete: true,
+        partial: false,
       });
 
       const oldLinkObs = linkObservable;
@@ -1691,6 +1837,7 @@ describe("ObservableQuery", () => {
         loading: true,
         networkStatus: NetworkStatus.refetch,
         complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitError(intentionalNetworkFailure);
@@ -1708,6 +1855,7 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1770,6 +1918,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await observableWithoutVariables.refetch({
@@ -1785,6 +1935,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         expect(console.warn).toHaveBeenCalledTimes(1);
@@ -1858,6 +2010,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         // It's a common mistake to call refetch({ variables }) when you meant
@@ -1952,6 +2106,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await observableWithVariablesVar.refetch({ variables: ["d", "e"] });
@@ -1965,6 +2121,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         expect(console.warn).not.toHaveBeenCalled();
@@ -2073,12 +2231,16 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       void observable.refetch();
@@ -2087,6 +2249,8 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqual({
         data: dataOneWithTypename,
@@ -2098,6 +2262,8 @@ describe("ObservableQuery", () => {
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqual({
         data: dataTwoWithTypename,
@@ -2126,6 +2292,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
 
       await tick();
@@ -2134,6 +2302,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
 
       await stream.takeNext();
@@ -2142,6 +2312,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: 7,
+        complete: true,
+        partial: false,
       });
     });
 
@@ -2162,6 +2334,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: 7,
+        complete: true,
+        partial: false,
       });
 
       const observable = client.watchQuery({ query, variables });
@@ -2170,6 +2344,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     });
 
@@ -2196,6 +2372,8 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
+        complete: false,
+        partial: true,
       });
     });
 
@@ -2225,6 +2403,8 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
+        complete: false,
+        partial: true,
       });
 
       expect(currentResult.error === currentResult2.error).toBe(true);
@@ -2255,6 +2435,8 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
+        complete: false,
+        partial: true,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
@@ -2263,6 +2445,8 @@ describe("ObservableQuery", () => {
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match
         networkStatus: NetworkStatus.ready,
+        complete: false,
+        partial: true,
       });
     });
 
@@ -2335,11 +2519,15 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     });
 
@@ -2387,6 +2575,7 @@ describe("ObservableQuery", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         complete: false,
+        partial: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -2396,12 +2585,14 @@ describe("ObservableQuery", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         complete: false,
+        partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
         complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -2409,12 +2600,14 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
         complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2441,6 +2634,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       const observable = client.watchQuery({
@@ -2453,6 +2648,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -2461,12 +2658,16 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2499,6 +2700,8 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -2507,22 +2710,30 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2573,6 +2784,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(obs.getCurrentResult()).toEqualApolloQueryResult({
@@ -2584,6 +2797,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       link.simulateResult(
@@ -2620,6 +2835,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(obs.getCurrentResult()).toEqualApolloQueryResult({
@@ -2635,6 +2852,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       // This 2nd identical check is intentional to ensure calling this function
@@ -2652,6 +2871,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2709,34 +2930,50 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: cacheValues.initial,
+          complete: true,
+          partial: false,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: cacheValues.initial,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: cacheValues.update1,
+          complete: true,
+          partial: false,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.update2,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.update3,
+          complete: true,
+          partial: false,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.update4,
+          complete: true,
+          partial: false,
         },
       };
 
@@ -2744,34 +2981,50 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.link,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.link,
+          complete: false,
+          partial: true,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.refetch,
+          complete: false,
+          partial: true,
         },
       };
 
@@ -2780,26 +3033,38 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         // like linkOnly:
         // resultAfterRefetchNext
@@ -2811,14 +3076,20 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: undefined,
+          complete: false,
+          partial: true,
         },
         // like cacheAndLink:
         // resultAfterLinkNext
@@ -2833,18 +3104,26 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
+          complete: true,
+          partial: false,
         },
         resultAfterSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
+          complete: false,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.done,
           data: cacheValues.update1,
+          complete: false,
+          partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.update1,
+          complete: false,
+          partial: true,
         },
         // like cacheAndLink:
         // resultAfterCacheUpdate2
@@ -3013,11 +3292,15 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         void client.mutate({
@@ -3032,6 +3315,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: {
@@ -3039,6 +3324,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await expect(stream).toEmitApolloQueryResult({
@@ -3047,6 +3334,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: {
@@ -3054,6 +3343,8 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          complete: true,
+          partial: false,
         });
 
         await expect(stream).not.toEmitAnything();
@@ -3362,6 +3653,8 @@ describe("ObservableQuery", () => {
       data: dataOne,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     let invalidateCount = 0;
@@ -3425,6 +3718,8 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: dataOne,
+        complete: true,
+        partial: false,
       });
       return {
         ...result,
@@ -3440,6 +3735,8 @@ describe("ObservableQuery", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { mapped: true },
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -3637,10 +3934,12 @@ test("handles changing variables in rapid succession before other request is com
   observable.subscribe(jest.fn());
 
   await waitFor(() => {
-    expect(observable.getCurrentResult(false)).toEqual({
+    expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
       data: { userCount: 10 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -3652,9 +3951,11 @@ test("handles changing variables in rapid succession before other request is com
   await wait(50);
 
   expect(observable.options.variables).toEqual({ department: null });
-  expect(observable.getCurrentResult(false)).toEqual({
+  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    complete: true,
+    partial: false,
   });
 });

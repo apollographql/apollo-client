@@ -104,7 +104,9 @@ export async function processInvariants(options: BuildStepOptions) {
           b.property(
             "init",
             b.identifier("file"),
-            b.stringLiteral("@apollo/client/" + file)
+            b.stringLiteral(
+              options.baseDir.replace(/^dist/, "@apollo/client") + "/" + file
+            )
           )
         );
         if (condition) {
@@ -139,72 +141,76 @@ export async function processInvariants(options: BuildStepOptions) {
     ast: recast.types.ASTNode;
     relativeSourcePath: string;
   }) {
-    recast.visit(ast, {
-      visitCallExpression(path) {
-        this.traverse(path);
-        const node = path.node;
+    if (
+      relativeSourcePath !==
+      osPathJoin(`utilities`, `globals`, `invariantWrappers.${options.jsExt}`)
+    )
+      recast.visit(ast, {
+        visitCallExpression(path) {
+          this.traverse(path);
+          const node = path.node;
 
-        if (isCallWithLength(node, "invariant", 1)) {
-          const newArgs = [...node.arguments];
-          newArgs.splice(
-            1,
-            1,
-            getErrorCode(relativeSourcePath, node, "errorCodes")
-          );
-
-          return b.callExpression.from({
-            ...node,
-            arguments: newArgs,
-          });
-        }
-
-        if (isCallWithLength(node, "newInvariantError", 0)) {
-          const newArgs = [...node.arguments];
-          newArgs.splice(
-            0,
-            1,
-            getErrorCode(relativeSourcePath, node, "errorCodes")
-          );
-
-          return b.callExpression.from({
-            ...node,
-            arguments: newArgs,
-          });
-        }
-
-        if (
-          node.callee.type === "MemberExpression" &&
-          isIdWithName(node.callee.object, "invariant") &&
-          isIdWithName(node.callee.property, "debug", "log", "warn", "error")
-        ) {
-          let newNode = node;
-          if (node.arguments[0].type !== "Identifier") {
-            const prop = node.callee.property;
-            if (!n.Identifier.check(prop)) throw new Error("unexpected type");
-
+          if (isCallWithLength(node, "invariant", 1)) {
             const newArgs = [...node.arguments];
             newArgs.splice(
-              0,
               1,
-              getErrorCode(
-                relativeSourcePath,
-                node,
-                ("dev" + capitalize(prop.name)) as ExportName
-              )
+              1,
+              getErrorCode(relativeSourcePath, node, "errorCodes")
             );
-            newNode = b.callExpression.from({
+
+            return b.callExpression.from({
               ...node,
               arguments: newArgs,
             });
           }
 
-          if (isDEVLogicalAnd(path.parent.node)) {
-            return newNode;
+          if (isCallWithLength(node, "newInvariantError", 0)) {
+            const newArgs = [...node.arguments];
+            newArgs.splice(
+              0,
+              1,
+              getErrorCode(relativeSourcePath, node, "errorCodes")
+            );
+
+            return b.callExpression.from({
+              ...node,
+              arguments: newArgs,
+            });
           }
-          return b.logicalExpression("&&", makeDEVExpr(), newNode);
-        }
-      },
-    });
+
+          if (
+            node.callee.type === "MemberExpression" &&
+            isIdWithName(node.callee.object, "invariant") &&
+            isIdWithName(node.callee.property, "debug", "log", "warn", "error")
+          ) {
+            let newNode = node;
+            if (node.arguments[0].type !== "Identifier") {
+              const prop = node.callee.property;
+              if (!n.Identifier.check(prop)) throw new Error("unexpected type");
+
+              const newArgs = [...node.arguments];
+              newArgs.splice(
+                0,
+                1,
+                getErrorCode(
+                  relativeSourcePath,
+                  node,
+                  ("dev" + capitalize(prop.name)) as ExportName
+                )
+              );
+              newNode = b.callExpression.from({
+                ...node,
+                arguments: newArgs,
+              });
+            }
+
+            if (isDEVLogicalAnd(path.parent.node)) {
+              return newNode;
+            }
+            return b.logicalExpression("&&", makeDEVExpr(), newNode);
+          }
+        },
+      });
 
     if (
       ![
@@ -233,11 +239,32 @@ export async function processInvariants(options: BuildStepOptions) {
     return { ast };
   }
 
-  function isIdWithName(node: Node | null | undefined, ...names: string[]) {
+  function _isIdWithName(node: Node | null | undefined, ...names: string[]) {
     return (
       node &&
       n.Identifier.check(node) &&
       names.some((name) => name === node.name)
+    );
+  }
+
+  /**
+   * wrapper around _isIdWithName that also checks for cjs-transpiled code-patterns:
+   *
+   * invariant(condition)
+   * ^^^^^^^^^
+   * in CJS:
+   * (0, index_js_1.invariant)(condition)
+   *                ^^^^^^^^^
+   * or index_js_2.invariant.warn
+   *               ^^^^^^^^^
+   */
+  function isIdWithName(node: Node | null | undefined, ...names: string[]) {
+    return (
+      _isIdWithName(node, ...names) ||
+      (n.SequenceExpression.check(node) &&
+        n.MemberExpression.check(node.expressions[1]) &&
+        _isIdWithName(node.expressions[1].property, ...names)) ||
+      (n.MemberExpression.check(node) && _isIdWithName(node.property, ...names))
     );
   }
 

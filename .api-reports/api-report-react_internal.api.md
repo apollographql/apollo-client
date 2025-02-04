@@ -1357,11 +1357,6 @@ type NextResultListener = (method: "next" | "error" | "complete", arg?: any) => 
 // @public
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 
-// Warning: (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type NonNullFrom<TData> = Exclude<From<TData>, null>;
-
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
     constructor({ queryManager, queryInfo, options, }: {
@@ -2322,7 +2317,7 @@ interface UseReadQueryResult<TData = unknown> {
 //
 // @public (undocumented)
 function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: NonNullFrom<TData>;
+    from: NonNullable<From<TData>>;
 }): UseSuspenseFragmentResult<TData>;
 
 // @public (undocumented)
@@ -2521,7 +2516,7 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/react/hooks/useBackgroundQuery.ts:38:3 - (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:54:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:78:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useSuspenseFragment.ts:62:5 - (ae-forgotten-export) The symbol "NonNullFrom" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:60:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 // src/react/query-preloader/createQueryPreloader.ts:145:3 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
 // src/react/query-preloader/createQueryPreloader.ts:167:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 

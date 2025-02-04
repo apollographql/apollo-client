@@ -1376,11 +1376,6 @@ type NextResultListener = (method: "next" | "error" | "complete", arg?: any) => 
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 export { NoInfer_2 as NoInfer }
 
-// Warning: (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type NonNullFrom<TData> = Exclude<From<TData>, null>;
-
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
     constructor({ queryManager, queryInfo, options, }: {
@@ -2425,7 +2420,7 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
 //
 // @public (undocumented)
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: NonNullFrom<TData>;
+    from: NonNullable<From<TData>>;
 }): UseSuspenseFragmentResult<TData>;
 
 // @public (undocumented)
@@ -2573,7 +2568,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:54:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:78:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:120:9 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useSuspenseFragment.ts:62:5 - (ae-forgotten-export) The symbol "NonNullFrom" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:60:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

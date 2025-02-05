@@ -1865,10 +1865,12 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         data: initialData,
         networkStatus: 1,
+        complete: true,
+        partial: false,
       });
 
       const error = await stream.takeError();
@@ -2543,19 +2545,23 @@ describe("client", () => {
 
     let stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      complete: true,
+      partial: false,
     });
 
     await wait(0);
     await expect(observable.refetch()).rejects.toThrow();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      complete: true,
+      partial: false,
     });
 
     const error = await stream.takeError();
@@ -2576,26 +2582,31 @@ describe("client", () => {
     observable.resetLastResults();
     stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      complete: true,
+      partial: false,
     });
 
     await wait(0);
     await expect(observable.refetch()).resolves.toBeTruthy();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      complete: true,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
-      errors: undefined,
       data: dataTwo,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -3003,18 +3014,24 @@ describe("@connection", () => {
       data: { a: 123 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(bStream).toEmitApolloQueryResult({
       data: { b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 123, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     aVar(aVar() + 111);
@@ -3023,6 +3040,8 @@ describe("@connection", () => {
       data: { a: 234 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(bStream).not.toEmitAnything({ timeout: 10 });
@@ -3031,6 +3050,8 @@ describe("@connection", () => {
       data: { a: 234, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     bVar(bVar().toUpperCase());
@@ -3041,12 +3062,16 @@ describe("@connection", () => {
       data: { b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     aVar(aVar() + 222);
@@ -3056,18 +3081,24 @@ describe("@connection", () => {
       data: { a: 456 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(bStream).toEmitApolloQueryResult({
       data: { b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 456, b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     // Since the ObservableQuery skips results that are the same as the
@@ -3102,6 +3133,8 @@ describe("@connection", () => {
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: false,
+      partial: true,
     });
 
     // Now try writing directly to the cache, rather than calling
@@ -3120,6 +3153,8 @@ describe("@connection", () => {
       data: { c: "see" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     cache.modify({
@@ -3138,6 +3173,8 @@ describe("@connection", () => {
       data: { c: "saw" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     client.cache.evict({ fieldName: "c" });
@@ -3149,6 +3186,8 @@ describe("@connection", () => {
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: false,
+      partial: true,
     });
   });
 
@@ -4585,6 +4624,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(document).toMatchDocument(transformedQuery);
@@ -4736,6 +4777,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     });
   });
@@ -4826,6 +4869,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -4851,6 +4896,8 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -4948,6 +4995,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -4976,6 +5025,8 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -5112,6 +5163,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(handleNext).toHaveBeenCalledTimes(1);
@@ -5156,6 +5209,8 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -5245,6 +5300,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -5270,6 +5327,8 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -5359,6 +5418,8 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -5384,6 +5445,8 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -5482,6 +5545,8 @@ describe("custom document transforms", () => {
         data: mocks[0].result.data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       expect(document).toMatchDocument(transformedQuery);
@@ -5501,6 +5566,8 @@ describe("custom document transforms", () => {
       data: mocks[1].result.data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 

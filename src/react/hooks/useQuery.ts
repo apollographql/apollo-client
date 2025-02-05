@@ -426,6 +426,7 @@ function useObservableSubscriptionResult<
             (previousResult && previousResult.loading) ||
             !equal(error, previousResult.error)
           ) {
+            const complete = !!previousResult?.data;
             setResult(
               {
                 data: (previousResult &&
@@ -433,6 +434,8 @@ function useObservableSubscriptionResult<
                 error: error as ApolloError,
                 loading: false,
                 networkStatus: NetworkStatus.error,
+                complete,
+                partial: !complete,
               },
               resultData,
               observable,
@@ -751,6 +754,8 @@ const ssrDisabledResult = maybeDeepFreeze({
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.loading,
+  complete: false,
+  partial: true,
 });
 
 const skipStandbyResult = maybeDeepFreeze({
@@ -758,6 +763,8 @@ const skipStandbyResult = maybeDeepFreeze({
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.ready,
+  complete: false,
+  partial: true,
 });
 
 function bindObservableMethods<TData, TVariables extends OperationVariables>(

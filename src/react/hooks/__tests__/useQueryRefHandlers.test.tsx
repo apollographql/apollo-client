@@ -1965,7 +1965,6 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
   type UpdateQueryFn = SubscribeToMoreUpdateQueryFn<
     SimpleCaseData,
     Record<string, never>,
-    Record<string, never>,
     SubscriptionData
   >;
 

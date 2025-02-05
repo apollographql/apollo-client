@@ -206,7 +206,6 @@ export interface UpdateQueryMapFn<
 export type SubscribeToMoreUpdateQueryFn<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-  TSubscriptionVariables extends OperationVariables = TVariables,
   TSubscriptionData = TData,
 > = {
   (
@@ -235,7 +234,6 @@ export interface SubscribeToMoreOptions<
   updateQuery?: SubscribeToMoreUpdateQueryFn<
     TData,
     TVariables,
-    TSubscriptionVariables,
     TSubscriptionData
   >;
   onError?: (error: Error) => void;

@@ -1090,13 +1090,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private reportError(error: ApolloError, variables: TVariables | undefined) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
-    const errorResult = {
+    const errorResult: ApolloQueryResult<TData> = {
+      data: undefined,
+      complete: false,
+      partial: true,
       ...this.getLastResult(),
       error,
       errors: error.graphQLErrors,
       networkStatus: NetworkStatus.error,
       loading: false,
-    } as ApolloQueryResult<TData>;
+    };
 
     this.updateLastResult(errorResult, variables);
 

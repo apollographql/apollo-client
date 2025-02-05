@@ -841,6 +841,11 @@ TData
     };
 } : never : never;
 
+// Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+type From<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
+
 // @internal
 const getApolloCacheMemoryInternals: (() => {
     cache: {
@@ -2180,8 +2185,6 @@ export function useFragment<TData = any, TVars = OperationVariables>(options: Us
 // @public (undocumented)
 export interface UseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer_2<TData>, NoInfer_2<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
     client?: ApolloClient<any>;
-    // Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
     from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
     // (undocumented)
@@ -2283,6 +2286,40 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     data?: TData | undefined;
     error?: ApolloError;
     variables?: TVariables | undefined;
+};
+
+// Warning: (ae-forgotten-export) The symbol "UseSuspenseFragmentOptions" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: NonNullable<From<TData>>;
+}): UseSuspenseFragmentResult<TData>;
+
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: null;
+}): UseSuspenseFragmentResult<null>;
+
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
+    from: From<TData>;
+}): UseSuspenseFragmentResult<TData | null>;
+
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables>): UseSuspenseFragmentResult<TData>;
+
+// @public (undocumented)
+interface UseSuspenseFragmentOptions<TData, TVars> extends Omit<Cache_2.DiffOptions<NoInfer_2<TData>, NoInfer_2<TVars>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVars>, "id" | "variables" | "returnPartialData"> {
+    client?: ApolloClient<any>;
+    // (undocumented)
+    from: From<TData>;
+    // (undocumented)
+    optimistic?: boolean;
+}
+
+// @public (undocumented)
+export type UseSuspenseFragmentResult<TData> = {
+    data: MaybeMasked<TData>;
 };
 
 // Warning: (ae-forgotten-export) The symbol "SuspenseQueryHookOptions" needs to be exported by the entry point index.d.ts
@@ -2392,6 +2429,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:51:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:75:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:120:9 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:60:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

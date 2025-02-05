@@ -1896,7 +1896,7 @@ describe("client.watchQuery", () => {
         expect(previousData).toStrictEqual(previousResult);
         // Type Guard
         if (!complete) {
-          return undefined;
+          return;
         }
         return {
           user: { ...previousData.user, name: "User (updated)" },

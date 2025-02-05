@@ -2054,12 +2054,14 @@ interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends Ope
 }
 
 // @public (undocumented)
-type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = UpdateQueryMapFn<TData, TVariables, {
-    subscriptionData: {
-        data: Unmasked<TSubscriptionData>;
-    };
-    subscriptionVariables: TSubscriptionVariables | undefined;
-}>;
+type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = {
+    (
+    previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+        subscriptionData: {
+            data: Unmasked<TSubscriptionData>;
+        };
+    }): Unmasked<TData> | void;
+};
 
 // @public (undocumented)
 interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
@@ -2182,18 +2184,16 @@ export function unwrapQueryRef<TData>(queryRef: Partial<WrappedQueryRef<TData>>)
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
-interface UpdateQueryFn<TData, TVariables extends OperationVariables, TOptions = {}> {
+interface UpdateQueryFn<TData, TVariables extends OperationVariables> {
     // (undocumented)
-    (mapFn: UpdateQueryMapFn<TData, TVariables, TOptions>): void;
+    (mapFn: UpdateQueryMapFn<TData, TVariables>): void;
 }
 
 // @public (undocumented)
-interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables, TOptions = {}> {
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-    //
+interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     (
-    previousQueryResult: Unmasked<TData>, options: TOptions & UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | undefined;
+    previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
@@ -2201,10 +2201,10 @@ type UpdateQueryOptions<TData, TVariables> = {
     variables?: TVariables;
 } & ({
     complete: true;
-    previousQueryResult: Unmasked<TData>;
+    previousData: Unmasked<TData>;
 } | {
     complete: false;
-    previousQueryResult: DeepPartial<Unmasked<TData>> | undefined;
+    previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
 // @public (undocumented)
@@ -2545,12 +2545,13 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:346:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:51:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:75:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:60:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts

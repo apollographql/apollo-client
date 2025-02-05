@@ -2669,12 +2669,14 @@ interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends Ope
 }
 
 // @public (undocumented)
-type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = UpdateQueryMapFn<TData, TVariables, {
-    subscriptionData: {
-        data: Unmasked<TSubscriptionData>;
-    };
-    subscriptionVariables: TSubscriptionVariables | undefined;
-}>;
+type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = {
+    (
+    previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+        subscriptionData: {
+            data: Unmasked<TSubscriptionData>;
+        };
+    }): Unmasked<TData> | void;
+};
 
 // @public (undocumented)
 interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
@@ -2798,12 +2800,10 @@ type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData exten
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
-interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables, TOptions = {}> {
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-    //
+interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables> {
     // (undocumented)
     (
-    previousQueryResult: Unmasked<TData>, options: TOptions & UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | undefined;
+    previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)
@@ -2811,10 +2811,10 @@ type UpdateQueryOptions<TData, TVariables> = {
     variables?: TVariables;
 } & ({
     complete: true;
-    previousQueryResult: Unmasked<TData>;
+    previousData: Unmasked<TData>;
 } | {
     complete: false;
-    previousQueryResult: DeepPartial<Unmasked<TData>> | undefined;
+    previousData: DeepPartial<Unmasked<TData>> | undefined;
 });
 
 // @public (undocumented)
@@ -2904,12 +2904,13 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/writeToStore.ts:65:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:346:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/utilities/graphql/storeUtils.ts:226:12 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts

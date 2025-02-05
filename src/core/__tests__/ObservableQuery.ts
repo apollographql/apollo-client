@@ -3383,7 +3383,6 @@ describe("ObservableQuery", () => {
             DeepPartial<typeof previous> | undefined
           >();
         }
-        return undefined;
       });
 
       observable.subscribe(jest.fn());
@@ -3409,7 +3408,6 @@ describe("ObservableQuery", () => {
             DeepPartial<typeof previous> | undefined
           >();
         }
-        return undefined;
       });
 
       expect(updateQuerySpy).toHaveBeenCalledTimes(2);

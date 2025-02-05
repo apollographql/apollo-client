@@ -245,7 +245,7 @@ describe("subscribeToMore", () => {
         expect(previousData).toStrictEqual(prev);
         // Type Guard
         if (!complete) {
-          return undefined;
+          return;
         }
 
         expect(previousData.entry).not.toContainEqual(nextMutation);

@@ -3373,8 +3373,8 @@ describe.skip("Type Tests", () => {
       },
     });
 
-    updateQuery((previousData, { complete, previousData }) => {
-      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+    updateQuery((_previousData, { complete, previousData }) => {
+      expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
       expectTypeOf(complete).toEqualTypeOf<boolean>();
       expectTypeOf(previousData).toEqualTypeOf<
         UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
@@ -3487,8 +3487,8 @@ describe.skip("Type Tests", () => {
       },
     });
 
-    updateQuery((previousData, { complete, previousData }) => {
-      expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+    updateQuery((_previousData, { complete, previousData }) => {
+      expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
       expectTypeOf(complete).toEqualTypeOf<boolean>();
       expectTypeOf(previousData).toEqualTypeOf<
         UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
@@ -3501,8 +3501,6 @@ describe.skip("Type Tests", () => {
           DeepPartial<UnmaskedQuery> | undefined
         >();
       }
-
-      return {} as UnmaskedQuery;
     });
 
     {

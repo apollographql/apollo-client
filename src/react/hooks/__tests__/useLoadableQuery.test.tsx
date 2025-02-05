@@ -5100,7 +5100,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
         data: { greetingUpdated: "Subscription hello" },
       },
       variables: {},
-      subscriptionVariables: undefined
+      subscriptionVariables: undefined,
     }
   );
 });

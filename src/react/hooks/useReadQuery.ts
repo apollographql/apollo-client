@@ -55,7 +55,12 @@ export function useReadQuery<TData>(
     : undefined
   ) as ApolloClient<any> | ObservableQuery<TData>;
 
-  return wrapHook("useReadQuery", useReadQuery_, clientOrObsQuery)(queryRef);
+  return wrapHook(
+    "useReadQuery",
+    // eslint-disable-next-line react-compiler/react-compiler
+    useReadQuery_,
+    clientOrObsQuery
+  )(queryRef);
 }
 
 function useReadQuery_<TData>(

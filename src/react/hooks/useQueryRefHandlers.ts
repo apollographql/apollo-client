@@ -67,6 +67,7 @@ export function useQueryRefHandlers<
 
   return wrapHook(
     "useQueryRefHandlers",
+    // eslint-disable-next-line react-compiler/react-compiler
     useQueryRefHandlers_,
     clientOrObsQuery
   )(queryRef);

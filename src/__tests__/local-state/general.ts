@@ -409,13 +409,14 @@ describe("Cache manipulation", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         serverData,
         selectedItemId: -1,
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await client.mutate({
@@ -424,13 +425,14 @@ describe("Cache manipulation", () => {
       refetchQueries: ["FetchInitialData"],
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         serverData,
         selectedItemId: 123,
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 

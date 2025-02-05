@@ -488,10 +488,11 @@ describe("useLazyQuery Hook", () => {
       },
     });
 
-    expect(refetchResult).toEqual({
+    expect(refetchResult).toEqualApolloQueryResult({
       data: { counter: 2, vars: { execVar: false } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     {
@@ -3384,13 +3385,13 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
     }
 
     {
       const { data } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
     }
   });
 
@@ -3483,13 +3484,13 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Query>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
 
     {
       const { data } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Query>();
+      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
   });
 });

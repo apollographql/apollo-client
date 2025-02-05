@@ -83,27 +83,30 @@ describe("subscribeToMore", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     wSLink.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(10);
     wSLink.simulateResult(results[1]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -140,16 +143,18 @@ describe("subscribeToMore", () => {
       wSLink.simulateResult(result);
     }
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(15);
@@ -190,10 +195,11 @@ describe("subscribeToMore", () => {
       wSLink.simulateResult(result);
     }
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(15);
@@ -217,10 +223,10 @@ describe("subscribeToMore", () => {
         ROOT_QUERY: {
           entry: [
             {
-              value: 1,
+              value: "1",
             },
             {
-              value: 2,
+              value: "2",
             },
           ],
         },
@@ -269,31 +275,34 @@ describe("subscribeToMore", () => {
       // note: we don't complete mutation with performTransaction because a real example would detect duplicates
     }
 
-    await expect(stream).toEmitValue({
-      data: { entry: [{ value: 1 }, { value: 2 }] },
+    await expect(stream).toEmitApolloQueryResult({
+      data: { entry: [{ value: "1" }, { value: "2" }] },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
-        entry: [{ value: 1 }, { value: 2 }, { value: "Dahivat Pandya" }],
+        entry: [{ value: "1" }, { value: "2" }, { value: "Dahivat Pandya" }],
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         entry: [
-          { value: 1 },
-          { value: 2 },
+          { value: "1" },
+          { value: "2" },
           { value: "Dahivat Pandya" },
           { value: "Amanda Liu" },
         ],
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -345,27 +354,30 @@ describe("subscribeToMore", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     wSLink.simulateResult(results[0]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await wait(10);
     wSLink.simulateResult(results[1]);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 });

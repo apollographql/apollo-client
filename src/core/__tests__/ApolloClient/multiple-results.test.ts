@@ -52,6 +52,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     link.simulateResult({ result: { data: laterData } });
@@ -60,6 +61,7 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -109,6 +111,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     link.simulateResult({
@@ -119,6 +122,7 @@ describe("mutiple results", () => {
       data: undefined,
       loading: false,
       networkStatus: 7,
+      partial: true,
     });
 
     await wait(20);
@@ -128,6 +132,7 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -177,6 +182,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     // this should fire the `next` event without this error
@@ -191,6 +197,7 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -240,6 +247,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     // this should fire the next event again
@@ -252,6 +260,7 @@ describe("mutiple results", () => {
       loading: false,
       networkStatus: 7,
       errors: [new Error("defer failed")],
+      partial: false,
     });
 
     link.simulateResult({ result: { data: laterData } });
@@ -260,6 +269,7 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -320,6 +330,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     link.simulateResult({ error: new Error("defer failed") });

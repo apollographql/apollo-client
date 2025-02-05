@@ -418,59 +418,64 @@ describe("no-cache", () => {
         };
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(1),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
       await observable.setVariables({ id: "2" });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        // TODO: Since we did not set `returnPartialData` on `watchQuery`, this
-        // property should not be here.
         partial: true,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
       await observable.refetch();
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
       await observable.refetch({ id: "3" });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(3),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -502,7 +507,7 @@ describe("cache-first", () => {
       })
     );
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
@@ -510,7 +515,7 @@ describe("cache-first", () => {
     });
     expect(results).toHaveLength(0);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Author",
@@ -521,6 +526,7 @@ describe("cache-first", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(results).toHaveLength(1);
 
@@ -538,7 +544,7 @@ describe("cache-first", () => {
       });
     }, "bogus");
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Bogus",
@@ -555,7 +561,7 @@ describe("cache-first", () => {
       client.cache.removeOptimistic("bogus");
     }, 50);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Author",
@@ -566,6 +572,7 @@ describe("cache-first", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // A network request should not be triggered until after the bogus
     // optimistic transaction has been removed.
@@ -584,7 +591,7 @@ describe("cache-first", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Author",
@@ -595,6 +602,7 @@ describe("cache-first", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(inOptimisticTransaction).toBe(false);
     expect(results).toHaveLength(1);
@@ -634,23 +642,25 @@ describe("cache-only", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         count: 1,
       },
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
     await observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         count: 2,
       },
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-only");
@@ -703,58 +713,59 @@ describe("cache-and-network", function () {
       };
     }
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(1),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await observable.setVariables({ id: "2" });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
-      // TODO: This field should not be present since returnPartialData is not
-      // set.
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: true,
       networkStatus: NetworkStatus.refetch,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await observable.refetch({ id: "3" });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
-      // TODO: This field should not be present since returnPartialData is not
-      // set.
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(3),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -764,6 +775,7 @@ describe("cache-and-network", function () {
 describe("nextFetchPolicy", () => {
   type TData = {
     echo: {
+      __typename: "Echo";
       linkCounter: number;
       opName: string;
       opVars: Record<string, any>;
@@ -881,18 +893,24 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -903,6 +921,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -914,22 +935,27 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result.loading).toBe(false);
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 3,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: false,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 3,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: false,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       // Changing variables resets the fetchPolicy to its initial value.
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -940,6 +966,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     // But nextFetchPolicy is applied again after the first request.
@@ -1013,18 +1042,24 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1035,6 +1070,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // Changing variables resets the fetchPolicy to its initial value.
     // expect(observable.options.fetchPolicy).toBe("cache-and-network");
@@ -1047,19 +1085,24 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result.loading).toBe(false);
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 3,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: false,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 3,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: false,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: true,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1070,12 +1113,14 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: false,
     });
     // But nextFetchPolicy is applied again after the first request.
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1086,6 +1131,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1166,18 +1214,24 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1188,6 +1242,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1198,14 +1255,20 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result.loading).toBe(false);
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       // The nextFetchPolicy function we provided always returnes cache-first,
@@ -1215,8 +1278,7 @@ describe("nextFetchPolicy", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1227,6 +1289,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 

@@ -7,7 +7,6 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
-  ApolloQueryResult,
   FetchPolicy,
   NetworkStatus,
   OperationVariables,
@@ -1854,6 +1853,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -1907,6 +1907,7 @@ describe("useQuery Hook", () => {
         data: { vars: { sourceOfVar: "reobserve without variable merge" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -2243,12 +2244,13 @@ describe("useQuery Hook", () => {
           if (obsQuery.hasObservers()) {
             expect(inactiveSet.has(obsQuery)).toBe(false);
             activeSet.add(obsQuery);
-            expect(obsQuery.getCurrentResult()).toEqual({
+            expect(obsQuery.getCurrentResult()).toEqualApolloQueryResult({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
                 linkCount: expectedLinkCount,
               },
+              partial: false,
             });
           } else {
             expect(activeSet.has(obsQuery)).toBe(false);
@@ -2267,6 +2269,7 @@ describe("useQuery Hook", () => {
         data: { linkCount: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5274,6 +5277,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5345,6 +5349,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5434,6 +5439,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5514,6 +5520,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5729,6 +5736,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -5806,6 +5814,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -6214,6 +6223,7 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -6221,10 +6231,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
-        // TODO: Fix ApolloQueryResult type to allow `data` to be an optional property.
-        // This fails without the type case for now even though the runtime
-        // code doesn't include a `data` property.
-      } as unknown as ApolloQueryResult<Query1>);
+      });
 
       expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
@@ -6280,8 +6287,7 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
-        // TODO: Fix TypeScript types to allow for `data` to be `undefined`
-        data: undefined as unknown as Query1,
+        data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -7295,6 +7301,7 @@ describe("useQuery Hook", () => {
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -7429,6 +7436,7 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7539,6 +7547,7 @@ describe("useQuery Hook", () => {
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7647,6 +7656,7 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -9143,6 +9153,7 @@ describe("useQuery Hook", () => {
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(requestSpy).toHaveBeenCalledTimes(1);
@@ -9256,6 +9267,7 @@ describe("useQuery Hook", () => {
         data: { hello: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
 
@@ -10129,6 +10141,7 @@ describe("useQuery Hook", () => {
         data: { a: "aaa", b: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({

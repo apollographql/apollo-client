@@ -52,6 +52,8 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
 
     link.simulateResult({ result: { data: laterData } });
@@ -60,6 +62,8 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -109,6 +113,8 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
 
     link.simulateResult({
@@ -119,6 +125,8 @@ describe("mutiple results", () => {
       data: undefined,
       loading: false,
       networkStatus: 7,
+      complete: false,
+      partial: true,
     });
 
     await wait(20);
@@ -128,6 +136,8 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -177,6 +187,8 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
 
     // this should fire the `next` event without this error
@@ -191,6 +203,8 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -240,6 +254,8 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
 
     // this should fire the next event again
@@ -252,6 +268,8 @@ describe("mutiple results", () => {
       loading: false,
       networkStatus: 7,
       errors: [new Error("defer failed")],
+      complete: true,
+      partial: false,
     });
 
     link.simulateResult({ result: { data: laterData } });
@@ -260,6 +278,8 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -320,6 +340,8 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
+      complete: true,
+      partial: false,
     });
 
     link.simulateResult({ error: new Error("defer failed") });

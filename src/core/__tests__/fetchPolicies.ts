@@ -418,10 +418,12 @@ describe("no-cache", () => {
         };
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(1),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -431,12 +433,16 @@ describe("no-cache", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -446,6 +452,8 @@ describe("no-cache", () => {
         data: dataWithId(2),
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        complete: true,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -453,6 +461,8 @@ describe("no-cache", () => {
         data: dataWithId(2),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -462,6 +472,8 @@ describe("no-cache", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        complete: false,
+        partial: true,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -469,6 +481,8 @@ describe("no-cache", () => {
         data: dataWithId(3),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -505,6 +519,7 @@ describe("cache-first", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       complete: false,
+      partial: true,
     });
     expect(results).toHaveLength(0);
 
@@ -520,6 +535,7 @@ describe("cache-first", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       complete: true,
+      partial: false,
     });
     expect(results).toHaveLength(1);
 
@@ -546,6 +562,7 @@ describe("cache-first", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       complete: false,
+      partial: true,
     });
     expect(results).toHaveLength(1);
 
@@ -566,6 +583,7 @@ describe("cache-first", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       complete: true,
+      partial: false,
     });
     // A network request should not be triggered until after the bogus
     // optimistic transaction has been removed.
@@ -596,6 +614,7 @@ describe("cache-first", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       complete: true,
+      partial: false,
     });
     expect(inOptimisticTransaction).toBe(false);
     expect(results).toHaveLength(1);
@@ -635,23 +654,27 @@ describe("cache-only", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         count: 1,
       },
+      complete: true,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
     await observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         count: 2,
       },
+      complete: true,
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-only");
@@ -704,10 +727,12 @@ describe("cache-and-network", function () {
       };
     }
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(1),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await observable.setVariables({ id: "2" });
@@ -716,12 +741,16 @@ describe("cache-and-network", function () {
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
+      complete: false,
+      partial: true,
     });
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await observable.refetch();
@@ -730,12 +759,16 @@ describe("cache-and-network", function () {
       data: dataWithId(2),
       loading: true,
       networkStatus: NetworkStatus.refetch,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await observable.refetch({ id: "3" });
@@ -744,12 +777,16 @@ describe("cache-and-network", function () {
       data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
+      complete: false,
+      partial: true,
     });
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(3),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -890,6 +927,8 @@ describe("nextFetchPolicy", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     }
 
@@ -906,6 +945,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -930,6 +971,8 @@ describe("nextFetchPolicy", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       // Changing variables resets the fetchPolicy to its initial value.
@@ -949,6 +992,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     // But nextFetchPolicy is applied again after the first request.
@@ -1035,6 +1080,8 @@ describe("nextFetchPolicy", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     }
 
@@ -1051,6 +1098,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     // Changing variables resets the fetchPolicy to its initial value.
     // expect(observable.options.fetchPolicy).toBe("cache-and-network");
@@ -1076,6 +1125,8 @@ describe("nextFetchPolicy", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     }
 
@@ -1092,6 +1143,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: true,
       networkStatus: NetworkStatus.setVariables,
+      complete: true,
+      partial: false,
     });
     // But nextFetchPolicy is applied again after the first request.
     expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1109,6 +1162,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1202,6 +1257,8 @@ describe("nextFetchPolicy", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
     }
 
@@ -1218,6 +1275,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1241,6 +1300,8 @@ describe("nextFetchPolicy", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       // The nextFetchPolicy function we provided always returnes cache-first,
@@ -1263,6 +1324,8 @@ describe("nextFetchPolicy", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 

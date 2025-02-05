@@ -259,7 +259,6 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
 
 // @public (undocumented)
 export interface ApolloQueryResult<T> {
-    complete: boolean;
     // (undocumented)
     data: T | undefined;
     error?: ApolloError;

@@ -297,8 +297,8 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
-        partial: true,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1192,8 +1192,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
-        partial: true,
+        complete: true,
+        partial: false,
       });
 
       await observable.refetch(differentVariables);
@@ -1210,8 +1210,8 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
-        partial: true,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1238,8 +1238,8 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
-        partial: true,
+        complete: true,
+        partial: false,
       });
 
       await observable.setVariables(variables);
@@ -2252,10 +2252,12 @@ describe("ObservableQuery", () => {
         complete: true,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -2265,10 +2267,12 @@ describe("ObservableQuery", () => {
         complete: true,
         partial: false,
       });
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        complete: true,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2435,8 +2439,8 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: false,
-        partial: true,
+        complete: true,
+        partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
@@ -2445,8 +2449,8 @@ describe("ObservableQuery", () => {
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match
         networkStatus: NetworkStatus.ready,
-        complete: false,
-        partial: true,
+        complete: true,
+        partial: false,
       });
     });
 
@@ -2784,6 +2788,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        // TODO: This should be false since there are still outstanding chunks
+        // that haven't been processed.
         complete: true,
         partial: false,
       });
@@ -2797,8 +2803,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
-        partial: false,
+        complete: false,
+        partial: true,
       });
 
       link.simulateResult(
@@ -2999,32 +3005,32 @@ describe("ObservableQuery", () => {
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.link,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.link,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.refetch,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
       };
 
@@ -3110,20 +3116,20 @@ describe("ObservableQuery", () => {
         resultAfterSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.done,
           data: cacheValues.update1,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.update1,
-          complete: false,
-          partial: true,
+          complete: true,
+          partial: false,
         },
         // like cacheAndLink:
         // resultAfterCacheUpdate2
@@ -3810,6 +3816,8 @@ test("regression test for #10587", async () => {
           },
           loading: true,
           networkStatus: 1,
+          complete: true,
+          partial: false,
         },
       ],
       [
@@ -3822,6 +3830,8 @@ test("regression test for #10587", async () => {
           },
           loading: false,
           networkStatus: 7,
+          complete: true,
+          partial: false,
         },
       ],
     ],
@@ -3837,6 +3847,8 @@ test("regression test for #10587", async () => {
           },
           loading: true,
           networkStatus: 1,
+          complete: true,
+          partial: false,
         },
       ],
       [
@@ -3851,6 +3863,8 @@ test("regression test for #10587", async () => {
           // TODO: this should be `true`, but that seems to be a separate bug!
           loading: false,
           networkStatus: 7,
+          complete: true,
+          partial: false,
         },
       ],
       [
@@ -3864,6 +3878,8 @@ test("regression test for #10587", async () => {
           },
           loading: false,
           networkStatus: 7,
+          complete: true,
+          partial: false,
         },
       ],
     ],

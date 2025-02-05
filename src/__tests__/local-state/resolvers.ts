@@ -76,6 +76,8 @@ describe("Basic resolver capabilities", () => {
       data: { foo: { bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -121,6 +123,8 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -171,6 +175,8 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -232,6 +238,8 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -265,6 +273,8 @@ describe("Basic resolver capabilities", () => {
       data: { foo: { bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -298,6 +308,8 @@ describe("Basic resolver capabilities", () => {
       data: { foo: { bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -363,6 +375,8 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -393,6 +407,8 @@ describe("Basic resolver capabilities", () => {
       data: { isInCart: false },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -558,6 +574,8 @@ describe("Basic resolver capabilities", () => {
       data: { foo: { bar: true }, bar: { baz: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(barResolver).not.toHaveBeenCalled();
   });
@@ -597,6 +615,8 @@ describe("Writing cache data from resolvers", () => {
       data: { field: 1 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -654,6 +674,8 @@ describe("Writing cache data from resolvers", () => {
       data: { obj: { __typename: "Object", field: 2 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -724,6 +746,8 @@ describe("Writing cache data from resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 });
@@ -766,6 +790,8 @@ describe("Resolving field aliases", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -796,6 +822,8 @@ describe("Resolving field aliases", () => {
       data: { fie: { bar: true, __typename: "Foo" } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -837,6 +865,8 @@ describe("Resolving field aliases", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -879,6 +909,8 @@ describe("Resolving field aliases", () => {
       data: { fie: { bar: "yo", __typename: "Foo" } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -941,6 +973,8 @@ describe("Resolving field aliases", () => {
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     // When the same query fires again, `isInCart` should be pulled from
@@ -949,6 +983,8 @@ describe("Resolving field aliases", () => {
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 });
@@ -990,6 +1026,8 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
 
     client.addResolvers({
@@ -1009,6 +1047,8 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -1057,6 +1097,8 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
     expect(count).toEqual(1);
   });
@@ -1195,6 +1237,8 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 });
@@ -1224,6 +1268,8 @@ describe("Async resolvers", () => {
       data: { isLoggedIn: true },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 
@@ -1283,6 +1329,8 @@ describe("Async resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      complete: true,
+      partial: false,
     });
   });
 });

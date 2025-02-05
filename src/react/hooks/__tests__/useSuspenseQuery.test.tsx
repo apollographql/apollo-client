@@ -7888,7 +7888,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -7901,7 +7901,8 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      complete: true,
+      partial: false,
     });
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -8269,7 +8270,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(fetchMorePromise!).resolves.toEqual({
+    await expect(fetchMorePromise!).resolves.toEqualApolloQueryResult({
       data: {
         greetings: [
           {
@@ -8284,7 +8285,8 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      complete: true,
+      partial: false,
     });
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -9442,7 +9444,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
       data: {
         hero: {
           heroFriends: [
@@ -9454,7 +9456,8 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      complete: true,
+      partial: false,
     });
 
     cache.updateQuery({ query }, (data) => ({

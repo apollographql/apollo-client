@@ -67,9 +67,19 @@ export interface QueryFunctionOptions<
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue]() on GitHub.
+   */
   onCompleted?: (data: MaybeMasked<TData>) => void;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue]() on GitHub.
+   */
   onError?: (error: ApolloError) => void;
 
   // Default WatchQueryOptions for this useQuery, providing initial values for
@@ -180,9 +190,19 @@ export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue]() on GitHub.
+   */
   onCompleted?: (data: MaybeMasked<TData>) => void;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue]() on GitHub.
+   */
   onError?: (error: ApolloError) => void;
 
   /** @internal */

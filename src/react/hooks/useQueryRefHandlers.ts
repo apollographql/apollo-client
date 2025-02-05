@@ -16,7 +16,7 @@ import type {
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { wrapHook } from "./internal/index.js";
-import { ApolloClient } from "../../core/ApolloClient.js";
+import type { ApolloClient } from "../../core/ApolloClient.js";
 import type { ObservableQuery } from "../../core/ObservableQuery.js";
 
 export interface UseQueryRefHandlersResult<

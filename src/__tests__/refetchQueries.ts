@@ -819,9 +819,11 @@ describe("client.refetchQueries", () => {
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
       expect(Object.keys(result).sort()).toEqual([
+        "complete",
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });
@@ -888,9 +890,11 @@ describe("client.refetchQueries", () => {
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
       expect(Object.keys(result).sort()).toEqual([
+        "complete",
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });
@@ -954,9 +958,11 @@ describe("client.refetchQueries", () => {
     const results = (await refetchResult).map((result) => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
       expect(Object.keys(result).sort()).toEqual([
+        "complete",
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });

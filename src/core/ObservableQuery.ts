@@ -723,18 +723,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    */
   public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
     const { queryManager } = this;
-    const { result, complete } = queryManager.cache.diff<Unmasked<TData>>({
+    const { result, complete } = queryManager.cache.diff<TData>({
       query: this.options.query,
       variables: this.variables,
       returnPartialData: true,
       optimistic: false,
     });
 
-    const newResult = mapFn(result!, {
-      variables: this.variables,
-      complete: !!complete,
-      previousData: result,
-    } as UpdateQueryOptions<TData, TVariables>);
+    const newResult = mapFn(
+      result! as Unmasked<TData>,
+      {
+        variables: this.variables,
+        complete: !!complete,
+        previousData: result,
+      } as UpdateQueryOptions<TData, TVariables>
+    );
 
     if (newResult) {
       queryManager.cache.writeQuery({

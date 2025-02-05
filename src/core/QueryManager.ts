@@ -1260,12 +1260,14 @@ export class QueryManager<TStore> {
           queryInfo.markReady();
         }
 
+        const complete = !!result.data;
+
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
-          partial: false,
+          complete,
+          partial: !complete,
         };
 
         // In the case we start multiple network requests simulatenously, we
@@ -1279,8 +1281,6 @@ export class QueryManager<TStore> {
         if (hasErrors && errorPolicy !== "ignore") {
           aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;
-          aqr.complete = !!aqr.data;
-          aqr.partial = !aqr.complete;
         }
 
         return aqr;

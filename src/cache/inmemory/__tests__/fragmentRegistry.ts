@@ -90,22 +90,26 @@ describe("FragmentRegistry", () => {
       client.watchQuery({ query, fetchPolicy: "cache-and-network" })
     );
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {
         __typename: "Query",
         source: "local",
       },
+      complete: true,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         __typename: "Query",
         source: "link",
       },
+      complete: true,
+      partial: false,
     });
 
     expect(cache.readQuery({ query })).toEqual({

@@ -426,7 +426,6 @@ function useObservableSubscriptionResult<
             (previousResult && previousResult.loading) ||
             !equal(error, previousResult.error)
           ) {
-            const complete = !!previousResult?.data;
             setResult(
               {
                 data: (previousResult &&
@@ -434,8 +433,7 @@ function useObservableSubscriptionResult<
                 error: error as ApolloError,
                 loading: false,
                 networkStatus: NetworkStatus.error,
-                complete,
-                partial: !complete,
+                partial: !previousResult?.data,
               },
               resultData,
               observable,
@@ -736,7 +734,7 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
-  const { data, complete, partial, ...resultWithoutPartial } = result;
+  const { data, partial, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {
     data, // Ensure always defined, even if result.data is missing.
     ...resultWithoutPartial,
@@ -754,7 +752,6 @@ const ssrDisabledResult = maybeDeepFreeze({
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.loading,
-  complete: false,
   partial: true,
 });
 
@@ -763,7 +760,6 @@ const skipStandbyResult = maybeDeepFreeze({
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.ready,
-  complete: false,
   partial: true,
 });
 

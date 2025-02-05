@@ -612,12 +612,14 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -631,21 +633,25 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -661,21 +667,25 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -706,12 +716,14 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -725,29 +737,35 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        complete: true,
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -763,29 +781,35 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        complete: true,
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -815,12 +839,14 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -834,21 +860,25 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -864,21 +894,25 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -908,12 +942,14 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -927,29 +963,35 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        complete: true,
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -965,29 +1007,35 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          complete: true,
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        complete: true,
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        complete: true,
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -1118,12 +1166,14 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         groceries: initialGroceries,
       },
+      complete: true,
+      partial: false,
     });
 
     expect(mergeArgsHistory).toEqual([{ offset: 0, limit: 2 }]);
@@ -1136,12 +1186,14 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
-      expect(fetchMoreResult).toEqual({
+      expect(fetchMoreResult).toEqualApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           groceries: additionalGroceries,
         },
+        complete: true,
+        partial: false,
       });
 
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1150,12 +1202,14 @@ describe("fetchMore on an observable query", () => {
     // This result comes entirely from the cache, without updating the
     // original variables for the ObservableQuery, because the
     // offsetLimitPagination field policy has keyArgs:false.
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         groceries: finalGroceries,
       },
+      complete: true,
+      partial: false,
     });
 
     expect(mergeArgsHistory).toEqual([
@@ -1393,38 +1447,46 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         emptyItems: [],
       },
+      complete: true,
+      partial: false,
     });
 
     const fetchMoreResult = await observable.fetchMore({
       variables,
     });
 
-    expect(fetchMoreResult).toEqual({
+    expect(fetchMoreResult).toEqualApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { emptyItems: [] },
+      complete: true,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       data: {
         emptyItems: [],
       },
+      complete: true,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         emptyItems: [],
       },
+      complete: true,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();

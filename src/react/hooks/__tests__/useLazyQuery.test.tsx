@@ -492,7 +492,6 @@ describe("useLazyQuery Hook", () => {
       data: { counter: 2, vars: { execVar: false } },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 

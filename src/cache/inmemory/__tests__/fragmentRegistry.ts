@@ -97,7 +97,6 @@ describe("FragmentRegistry", () => {
         __typename: "Query",
         source: "local",
       },
-      complete: true,
       partial: false,
     });
 
@@ -108,7 +107,6 @@ describe("FragmentRegistry", () => {
         __typename: "Query",
         source: "link",
       },
-      complete: true,
       partial: false,
     });
 

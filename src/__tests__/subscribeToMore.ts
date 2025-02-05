@@ -87,7 +87,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -97,7 +96,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -108,7 +106,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });
@@ -150,7 +147,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -158,7 +154,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -204,7 +199,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -285,7 +279,6 @@ describe("subscribeToMore", () => {
       data: { entry: [{ value: "1" }, { value: "2" }] },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -295,7 +288,6 @@ describe("subscribeToMore", () => {
       },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -310,7 +302,6 @@ describe("subscribeToMore", () => {
       },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -367,7 +358,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "1" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -377,7 +367,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "Dahivat Pandya" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -388,7 +377,6 @@ describe("subscribeToMore", () => {
       data: { entry: { value: "Amanda Liu" } },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });

@@ -416,7 +416,6 @@ describe("Cache manipulation", () => {
       },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -433,7 +432,6 @@ describe("Cache manipulation", () => {
       },
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });

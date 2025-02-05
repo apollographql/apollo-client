@@ -618,7 +618,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
-        complete: true,
         partial: false,
       });
 
@@ -639,7 +638,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -650,7 +648,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
-        complete: true,
         partial: false,
       });
 
@@ -673,7 +670,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -684,7 +680,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
-        complete: true,
         partial: false,
       });
 
@@ -722,7 +717,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
-        complete: true,
         partial: false,
       });
 
@@ -743,7 +737,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -754,7 +747,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
-        complete: true,
         partial: false,
       });
 
@@ -764,7 +756,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
-        complete: true,
         partial: false,
       });
 
@@ -787,7 +778,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -798,7 +788,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
-        complete: true,
         partial: false,
       });
 
@@ -808,7 +797,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
-        complete: true,
         partial: false,
       });
 
@@ -845,7 +833,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
-        complete: true,
         partial: false,
       });
 
@@ -866,7 +853,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -877,7 +863,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
-        complete: true,
         partial: false,
       });
 
@@ -900,7 +885,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -911,7 +895,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
-        complete: true,
         partial: false,
       });
 
@@ -948,7 +931,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
-        complete: true,
         partial: false,
       });
 
@@ -969,7 +951,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -980,7 +961,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
-        complete: true,
         partial: false,
       });
 
@@ -990,7 +970,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
-        complete: true,
         partial: false,
       });
 
@@ -1013,7 +992,6 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
-          complete: true,
           partial: false,
         });
       }
@@ -1024,7 +1002,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
-        complete: true,
         partial: false,
       });
 
@@ -1034,7 +1011,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
-        complete: true,
         partial: false,
       });
 
@@ -1172,7 +1148,6 @@ describe("fetchMore on an observable query", () => {
       data: {
         groceries: initialGroceries,
       },
-      complete: true,
       partial: false,
     });
 
@@ -1192,7 +1167,6 @@ describe("fetchMore on an observable query", () => {
         data: {
           groceries: additionalGroceries,
         },
-        complete: true,
         partial: false,
       });
 
@@ -1208,7 +1182,6 @@ describe("fetchMore on an observable query", () => {
       data: {
         groceries: finalGroceries,
       },
-      complete: true,
       partial: false,
     });
 
@@ -1453,7 +1426,6 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
-      complete: true,
       partial: false,
     });
 
@@ -1465,7 +1437,6 @@ describe("fetchMore on an observable query", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { emptyItems: [] },
-      complete: true,
       partial: false,
     });
 
@@ -1475,7 +1446,6 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
-      complete: true,
       partial: false,
     });
 
@@ -1485,7 +1455,6 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
-      complete: true,
       partial: false,
     });
 

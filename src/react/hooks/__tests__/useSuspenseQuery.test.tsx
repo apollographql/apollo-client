@@ -7901,7 +7901,6 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -8285,7 +8284,6 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -9456,7 +9454,6 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 

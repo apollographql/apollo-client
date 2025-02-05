@@ -118,7 +118,6 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -128,7 +127,6 @@ describe("ObservableQuery", () => {
           data: dataTwo,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -168,7 +166,6 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -209,7 +206,6 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -219,7 +215,6 @@ describe("ObservableQuery", () => {
           data: dataTwo,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -279,7 +274,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -289,7 +283,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
 
@@ -297,7 +290,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -353,7 +345,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -363,7 +354,6 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.refetch,
-        complete: true,
         partial: false,
       });
 
@@ -371,7 +361,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -416,7 +405,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -429,7 +417,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
 
@@ -437,7 +424,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -447,7 +433,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -455,7 +440,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -487,7 +471,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -503,7 +486,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -532,7 +514,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -542,7 +523,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -590,7 +570,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -603,7 +582,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
         partial: true,
       });
 
@@ -656,7 +634,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
         partial: true,
       });
       expect(timesFired).toBe(0);
@@ -667,7 +644,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(timesFired).toBe(1);
@@ -717,7 +693,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(timesFired).toBe(1);
@@ -775,7 +750,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -809,7 +783,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -821,7 +794,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -829,7 +801,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: true,
         partial: false,
       });
 
@@ -837,7 +808,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -873,7 +843,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -883,7 +852,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
 
@@ -891,7 +859,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -920,14 +887,12 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -937,14 +902,12 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1007,14 +970,12 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1024,14 +985,12 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1066,7 +1025,6 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: false,
         partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
@@ -1074,7 +1032,6 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
         partial: true,
       });
 
@@ -1084,14 +1041,12 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1138,7 +1093,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1148,7 +1102,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
 
@@ -1156,7 +1109,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1192,7 +1144,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1202,7 +1153,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
 
@@ -1210,7 +1160,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1238,7 +1187,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1275,7 +1223,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1316,7 +1263,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1326,7 +1272,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1377,7 +1322,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1407,7 +1351,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1434,7 +1377,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1543,7 +1485,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1553,7 +1494,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
 
@@ -1561,7 +1501,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1571,7 +1510,6 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: true,
         partial: false,
       });
 
@@ -1579,7 +1517,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1665,7 +1602,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1676,7 +1612,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: false,
         partial: true,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1685,7 +1620,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1697,7 +1631,6 @@ describe("ObservableQuery", () => {
           data,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
         expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1707,7 +1640,6 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: true,
         partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1716,7 +1648,6 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1728,7 +1659,6 @@ describe("ObservableQuery", () => {
           data: data2,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
         expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1738,7 +1668,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
-        complete: true,
         partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1747,7 +1676,6 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1812,7 +1740,6 @@ describe("ObservableQuery", () => {
         data: { counter: 1 },
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -1820,7 +1747,6 @@ describe("ObservableQuery", () => {
         data: { counter: 2, name: "Ben" },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1836,7 +1762,6 @@ describe("ObservableQuery", () => {
         data: { counter: 3, name: "Ben" },
         loading: true,
         networkStatus: NetworkStatus.refetch,
-        complete: true,
         partial: false,
       });
 
@@ -1854,7 +1779,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1918,7 +1842,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -1935,7 +1858,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -2010,7 +1932,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -2106,7 +2027,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -2121,7 +2041,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -2231,7 +2150,6 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2239,7 +2157,6 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2249,14 +2166,12 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
-        complete: true,
         partial: false,
       });
 
@@ -2264,14 +2179,12 @@ describe("ObservableQuery", () => {
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2296,7 +2209,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2306,7 +2218,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2316,7 +2227,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: 7,
-        complete: true,
         partial: false,
       });
     });
@@ -2338,7 +2248,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: 7,
-        complete: true,
         partial: false,
       });
 
@@ -2348,7 +2257,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
     });
@@ -2376,7 +2284,6 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: false,
         partial: true,
       });
     });
@@ -2407,7 +2314,6 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: false,
         partial: true,
       });
 
@@ -2439,7 +2345,6 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: true,
         partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
@@ -2449,7 +2354,6 @@ describe("ObservableQuery", () => {
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
     });
@@ -2523,14 +2427,12 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
     });
@@ -2578,7 +2480,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2588,14 +2489,12 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2603,14 +2502,12 @@ describe("ObservableQuery", () => {
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2638,7 +2535,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2652,7 +2548,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2662,7 +2557,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2670,7 +2564,6 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2704,7 +2597,6 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2714,14 +2606,12 @@ describe("ObservableQuery", () => {
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        complete: false,
         partial: true,
       });
 
@@ -2729,14 +2619,12 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2788,9 +2676,8 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This should be false since there are still outstanding chunks
+        // TODO: This should be true since there are still outstanding chunks
         // that haven't been processed.
-        complete: true,
         partial: false,
       });
 
@@ -2803,7 +2690,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: false,
         partial: true,
       });
 
@@ -2841,7 +2727,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2858,7 +2743,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2877,7 +2761,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2936,49 +2819,41 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: cacheValues.initial,
-          complete: true,
           partial: false,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: cacheValues.initial,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: cacheValues.update1,
-          complete: true,
           partial: false,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.update2,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.update3,
-          complete: true,
           partial: false,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.update4,
-          complete: true,
           partial: false,
         },
       };
@@ -2987,49 +2862,41 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.link,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.link,
-          complete: true,
           partial: false,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.refetch,
-          complete: true,
           partial: false,
         },
       };
@@ -3039,37 +2906,31 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: undefined,
-          complete: false,
           partial: true,
         },
         // like linkOnly:
@@ -3082,19 +2943,16 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: undefined,
-          complete: false,
           partial: true,
         },
         // like cacheAndLink:
@@ -3110,25 +2968,21 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
-          complete: true,
           partial: false,
         },
         resultAfterSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
-          complete: true,
           partial: false,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.done,
           data: cacheValues.update1,
-          complete: true,
           partial: false,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.update1,
-          complete: true,
           partial: false,
         },
         // like cacheAndLink:
@@ -3298,14 +3152,12 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -3321,7 +3173,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
@@ -3330,7 +3181,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -3340,7 +3190,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
@@ -3349,7 +3198,6 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -3659,7 +3507,6 @@ describe("ObservableQuery", () => {
       data: dataOne,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3724,7 +3571,6 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: dataOne,
-        complete: true,
         partial: false,
       });
       return {
@@ -3741,7 +3587,6 @@ describe("ObservableQuery", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { mapped: true },
-      complete: true,
       partial: false,
     });
 
@@ -3816,7 +3661,6 @@ test("regression test for #10587", async () => {
           },
           loading: true,
           networkStatus: 1,
-          complete: true,
           partial: false,
         },
       ],
@@ -3830,7 +3674,6 @@ test("regression test for #10587", async () => {
           },
           loading: false,
           networkStatus: 7,
-          complete: true,
           partial: false,
         },
       ],
@@ -3847,7 +3690,6 @@ test("regression test for #10587", async () => {
           },
           loading: true,
           networkStatus: 1,
-          complete: true,
           partial: false,
         },
       ],
@@ -3863,7 +3705,6 @@ test("regression test for #10587", async () => {
           // TODO: this should be `true`, but that seems to be a separate bug!
           loading: false,
           networkStatus: 7,
-          complete: true,
           partial: false,
         },
       ],
@@ -3878,7 +3719,6 @@ test("regression test for #10587", async () => {
           },
           loading: false,
           networkStatus: 7,
-          complete: true,
           partial: false,
         },
       ],
@@ -3954,7 +3794,6 @@ test("handles changing variables in rapid succession before other request is com
       data: { userCount: 10 },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });
@@ -3971,7 +3810,6 @@ test("handles changing variables in rapid succession before other request is com
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,
-    complete: true,
     partial: false,
   });
 });

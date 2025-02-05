@@ -1853,7 +1853,6 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -1908,7 +1907,6 @@ describe("useQuery Hook", () => {
         data: { vars: { sourceOfVar: "reobserve without variable merge" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -2252,7 +2250,6 @@ describe("useQuery Hook", () => {
               data: {
                 linkCount: expectedLinkCount,
               },
-              complete: true,
               partial: false,
             });
           } else {
@@ -2272,7 +2269,6 @@ describe("useQuery Hook", () => {
         data: { linkCount: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5281,7 +5277,6 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5354,7 +5349,6 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5445,7 +5439,6 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5527,7 +5520,6 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5744,7 +5736,6 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5823,7 +5814,6 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -6240,7 +6230,6 @@ describe("useQuery Hook", () => {
         errors: [new GraphQLError("Intentional error")],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: false,
         partial: true,
       });
 
@@ -6305,7 +6294,6 @@ describe("useQuery Hook", () => {
         errors: [new GraphQLError("Intentional error")],
         loading: false,
         networkStatus: NetworkStatus.error,
-        complete: false,
         partial: true,
       });
 
@@ -7313,7 +7301,6 @@ describe("useQuery Hook", () => {
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -7449,7 +7436,6 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -7561,7 +7547,6 @@ describe("useQuery Hook", () => {
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -7671,7 +7656,6 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          complete: true,
           partial: false,
         });
 
@@ -9169,7 +9153,6 @@ describe("useQuery Hook", () => {
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -9284,7 +9267,6 @@ describe("useQuery Hook", () => {
         data: { hello: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
@@ -10159,7 +10141,6 @@ describe("useQuery Hook", () => {
         data: { a: "aaa", b: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 

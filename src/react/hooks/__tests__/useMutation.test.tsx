@@ -1851,7 +1851,6 @@ describe("useMutation Hook", () => {
           data: {
             todoCount: 1,
           },
-          complete: true,
           partial: false,
         });
       });

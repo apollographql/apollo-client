@@ -52,7 +52,6 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -62,7 +61,6 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });
@@ -113,7 +111,6 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -125,7 +122,6 @@ describe("mutiple results", () => {
       data: undefined,
       loading: false,
       networkStatus: 7,
-      complete: false,
       partial: true,
     });
 
@@ -136,7 +132,6 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });
@@ -187,7 +182,6 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -203,7 +197,6 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });
@@ -254,7 +247,6 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 
@@ -268,7 +260,6 @@ describe("mutiple results", () => {
       loading: false,
       networkStatus: 7,
       errors: [new Error("defer failed")],
-      complete: true,
       partial: false,
     });
 
@@ -278,7 +269,6 @@ describe("mutiple results", () => {
       data: laterData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
   });
@@ -340,7 +330,6 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      complete: true,
       partial: false,
     });
 

@@ -1869,7 +1869,6 @@ describe("client", () => {
         loading: true,
         data: initialData,
         networkStatus: 1,
-        complete: true,
         partial: false,
       });
 
@@ -2549,7 +2548,6 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
-      complete: true,
       partial: false,
     });
 
@@ -2560,7 +2558,6 @@ describe("client", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
-      complete: true,
       partial: false,
     });
 
@@ -2586,7 +2583,6 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
-      complete: true,
       partial: false,
     });
 
@@ -2597,7 +2593,6 @@ describe("client", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
-      complete: true,
       partial: false,
     });
 
@@ -2605,7 +2600,6 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: dataTwo,
-      complete: true,
       partial: false,
     });
 
@@ -3014,7 +3008,6 @@ describe("@connection", () => {
       data: { a: 123 },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3022,7 +3015,6 @@ describe("@connection", () => {
       data: { b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3030,7 +3022,6 @@ describe("@connection", () => {
       data: { a: 123, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3040,7 +3031,6 @@ describe("@connection", () => {
       data: { a: 234 },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3050,7 +3040,6 @@ describe("@connection", () => {
       data: { a: 234, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3062,7 +3051,6 @@ describe("@connection", () => {
       data: { b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3070,7 +3058,6 @@ describe("@connection", () => {
       data: { a: 234, b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3081,7 +3068,6 @@ describe("@connection", () => {
       data: { a: 456 },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3089,7 +3075,6 @@ describe("@connection", () => {
       data: { b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3097,7 +3082,6 @@ describe("@connection", () => {
       data: { a: 456, b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3133,7 +3117,6 @@ describe("@connection", () => {
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: false,
       partial: true,
     });
 
@@ -3153,7 +3136,6 @@ describe("@connection", () => {
       data: { c: "see" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3173,7 +3155,6 @@ describe("@connection", () => {
       data: { c: "saw" },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
 
@@ -3186,7 +3167,6 @@ describe("@connection", () => {
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: false,
       partial: true,
     });
   });
@@ -4624,7 +4604,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -4777,7 +4756,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
     });
@@ -4869,7 +4847,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -4896,7 +4873,6 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });
@@ -4995,7 +4971,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5025,7 +5000,6 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });
@@ -5163,7 +5137,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5209,7 +5182,6 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });
@@ -5300,7 +5272,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5327,7 +5298,6 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });
@@ -5418,7 +5388,6 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5445,7 +5414,6 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });
@@ -5545,7 +5513,6 @@ describe("custom document transforms", () => {
         data: mocks[0].result.data,
         loading: false,
         networkStatus: NetworkStatus.ready,
-        complete: true,
         partial: false,
       });
 
@@ -5566,7 +5533,6 @@ describe("custom document transforms", () => {
       data: mocks[1].result.data,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      complete: true,
       partial: false,
     });
   });

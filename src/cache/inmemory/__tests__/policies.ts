@@ -3655,7 +3655,6 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
-        complete: true,
         partial: false,
       });
 
@@ -3690,7 +3689,6 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
-        complete: true,
         partial: false,
       });
 
@@ -3706,7 +3704,6 @@ describe("type policies", function () {
             extraMetaData: "extra",
           },
         },
-        complete: true,
         partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
@@ -4124,7 +4121,6 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
-        complete: true,
         partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
@@ -4150,7 +4146,6 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
-          complete: true,
           partial: false,
         });
         expect(cache.extract()).toMatchSnapshot();
@@ -4179,7 +4174,6 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
-          complete: true,
           partial: false,
         });
 
@@ -4207,7 +4201,6 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
-          complete: true,
           partial: false,
         });
 
@@ -4242,7 +4235,6 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
-          complete: true,
           partial: false,
         });
 
@@ -4272,7 +4264,6 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
-          complete: true,
           partial: false,
         });
 
@@ -4342,7 +4333,6 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
-          complete: true,
           partial: false,
         });
 
@@ -4371,7 +4361,6 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
-          complete: true,
           partial: false,
         });
 

@@ -3370,16 +3370,16 @@ describe("ObservableQuery", () => {
       });
 
       let updateQuerySpy = jest.fn();
-      observable.updateQuery((previous, { complete, previousQueryResult }) => {
+      observable.updateQuery((previous, { complete, previousData }) => {
         updateQuerySpy();
         expect(previous).toEqual({});
         expect(complete).toBe(false);
-        expect(previousQueryResult).toStrictEqual(previous);
+        expect(previousData).toStrictEqual(previous);
 
         if (complete) {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<typeof dataOne>();
+          expectTypeOf(previousData).toEqualTypeOf<typeof dataOne>();
         } else {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<
+          expectTypeOf(previousData).toEqualTypeOf<
             DeepPartial<typeof previous> | undefined
           >();
         }
@@ -3396,16 +3396,16 @@ describe("ObservableQuery", () => {
         });
       });
 
-      observable.updateQuery((previous, { complete, previousQueryResult }) => {
+      observable.updateQuery((previous, { complete, previousData }) => {
         updateQuerySpy();
         expect(previous).toEqual(dataOne);
         expect(complete).toBe(true);
-        expect(previousQueryResult).toStrictEqual(previous);
+        expect(previousData).toStrictEqual(previous);
 
         if (complete) {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<typeof dataOne>();
+          expectTypeOf(previousData).toEqualTypeOf<typeof dataOne>();
         } else {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<
+          expectTypeOf(previousData).toEqualTypeOf<
             DeepPartial<typeof previous> | undefined
           >();
         }

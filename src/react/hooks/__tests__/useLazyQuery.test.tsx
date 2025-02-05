@@ -3351,20 +3351,17 @@ describe.skip("Type Tests", () => {
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
-      updateQuery(
-        queryData,
-        { subscriptionData, complete, previousQueryResult }
-      ) {
+      updateQuery(queryData, { subscriptionData, complete, previousData }) {
         expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
         expectTypeOf(complete).toEqualTypeOf<boolean>();
-        expectTypeOf(previousQueryResult).toEqualTypeOf<
+        expectTypeOf(previousData).toEqualTypeOf<
           UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
         >();
 
         if (complete) {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
         } else {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<
+          expectTypeOf(previousData).toEqualTypeOf<
             DeepPartial<UnmaskedQuery> | undefined
           >();
         }
@@ -3376,10 +3373,10 @@ describe.skip("Type Tests", () => {
       },
     });
 
-    updateQuery((previousData, { complete, previousQueryResult }) => {
+    updateQuery((previousData, { complete, previousData }) => {
       expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
       expectTypeOf(complete).toEqualTypeOf<boolean>();
-      expectTypeOf(previousQueryResult).toEqualTypeOf<
+      expectTypeOf(previousData).toEqualTypeOf<
         UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
       >();
 
@@ -3469,12 +3466,9 @@ describe.skip("Type Tests", () => {
 
     subscribeToMore({
       document: gql`` as TypedDocumentNode<Subscription, never>,
-      updateQuery(
-        queryData,
-        { subscriptionData, complete, previousQueryResult }
-      ) {
+      updateQuery(queryData, { subscriptionData, complete, previousData }) {
         expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
-        expectTypeOf(previousQueryResult).toEqualTypeOf<
+        expectTypeOf(previousData).toEqualTypeOf<
           UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
         >();
         expectTypeOf(
@@ -3482,9 +3476,9 @@ describe.skip("Type Tests", () => {
         ).toEqualTypeOf<UnmaskedSubscription>();
 
         if (complete) {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
         } else {
-          expectTypeOf(previousQueryResult).toEqualTypeOf<
+          expectTypeOf(previousData).toEqualTypeOf<
             DeepPartial<UnmaskedQuery> | undefined
           >();
         }
@@ -3493,17 +3487,17 @@ describe.skip("Type Tests", () => {
       },
     });
 
-    updateQuery((previousData, { complete, previousQueryResult }) => {
+    updateQuery((previousData, { complete, previousData }) => {
       expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
       expectTypeOf(complete).toEqualTypeOf<boolean>();
-      expectTypeOf(previousQueryResult).toEqualTypeOf<
+      expectTypeOf(previousData).toEqualTypeOf<
         UnmaskedQuery | DeepPartial<UnmaskedQuery> | undefined
       >();
 
       if (complete) {
-        expectTypeOf(previousQueryResult).toEqualTypeOf<UnmaskedQuery>();
+        expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
       } else {
-        expectTypeOf(previousQueryResult).toEqualTypeOf<
+        expectTypeOf(previousData).toEqualTypeOf<
           DeepPartial<UnmaskedQuery> | undefined
         >();
       }

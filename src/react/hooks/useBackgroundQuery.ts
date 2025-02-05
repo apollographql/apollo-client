@@ -292,7 +292,7 @@ function useBackgroundQuery_<
       refetch,
       // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
       subscribeToMore: queryRef.observable
-        .subscribeToMore as any as SubscribeToMoreFunction<TData, TVariables>,
+        .subscribeToMore as SubscribeToMoreFunction<TData, TVariables>,
     },
   ];
 }

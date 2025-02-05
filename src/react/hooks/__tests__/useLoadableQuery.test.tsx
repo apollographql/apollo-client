@@ -5095,12 +5095,11 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
     { greeting: "Hello" },
     {
       complete: true,
-      previousQueryResult: { greeting: "Hello" },
+      previousData: { greeting: "Hello" },
       subscriptionData: {
         data: { greetingUpdated: "Subscription hello" },
       },
       variables: {},
-      subscriptionVariables: undefined,
     }
   );
 });

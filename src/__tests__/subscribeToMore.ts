@@ -240,23 +240,17 @@ describe("subscribeToMore", () => {
           name
         }
       `,
-      updateQuery: (
-        prev,
-        { subscriptionData, complete, previousQueryResult }
-      ) => {
+      updateQuery: (prev, { subscriptionData, complete, previousData }) => {
         expect(complete).toBe(true);
-        expect(previousQueryResult).toStrictEqual(prev);
+        expect(previousData).toStrictEqual(prev);
         // Type Guard
         if (!complete) {
           return undefined;
         }
 
-        expect(previousQueryResult.entry).not.toContainEqual(nextMutation);
+        expect(previousData.entry).not.toContainEqual(nextMutation);
         return {
-          entry: [
-            ...previousQueryResult.entry,
-            { value: subscriptionData.data.name },
-          ],
+          entry: [...previousData.entry, { value: subscriptionData.data.name }],
         };
       },
     });

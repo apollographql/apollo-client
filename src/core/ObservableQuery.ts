@@ -7,7 +7,6 @@ import type {
   Concast,
   Observer,
   ObservableSubscription,
-  DeepPartial,
 } from "../utilities/index.js";
 import {
   cloneDeep,
@@ -636,7 +635,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             this.updateQuery((previous, updateOptions) =>
               updateQuery(previous, {
                 subscriptionData,
-                subscriptionVariables: options.variables,
                 ...updateOptions,
               })
             );
@@ -732,23 +730,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       optimistic: false,
     });
 
-    const variables = (this as any).variables;
-    let updateOptions: UpdateQueryOptions<TData, TVariables>;
-    if (complete && result) {
-      updateOptions = {
-        variables,
-        complete: true,
-        previousQueryResult: result,
-      };
-    } else {
-      updateOptions = {
-        variables,
-        complete: false,
-        previousQueryResult: result as DeepPartial<Unmasked<TData>>,
-      };
-    }
-
-    const newResult = mapFn(result!, updateOptions);
+    const newResult = mapFn(result!, {
+      variables: this.variables,
+      complete: !!complete,
+      previousData: result,
+    } as UpdateQueryOptions<TData, TVariables>);
 
     if (newResult) {
       queryManager.cache.writeQuery({

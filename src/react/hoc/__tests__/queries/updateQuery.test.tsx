@@ -41,7 +41,6 @@ describe("[queries] updateQuery", () => {
           try {
             data!.updateQuery(() => {
               done = true;
-              return undefined;
             });
           } catch (error) {
             reject(error);

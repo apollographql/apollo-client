@@ -290,8 +290,7 @@ export function useQueryInternals<
   );
 
   const obsQueryFields = React.useMemo(
-    (): Omit<ObservableQueryFields<TData, TVariables>, "variables"> =>
-      bindObservableMethods(observable),
+    () => bindObservableMethods(observable),
     [observable]
   );
 

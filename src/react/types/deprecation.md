@@ -129,8 +129,7 @@ will switch to throwing errors by default which further negates the need for the
 
 ## `useMutation` is not affected by this deprecation
 
-`useMutation` doesn't suffer from most of the problems laid out here.
-At this point we can't fully guaranteed that we won't also deprecate those
-callbacks as they have some problems on their own, but this current deprecation
-is simply not about them, so please let's keep discussion to `useQuery` and
-`useLazyQuery` here.
+`useMutation` doesn't suffer from the same problems laid out here so these
+callbacks are unaffected. While we can't guarantee that we won't deprecate these
+callbacks in a future version, this deprecation is focused on `useQuery` and
+`useLazyQuery`.

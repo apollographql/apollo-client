@@ -47,6 +47,18 @@ expect the behavior from 3.5 to 3.7 as the correct behavior.
 
 Given this history, we are not confident that we can provide an approach that is intuitive for everyone and doesn't add more confusion among our userbase.
 
+### Our recommendation
+
+As we've received questions about `onCompleted` through various issues and our
+community forum, the solutions we propose often involve moving away from
+`onCompleted` entirely. Many of the cases where we see `onCompleted` used
+involve some kind of state syncing which is a highly discouraged pattern (see
+the section on ["State
+Syncing"](https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose#state-syncing)
+in Dominik's blog post for an example.) We have recommended against using the
+the use of these callbacks for quite some time now for one reason or another and
+believe its time for us to sunset these APIs.
+
 ### Bugs
 
 The final straw that made us come to this decision was [this bug report](https://github.com/apollographql/apollo-client/issues/12316):

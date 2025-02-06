@@ -203,7 +203,7 @@ export type UpdateQueryOptions<TData, TVariables> = {
 
 export interface UpdateQueryMapFn<
   TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TVariables = OperationVariables,
 > {
   (
     /**

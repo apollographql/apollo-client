@@ -2907,14 +2907,6 @@ type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData exten
 // @public (undocumented)
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
-// @public @deprecated (undocumented)
-export type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = (previousQueryResult: Unmasked<TData>, options: {
-    subscriptionData: {
-        data: Unmasked<TSubscriptionData>;
-    };
-    variables?: TSubscriptionVariables;
-}) => Unmasked<TData>;
-
 // @public (undocumented)
 export interface UpdateQueryMapFn<TData = any, TVariables = OperationVariables> {
     // (undocumented)

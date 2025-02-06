@@ -211,7 +211,7 @@ export interface UpdateQueryMapFn<
      * argument will be removed in the next major version of Apollo Client. Use
      * `options.previousData` instead for a more type-safe value.
      */
-    previousData: Unmasked<TData>,
+    unsafePreviousData: Unmasked<TData>,
     options: UpdateQueryOptions<TData, TVariables>
   ): Unmasked<TData> | void;
 }
@@ -227,7 +227,7 @@ export type SubscribeToMoreUpdateQueryFn<
      * argument will be removed in the next major version of Apollo Client. Use
      * `options.previousData` instead for a more type-safe value.
      */
-    previousData: Unmasked<TData>,
+    unsafePreviousData: Unmasked<TData>,
     options: UpdateQueryOptions<TData, TVariables> & {
       subscriptionData: { data: Unmasked<TSubscriptionData> };
     }

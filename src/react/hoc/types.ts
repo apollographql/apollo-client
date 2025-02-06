@@ -8,7 +8,7 @@ import type {
   FetchMoreQueryOptions,
   OperationVariables,
   SubscribeToMoreOptions,
-  UpdateQueryFn,
+  UpdateQueryMapFn,
 } from "../../core/index.js";
 import type {
   MutationFunction,
@@ -33,7 +33,7 @@ export interface QueryControls<
   startPolling: (pollInterval: number) => void;
   stopPolling: () => void;
   subscribeToMore: (options: SubscribeToMoreOptions) => () => void;
-  updateQuery: UpdateQueryFn<TData, any>;
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TGraphQLVariables>) => void;
 }
 
 export type DataValue<

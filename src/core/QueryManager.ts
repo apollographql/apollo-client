@@ -1658,7 +1658,7 @@ export class QueryManager<TStore> {
           data: data as TData | undefined,
           dataState:
             diff.complete ? "complete"
-            : returnPartialData && data ? "partial"
+            : data ? "partial"
             : "none",
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,

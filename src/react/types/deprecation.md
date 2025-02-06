@@ -32,7 +32,7 @@ Apollo Client users have provided logical justification for each of these cases 
 
 What makes matters worse is that with the introduction of `@defer` in the GraphQL
 ecosystem, we have yet another source of "updates".
-Should `onComplete` run once the initial chunk of data arrives? After all
+Should `onCompleted` run once the initial chunk of data arrives? After all
 deferred fragments arrived? After each fragment?
 While one behavior might make sense to some, others might have vastly different conflicting opinions that are equally valid.
 

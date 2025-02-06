@@ -12771,12 +12771,27 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData> | undefined
-        >();
-        expectTypeOf(
-          result.data
-        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+        if (result.dataState === "complete") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            Masked<MaskedVariablesCaseData>
+          >();
+        }
+
+        if (result.dataState === "partial") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            DeepPartial<Masked<MaskedVariablesCaseData>>
+          >();
+        }
+
+        if (result.dataState === "hasNext") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            Masked<MaskedVariablesCaseData>
+          >();
+        }
+
+        if (result.dataState === "none") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<undefined>();
+        }
       }
 
       {
@@ -12784,12 +12799,27 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
-        >();
-        expectTypeOf(
-          result.data
-        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+        if (result.dataState === "complete") {
+          expectTypeOf(
+            result.data
+          ).branded.toEqualTypeOf<MaskedVariablesCaseData>();
+        }
+
+        if (result.dataState === "partial") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            DeepPartial<MaskedVariablesCaseData>
+          >();
+        }
+
+        if (result.dataState === "hasNext") {
+          expectTypeOf(
+            result.data
+          ).branded.toEqualTypeOf<MaskedVariablesCaseData>();
+        }
+
+        if (result.dataState === "none") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<undefined>();
+        }
       }
     });
 
@@ -12817,12 +12847,27 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData> | undefined
-        >();
-        expectTypeOf(
-          result.data
-        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+        if (result.dataState === "complete") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            Masked<MaskedVariablesCaseData>
+          >();
+        }
+
+        if (result.dataState === "partial") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            DeepPartial<Masked<MaskedVariablesCaseData>>
+          >();
+        }
+
+        if (result.dataState === "hasNext") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            Masked<MaskedVariablesCaseData>
+          >();
+        }
+
+        if (result.dataState === "none") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<undefined>();
+        }
       }
 
       {
@@ -12846,12 +12891,27 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<
-          MaskedVariablesCaseData | undefined
-        >();
-        expectTypeOf(
-          result.data
-        ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
+        if (result.dataState === "complete") {
+          expectTypeOf(
+            result.data
+          ).branded.toEqualTypeOf<MaskedVariablesCaseData>();
+        }
+
+        if (result.dataState === "partial") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<
+            DeepPartial<MaskedVariablesCaseData>
+          >();
+        }
+
+        if (result.dataState === "hasNext") {
+          expectTypeOf(
+            result.data
+          ).branded.toEqualTypeOf<MaskedVariablesCaseData>();
+        }
+
+        if (result.dataState === "none") {
+          expectTypeOf(result.data).branded.toEqualTypeOf<undefined>();
+        }
       }
     });
 

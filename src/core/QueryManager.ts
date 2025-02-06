@@ -1254,7 +1254,7 @@ export class QueryManager<TStore> {
 
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
-          dataState: "complete",
+          dataState: result.data ? "complete" : "none",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: !result.data,
@@ -1262,6 +1262,7 @@ export class QueryManager<TStore> {
 
         if (isExecutionPatchResult(result) && result.hasNext) {
           aqr.dataState = "hasNext";
+          aqr.partial = true;
         }
 
         // In the case we start multiple network requests simulatenously, we

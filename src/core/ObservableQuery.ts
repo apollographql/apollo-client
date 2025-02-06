@@ -281,7 +281,6 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       result.partial = !diff.complete;
-      result.dataState = "none";
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
@@ -293,6 +292,7 @@ export class ObservableQuery<
 
       if (result.data === null) {
         result.data = void 0 as any;
+        result.dataState = "none";
       }
 
       if (diff.complete) {

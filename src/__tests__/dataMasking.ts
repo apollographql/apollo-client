@@ -1987,13 +1987,15 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
         greeting: { message: "Hello world", __typename: "Greeting" },
-      });
-    }
+      },
+      dataState: "hasNext",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -2011,9 +2013,7 @@ describe("client.watchQuery", () => {
     });
 
     // Since the fragment data is masked, we don't expect to get another result
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    await expect(stream).not.toEmitAnything();
 
     expect(client.readQuery({ query })).toEqual({
       greeting: {

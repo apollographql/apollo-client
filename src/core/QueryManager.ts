@@ -818,7 +818,8 @@ export class QueryManager<TStore> {
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
       .then(
         (result) =>
-          result && {
+          result &&
+          ({
             ...result,
             data: this.maskOperation({
               document: query,
@@ -826,7 +827,7 @@ export class QueryManager<TStore> {
               fetchPolicy: options.fetchPolicy,
               id: queryId,
             }),
-          }
+          } as ApolloQueryResult<TData>)
       )
       .finally(() => this.stopQuery(queryId));
   }

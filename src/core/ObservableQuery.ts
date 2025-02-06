@@ -598,8 +598,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               ...lastResult,
               networkStatus: originalNetworkStatus,
               loading: isNetworkRequestInFlight(originalNetworkStatus),
-              data: data as TData,
-            },
+              data,
+            } as ApolloQueryResult<TData>,
             this.variables
           );
         }
@@ -1139,7 +1139,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<T>
   ): ApolloQueryResult<MaybeMasked<T>> {
     return result && "data" in result ?
-        {
+        ({
           ...result,
           data: this.queryManager.maskOperation({
             document: this.query,
@@ -1147,7 +1147,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             fetchPolicy: this.options.fetchPolicy,
             id: this.queryId,
           }),
-        }
+        } as ApolloQueryResult<T>)
       : result;
   }
 }

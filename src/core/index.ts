@@ -17,7 +17,6 @@ export type {
   FetchMoreQueryOptions,
   SubscribeToMoreOptions,
   SubscribeToMoreFunction,
-  UpdateQueryFn,
   UpdateQueryMapFn,
   UpdateQueryOptions,
   SubscribeToMoreUpdateQueryFn,

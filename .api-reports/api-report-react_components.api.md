@@ -1865,7 +1865,7 @@ interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends Ope
 // @public (undocumented)
 type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
-    previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
             data: Unmasked<TSubscriptionData>;
         };
@@ -1979,7 +1979,7 @@ type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 interface UpdateQueryMapFn<TData = any, TVariables = OperationVariables> {
     // (undocumented)
     (
-    previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
+    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
 }
 
 // @public (undocumented)

@@ -1,33 +1,30 @@
 # Deprecation of `useQuery` and `useLazyQuery` lifecycle hooks
 
 With the release of Apollo Client 3.13, we will be deprecating the `useQuery`
-and `useLazyQuery` lifecyclye hooks `onCompleted` and `onError`.
+and `useLazyQuery` lifecycle hooks `onCompleted` and `onError` and will be removing them in Apollo Client 4.0.
 
-These lifecycle hooks have for a long time been the cause of confusion, bugs and
-frustration for many developers, and with this step we are following other tools
+These lifecycle hooks have long been the cause of confusion, bugs and
+frustration for many developers. With this step we are following other tools
 like React Query in their removal.
 
-React Query's maintainer Dominik Dorfmeister has already done a better job in
-[this comprehensive blog post](https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose)
-explaining their choice, so I'd highly recommend giving it a read.
+We encourage you to read [this comprehensive blog post](https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose) by React Query's maintainer [Dominik Dorfmeister](https://github.com/tkdodo) which provides some great insight into the pitfalls of these callback APIs. Apollo Client shares many of the same concerns.
 
-That said, we are a different library and so we have some different reasons behind
-this. I'll try my best to sum them up:
+While Apollo Client shares similar concerns, there are some additional reasons behind this change.
 
 ## `onCompleted`
 
-### No clear intuition what `onCompleted` means
+### Conflicting interpretations for `onCompleted` behavior
 
-Apollo Client is a normalized cache, which means that there are many different
+Apollo Client uses a normalized cache, which means that there are many different
 reasons why the data displayed by a component might change:
 
 * The query initiated by the current hook might return data
 * The same query might be initiated by another hook and update existing data
-* You call `fetchMore`
+* You call `fetchMore`, `refetch`, etc.
 * Another query or mutation might be overlapping with the query of the current hook and
-  update some of it's data
+  update some of its data
 * An optimistic update might update some or all of the data of the hook
-* Any other manual cache modification might update the data of the hook
+* A manual cache update might change the data for the hook
 
 For each of these events, you will find developers that see it as intuitive that
 the `onCompleted` callback should execute - or that it definitely should not execute.
@@ -36,11 +33,9 @@ the `onCompleted` callback should execute - or that it definitely should not exe
 
 What makes matters worse is that with the introduction of `@defer` in the GraphQL
 ecosystem, we have yet another source of "updates".
-Do you want `onComplete` to run once the initial chunk of data arrives? After all
+Should `onComplete` run once the initial chunk of data arrives? After all
 deferred fragments arrived? After each fragment?
-The answer to this might be obvious to you, but turn around and talk to another
-developer, and their opinion might be wildly different from yours - and equally
-valid.
+While one behavior might make sense to some, others might have vastly different conflicting opinions that are equally valid.
 
 ### Changes around the behaviour
 
@@ -50,9 +45,7 @@ came in, now it's only called if a *different* result came in.
 This can be alleviated by setting `notifyOnNetworkStatusChange` to `true`, but
 it unfortunately adds to the confusion surrounding the callback.
 
-Given this history, even if we came up with a "perfect" and "intuitive" new behaviour,
-any further change to these callbacks would just cause more and more confusion
-among our userbase.
+Given this history, we are not confident that we can provide an approach that is intuitive for everyone and doesn't add more confusion among our userbase.
 
 ### Bugs
 
@@ -64,9 +57,9 @@ using suspense in your App.
 React's [`useEffectEvent`](https://react.dev/learn/separating-events-from-effects#declaring-an-effect-event)
 hook would solve this problem for us, but that hook is still experimental and
 even when it is available, it won't be backported to the old React versions
-we are still supporting.
-With the currentlt available primitives, fixing this might be possible in a very
-hacky way, but given everything else, we want to move everybody off these callbacks
+which means we cannot provide a working solution for our entire userbase.
+With the current available primitives, fixing this might be possible in a very
+hacky way. Given everything else, we want to move everybody off these callbacks
 instead of pushing additional bundle size on all our users for a feature we
 don't recommend to use in the first place.
 

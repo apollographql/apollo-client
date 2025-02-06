@@ -28,7 +28,7 @@ import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
   SubscribeToMoreFunction,
-  UpdateQueryFn,
+  UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
 import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
@@ -93,7 +93,7 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: UpdateQueryFn<TData, TVariables>;
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>

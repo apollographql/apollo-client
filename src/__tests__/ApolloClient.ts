@@ -1198,9 +1198,14 @@ describe("ApolloClient", () => {
             variables: { testVar: "foo" },
           });
 
+          invariant(
+            result.dataState === "complete",
+            "expected dataState to be complete"
+          );
+
           // Just try to access it, if something will break, TS will throw an error
           // during the test
-          result.data?.people.friends[0].id;
+          result.data.people.friends[0].id;
         });
 
         it("with a replacement of nested array (wq)", async () => {
@@ -1281,7 +1286,13 @@ describe("ApolloClient", () => {
           };
 
           const nextResult = await stream.takeNext();
-          const nextFriends = nextResult.data!.people.friends;
+
+          invariant(
+            nextResult.dataState === "complete",
+            "expected dataState to be complete"
+          );
+
+          const nextFriends = nextResult.data.people.friends;
 
           expect(nextFriends[0]).toEqual(expectation0);
           expect(nextFriends[1]).toEqual(expectation1);
@@ -1301,10 +1312,15 @@ describe("ApolloClient", () => {
           {
             const result = await stream.takeNext();
 
+            invariant(
+              result.dataState === "complete",
+              "expected dataState to be complete"
+            );
+
             expect(result.data).toEqual(data);
             expect(observable.getCurrentResult().data).toEqual(data);
 
-            const bestFriends = result.data!.people.friends.filter(
+            const bestFriends = result.data.people.friends.filter(
               (x) => x.type === "best"
             );
 
@@ -1327,7 +1343,13 @@ describe("ApolloClient", () => {
 
           {
             const result = await stream.takeNext();
-            expect(result.data!.people.friends).toEqual([bestFriend]);
+
+            invariant(
+              result.dataState === "complete",
+              "expected dataState to be complete"
+            );
+
+            expect(result.data.people.friends).toEqual([bestFriend]);
           }
         });
 
@@ -1339,13 +1361,18 @@ describe("ApolloClient", () => {
           {
             const result = await stream.takeNext();
 
+            invariant(
+              result.dataState === "complete",
+              "expected dataState to be complete"
+            );
+
             expect(result.data).toEqual(data);
             expect(observable.getCurrentResult().data).toEqual(data);
-            const friends = result.data!.people.friends;
+            const friends = result.data.people.friends;
 
             // this should re call next
             client.writeFragment({
-              id: `Person${result.data!.people.id}`,
+              id: `Person${result.data.people.id}`,
               fragment: gql`
                 fragment bestFriends on Person {
                   friends {
@@ -1366,7 +1393,13 @@ describe("ApolloClient", () => {
 
           {
             const result = await stream.takeNext();
-            const nextFriends = result.data!.people.friends;
+
+            invariant(
+              result.dataState === "complete",
+              "expected dataState to be complete"
+            );
+
+            const nextFriends = result.data.people.friends;
 
             expect(nextFriends[0]).toEqual({
               ...bestFriend,
@@ -3078,7 +3111,23 @@ describe("ApolloClient", () => {
       const client = new ApolloClient({ cache: new InMemoryCache() });
       const result = await client.query({ variables: { id: "1" }, query });
 
-      expectTypeOf(result.data).toMatchTypeOf<Query | null | undefined>();
+      if (result.dataState === "complete") {
+        expectTypeOf(result.data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (result.dataState === "partial") {
+        expectTypeOf(result.data).branded.toEqualTypeOf<
+          DeepPartial<Masked<Query>>
+        >();
+      }
+
+      if (result.dataState === "hasNext") {
+        expectTypeOf(result.data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (result.dataState === "none") {
+        expectTypeOf(result.data).branded.toEqualTypeOf<undefined>();
+      }
     });
 
     test("client.watchQuery uses correct masked/unmasked types", async () => {
@@ -3165,16 +3214,28 @@ describe("ApolloClient", () => {
 
       observableQuery.subscribe({
         next: (result) => {
-          expectTypeOf(result.data).toMatchTypeOf<Query | undefined>();
-          expectTypeOf(result.data).not.toMatchTypeOf<UnmaskedQuery>();
+          if (result.dataState === "complete") {
+            expectTypeOf(result.data).branded.toEqualTypeOf<Masked<Query>>();
+          }
+
+          if (result.dataState === "partial") {
+            expectTypeOf(result.data).branded.toEqualTypeOf<
+              DeepPartial<Masked<Query>>
+            >();
+          }
+
+          if (result.dataState === "hasNext") {
+            expectTypeOf(result.data).branded.toEqualTypeOf<Masked<Query>>();
+          }
+
+          if (result.dataState === "none") {
+            expectTypeOf(result.data).branded.toEqualTypeOf<undefined>();
+          }
         },
       });
 
-      expectTypeOf(observableQuery.getCurrentResult()).toMatchTypeOf<
-        ApolloQueryResult<Query>
-      >();
-      expectTypeOf(observableQuery.getCurrentResult()).not.toMatchTypeOf<
-        ApolloQueryResult<UnmaskedQuery>
+      expectTypeOf(observableQuery.getCurrentResult()).branded.toEqualTypeOf<
+        ApolloQueryResult<Masked<Query>>
       >();
 
       const fetchMoreResult = await observableQuery.fetchMore({
@@ -3189,31 +3250,101 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(fetchMoreResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+      if (fetchMoreResult.dataState === "complete") {
+        expectTypeOf(fetchMoreResult.data).branded.toEqualTypeOf<
+          Masked<Query>
+        >();
+      }
+
+      if (fetchMoreResult.dataState === "partial") {
+        expectTypeOf(fetchMoreResult.data).branded.toEqualTypeOf<
+          DeepPartial<Masked<Query>>
+        >();
+      }
+
+      if (fetchMoreResult.dataState === "hasNext") {
+        expectTypeOf(fetchMoreResult.data).branded.toEqualTypeOf<
+          Masked<Query>
+        >();
+      }
+
+      if (fetchMoreResult.dataState === "none") {
+        expectTypeOf(fetchMoreResult.data).branded.toEqualTypeOf<undefined>();
+      }
 
       const refetchResult = await observableQuery.refetch();
 
-      expectTypeOf(refetchResult.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
+      if (refetchResult.dataState === "complete") {
+        expectTypeOf(refetchResult.data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (refetchResult.dataState === "partial") {
+        expectTypeOf(refetchResult.data).branded.toEqualTypeOf<
+          DeepPartial<Masked<Query>>
+        >();
+      }
+
+      if (refetchResult.dataState === "hasNext") {
+        expectTypeOf(refetchResult.data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (refetchResult.dataState === "none") {
+        expectTypeOf(refetchResult.data).branded.toEqualTypeOf<undefined>();
+      }
 
       const setVariablesResult = await observableQuery.setVariables({
         id: "2",
       });
 
-      expectTypeOf(setVariablesResult?.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(setVariablesResult?.data).not.toMatchTypeOf<
-        UnmaskedQuery | undefined
-      >();
+      if (setVariablesResult?.dataState === "complete") {
+        expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
+          Masked<Query>
+        >();
+      }
+
+      if (setVariablesResult?.dataState === "partial") {
+        expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
+          DeepPartial<Masked<Query>>
+        >();
+      }
+
+      if (setVariablesResult?.dataState === "hasNext") {
+        expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
+          Masked<Query>
+        >();
+      }
+
+      if (setVariablesResult?.dataState === "none") {
+        expectTypeOf(
+          setVariablesResult.data
+        ).branded.toEqualTypeOf<undefined>();
+      }
 
       const setOptionsResult = await observableQuery.setOptions({
         variables: { id: "2" },
       });
 
-      expectTypeOf(setOptionsResult.data).toMatchTypeOf<Query | undefined>();
-      expectTypeOf(setOptionsResult.data).not.toMatchTypeOf<
-        UnmaskedQuery | undefined
-      >();
+      if (setOptionsResult.dataState === "complete") {
+        expectTypeOf(setOptionsResult.data).branded.toEqualTypeOf<
+          Masked<Query>
+        >();
+      }
+
+      if (setOptionsResult.dataState === "partial") {
+        expectTypeOf(setOptionsResult.data).branded.toEqualTypeOf<
+          DeepPartial<Masked<Query>>
+        >();
+      }
+
+      if (setOptionsResult.dataState === "hasNext") {
+        expectTypeOf(setOptionsResult.data).branded.toEqualTypeOf<
+          Masked<Query>
+        >();
+      }
+
+      if (setOptionsResult.dataState === "none") {
+        expectTypeOf(setOptionsResult.data).branded.toEqualTypeOf<undefined>();
+      }
 
       observableQuery.updateQuery(
         (_previousData, { complete, previousData }) => {

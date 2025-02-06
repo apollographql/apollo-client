@@ -26,8 +26,7 @@ reasons why the data displayed by a component might change:
 * An optimistic update might update some or all of the data of the hook
 * A manual cache update might change the data for the hook
 
-For each of these events, you will find developers that see it as intuitive that
-the `onCompleted` callback should execute - or that it definitely should not execute.
+Apollo Client users have provided logical justification for each of these cases for why the `onCompleted` callback should or should not execute.
 
 ### Added ambiguisity around `@defer`
 

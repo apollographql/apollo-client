@@ -28,7 +28,7 @@ reasons why the data displayed by a component might change:
 
 Apollo Client users have provided logical justification for each of these cases for why the `onCompleted` callback should or should not execute.
 
-### Added ambiguisity around `@defer`
+### Added ambiguity around `@defer`
 
 What makes matters worse is that with the introduction of `@defer` in the GraphQL
 ecosystem, we have yet another source of "updates".

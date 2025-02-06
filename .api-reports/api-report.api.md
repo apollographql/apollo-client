@@ -1962,7 +1962,7 @@ export interface ObservableQueryFields<TData, TVariables extends OperationVariab
     startPolling: (pollInterval: number) => void;
     stopPolling: () => void;
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    updateQuery: UpdateQueryFn<TData, TVariables>;
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
     variables: TVariables | undefined;
 }
 
@@ -2748,16 +2748,14 @@ export interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables exte
     document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     // (undocumented)
     onError?: (error: Error) => void;
-    // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreUpdateQueryFn" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionVariables, TSubscriptionData>;
+    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
     // (undocumented)
     variables?: TSubscriptionVariables;
 }
 
 // @public (undocumented)
-type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = {
+export type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
     previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
@@ -2909,14 +2907,16 @@ type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData exten
 // @public (undocumented)
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
-// @public (undocumented)
-export interface UpdateQueryFn<TData, TVariables extends OperationVariables> {
-    // (undocumented)
-    (mapFn: UpdateQueryMapFn<TData, TVariables>): void;
-}
+// @public @deprecated (undocumented)
+export type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = (previousQueryResult: Unmasked<TData>, options: {
+    subscriptionData: {
+        data: Unmasked<TSubscriptionData>;
+    };
+    variables?: TSubscriptionVariables;
+}) => Unmasked<TData>;
 
 // @public (undocumented)
-export interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables> {
+export interface UpdateQueryMapFn<TData = any, TVariables = OperationVariables> {
     // (undocumented)
     (
     previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;

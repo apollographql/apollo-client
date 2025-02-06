@@ -1436,8 +1436,7 @@ interface ObservableQueryFields<TData, TVariables extends OperationVariables> {
     stopPolling: () => void;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-    updateQuery: UpdateQueryFn<TData, TVariables>;
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
     variables: TVariables | undefined;
 }
 
@@ -2048,13 +2047,13 @@ interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends Ope
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreUpdateQueryFn" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionVariables, TSubscriptionData>;
+    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
     // (undocumented)
     variables?: TSubscriptionVariables;
 }
 
 // @public (undocumented)
-type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = {
+type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
     previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
@@ -2184,13 +2183,7 @@ export function unwrapQueryRef<TData>(queryRef: Partial<WrappedQueryRef<TData>>)
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
-interface UpdateQueryFn<TData, TVariables extends OperationVariables> {
-    // (undocumented)
-    (mapFn: UpdateQueryMapFn<TData, TVariables>): void;
-}
-
-// @public (undocumented)
-interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables> {
+interface UpdateQueryMapFn<TData = any, TVariables = OperationVariables> {
     // (undocumented)
     (
     previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
@@ -2551,7 +2544,7 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:346:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:357:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:51:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:75:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:60:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts

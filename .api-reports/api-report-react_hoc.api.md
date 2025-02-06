@@ -1388,10 +1388,8 @@ export interface QueryControls<TData = any, TGraphQLVariables = OperationVariabl
     stopPolling: () => void;
     // (undocumented)
     subscribeToMore: (options: SubscribeToMoreOptions) => () => void;
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-    //
     // (undocumented)
-    updateQuery: UpdateQueryFn<TData, any>;
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TGraphQLVariables>) => void;
     // (undocumented)
     variables: TGraphQLVariables;
 }
@@ -1807,13 +1805,13 @@ interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends Ope
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreUpdateQueryFn" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionVariables, TSubscriptionData>;
+    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
     // (undocumented)
     variables?: TSubscriptionVariables;
 }
 
 // @public (undocumented)
-type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionVariables extends OperationVariables = TVariables, TSubscriptionData = TData> = {
+type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
     (
     previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
         subscriptionData: {
@@ -1893,13 +1891,7 @@ type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData exten
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
-interface UpdateQueryFn<TData, TVariables extends OperationVariables> {
-    // (undocumented)
-    (mapFn: UpdateQueryMapFn<TData, TVariables>): void;
-}
-
-// @public (undocumented)
-interface UpdateQueryMapFn<TData = any, TVariables extends OperationVariables = OperationVariables> {
+interface UpdateQueryMapFn<TData = any, TVariables = OperationVariables> {
     // (undocumented)
     (
     previousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
@@ -1983,7 +1975,7 @@ export function withSubscription<TProps extends TGraphQLVariables | {} = {}, TDa
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:346:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:357:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

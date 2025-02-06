@@ -619,6 +619,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -639,6 +640,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -649,6 +651,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -671,6 +674,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -681,6 +685,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -718,6 +723,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -738,6 +744,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -748,6 +755,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -757,6 +765,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -779,6 +788,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -789,6 +799,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -798,6 +809,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -834,6 +846,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -854,6 +867,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -864,6 +878,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -886,6 +901,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -896,6 +912,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -932,6 +949,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -952,6 +970,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(2, 4),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -962,6 +981,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 2),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -971,6 +991,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -993,6 +1014,7 @@ describe("fetchMore on an observable query", () => {
           data: {
             TODO: tasks.slice(5, 8),
           },
+          dataState: "complete",
           partial: false,
         });
       }
@@ -1003,6 +1025,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: tasks.slice(0, 4),
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1012,6 +1035,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1149,6 +1173,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         groceries: initialGroceries,
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1168,6 +1193,7 @@ describe("fetchMore on an observable query", () => {
         data: {
           groceries: additionalGroceries,
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -1183,6 +1209,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         groceries: finalGroceries,
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1427,6 +1454,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1438,6 +1466,7 @@ describe("fetchMore on an observable query", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { emptyItems: [] },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1447,6 +1476,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -1456,6 +1486,7 @@ describe("fetchMore on an observable query", () => {
       data: {
         emptyItems: [],
       },
+      dataState: "complete",
       partial: false,
     });
 

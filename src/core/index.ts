@@ -20,6 +20,7 @@ export type {
   UpdateQueryFn,
   UpdateQueryMapFn,
   UpdateQueryOptions,
+  SubscribeToMoreUpdateQueryFn,
 } from "./watchQueryOptions.js";
 export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
 export type * from "./types.js";

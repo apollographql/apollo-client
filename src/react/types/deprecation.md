@@ -38,12 +38,11 @@ While one behavior might make sense to some, others might have vastly different 
 
 ### Changes around the behaviour
 
-Adding insult to injury, `onCompleted` had a bug in versions from 3.5 to 3.7 
-where not only changes from the network would cause `onCompleted` to run,
-but also cache changes.
-We fixed this back in 3.8 with #10229, but the damage was done: some users
-now expect one behaviour while others in the meantime had gotten used to the
-other behaviour.
+Adding insult to injury, `onCompleted` had a bug in versions from versions 3.5 to 3.7
+where cache changes in addition to network requests would execute the `onCompleted`
+callback. This was fixed in version [3.8](https://github.com/apollographql/apollo-client/releases/tag/v3.8.0) with #10229, but the damage was done.
+While the users who initially reported the bug were satisfied, others came to
+expect the behavior from 3.5 to 3.7 as the correct behavior.
 
 Given this history, we are not confident that we can provide an approach that is intuitive for everyone and doesn't add more confusion among our userbase.
 

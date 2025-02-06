@@ -38,11 +38,12 @@ While one behavior might make sense to some, others might have vastly different 
 
 ### Changes around the behaviour
 
-Adding insult to injury, we actually changed the behaviour of `onCompleted` slightly
-at one point - where previously the callback was always called whenever a result
-came in, now it's only called if a *different* result came in.
-This can be alleviated by setting `notifyOnNetworkStatusChange` to `true`, but
-it unfortunately adds to the confusion surrounding the callback.
+Adding insult to injury, `onCompleted` had a bug in versions from 3.5 to 3.7 
+where not only changes from the network would cause `onCompleted` to run,
+but also cache changes.
+We fixed this back in 3.8 with #10229, but the damage was done: some users
+now expect one behaviour while others in the meantime had gotten used to the
+other behaviour.
 
 Given this history, we are not confident that we can provide an approach that is intuitive for everyone and doesn't add more confusion among our userbase.
 

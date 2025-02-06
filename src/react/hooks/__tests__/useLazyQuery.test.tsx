@@ -88,6 +88,7 @@ describe("useLazyQuery Hook", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { hello: "world" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -150,6 +151,7 @@ describe("useLazyQuery Hook", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { hello: "world 1" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -209,6 +211,7 @@ describe("useLazyQuery Hook", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { hello: "world" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -296,6 +299,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -331,6 +335,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { name: "changed" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -405,6 +410,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -442,6 +448,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(refetch()).resolves.toEqualApolloQueryResult({
       data: { name: "changed" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -520,6 +527,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -567,6 +575,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { name: "changed" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -646,6 +655,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 1" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -666,6 +676,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 2" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -733,6 +744,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 1" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -766,6 +778,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 2" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -845,6 +858,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 1" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -880,6 +894,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(refetch()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 2" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -960,6 +975,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "world 1" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1077,6 +1093,7 @@ describe("useLazyQuery Hook", () => {
       execute({ variables: { id: 1 } })
     ).resolves.toEqualApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1099,6 +1116,7 @@ describe("useLazyQuery Hook", () => {
       execute({ variables: { id: 2 } })
     ).resolves.toEqualApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1190,6 +1208,7 @@ describe("useLazyQuery Hook", () => {
       execute({ variables: { id: 1 } })
     ).resolves.toEqualApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1225,6 +1244,7 @@ describe("useLazyQuery Hook", () => {
       execute({ variables: { id: 2 } })
     ).resolves.toEqualApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1301,6 +1321,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "from link" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1385,6 +1406,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "from link" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1418,6 +1440,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "from link 2" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1509,6 +1532,7 @@ describe("useLazyQuery Hook", () => {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1552,6 +1576,7 @@ describe("useLazyQuery Hook", () => {
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1655,6 +1680,7 @@ describe("useLazyQuery Hook", () => {
       data: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1698,6 +1724,7 @@ describe("useLazyQuery Hook", () => {
       data: {
         character: { __typename: "Character", id: "2", name: "Black Widow" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1883,6 +1910,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
+      dataState: "complete",
       error: new CombinedGraphQLErrors([{ message: "Not logged in" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -1905,6 +1933,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
+      dataState: "complete",
       error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -1983,6 +2012,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2036,6 +2066,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(promise!).resolves.toEqualApolloQueryResult({
       data: { hello: "Greetings" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2067,6 +2098,7 @@ describe("useLazyQuery Hook", () => {
 
     const expectedResult = {
       data: { hello: "Greetings" },
+      dataState: "complete" as const,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2138,6 +2170,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(promise1).resolves.toEqualApolloQueryResult({
       data: mocks[0].result.data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2145,6 +2178,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(promise2).resolves.toEqualApolloQueryResult({
       data: mocks[1].result.data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2223,6 +2257,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { hello: "Greetings" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2992,6 +3027,7 @@ describe("useLazyQuery Hook", () => {
             name: "Test User",
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3096,6 +3132,7 @@ describe("useLazyQuery Hook", () => {
             age: 30,
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3200,6 +3237,7 @@ describe("useLazyQuery Hook", () => {
             age: 30,
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3749,6 +3787,7 @@ test("uses the updated client when executing the function after changing clients
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { greeting: "Hello client 1" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -3784,6 +3823,7 @@ test("uses the updated client when executing the function after changing clients
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { greeting: "Hello client 2" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -3846,6 +3886,7 @@ test("responds to cache updates after executing query", async () => {
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { greeting: "Hello" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -3929,6 +3970,7 @@ test("responds to cache updates after changing variables", async () => {
     data: {
       character: { __typename: "Character", id: "1", name: "Spider-Man" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -3955,6 +3997,7 @@ test("responds to cache updates after changing variables", async () => {
     data: {
       character: { __typename: "Character", id: "2", name: "Black Widow" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4077,6 +4120,7 @@ test("uses cached result when switching to variables already written to the cach
     data: {
       character: { __typename: "Character", id: "1", name: "Spider-Man" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4107,6 +4151,7 @@ test("uses cached result when switching to variables already written to the cach
         name: "Cached Character",
       },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4184,6 +4229,7 @@ test("renders loading states where necessary when switching to variables maybe w
     data: {
       character: { __typename: "Character", id: "1", name: "Spider-Man" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4227,6 +4273,7 @@ test("renders loading states where necessary when switching to variables maybe w
         name: "Cached Character",
       },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4263,6 +4310,7 @@ test("renders loading states where necessary when switching to variables maybe w
         name: "Iron Man",
       },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4392,6 +4440,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
     data: {
       character: { __typename: "Character", id: "1", name: "Spider-Man" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4506,6 +4555,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { context: { source: "initialHookValue" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4541,6 +4591,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { context: { source: "rerender" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4594,6 +4645,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
     execute({ context: { source: "execute" } })
   ).resolves.toEqualApolloQueryResult({
     data: { context: { source: "execute" } },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4697,6 +4749,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
     execute({ variables: { min: 0, max: 12 } })
   ).resolves.toEqualApolloQueryResult({
     data: mocks[0].result.data,
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4881,6 +4934,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
     data: {
       character: { __typename: "Character", id: "1", name: "Doctor Strange" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -4924,6 +4978,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
     data: {
       character: { __typename: "Character", id: "2", name: "Hulk" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5020,6 +5075,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
     data: {
       character: { __typename: "Character", id: "1", name: "Spider-Cache" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5063,6 +5119,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
     data: {
       character: { __typename: "Character", id: "2", name: "Black Widow" },
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5150,6 +5207,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { greeting: "Hello 1" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5185,6 +5243,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { greeting: "Hello 2" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -5233,6 +5292,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 
   await expect(execute()).resolves.toEqualApolloQueryResult({
     data: { greeting: "Hello 3" },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,

@@ -1853,6 +1853,7 @@ describe("client", () => {
       await expect(stream).toEmitApolloQueryResult({
         loading: true,
         data: initialData,
+        dataState: "complete",
         networkStatus: 1,
         partial: false,
       });
@@ -2547,6 +2548,7 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2557,6 +2559,7 @@ describe("client", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2586,6 +2589,7 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2596,6 +2600,7 @@ describe("client", () => {
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      dataState: "complete",
       partial: false,
     });
 
@@ -2603,6 +2608,7 @@ describe("client", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: dataTwo,
+      dataState: "complete",
       partial: false,
     });
 
@@ -3009,6 +3015,7 @@ describe("@connection", () => {
 
     await expect(aStream).toEmitApolloQueryResult({
       data: { a: 123 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3016,6 +3023,7 @@ describe("@connection", () => {
 
     await expect(bStream).toEmitApolloQueryResult({
       data: { b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3023,6 +3031,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 123, b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3032,6 +3041,7 @@ describe("@connection", () => {
 
     await expect(aStream).toEmitApolloQueryResult({
       data: { a: 234 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3041,6 +3051,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "asdf" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3052,6 +3063,7 @@ describe("@connection", () => {
 
     await expect(bStream).toEmitApolloQueryResult({
       data: { b: "ASDF" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3059,6 +3071,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "ASDF" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3069,6 +3082,7 @@ describe("@connection", () => {
 
     await expect(aStream).toEmitApolloQueryResult({
       data: { a: 456 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3076,6 +3090,7 @@ describe("@connection", () => {
 
     await expect(bStream).toEmitApolloQueryResult({
       data: { b: "oyez" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3083,6 +3098,7 @@ describe("@connection", () => {
 
     await expect(abStream).toEmitApolloQueryResult({
       data: { a: 456, b: "oyez" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3118,6 +3134,7 @@ describe("@connection", () => {
 
     await expect(cStream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3137,6 +3154,7 @@ describe("@connection", () => {
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitApolloQueryResult({
       data: { c: "see" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3156,6 +3174,7 @@ describe("@connection", () => {
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitApolloQueryResult({
       data: { c: "saw" },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3168,6 +3187,7 @@ describe("@connection", () => {
     await expect(abStream).not.toEmitAnything();
     await expect(cStream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -4608,6 +4628,7 @@ describe("custom document transforms", () => {
         data: {
           currentUser: { __typename: "User", id: 1, name: "John Doe" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4760,6 +4781,7 @@ describe("custom document transforms", () => {
             description: "Cached product description",
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4851,6 +4873,7 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4877,6 +4900,7 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 1 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -4972,6 +4996,7 @@ describe("custom document transforms", () => {
       data: {
         products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5000,6 +5025,7 @@ describe("custom document transforms", () => {
           { __typename: "Product", id: 2 },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5139,6 +5165,7 @@ describe("custom document transforms", () => {
           currentUser: { id: 1 },
           products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5184,6 +5211,7 @@ describe("custom document transforms", () => {
           { __typename: "Product", id: 2 },
         ],
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5274,6 +5302,7 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5300,6 +5329,7 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 2 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5390,6 +5420,7 @@ describe("custom document transforms", () => {
         data: {
           product: { __typename: "Product", id: 1, metrics: "1000/vpm" },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5416,6 +5447,7 @@ describe("custom document transforms", () => {
       data: {
         product: { __typename: "Product", id: 2 },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5515,6 +5547,7 @@ describe("custom document transforms", () => {
     await waitFor(() => {
       expect(handleNext).toHaveBeenLastCalledWith({
         data: mocks[0].result.data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5535,6 +5568,7 @@ describe("custom document transforms", () => {
 
     expect(handleNext).toHaveBeenLastCalledWith({
       data: mocks[1].result.data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

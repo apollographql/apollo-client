@@ -86,21 +86,22 @@ size on all our users.
 
 ### What to use instead
 
-The blog article by Dominik Dorfmeister linked above gives a lot of answers to what
-to do instead, so I really recommend giving that a read.
+Once again, we recommend reading the [blog article](https://tkdodo.eu/blog/breaking-react-querys-api-on-purpose)
+by Dominik Dorfmeister which provides a lot of answers on what to use in place
+of these callbacks.
 
 In short:
 
-* for derived state, use `useMemo`
-* if you want to reset state in child components, use `key`
-* if you want to (re)set or modify local component state as a reaction to the hook
+* For derived state, use `useMemo`
+* If you want to reset state in child components, use `key`
+* If you want to (re)set or modify local component state as a reaction to the hook
   result changing, you can actually call the `setState`
   function of `useState` during component render, so you can use this to compare
   new results with old results and modify state as a consequence.
   See [this example in the React docs](https://react.dev/reference/react/useState#storing-information-from-previous-renders).
   Keep in mind that this is a very rare use case and you should usually go with `useMemo`.
-* if you are interested when an in-flight query is finished, keep an eye on `networkStatus`
-* to synchronize things outside of React with your received data, use `useEffect`.
+* If you are interested when an in-flight query is finished, keep an eye on `networkStatus`
+* To synchronize things outside of React with your received data, use `useEffect`.
 
 ## `onError`
 

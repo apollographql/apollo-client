@@ -2026,8 +2026,18 @@ describe("client.watchQuery", () => {
       },
     });
 
-    // Since the fragment data is masked, we don't expect to get another result
-    await expect(stream).not.toEmitAnything();
+    // Even though `data` didn't change, the `dataStatus` is updated to reflect
+    // that the full result has been stremed in so we expect another render
+    // value.
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(client.readQuery({ query })).toEqual({
       greeting: {

@@ -536,7 +536,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
                     optimistic: false,
                   },
                   (previous) =>
-                    // REVIEW: Code smell here with the `!` and cast, is it possible for previous to be null or have partial data ?
                     updateQuery(previous! as any, {
                       fetchMoreResult: fetchMoreResult.data as any,
                       variables: combinedOptions.variables as TFetchVars,

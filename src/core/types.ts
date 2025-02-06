@@ -175,19 +175,6 @@ export type { QueryOptions as PureQueryOptions };
 export type OperationVariables = Record<string, any>;
 
 export type ApolloQueryResult<T> = {
-  data: T | DeepPartial<T> | undefined;
-  /**
-   * Describes the completeness of `data`.
-   * - `none`: No data could be fulfilled from the cache or the result is
-   *   incomplete. `data` is `undefined`.
-   * - `partial`: Some data could be fulfilled from the cache but `data` is
-   *   incomplete. This is only possible when `returnPartialData` is `true`.
-   * - `hasNext`: `data` is incomplete as a result of a deferred query and
-   *   the result is still streaming in.
-   *  - `complete`: `data` is a fully satisfied query result fulfilled
-   *  either from the cache or network.
-   */
-  dataState: "none" | "partial" | "hasNext" | "complete";
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
@@ -203,7 +190,36 @@ export type ApolloQueryResult<T> = {
    * @deprecated This field will be removed in a future version of Apollo Client.
    */
   partial: boolean;
-};
+} & (
+  | {
+      data: T;
+      /**
+       * Describes the completeness of `data`.
+       * - `none`: No data could be fulfilled from the cache or the result is
+       *   incomplete. `data` is `undefined`.
+       * - `partial`: Some data could be fulfilled from the cache but `data` is
+       *   incomplete. This is only possible when `returnPartialData` is `true`.
+       * - `hasNext`: `data` is incomplete as a result of a deferred query and
+       *   the result is still streaming in.
+       *  - `complete`: `data` is a fully satisfied query result fulfilled
+       *  either from the cache or network.
+       */
+      dataState: "complete";
+    }
+  | {
+      data: DeepPartial<T>;
+      dataState: "partial";
+    }
+  | {
+      // Defer to the passed in type to properly type the `@defer` fields.
+      data: T;
+      dataState: "hasNext";
+    }
+  | {
+      data: undefined;
+      dataState: "none";
+    }
+);
 
 // This is part of the public API, people write these functions in `updateQueries`.
 export type MutationQueryReducer<T> = (

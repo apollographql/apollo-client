@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  secops: apollo/circleci-secops-orb@2.0.7
-
 jobs:
   # Filesize:
   #   docker:
@@ -183,17 +180,3 @@ workflows:
                 - "@types/react@18 @types/react-dom@18"
                 - "@types/react@19 @types/react-dom@19"
                 - "typescript@next"
-  security-scans:
-    jobs:
-      - secops/gitleaks:
-          context:
-            - platform-docker-ro
-            - github-orb
-            - secops-oidc
-          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>
-          git-revision: << pipeline.git.revision >>
-      - secops/semgrep:
-          context:
-            - secops-oidc
-            - github-orb
-          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>

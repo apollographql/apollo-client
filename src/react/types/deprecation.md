@@ -123,7 +123,9 @@ influenced by prior cache contents.
 Your component is probably the wrong place to handle errors like this, and you
 should probably do it in a more centralized place such as an `onError` link, or
 if you are using the suspenseful hooks, in an `ErrorBoundary` that is parent to
-all components potentially calling your query.
+all components potentially calling your query. Future versions of the client
+will switch to throwing errors by default which further negates the need for the
+`onError` callback.
 
 ## `useMutation` is not affected by this deprecation
 

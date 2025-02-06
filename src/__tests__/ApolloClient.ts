@@ -11,7 +11,7 @@ import {
 } from "../core";
 import { Kind } from "graphql";
 
-import { Observable } from "../utilities";
+import { DeepPartial, Observable } from "../utilities";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
@@ -3218,25 +3218,39 @@ describe("ApolloClient", () => {
         UnmaskedQuery | undefined
       >();
 
-      observableQuery.updateQuery((previousData) => {
-        expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
-        expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+      observableQuery.updateQuery(
+        (_previousData, { complete, previousData }) => {
+          expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(_previousData).not.toMatchTypeOf<Query>();
 
-        return {} as UnmaskedQuery;
-      });
+          if (complete) {
+            expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+          } else {
+            expectTypeOf(previousData).toEqualTypeOf<
+              DeepPartial<UnmaskedQuery> | undefined
+            >();
+          }
+        }
+      );
 
       observableQuery.subscribeToMore({
         document: subscription,
-        updateQuery(queryData, { subscriptionData }) {
-          expectTypeOf(queryData).toMatchTypeOf<UnmaskedQuery>();
+        updateQuery(queryData, { subscriptionData, complete, previousData }) {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
           expectTypeOf(queryData).not.toMatchTypeOf<Query>();
+
+          if (complete) {
+            expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+          } else {
+            expectTypeOf(previousData).toEqualTypeOf<
+              DeepPartial<UnmaskedQuery> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data
           ).toMatchTypeOf<UnmaskedSubscription>();
           expectTypeOf(subscriptionData.data).not.toMatchTypeOf<Subscription>();
-
-          return {} as UnmaskedQuery;
         },
       });
     });

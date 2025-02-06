@@ -253,6 +253,7 @@ export class ObservableQuery<
 
     const result: ApolloQueryResult<TData> = {
       data: undefined,
+      dataState: "none",
       partial: true,
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
@@ -280,9 +281,14 @@ export class ObservableQuery<
       const diff = this.queryInfo.getDiff();
 
       result.partial = !diff.complete;
+      result.dataState = "none";
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
+        result.dataState =
+          diff.complete ? "complete"
+          : diff.result ? "partial"
+          : "none";
       }
 
       if (result.data === null) {
@@ -1091,6 +1097,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {
       data: undefined,
+      dataState: "none",
       partial: true,
       ...this.getLastResult(),
       error,

@@ -19,6 +19,7 @@ import {
   concatPagination,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import {
   ObservableStream,
@@ -293,8 +294,13 @@ describe("fetchMore on an observable query", () => {
       {
         const result = await stream.takeNext();
 
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(result.loading).toBe(false);
-        expect(result.data!.entry.comments).toHaveLength(10);
+        expect(result.data.entry.comments).toHaveLength(10);
       }
 
       {
@@ -313,14 +319,25 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
+        invariant(
+          fetchMoreResult.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         // This is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data!.entry.comments;
+
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const combinedComments = result.data.entry.comments;
 
         expect(combinedComments).toHaveLength(20);
 
@@ -354,8 +371,13 @@ describe("fetchMore on an observable query", () => {
       {
         const result = await stream.takeNext();
 
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(result.loading).toBe(false);
-        expect(result.data!.entry.comments).toHaveLength(10);
+        expect(result.data.entry.comments).toHaveLength(10);
       }
 
       {
@@ -364,14 +386,25 @@ describe("fetchMore on an observable query", () => {
           variables: { start: 10 },
         });
 
+        invariant(
+          fetchMoreResult.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         // This is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data!.entry.comments;
+
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const combinedComments = result.data.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -400,8 +433,13 @@ describe("fetchMore on an observable query", () => {
       {
         const result = await stream.takeNext();
 
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(result.loading).toBe(false);
-        expect(result.data!.entry.comments).toHaveLength(10);
+        expect(result.data.entry.comments).toHaveLength(10);
       }
 
       {
@@ -418,7 +456,12 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        const fetchMoreComments = fetchMoreResult.data!.entry.comments;
+        invariant(
+          fetchMoreResult.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const fetchMoreComments = fetchMoreResult.data.entry.comments;
 
         expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreComments).toHaveLength(10);
@@ -429,7 +472,13 @@ describe("fetchMore on an observable query", () => {
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data!.entry.comments;
+
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const combinedComments = result.data.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -467,8 +516,13 @@ describe("fetchMore on an observable query", () => {
       {
         const result = await stream.takeNext();
 
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(result.loading).toBe(false);
-        expect(result.data!.entry.comments).toHaveLength(10);
+        expect(result.data.entry.comments).toHaveLength(10);
       }
 
       {
@@ -477,13 +531,24 @@ describe("fetchMore on an observable query", () => {
           variables: { start: 10 },
         });
 
+        invariant(
+          fetchMoreResult.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10); // this is the server result
+        expect(fetchMoreResult.data.entry.comments).toHaveLength(10); // this is the server result
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data!.entry.comments;
+
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const combinedComments = result.data.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -1235,8 +1300,13 @@ describe("fetchMore on an observable query", () => {
     {
       const result = await stream.takeNext();
 
+      invariant(
+        result.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
       expect(result.loading).toBe(false);
-      expect(result.data!.entry.comments).toHaveLength(10);
+      expect(result.data.entry.comments).toHaveLength(10);
     }
 
     {
@@ -1253,12 +1323,23 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
+      invariant(
+        fetchMoreResult.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
       expect(fetchMoreResult.loading).toBe(false);
-      expect(fetchMoreResult.data!.comments).toHaveLength(10);
+      expect(fetchMoreResult.data.comments).toHaveLength(10);
     }
 
     {
       const result = await stream.takeNext();
+
+      invariant(
+        result.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
       const combinedComments = result.data!.entry.comments;
 
       expect(result.loading).toBe(false);
@@ -1304,10 +1385,12 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      const { data, networkStatus } = await stream.takeNext();
+      const { data, networkStatus, dataState } = await stream.takeNext();
+
+      invariant(dataState === "complete", "expected result to be complete");
 
       expect(networkStatus).toBe(NetworkStatus.ready);
-      expect(data!.entry.comments.length).toBe(10);
+      expect(data.entry.comments.length).toBe(10);
 
       const error = await observable
         .fetchMore({
@@ -1367,10 +1450,12 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      const { data, networkStatus } = await stream.takeNext();
+      const { data, networkStatus, dataState } = await stream.takeNext();
+
+      invariant(dataState === "complete", "expected dataState to be complete");
 
       expect(networkStatus).toBe(NetworkStatus.ready);
-      expect(data!.entry.comments.length).toBe(10);
+      expect(data.entry.comments.length).toBe(10);
 
       const error = await observable
         .fetchMore({
@@ -1636,8 +1721,13 @@ describe("fetchMore on an observable query with connection", () => {
       {
         const result = await stream.takeNext();
 
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(result.loading).toBe(false);
-        expect(result.data!.entry.comments).toHaveLength(10);
+        expect(result.data.entry.comments).toHaveLength(10);
       }
 
       {
@@ -1653,13 +1743,24 @@ describe("fetchMore on an observable query with connection", () => {
           },
         });
 
-        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
+        invariant(
+          fetchMoreResult.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
         expect(fetchMoreResult.loading).toBe(false);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data!.entry.comments;
+
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const combinedComments = result.data.entry.comments;
 
         expect(combinedComments).toHaveLength(20);
         combinedComments.forEach((comment, i) => {
@@ -1695,8 +1796,13 @@ describe("fetchMore on an observable query with connection", () => {
       {
         const result = await stream.takeNext();
 
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         expect(result.loading).toBe(false);
-        expect(result.data!.entry.comments).toHaveLength(10);
+        expect(result.data.entry.comments).toHaveLength(10);
       }
 
       {
@@ -1705,15 +1811,25 @@ describe("fetchMore on an observable query with connection", () => {
           variables: { start: 10 },
         });
 
+        invariant(
+          fetchMoreResult.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
         // this is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
 
-        const combinedComments = result.data!.entry.comments;
+        invariant(
+          result.dataState === "complete",
+          "expected dataState to be complete"
+        );
+
+        const combinedComments = result.data.entry.comments;
         expect(combinedComments).toHaveLength(20);
         combinedComments.forEach((comment, i) => {
           expect(comment.text).toBe(`comment ${i + 1}`);
@@ -1753,10 +1869,15 @@ describe("fetchMore on an observable query with connection", () => {
       const stream = new ObservableStream(observable);
 
       {
-        const { data, networkStatus } = await stream.takeNext();
+        const { data, networkStatus, dataState } = await stream.takeNext();
+
+        invariant(
+          dataState === "complete",
+          "expected dataState to be complete"
+        );
 
         expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data!.entry.comments.length).toBe(10);
+        expect(data.entry.comments.length).toBe(10);
       }
 
       void observable.fetchMore({
@@ -1772,10 +1893,15 @@ describe("fetchMore on an observable query with connection", () => {
       });
 
       {
-        const { data, networkStatus } = await stream.takeNext();
+        const { data, networkStatus, dataState } = await stream.takeNext();
+
+        invariant(
+          dataState === "complete",
+          "expected dataState to be complete"
+        );
 
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data!.entry.comments.length).toBe(10);
+        expect(data.entry.comments.length).toBe(10);
       }
 
       {
@@ -1835,17 +1961,27 @@ describe("fetchMore on an observable query with connection", () => {
       });
 
       {
-        const { data, networkStatus } = await stream.takeNext();
+        const { data, networkStatus, dataState } = await stream.takeNext();
+
+        invariant(
+          dataState === "complete",
+          "expected dataState to be complete"
+        );
 
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data!.entry.comments.length).toBe(10);
+        expect(data.entry.comments.length).toBe(10);
       }
 
       {
-        const { data, networkStatus } = await stream.takeNext();
+        const { data, networkStatus, dataState } = await stream.takeNext();
+
+        invariant(
+          dataState === "complete",
+          "expected dataState to be complete"
+        );
 
         expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data!.entry.comments.length).toBe(20);
+        expect(data.entry.comments.length).toBe(20);
       }
 
       await expect(stream).not.toEmitAnything();
@@ -1875,6 +2011,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   // This will be normalized with the work to change notifyOnNetworkStatusChange.
   await expect(stream).toEmitApolloQueryResult({
     data: undefined,
+    dataState: "none",
     loading: true,
     networkStatus: NetworkStatus.loading,
     partial: true,
@@ -1887,6 +2024,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "B", position: 2 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -1906,6 +2044,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -1918,6 +2057,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "B", position: 2 },
       ],
     },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.fetchMore,
     partial: false,
@@ -1932,6 +2072,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -1947,6 +2088,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -1966,6 +2108,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "F", position: 6 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -1980,6 +2123,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
+    dataState: "complete",
     loading: true,
     networkStatus: NetworkStatus.fetchMore,
     partial: false,
@@ -1992,6 +2136,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "F", position: 6 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,
@@ -2004,6 +2149,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "F", position: 6 },
       ],
     },
+    dataState: "complete",
     loading: false,
     networkStatus: NetworkStatus.ready,
     partial: false,

@@ -63,17 +63,26 @@ believe its time for us to sunset these APIs.
 
 The final straw that made us come to this decision was [this bug report](https://github.com/apollographql/apollo-client/issues/12316):
 With the current implementation, in some circumstances, the `onCompleted` and
-`onError` callbacks can be stale by one render - and there's no good way we can
-prevent that from happening in a matter that won't introduce new bugs in case you're
-using suspense in your App.
+`onError` callbacks can be stale by one render. Unfortunately there is no perfect
+solution that can prevent that from happening in a manner that won't introduce new bugs,
+for example when using suspense in your App.
+
 React's [`useEffectEvent`](https://react.dev/learn/separating-events-from-effects#declaring-an-effect-event)
-hook would solve this problem for us, but that hook is still experimental and
-even when it is available, it won't be backported to the old React versions
+hook might solve this problem for us, but that hook is still experimental.
+Even when it is available, it won't be backported to the old React versions
 which means we cannot provide a working solution for our entire userbase.
+
+This isn't the first issue that's been opened in regards to timing issues with
+`onCompleted`. Once again, this is one of those cases where varying logical
+opinions make it impossible to determine the correct behavior. React itself does
+not guarantee stability on the timing of renders between major versions which
+further complicates this issue as upgrading React versions might subtly change
+the timing of when `onCompleted` executes.
+
 With the current available primitives, fixing this might be possible in a very
-hacky way. Given everything else, we want to move everybody off these callbacks
-instead of pushing additional bundle size on all our users for a feature we
-don't recommend to use in the first place.
+hacky way, but given everything else and the fact that we discourage its use, we
+want to move everybody off these callbacks instead of pushing additional bundle
+size on all our users.
 
 ### What to use instead
 

@@ -16,6 +16,8 @@ import type {
 import type { FetchMoreQueryOptions } from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { wrapHook } from "./internal/index.js";
+import type { ApolloClient } from "../../core/ApolloClient.js";
+import type { ObservableQuery } from "../../core/ObservableQuery.js";
 
 export interface UseQueryRefHandlersResult<
   TData = unknown,
@@ -55,21 +57,19 @@ export function useQueryRefHandlers<
   queryRef: QueryRef<TData, TVariables>
 ): UseQueryRefHandlersResult<TData, TVariables> {
   const unwrapped = unwrapQueryRef(queryRef);
+  const clientOrObsQuery = useApolloClient(
+    unwrapped ?
+      // passing an `ObservableQuery` is not supported by the types, but it will
+      // return any truthy value that is passed in as an override so we cast the result
+      (unwrapped["observable"] as any)
+    : undefined
+  ) as ApolloClient<any> | ObservableQuery<TData>;
 
   return wrapHook(
     "useQueryRefHandlers",
+    // eslint-disable-next-line react-compiler/react-compiler
     useQueryRefHandlers_,
-    unwrapped ?
-      unwrapped["observable"]
-      // in the case of a "transported" queryRef object, we need to use the
-      // client that's available to us at the current position in the React tree
-      // that ApolloClient will then have the job to recreate a real queryRef from
-      // the transported object
-      // This is just a context read - it's fine to do this conditionally.
-      // This hook wrapper also shouldn't be optimized by React Compiler.
-      // eslint-disable-next-line react-compiler/react-compiler
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-    : useApolloClient()
+    clientOrObsQuery
   )(queryRef);
 }
 

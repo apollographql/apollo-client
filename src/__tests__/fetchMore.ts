@@ -22,7 +22,7 @@ import {
 } from "../cache";
 
 import { MockedResponse, mockSingleLink } from "../testing";
-import { ObservableStream } from "../testing/internal";
+import { ObservableStream, setupPaginatedCase } from "../testing/internal";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`
@@ -1788,4 +1788,141 @@ describe("fetchMore on an observable query with connection", () => {
       await expect(stream).not.toEmitAnything();
     });
   });
+});
+
+test("uses updateQuery to update the result of the query with no-cache queries", async () => {
+  const { query, link } = setupPaginatedCase();
+
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  const observable = client.watchQuery({
+    query,
+    fetchPolicy: "no-cache",
+    notifyOnNetworkStatusChange: true,
+    variables: { limit: 2 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  let fetchMoreResult = await observable.fetchMore({
+    variables: { offset: 2 },
+    updateQuery: (prev, { fetchMoreResult }) => ({
+      letters: prev.letters.concat(fetchMoreResult.letters),
+    }),
+  });
+
+  expect(fetchMoreResult).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+      ],
+    },
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  // Ensure we store the merged result as the last result
+  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  fetchMoreResult = await observable.fetchMore({
+    variables: { offset: 4 },
+    updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+  });
+
+  expect(fetchMoreResult).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "E", position: 5 },
+        { __typename: "Letter", letter: "F", position: 6 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "E", position: 5 },
+        { __typename: "Letter", letter: "F", position: 6 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "E", position: 5 },
+        { __typename: "Letter", letter: "F", position: 6 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+  });
+
+  await expect(stream).not.toEmitAnything();
 });

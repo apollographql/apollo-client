@@ -82,7 +82,6 @@ export function prepareDist() {
     bundleName = dirs[dirs.length - 1],
     sideEffects = false,
   }) {
-    if (!dirs.length) return;
     fs.writeFileSync(
       path.join(distRoot, ...dirs, "package.json"),
       JSON.stringify(

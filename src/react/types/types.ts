@@ -175,8 +175,6 @@ export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (data: MaybeMasked<TData>) => void;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError) => void;
 

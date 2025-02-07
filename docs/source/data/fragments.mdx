@@ -618,13 +618,13 @@ function List() {
   const { data } = useSuspenseQuery(listQuery);
 
   return (
-      <ol>
-        {data.list.map(item => (
-          <Suspense fallback={<Spinner />}>
-            <Item key={item.id} item={item}/>
-          </Suspense>
-        ))}
-      </ol>
+    <ol>
+      {data.list.map(item => (
+        <Suspense fallback={<Spinner />}>
+          <Item key={item.id} item={item}/>
+        </Suspense>
+      ))}
+    </ol>
   );
 }
 ```

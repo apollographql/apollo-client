@@ -1844,6 +1844,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   let fetchMoreResult = await observable.fetchMore({
@@ -1862,6 +1863,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   await expect(stream).toEmitApolloQueryResult({
@@ -1873,6 +1875,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: true,
     networkStatus: NetworkStatus.fetchMore,
+    partial: false,
   });
 
   await expect(stream).toEmitApolloQueryResult({
@@ -1886,6 +1889,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   // Ensure we store the merged result as the last result
@@ -1900,6 +1904,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   await expect(stream).not.toEmitAnything();
@@ -1918,6 +1923,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   await expect(stream).toEmitApolloQueryResult({
@@ -1931,6 +1937,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: true,
     networkStatus: NetworkStatus.fetchMore,
+    partial: false,
   });
 
   await expect(stream).toEmitApolloQueryResult({
@@ -1942,6 +1949,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
@@ -1953,6 +1961,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 
   await expect(stream).not.toEmitAnything();

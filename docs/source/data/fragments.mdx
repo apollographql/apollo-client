@@ -561,7 +561,7 @@ function Item(props: { item: { __typename: 'Item', id: number }}) {
   const { complete, data } = useFragment({
     fragment: ItemFragment,
     fragmentName: "ItemFragment",
-    from: item
+    from: props.item
   });
 
   return <li>{complete ? data.text : "incomplete"}</li>;
@@ -573,7 +573,7 @@ function Item(props) {
   const { complete, data } = useFragment({
     fragment: ITEM_FRAGMENT,
     fragmentName: "ItemFragment",
-    from: item
+    from: props.item
   });
 
   return <li>{complete ? data.text : "incomplete"}</li>;

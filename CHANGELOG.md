@@ -62,7 +62,7 @@
 - [#12338](https://github.com/apollographql/apollo-client/pull/12338) [`67c16c9`](https://github.com/apollographql/apollo-client/commit/67c16c93897e36be980ba2139ee8bd3f24ab8558) Thanks [@phryneas](https://github.com/phryneas)! - In case of a multipart response (e.g. with `@defer`), query deduplication will
   now keep going until the final chunk has been received.
 
-- [#12276](https://github.com/apollographql/apollo-client/pull/12276) [`670f112`](https://github.com/apollographql/apollo-client/commit/670f112a7d9d85cb357eb279a488ac2c6d0137a9) Thanks [@Cellule](https://github.com/Cellule)! - Fix the type of the `variables` property passed as the 2nd argument to the `subscribeToMore` callback. This was previously reported as the `variables` type for the subscription itself, but is now properly typed as the query `variables`.
+- [#12276](https://github.com/apollographql/apollo-client/pull/12276) [`670f112`](https://github.com/apollographql/apollo-client/commit/670f112a7d9d85cb357eb279a488ac2c6d0137a9) Thanks [@Cellule](https://github.com/Cellule)! - Fix the type of the `variables` property passed as the 2nd argument to the `subscribeToMore` `updateQuery` callback. This was previously reported as the `variables` type for the subscription itself, but is now properly typed as the query `variables`.
 
 ## 3.12.11
 

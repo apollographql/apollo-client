@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.12.10
+
+### Patch Changes
+
+- [#12341](https://github.com/apollographql/apollo-client/pull/12341) [`f2bb0b9`](https://github.com/apollographql/apollo-client/commit/f2bb0b9955564e432345ee8bd431290e698d092c) Thanks [@phryneas](https://github.com/phryneas)! - `useReadQuery`/`useQueryRefHandlers`: Fix a "hook order" warning that might be emitted in React 19 dev mode.
+
+- [#12342](https://github.com/apollographql/apollo-client/pull/12342) [`219b26b`](https://github.com/apollographql/apollo-client/commit/219b26ba5a697981ad700e05b926d42db0fb8e59) Thanks [@phryneas](https://github.com/phryneas)! - Add `graphql-ws` `^6.0.3` as a valid `peerDependency`
+
 ## 3.12.9
 
 ### Patch Changes

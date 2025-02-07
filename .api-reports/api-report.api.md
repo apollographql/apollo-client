@@ -1465,7 +1465,9 @@ export interface LazyQueryHookExecOptions<TData = any, TVariables extends Operat
 export interface LazyQueryHookOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
     // @internal (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+    // @deprecated
     onCompleted?: (data: MaybeMasked<TData>) => void;
+    // @deprecated
     onError?: (error: ApolloError) => void;
 }
 
@@ -2180,7 +2182,9 @@ export interface QueryDataOptions<TData = any, TVariables extends OperationVaria
 export interface QueryFunctionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
     // @internal (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+    // @deprecated
     onCompleted?: (data: MaybeMasked<TData>) => void;
+    // @deprecated
     onError?: (error: ApolloError) => void;
     skip?: boolean;
 }

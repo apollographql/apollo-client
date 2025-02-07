@@ -585,7 +585,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           });
 
           this.reportResult(
-            { ...lastResult, data: data as TData },
+            {
+              ...lastResult,
+              networkStatus: originalNetworkStatus!,
+              loading: isNetworkRequestInFlight(originalNetworkStatus),
+              data: data as TData,
+            },
             this.variables
           );
         }

@@ -2173,9 +2173,6 @@ describe("useLazyQuery Hook", () => {
           return useLazyQuery(query, {
             fetchPolicy: "cache-first",
             variables: { id: "1" },
-            onError: () => {
-              trackClosureValue("onError", count);
-            },
             skipPollAttempt: () => {
               trackClosureValue("skipPollAttempt", count);
               return false;
@@ -2270,7 +2267,6 @@ describe("useLazyQuery Hook", () => {
     [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);
 
-    // Check for stale closures with onError
     await execute({ variables: { id: "2" } });
 
     {
@@ -2317,7 +2313,6 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 2);
     // after fetch
     expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 2);
-    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onError", 2);
     trackClosureValue.mockClear();
 
     countRef.current++;

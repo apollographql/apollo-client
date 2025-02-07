@@ -13,7 +13,6 @@
  * disableNetworkFetches
  * renderPromises
  * isSyncSSR
- * callbacks
  */
 /** */
 import * as React from "rehackt";

@@ -10,6 +10,7 @@ import {
   FetchPolicy,
   gql,
   InMemoryCache,
+  NetworkStatus,
   Observable,
   Reference,
   TypedDocumentNode,
@@ -1125,14 +1126,17 @@ describe("client.watchQuery", () => {
     const stream = new ObservableStream(observable);
 
     {
-      const { data } = await stream.takeNext();
-      data!.currentUser.__typename;
-      data!.currentUser.id;
-      data!.currentUser.name;
+      const { data, dataState } = await stream.takeNext();
+
+      invariant(dataState === "complete", "expected dataState to be complete");
+
+      data.currentUser.__typename;
+      data.currentUser.id;
+      data.currentUser.name;
 
       expect(consoleSpy.warn).not.toHaveBeenCalled();
 
-      data!.currentUser.age;
+      data.currentUser.age;
 
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
       expect(consoleSpy.warn).toHaveBeenCalledWith(
@@ -1206,9 +1210,11 @@ describe("client.watchQuery", () => {
     const observable = client.watchQuery({ query });
     const stream = new ObservableStream(observable);
 
-    const { data } = await stream.takeNext();
+    const { data, dataState } = await stream.takeNext();
 
-    const id = client.cache.identify(data!.currentUser);
+    invariant(dataState === "complete", "expected dataState to be complete");
+
+    const id = client.cache.identify(data.currentUser);
 
     expect(consoleSpy.warn).not.toHaveBeenCalled();
     expect(id).toEqual("User:1");
@@ -1269,10 +1275,13 @@ describe("client.watchQuery", () => {
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
 
-    const { data } = await queryStream.takeNext();
+    const { data, dataState } = await queryStream.takeNext();
+
+    invariant(dataState === "complete", "expected dataState to be complete");
+
     const fragmentObservable = client.watchFragment({
       fragment,
-      from: data!.currentUser,
+      from: data.currentUser,
     });
 
     const fragmentStream = new ObservableStream(fragmentObservable);
@@ -1342,10 +1351,13 @@ describe("client.watchQuery", () => {
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
 
-    const { data } = await queryStream.takeNext();
+    const { data, dataState } = await queryStream.takeNext();
+
+    invariant(dataState === "complete", "expected dataState to be complete");
+
     const fragmentObservable = client.watchFragment({
       fragment,
-      from: data!.currentUser,
+      from: data.currentUser,
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -1419,10 +1431,13 @@ describe("client.watchQuery", () => {
 
     const queryStream = new ObservableStream(client.watchQuery({ query }));
 
-    const { data } = await queryStream.takeNext();
+    const { data, dataState } = await queryStream.takeNext();
+
+    invariant(dataState === "complete", "expected dataState to be complete");
+
     const fragmentObservable = client.watchFragment({
       fragment,
-      from: data!.currentUser,
+      from: data.currentUser,
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -1970,13 +1985,15 @@ describe("client.watchQuery", () => {
       },
     });
 
-    {
-      const { data } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
         greeting: { message: "Hello world", __typename: "Greeting" },
-      });
-    }
+      },
+      dataState: "hasNext",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
 
     link.simulateResult({
       result: {
@@ -1993,10 +2010,18 @@ describe("client.watchQuery", () => {
       },
     });
 
-    // Since the fragment data is masked, we don't expect to get another result
-    await expect(stream.takeNext()).rejects.toThrow(
-      new Error("Timeout waiting for next event")
-    );
+    // Even though `data` didn't change, the `dataStatus` is updated to reflect
+    // that the full result has been stremed in so we expect another render
+    // value.
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
+        greeting: { message: "Hello world", __typename: "Greeting" },
+      },
+      dataState: "complete",
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     expect(client.readQuery({ query })).toEqual({
       greeting: {

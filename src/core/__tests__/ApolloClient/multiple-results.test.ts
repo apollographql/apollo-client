@@ -50,6 +50,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -59,6 +60,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -109,6 +111,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -120,6 +123,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: false,
       networkStatus: 7,
       partial: true,
@@ -130,6 +134,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -180,6 +185,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -195,6 +201,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -245,6 +252,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -257,6 +265,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       errors: [new Error("defer failed")],
@@ -267,6 +276,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: laterData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -328,6 +338,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,

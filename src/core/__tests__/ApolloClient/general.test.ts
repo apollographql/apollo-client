@@ -107,6 +107,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: false,
       networkStatus: 8,
       errors: [{ message: "This is an error message." }],
@@ -175,6 +176,7 @@ describe("ApolloClient", () => {
           },
         },
       },
+      dataState: "complete",
       networkStatus: NetworkStatus.ready,
       loading: false,
       partial: false,
@@ -501,6 +503,7 @@ describe("ApolloClient", () => {
       loading: false,
       networkStatus: 7,
       partial: false,
+      dataState: "complete",
       ...expResult,
     });
   });
@@ -567,12 +570,14 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -582,12 +587,14 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -598,6 +605,7 @@ describe("ApolloClient", () => {
 
     await expect(stream2).toEmitApolloQueryResult({
       data: data3,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -693,18 +701,21 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream3).toEmitApolloQueryResult({
       data: data3,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -750,6 +761,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -757,6 +769,7 @@ describe("ApolloClient", () => {
     void observable.refetch();
     await expect(stream).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -919,6 +932,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -928,12 +942,14 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
     });
     await expect(stream).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -975,6 +991,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -984,6 +1001,7 @@ describe("ApolloClient", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1061,6 +1079,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1070,6 +1089,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1079,6 +1099,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data3,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1088,6 +1109,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data4,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1138,6 +1160,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1147,6 +1170,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1212,6 +1236,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1221,6 +1246,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1229,6 +1255,7 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult(
       {
         data: data3,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1293,6 +1320,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1300,6 +1328,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.poll,
       partial: false,
@@ -1326,6 +1355,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1380,6 +1410,7 @@ describe("ApolloClient", () => {
     // returnPartialData is `true`
     await expect(stream).toEmitApolloQueryResult({
       data: { luke: { name: "Luke Skywalker" } },
+      dataState: "partial",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -1655,12 +1686,14 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1730,6 +1763,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1746,6 +1780,7 @@ describe("ApolloClient", () => {
           age: 50,
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1821,6 +1856,7 @@ describe("ApolloClient", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: transformedQueryResult,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1941,6 +1977,7 @@ describe("ApolloClient", () => {
 
     expect(result).toEqualApolloQueryResult({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1988,6 +2025,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2036,6 +2074,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2080,6 +2119,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2087,6 +2127,7 @@ describe("ApolloClient", () => {
 
     await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
       data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2174,12 +2215,14 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2257,18 +2300,21 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream1).toEmitApolloQueryResult({
       data: data1,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2338,6 +2384,7 @@ describe("ApolloClient", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: undefined,
+      dataState: "none",
       partial: true,
     });
 
@@ -2345,6 +2392,7 @@ describe("ApolloClient", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: undefined,
+      dataState: "none",
       partial: true,
     });
 
@@ -2356,6 +2404,7 @@ describe("ApolloClient", () => {
           a: "ay",
         },
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -2367,6 +2416,7 @@ describe("ApolloClient", () => {
           b: "bee",
         },
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -2376,6 +2426,7 @@ describe("ApolloClient", () => {
       data: {
         info: {},
       },
+      dataState: "partial",
       partial: true,
     });
 
@@ -2387,6 +2438,7 @@ describe("ApolloClient", () => {
           a: "ay",
         },
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -2437,6 +2489,7 @@ describe("ApolloClient", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: undefined,
+      dataState: "none",
       partial: true,
     });
 
@@ -2448,6 +2501,7 @@ describe("ApolloClient", () => {
           c: "see",
         },
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -2457,6 +2511,7 @@ describe("ApolloClient", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: undefined,
+      dataState: "none",
       partial: true,
     });
 
@@ -2468,6 +2523,7 @@ describe("ApolloClient", () => {
           c: "see",
         },
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -2483,6 +2539,7 @@ describe("ApolloClient", () => {
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: undefined,
+      dataState: "none",
       partial: true,
     });
 
@@ -2494,6 +2551,7 @@ describe("ApolloClient", () => {
           c: "see",
         },
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -2600,12 +2658,14 @@ describe("ApolloClient", () => {
 
     await expect(stream1).toEmitApolloQueryResult({
       data: dataWithoutId,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: dataWithId,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2646,6 +2706,7 @@ describe("ApolloClient", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: firstResult.data,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2713,12 +2774,14 @@ describe("ApolloClient", () => {
     await expect(streamA).toEmitNext();
     expect(observableA.getCurrentResult()).toEqualApolloQueryResult({
       data: dataA,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -2727,12 +2790,14 @@ describe("ApolloClient", () => {
     await expect(streamB).toEmitNext();
     expect(observableA.getCurrentResult()).toEqualApolloQueryResult({
       data: dataA,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
     expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
       data: dataB,
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -2855,12 +2920,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2921,6 +2988,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3099,12 +3167,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3175,6 +3245,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3238,12 +3309,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3297,6 +3370,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3355,6 +3429,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3368,12 +3443,14 @@ describe("ApolloClient", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3459,12 +3536,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream2).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3474,12 +3553,14 @@ describe("ApolloClient", () => {
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataChanged,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
         data: data2Changed,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3547,6 +3628,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3559,6 +3641,7 @@ describe("ApolloClient", () => {
       // only refetch once and make sure data has changed
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3602,6 +3685,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3659,6 +3743,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -3669,6 +3754,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4014,12 +4100,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream2).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4029,12 +4117,14 @@ describe("ApolloClient", () => {
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataChanged,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
         data: data2Changed,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4087,6 +4177,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4098,6 +4189,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4140,6 +4232,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4193,6 +4286,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4203,6 +4297,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4538,12 +4633,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       await expect(stream2).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4555,12 +4652,14 @@ describe("ApolloClient", () => {
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataChanged,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
         data: data2Changed,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4590,6 +4689,7 @@ describe("ApolloClient", () => {
 
       expect(result).toEqualApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4642,12 +4742,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: primeData,
+        dataState: "partial",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: fullData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4676,6 +4778,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: { author: { firstName: "John", lastName: "Smith" } },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4726,6 +4829,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4736,6 +4840,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4793,6 +4898,7 @@ describe("ApolloClient", () => {
       const result1 = await client.query({ query: query1 });
       expect(result1).toEqualApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4806,12 +4912,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
+        dataState: "partial",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4892,6 +5000,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4901,12 +5010,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4973,6 +5084,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -4985,6 +5097,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5053,6 +5166,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5128,6 +5242,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5204,6 +5319,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5284,6 +5400,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5298,6 +5415,7 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult(
         {
           data: secondReqData,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -5306,6 +5424,7 @@ describe("ApolloClient", () => {
       );
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5377,6 +5496,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5391,6 +5511,7 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult(
         {
           data: secondReqData,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -5399,6 +5520,7 @@ describe("ApolloClient", () => {
       );
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5470,6 +5592,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5485,6 +5608,7 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult(
         {
           data: secondReqData,
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -5493,6 +5617,7 @@ describe("ApolloClient", () => {
       );
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5558,6 +5683,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5629,6 +5755,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5644,6 +5771,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5895,6 +6023,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5928,12 +6057,14 @@ describe("ApolloClient", () => {
       expect(finishedRefetch).toBe(true);
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5959,6 +6090,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5985,6 +6117,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6011,6 +6144,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6037,6 +6171,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6119,6 +6254,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6136,12 +6272,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6219,6 +6357,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6232,12 +6371,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6315,6 +6456,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6332,12 +6474,14 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6417,6 +6561,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6519,6 +6664,7 @@ describe("ApolloClient", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6526,6 +6672,7 @@ describe("ApolloClient", () => {
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6724,6 +6871,7 @@ describe("ApolloClient", () => {
 
       await expect(stream1).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6733,8 +6881,11 @@ describe("ApolloClient", () => {
 
       const stream2 = new ObservableStream(observable2);
 
+      // TODO: Since `returnPartialData` is `false`, this should not emit any
+      // data and should instead be undefined.
       await expect(stream2).toEmitApolloQueryResult({
         data: data1,
+        dataState: "partial",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -6796,6 +6947,7 @@ describe("ApolloClient", () => {
 
       await expect(stream1).toEmitApolloQueryResult({
         data: data1,
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6807,6 +6959,7 @@ describe("ApolloClient", () => {
 
       await expect(stream2).toEmitApolloQueryResult({
         data: data1,
+        dataState: "partial",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,

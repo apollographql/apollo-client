@@ -242,16 +242,18 @@ function useSuspenseQuery_<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
+  const skipResult = React.useMemo<
+    Omit<ApolloQueryResult<TData>, "dataState">
+  >(() => {
     const error = toApolloError(queryRef.result);
-    const complete = !!queryRef.result.data;
+    const data = queryRef.result.data;
+    const complete = !!data;
 
     return {
       loading: false,
       data: queryRef.result.data,
       networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
       error,
-      complete,
       partial: !complete,
     };
   }, [queryRef.result]);
@@ -333,7 +335,9 @@ function validatePartialDataReturn(
   }
 }
 
-export function toApolloError(result: ApolloQueryResult<any>) {
+export function toApolloError(
+  result: Pick<ApolloQueryResult<any>, "error" | "errors">
+) {
   return isNonEmptyArray(result.errors) ?
       new ApolloError({ graphQLErrors: result.errors })
     : result.error;

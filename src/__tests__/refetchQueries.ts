@@ -820,6 +820,7 @@ describe("client.refetchQueries", () => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
       expect(Object.keys(result).sort()).toEqual([
         "data",
+        "dataState",
         "loading",
         "networkStatus",
         "partial",
@@ -890,6 +891,7 @@ describe("client.refetchQueries", () => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
       expect(Object.keys(result).sort()).toEqual([
         "data",
+        "dataState",
         "loading",
         "networkStatus",
         "partial",
@@ -957,6 +959,7 @@ describe("client.refetchQueries", () => {
       // These results are ApolloQueryResult<any>, as inferred by TypeScript.
       expect(Object.keys(result).sort()).toEqual([
         "data",
+        "dataState",
         "loading",
         "networkStatus",
         "partial",

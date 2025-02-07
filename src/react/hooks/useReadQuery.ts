@@ -102,7 +102,7 @@ function useReadQuery_<TData>(
 
   return React.useMemo(() => {
     return {
-      data: result.data!,
+      data: result.data as TData,
       networkStatus: result.networkStatus,
       error: toApolloError(result),
     };

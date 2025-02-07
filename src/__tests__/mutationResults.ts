@@ -11,6 +11,7 @@ import {
 } from "../utilities";
 import { MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { invariant } from "../utilities/globals";
 
 describe("mutation results", () => {
   const query = gql`
@@ -290,12 +291,24 @@ describe("mutation results", () => {
     const stream = new ObservableStream(obs);
     {
       const result = await stream.takeNext();
-      expect(result.data!.mini.cover).toBe("image");
+
+      invariant(
+        result.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
+      expect(result.data.mini.cover).toBe("image");
     }
     await client.mutate({ mutation, variables: { signature: "1234" } });
     {
       const result = await stream.takeNext();
-      expect(result.data!.mini.cover).toBe("image2");
+
+      invariant(
+        result.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
+      expect(result.data.mini.cover).toBe("image2");
     }
   });
 

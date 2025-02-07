@@ -12,7 +12,7 @@ import {
   NetworkStatus,
   TypedDocumentNode,
 } from "../../../core";
-import { Observable } from "../../../utilities";
+import { DeepPartial, Observable } from "../../../utilities";
 import { ApolloProvider } from "../../../react";
 import {
   mockSingleLink,
@@ -490,6 +490,7 @@ describe("useLazyQuery Hook", () => {
 
     expect(refetchResult).toEqualApolloQueryResult({
       data: { counter: 2, vars: { execVar: false } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -3375,7 +3376,7 @@ describe.skip("Type Tests", () => {
     }
 
     {
-      const { data } = await fetchMore({
+      const { data, dataState } = await fetchMore({
         variables: {},
         updateQuery: (queryData, { fetchMoreResult }) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
@@ -3385,13 +3386,41 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      if (dataState === "complete") {
+        expectTypeOf(data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Masked<Query>>>();
+      }
+
+      if (dataState === "hasNext") {
+        expectTypeOf(data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (dataState === "none") {
+        expectTypeOf(data).branded.toEqualTypeOf<undefined>();
+      }
     }
 
     {
-      const { data } = await refetch();
+      const { data, dataState } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      if (dataState === "complete") {
+        expectTypeOf(data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Masked<Query>>>();
+      }
+
+      if (dataState === "hasNext") {
+        expectTypeOf(data).branded.toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (dataState === "none") {
+        expectTypeOf(data).branded.toEqualTypeOf<undefined>();
+      }
     }
   });
 
@@ -3474,7 +3503,7 @@ describe.skip("Type Tests", () => {
     }
 
     {
-      const { data } = await fetchMore({
+      const { data, dataState } = await fetchMore({
         variables: {},
         updateQuery: (queryData, { fetchMoreResult }) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
@@ -3484,13 +3513,41 @@ describe.skip("Type Tests", () => {
         },
       });
 
-      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+      if (dataState === "complete") {
+        expectTypeOf(data).branded.toEqualTypeOf<Query>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Query>>();
+      }
+
+      if (dataState === "hasNext") {
+        expectTypeOf(data).branded.toEqualTypeOf<Query>();
+      }
+
+      if (dataState === "none") {
+        expectTypeOf(data).branded.toEqualTypeOf<undefined>();
+      }
     }
 
     {
-      const { data } = await refetch();
+      const { data, dataState } = await refetch();
 
-      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+      if (dataState === "complete") {
+        expectTypeOf(data).branded.toEqualTypeOf<Query>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Query>>();
+      }
+
+      if (dataState === "hasNext") {
+        expectTypeOf(data).branded.toEqualTypeOf<Query>();
+      }
+
+      if (dataState === "none") {
+        expectTypeOf(data).branded.toEqualTypeOf<undefined>();
+      }
     }
   });
 });

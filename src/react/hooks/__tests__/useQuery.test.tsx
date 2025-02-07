@@ -1851,6 +1851,7 @@ describe("useQuery Hook", () => {
             mandatory: true,
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1905,6 +1906,7 @@ describe("useQuery Hook", () => {
         // isGlobal: false,
         // mandatory: true,
         data: { vars: { sourceOfVar: "reobserve without variable merge" } },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -2250,6 +2252,7 @@ describe("useQuery Hook", () => {
               data: {
                 linkCount: expectedLinkCount,
               },
+              dataState: "complete",
               partial: false,
             });
           } else {
@@ -2267,6 +2270,7 @@ describe("useQuery Hook", () => {
         getCurrentSnapshot().observable.reobserve()
       ).resolves.toEqualApolloQueryResult({
         data: { linkCount: 2 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5275,6 +5279,7 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualApolloQueryResult({
         data: { letters: cd },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5347,6 +5352,7 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualApolloQueryResult({
         data: { letters: cd },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5437,6 +5443,7 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualApolloQueryResult({
         data: { letters: cd },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5518,6 +5525,7 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualApolloQueryResult({
         data: { letters: cd },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5734,6 +5742,7 @@ describe("useQuery Hook", () => {
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -5812,6 +5821,7 @@ describe("useQuery Hook", () => {
             { __typename: "Letter", letter: "F", position: 6 },
           ],
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -6224,6 +6234,7 @@ describe("useQuery Hook", () => {
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
         data: undefined,
+        dataState: "none",
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -6288,6 +6299,7 @@ describe("useQuery Hook", () => {
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
         data: undefined,
+        dataState: "none",
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -7299,6 +7311,7 @@ describe("useQuery Hook", () => {
         getCurrentSnapshot().refetch()
       ).resolves.toEqualApolloQueryResult({
         data: { hello: "world 2" },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -7434,6 +7447,7 @@ describe("useQuery Hook", () => {
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
         ).resolves.toEqualApolloQueryResult({
           data: { primes: [13, 17, 19, 23, 29] },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -7545,6 +7559,7 @@ describe("useQuery Hook", () => {
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
         ).resolves.toEqualApolloQueryResult({
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -7654,6 +7669,7 @@ describe("useQuery Hook", () => {
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
         ).resolves.toEqualApolloQueryResult({
           data: { primes: [13, 17, 19, 23, 29] },
+          dataState: "complete",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: false,
@@ -9151,6 +9167,7 @@ describe("useQuery Hook", () => {
 
       expect(refetchResult).toEqualApolloQueryResult({
         data: { hello: "world" },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -9265,6 +9282,7 @@ describe("useQuery Hook", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: { hello: 2 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -10139,6 +10157,7 @@ describe("useQuery Hook", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: { a: "aaa", b: 2 },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,

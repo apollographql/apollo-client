@@ -3655,6 +3655,7 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -3689,6 +3690,7 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        dataState: "complete",
         partial: false,
       });
 
@@ -3704,6 +3706,7 @@ describe("type policies", function () {
             extraMetaData: "extra",
           },
         },
+        dataState: "complete",
         partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
@@ -4121,6 +4124,7 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        dataState: "complete",
         partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
@@ -4146,6 +4150,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          dataState: "complete",
           partial: false,
         });
         expect(cache.extract()).toMatchSnapshot();
@@ -4174,6 +4179,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          dataState: "complete",
           partial: false,
         });
 
@@ -4201,6 +4207,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          dataState: "complete",
           partial: false,
         });
 
@@ -4235,6 +4242,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          dataState: "complete",
           partial: false,
         });
 
@@ -4264,6 +4272,7 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
+          dataState: "complete",
           partial: false,
         });
 
@@ -4333,6 +4342,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          dataState: "complete",
           partial: false,
         });
 
@@ -4361,6 +4371,7 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
+          dataState: "complete",
           partial: false,
         });
 

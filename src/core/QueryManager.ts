@@ -823,7 +823,8 @@ export class QueryManager<TStore> {
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
       .then(
         (result) =>
-          result && {
+          result &&
+          ({
             ...result,
             data: this.maskOperation({
               document: query,
@@ -831,7 +832,7 @@ export class QueryManager<TStore> {
               fetchPolicy: options.fetchPolicy,
               id: queryId,
             }),
-          }
+          } as ApolloQueryResult<TData>)
       )
       .finally(() => this.stopQuery(queryId));
   }
@@ -1262,10 +1263,16 @@ export class QueryManager<TStore> {
 
         const aqr: ApolloQueryResult<TData> = {
           data: result.data,
+          dataState: result.data ? "complete" : "none",
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: !result.data,
         };
+
+        if (isExecutionPatchResult(result) && result.hasNext) {
+          aqr.dataState = "hasNext";
+          aqr.partial = true;
+        }
 
         // In the case we start multiple network requests simulatenously, we
         // want to ensure we properly set `data` if we're reporting on an old
@@ -1273,6 +1280,7 @@ export class QueryManager<TStore> {
         // throwing the markError result.
         if (hasErrors && errorPolicy === "none") {
           aqr.data = void 0 as TData;
+          aqr.dataState = "none";
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
@@ -1656,13 +1664,16 @@ export class QueryManager<TStore> {
       }
 
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        const result: ApolloQueryResult<TData> = {
-          // TODO: Handle partial data
-          data: data as TData | undefined,
+        const result = {
+          data,
+          dataState:
+            diff.complete ? "complete"
+            : data ? "partial"
+            : "none",
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
-        };
+        } as ApolloQueryResult<TData>;
 
         return Observable.of(result);
       };

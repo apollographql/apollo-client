@@ -74,6 +74,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: { foo: { bar: true } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -120,6 +121,7 @@ describe("Basic resolver capabilities", () => {
         foo: { bar: true },
         bar: { baz: true },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -171,6 +173,7 @@ describe("Basic resolver capabilities", () => {
         foo: { bar: true, __typename: "ClientData" },
         bar: { baz: true },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -233,6 +236,7 @@ describe("Basic resolver capabilities", () => {
         foo: { bar: true, baz: false, __typename: "Foo" },
         bar: { baz: true },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -267,6 +271,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: { foo: { bar: 1 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -301,6 +306,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: { foo: { bar: 1 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -367,6 +373,7 @@ describe("Basic resolver capabilities", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -398,6 +405,7 @@ describe("Basic resolver capabilities", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { isInCart: false },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -564,6 +572,7 @@ describe("Basic resolver capabilities", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: { foo: { bar: true }, bar: { baz: true } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -604,6 +613,7 @@ describe("Writing cache data from resolvers", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { field: 1 },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -662,6 +672,7 @@ describe("Writing cache data from resolvers", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { obj: { __typename: "Object", field: 2 } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -733,6 +744,7 @@ describe("Writing cache data from resolvers", () => {
           id: "uniqueId",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -776,6 +788,7 @@ describe("Resolving field aliases", () => {
         foo: { bar: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -807,6 +820,7 @@ describe("Resolving field aliases", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { fie: { bar: true, __typename: "Foo" } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -849,6 +863,7 @@ describe("Resolving field aliases", () => {
         fie: { fum: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -892,6 +907,7 @@ describe("Resolving field aliases", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { fie: { bar: "yo", __typename: "Foo" } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -955,6 +971,7 @@ describe("Resolving field aliases", () => {
     // stored in the cache).
     await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -964,6 +981,7 @@ describe("Resolving field aliases", () => {
     // the cache and have a value of `true`.
     await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1006,6 +1024,7 @@ describe("Force local resolvers", () => {
       data: {
         author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1026,6 +1045,7 @@ describe("Force local resolvers", () => {
       data: {
         author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1075,6 +1095,7 @@ describe("Force local resolvers", () => {
           name: "John Smith",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1214,6 +1235,7 @@ describe("Force local resolvers", () => {
           fullName: "Ben Newman",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1244,6 +1266,7 @@ describe("Async resolvers", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { isLoggedIn: true },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1304,6 +1327,7 @@ describe("Async resolvers", () => {
           __typename: "Member",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

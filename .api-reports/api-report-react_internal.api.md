@@ -1566,7 +1566,9 @@ const QUERY_REFERENCE_SYMBOL: unique symbol;
 interface QueryFunctionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
     // @internal (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+    // @deprecated
     onCompleted?: (data: MaybeMasked<TData>) => void;
+    // @deprecated
     onError?: (error: ApolloError) => void;
     skip?: boolean;
 }

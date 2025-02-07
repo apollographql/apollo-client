@@ -42,6 +42,7 @@ import equal from "@wry/equality";
 import {
   RefetchWritePolicy,
   SubscribeToMoreOptions,
+  SubscribeToMoreFunction,
 } from "../../../core/watchQueryOptions";
 import { skipToken } from "../constants";
 import {
@@ -57,7 +58,6 @@ import {
   spyOnConsole,
   addDelayToMocks,
 } from "../../../testing/internal";
-import { SubscribeToMoreFunction } from "../useSuspenseQuery";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
@@ -7190,6 +7190,8 @@ describe("fetchMore", () => {
     expect(updateQuery).toHaveBeenCalledWith(
       { greeting: "Hello" },
       {
+        complete: true,
+        previousData: { greeting: "Hello" },
         subscriptionData: {
           data: { greetingUpdated: "Subscription hello" },
         },
@@ -8364,9 +8366,12 @@ describe.skip("type tests", () => {
     {
       const [, { subscribeToMore }] = useBackgroundQuery(query);
 
-      const subscription: MaskedDocumentNode<Subscription, never> = gql`
-        subscription {
-          pushLetter {
+      const subscription: MaskedDocumentNode<
+        Subscription,
+        { letterId: string }
+      > = gql`
+        subscription LetterPushed($letterId: ID!) {
+          pushLetter(letterId: $letterId) {
             id
             ...CharacterFragment
           }
@@ -8379,14 +8384,40 @@ describe.skip("type tests", () => {
 
       subscribeToMore({
         document: subscription,
-        updateQuery: (queryData, { subscriptionData }) => {
+        updateQuery: (
+          queryData,
+          { subscriptionData, variables, complete, previousData }
+        ) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+          expectTypeOf(previousData).toEqualTypeOf<
+            | UnmaskedVariablesCaseData
+            | DeepPartial<UnmaskedVariablesCaseData>
+            | undefined
+          >();
+
+          if (complete) {
+            // Should narrow the type
+            expectTypeOf(
+              previousData
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              previousData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+          } else {
+            expectTypeOf(previousData).toEqualTypeOf<
+              DeepPartial<UnmaskedVariablesCaseData> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data
           ).toEqualTypeOf<UnmaskedSubscription>();
           expectTypeOf(subscriptionData.data).not.toEqualTypeOf<Subscription>();
+
+          expectTypeOf(variables).toEqualTypeOf<
+            VariablesCaseVariables | undefined
+          >();
 
           return {} as UnmaskedVariablesCaseData;
         },
@@ -8411,16 +8442,43 @@ describe.skip("type tests", () => {
 
       subscribeToMore({
         document: subscription,
-        updateQuery: (queryData, { subscriptionData }) => {
+        updateQuery: (
+          queryData,
+          { subscriptionData, variables, complete, previousData }
+        ) => {
           expectTypeOf(queryData).toEqualTypeOf<UnmaskedVariablesCaseData>();
           expectTypeOf(queryData).not.toEqualTypeOf<MaskedVariablesCaseData>();
+
+          expectTypeOf(previousData).toEqualTypeOf<
+            | UnmaskedVariablesCaseData
+            | DeepPartial<UnmaskedVariablesCaseData>
+            | undefined
+          >();
+
+          if (complete) {
+            // Should narrow the type
+            expectTypeOf(
+              previousData
+            ).toEqualTypeOf<UnmaskedVariablesCaseData>();
+            expectTypeOf(
+              previousData
+            ).not.toEqualTypeOf<MaskedVariablesCaseData>();
+          } else {
+            expectTypeOf(previousData).toEqualTypeOf<
+              DeepPartial<UnmaskedVariablesCaseData> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data
           ).toEqualTypeOf<UnmaskedSubscription>();
           expectTypeOf(subscriptionData.data).not.toEqualTypeOf<Subscription>();
 
-          return {} as UnmaskedVariablesCaseData;
+          expectTypeOf(variables).toEqualTypeOf<
+            VariablesCaseVariables | undefined
+          >();
+
+          return queryData;
         },
       });
     }

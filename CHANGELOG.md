@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.12.11
+
+### Patch Changes
+
+- [#12351](https://github.com/apollographql/apollo-client/pull/12351) [`3da908b`](https://github.com/apollographql/apollo-client/commit/3da908b1dde73847805a41c287a83700b2b88887) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where the wrong `networkStatus` and `loading` value was emitted from `observableQuery` when calling `fetchMore` with a `no-cache` fetch policy. The `networkStatus` now properly reports as `ready` and `loading` as `false` after the result is returned.
+
+- [#12354](https://github.com/apollographql/apollo-client/pull/12354) [`a24ef94`](https://github.com/apollographql/apollo-client/commit/a24ef9474f8f7a864f8b866563f8f7e661d2533f) Thanks [@phryneas](https://github.com/phryneas)! - Fix missing `main.d.cts` file
+
 ## 3.12.10
 
 ### Patch Changes

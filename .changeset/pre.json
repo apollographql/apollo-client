@@ -4,5 +4,15 @@
   "initialVersions": {
     "@apollo/client": "3.12.2"
   },
-  "changesets": []
+  "changesets": [
+    "blue-comics-train",
+    "bright-guests-chew",
+    "fluffy-worms-fail",
+    "heavy-pumas-boil",
+    "khaki-cars-develop",
+    "pretty-planets-cough",
+    "quiet-apricots-reply",
+    "sharp-windows-switch",
+    "tough-years-destroy"
+  ]
 }

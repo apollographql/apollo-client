@@ -89,10 +89,6 @@ interface InternalState<TData, TVariables extends OperationVariables> {
 }
 
 interface Callbacks<TData> {
-  // Defining these methods as no-ops on the prototype allows us to call
-  // state.onCompleted and/or state.onError without worrying about whether a
-  // callback was provided.
-  onCompleted(data: MaybeMasked<TData>): void;
   onError(error: ApolloError): void;
 }
 
@@ -297,7 +293,6 @@ export function useQueryInternals<
     disableNetworkFetches,
     isSyncSSR,
     {
-      onCompleted: options.onCompleted || noop,
       onError: options.onError || noop,
     }
   );
@@ -324,14 +319,13 @@ function useObservableSubscriptionResult<
   disableNetworkFetches: boolean,
   isSyncSSR: boolean,
   callbacks: {
-    onCompleted: (data: MaybeMasked<TData>) => void;
     onError: (error: ApolloError) => void;
   }
 ) {
   const callbackRef = React.useRef<Callbacks<TData>>(callbacks);
   React.useEffect(() => {
-    // Make sure state.onCompleted and state.onError always reflect the latest
-    // options.onCompleted and options.onError callbacks provided to useQuery,
+    // Make sure state.onError always reflect the latest
+    // options.onError callbacks provided to useQuery,
     // since those functions are often recreated every time useQuery is called.
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
@@ -540,7 +534,6 @@ export function createMakeWatchQueryOptions<
   {
     skip,
     ssr,
-    onCompleted,
     onError,
     defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
@@ -654,12 +647,11 @@ function setResult<TData, TVariables extends OperationVariables>(
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
-  handleErrorOrCompleted(nextResult, previousResult?.networkStatus, callbacks);
+  handleErrorOrCompleted(nextResult, callbacks);
 }
 
 function handleErrorOrCompleted<TData>(
   result: ApolloQueryResult<MaybeMasked<TData>>,
-  previousNetworkStatus: NetworkStatus | undefined,
   callbacks: Callbacks<TData>
 ) {
   if (!result.loading) {
@@ -670,12 +662,6 @@ function handleErrorOrCompleted<TData>(
       .then(() => {
         if (error) {
           callbacks.onError(error);
-        } else if (
-          result.data &&
-          previousNetworkStatus !== result.networkStatus &&
-          result.networkStatus === NetworkStatus.ready
-        ) {
-          callbacks.onCompleted(result.data);
         }
       })
       .catch((error) => {

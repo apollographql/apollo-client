@@ -139,15 +139,6 @@ export interface QueryOptionsDocumentation {
    * @docGroup 1. Operation options
    */
   skip_deprecated: unknown;
-
-  /**
-   * A callback function that's called when your query successfully completes with zero errors (or if `errorPolicy` is `ignore` and partial data is returned).
-   *
-   * This function is passed the query's result `data`.
-   *
-   * @docGroup 1. Operation options
-   */
-  onCompleted: unknown;
   /**
    * A callback function that's called when the query encounters one or more errors (unless `errorPolicy` is `ignore`).
    *

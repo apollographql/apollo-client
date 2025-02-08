@@ -446,10 +446,13 @@ export class StoreReader {
           context.lookupFragment
         );
 
-        if (!fragment && selection.kind === Kind.FRAGMENT_SPREAD) {
-          throw newInvariantError(`No fragment named %s`, selection.name.value);
-        }
-        if (fragment) {
+        if (selection.kind === Kind.FRAGMENT_SPREAD) {
+          if (!fragment) {
+            throw newInvariantError(
+              `No fragment named %s`,
+              selection.name.value
+            );
+          }
           fragment.selectionSet.selections.forEach((subSelection) => {
             if (isField(subSelection)) {
               let subFieldValue = policies.readField(

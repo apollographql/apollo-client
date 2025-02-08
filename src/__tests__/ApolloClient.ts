@@ -2549,7 +2549,8 @@ describe("ApolloClient", () => {
         });
       }
     });
-    it.only("reports diffs correctly when using getFragmentDoc", async () => {
+
+    it("reports diffs correctly when using getFragmentDoc", async () => {
       const cache = new InMemoryCache();
 
       const diffWithFragment = cache.diff({
@@ -2603,6 +2604,7 @@ describe("ApolloClient", () => {
         });
       });
     });
+
     it("reports diffs correctly when not using getFragmentDoc", async () => {
       const cache = new InMemoryCache();
 

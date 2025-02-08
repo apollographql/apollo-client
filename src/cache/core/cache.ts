@@ -227,18 +227,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
     const query = this.getFragmentDoc(fragment, fragmentName);
 
     const id = typeof from === "string" ? from : this.identify(from);
-
-    if (!id) {
-      return new Observable((observer) => {
-        observer.next({
-          data: {} as DeepPartial<TData>,
-          complete: false,
-          missing: "Unable to identify object",
-        });
-        return () => {};
-      });
-    }
-
     const diffOptions: Cache.DiffOptions<TData, TVars> = {
       ...otherOptions,
       returnPartialData: true,

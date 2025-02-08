@@ -12,7 +12,7 @@ import { Kind } from "graphql";
 import { Observable } from "../utilities";
 import { ApolloLink } from "../link/core";
 import { HttpLink } from "../link/http";
-import { InMemoryCache } from "../cache";
+import { InMemoryCache, MissingFieldError } from "../cache";
 import { itAsync } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
@@ -2542,9 +2542,120 @@ describe("ApolloClient", () => {
         expect(result).toStrictEqual({
           data: {},
           complete: false,
-          missing: "Unable to identify object",
+          missing: {
+            id: "Can't find field 'id' on ROOT_QUERY object",
+            text: "Can't find field 'text' on ROOT_QUERY object",
+          },
         });
       }
+    });
+    it.only("reports diffs correctly when using getFragmentDoc", async () => {
+      const cache = new InMemoryCache();
+
+      const diffWithFragment = cache.diff({
+        query: cache["getFragmentDoc"](gql`
+          fragment FooFragment on Foo {
+            foo
+          }
+        `),
+        id: cache.identify({}),
+        returnPartialData: true,
+        optimistic: true,
+      });
+
+      expect(diffWithFragment).toStrictEqual({
+        result: {},
+        complete: false,
+        missing: [
+          new MissingFieldError(
+            "Can't find field 'foo' on ROOT_QUERY object",
+            expect.anything(), // query
+            expect.anything() // variables
+          ),
+        ],
+      });
+
+      await new Promise((res) => {
+        cache.watch({
+          query: cache["getFragmentDoc"](gql`
+            fragment FooFragment on Foo {
+              foo
+            }
+          `),
+          id: cache.identify({}),
+          returnPartialData: true,
+          immediate: true,
+          optimistic: true,
+          callback: (diff) => {
+            expect(diff).toStrictEqual({
+              result: {},
+              complete: false,
+              missing: [
+                new MissingFieldError(
+                  "Can't find field 'foo' on ROOT_QUERY object",
+                  expect.anything(), // query
+                  expect.anything() // variables
+                ),
+              ],
+            });
+            res(void 0);
+          },
+        });
+      });
+    });
+    it("reports diffs correctly when not using getFragmentDoc", async () => {
+      const cache = new InMemoryCache();
+
+      const diffWithoutFragment = cache.diff({
+        query: gql`
+          query {
+            foo
+          }
+        `,
+        id: cache.identify({}),
+        returnPartialData: true,
+        optimistic: true,
+      });
+
+      expect(diffWithoutFragment).toStrictEqual({
+        result: {},
+        complete: false,
+        missing: [
+          new MissingFieldError(
+            "Can't find field 'foo' on ROOT_QUERY object",
+            expect.anything(), // query
+            expect.anything() // variables
+          ),
+        ],
+      });
+
+      await new Promise((res) => {
+        cache.watch({
+          query: gql`
+            query {
+              foo
+            }
+          `,
+          id: cache.identify({}),
+          returnPartialData: true,
+          immediate: true,
+          optimistic: true,
+          callback: (diff) => {
+            expect(diff).toStrictEqual({
+              result: {},
+              complete: false,
+              missing: [
+                new MissingFieldError(
+                  "Can't find field 'foo' on ROOT_QUERY object",
+                  expect.anything(), // query
+                  expect.anything() // variables
+                ),
+              ],
+            });
+            res(void 0);
+          },
+        });
+      });
     });
   });
 

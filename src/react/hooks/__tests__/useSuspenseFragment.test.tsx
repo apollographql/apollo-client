@@ -1895,7 +1895,6 @@ describe.skip("type tests", () => {
     const fragment: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
     useSuspenseFragment({ fragment, from: null });
-    // @ts-expect-error no variables argument allowed
     useSuspenseFragment({ fragment, from: null, variables: {} });
     // @ts-expect-error no variables argument allowed
     useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });

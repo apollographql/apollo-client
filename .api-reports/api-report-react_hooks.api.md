@@ -993,8 +993,6 @@ interface LazyQueryHookExecOptions<TData = any, TVariables extends OperationVari
 interface LazyQueryHookOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
     // @internal (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
-    onCompleted?: (data: MaybeMasked<TData>) => void;
-    onError?: (error: ApolloError) => void;
 }
 
 // Warning: (ae-forgotten-export) The symbol "LazyQueryExecFunction" needs to be exported by the entry point index.d.ts
@@ -1463,8 +1461,6 @@ const QUERY_REF_BRAND: unique symbol;
 interface QueryFunctionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
     // @internal (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
-    onCompleted?: (data: MaybeMasked<TData>) => void;
-    onError?: (error: ApolloError) => void;
     skip?: boolean;
 }
 

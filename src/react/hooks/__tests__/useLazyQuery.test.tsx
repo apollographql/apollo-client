@@ -2173,12 +2173,6 @@ describe("useLazyQuery Hook", () => {
           return useLazyQuery(query, {
             fetchPolicy: "cache-first",
             variables: { id: "1" },
-            onCompleted: () => {
-              trackClosureValue("onCompleted", count);
-            },
-            onError: () => {
-              trackClosureValue("onError", count);
-            },
             skipPollAttempt: () => {
               trackClosureValue("skipPollAttempt", count);
               return false;
@@ -2233,7 +2227,6 @@ describe("useLazyQuery Hook", () => {
     let [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);
 
-    // Check for stale closures with onCompleted
     await execute();
 
     {
@@ -2264,7 +2257,6 @@ describe("useLazyQuery Hook", () => {
 
     // after fetch
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 1);
-    expect(trackClosureValue).toHaveBeenNthCalledWith(2, "onCompleted", 1);
     trackClosureValue.mockClear();
 
     countRef.current++;
@@ -2275,7 +2267,6 @@ describe("useLazyQuery Hook", () => {
     [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);
 
-    // Check for stale closures with onError
     await execute({ variables: { id: "2" } });
 
     {
@@ -2322,7 +2313,6 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 2);
     // after fetch
     expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 2);
-    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onError", 2);
     trackClosureValue.mockClear();
 
     countRef.current++;
@@ -2378,7 +2368,6 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenNthCalledWith(1, "nextFetchPolicy", 3);
     // after fetch
     expect(trackClosureValue).toHaveBeenNthCalledWith(2, "nextFetchPolicy", 3);
-    expect(trackClosureValue).toHaveBeenNthCalledWith(3, "onCompleted", 3);
     trackClosureValue.mockClear();
 
     // Test for stale closures for skipPollAttempt
@@ -3341,11 +3330,7 @@ describe.skip("Type Tests", () => {
     const [
       execute,
       { data, previousData, subscribeToMore, fetchMore, refetch, updateQuery },
-    ] = useLazyQuery(query, {
-      onCompleted(data) {
-        expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
-      },
-    });
+    ] = useLazyQuery(query);
 
     expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
     expectTypeOf(previousData).toEqualTypeOf<Masked<Query> | undefined>();
@@ -3440,11 +3425,7 @@ describe.skip("Type Tests", () => {
     const [
       execute,
       { data, previousData, fetchMore, refetch, subscribeToMore, updateQuery },
-    ] = useLazyQuery(query, {
-      onCompleted(data) {
-        expectTypeOf(data).toEqualTypeOf<Query>();
-      },
-    });
+    ] = useLazyQuery(query);
 
     expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     expectTypeOf(previousData).toEqualTypeOf<Query | undefined>();

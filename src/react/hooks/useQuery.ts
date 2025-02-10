@@ -13,11 +13,8 @@
  * disableNetworkFetches
  * renderPromises
  * isSyncSSR
- * callbacks
  */
 /** */
-import { invariant } from "../../utilities/globals/index.js";
-
 import * as React from "rehackt";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
@@ -66,7 +63,6 @@ type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
   Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
 >;
 
-function noop() {}
 const lastWatchOptions = Symbol();
 
 export interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
@@ -86,14 +82,6 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
   resultData: InternalResult<TData, TVariables>;
-}
-
-interface Callbacks<TData> {
-  // Defining these methods as no-ops on the prototype allows us to call
-  // state.onCompleted and/or state.onError without worrying about whether a
-  // callback was provided.
-  onCompleted(data: MaybeMasked<TData>): void;
-  onError(error: ApolloError): void;
 }
 
 /**
@@ -295,11 +283,7 @@ export function useQueryInternals<
     options,
     watchQueryOptions,
     disableNetworkFetches,
-    isSyncSSR,
-    {
-      onCompleted: options.onCompleted || noop,
-      onError: options.onError || noop,
-    }
+    isSyncSSR
   );
 
   return {
@@ -322,24 +306,8 @@ function useObservableSubscriptionResult<
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   disableNetworkFetches: boolean,
-  isSyncSSR: boolean,
-  callbacks: {
-    onCompleted: (data: MaybeMasked<TData>) => void;
-    onError: (error: ApolloError) => void;
-  }
+  isSyncSSR: boolean
 ) {
-  const callbackRef = React.useRef<Callbacks<TData>>(callbacks);
-  React.useEffect(() => {
-    // Make sure state.onCompleted and state.onError always reflect the latest
-    // options.onCompleted and options.onError callbacks provided to useQuery,
-    // since those functions are often recreated every time useQuery is called.
-    // Like the forceUpdate method, the versions of these methods inherited from
-    // InternalState.prototype are empty no-ops, but we can override them on the
-    // base state object (without modifying the prototype).
-    // eslint-disable-next-line react-compiler/react-compiler
-    callbackRef.current = callbacks;
-  });
-
   const resultOverride =
     (
       (isSyncSSR || disableNetworkFetches) &&
@@ -398,14 +366,7 @@ function useObservableSubscriptionResult<
             return;
           }
 
-          setResult(
-            result,
-            resultData,
-            observable,
-            client,
-            handleStoreChange,
-            callbackRef.current
-          );
+          setResult(result, resultData, observable, client, handleStoreChange);
         };
 
         const onError = (error: Error) => {
@@ -438,8 +399,7 @@ function useObservableSubscriptionResult<
               resultData,
               observable,
               client,
-              handleStoreChange,
-              callbackRef.current
+              handleStoreChange
             );
           }
         };
@@ -463,11 +423,9 @@ function useObservableSubscriptionResult<
       [disableNetworkFetches, isSyncSSR, observable, resultData, client]
     ),
     () =>
-      currentResultOverride ||
-      getCurrentResult(resultData, observable, callbackRef.current, client),
+      currentResultOverride || getCurrentResult(resultData, observable, client),
     () =>
-      currentResultOverride ||
-      getCurrentResult(resultData, observable, callbackRef.current, client)
+      currentResultOverride || getCurrentResult(resultData, observable, client)
   );
 }
 
@@ -540,8 +498,6 @@ export function createMakeWatchQueryOptions<
   {
     skip,
     ssr,
-    onCompleted,
-    onError,
     defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
@@ -629,8 +585,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>,
-  forceUpdate: () => void,
-  callbacks: Callbacks<TData>
+  forceUpdate: () => void
 ) {
   const previousResult = resultData.current;
   if (previousResult && previousResult.data) {
@@ -654,40 +609,11 @@ function setResult<TData, TVariables extends OperationVariables>(
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
-  handleErrorOrCompleted(nextResult, previousResult?.networkStatus, callbacks);
-}
-
-function handleErrorOrCompleted<TData>(
-  result: ApolloQueryResult<MaybeMasked<TData>>,
-  previousNetworkStatus: NetworkStatus | undefined,
-  callbacks: Callbacks<TData>
-) {
-  if (!result.loading) {
-    const error = toApolloError(result);
-
-    // wait a tick in case we are in the middle of rendering a component
-    Promise.resolve()
-      .then(() => {
-        if (error) {
-          callbacks.onError(error);
-        } else if (
-          result.data &&
-          previousNetworkStatus !== result.networkStatus &&
-          result.networkStatus === NetworkStatus.ready
-        ) {
-          callbacks.onCompleted(result.data);
-        }
-      })
-      .catch((error) => {
-        invariant.warn(error);
-      });
-  }
 }
 
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  callbacks: Callbacks<TData>,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
@@ -699,8 +625,7 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
       resultData,
       observable,
       client,
-      () => {},
-      callbacks
+      () => {}
     );
   }
   return resultData.current!;

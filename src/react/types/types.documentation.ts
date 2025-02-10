@@ -141,23 +141,6 @@ export interface QueryOptionsDocumentation {
   skip_deprecated: unknown;
 
   /**
-   * A callback function that's called when your query successfully completes with zero errors (or if `errorPolicy` is `ignore` and partial data is returned).
-   *
-   * This function is passed the query's result `data`.
-   *
-   * @docGroup 1. Operation options
-   */
-  onCompleted: unknown;
-  /**
-   * A callback function that's called when the query encounters one or more errors (unless `errorPolicy` is `ignore`).
-   *
-   * This function is passed an `ApolloError` object that contains either a `networkError` object or a `graphQLErrors` array, depending on the error(s) that occurred.
-   *
-   * @docGroup 1. Operation options
-   */
-  onError: unknown;
-
-  /**
    * The instance of `ApolloClient` to use to execute the query.
    *
    * By default, the instance that's passed down via context is used, but you

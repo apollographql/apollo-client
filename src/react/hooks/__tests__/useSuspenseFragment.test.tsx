@@ -10,6 +10,7 @@ import {
   Masked,
   MaskedDocumentNode,
   MaybeMasked,
+  OperationVariables,
   TypedDocumentNode,
 } from "../../../core";
 import React, { Suspense } from "react";
@@ -1859,6 +1860,18 @@ describe.skip("type tests", () => {
 
   it("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
     const fragment: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useSuspenseFragment({ fragment, from: null });
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
+    useSuspenseFragment({ fragment, from: null, variables: { bar: "baz" } });
+  });
+
+  it("variables are optional and can be anything with OperationVariables on a TypedDocumentNode", () => {
+    const fragment: TypedDocumentNode<
+      { greeting: string },
+      OperationVariables
+    > = gql``;
 
     useSuspenseFragment({ fragment, from: null });
     useSuspenseFragment({ fragment, from: null, variables: {} });

@@ -1346,8 +1346,6 @@ interface QueryDataOptions<TData = any, TVariables extends OperationVariables = 
 interface QueryFunctionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
     // @internal (undocumented)
     defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
-    onCompleted?: (data: MaybeMasked<TData>) => void;
-    onError?: (error: ApolloError) => void;
     skip?: boolean;
 }
 

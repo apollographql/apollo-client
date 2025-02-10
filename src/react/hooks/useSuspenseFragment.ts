@@ -14,8 +14,7 @@ import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import type { NoInfer } from "../types/types.js";
-import type { OnlyRequiredProperties } from "../../utilities/index.js";
+import type { NoInfer, VariablesOption } from "../types/types.js";
 
 type From<TData> =
   | StoreObject
@@ -23,12 +22,6 @@ type From<TData> =
   | FragmentType<NoInfer<TData>>
   | string
   | null;
-
-type VariablesOption<TVariables> =
-  [TVariables] extends [never] ? { variables?: never }
-  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-    { variables?: TVariables }
-  : { variables: TVariables };
 
 export type UseSuspenseFragmentOptions<TData, TVars> = {
   /**

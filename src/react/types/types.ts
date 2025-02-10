@@ -528,7 +528,7 @@ export interface SubscriptionCurrentObservable {
   subscription?: ObservableSubscription;
 }
 
-export type VariablesOption<TVariables> =
+export type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
     {
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */

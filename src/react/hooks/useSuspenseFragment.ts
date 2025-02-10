@@ -23,14 +23,17 @@ type From<TData> =
   | string
   | null;
 
-export type UseSuspenseFragmentOptions<TData, TVars> = {
+export type UseSuspenseFragmentOptions<
+  TData,
+  TVariables extends OperationVariables,
+> = {
   /**
    * A GraphQL document created using the `gql` template string tag from
    * `graphql-tag` with one or more fragments which will be used to determine
    * the shape of data to read. If you provide more than one fragment in this
    * document then you must also specify `fragmentName` to select a single.
    */
-  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+  fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
   /**
    * The name of the fragment in your GraphQL document to be used. If you do
@@ -50,7 +53,7 @@ export type UseSuspenseFragmentOptions<TData, TVars> = {
    * @docGroup 1. Operation options
    */
   client?: ApolloClient<any>;
-} & VariablesOption<NoInfer<TVars>>;
+} & VariablesOption<NoInfer<TVariables>>;
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 

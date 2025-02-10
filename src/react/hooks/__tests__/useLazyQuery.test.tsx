@@ -1510,8 +1510,8 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
+        loading: false,
+        networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
         // TODO: Why is this only populated when in loading state?
@@ -1520,6 +1520,7 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
+    // TODO: Determine why we have this extra render here
     {
       const [, result] = await takeSnapshot();
 
@@ -1533,6 +1534,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("the promise should not cause an unhandled rejection", async () => {
@@ -2697,8 +2700,8 @@ describe("useLazyQuery Hook", () => {
         ),
       }),
       errors: [],
-      loading: true,
-      networkStatus: NetworkStatus.loading,
+      loading: false,
+      networkStatus: NetworkStatus.error,
       called: true,
       previousData: undefined,
       variables: {},

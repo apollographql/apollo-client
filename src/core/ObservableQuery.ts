@@ -311,6 +311,7 @@ export class ObservableQuery<
       // `errors` is deprecated in favor of `error`.
       if (result.error || result.errors) {
         result.networkStatus = NetworkStatus.error;
+        result.loading = false;
       }
 
       if (

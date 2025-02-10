@@ -1510,8 +1510,8 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         called: true,
-        loading: false,
-        networkStatus: NetworkStatus.error,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
         // TODO: Why is this only populated when in loading state?

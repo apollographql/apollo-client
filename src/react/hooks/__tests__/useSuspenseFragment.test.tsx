@@ -1881,8 +1881,6 @@ describe.skip("type tests", () => {
   it("does not allow variables when TVariables is `never`", () => {
     const fragment: TypedDocumentNode<{ greeting: string }, never> = gql``;
 
-    const [useSuspenseFragment] = useLoadableQuery(query);
-
     useSuspenseFragment({ fragment, from: null });
     // @ts-expect-error no variables argument allowed
     useSuspenseFragment({ fragment, from: null, variables: {} });

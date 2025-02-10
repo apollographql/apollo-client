@@ -2308,13 +2308,13 @@ export function useSuspenseFragment<TData, TVariables extends OperationVariables
 // Warning: (ae-forgotten-export) The symbol "VariablesOption" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type UseSuspenseFragmentOptions<TData, TVars> = {
-    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariables> = {
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
     fragmentName?: string;
     from: From<TData>;
     optimistic?: boolean;
     client?: ApolloClient<any>;
-} & VariablesOption<NoInfer_2<TVars>>;
+} & VariablesOption<NoInfer_2<TVariables>>;
 
 // @public (undocumented)
 export type UseSuspenseFragmentResult<TData> = {
@@ -2383,10 +2383,10 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
 }
 
 // @public (undocumented)
-type VariablesOption<TVariables> = [
+type VariablesOption<TVariables extends OperationVariables> = [
 TVariables
 ] extends [never] ? {
-    variables?: never;
+    variables?: Record<string, never>;
 } : Record<string, never> extends OnlyRequiredProperties<TVariables> ? {
     variables?: TVariables;
 } : {
@@ -2440,7 +2440,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:51:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:75:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:120:9 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useSuspenseFragment.ts:74:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:70:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

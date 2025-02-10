@@ -2367,16 +2367,14 @@ function useSuspenseFragment<TData, TVariables extends OperationVariables = Oper
 // @public (undocumented)
 function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables>): UseSuspenseFragmentResult<TData>;
 
-// Warning: (ae-forgotten-export) The symbol "VariablesOption_2" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-type UseSuspenseFragmentOptions<TData, TVars> = {
-    fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariables> = {
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
     fragmentName?: string;
     from: From<TData>;
     optimistic?: boolean;
     client?: ApolloClient<any>;
-} & VariablesOption_2<NoInfer_2<TVars>>;
+} & VariablesOption<NoInfer_2<TVariables>>;
 
 // @public (undocumented)
 type UseSuspenseFragmentResult<TData> = {
@@ -2450,17 +2448,6 @@ type VariablesOption<TVariables extends OperationVariables> = [
 TVariables
 ] extends [never] ? {
     variables?: Record<string, never>;
-} : {} extends OnlyRequiredProperties<TVariables> ? {
-    variables?: TVariables;
-} : {
-    variables: TVariables;
-};
-
-// @public (undocumented)
-type VariablesOption_2<TVariables> = [
-TVariables
-] extends [never] ? {
-    variables?: never;
 } : Record<string, never> extends OnlyRequiredProperties<TVariables> ? {
     variables?: TVariables;
 } : {
@@ -2562,9 +2549,9 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/core/watchQueryOptions.ts:357:2 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:51:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:75:4 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useSuspenseFragment.ts:74:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:145:3 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:167:5 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useSuspenseFragment.ts:70:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:77:5 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:117:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

@@ -7,7 +7,6 @@ import type {
   TypedDocumentNode,
 } from "../../core/index.js";
 import { canonicalStringify } from "../../cache/index.js";
-import type { Cache } from "../../cache/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { getSuspenseCache } from "../internal/index.js";
 import React, { useMemo } from "rehackt";
@@ -16,6 +15,7 @@ import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 import type { NoInfer } from "../types/types.js";
+import { OnlyRequiredProperties } from "../../utilities/index.js";
 
 type From<TData> =
   | StoreObject
@@ -24,7 +24,13 @@ type From<TData> =
   | string
   | null;
 
-export interface UseSuspenseFragmentOptions<TData, TVars> {
+type VariablesOption<TVariables> =
+  [TVariables] extends [never] ? { variables?: never }
+  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    { variables?: TVariables }
+  : { variables: TVariables };
+
+export type UseSuspenseFragmentOptions<TData, TVars> = {
   /**
    * A GraphQL document created using the `gql` template string tag from
    * `graphql-tag` with one or more fragments which will be used to determine
@@ -39,10 +45,6 @@ export interface UseSuspenseFragmentOptions<TData, TVars> {
    * `fragment` document then that fragment will be used.
    */
   fragmentName?: string;
-  /**
-   * Any variables that the GraphQL query may depend on.
-   */
-  variables?: NoInfer<TVars>;
   from: From<TData>;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
@@ -55,7 +57,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars> {
    * @docGroup 1. Operation options
    */
   client?: ApolloClient<any>;
-}
+} & VariablesOption<NoInfer<TVars>>;
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 

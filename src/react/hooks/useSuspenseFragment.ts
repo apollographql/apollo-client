@@ -15,7 +15,7 @@ import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 import type { NoInfer } from "../types/types.js";
-import { OnlyRequiredProperties } from "../../utilities/index.js";
+import type { OnlyRequiredProperties } from "../../utilities/index.js";
 
 type From<TData> =
   | StoreObject

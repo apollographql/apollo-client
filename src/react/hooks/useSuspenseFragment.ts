@@ -1,8 +1,10 @@
 import type {
   ApolloClient,
+  DocumentNode,
   OperationVariables,
   Reference,
   StoreObject,
+  TypedDocumentNode,
 } from "../../core/index.js";
 import { canonicalStringify } from "../../cache/index.js";
 import type { Cache } from "../../cache/index.js";
@@ -22,15 +24,25 @@ type From<TData> =
   | string
   | null;
 
-export interface UseSuspenseFragmentOptions<TData, TVars>
-  extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
-      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
-    >,
-    Omit<
-      Cache.ReadFragmentOptions<TData, TVars>,
-      "id" | "variables" | "returnPartialData"
-    > {
+export interface UseSuspenseFragmentOptions<TData, TVars> {
+  /**
+   * A GraphQL document created using the `gql` template string tag from
+   * `graphql-tag` with one or more fragments which will be used to determine
+   * the shape of data to read. If you provide more than one fragment in this
+   * document then you must also specify `fragmentName` to select a single.
+   */
+  fragment: DocumentNode | TypedDocumentNode<TData, TVars>;
+
+  /**
+   * The name of the fragment in your GraphQL document to be used. If you do
+   * not provide a `fragmentName` and there is only one fragment in your
+   * `fragment` document then that fragment will be used.
+   */
+  fragmentName?: string;
+  /**
+   * Any variables that the GraphQL query may depend on.
+   */
+  variables?: NoInfer<TVars>;
   from: From<TData>;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;

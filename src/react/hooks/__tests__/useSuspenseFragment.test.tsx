@@ -1847,4 +1847,151 @@ describe.skip("type tests", () => {
       expectTypeOf(data).branded.toEqualTypeOf<Post | null>();
     }
   });
+
+  test("variables are optional and can be anything with an untyped DocumentNode", () => {
+    const fragment = gql``;
+
+    useSuspenseFragment({ fragment, from: null });
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
+    useSuspenseFragment({ fragment, from: null, variables: { bar: "baz" } });
+  });
+
+  it("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const fragment: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    useSuspenseFragment({ fragment, from: null });
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
+    useSuspenseFragment({ fragment, from: null, variables: { bar: "baz" } });
+  });
+
+  it("variables are optional when TVariables are empty", () => {
+    const fragment: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    useSuspenseFragment({ fragment, from: null });
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    // @ts-expect-error unknown variable
+    useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
+  });
+
+  it("does not allow variables when TVariables is `never`", () => {
+    const fragment: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    const [useSuspenseFragment] = useLoadableQuery(query);
+
+    useSuspenseFragment({ fragment, from: null });
+    // @ts-expect-error no variables argument allowed
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    // @ts-expect-error no variables argument allowed
+    useSuspenseFragment({ fragment, from: null, variables: { foo: "bar" } });
+  });
+
+  it("optional variables are optional to useSuspenseFragment", () => {
+    const fragment: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    useSuspenseFragment({ fragment, from: null });
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    useSuspenseFragment({ fragment, from: null, variables: { limit: 10 } });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+  });
+
+  it("enforces required variables when TVariables includes required variables", () => {
+    const fragment: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    // @ts-expect-error missing variables argument
+    useSuspenseFragment({ fragment, from: null });
+    // @ts-expect-error empty variables
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    useSuspenseFragment({ fragment, from: null, variables: { id: "1" } });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+  });
+
+  it("requires variables with mixed TVariables", () => {
+    const fragment: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    // @ts-expect-error missing variables argument
+    useSuspenseFragment({ fragment, from: null });
+    // @ts-expect-error empty variables
+    useSuspenseFragment({ fragment, from: null, variables: {} });
+    useSuspenseFragment({ fragment, from: null, variables: { id: "1" } });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      // @ts-expect-error missing required variable
+      variables: { language: "en" },
+    });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: { id: "1", language: "en" },
+    });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+    useSuspenseFragment({
+      fragment,
+      from: null,
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variable
+        foo: "bar",
+      },
+    });
+  });
 });

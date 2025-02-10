@@ -1520,7 +1520,6 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    // TODO: Determine why we have this extra render here
     {
       const [, result] = await takeSnapshot();
 

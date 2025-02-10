@@ -2494,6 +2494,11 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
       });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+      });
 
       await expect(stream).not.toEmitAnything();
     });

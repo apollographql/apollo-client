@@ -117,7 +117,7 @@ function useSuspenseFragment_<
   options: UseSuspenseFragmentOptions<TData, TVariables>
 ): UseSuspenseFragmentResult<TData | null> {
   const client = useApolloClient(options.client);
-  const { from } = options;
+  const { from, variables } = options;
   const { cache } = client;
 
   const id = useMemo(
@@ -130,10 +130,10 @@ function useSuspenseFragment_<
 
   const fragmentRef =
     id === null ? null : (
-      getSuspenseCache(client).getFragmentRef<TData, TVariables>(
-        [id, options.fragment, canonicalStringify(options.variables)],
+      getSuspenseCache(client).getFragmentRef(
+        [id, options.fragment, canonicalStringify(variables)],
         client,
-        { ...options, from: id }
+        { ...options, variables: variables as TVariables, from: id }
       )
     );
 

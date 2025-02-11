@@ -3176,6 +3176,16 @@ describe("useLazyQuery Hook", () => {
   });
 });
 
+test.todo("throws when calling `refetch` before execute function is called");
+test.todo("throws when calling `fetchMore` before execute function is called");
+test.todo(
+  "throws when calling `subscribeToMore` before execute function is called"
+);
+test.todo(
+  "throws when calling `updateQuery` before execute function is called"
+);
+test.todo("throws when calling `reobserve` before execute function is called");
+
 test.skip("uses the updated client when executing the function after changing clients", async () => {
   const { query } = setupSimpleCase();
 

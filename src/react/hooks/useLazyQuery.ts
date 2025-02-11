@@ -329,7 +329,7 @@ export function useLazyQuery<
         if (!execOptionsRef.current) {
           execOptionsRef.current = {};
           // Only the first time populating execOptionsRef.current matters here.
-          forceUpdateState();
+          // forceUpdateState();
         }
         // @ts-expect-error this is just too generic to type
         return method.apply(this, arguments);

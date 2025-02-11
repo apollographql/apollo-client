@@ -777,7 +777,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it.skip("should persist previous data when a query is re-run", async () => {
+  it("should persist previous data when a query is re-run", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -810,7 +810,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,

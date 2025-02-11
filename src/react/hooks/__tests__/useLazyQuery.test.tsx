@@ -76,12 +76,11 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: {},
+        variables: undefined,
       });
       expect(result.observable).toBeUndefined();
     }

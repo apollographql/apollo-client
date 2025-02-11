@@ -3991,7 +3991,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
   await expect(takeSnapshot).not.toRerender();
 });
 
-test.skip("applies `refetchWritePolicy` on next fetch when it changes between renders", async () => {
+test("applies `refetchWritePolicy` on next fetch when it changes between renders", async () => {
   const query: TypedDocumentNode<
     { primes: number[] },
     { min: number; max: number }
@@ -4058,7 +4058,6 @@ test.skip("applies `refetchWritePolicy` on next fetch when it changes between re
 
     expect(result).toEqualLazyQueryResult({
       data: undefined,
-      error: undefined,
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4121,7 +4120,7 @@ test.skip("applies `refetchWritePolicy` on next fetch when it changes between re
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      previousData: undefined,
+      previousData: mocks[0].result.data,
       variables: { min: 12, max: 30 },
     });
   }
@@ -4144,7 +4143,7 @@ test.skip("applies `refetchWritePolicy` on next fetch when it changes between re
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      previousData: undefined,
+      previousData: mocks[0].result.data,
       variables: { min: 12, max: 30 },
     });
   }
@@ -4159,7 +4158,7 @@ test.skip("applies `refetchWritePolicy` on next fetch when it changes between re
       called: true,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      previousData: undefined,
+      previousData: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
       variables: { min: 30, max: 50 },
     });
   }

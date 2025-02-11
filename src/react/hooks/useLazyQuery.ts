@@ -176,7 +176,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
   client: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
-  observable: ObservableQuery<TData, TVariables>;
+  observable: ObservableQuery<TData, TVariables> | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: MaybeMasked<TData> | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */

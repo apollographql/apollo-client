@@ -1364,7 +1364,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it.skip("the promise should reject with errors the “way useMutation does”", async () => {
+  it("the promise returned from execute should reject when GraphQL errors are returned and errorPolicy is `none`", async () => {
     const mocks = [
       {
         request: { query: helloQuery },

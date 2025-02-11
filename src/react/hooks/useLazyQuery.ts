@@ -275,7 +275,12 @@ export function useLazyQuery<
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
 
   function updateResult(result: ApolloQueryResult<TData>) {
-    previousDataRef.current = resultRef.current?.data;
+    const previousData = resultRef.current?.data;
+
+    if (previousData) {
+      previousDataRef.current = previousData;
+    }
+
     resultRef.current = result;
   }
 

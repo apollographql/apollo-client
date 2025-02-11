@@ -1208,6 +1208,9 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
+  // TODO: Determine if this makes sense. We will likely remove the majority of
+  // properties returned from the execute function (refetch, fetchMore, etc)
+  // since they can be accessed on the hook.
   it.skip("should have matching results from execution function and hook", async () => {
     const query = gql`
       query GetCountries($filter: String) {

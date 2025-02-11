@@ -2401,7 +2401,7 @@ describe("useLazyQuery Hook", () => {
     // Technically errorPolicy:"ignore" is supposed to throw away result.error,
     // but in the case of network errors, since there's no actual data to
     // report, it's useful/important that we report result.error anyway.
-    it.skip('handles errorPolicy:"ignore" appropriately', async () => {
+    it('handles errorPolicy:"ignore" appropriately', async () => {
       const networkError = new Error("from the network");
 
       const client = new ApolloClient({
@@ -2435,7 +2435,6 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: undefined,
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2446,17 +2445,9 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).resolves.toEqualLazyQueryResult({
-        data: undefined,
-        error: new ApolloError({ networkError }),
-        // TODO: Remove when errors is deprecated
-        errors: [],
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.error,
-        previousData: undefined,
-        variables: {},
-      });
+      await expect(execute()).rejects.toEqual(
+        new ApolloError({ networkError })
+      );
 
       {
         const [, result] = await takeSnapshot();

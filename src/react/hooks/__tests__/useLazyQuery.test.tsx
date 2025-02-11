@@ -36,7 +36,6 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 import {
   setupSimpleCase,
   setupVariablesCase,
-  spyOnConsole,
   VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
 import { QueryResult } from "../../types/types.js";

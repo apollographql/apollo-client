@@ -30,6 +30,7 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { DeepPartial } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
+import { setupSimpleCase } from "../../../testing/internal/index.js";
 import { QueryResult } from "../../types/types.js";
 import { useLazyQuery } from "../useLazyQuery.js";
 
@@ -3166,6 +3167,142 @@ describe("useLazyQuery Hook", () => {
       });
     });
   });
+});
+
+test("uses the updated client when executing the function after changing clients", async () => {
+  const { query } = setupSimpleCase();
+
+  const client1 = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "Hello client 1" } },
+        delay: 20,
+      },
+    ]),
+  });
+
+  const client2 = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      {
+        request: { query },
+        result: { data: { greeting: "Hello client 2" } },
+        delay: 20,
+      },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ client }) => useLazyQuery(query, { client }),
+      { initialProps: { client: client1 } }
+    );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute()).resolves.toEqualQueryResult({
+    data: { greeting: "Hello client 1" },
+    called: true,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: {},
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { greeting: "Hello client 1" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  await rerender({ client: client2 });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { greeting: "Hello client 1" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  await expect(execute()).resolves.toEqualQueryResult({
+    data: { greeting: "Hello client 2" },
+    called: true,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: { greeting: "Hello client 1" },
+    variables: {},
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: { greeting: "Hello client 1" },
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { greeting: "Hello client 2" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { greeting: "Hello client 1" },
+      variables: {},
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
 });
 
 describe.skip("Type Tests", () => {

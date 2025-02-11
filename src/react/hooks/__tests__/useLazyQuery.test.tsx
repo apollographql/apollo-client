@@ -3822,7 +3822,12 @@ test.skip("applies `context` on next fetch when it changes between renders", asy
     link: new ApolloLink((operation) => {
       const context = operation.getContext();
 
-      return Observable.of({ data: { context: { source: context.source } } });
+      return new Observable((observer) => {
+        setTimeout(() => {
+          observer.next({ data: { context: { source: context.source } } });
+          observer.complete();
+        }, 20);
+      });
     }),
   });
 

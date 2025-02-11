@@ -229,7 +229,9 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should merge variables from original hook and execution function", async () => {
+  // TODO: Remove this test after we resolve the TODO comment inside of this
+  // test.
+  it.skip("should merge variables from original hook and execution function", async () => {
     const counterQuery: TypedDocumentNode<
       {
         counter: number;

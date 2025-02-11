@@ -3559,7 +3559,6 @@ test.skip("uses cached result when switching to variables already written to the
 
     expect(result).toEqualLazyQueryResult({
       data: undefined,
-      error: undefined,
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3715,7 +3714,6 @@ test.skip("applies `errorPolicy` on next fetch when it changes between renders",
 
     expect(result).toEqualLazyQueryResult({
       data: undefined,
-      error: undefined,
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3739,6 +3737,20 @@ test.skip("applies `errorPolicy` on next fetch when it changes between renders",
     previousData: undefined,
     variables: { id: "1" },
   });
+
+  // TODO: Determine if we want this extra render without notifyOnNetworkStatusChange
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
 
   {
     const [, result] = await takeSnapshot();
@@ -3787,7 +3799,7 @@ test.skip("applies `errorPolicy` on next fetch when it changes between renders",
       }),
       called: true,
       loading: false,
-      networkStatus: NetworkStatus.ready,
+      networkStatus: NetworkStatus.error,
       previousData: {
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },

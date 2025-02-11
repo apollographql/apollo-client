@@ -13,10 +13,9 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type {
-  LazyQueryExecFunction,
-  LazyQueryResultTuple,
   NoInfer,
   QueryHookOptions,
+  QueryResult,
 } from "@apollo/client/react";
 import { mergeOptions } from "@apollo/client/utilities";
 

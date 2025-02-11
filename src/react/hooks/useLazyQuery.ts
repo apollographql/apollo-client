@@ -90,7 +90,58 @@ export interface LazyQueryHookOptions<
 export interface LazyQueryHookExecOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends LazyQueryHookOptions<TData, TVariables> {
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+  nextFetchPolicy?:
+    | WatchQueryFetchPolicy
+    | ((
+        this: WatchQueryOptions<TVariables, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVariables>
+      ) => WatchQueryFetchPolicy);
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+  pollInterval?: number;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
+  canonizeResults?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+  skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+  ssr?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient<any>;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+
+  /** @internal */
+  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 

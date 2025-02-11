@@ -2192,7 +2192,7 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
 
-  it.skip("maintains stable execute function identity when changing non-callback options", async () => {
+  it("maintains stable execute function identity when changing non-callback options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -2244,7 +2244,7 @@ describe("useLazyQuery Hook", () => {
   describe("network errors", () => {
     // For errorPolicy:"none", we expect result.error to be defined and
     // result.data to be undefined
-    it.skip('handles errorPolicy:"none" appropriately', async () => {
+    it('handles errorPolicy:"none" appropriately', async () => {
       const networkError = new Error("from the network");
 
       const client = new ApolloClient({
@@ -2278,7 +2278,6 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: undefined,
           called: false,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -2289,17 +2288,10 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).resolves.toEqualLazyQueryResult({
-        data: undefined,
-        error: new ApolloError({ networkError }),
-        // TODO: Remove this when errors is deprecated
-        errors: [],
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.error,
-        previousData: undefined,
-        variables: {},
-      });
+      // TODO: Determine if this is the correct behavior for 4.x
+      await expect(execute()).rejects.toEqual(
+        new ApolloError({ networkError })
+      );
 
       {
         const [, result] = await takeSnapshot();

@@ -16,7 +16,6 @@ import {
   ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
-  ObservableQuery,
   RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,

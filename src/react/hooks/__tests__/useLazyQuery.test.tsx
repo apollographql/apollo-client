@@ -1807,15 +1807,11 @@ describe("useLazyQuery Hook", () => {
 
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
-    const { result, rerender } = renderHook(
-      () => useLazyQuery(query, { variables: { id: "1" } }),
-      {
-        initialProps: { id: "1" },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+    const { result, rerender } = renderHook(() => useLazyQuery(query), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    });
 
     const [execute] = result.current;
 

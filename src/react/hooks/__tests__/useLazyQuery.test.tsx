@@ -1178,7 +1178,14 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = getCurrentSnapshot();
 
-    setTimeout(() => execute());
+    await expect(execute()).resolves.toEqualQueryResult({
+      data: { hello: "from link" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { hello: "from cache" },
+      variables: {},
+    });
 
     {
       const [, result] = await takeSnapshot();

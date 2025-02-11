@@ -632,7 +632,7 @@ function List() {
 And that's it! Suspense made our `Item` component a bit more succinct since we no longer need to check the `complete` property to determine if we can use safely use `data`.
 
 <Note>
-In most cases, `useSuspenseFragment` will not suspend when rendered as a child of a query component. In this example `useSuspenseQuery` loads the full query data before each `Item` is rendered so the `data` inside each fragment is already complete. The `Suspense` boundary in this example ensures that a loading spinner is shown if field data is removed for the cache for any given item in the list, such as when a manual cache update is performed.
+In most cases, `useSuspenseFragment` will not suspend when rendered as a child of a query component. In this example `useSuspenseQuery` loads the full query data before each `Item` is rendered so the `data` inside each fragment is already complete. The `Suspense` boundary in this example ensures that a loading spinner is shown if field data is removed for any given item in the list in the cache, such as when a manual cache update is performed.
 </Note>
 
 ### Using `useSuspenseFragment` with `@defer`

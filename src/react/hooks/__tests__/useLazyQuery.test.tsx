@@ -3354,7 +3354,7 @@ test("responds to cache updates after executing query", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test.skip("responds to cache updates after changing variables", async () => {
+test("responds to cache updates after changing variables", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -3377,7 +3377,6 @@ test.skip("responds to cache updates after changing variables", async () => {
 
     expect(result).toEqualLazyQueryResult({
       data: undefined,
-      error: undefined,
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,

@@ -5,6 +5,7 @@ import * as React from "rehackt";
 
 import type {
   ApolloClient,
+  ApolloQueryResult,
   DefaultContext,
   DefaultOptions,
   ErrorPolicy,
@@ -176,7 +177,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
   client: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
-  observable: ObservableQuery<TData, TVariables> | undefined;
+  observable: ObservableQuery<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: MaybeMasked<TData> | undefined;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
@@ -265,25 +266,17 @@ export function useLazyQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
-  const [observable, setObservable] = React.useState<
-    ObservableQuery<TData, TVariables> | undefined
-  >(undefined);
+  const client = useApolloClient(options?.client);
+  const [observable] = React.useState(() =>
+    client.watchQuery({ ...options, query, fetchPolicy: "standby" })
+  );
 
-  const previousDataRef = React.useRef<TData | undefined>(undefined);
-  const resultRef = React.useRef<ApolloQueryResult<TData>>({
-    data: undefined,
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: true,
-  });
+  const previousDataRef = React.useRef<TData>(undefined);
+  const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
 
   const observableResult = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
-        if (!observable) {
-          return () => {};
-        }
-
         const subscription = observable.subscribe({
           next: (value) => {
             if (!equal(resultRef.current, value)) {
@@ -299,8 +292,8 @@ export function useLazyQuery<
       },
       [observable]
     ),
-    () => resultRef.current,
-    () => resultRef.current
+    () => resultRef.current || initialResult,
+    () => resultRef.current || initialResult
   );
 
   const execOptionsRef =
@@ -321,13 +314,15 @@ export function useLazyQuery<
     ...merged,
     skip: !execOptionsRef.current,
   };
-  const { obsQueryFields, client, resultData, onQueryExecuted } =
-    useQueryInternals(query, queryHookOptions);
+  const { obsQueryFields, resultData, onQueryExecuted } = useQueryInternals(
+    query,
+    queryHookOptions
+  );
 
-  // const initialFetchPolicy =
-  //   observable.options.initialFetchPolicy ||
-  //   client.defaultOptions.watchQuery?.fetchPolicy ||
-  //   "cache-first";
+  const fetchPolicy =
+    observable.options.initialFetchPolicy ||
+    client.defaultOptions.watchQuery?.fetchPolicy ||
+    "cache-first";
 
   const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
   // We use useMemo here to make sure the eager methods have a stable identity.
@@ -357,51 +352,24 @@ export function useLazyQuery<
       previousData: previousDataRef.current,
       variables: observable?.variables,
       observable,
-      called: !!observable,
+      called: !!resultRef.current,
     }),
     [client, observableResult, eagerMethods, observable]
   );
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
     (executeOptions) => {
-      execOptionsRef.current = executeOptions ? executeOptions : {};
-
-      const options = mergeOptions(optionsRef.current, {
-        query,
-        ...execOptionsRef.current,
-      });
-
-      const currentObservable = observable || client.watchQuery(options);
-
-      if (!observable) {
-        setObservable(currentObservable);
-        resultRef.current = currentObservable.getCurrentResult();
+      if (!resultRef.current) {
+        resultRef.current = observable.getCurrentResult();
       }
 
-      const promise = executeQuery(
-        resultData,
-        currentObservable,
-        client,
-        query,
-        { ...options, skip: false },
-        onQueryExecuted
-      ).then((queryResult) => Object.assign(queryResult, eagerMethods));
-
-      // Because the return value of `useLazyQuery` is usually floated, we need
-      // to catch the promise to prevent unhandled rejections.
-      promise.catch(() => {});
-
-      return promise;
+      return observable
+        .reobserve({ ...executeOptions, fetchPolicy })
+        .then((queryResult) => {
+          return Object.assign(queryResult, eagerMethods);
+        });
     },
-    [
-      client,
-      query,
-      eagerMethods,
-      // initialFetchPolicy,
-      observable,
-      resultData,
-      onQueryExecuted,
-    ]
+    [query, eagerMethods, fetchPolicy, observable, resultData, onQueryExecuted]
   );
 
   const executeRef = React.useRef(execute);
@@ -416,41 +384,12 @@ export function useLazyQuery<
   return [stableExecute, result];
 }
 
-function executeQuery<TData, TVariables extends OperationVariables>(
-  resultData: InternalResult<TData, TVariables>,
-  observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>,
-  currentQuery: DocumentNode,
-  options: QueryHookOptions<TData, TVariables> & {
-    query?: DocumentNode;
-  },
-  onQueryExecuted: (options: WatchQueryOptions<TVariables, TData>) => void
-) {
-  const query = options.query || currentQuery;
-  const watchQueryOptions = createMakeWatchQueryOptions(
-    client,
-    query,
-    options,
-    false
-  )(observable);
-
-  const promise = observable.reobserve(
-    getObsQueryOptions(observable, client, options, watchQueryOptions)
-  );
-  onQueryExecuted(watchQueryOptions);
-
-  return promise.then(
-    (result) =>
-      toQueryResult(result, resultData.previousData, observable, client),
-    () =>
-      toQueryResult(
-        observable.getCurrentResult(),
-        resultData.previousData,
-        observable,
-        client
-      )
-  );
-}
+const initialResult: ApolloQueryResult<any> = maybeDeepFreeze({
+  data: undefined,
+  loading: false,
+  networkStatus: NetworkStatus.ready,
+  partial: true,
+});
 
 function createMakeWatchQueryOptions<
   TData = any,

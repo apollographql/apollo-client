@@ -250,13 +250,6 @@ export interface LoadableQueryHookOptions {
   returnPartialData?: boolean;
 }
 
-export type LazyQueryExecFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = (
-  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
-) => Promise<QueryResult<TData, TVariables>>;
-
 /* Mutation types */
 
 export type RefetchQueriesFunction = (

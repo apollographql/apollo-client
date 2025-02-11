@@ -154,6 +154,13 @@ export type LazyQueryResultTuple<
   result: QueryResult<TData, TVariables>,
 ];
 
+export type LazyQueryExecFunction<
+  TData,
+  TVariables extends OperationVariables,
+> = (
+  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
+) => Promise<QueryResult<TData, TVariables>>;
+
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
 const EAGER_METHODS = [

@@ -1971,7 +1971,6 @@ describe("useLazyQuery Hook", () => {
 
           return useLazyQuery(query, {
             fetchPolicy: "cache-first",
-            variables: { id: "1" },
             skipPollAttempt: () => {
               trackClosureValue("skipPollAttempt", count);
               return false;
@@ -1999,7 +1998,8 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: "1" },
+        // @ts-expect-error Need to fix the return value of this property
+        variables: {},
       });
     }
 
@@ -2019,14 +2019,15 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: "1" },
+        // @ts-expect-error Need to fix the return value of this property
+        variables: {},
       });
     }
 
     let [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);
 
-    await execute();
+    await execute({ variables: { id: "1" } });
 
     {
       const [, result] = await takeSnapshot();

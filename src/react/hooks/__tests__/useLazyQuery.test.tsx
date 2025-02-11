@@ -13,6 +13,7 @@ import {
   ApolloClient,
   ApolloError,
   ApolloLink,
+  ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
   TypedDocumentNode,
@@ -33,6 +34,7 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 import {
   setupSimpleCase,
   setupVariablesCase,
+  VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
 import { QueryResult } from "../../types/types.js";
 import { useLazyQuery } from "../useLazyQuery.js";
@@ -3702,6 +3704,149 @@ test("uses cached result when switching to variables already written to the cach
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
       variables: { id: "2" },
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies `errorPolicy` on next fetch when it changes between renders", async () => {
+  const query: TypedDocumentNode<
+    {
+      character: { __typename: "Character"; id: string; name: string } | null;
+    },
+    VariablesCaseVariables
+  > = gql`
+    query CharacterQuery($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query, variables: { id: "1" } },
+      result: {
+        data: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+      },
+      delay: 20,
+    },
+    {
+      request: { query, variables: { id: "1" } },
+      result: {
+        data: {
+          character: null,
+        },
+        errors: [new GraphQLError("Could not find character 1")],
+      },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ errorPolicy }: { errorPolicy: ErrorPolicy }) =>
+        useLazyQuery(query, { errorPolicy }),
+      {
+        initialProps: { errorPolicy: "none" },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      // @ts-expect-error this should be undefined
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualQueryResult(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  await rerender({ errorPolicy: "all" });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  const [, { refetch }] = getCurrentSnapshot();
+  refetch();
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: {
+        character: null,
+      },
+      error: new ApolloError({
+        graphQLErrors: [{ message: "Could not find character 1" }],
+      }),
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      variables: { id: "1" },
     });
   }
 

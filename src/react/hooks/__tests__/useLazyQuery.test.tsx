@@ -295,14 +295,6 @@ describe("useLazyQuery Hook", () => {
         () => {
           return useLazyQuery(counterQuery, {
             notifyOnNetworkStatusChange: true,
-            variables: {
-              hookVar: true,
-            },
-            defaultOptions: {
-              variables: {
-                localDefaultVar: true,
-              },
-            },
           });
         },
         {

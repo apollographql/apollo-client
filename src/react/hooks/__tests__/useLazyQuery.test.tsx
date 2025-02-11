@@ -35,6 +35,7 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 import {
   setupSimpleCase,
   setupVariablesCase,
+  spyOnConsole,
   VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
 import { QueryResult } from "../../types/types.js";
@@ -4178,6 +4179,204 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
     ],
     [undefined, [31, 37, 41, 43, 47]],
   ]);
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+  const fullQuery = gql`
+    query ($id: ID!) {
+      character(id: $id) {
+        id
+        name
+      }
+    }
+  `;
+
+  const partialQuery = gql`
+    query ($id: ID!) {
+      character(id: $id) {
+        id
+      }
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query: fullQuery, variables: { id: "1" } },
+      result: {
+        data: {
+          character: {
+            __typename: "Character",
+            id: "1",
+            name: "Doctor Strange",
+          },
+        },
+      },
+      delay: 20,
+    },
+    {
+      request: { query: fullQuery, variables: { id: "2" } },
+      result: {
+        data: {
+          character: {
+            __typename: "Character",
+            id: "2",
+            name: "Hulk",
+          },
+        },
+      },
+      delay: 20,
+    },
+  ];
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query: partialQuery,
+    data: { character: { __typename: "Character", id: "1" } },
+    variables: { id: "1" },
+  });
+
+  client.writeQuery({
+    query: partialQuery,
+    data: { character: { __typename: "Character", id: "2" } },
+    variables: { id: "2" },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ returnPartialData }) => useLazyQuery(fullQuery, { returnPartialData }),
+      {
+        initialProps: { returnPartialData: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute({ variables: { id: "1" } })).resolves.toEqualQueryResult(
+    {
+      data: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  await rerender({ returnPartialData: true });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  await expect(execute({ variables: { id: "2" } })).resolves.toEqualQueryResult(
+    {
+      data: {
+        character: { __typename: "Character", id: "2", name: "Hulk" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      variables: { id: "2" },
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { character: { __typename: "Character", id: "2" } },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      variables: { id: "2" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { character: { __typename: "Character", id: "2", name: "Hulk" } },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      },
+      variables: { id: "2" },
+    });
+  }
 
   await expect(takeSnapshot).not.toRerender();
 });

@@ -267,12 +267,26 @@ export function useLazyQuery<
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
   const client = useApolloClient(options?.client);
-  const [observable] = React.useState(() =>
+  const [currentClient, setCurrentClient] = React.useState(client);
+  const [observable, setObservable] = React.useState(() =>
     client.watchQuery({ ...options, query, fetchPolicy: "standby" })
   );
 
+  const dirtyRef = React.useRef(false);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
+
+  if (currentClient !== client) {
+    setCurrentClient(client);
+    setObservable(
+      client.watchQuery({
+        ...options,
+        query,
+        fetchPolicy: "standby",
+      })
+    );
+    dirtyRef.current = true;
+  }
 
   function updateResult(result: ApolloQueryResult<TData>) {
     const previousData = resultRef.current?.data;
@@ -400,6 +414,7 @@ export function useLazyQuery<
       // rerendering in React 17. Without this, the `variables` value is returned
       // with the previous set of variables.
       if (
+        dirtyRef.current ||
         !equal(
           { query: previousQuery, variables: previousVariables },
           // TODO: Remove fallback on empty object when variables returns
@@ -407,6 +422,7 @@ export function useLazyQuery<
           { query, variables: executeOptions?.variables ?? {} }
         )
       ) {
+        dirtyRef.current = false;
         updateResult({ ...observable.getCurrentResult(), data: undefined });
         forceUpdateState();
       }

@@ -3119,7 +3119,7 @@ test.todo(
 );
 test.todo("throws when calling `reobserve` before execute function is called");
 
-test.skip("uses the updated client when executing the function after changing clients", async () => {
+test("uses the updated client when executing the function after changing clients", async () => {
   const { query } = setupSimpleCase();
 
   const client1 = new ApolloClient({
@@ -3156,7 +3156,6 @@ test.skip("uses the updated client when executing the function after changing cl
 
     expect(result).toEqualLazyQueryResult({
       data: undefined,
-      error: undefined,
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3226,6 +3225,7 @@ test.skip("uses the updated client when executing the function after changing cl
     variables: {},
   });
 
+  // TODO: Determine if we want this render without notifyOnNetworkStatusChange
   {
     const [, result] = await takeSnapshot();
 

@@ -1105,6 +1105,7 @@ describe("useLazyQuery Hook", () => {
       variables: { id: 2 },
     });
 
+    // TODO: Determine if we should have a render here without notifyOnNetworkStatusChange
     {
       const [, result] = await takeSnapshot();
 

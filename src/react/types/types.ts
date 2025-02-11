@@ -257,14 +257,6 @@ export type LazyQueryExecFunction<
   options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
 ) => Promise<QueryResult<TData, TVariables>>;
 
-export type LazyQueryResultTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = [
-  execute: LazyQueryExecFunction<TData, TVariables>,
-  result: QueryResult<TData, TVariables>,
-];
-
 /* Mutation types */
 
 export type RefetchQueriesFunction = (

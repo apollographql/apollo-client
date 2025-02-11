@@ -13,6 +13,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type {
+  LazyQueryExecFunction,
   LazyQueryResultTuple,
   NoInfer,
   QueryHookOptions,
@@ -144,6 +145,14 @@ export interface LazyQueryHookExecOptions<
 
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
+
+export type LazyQueryResultTuple<
+  TData,
+  TVariables extends OperationVariables,
+> = [
+  execute: LazyQueryExecFunction<TData, TVariables>,
+  result: QueryResult<TData, TVariables>,
+];
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.

@@ -16,6 +16,7 @@ import {
   ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
+  RefetchWritePolicy,
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
@@ -3992,6 +3993,191 @@ test("applies `context` on next fetch when it changes between renders", async ()
       variables: {},
     });
   }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
+test("applies `refetchWritePolicy` on next fetch when it changes between renders", async () => {
+  const query: TypedDocumentNode<
+    { primes: number[] },
+    { min: number; max: number }
+  > = gql`
+    query GetPrimes($min: number, $max: number) {
+      primes(min: $min, max: $max)
+    }
+  `;
+
+  const mocks = [
+    {
+      request: { query, variables: { min: 0, max: 12 } },
+      result: { data: { primes: [2, 3, 5, 7, 11] } },
+      delay: 20,
+    },
+    {
+      request: { query, variables: { min: 12, max: 30 } },
+      result: { data: { primes: [13, 17, 19, 23, 29] } },
+      delay: 10,
+    },
+    {
+      request: { query, variables: { min: 30, max: 50 } },
+      result: { data: { primes: [31, 37, 41, 43, 47] } },
+      delay: 10,
+    },
+  ];
+
+  const mergeParams: [number[] | undefined, number[]][] = [];
+  const cache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          primes: {
+            keyArgs: false,
+            merge(existing: number[] | undefined, incoming: number[]) {
+              mergeParams.push([existing, incoming]);
+              return existing ? existing.concat(incoming) : incoming;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const client = new ApolloClient({
+    cache,
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ refetchWritePolicy }) => useLazyQuery(query, { refetchWritePolicy }),
+      {
+        initialProps: { refetchWritePolicy: "merge" as RefetchWritePolicy },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      error: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      // @ts-expect-error needs to be undefined
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(
+    execute({ variables: { min: 0, max: 12 } })
+  ).resolves.toEqualQueryResult({
+    data: mocks[0].result.data,
+    called: true,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    previousData: undefined,
+    variables: { min: 0, max: 12 },
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: { min: 0, max: 12 },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: mocks[0].result.data,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { min: 0, max: 12 },
+    });
+  }
+
+  expect(mergeParams).toEqual([[undefined, [2, 3, 5, 7, 11]]]);
+
+  const [, { refetch }] = getCurrentSnapshot();
+
+  void refetch({ min: 12, max: 30 });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { min: 12, max: 30 },
+    });
+  }
+
+  expect(mergeParams).toEqual([
+    [undefined, [2, 3, 5, 7, 11]],
+    [
+      [2, 3, 5, 7, 11],
+      [13, 17, 19, 23, 29],
+    ],
+  ]);
+
+  await rerender({ refetchWritePolicy: "overwrite" });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { min: 12, max: 30 },
+    });
+  }
+
+  void refetch({ min: 30, max: 50 });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualQueryResult({
+      data: mocks[2].result.data,
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { min: 30, max: 50 },
+    });
+  }
+
+  expect(mergeParams).toEqual([
+    [undefined, [2, 3, 5, 7, 11]],
+    [
+      [2, 3, 5, 7, 11],
+      [13, 17, 19, 23, 29],
+    ],
+    [undefined, [31, 37, 41, 43, 47]],
+  ]);
 
   await expect(takeSnapshot).not.toRerender();
 });

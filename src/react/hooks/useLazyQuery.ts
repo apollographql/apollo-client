@@ -303,21 +303,15 @@ export function useLazyQuery<
   const queryRef = React.useRef<
     DocumentNode | TypedDocumentNode<TData, TVariables>
   >(void 0);
-  const merged = mergeOptions(options, execOptionsRef.current || {});
 
   // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
   optionsRef.current = options;
   queryRef.current = query;
 
-  const queryHookOptions = {
-    ...merged,
-    skip: !execOptionsRef.current,
-  };
-  const { obsQueryFields, resultData, onQueryExecuted } = useQueryInternals(
-    query,
-    queryHookOptions
-  );
+  const obsQueryFields = React.useMemo<
+    Omit<ObservableQueryFields<TData, TVariables>, "variables">
+  >(() => bindObservableMethods(observable), [observable]);
 
   const fetchPolicy =
     observable.options.initialFetchPolicy ||
@@ -366,10 +360,16 @@ export function useLazyQuery<
       return observable
         .reobserve({ ...executeOptions, fetchPolicy })
         .then((queryResult) => {
-          return Object.assign(queryResult, eagerMethods);
+          return {
+            ...queryResult,
+            ...eagerMethods,
+            called: true,
+            previousData: previousDataRef.current,
+            variables: observable.variables,
+          };
         });
     },
-    [query, eagerMethods, fetchPolicy, observable, resultData, onQueryExecuted]
+    [query, eagerMethods, fetchPolicy, observable]
   );
 
   const executeRef = React.useRef(execute);

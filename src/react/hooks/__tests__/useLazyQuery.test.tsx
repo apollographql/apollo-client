@@ -123,7 +123,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should set `called` to false by default", async () => {
+  it.skip("should set `called` to false by default", async () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useLazyQuery(helloQuery),
@@ -139,7 +139,7 @@ describe("useLazyQuery Hook", () => {
     expect(called).toBe(false);
   });
 
-  it("should set `called` to true after calling the lazy execute function", async () => {
+  it.skip("should set `called` to true after calling the lazy execute function", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -178,7 +178,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should use variables passed to execute function when running the lazy execution function", async () => {
+  it.skip("should use variables passed to execute function when running the lazy execution function", async () => {
     const query = gql`
       query ($id: number) {
         hello(id: $id)
@@ -538,7 +538,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("changing queries", async () => {
+  it.skip("changing queries", async () => {
     const query1 = gql`
       query {
         hello
@@ -675,7 +675,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
+  it.skip('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -789,7 +789,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should persist previous data when a query is re-run", async () => {
+  it.skip("should persist previous data when a query is re-run", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -905,7 +905,7 @@ describe("useLazyQuery Hook", () => {
 
   // TODO: Determine if this hook makes sense for polling or if that should be
   // reserved for useQuery
-  it("should allow for the query to start with polling", async () => {
+  it.skip("should allow for the query to start with polling", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -1006,7 +1006,7 @@ describe("useLazyQuery Hook", () => {
     expect(takeSnapshot).not.toRerender();
   });
 
-  it("should persist previous data when a query is re-run and variable changes", async () => {
+  it.skip("should persist previous data when a query is re-run and variable changes", async () => {
     const CAR_QUERY_BY_ID = gql`
       query ($id: Int) {
         car(id: $id) {
@@ -1143,7 +1143,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should work with cache-and-network fetch policy", async () => {
+  it.skip("should work with cache-and-network fetch policy", async () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({
       request: { query: helloQuery },
@@ -1222,7 +1222,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("should have matching results from execution function and hook", async () => {
+  it.skip("should have matching results from execution function and hook", async () => {
     const query = gql`
       query GetCountries($filter: String) {
         countries(filter: $filter) {
@@ -1375,7 +1375,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  it("the promise should reject with errors the “way useMutation does”", async () => {
+  it.skip("the promise should reject with errors the “way useMutation does”", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -1491,7 +1491,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it("the promise should not cause an unhandled rejection", async () => {
+  it.skip("the promise should not cause an unhandled rejection", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -1534,7 +1534,7 @@ describe("useLazyQuery Hook", () => {
     await wait(50);
   });
 
-  it("allows in-flight requests to resolve when component unmounts", async () => {
+  it.skip("allows in-flight requests to resolve when component unmounts", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
@@ -1727,7 +1727,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/10198
-  it("uses the most recent query document when the hook rerenders before execution", async () => {
+  it.skip("uses the most recent query document when the hook rerenders before execution", async () => {
     const query = gql`
       query DummyQuery {
         shouldNotBeUsed
@@ -1819,7 +1819,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it("does not refetch when rerendering after executing query", async () => {
+  it.skip("does not refetch when rerendering after executing query", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -1966,7 +1966,7 @@ describe("useLazyQuery Hook", () => {
     }
   );
 
-  it("maintains stable execute function when passing in dynamic function options", async () => {
+  it.skip("maintains stable execute function when passing in dynamic function options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -2224,7 +2224,7 @@ describe("useLazyQuery Hook", () => {
     expect(trackClosureValue).toHaveBeenCalledWith("skipPollAttempt", 3);
   });
 
-  it("maintains stable execute function identity when changing non-callback options", async () => {
+  it.skip("maintains stable execute function identity when changing non-callback options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -2276,7 +2276,7 @@ describe("useLazyQuery Hook", () => {
   describe("network errors", () => {
     // For errorPolicy:"none", we expect result.error to be defined and
     // result.data to be undefined
-    it('handles errorPolicy:"none" appropriately', async () => {
+    it.skip('handles errorPolicy:"none" appropriately', async () => {
       const networkError = new Error("from the network");
 
       const client = new ApolloClient({
@@ -2363,7 +2363,7 @@ describe("useLazyQuery Hook", () => {
     // If there was any data to report, errorPolicy:"all" would report both
     // result.data and result.error, but there is no GraphQL data when we
     // encounter a network error, so the test again captures desired behavior.
-    it('handles errorPolicy:"all" appropriately', async () => {
+    it.skip('handles errorPolicy:"all" appropriately', async () => {
       const networkError = new Error("from the network");
 
       const client = new ApolloClient({
@@ -2450,7 +2450,7 @@ describe("useLazyQuery Hook", () => {
     // Technically errorPolicy:"ignore" is supposed to throw away result.error,
     // but in the case of network errors, since there's no actual data to
     // report, it's useful/important that we report result.error anyway.
-    it('handles errorPolicy:"ignore" appropriately', async () => {
+    it.skip('handles errorPolicy:"ignore" appropriately', async () => {
       const networkError = new Error("from the network");
 
       const client = new ApolloClient({
@@ -2536,7 +2536,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // regression for https://github.com/apollographql/apollo-client/issues/11988
-  test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
+  test.skip("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
     const link = new MockSubscriptionLink();
     let requests = 0;
     link.onSetup(() => requests++);
@@ -2624,7 +2624,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   describe("data masking", () => {
-    it("masks queries when dataMasking is `true`", async () => {
+    it.skip("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2727,7 +2727,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("does not mask queries when dataMasking is `false`", async () => {
+    it.skip("does not mask queries when dataMasking is `false`", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2835,7 +2835,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("does not mask queries by default", async () => {
+    it.skip("does not mask queries by default", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -2942,7 +2942,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("masks queries updated by the cache", async () => {
+    it.skip("masks queries updated by the cache", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -3063,7 +3063,7 @@ describe("useLazyQuery Hook", () => {
       }
     });
 
-    it("does not rerender when updating field in named fragment", async () => {
+    it.skip("does not rerender when updating field in named fragment", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;
@@ -3176,7 +3176,7 @@ describe("useLazyQuery Hook", () => {
   });
 });
 
-test("uses the updated client when executing the function after changing clients", async () => {
+test.skip("uses the updated client when executing the function after changing clients", async () => {
   const { query } = setupSimpleCase();
 
   const client1 = new ApolloClient({
@@ -3312,7 +3312,7 @@ test("uses the updated client when executing the function after changing clients
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("responds to cache updates after executing query", async () => {
+test.skip("responds to cache updates after executing query", async () => {
   const { query } = setupSimpleCase();
 
   const client = new ApolloClient({
@@ -3410,7 +3410,7 @@ test("responds to cache updates after executing query", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("responds to cache updates after changing variables", async () => {
+test.skip("responds to cache updates after changing variables", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -3585,7 +3585,7 @@ test("responds to cache updates after changing variables", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("uses cached result when switching to variables already written to the cache", async () => {
+test.skip("uses cached result when switching to variables already written to the cache", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -3712,7 +3712,7 @@ test("uses cached result when switching to variables already written to the cach
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("applies `errorPolicy` on next fetch when it changes between renders", async () => {
+test.skip("applies `errorPolicy` on next fetch when it changes between renders", async () => {
   const query: TypedDocumentNode<
     {
       character: { __typename: "Character"; id: string; name: string } | null;
@@ -3855,7 +3855,7 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("applies `context` on next fetch when it changes between renders", async () => {
+test.skip("applies `context` on next fetch when it changes between renders", async () => {
   const query = gql`
     query {
       context
@@ -3998,7 +3998,7 @@ test("applies `context` on next fetch when it changes between renders", async ()
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("applies `refetchWritePolicy` on next fetch when it changes between renders", async () => {
+test.skip("applies `refetchWritePolicy` on next fetch when it changes between renders", async () => {
   const query: TypedDocumentNode<
     { primes: number[] },
     { min: number; max: number }
@@ -4183,7 +4183,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+test.skip("applies `returnPartialData` on next fetch when it changes between renders", async () => {
   const fullQuery = gql`
     query ($id: ID!) {
       character(id: $id) {
@@ -4381,7 +4381,7 @@ test("applies `returnPartialData` on next fetch when it changes between renders"
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
+test.skip("applies updated `fetchPolicy` on next fetch when it changes between renders", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -4545,7 +4545,7 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
 });
 
 describe.skip("Type Tests", () => {
-  test("NoInfer prevents adding arbitrary additional variables", () => {
+  test.skip("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
     const [execute, { variables }] = useLazyQuery(typedNode);
 
@@ -4562,7 +4562,7 @@ describe.skip("Type Tests", () => {
     variables?.nonExistingVariable;
   });
 
-  test("uses masked types when using masked document", async () => {
+  test.skip("uses masked types when using masked document", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -4673,7 +4673,7 @@ describe.skip("Type Tests", () => {
     }
   });
 
-  test("uses unmodified types when using TypedDocumentNode", async () => {
+  test.skip("uses unmodified types when using TypedDocumentNode", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;

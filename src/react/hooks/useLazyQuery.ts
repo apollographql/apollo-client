@@ -355,6 +355,7 @@ export function useLazyQuery<
     (executeOptions) => {
       if (!resultRef.current) {
         resultRef.current = observable.getCurrentResult();
+        forceUpdateState();
       }
 
       return observable

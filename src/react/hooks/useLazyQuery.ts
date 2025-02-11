@@ -4,18 +4,22 @@ import * as React from "rehackt";
 
 import type {
   ApolloClient,
+  DefaultContext,
+  ErrorPolicy,
   ObservableQuery,
   OperationVariables,
+  RefetchWritePolicy,
+  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type {
-  LazyQueryHookExecOptions,
-  LazyQueryHookOptions,
   LazyQueryResultTuple,
   NoInfer,
   QueryHookOptions,
 } from "@apollo/client/react";
 import { mergeOptions } from "@apollo/client/utilities";
+
+import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import type { InternalResult } from "./useQuery.js";
@@ -26,6 +30,69 @@ import {
   toQueryResult,
   useQueryInternals,
 } from "./useQuery.js";
+
+export interface LazyQueryHookOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+  nextFetchPolicy?:
+    | WatchQueryFetchPolicy
+    | ((
+        this: WatchQueryOptions<TVariables, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVariables>
+      ) => WatchQueryFetchPolicy);
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+  pollInterval?: number;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
+  canonizeResults?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+  skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+  ssr?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient<any>;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+
+  /** @internal */
+  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
+}
+
+export interface LazyQueryHookExecOptions<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
+> extends LazyQueryHookOptions<TData, TVariables> {
+  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+}
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.

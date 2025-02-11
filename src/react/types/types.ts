@@ -151,20 +151,6 @@ export interface QueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {}
 
-export interface LazyQueryHookOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables, TData> {
-  /** @internal */
-  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
-}
-export interface LazyQueryHookExecOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends LazyQueryHookOptions<TData, TVariables> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
 export type SuspenseQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"

@@ -349,24 +349,24 @@ export function useLazyQuery<
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
     (executeOptions) => {
+      const promise = observable.reobserve({ ...executeOptions, fetchPolicy });
+
       if (!resultRef.current) {
         updateResult(observable.getCurrentResult());
         forceUpdateState();
       }
 
-      return observable
-        .reobserve({ ...executeOptions, fetchPolicy })
-        .then((queryResult) => {
-          return {
-            ...queryResult,
-            ...eagerMethods,
-            client,
-            observable,
-            called: true,
-            previousData: previousDataRef.current,
-            variables: observable.variables,
-          };
-        });
+      return promise.then((queryResult) => {
+        return {
+          ...queryResult,
+          ...eagerMethods,
+          client,
+          observable,
+          called: true,
+          previousData: previousDataRef.current,
+          variables: observable.variables,
+        };
+      });
     },
     [query, eagerMethods, fetchPolicy, observable]
   );

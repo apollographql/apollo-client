@@ -595,7 +595,7 @@ See the [API reference](../api/react/hooks#usefragment) for more details on the 
 
 For those that have integrated with React [Suspense](https://react.dev/reference/react/Suspense), `useSuspenseFragment` is available as a drop-in replacement for `useFragment`. `useSuspenseFragment` works identically to `useFragment` but will suspend while `data` is incomplete.
 
-Let's update the example from the previous section to use `useSuspenseFragment`. First we'll update our `Item` component and replace `useFragment` with `useSuspenseFragment`. Since we are using Suspense, we no longer have to check for a `complete` property to determine if the result is fully complete because the component will suspend otherwise.
+Let's update the example from the previous section to use `useSuspenseFragment`. First, we'll update our `Item` component and replace `useFragment` with `useSuspenseFragment`. Since we are using Suspense, we no longer have to check for a `complete` property to determine if the result is complete because the component will suspend otherwise.
 
 ```tsx
 import { useSuspenseFragment } from "@apollo/client";
@@ -611,7 +611,7 @@ function Item(props) {
 }
 ```
 
-Next we'll will wrap our `Item` components in a `Suspense` boundary to show a loading indicator if the data from `ItemFragment` is not complete. Since we're using Suspense, we'll replace `useQuery` with `useSuspenseQuery` as well:
+Next, we'll will wrap our `Item` components in a `Suspense` boundary to show a loading indicator if the data from `ItemFragment` is not complete. Since we're using Suspense, we'll replace `useQuery` with `useSuspenseQuery` as well:
 
 ```tsx
 function List() {
@@ -629,7 +629,7 @@ function List() {
 }
 ```
 
-And that's it! Suspense made our `Item` component a bit more succinct since we no longer need to check the `complete` property to determine if we can use safely use `data`.
+And that's it! Suspense made our `Item` component a bit more succinct since we no longer need to check the `complete` property to determine if we can safely use `data`.
 
 <Note>
 In most cases, `useSuspenseFragment` will not suspend when rendered as a child of a query component. In this example `useSuspenseQuery` loads the full query data before each `Item` is rendered so the `data` inside each fragment is already complete. The `Suspense` boundary in this example ensures that a loading spinner is shown if field data is removed for any given item in the list in the cache, such as when a manual cache update is performed.
@@ -651,7 +651,7 @@ query GetItemList {
 Our list will now render as soon as our list returns but before the data for `ItemFragment` is loaded.
 
 <Caution>
-You **must** ensure that any key fields used to identify the object passed to the `from` option are not deferred, otherwise you risk suspending the `useSuspenseFragment` hook forever. If you need to defer loading key fields for any reason, the component itself will need to be conditionally rendered until the object passed to the `from` option is identifiable by the cache.
+You **must** ensure that any key fields used to identify the object passed to the `from` option are not deferred. If they are, you risk suspending the `useSuspenseFragment` hook forever. If you need to defer loading key fields, conditionally render the component until the object passed to the `from` option is identifiable by the cache.
 </Caution>
 
 <MinVersion version="3.12.0">

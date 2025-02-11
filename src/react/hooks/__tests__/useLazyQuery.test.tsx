@@ -538,7 +538,7 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
-  it.skip("changing queries", async () => {
+  it("changing queries", async () => {
     const query1 = gql`
       query {
         hello
@@ -579,7 +579,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,

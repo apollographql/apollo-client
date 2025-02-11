@@ -354,7 +354,18 @@ export function useLazyQuery<
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
     (executeOptions) => {
-      const promise = observable.reobserve({ ...executeOptions, fetchPolicy });
+      const previousQuery = observable.options.query;
+
+      const promise = observable.reobserve({
+        ...executeOptions,
+        query,
+        fetchPolicy,
+      });
+
+      if (!equal(previousQuery, query)) {
+        updateResult({ ...observable.getCurrentResult(), data: undefined });
+        forceUpdateState();
+      }
 
       if (!resultRef.current) {
         updateResult(observable.getCurrentResult());

@@ -540,8 +540,9 @@ describe("useLazyQuery Hook", () => {
 
     const cache = new InMemoryCache();
     using _disabledAct = disableActEnvironment();
-    const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(() => useLazyQuery(query1), {
+    const { takeSnapshot, getCurrentSnapshot, rerender } =
+      await renderHookToSnapshotStream(({ query }) => useLazyQuery(query), {
+        initialProps: { query: query1 },
         wrapper: ({ children }) => (
           <MockedProvider mocks={mocks} cache={cache}>
             {children}
@@ -591,13 +592,28 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    setTimeout(() => execute({ query: query2 }));
+    await rerender({ query: query2 });
 
     {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualQueryResult({
         data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    setTimeout(() => execute());
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualQueryResult({
+        data: undefined,
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,

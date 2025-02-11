@@ -298,16 +298,6 @@ export function useLazyQuery<
 
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TVariables>>>(void 0);
-  const optionsRef =
-    React.useRef<LazyQueryHookOptions<TData, TVariables>>(void 0);
-  const queryRef = React.useRef<
-    DocumentNode | TypedDocumentNode<TData, TVariables>
-  >(void 0);
-
-  // Use refs to track options and the used query to ensure the `execute`
-  // function remains referentially stable between renders.
-  optionsRef.current = options;
-  queryRef.current = query;
 
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">

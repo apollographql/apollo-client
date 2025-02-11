@@ -896,6 +896,8 @@ describe("useLazyQuery Hook", () => {
     }
   });
 
+  // TODO: Determine if this hook makes sense for polling or if that should be
+  // reserved for useQuery
   it("should allow for the query to start with polling", async () => {
     const mocks = [
       {

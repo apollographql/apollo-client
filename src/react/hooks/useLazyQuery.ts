@@ -315,9 +315,6 @@ export function useLazyQuery<
     () => resultRef.current || initialResult
   );
 
-  const execOptionsRef =
-    React.useRef<Partial<LazyQueryHookExecOptions<TVariables>>>(void 0);
-
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
   >(() => bindObservableMethods(observable), [observable]);
@@ -333,16 +330,7 @@ export function useLazyQuery<
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      const method = obsQueryFields[key];
-      eagerMethods[key] = function () {
-        if (!execOptionsRef.current) {
-          execOptionsRef.current = {};
-          // Only the first time populating execOptionsRef.current matters here.
-          // forceUpdateState();
-        }
-        // @ts-expect-error this is just too generic to type
-        return method.apply(this, arguments);
-      };
+      eagerMethods[key] = obsQueryFields[key];
     }
 
     return eagerMethods as typeof obsQueryFields;

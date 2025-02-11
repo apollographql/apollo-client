@@ -260,14 +260,6 @@ export interface QueryLazyOptions<TVariables> {
   context?: DefaultContext;
 }
 
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export type LazyQueryResult<
-  TData,
-  TVariables extends OperationVariables,
-> = QueryResult<TData, TVariables>;
-
 export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,

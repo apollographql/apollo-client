@@ -709,8 +709,17 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
-    const execute = getCurrentSnapshot()[0];
-    setTimeout(() => execute());
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(execute()).resolves.toEqualQueryResult({
+      data: { hello: "world 1" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
 
     {
       const [, result] = await takeSnapshot();
@@ -738,7 +747,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    setTimeout(() => execute());
+    await expect(execute()).resolves.toEqualQueryResult({
+      data: { hello: "world 2" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { hello: "world 1" },
+      variables: {},
+    });
 
     {
       const [, result] = await takeSnapshot();

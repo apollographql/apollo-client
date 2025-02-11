@@ -823,8 +823,17 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
-    const execute = getCurrentSnapshot()[0];
-    setTimeout(() => execute());
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(execute()).resolves.toEqualQueryResult({
+      data: { hello: "world 1" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
 
     {
       const [, result] = await takeSnapshot();
@@ -852,8 +861,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    const refetch = getCurrentSnapshot()[1].refetch;
-    setTimeout(() => refetch!());
+    const [, { refetch }] = getCurrentSnapshot();
+
+    await expect(refetch()).resolves.toEqualApolloQueryResult({
+      data: { hello: "world 2" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     {
       const [, result] = await takeSnapshot();

@@ -1465,6 +1465,9 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Need to determine whether to keep this test depending on whether we
+  // keep the promise rejection behavior in 4.x. With the updated behavior, the
+  // execute function throws
   it.skip("the promise should not cause an unhandled rejection", async () => {
     const mocks = [
       {
@@ -1493,7 +1496,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,

@@ -13,7 +13,6 @@ import {
   ApolloClient,
   ApolloError,
   ApolloLink,
-  ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
   TypedDocumentNode,
@@ -2267,7 +2266,9 @@ describe("useLazyQuery Hook", () => {
   });
 
   describe("network errors", () => {
-    async function check(errorPolicy: ErrorPolicy) {
+    // For errorPolicy:"none", we expect result.error to be defined and
+    // result.data to be undefined
+    it('handles errorPolicy:"none" appropriately', async () => {
       const networkError = new Error("from the network");
 
       const client = new ApolloClient({
@@ -2287,7 +2288,7 @@ describe("useLazyQuery Hook", () => {
         await renderHookToSnapshotStream(
           () =>
             useLazyQuery(helloQuery, {
-              errorPolicy,
+              errorPolicy: "none",
             }),
           {
             wrapper: ({ children }) => (
@@ -2310,8 +2311,19 @@ describe("useLazyQuery Hook", () => {
         });
       }
 
-      const execute = getCurrentSnapshot()[0];
-      setTimeout(execute);
+      const [execute] = getCurrentSnapshot();
+
+      await expect(execute()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ networkError }),
+        // TODO: Remove this when errors is deprecated
+        errors: [],
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
 
       {
         const [, result] = await takeSnapshot();
@@ -2338,21 +2350,181 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
-    }
-
-    // For errorPolicy:"none", we expect result.error to be defined and
-    // result.data to be undefined, which is what we test above.
-    it('handles errorPolicy:"none" appropriately', () => check("none"));
+    });
 
     // If there was any data to report, errorPolicy:"all" would report both
     // result.data and result.error, but there is no GraphQL data when we
     // encounter a network error, so the test again captures desired behavior.
-    it('handles errorPolicy:"all" appropriately', () => check("all"));
+    it('handles errorPolicy:"all" appropriately', async () => {
+      const networkError = new Error("from the network");
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (request) =>
+            new Observable((observer) => {
+              setTimeout(() => {
+                observer.error(networkError);
+              }, 20);
+            })
+        ),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useLazyQuery(helloQuery, {
+              errorPolicy: "all",
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const [execute] = getCurrentSnapshot();
+
+      await expect(execute()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ networkError }),
+        // TODO: Remove when errors is deprecated
+        errors: [],
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ networkError }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
 
     // Technically errorPolicy:"ignore" is supposed to throw away result.error,
     // but in the case of network errors, since there's no actual data to
     // report, it's useful/important that we report result.error anyway.
-    it('handles errorPolicy:"ignore" appropriately', () => check("ignore"));
+    it('handles errorPolicy:"ignore" appropriately', async () => {
+      const networkError = new Error("from the network");
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (request) =>
+            new Observable((observer) => {
+              setTimeout(() => {
+                observer.error(networkError);
+              }, 20);
+            })
+        ),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useLazyQuery(helloQuery, {
+              errorPolicy: "ignore",
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: undefined,
+          called: false,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      const [execute] = getCurrentSnapshot();
+
+      await expect(execute()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: new ApolloError({ networkError }),
+        // TODO: Remove when errors is deprecated
+        errors: [],
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ networkError }),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+    });
   });
 
   // regression for https://github.com/apollographql/apollo-client/issues/11988

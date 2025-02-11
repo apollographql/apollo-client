@@ -363,6 +363,8 @@ export function useLazyQuery<
           return {
             ...queryResult,
             ...eagerMethods,
+            client,
+            observable,
             called: true,
             previousData: previousDataRef.current,
             variables: observable.variables,

@@ -268,14 +268,6 @@ export type LazyQueryResult<
   TVariables extends OperationVariables,
 > = QueryResult<TData, TVariables>;
 
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export type QueryTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = LazyQueryResultTuple<TData, TVariables>;
-
 export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,

@@ -34,6 +34,7 @@ import {
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 import type { ObservableQueryFields } from "../types/types.js";
 
+import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -275,15 +276,12 @@ export function useLazyQuery<
   const dirtyRef = React.useRef(false);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
+  const stableOptions = useDeepMemo(() => options, [options]);
 
   if (currentClient !== client) {
     setCurrentClient(client);
     setObservable(
-      client.watchQuery({
-        ...options,
-        query,
-        fetchPolicy: "standby",
-      })
+      client.watchQuery({ ...options, query, fetchPolicy: "standby" })
     );
     dirtyRef.current = true;
   }
@@ -384,6 +382,13 @@ export function useLazyQuery<
     return eagerMethods as typeof obsQueryFields;
   }, [forceUpdateState, obsQueryFields]);
 
+  React.useEffect(() => {
+    observable.silentSetOptions({
+      errorPolicy: stableOptions?.errorPolicy,
+      context: stableOptions?.context,
+    });
+  }, [observable, stableOptions]);
+
   const result = React.useMemo(
     () => ({
       ...eagerMethods,
@@ -460,7 +465,7 @@ export function useLazyQuery<
         }
       );
     },
-    [query, eagerMethods, fetchPolicy, observable]
+    [query, eagerMethods, fetchPolicy, observable, stableOptions]
   );
 
   const executeRef = React.useRef(execute);

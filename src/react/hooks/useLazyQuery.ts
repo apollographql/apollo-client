@@ -363,6 +363,9 @@ export function useLazyQuery<
         fetchPolicy,
       });
 
+      // Call updateResult after calling reobserve due to the timing of
+      // rerendering in React 17. Without this, the `variables` value is returned
+      // with the previous set of variables.
       if (
         !equal(
           { query: previousQuery, variables: previousVariables },

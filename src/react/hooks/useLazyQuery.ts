@@ -430,7 +430,7 @@ export function useLazyQuery<
             },
             complete() {
               resolve({
-                ...result,
+                ...observable["maskResult"](result),
                 ...eagerMethods,
                 client,
                 observable,

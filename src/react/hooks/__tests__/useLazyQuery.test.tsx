@@ -2557,7 +2557,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   describe("data masking", () => {
-    it.skip("masks queries when dataMasking is `true`", async () => {
+    it("masks queries when dataMasking is `true`", async () => {
       type UserFieldsFragment = {
         __typename: "User";
         age: number;

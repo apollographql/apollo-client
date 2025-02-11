@@ -2210,9 +2210,10 @@ describe("useLazyQuery Hook", () => {
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 
     const { result, rerender } = renderHook(
-      ({ id }) => useLazyQuery(query, { variables: { id } }),
+      ({ notifyOnNetworkStatusChange }) =>
+        useLazyQuery(query, { notifyOnNetworkStatusChange }),
       {
-        initialProps: { id: "1" },
+        initialProps: { notifyOnNetworkStatusChange: false },
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -2221,7 +2222,7 @@ describe("useLazyQuery Hook", () => {
 
     const [execute] = result.current;
 
-    rerender({ id: "2" });
+    rerender({ notifyOnNetworkStatusChange: true });
 
     expect(result.current[0]).toBe(execute);
   });

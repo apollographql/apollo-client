@@ -274,13 +274,18 @@ export function useLazyQuery<
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
 
+  function updateResult(result: ApolloQueryResult<TData>) {
+    previousDataRef.current = resultRef.current?.data;
+    resultRef.current = result;
+  }
+
   const observableResult = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
         const subscription = observable.subscribe({
           next: (value) => {
             if (!equal(resultRef.current, value)) {
-              resultRef.current = value;
+              updateResult(value);
               forceUpdate();
             }
           },
@@ -344,7 +349,7 @@ export function useLazyQuery<
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
     (executeOptions) => {
       if (!resultRef.current) {
-        resultRef.current = observable.getCurrentResult();
+        updateResult(observable.getCurrentResult());
         forceUpdateState();
       }
 

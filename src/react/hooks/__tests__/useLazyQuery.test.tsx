@@ -1847,11 +1847,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/9448
-  // TODO: Determine how the new behavior changes this test.
-  // Proposal: I would expect that calling the execute function again with no
-  // variables is the same thing as setting variables back to undefined, so this
-  // should be treated the same as changing variables.
-  it.skip.each(["network-only", "no-cache", "cache-and-network"] as const)(
+  it.each(["network-only", "no-cache", "cache-and-network"] as const)(
     "does not issue multiple network calls when calling execute again without variables with a %s fetch policy",
     async (fetchPolicy) => {
       interface Data {

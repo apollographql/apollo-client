@@ -390,6 +390,8 @@ export function useLazyQuery<
 
       const concast = observable.reobserveAsConcast({
         ...executeOptions,
+        // TODO: Figure out a better way to reset variables back to empty
+        variables: executeOptions?.variables ?? ({} as TVariables),
         query,
         fetchPolicy,
       });

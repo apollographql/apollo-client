@@ -25,7 +25,6 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
 import type { InternalResult } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,
-  getDefaultFetchPolicy,
   getObsQueryOptions,
   toQueryResult,
   useQueryInternals,
@@ -235,10 +234,8 @@ export function useLazyQuery<
 
   const initialFetchPolicy =
     observable.options.initialFetchPolicy ||
-    getDefaultFetchPolicy(
-      queryHookOptions.defaultOptions,
-      client.defaultOptions
-    );
+    client.defaultOptions.watchQuery?.fetchPolicy ||
+    "cache-first";
 
   const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
   // We use useMemo here to make sure the eager methods have a stable identity.

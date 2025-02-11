@@ -42,7 +42,6 @@ import {
 import { useLazyQuery } from "../useLazyQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
-const IS_REACT_18 = React.version.startsWith("18");
 
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{

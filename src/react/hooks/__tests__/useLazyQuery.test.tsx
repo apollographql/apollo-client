@@ -3654,7 +3654,7 @@ test.skip("uses cached result when switching to variables already written to the
   await expect(takeSnapshot).not.toRerender();
 });
 
-test.skip("applies `errorPolicy` on next fetch when it changes between renders", async () => {
+test("applies `errorPolicy` on next fetch when it changes between renders", async () => {
   const query: TypedDocumentNode<
     {
       character: { __typename: "Character"; id: string; name: string } | null;
@@ -3794,9 +3794,11 @@ test.skip("applies `errorPolicy` on next fetch when it changes between renders",
       data: {
         character: null,
       },
-      error: new ApolloError({
-        graphQLErrors: [{ message: "Could not find character 1" }],
-      }),
+      // TODO: Re-enable when errors is deprecated in favor of this property
+      // error: new ApolloError({
+      //   graphQLErrors: [{ message: "Could not find character 1" }],
+      // }),
+      errors: [{ message: "Could not find character 1" }],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,

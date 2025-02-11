@@ -177,7 +177,7 @@ export type LazyQueryExecFunction<
   TVariables extends OperationVariables,
 > = (
   options?: LazyQueryHookExecOptions<TVariables>
-) => Promise<LazyQueryResult<TData, TVariables>>;
+) => Promise<ApolloQueryResult<TData>>;
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -389,33 +389,23 @@ export function useLazyQuery<
         forceUpdateState();
       }
 
-      return new Promise<LazyQueryResult<TData, TVariables>>(
-        (resolve, reject) => {
-          let result: ApolloQueryResult<TData>;
+      return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
+        let result: ApolloQueryResult<TData>;
 
-          // Subscribe to the concast independently of the ObservableQuery in case
-          // the component gets unmounted before the promise resolves. This prevents
-          // the concast from terminating early and resolving with `undefined` when
-          // there are no more subscribers for the concast.
-          concast.subscribe({
-            next(value) {
-              result = value;
-            },
-            complete() {
-              resolve({
-                ...observable["maskResult"](result),
-                ...eagerMethods,
-                client,
-                observable,
-                called: true,
-                previousData: previousDataRef.current,
-                variables: observable.variables,
-              });
-            },
-            error: reject,
-          });
-        }
-      );
+        // Subscribe to the concast independently of the ObservableQuery in case
+        // the component gets unmounted before the promise resolves. This prevents
+        // the concast from terminating early and resolving with `undefined` when
+        // there are no more subscribers for the concast.
+        concast.subscribe({
+          next(value) {
+            result = value;
+          },
+          complete() {
+            resolve(observable["maskResult"](result));
+          },
+          error: reject,
+        });
+      });
     },
     [query, eagerMethods, fetchPolicy, observable, stableOptions]
   );

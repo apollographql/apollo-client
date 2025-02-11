@@ -164,12 +164,11 @@ export function useLazyQuery<
     DocumentNode | TypedDocumentNode<TData, TVariables>
   >(void 0);
   const merged = mergeOptions(options, execOptionsRef.current || {});
-  const document = merged?.query ?? query;
 
   // Use refs to track options and the used query to ensure the `execute`
   // function remains referentially stable between renders.
   optionsRef.current = options;
-  queryRef.current = document;
+  queryRef.current = query;
 
   const queryHookOptions = {
     ...merged,
@@ -182,7 +181,7 @@ export function useLazyQuery<
     resultData,
     observable,
     onQueryExecuted,
-  } = useQueryInternals(document, queryHookOptions);
+  } = useQueryInternals(query, queryHookOptions);
 
   const initialFetchPolicy =
     observable.options.initialFetchPolicy ||
@@ -240,7 +239,7 @@ export function useLazyQuery<
         resultData,
         observable,
         client,
-        document,
+        query,
         { ...options, skip: false },
         onQueryExecuted
       ).then((queryResult) => Object.assign(queryResult, eagerMethods));
@@ -253,7 +252,7 @@ export function useLazyQuery<
     },
     [
       client,
-      document,
+      query,
       eagerMethods,
       initialFetchPolicy,
       observable,

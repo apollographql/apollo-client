@@ -250,16 +250,6 @@ export interface LoadableQueryHookOptions {
   returnPartialData?: boolean;
 }
 
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export interface QueryLazyOptions<TVariables> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-}
-
 export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,

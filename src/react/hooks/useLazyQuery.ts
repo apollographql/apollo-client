@@ -265,6 +265,44 @@ export function useLazyQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
+  const [observable, setObservable] = React.useState<
+    ObservableQuery<TData, TVariables> | undefined
+  >(undefined);
+
+  const previousDataRef = React.useRef<TData | undefined>(undefined);
+  const resultRef = React.useRef<ApolloQueryResult<TData>>({
+    data: undefined,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: true,
+  });
+
+  const observableResult = useSyncExternalStore(
+    React.useCallback(
+      (forceUpdate) => {
+        if (!observable) {
+          return () => {};
+        }
+
+        const subscription = observable.subscribe({
+          next: (value) => {
+            if (!equal(resultRef.current, value)) {
+              resultRef.current = value;
+              forceUpdate();
+            }
+          },
+        });
+
+        return () => {
+          subscription?.unsubscribe();
+        };
+      },
+      [observable]
+    ),
+    () => resultRef.current,
+    () => resultRef.current
+  );
+
   const execOptionsRef =
     React.useRef<Partial<LazyQueryHookExecOptions<TVariables>>>(void 0);
   const optionsRef =
@@ -283,19 +321,13 @@ export function useLazyQuery<
     ...merged,
     skip: !execOptionsRef.current,
   };
-  const {
-    obsQueryFields,
-    result: useQueryResult,
-    client,
-    resultData,
-    observable,
-    onQueryExecuted,
-  } = useQueryInternals(query, queryHookOptions);
+  const { obsQueryFields, client, resultData, onQueryExecuted } =
+    useQueryInternals(query, queryHookOptions);
 
-  const initialFetchPolicy =
-    observable.options.initialFetchPolicy ||
-    client.defaultOptions.watchQuery?.fetchPolicy ||
-    "cache-first";
+  // const initialFetchPolicy =
+  //   observable.options.initialFetchPolicy ||
+  //   client.defaultOptions.watchQuery?.fetchPolicy ||
+  //   "cache-first";
 
   const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
   // We use useMemo here to make sure the eager methods have a stable identity.
@@ -317,14 +349,17 @@ export function useLazyQuery<
     return eagerMethods as typeof obsQueryFields;
   }, [forceUpdateState, obsQueryFields]);
 
-  const called = !!execOptionsRef.current;
   const result = React.useMemo(
     () => ({
-      ...useQueryResult,
       ...eagerMethods,
-      called,
+      ...observableResult,
+      client,
+      previousData: previousDataRef.current,
+      variables: observable?.variables,
+      observable,
+      called: !!observable,
     }),
-    [useQueryResult, eagerMethods, called]
+    [client, observableResult, eagerMethods, observable]
   );
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
@@ -332,13 +367,20 @@ export function useLazyQuery<
       execOptionsRef.current = executeOptions ? executeOptions : {};
 
       const options = mergeOptions(optionsRef.current, {
-        query: queryRef.current,
+        query,
         ...execOptionsRef.current,
       });
 
+      const currentObservable = getObservable(client, observable, options);
+
+      if (!observable) {
+        setObservable(currentObservable);
+        resultRef.current = currentObservable.getCurrentResult();
+      }
+
       const promise = executeQuery(
         resultData,
-        observable,
+        currentObservable,
         client,
         query,
         { ...options, skip: false },
@@ -355,7 +397,7 @@ export function useLazyQuery<
       client,
       query,
       eagerMethods,
-      initialFetchPolicy,
+      // initialFetchPolicy,
       observable,
       resultData,
       onQueryExecuted,
@@ -372,6 +414,19 @@ export function useLazyQuery<
     []
   );
   return [stableExecute, result];
+}
+
+function getObservable(
+  client: ApolloClient<any>,
+  currentObservable: ObservableQuery<any, any> | undefined,
+  options: WatchQueryOptions<any, any>
+) {
+  if (currentObservable) {
+    currentObservable.silentSetOptions(options);
+    return currentObservable;
+  }
+
+  return client.watchQuery(options);
 }
 
 function executeQuery<TData, TVariables extends OperationVariables>(

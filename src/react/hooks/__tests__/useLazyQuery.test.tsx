@@ -97,6 +97,7 @@ describe("useLazyQuery Hook", () => {
       variables: {},
     });
 
+    // TODO: Determine if this first loading state makes sense without notifyOnNetworkStatusChange
     {
       const [, result] = await takeSnapshot();
 

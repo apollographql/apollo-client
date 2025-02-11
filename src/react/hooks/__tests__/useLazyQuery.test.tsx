@@ -2478,7 +2478,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // regression for https://github.com/apollographql/apollo-client/issues/11988
-  test.skip("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
+  test("calling `clearStore` while a lazy query is running puts the hook into an error state and resolves the promise with an error result", async () => {
     const link = new MockSubscriptionLink();
     let requests = 0;
     link.onSetup(() => requests++);
@@ -2499,7 +2499,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -2528,19 +2527,11 @@ describe("useLazyQuery Hook", () => {
 
     await client.clearStore();
 
-    await expect(promise).resolves.toEqualLazyQueryResult({
-      data: undefined,
-      error: new ApolloError({
-        networkError: new InvariantError(
-          "Store reset while query was in flight (not completed in link chain)"
-        ),
-      }),
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      called: true,
-      previousData: undefined,
-      variables: {},
-    });
+    await expect(promise).rejects.toEqual(
+      new InvariantError(
+        "Store reset while query was in flight (not completed in link chain)"
+      )
+    );
 
     {
       const [, result] = await takeSnapshot();

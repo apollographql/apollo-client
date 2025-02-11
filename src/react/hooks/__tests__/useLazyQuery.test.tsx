@@ -4175,7 +4175,7 @@ test("applies `refetchWritePolicy` on next fetch when it changes between renders
   await expect(takeSnapshot).not.toRerender();
 });
 
-test.skip("applies `returnPartialData` on next fetch when it changes between renders", async () => {
+test("applies `returnPartialData` on next fetch when it changes between renders", async () => {
   const fullQuery = gql`
     query ($id: ID!) {
       character(id: $id) {
@@ -4256,7 +4256,6 @@ test.skip("applies `returnPartialData` on next fetch when it changes between ren
 
     expect(result).toEqualLazyQueryResult({
       data: undefined,
-      error: undefined,
       called: false,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -4335,7 +4334,7 @@ test.skip("applies `returnPartialData` on next fetch when it changes between ren
     loading: false,
     networkStatus: NetworkStatus.ready,
     previousData: {
-      character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+      character: { __typename: "Character", id: "2" },
     },
     variables: { id: "2" },
   });
@@ -4364,7 +4363,7 @@ test.skip("applies `returnPartialData` on next fetch when it changes between ren
       loading: false,
       networkStatus: NetworkStatus.ready,
       previousData: {
-        character: { __typename: "Character", id: "1", name: "Doctor Strange" },
+        character: { __typename: "Character", id: "2" },
       },
       variables: { id: "2" },
     });

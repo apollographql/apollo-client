@@ -2064,11 +2064,6 @@ describe("useLazyQuery Hook", () => {
     // TODO: Update when https://github.com/testing-library/react-render-stream-testing-library/issues/13 is fixed
     await rerender(undefined);
 
-    [execute] = getCurrentSnapshot();
-    expect(execute).toBe(originalExecute);
-
-    await execute({ variables: { id: "2" } });
-
     {
       const [, result] = await takeSnapshot();
 
@@ -2081,6 +2076,11 @@ describe("useLazyQuery Hook", () => {
         variables: { id: "1" },
       });
     }
+
+    [execute] = getCurrentSnapshot();
+    expect(execute).toBe(originalExecute);
+
+    await execute({ variables: { id: "2" } });
 
     {
       const [, result] = await takeSnapshot();
@@ -2122,8 +2122,6 @@ describe("useLazyQuery Hook", () => {
     [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);
 
-    await execute({ variables: { id: "3" } });
-
     {
       const [, result] = await takeSnapshot();
 
@@ -2137,6 +2135,8 @@ describe("useLazyQuery Hook", () => {
         variables: { id: "2" },
       });
     }
+
+    await execute({ variables: { id: "3" } });
 
     {
       const [, result] = await takeSnapshot();

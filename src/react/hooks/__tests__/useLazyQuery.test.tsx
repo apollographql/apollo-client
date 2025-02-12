@@ -1499,6 +1499,148 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  test("executes on the network multiple times with a cache-and-network fetch policy when changing variables", async () => {
+    const { query, mocks } = setupVariablesCase();
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink(mocks),
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        character: { __typename: "Character", id: "1", name: "Cache 1" },
+      },
+      variables: { id: "1" },
+    });
+
+    client.writeQuery({
+      query,
+      data: {
+        character: { __typename: "Character", id: "2", name: "Cache 2" },
+      },
+      variables: { id: "2" },
+    });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useLazyQuery(query, { fetchPolicy: "cache-and-network" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        // @ts-expect-error should be undefined
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(
+      execute({ variables: { id: "1" } })
+    ).resolves.toEqualApolloQueryResult({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: {
+          character: { __typename: "Character", id: "1", name: "Cache 1" },
+        },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: "1" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          character: { __typename: "Character", id: "1", name: "Cache 1" },
+        },
+        variables: { id: "1" },
+      });
+    }
+
+    await expect(
+      execute({ variables: { id: "2" } })
+    ).resolves.toEqualApolloQueryResult({
+      data: {
+        character: { __typename: "Character", id: "2", name: "Black Widow" },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: {
+          character: { __typename: "Character", id: "2", name: "Cache 2" },
+        },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: {
+          character: { __typename: "Character", id: "1", name: "Spider-Man" },
+        },
+        variables: { id: "2" },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: {
+          character: { __typename: "Character", id: "2", name: "Black Widow" },
+        },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: {
+          character: { __typename: "Character", id: "2", name: "Cache 2" },
+        },
+        variables: { id: "2" },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   // TODO: Determine if this makes sense. We will likely remove the majority of
   // properties returned from the execute function (refetch, fetchMore, etc)
   // since they can be accessed on the hook.

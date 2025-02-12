@@ -559,6 +559,122 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it('renders loading states each time the execution function is called when using a "network-only" fetch policy with notifyOnNetworkStatusChange', async () => {
+    const mocks = [
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "world 1" } },
+        delay: 20,
+      },
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "world 2" } },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(helloQuery, {
+            notifyOnNetworkStatusChange: true,
+            fetchPolicy: "network-only",
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { hello: "world 1" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { hello: "world 2" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "world 1" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        // TODO: Determine if we set this immediately or when `data` changes
+        previousData: {
+          hello: "world 1",
+        },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "world 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "world 1" },
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("should persist previous data when a query is re-run", async () => {
     const mocks = [
       {

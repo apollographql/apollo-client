@@ -327,8 +327,6 @@ export function useLazyQuery<
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      const method = observable[key];
-
       eagerMethods[key] = function () {
         invariant(
           resultRef.current,
@@ -337,7 +335,7 @@ export function useLazyQuery<
         );
 
         // @ts-expect-error this is just to generic to type
-        return method.apply(this, arguments);
+        return observable[key].apply(observable, arguments);
       };
     }
 

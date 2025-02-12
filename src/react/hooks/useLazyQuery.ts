@@ -328,7 +328,18 @@ export function useLazyQuery<
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      eagerMethods[key] = observable[key].bind(observable);
+      const method = observable[key];
+
+      eagerMethods[key] = function () {
+        invariant(
+          resultRef.current,
+          "useLazyQuery: '%s' cannot be called before executing the query.",
+          key
+        );
+
+        // @ts-expect-error this is just to generic to type
+        return method.apply(this, arguments);
+      };
     }
 
     return eagerMethods as Pick<

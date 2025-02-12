@@ -3324,20 +3324,185 @@ describe("useLazyQuery Hook", () => {
   });
 });
 
-test.todo("throws when calling `refetch` before execute function is called");
-test.todo("throws when calling `fetchMore` before execute function is called");
-test.todo(
-  "throws when calling `subscribeToMore` before execute function is called"
-);
-test.todo(
-  "throws when calling `updateQuery` before execute function is called"
-);
-test.todo(
-  "throws when calling `startPolling` before execute function is called"
-);
-test.todo(
-  "throws when calling `stopPolling` before execute function is called"
-);
+test("throws when calling `refetch` before execute function is called", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [, { refetch }] = await takeSnapshot();
+
+  expect(() => {
+    void refetch();
+  }).toThrow(
+    new InvariantError(
+      "useLazyQuery: 'refetch' cannot be called before executing the query."
+    )
+  );
+});
+
+test("throws when calling `fetchMore` before execute function is called", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [, { fetchMore }] = await takeSnapshot();
+
+  expect(() => {
+    void fetchMore({});
+  }).toThrow(
+    new InvariantError(
+      "useLazyQuery: 'fetchMore' cannot be called before executing the query."
+    )
+  );
+});
+
+test("throws when calling `subscribeToMore` before execute function is called", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [, { subscribeToMore }] = await takeSnapshot();
+
+  expect(() => {
+    subscribeToMore({
+      document: gql`
+        subscription {
+          foo
+        }
+      `,
+    });
+  }).toThrow(
+    new InvariantError(
+      "useLazyQuery: 'subscribeToMore' cannot be called before executing the query."
+    )
+  );
+});
+
+test("throws when calling `updateQuery` before execute function is called", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [, { updateQuery }] = await takeSnapshot();
+
+  expect(() => {
+    updateQuery(() => ({ greeting: "foo" }));
+  }).toThrow(
+    new InvariantError(
+      "useLazyQuery: 'updateQuery' cannot be called before executing the query."
+    )
+  );
+});
+
+test("throws when calling `startPolling` before execute function is called", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [, { startPolling }] = await takeSnapshot();
+
+  expect(() => {
+    startPolling(10);
+  }).toThrow(
+    new InvariantError(
+      "useLazyQuery: 'startPolling' cannot be called before executing the query."
+    )
+  );
+});
+
+test("throws when calling `stopPolling` before execute function is called", async () => {
+  const { query, mocks } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  const [, { stopPolling }] = await takeSnapshot();
+
+  expect(() => {
+    stopPolling();
+  }).toThrow(
+    new InvariantError(
+      "useLazyQuery: 'stopPolling' cannot be called before executing the query."
+    )
+  );
+});
 
 test("throws when calling execute function during first render", async () => {
   // We don't provide this functionality with React 19 anymore since it requires internals access

@@ -1787,7 +1787,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it("the promise returned from execute should reject when GraphQL errors are returned and errorPolicy is `none`", async () => {
+  it("the promise returned from execute rejects when GraphQL errors are returned and errorPolicy is `none`", async () => {
     const mocks = [
       {
         request: { query: helloQuery },

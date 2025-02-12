@@ -24,6 +24,7 @@ import type { NoInfer } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
+import { getApolloContext } from "../context/ApolloContext.js";
 import type { ObservableQueryFields } from "../types/types.js";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -234,21 +235,41 @@ export function useLazyQuery<
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
   const client = useApolloClient(options?.client);
-  const [currentClient, setCurrentClient] = React.useState(client);
-  const [observable, setObservable] = React.useState(() =>
-    client.watchQuery({ ...options, query, fetchPolicy: "standby" })
-  );
-
+  const { renderPromises } = React.useContext(getApolloContext());
   const dirtyRef = React.useRef(false);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
+  const ssrAllowed = options?.ssr !== false && !!resultRef.current;
+
+  function createObservable() {
+    if (!renderPromises) {
+      return client.watchQuery({ ...options, query, fetchPolicy: "standby" });
+    }
+
+    let fetchPolicy = options?.fetchPolicy;
+
+    // this behavior was added to react-apollo without explanation in this PR
+    // https://github.com/apollographql/react-apollo/pull/1579
+    if (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network") {
+      fetchPolicy = "cache-first";
+    }
+
+    // See if there is an existing observable that was used to fetch the same
+    // data and if so, use it instead since it will contain the proper queryId
+    // to fetch the result set. This is used during SSR.
+    return (
+      renderPromises.getSSRObservable({ ...options, fetchPolicy, query }) ||
+      client.watchQuery({ ...options, query, fetchPolicy })
+    );
+  }
+
+  const [currentClient, setCurrentClient] = React.useState(client);
+  const [observable, setObservable] = React.useState(createObservable);
 
   if (currentClient !== client) {
     setCurrentClient(client);
-    setObservable(
-      client.watchQuery({ ...options, query, fetchPolicy: "standby" })
-    );
+    setObservable(createObservable());
     dirtyRef.current = true;
   }
 
@@ -315,6 +336,15 @@ export function useLazyQuery<
     () => resultRef.current || initialResult
   );
 
+  if (renderPromises && ssrAllowed) {
+    renderPromises.registerSSRObservable(observable);
+
+    if (observable.getCurrentResult().loading) {
+      // TODO: This is a legacy API which could probably be cleaned up
+      renderPromises.addObservableQueryPromise(observable);
+    }
+  }
+
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
   >(() => bindObservableMethods(observable), [observable]);
@@ -370,7 +400,11 @@ export function useLazyQuery<
       });
 
       // TODO: This should be fixed in core
-      if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
+      if (
+        !resultRef.current &&
+        (stableOptions?.notifyOnNetworkStatusChange ||
+          client["queryManager"].ssrMode)
+      ) {
         updateResult(observable.getCurrentResult());
         forceUpdateState();
       }

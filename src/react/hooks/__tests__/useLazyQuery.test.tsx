@@ -3332,7 +3332,6 @@ test.todo(
 test.todo(
   "throws when calling `updateQuery` before execute function is called"
 );
-test.todo("throws when calling `reobserve` before execute function is called");
 
 test("throws when calling execute function during first render", async () => {
   // We don't provide this functionality with React 19 anymore since it requires internals access

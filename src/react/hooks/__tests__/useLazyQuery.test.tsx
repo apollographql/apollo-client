@@ -122,6 +122,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Should we delete this? This is covered by the first test
   it("should set `called` to false by default", async () => {
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -138,6 +139,7 @@ describe("useLazyQuery Hook", () => {
     expect(called).toBe(false);
   });
 
+  // TODO: Should we delete this? This is covered by the first test
   it("should set `called` to true after calling the lazy execute function", async () => {
     const mocks = [
       {

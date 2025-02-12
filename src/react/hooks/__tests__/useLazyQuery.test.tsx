@@ -1886,6 +1886,10 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
+  // TODO: Determine if we want this behavior. While it works, this is discouraged
+  // in favor of using client.query directly. Perhaps we should warn?
+  // If we do keep this, we should also test this with `notifyOnNetworkStatusChange`
+  // to ensure that behavior is captured in the tests.
   it("resolves each execution of the query with the appropriate result and renders with the result from the latest execution", async () => {
     interface Data {
       user: { id: string; name: string };

@@ -335,15 +335,6 @@ export function useLazyQuery<
     () => resultRef.current || initialResult
   );
 
-  if (renderPromises && options?.ssr !== false && !!resultRef.current) {
-    renderPromises.registerSSRObservable(observable);
-
-    if (observable.getCurrentResult().loading) {
-      // TODO: This is a legacy API which could probably be cleaned up
-      renderPromises.addObservableQueryPromise(observable);
-    }
-  }
-
   const obsQueryFields = React.useMemo<
     Omit<ObservableQueryFields<TData, TVariables>, "variables">
   >(() => bindObservableMethods(observable), [observable]);
@@ -399,11 +390,15 @@ export function useLazyQuery<
       });
 
       // TODO: This should be fixed in core
-      if (
-        !resultRef.current &&
-        (stableOptions?.notifyOnNetworkStatusChange ||
-          client["queryManager"].ssrMode)
-      ) {
+      if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
+        updateResult(observable.getCurrentResult());
+        forceUpdateState();
+      }
+
+      if (renderPromises && stableOptions?.ssr !== false) {
+        renderPromises.registerSSRObservable(observable);
+        renderPromises.addObservableQueryPromise(observable);
+
         updateResult(observable.getCurrentResult());
         forceUpdateState();
       }
@@ -426,7 +421,14 @@ export function useLazyQuery<
         });
       });
     },
-    [query, eagerMethods, fetchPolicy, observable, stableOptions]
+    [
+      query,
+      eagerMethods,
+      fetchPolicy,
+      observable,
+      stableOptions,
+      renderPromises,
+    ]
   );
 
   const executeRef = React.useRef(execute);

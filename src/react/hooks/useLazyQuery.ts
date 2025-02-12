@@ -334,10 +334,6 @@ export function useLazyQuery<
     () => resultRef.current || initialResult
   );
 
-  const obsQueryFields = React.useMemo<
-    Omit<ObservableQueryFields<TData, TVariables>, "variables">
-  >(() => bindObservableMethods(observable), [observable]);
-
   const fetchPolicy =
     options?.fetchPolicy ||
     observable.options.initialFetchPolicy ||
@@ -349,11 +345,14 @@ export function useLazyQuery<
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
-      eagerMethods[key] = obsQueryFields[key];
+      eagerMethods[key] = observable[key].bind(observable);
     }
 
-    return eagerMethods as typeof obsQueryFields;
-  }, [obsQueryFields]);
+    return eagerMethods as Pick<
+      ObservableQueryFields<TData, TVariables>,
+      (typeof EAGER_METHODS)[number]
+    >;
+  }, [observable]);
 
   React.useEffect(() => {
     observable.silentSetOptions({
@@ -448,17 +447,3 @@ const initialResult: ApolloQueryResult<any> = maybeDeepFreeze({
   networkStatus: NetworkStatus.ready,
   partial: true,
 });
-
-function bindObservableMethods<TData, TVariables extends OperationVariables>(
-  observable: ObservableQuery<TData, TVariables>
-) {
-  return {
-    refetch: observable.refetch.bind(observable),
-    reobserve: observable.reobserve.bind(observable),
-    fetchMore: observable.fetchMore.bind(observable),
-    updateQuery: observable.updateQuery.bind(observable),
-    startPolling: observable.startPolling.bind(observable),
-    stopPolling: observable.stopPolling.bind(observable),
-    subscribeToMore: observable.subscribeToMore.bind(observable),
-  };
-}

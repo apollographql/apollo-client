@@ -22,10 +22,12 @@ import type {
 import { NetworkStatus } from "@apollo/client/core";
 import type { NoInfer } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 import type { ObservableQueryFields } from "../types/types.js";
 
+import { useRenderGuard } from "./internal/index.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -234,6 +236,7 @@ export function useLazyQuery<
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
+  const calledDuringRender = useRenderGuard();
 
   function createObservable() {
     return client.watchQuery({
@@ -376,7 +379,12 @@ export function useLazyQuery<
   );
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
-    async (executeOptions) => {
+    (executeOptions) => {
+      invariant(
+        !calledDuringRender(),
+        "useLazyQuery: 'execute' should not be called during render. To start a query during render, use the 'useQuery' hook."
+      );
+
       const options: WatchQueryOptions<TVariables, TData> = {
         ...executeOptions,
         // TODO: Figure out a better way to reset variables back to empty
@@ -415,7 +423,14 @@ export function useLazyQuery<
         });
       });
     },
-    [query, observable, stableOptions, forceUpdateState, updateResult]
+    [
+      query,
+      observable,
+      stableOptions,
+      forceUpdateState,
+      updateResult,
+      calledDuringRender,
+    ]
   );
 
   const executeRef = React.useRef(execute);

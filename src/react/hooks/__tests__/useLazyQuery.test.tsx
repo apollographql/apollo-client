@@ -1381,6 +1381,124 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  test("executes on the network multiple times with a cache-and-network fetch policy", async () => {
+    const cache = new InMemoryCache();
+    const link = new MockLink([
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "from link" } },
+        delay: 20,
+      },
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "from link 2" } },
+        delay: 20,
+      },
+    ]);
+
+    const client = new ApolloClient({
+      link,
+      cache,
+    });
+
+    cache.writeQuery({ query: helloQuery, data: { hello: "from cache" } });
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useLazyQuery(helloQuery, { fetchPolicy: "cache-and-network" }),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { hello: "from link" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "from cache" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "from link" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "from cache" },
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { hello: "from link 2" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "from link" },
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        // TODO: Determine if this should change immediately
+        previousData: { hello: "from link" },
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "from link 2" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { hello: "from link" },
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   // TODO: Determine if this makes sense. We will likely remove the majority of
   // properties returned from the execute function (refetch, fetchMore, etc)
   // since they can be accessed on the hook.

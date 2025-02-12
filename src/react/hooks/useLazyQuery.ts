@@ -236,7 +236,6 @@ export function useLazyQuery<
 ): LazyQueryResultTuple<TData, TVariables> {
   const client = useApolloClient(options?.client);
   const { renderPromises } = React.useContext(getApolloContext());
-  const dirtyRef = React.useRef(false);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
@@ -269,7 +268,6 @@ export function useLazyQuery<
   if (currentClient !== client) {
     setCurrentClient(client);
     setObservable(createObservable());
-    dirtyRef.current = true;
   }
 
   function updateResult(result: ApolloQueryResult<TData>) {

@@ -369,13 +369,22 @@ export function useLazyQuery<
   }, [observable]);
 
   React.useEffect(() => {
-    observable.silentSetOptions({
+    const options: Partial<WatchQueryOptions<TVariables, TData>> = {
       errorPolicy: stableOptions?.errorPolicy,
       context: stableOptions?.context,
       refetchWritePolicy: stableOptions?.refetchWritePolicy,
       returnPartialData: stableOptions?.returnPartialData,
       notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
-    });
+    };
+
+    if (
+      observable.options.fetchPolicy !== "standby" &&
+      stableOptions?.fetchPolicy
+    ) {
+      options.fetchPolicy = stableOptions?.fetchPolicy;
+    }
+
+    observable.silentSetOptions(options);
   }, [observable, stableOptions]);
 
   const result = React.useMemo(
@@ -393,13 +402,18 @@ export function useLazyQuery<
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
     async (executeOptions) => {
-      const concast = observable.reobserveAsConcast({
+      const options: WatchQueryOptions<TVariables, TData> = {
         ...executeOptions,
         // TODO: Figure out a better way to reset variables back to empty
         variables: executeOptions?.variables ?? ({} as TVariables),
         query,
-        fetchPolicy,
-      });
+      };
+
+      if (observable.options.fetchPolicy === "standby") {
+        options.fetchPolicy = observable.options.initialFetchPolicy;
+      }
+
+      const concast = observable.reobserveAsConcast(options);
 
       // TODO: This should be fixed in core
       if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {

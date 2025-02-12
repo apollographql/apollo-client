@@ -675,7 +675,7 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  it("should persist previous data when a query is re-run", async () => {
+  it("should persist previous data when a query is refetched", async () => {
     const mocks = [
       {
         request: { query: helloQuery },

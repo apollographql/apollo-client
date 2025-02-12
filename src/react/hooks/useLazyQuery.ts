@@ -241,11 +241,16 @@ export function useLazyQuery<
   const stableOptions = useDeepMemo(() => options, [options]);
 
   function createObservable() {
-    if (!renderPromises) {
-      return client.watchQuery({ ...options, query, fetchPolicy: "standby" });
-    }
-
     let fetchPolicy = options?.fetchPolicy;
+
+    if (!renderPromises) {
+      return client.watchQuery({
+        ...options,
+        query,
+        initialFetchPolicy: fetchPolicy,
+        fetchPolicy: "standby",
+      });
+    }
 
     // this behavior was added to react-apollo without explanation in this PR
     // https://github.com/apollographql/react-apollo/pull/1579

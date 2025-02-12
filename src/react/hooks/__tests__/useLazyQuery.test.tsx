@@ -1166,6 +1166,144 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  test("renders loading states when a query is re-run and variables changes with notifyOnNetworkStatusChange", async () => {
+    const CAR_QUERY_BY_ID = gql`
+      query ($id: Int) {
+        car(id: $id) {
+          make
+          model
+        }
+      }
+    `;
+
+    const data1 = {
+      car: {
+        make: "Audi",
+        model: "A4",
+        __typename: "Car",
+      },
+    };
+
+    const data2 = {
+      car: {
+        make: "Audi",
+        model: "RS8",
+        __typename: "Car",
+      },
+    };
+
+    const mocks = [
+      {
+        request: { query: CAR_QUERY_BY_ID, variables: { id: 1 } },
+        result: { data: data1 },
+        delay: 20,
+      },
+      {
+        request: { query: CAR_QUERY_BY_ID, variables: { id: 2 } },
+        result: { data: data2 },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useLazyQuery(CAR_QUERY_BY_ID, { notifyOnNetworkStatusChange: true }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+
+    await expect(
+      execute({ variables: { id: 1 } })
+    ).resolves.toEqualApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: data1,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+    }
+
+    await expect(
+      execute({ variables: { id: 2 } })
+    ).resolves.toEqualApolloQueryResult({
+      data: data2,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.setVariables,
+        previousData: data1,
+        variables: { id: 2 },
+      });
+    }
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: data2,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: data1,
+        variables: { id: 2 },
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("should work with cache-and-network fetch policy", async () => {
     const cache = new InMemoryCache();
     const link = mockSingleLink({

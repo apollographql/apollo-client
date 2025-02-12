@@ -241,7 +241,10 @@ export function useLazyQuery<
   const stableOptions = useDeepMemo(() => options, [options]);
 
   function createObservable() {
-    let fetchPolicy = options?.fetchPolicy;
+    let fetchPolicy =
+      options?.fetchPolicy ??
+      client.defaultOptions.watchQuery?.fetchPolicy ??
+      "cache-first";
 
     if (!renderPromises) {
       return client.watchQuery({

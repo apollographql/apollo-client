@@ -409,6 +409,8 @@ export function useLazyQuery<
         ...executeOptions,
         // TODO: Figure out a better way to reset variables back to empty
         variables: executeOptions?.variables ?? ({} as TVariables),
+        // TODO: Determine when query is applied. Should it be applied right
+        // away? If so, move this to the useEffect above
         query,
       };
 

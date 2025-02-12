@@ -297,6 +297,7 @@ export function useLazyQuery<
             handleError
           );
 
+          // TODO: Determine if this is still needed.
           if (!hasOwnProperty.call(error, "graphQLErrors")) {
             // The error is not a GraphQL error
             throw error;

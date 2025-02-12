@@ -278,7 +278,10 @@ export function useLazyQuery<
     setObservable(createObservable());
   }
 
-  function updateResult(result: ApolloQueryResult<TData>) {
+  function updateResult(
+    result: ApolloQueryResult<TData>,
+    forceUpdate: () => void
+  ) {
     const previousData = resultRef.current?.data;
 
     if (previousData && !equal(previousData, result.data)) {
@@ -286,6 +289,8 @@ export function useLazyQuery<
     }
 
     resultRef.current = result;
+
+    forceUpdate();
   }
 
   const observableResult = useSyncExternalStore(
@@ -293,8 +298,7 @@ export function useLazyQuery<
       (forceUpdate) => {
         function handleNext(result: ApolloQueryResult<TData>) {
           if (!equal(resultRef.current, result)) {
-            updateResult(result);
-            forceUpdate();
+            updateResult(result, forceUpdate);
           }
         }
 
@@ -313,15 +317,17 @@ export function useLazyQuery<
 
           const previousResult = resultRef.current;
           if (!previousResult || !equal(error, previousResult.error)) {
-            updateResult({
-              data: previousResult?.data,
-              partial: !previousResult?.data,
-              ...resultRef.current,
-              error: error as ApolloError,
-              loading: false,
-              networkStatus: NetworkStatus.error,
-            });
-            forceUpdate();
+            updateResult(
+              {
+                data: previousResult?.data,
+                partial: !previousResult?.data,
+                ...resultRef.current,
+                error: error as ApolloError,
+                loading: false,
+                networkStatus: NetworkStatus.error,
+              },
+              forceUpdate
+            );
           }
         }
 
@@ -397,16 +403,14 @@ export function useLazyQuery<
 
       // TODO: This should be fixed in core
       if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
-        updateResult(observable.getCurrentResult());
-        forceUpdateState();
+        updateResult(observable.getCurrentResult(), forceUpdateState);
       }
 
       if (renderPromises && stableOptions?.ssr !== false) {
         renderPromises.registerSSRObservable(observable);
         renderPromises.addObservableQueryPromise(observable);
 
-        updateResult(observable.getCurrentResult());
-        forceUpdateState();
+        updateResult(observable.getCurrentResult(), forceUpdateState);
       }
 
       return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {

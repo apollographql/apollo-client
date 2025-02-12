@@ -377,6 +377,9 @@ export function useLazyQuery<
       notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
     };
 
+    // Wait to apply the changed fetch policy until after the execute
+    // function has been called. The execute function will handle setting the
+    // the fetch policy away from standby for us when called for the first time.
     if (
       observable.options.fetchPolicy !== "standby" &&
       stableOptions?.fetchPolicy

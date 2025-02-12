@@ -24,7 +24,10 @@ import {
 
 // core
 import { NetworkStatus } from "../../networkStatus";
-import { WatchQueryOptions } from "../../watchQueryOptions";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../../watchQueryOptions";
 import { QueryManager } from "../../QueryManager";
 
 import { ApolloError } from "../../../errors";
@@ -32,7 +35,7 @@ import { ApolloError } from "../../../errors";
 // testing utils
 import { waitFor } from "@testing-library/react";
 import { wait } from "../../../testing/core";
-import { ApolloClient } from "../../../core";
+import { ApolloClient, ApolloQueryResult } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
 import {
@@ -873,23 +876,7 @@ describe("ApolloClient", () => {
     expect(data).toBe(observable.getCurrentResult().data);
   });
 
-  it("sets networkStatus to `refetch` when refetching", async () => {
-    const request: WatchQueryOptions = {
-      query: gql`
-        query fetchLuke($id: String) {
-          people_one(id: $id) {
-            name
-          }
-        }
-      `,
-      variables: {
-        id: "1",
-      },
-      notifyOnNetworkStatusChange: true,
-      // This causes a loading:true result to be delivered from the cache
-      // before the final data2 result is delivered.
-      fetchPolicy: "cache-and-network",
-    };
+  {
     const data1 = {
       people_one: {
         name: "Luke Skywalker",
@@ -901,37 +888,204 @@ describe("ApolloClient", () => {
         name: "Luke Skywalker has a new name",
       },
     };
+    it.only.each<
+      [
+        notifyOnNetworkStatusChange: boolean,
+        fetchPolicy: WatchQueryFetchPolicy,
+        expectedInitialResults: ApolloQueryResult<typeof data1>[],
+        expectedRefetchedResults: ApolloQueryResult<typeof data1>[],
+      ]
+    >([
+      [
+        false,
+        "cache-first",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        false,
+        "network-only",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        false,
+        "cache-and-network",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          // {
+          //   data: data1,
+          //   loading: true,
+          //   networkStatus: NetworkStatus.refetch,
+          //   partial: false,
+          // },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        true,
+        "cache-first",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data1,
+            loading: true,
+            networkStatus: NetworkStatus.refetch,
+            partial: false,
+          },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        true,
+        "network-only",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data1,
+            loading: true,
+            networkStatus: NetworkStatus.refetch,
+            partial: false,
+          },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        true,
+        "cache-and-network",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data1,
+            loading: true,
+            networkStatus: NetworkStatus.refetch,
+            partial: false,
+          },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+    ])(
+      "networkStatus changes (notifyOnNetworkStatusChange: %s, fetchPolicy %s)",
+      async (
+        notifyOnNetworkStatusChange,
+        fetchPolicy,
+        expectedInitialResults,
+        expectedRefetchedResults
+      ) => {
+        const request: WatchQueryOptions = {
+          query: gql`
+            query fetchLuke($id: String) {
+              people_one(id: $id) {
+                name
+              }
+            }
+          `,
+          variables: {
+            id: "1",
+          },
+          notifyOnNetworkStatusChange,
+          // This causes a loading:true result to be delivered from the cache
+          // before the final data2 result is delivered.
+          fetchPolicy,
+        };
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
-      link: new MockLink([
-        { request, result: { data: data1 } },
-        { request, result: { data: data2 } },
-      ]),
-    });
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([
+            { request, result: { data: data1 } },
+            { request, result: { data: data2 } },
+          ]),
+        });
 
-    const observable = client.watchQuery(request);
-    const stream = new ObservableStream(observable);
-
-    await expect(stream).toEmitApolloQueryResult({
-      data: data1,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-    });
-
-    void observable.refetch();
-
-    await expect(stream).toEmitApolloQueryResult({
-      data: data1,
-      loading: true,
-      networkStatus: NetworkStatus.refetch,
-    });
-    await expect(stream).toEmitApolloQueryResult({
-      data: data2,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-    });
-  });
+        const observable = client.watchQuery(request);
+        const stream = new ObservableStream(observable);
+        for (const expected of expectedInitialResults) {
+          await expect(stream).toEmitApolloQueryResult(expected);
+        }
+        void observable.refetch();
+        for (const expected of expectedRefetchedResults) {
+          await expect(stream).toEmitApolloQueryResult(expected);
+        }
+        expect(stream).not.toEmitAnything();
+      }
+    );
+  }
 
   it("allows you to refetch queries with promises", async () => {
     const request = {

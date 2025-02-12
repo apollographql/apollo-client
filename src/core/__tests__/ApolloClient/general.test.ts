@@ -888,7 +888,7 @@ describe("ApolloClient", () => {
         name: "Luke Skywalker has a new name",
       },
     };
-    it.only.each<
+    it.each<
       [
         notifyOnNetworkStatusChange: boolean,
         fetchPolicy: WatchQueryFetchPolicy,
@@ -904,7 +904,6 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
         [
@@ -912,7 +911,6 @@ describe("ApolloClient", () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
       ],
@@ -924,7 +922,6 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
         [
@@ -932,7 +929,6 @@ describe("ApolloClient", () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
       ],
@@ -944,7 +940,6 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
         [
@@ -958,7 +953,6 @@ describe("ApolloClient", () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
       ],
@@ -970,7 +964,6 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
         [
@@ -978,13 +971,11 @@ describe("ApolloClient", () => {
             data: data1,
             loading: true,
             networkStatus: NetworkStatus.refetch,
-            partial: false,
           },
           {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
       ],
@@ -996,7 +987,6 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
         [
@@ -1004,13 +994,11 @@ describe("ApolloClient", () => {
             data: data1,
             loading: true,
             networkStatus: NetworkStatus.refetch,
-            partial: false,
           },
           {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
       ],
@@ -1022,7 +1010,6 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
         [
@@ -1030,13 +1017,11 @@ describe("ApolloClient", () => {
             data: data1,
             loading: true,
             networkStatus: NetworkStatus.refetch,
-            partial: false,
           },
           {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
-            partial: false,
           },
         ],
       ],

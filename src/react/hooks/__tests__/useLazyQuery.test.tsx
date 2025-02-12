@@ -1853,9 +1853,7 @@ describe("useLazyQuery Hook", () => {
     });
   });
 
-  // TODO: Determine if this is something we should handle or not. Disabling for
-  // now until we know.
-  it.skip("handles resolving multiple in-flight requests when component unmounts", async () => {
+  it("handles resolving multiple in-flight requests when component unmounts", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
 

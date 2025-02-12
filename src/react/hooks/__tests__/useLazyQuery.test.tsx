@@ -41,8 +41,6 @@ import {
 } from "../../../testing/internal/index.js";
 import { useLazyQuery } from "../useLazyQuery.js";
 
-const IS_REACT_17 = React.version.startsWith("17");
-
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
@@ -1888,9 +1886,7 @@ describe("useLazyQuery Hook", () => {
   });
 
   // https://github.com/apollographql/apollo-client/issues/9755
-  // TODO: Determine if this is a case we want to handle. Disabling until we
-  // know for sure.
-  it.skip("resolves each execution of the query with the appropriate result and renders with the result from the latest execution", async () => {
+  it("resolves each execution of the query with the appropriate result and renders with the result from the latest execution", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -1938,7 +1934,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -1963,32 +1958,6 @@ describe("useLazyQuery Hook", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-
-    if (IS_REACT_17) {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: { id: "1" },
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.setVariables,
-        previousData: undefined,
-        variables: { id: "2" },
-      });
-    }
 
     {
       const [, result] = await takeSnapshot();

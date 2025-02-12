@@ -360,9 +360,6 @@ export function useLazyQuery<
 
   const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
     async (executeOptions) => {
-      const previousQuery = observable.options.query;
-      const previousVariables = observable.variables;
-
       const concast = observable.reobserveAsConcast({
         ...executeOptions,
         // TODO: Figure out a better way to reset variables back to empty
@@ -371,20 +368,8 @@ export function useLazyQuery<
         fetchPolicy,
       });
 
-      // Call updateResult after calling reobserve due to the timing of
-      // rerendering in React 17. Without this, the `variables` value is returned
-      // with the previous set of variables.
-      if (
-        !resultRef.current ||
-        dirtyRef.current ||
-        !equal(
-          { query: previousQuery, variables: previousVariables },
-          // TODO: Remove fallback on empty object when variables returns
-          // undefined
-          { query, variables: executeOptions?.variables ?? {} }
-        )
-      ) {
-        dirtyRef.current = false;
+      // TODO: This should be fixed in core
+      if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
         updateResult(observable.getCurrentResult());
         forceUpdateState();
       }

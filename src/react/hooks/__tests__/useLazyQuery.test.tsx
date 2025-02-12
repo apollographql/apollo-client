@@ -253,6 +253,78 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  test("sets initial loading state when notifyOnNetworkStatusChange is true", async () => {
+    const mocks = [
+      {
+        request: { query: helloQuery },
+        result: { data: { hello: "world" } },
+        delay: 50,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useLazyQuery(helloQuery, { notifyOnNetworkStatusChange: true }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    const [execute] = getCurrentSnapshot();
+    const result = await execute();
+
+    expect(result).toEqualApolloQueryResult({
+      data: { hello: "world" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: true,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { hello: "world" },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("changing queries", async () => {
     const query1 = gql`
       query {

@@ -768,6 +768,7 @@ describe("useLazyQuery Hook", () => {
         called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        // TODO: Determine if this is set immediately or when `data` changes
         previousData: { hello: "world 1" },
         variables: {},
       });

@@ -342,6 +342,7 @@ export function useLazyQuery<
       context: stableOptions?.context,
       refetchWritePolicy: stableOptions?.refetchWritePolicy,
       returnPartialData: stableOptions?.returnPartialData,
+      notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
     });
   }, [observable, stableOptions]);
 

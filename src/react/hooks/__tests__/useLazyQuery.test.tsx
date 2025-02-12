@@ -4602,6 +4602,156 @@ test("applies updated `fetchPolicy` on next fetch when it changes between render
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("renders loading states at appropriate times on next fetch after updating `notifyOnNetworkStatusChange`", async () => {
+  const { query } = setupSimpleCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      { request: { query }, result: { data: { greeting: "Hello 1" } } },
+      { request: { query }, result: { data: { greeting: "Hello 2" } } },
+      { request: { query }, result: { data: { greeting: "Hello 3" } } },
+    ]),
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot, rerender } =
+    await renderHookToSnapshotStream(
+      ({ notifyOnNetworkStatusChange }) =>
+        useLazyQuery(query, {
+          notifyOnNetworkStatusChange,
+          fetchPolicy: "network-only",
+        }),
+      {
+        initialProps: { notifyOnNetworkStatusChange: false },
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(execute()).resolves.toEqualApolloQueryResult({
+    data: { greeting: "Hello 1" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: { greeting: "Hello 1" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  await rerender({ notifyOnNetworkStatusChange: true });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: { greeting: "Hello 1" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: {},
+    });
+  }
+
+  await expect(execute()).resolves.toEqualApolloQueryResult({
+    data: { greeting: "Hello 2" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: { greeting: "Hello 1" },
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      // TODO: Determine if this should be set immediately
+      previousData: { greeting: "Hello 1" },
+      variables: {},
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: { greeting: "Hello 2" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { greeting: "Hello 1" },
+      variables: {},
+    });
+  }
+
+  await rerender({ notifyOnNetworkStatusChange: false });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: { greeting: "Hello 2" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { greeting: "Hello 1" },
+      variables: {},
+    });
+  }
+
+  await expect(execute()).resolves.toEqualApolloQueryResult({
+    data: { greeting: "Hello 3" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: { greeting: "Hello 3" },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: { greeting: "Hello 2" },
+      variables: {},
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 describe.skip("Type Tests", () => {
   test.skip("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;

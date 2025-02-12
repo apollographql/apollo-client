@@ -240,7 +240,6 @@ export function useLazyQuery<
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
-  const ssrAllowed = options?.ssr !== false && !!resultRef.current;
 
   function createObservable() {
     if (!renderPromises) {
@@ -336,7 +335,7 @@ export function useLazyQuery<
     () => resultRef.current || initialResult
   );
 
-  if (renderPromises && ssrAllowed) {
+  if (renderPromises && options?.ssr !== false && !!resultRef.current) {
     renderPromises.registerSSRObservable(observable);
 
     if (observable.getCurrentResult().loading) {

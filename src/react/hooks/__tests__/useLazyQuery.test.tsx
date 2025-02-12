@@ -118,6 +118,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should set `called` to false by default", async () => {
@@ -245,6 +247,8 @@ describe("useLazyQuery Hook", () => {
         variables: { id: 1 },
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("changing queries", async () => {
@@ -378,6 +382,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it('should fetch data each time the execution function is called, when using a "network-only" fetch policy', async () => {
@@ -588,6 +594,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   // TODO: Determine if this hook makes sense for polling or if that should be
@@ -825,6 +833,8 @@ describe("useLazyQuery Hook", () => {
         variables: { id: 2 },
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should work with cache-and-network fetch policy", async () => {
@@ -900,6 +910,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   // TODO: Determine if this makes sense. We will likely remove the majority of
@@ -1471,6 +1483,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("does not refetch when rerendering after executing query", async () => {
@@ -1998,6 +2012,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     // If there was any data to report, errorPolicy:"all" would report both
@@ -2076,6 +2092,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     // Technically errorPolicy:"ignore" is supposed to throw away result.error,
@@ -2154,6 +2172,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 
@@ -2336,6 +2356,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("does not mask queries when dataMasking is `false`", async () => {
@@ -2442,6 +2464,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("does not mask queries by default", async () => {
@@ -2547,6 +2571,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("masks queries updated by the cache", async () => {
@@ -2668,6 +2694,8 @@ describe("useLazyQuery Hook", () => {
           variables: {},
         });
       }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("does not rerender when updating field in named fragment", async () => {

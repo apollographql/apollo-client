@@ -24,7 +24,6 @@ import type { NoInfer } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
-import { getApolloContext } from "../context/ApolloContext.js";
 import type { ObservableQueryFields } from "../types/types.js";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -72,9 +71,6 @@ export interface LazyQueryHookOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
   skipPollAttempt?: () => boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
-  ssr?: boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
@@ -235,39 +231,20 @@ export function useLazyQuery<
   options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): LazyQueryResultTuple<TData, TVariables> {
   const client = useApolloClient(options?.client);
-  const { renderPromises } = React.useContext(getApolloContext());
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
   const stableOptions = useDeepMemo(() => options, [options]);
 
   function createObservable() {
-    let fetchPolicy =
-      options?.fetchPolicy ??
-      client.defaultOptions.watchQuery?.fetchPolicy ??
-      "cache-first";
-
-    if (!renderPromises) {
-      return client.watchQuery({
-        ...options,
-        query,
-        initialFetchPolicy: fetchPolicy,
-        fetchPolicy: "standby",
-      });
-    }
-
-    // this behavior was added to react-apollo without explanation in this PR
-    // https://github.com/apollographql/react-apollo/pull/1579
-    if (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network") {
-      fetchPolicy = "cache-first";
-    }
-
-    // See if there is an existing observable that was used to fetch the same
-    // data and if so, use it instead since it will contain the proper queryId
-    // to fetch the result set. This is used during SSR.
-    return (
-      renderPromises.getSSRObservable({ ...options, fetchPolicy, query }) ||
-      client.watchQuery({ ...options, query, fetchPolicy })
-    );
+    return client.watchQuery({
+      ...options,
+      query,
+      initialFetchPolicy:
+        options?.fetchPolicy ??
+        client.defaultOptions.watchQuery?.fetchPolicy ??
+        "cache-first",
+      fetchPolicy: "standby",
+    });
   }
 
   const [currentClient, setCurrentClient] = React.useState(client);
@@ -420,13 +397,6 @@ export function useLazyQuery<
         updateResult(observable.getCurrentResult(), forceUpdateState);
       }
 
-      if (renderPromises && stableOptions?.ssr !== false) {
-        renderPromises.registerSSRObservable(observable);
-        renderPromises.addObservableQueryPromise(observable);
-
-        updateResult(observable.getCurrentResult(), forceUpdateState);
-      }
-
       return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
         let result: ApolloQueryResult<TData>;
 
@@ -445,14 +415,7 @@ export function useLazyQuery<
         });
       });
     },
-    [
-      query,
-      observable,
-      stableOptions,
-      renderPromises,
-      forceUpdateState,
-      updateResult,
-    ]
+    [query, observable, stableOptions, forceUpdateState, updateResult]
   );
 
   const executeRef = React.useRef(execute);

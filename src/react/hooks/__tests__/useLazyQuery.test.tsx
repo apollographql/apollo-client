@@ -3656,7 +3656,7 @@ test("responds to cache updates after changing variables", async () => {
   await expect(takeSnapshot).not.toRerender();
 });
 
-test.skip("uses cached result when switching to variables already written to the cache", async () => {
+test("uses cached result when switching to variables already written to the cache", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -3708,19 +3708,6 @@ test.skip("uses cached result when switching to variables already written to the
     networkStatus: NetworkStatus.ready,
     partial: false,
   });
-
-  {
-    const [, result] = await takeSnapshot();
-
-    expect(result).toEqualLazyQueryResult({
-      data: undefined,
-      called: true,
-      loading: true,
-      networkStatus: NetworkStatus.loading,
-      previousData: undefined,
-      variables: { id: "1" },
-    });
-  }
 
   {
     const [, result] = await takeSnapshot();

@@ -3763,6 +3763,126 @@ test("uses cached result when switching to variables already written to the cach
   await expect(takeSnapshot).not.toRerender();
 });
 
+test("renders loading states when switching to variables already written to the cache with notifyOnNetworkStatusChange", async () => {
+  const { query, mocks } = setupVariablesCase();
+
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink(mocks),
+  });
+
+  client.writeQuery({
+    query,
+    variables: { id: "2" },
+    data: {
+      character: { __typename: "Character", id: "2", name: "Cached Character" },
+    },
+  });
+
+  using _disabledAct = disableActEnvironment();
+  const { takeSnapshot, getCurrentSnapshot } = await renderHookToSnapshotStream(
+    () => useLazyQuery(query, { notifyOnNetworkStatusChange: true }),
+    {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
+    }
+  );
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: undefined,
+      called: false,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      // @ts-expect-error this should be undefined
+      variables: {},
+    });
+  }
+
+  const [execute] = getCurrentSnapshot();
+
+  await expect(
+    execute({ variables: { id: "1" } })
+  ).resolves.toEqualApolloQueryResult({
+    data: {
+      character: { __typename: "Character", id: "1", name: "Spider-Man" },
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: undefined,
+      variables: { id: "1" },
+    });
+  }
+
+  await expect(
+    execute({ variables: { id: "2" } })
+  ).resolves.toEqualApolloQueryResult({
+    data: {
+      character: {
+        __typename: "Character",
+        id: "2",
+        name: "Cached Character",
+      },
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        character: { __typename: "Character", id: "1", name: "Spider-Man" },
+      },
+      variables: { id: "2" },
+    });
+  }
+
+  await expect(takeSnapshot).not.toRerender();
+});
+
 // TODO: For this test and the following tests that check for changed options,
 // we need to determine whether those options take effect immediately (which
 // would affect `refetch` for example), or the next time the query is evaluated

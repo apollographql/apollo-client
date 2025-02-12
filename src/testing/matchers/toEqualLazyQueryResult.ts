@@ -1,7 +1,7 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
 import type { LazyQueryResult } from "../../react/index.js";
-import { OperationVariables } from "../../core/types.js";
+import type { OperationVariables } from "../../core/types.js";
 
 const CHECKED_KEYS = [
   "loading",

@@ -724,10 +724,7 @@ describe("useLazyQuery Hook", () => {
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        // TODO: Determine if we set this immediately or when `data` changes
-        previousData: {
-          hello: "world 1",
-        },
+        previousData: undefined,
         variables: {},
       });
     }
@@ -841,8 +838,7 @@ describe("useLazyQuery Hook", () => {
         called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
-        // TODO: Determine if this is set immediately or when `data` changes
-        previousData: { hello: "world 1" },
+        previousData: undefined,
         variables: {},
       });
     }
@@ -1386,8 +1382,7 @@ describe("useLazyQuery Hook", () => {
         called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
-        // TODO: Determine if this should change immediately
-        previousData: { hello: "from link" },
+        previousData: { hello: "from cache" },
         variables: {},
       });
     }
@@ -4695,8 +4690,7 @@ test("renders loading states at appropriate times on next fetch after updating `
       called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
-      // TODO: Determine if this should be set immediately
-      previousData: { greeting: "Hello 1" },
+      previousData: undefined,
       variables: {},
     });
   }

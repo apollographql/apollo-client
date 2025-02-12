@@ -255,7 +255,7 @@ export function useLazyQuery<
   function updateResult(result: ApolloQueryResult<TData>) {
     const previousData = resultRef.current?.data;
 
-    if (previousData) {
+    if (previousData && !equal(previousData, result.data)) {
       previousDataRef.current = previousData;
     }
 

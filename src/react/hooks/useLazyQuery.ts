@@ -257,6 +257,7 @@ export function useLazyQuery<
       const previousData = resultRef.current?.data;
 
       if (previousData && !equal(previousData, result.data)) {
+        // eslint-disable-next-line react-compiler/react-compiler
         previousDataRef.current = previousData;
       }
 

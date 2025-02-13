@@ -3497,7 +3497,7 @@ describe("ObservableQuery", () => {
       let updateQuerySpy = jest.fn();
       observable.updateQuery((previous, { complete, previousData }) => {
         updateQuerySpy();
-        expect(previous).toEqual({});
+        expect(previous).toEqual(null);
         expect(complete).toBe(false);
         expect(previousData).toStrictEqual(previous);
 
@@ -3517,6 +3517,7 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
       });
 

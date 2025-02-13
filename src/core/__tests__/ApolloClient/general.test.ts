@@ -6717,6 +6717,7 @@ describe("ApolloClient", () => {
         data: initialData,
         loading: false,
         networkStatus: 7,
+        partial: false,
       };
 
       defer.enqueueInitialChunk({

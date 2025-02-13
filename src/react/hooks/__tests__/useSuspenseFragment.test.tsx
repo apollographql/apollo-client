@@ -24,7 +24,8 @@ import {
 import { renderAsync, spyOnConsole } from "../../../testing/internal";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { InvariantError } from "ts-invariant";
-import { MockedProvider, MockSubscriptionLink, wait } from "../../../testing";
+import { MockSubscriptionLink, wait } from "../../../testing";
+import { MockedProvider } from "../../../testing/react";
 import { expectTypeOf } from "expect-type";
 import userEvent from "@testing-library/user-event";
 

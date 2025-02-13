@@ -26,6 +26,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 import type {
   NextFetchPolicyContext,
   SubscribeToMoreFunction,
+  UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
 import type { ObservableQueryFields } from "../types/types.js";
 
@@ -101,12 +102,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: <TVars extends OperationVariables = TVariables>(
-    mapFn: (
-      previousQueryResult: Unmasked<TData>,
-      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData>
-  ) => void;
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>

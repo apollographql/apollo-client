@@ -1891,8 +1891,16 @@ describe("client.watchQuery", () => {
     }
 
     const updateQuery: Parameters<typeof observable.updateQuery>[0] = jest.fn(
-      (previousResult) => {
-        return { user: { ...previousResult.user, name: "User (updated)" } };
+      (previousResult, { complete, previousData }) => {
+        expect(complete).toBe(true);
+        expect(previousData).toStrictEqual(previousResult);
+        // Type Guard
+        if (!complete) {
+          return;
+        }
+        return {
+          user: { ...previousData.user, name: "User (updated)" },
+        };
       }
     );
 
@@ -1900,7 +1908,13 @@ describe("client.watchQuery", () => {
 
     expect(updateQuery).toHaveBeenCalledWith(
       { user: { __typename: "User", id: 1, name: "User 1", age: 30 } },
-      { variables: { id: 1 } }
+      {
+        variables: { id: 1 },
+        complete: true,
+        previousData: {
+          user: { __typename: "User", id: 1, name: "User 1", age: 30 },
+        },
+      }
     );
 
     {
@@ -4831,7 +4845,16 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
+        complete: true,
         variables: {},
+        previousData: {
+          recentComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Recent comment",
+            author: "Test User",
+          },
+        },
         subscriptionData: {
           data: {
             addedComment: {
@@ -4958,7 +4981,16 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
+        complete: true,
         variables: {},
+        previousData: {
+          recentComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Recent comment",
+            author: "Test User",
+          },
+        },
         subscriptionData: {
           data: {
             addedComment: {
@@ -5006,8 +5038,8 @@ describe("observableQuery.subscribeToMore", () => {
     `;
 
     const subscription = gql`
-      subscription NewCommentSubscription {
-        addedComment {
+      subscription NewCommentSubscription($id: ID!) {
+        addedComment(id: $id) {
           id
           ...CommentFields
         }
@@ -5060,7 +5092,11 @@ describe("observableQuery.subscribeToMore", () => {
       return { recentComment: subscriptionData.data.addedComment };
     });
 
-    observable.subscribeToMore({ document: subscription, updateQuery });
+    observable.subscribeToMore({
+      document: subscription,
+      updateQuery,
+      variables: { id: 1 },
+    });
 
     subscriptionLink.simulateResult({
       result: {
@@ -5087,7 +5123,16 @@ describe("observableQuery.subscribeToMore", () => {
         },
       },
       {
+        complete: true,
         variables: {},
+        previousData: {
+          recentComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Recent comment",
+            author: "Test User",
+          },
+        },
         subscriptionData: {
           data: {
             addedComment: {

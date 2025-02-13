@@ -9,7 +9,11 @@ import {
   Observable,
   Observer,
 } from "../../../utilities/observables/Observable";
-import { ApolloLink, FetchResult } from "../../../link/core";
+import {
+  ApolloLink,
+  FetchResult,
+  type RequestHandler,
+} from "../../../link/core";
 import { InMemoryCache } from "../../../cache";
 
 // mocks
@@ -31,7 +35,11 @@ import { wait } from "../../../testing/core";
 import { ApolloClient } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
-import { ObservableStream, spyOnConsole } from "../../../testing/internal";
+import {
+  mockDeferStream,
+  ObservableStream,
+  spyOnConsole,
+} from "../../../testing/internal";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({
@@ -6521,6 +6529,129 @@ describe("ApolloClient", () => {
           "{}"
         )
       ).toBeUndefined();
+    });
+
+    it("deduplicates queries as long as a query still has deferred chunks", async () => {
+      const query = gql`
+        query LazyLoadLuke {
+          people(id: 1) {
+            id
+            name
+            friends {
+              id
+              ... @defer {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const outgoingRequestSpy = jest.fn(((operation, forward) =>
+        forward(operation)) satisfies RequestHandler);
+      const defer = mockDeferStream();
+      const client = new ApolloClient({
+        cache: new InMemoryCache({}),
+        link: new ApolloLink(outgoingRequestSpy).concat(defer.httpLink),
+      });
+
+      const query1 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      const query2 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+
+      const initialData = {
+        people: {
+          __typename: "Person",
+          id: 1,
+          name: "Luke",
+          friends: [
+            {
+              __typename: "Person",
+              id: 5,
+            } as { __typename: "Person"; id: number; name?: string },
+            {
+              __typename: "Person",
+              id: 8,
+            } as { __typename: "Person"; id: number; name?: string },
+          ],
+        },
+      };
+      const initialResult = {
+        data: initialData,
+        loading: false,
+        networkStatus: 7,
+      };
+
+      defer.enqueueInitialChunk({
+        data: initialData,
+        hasNext: true,
+      });
+
+      await expect(query1).toEmitFetchResult(initialResult);
+      await expect(query2).toEmitFetchResult(initialResult);
+
+      const query3 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      await expect(query3).toEmitFetchResult(initialResult);
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+
+      const firstChunk = {
+        incremental: [
+          {
+            data: {
+              name: "Leia",
+            },
+            path: ["people", "friends", 0],
+          },
+        ],
+        hasNext: true,
+      };
+      const resultAfterFirstChunk = structuredClone(initialResult);
+      resultAfterFirstChunk.data.people.friends[0].name = "Leia";
+
+      defer.enqueueSubsequentChunk(firstChunk);
+
+      await expect(query1).toEmitFetchResult(resultAfterFirstChunk);
+      await expect(query2).toEmitFetchResult(resultAfterFirstChunk);
+      await expect(query3).toEmitFetchResult(resultAfterFirstChunk);
+
+      const query4 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      expect(query4).toEmitFetchResult(resultAfterFirstChunk);
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+
+      const secondChunk = {
+        incremental: [
+          {
+            data: {
+              name: "Han Solo",
+            },
+            path: ["people", "friends", 1],
+          },
+        ],
+        hasNext: false,
+      };
+      const resultAfterSecondChunk = structuredClone(resultAfterFirstChunk);
+      resultAfterSecondChunk.data.people.friends[1].name = "Han Solo";
+
+      defer.enqueueSubsequentChunk(secondChunk);
+
+      await expect(query1).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query2).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query3).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query4).toEmitFetchResult(resultAfterSecondChunk);
+
+      const query5 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      expect(query5).not.toEmitAnything();
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -440,7 +440,7 @@ export type VariablesOption<TVariables extends OperationVariables> = {} extends 
 
 // Warnings were encountered during analysis:
 //
-// src/utilities/internal/getStoreKeyName.ts:87:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/internal/getStoreKeyName.ts:89:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

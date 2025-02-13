@@ -356,7 +356,7 @@ export abstract class EntityStore implements NormalizedCache {
     // (undocumented)
     merge(older: string | StoreObject, newer: StoreObject | string): void;
     // (undocumented)
-    modify(dataId: string, fields: Modifier<any> | Modifiers<Record<string, any>>): boolean;
+    modify(dataId: string, fields: Modifier<any> | Modifiers<Record<string, any>>, exact: boolean): boolean;
     // (undocumented)
     readonly policies: Policies;
     // (undocumented)
@@ -729,7 +729,7 @@ export interface NormalizedCache {
     // (undocumented)
     merge(olderObject: StoreObject, newerId: string): void;
     // (undocumented)
-    modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>): boolean;
+    modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>, exact: boolean): boolean;
     // (undocumented)
     release(rootId: string): number;
     replace(newData: NormalizedCacheObject): void;
@@ -953,7 +953,7 @@ interface WriteContext extends ReadMergeModifyContext {
 //
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:133:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:134:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

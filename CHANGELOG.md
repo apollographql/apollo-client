@@ -6,7 +6,7 @@
 
 - [#12066](https://github.com/apollographql/apollo-client/pull/12066) [`c01da5d`](https://github.com/apollographql/apollo-client/commit/c01da5da639d4d9e882d380573b7876df4a1d65b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds a new `useSuspenseFragment` hook.
 
-  `useSuspenseFragment` suspends until `data` is complete. It is a drop-in replacement for `useFragment` when you prefer to use Suspense to control the loading state of a fragment.
+  `useSuspenseFragment` suspends until `data` is complete. It is a drop-in replacement for `useFragment` when you prefer to use Suspense to control the loading state of a fragment. See the [documentation](https://www.apollographql.com/docs/react/data/fragments#usesuspensefragment) for more details.
 
 - [#12174](https://github.com/apollographql/apollo-client/pull/12174) [`ba5cc33`](https://github.com/apollographql/apollo-client/commit/ba5cc330f8734a989eef71e883861f848388ac0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure errors thrown in the `onCompleted` callback from `useMutation` don't call `onError`.
 

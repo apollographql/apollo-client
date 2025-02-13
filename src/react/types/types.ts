@@ -5,6 +5,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
   Observable,
   ObservableSubscription,
+  OnlyRequiredProperties,
 } from "../../utilities/index.js";
 import type { FetchResult } from "../../link/core/index.js";
 import type { ApolloError } from "../../errors/index.js";
@@ -526,5 +527,21 @@ export interface SubscriptionCurrentObservable {
   query?: Observable<any>;
   subscription?: ObservableSubscription;
 }
+
+export type VariablesOption<TVariables extends OperationVariables> =
+  [TVariables] extends [never] ?
+    {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: Record<string, never>;
+    }
+  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: TVariables;
+    }
+  : {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables: TVariables;
+    };
 
 export type { NoInfer } from "../../utilities/index.js";

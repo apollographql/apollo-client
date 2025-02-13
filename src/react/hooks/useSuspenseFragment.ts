@@ -1,11 +1,12 @@
 import type {
   ApolloClient,
+  DocumentNode,
   OperationVariables,
   Reference,
   StoreObject,
+  TypedDocumentNode,
 } from "../../core/index.js";
 import { canonicalStringify } from "../../cache/index.js";
-import type { Cache } from "../../cache/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { getSuspenseCache } from "../internal/index.js";
 import React, { useMemo } from "rehackt";
@@ -13,7 +14,7 @@ import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import type { NoInfer } from "../types/types.js";
+import type { NoInfer, VariablesOption } from "../types/types.js";
 
 type From<TData> =
   | StoreObject
@@ -22,15 +23,24 @@ type From<TData> =
   | string
   | null;
 
-export interface UseSuspenseFragmentOptions<TData, TVars>
-  extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
-      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
-    >,
-    Omit<
-      Cache.ReadFragmentOptions<TData, TVars>,
-      "id" | "variables" | "returnPartialData"
-    > {
+export type UseSuspenseFragmentOptions<
+  TData,
+  TVariables extends OperationVariables,
+> = {
+  /**
+   * A GraphQL document created using the `gql` template string tag from
+   * `graphql-tag` with one or more fragments which will be used to determine
+   * the shape of data to read. If you provide more than one fragment in this
+   * document then you must also specify `fragmentName` to select a single.
+   */
+  fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+  /**
+   * The name of the fragment in your GraphQL document to be used. If you do
+   * not provide a `fragmentName` and there is only one fragment in your
+   * `fragment` document then that fragment will be used.
+   */
+  fragmentName?: string;
   from: From<TData>;
   // Override this field to make it optional (default: true).
   optimistic?: boolean;
@@ -43,7 +53,7 @@ export interface UseSuspenseFragmentOptions<TData, TVars>
    * @docGroup 1. Operation options
    */
   client?: ApolloClient<any>;
-}
+} & VariablesOption<NoInfer<TVariables>>;
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };
 
@@ -107,7 +117,7 @@ function useSuspenseFragment_<
   options: UseSuspenseFragmentOptions<TData, TVariables>
 ): UseSuspenseFragmentResult<TData | null> {
   const client = useApolloClient(options.client);
-  const { from } = options;
+  const { from, variables } = options;
   const { cache } = client;
 
   const id = useMemo(
@@ -120,10 +130,10 @@ function useSuspenseFragment_<
 
   const fragmentRef =
     id === null ? null : (
-      getSuspenseCache(client).getFragmentRef<TData, TVariables>(
-        [id, options.fragment, canonicalStringify(options.variables)],
+      getSuspenseCache(client).getFragmentRef(
+        [id, options.fragment, canonicalStringify(variables)],
         client,
-        { ...options, from: id }
+        { ...options, variables: variables as TVariables, from: id }
       )
     );
 

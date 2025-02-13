@@ -14,7 +14,6 @@ import type {
   ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
   Unmasked,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -24,7 +23,10 @@ import type { NoInfer } from "@apollo/client/react";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
+import type {
+  NextFetchPolicyContext,
+  SubscribeToMoreFunction,
+} from "../../core/watchQueryOptions.js";
 import type { ObservableQueryFields } from "../types/types.js";
 
 import { useRenderGuard } from "./internal/index.js";
@@ -97,16 +99,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
   stopPolling: () => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: <
-    TSubscriptionData = TData,
-    TSubscriptionVariables extends OperationVariables = TVariables,
-  >(
-    options: SubscribeToMoreOptions<
-      TData,
-      TSubscriptionVariables,
-      TSubscriptionData
-    >
-  ) => () => void;
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
   updateQuery: <TVars extends OperationVariables = TVariables>(
     mapFn: (

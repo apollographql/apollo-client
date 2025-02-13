@@ -1,5 +1,69 @@
 # @apollo/client
 
+## 3.13.0
+
+### Minor Changes
+
+- [#12066](https://github.com/apollographql/apollo-client/pull/12066) [`c01da5d`](https://github.com/apollographql/apollo-client/commit/c01da5da639d4d9e882d380573b7876df4a1d65b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Adds a new `useSuspenseFragment` hook.
+
+  `useSuspenseFragment` suspends until `data` is complete. It is a drop-in replacement for `useFragment` when you prefer to use Suspense to control the loading state of a fragment.
+
+- [#12174](https://github.com/apollographql/apollo-client/pull/12174) [`ba5cc33`](https://github.com/apollographql/apollo-client/commit/ba5cc330f8734a989eef71e883861f848388ac0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Ensure errors thrown in the `onCompleted` callback from `useMutation` don't call `onError`.
+
+- [#12340](https://github.com/apollographql/apollo-client/pull/12340) [`716d02e`](https://github.com/apollographql/apollo-client/commit/716d02ec9c5b1448f50cb50a0306a345310a2342) Thanks [@phryneas](https://github.com/phryneas)! - Deprecate the `onCompleted` and `onError` callbacks of `useQuery` and `useLazyQuery`.
+  For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
+
+- [#12276](https://github.com/apollographql/apollo-client/pull/12276) [`670f112`](https://github.com/apollographql/apollo-client/commit/670f112a7d9d85cb357eb279a488ac2c6d0137a9) Thanks [@Cellule](https://github.com/Cellule)! - Provide a more type-safe option for the previous data value passed to `observableQuery.updateQuery`. Using it could result in crashes at runtime as this callback could be called with partial data even though its type reported the value as a complete result.
+
+  The `updateQuery` callback function is now called with a new type-safe `previousData` property and a new `complete` property in the 2nd argument that determines whether `previousData` is a complete or partial result.
+
+  As a result of this change, it is recommended to use the `previousData` property passed to the 2nd argument of the callback rather than using the previous data value from the first argument since that value is not type-safe. The first argument is now deprecated and will be removed in a future version of Apollo Client.
+
+  ```ts
+  observableQuery.updateQuery(
+    (unsafePreviousData, { previousData, complete }) => {
+      previousData;
+      // ^? TData | DeepPartial<TData> | undefined
+
+      if (complete) {
+        previousData;
+        // ^? TData
+      } else {
+        previousData;
+        // ^? DeepPartial<TData> | undefined
+      }
+    }
+  );
+  ```
+
+- [#12174](https://github.com/apollographql/apollo-client/pull/12174) [`ba5cc33`](https://github.com/apollographql/apollo-client/commit/ba5cc330f8734a989eef71e883861f848388ac0c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reject the mutation promise if errors are thrown in the `onCompleted` callback of `useMutation`.
+
+### Patch Changes
+
+- [#12276](https://github.com/apollographql/apollo-client/pull/12276) [`670f112`](https://github.com/apollographql/apollo-client/commit/670f112a7d9d85cb357eb279a488ac2c6d0137a9) Thanks [@Cellule](https://github.com/Cellule)! - Fix the return type of the `updateQuery` function to allow for `undefined`. `updateQuery` had the ability to bail out of the update by returning a falsey value, but the return type enforced a query value.
+
+  ```ts
+  observableQuery.updateQuery(
+    (unsafePreviousData, { previousData, complete }) => {
+      if (!complete) {
+        // Bail out of the update by returning early
+        return;
+      }
+
+      // ...
+    }
+  );
+  ```
+
+- [#12296](https://github.com/apollographql/apollo-client/pull/12296) [`2422df2`](https://github.com/apollographql/apollo-client/commit/2422df202a7ec71365d5a8ab5b3b554fcf60e4af) Thanks [@Cellule](https://github.com/Cellule)! - Deprecate option `ignoreResults` in `useMutation`.
+  Once this option is removed, existing code still using it might see increase in re-renders.
+  If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
+
+- [#12338](https://github.com/apollographql/apollo-client/pull/12338) [`67c16c9`](https://github.com/apollographql/apollo-client/commit/67c16c93897e36be980ba2139ee8bd3f24ab8558) Thanks [@phryneas](https://github.com/phryneas)! - In case of a multipart response (e.g. with `@defer`), query deduplication will
+  now keep going until the final chunk has been received.
+
+- [#12276](https://github.com/apollographql/apollo-client/pull/12276) [`670f112`](https://github.com/apollographql/apollo-client/commit/670f112a7d9d85cb357eb279a488ac2c6d0137a9) Thanks [@Cellule](https://github.com/Cellule)! - Fix the type of the `variables` property passed as the 2nd argument to the `subscribeToMore` callback. This was previously reported as the `variables` type for the subscription itself, but is now properly typed as the query `variables`.
+
 ## 3.13.0-rc.0
 
 ### Minor Changes

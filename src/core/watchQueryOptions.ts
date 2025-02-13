@@ -158,23 +158,6 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   context?: DefaultContext;
 }
 
-/**
- * @deprecated `UpdateQueryFn` is deprecated and will be removed or updated in a
- * future version of Apollo Client. Use `SubscribeToMoreUpdateQueryFn` instead
- * which provides a more type-safe result.
- */
-export type UpdateQueryFn<
-  TData = any,
-  TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData,
-> = (
-  previousQueryResult: Unmasked<TData>,
-  options: {
-    subscriptionData: { data: Unmasked<TSubscriptionData> };
-    variables?: TSubscriptionVariables;
-  }
-) => Unmasked<TData>;
-
 export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;
 } & (

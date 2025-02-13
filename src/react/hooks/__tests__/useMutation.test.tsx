@@ -1206,6 +1206,61 @@ describe("useMutation Hook", () => {
         expect.objectContaining({ variables })
       );
     });
+
+    // https://github.com/apollographql/apollo-client/issues/12008
+    it("does not call onError if errors are thrown in the onCompleted callback", async () => {
+      const CREATE_TODO_DATA = {
+        createTodo: {
+          id: 1,
+          priority: "Low",
+          description: "Get milk!",
+          __typename: "Todo",
+        },
+      };
+
+      const variables = {
+        priority: "Low",
+        description: "Get milk2.",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_DATA,
+          },
+        },
+      ];
+
+      const onError = jest.fn();
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () =>
+          useMutation(CREATE_TODO_MUTATION, {
+            onCompleted: () => {
+              throw new Error("Oops");
+            },
+            onError,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      const [createTodo] = await takeSnapshot();
+
+      await expect(createTodo({ variables })).rejects.toEqual(
+        new Error("Oops")
+      );
+
+      expect(onError).not.toHaveBeenCalled();
+    });
   });
 
   describe("ROOT_MUTATION cache data", () => {

@@ -5,6 +5,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
   Observable,
   ObservableSubscription,
+  OnlyRequiredProperties,
 } from "../../utilities/index.js";
 import type { FetchResult } from "../../link/core/index.js";
 import type { ApolloError } from "../../errors/index.js";
@@ -19,7 +20,6 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
-  SubscribeToMoreOptions,
   ApolloQueryResult,
   FetchMoreQueryOptions,
   ErrorPolicy,
@@ -28,6 +28,8 @@ import type {
 import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
 import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
@@ -67,9 +69,19 @@ export interface QueryFunctionOptions<
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
+   */
   onCompleted?: (data: MaybeMasked<TData>) => void;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
+   */
   onError?: (error: ApolloError) => void;
 
   // Default WatchQueryOptions for this useQuery, providing initial values for
@@ -90,23 +102,9 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
   stopPolling: () => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: <
-    TSubscriptionData = TData,
-    TSubscriptionVariables extends OperationVariables = TVariables,
-  >(
-    options: SubscribeToMoreOptions<
-      TData,
-      TSubscriptionVariables,
-      TSubscriptionData
-    >
-  ) => () => void;
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: <TVars extends OperationVariables = TVariables>(
-    mapFn: (
-      previousQueryResult: Unmasked<TData>,
-      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData>
-  ) => void;
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>
@@ -180,9 +178,19 @@ export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
+   */
   onCompleted?: (data: MaybeMasked<TData>) => void;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member} */
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
+   */
   onError?: (error: ApolloError) => void;
 
   /** @internal */
@@ -358,7 +366,12 @@ export interface BaseMutationOptions<
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
+  /**
+   * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
+   *
+   * @deprecated This option will be removed in the next major version of Apollo Client.
+   * If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
+   */
   ignoreResults?: boolean;
 }
 
@@ -514,5 +527,21 @@ export interface SubscriptionCurrentObservable {
   query?: Observable<any>;
   subscription?: ObservableSubscription;
 }
+
+export type VariablesOption<TVariables extends OperationVariables> =
+  [TVariables] extends [never] ?
+    {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: Record<string, never>;
+    }
+  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: TVariables;
+    }
+  : {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables: TVariables;
+    };
 
 export type { NoInfer } from "../../utilities/index.js";

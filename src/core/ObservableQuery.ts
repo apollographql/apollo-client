@@ -31,6 +31,8 @@ import type {
   SubscribeToMoreOptions,
   NextFetchPolicyContext,
   WatchQueryFetchPolicy,
+  UpdateQueryMapFn,
+  UpdateQueryOptions,
 } from "./watchQueryOptions.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
@@ -52,10 +54,6 @@ export interface FetchMoreOptions<
       variables?: TVariables;
     }
   ) => TData;
-}
-
-export interface UpdateQueryOptions<TVariables> {
-  variables?: TVariables;
 }
 
 interface Last<TData, TVariables> {
@@ -635,9 +633,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     options: SubscribeToMoreOptions<
       TData,
       TSubscriptionVariables,
-      TSubscriptionData
+      TSubscriptionData,
+      TVariables
     >
-  ) {
+  ): () => void {
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
@@ -648,12 +647,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
           const { updateQuery } = options;
           if (updateQuery) {
-            this.updateQuery<TSubscriptionVariables>(
-              (previous, { variables }) =>
-                updateQuery(previous, {
-                  subscriptionData,
-                  variables,
-                })
+            this.updateQuery((previous, updateOptions) =>
+              updateQuery(previous, {
+                subscriptionData,
+                ...updateOptions,
+              })
             );
           }
         },
@@ -738,23 +736,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    *
    * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
    */
-  public updateQuery<TVars extends OperationVariables = TVariables>(
-    mapFn: (
-      previousQueryResult: Unmasked<TData>,
-      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData>
-  ): void {
+  public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
     const { queryManager } = this;
-    const { result } = queryManager.cache.diff<TData>({
+    const { result, complete } = queryManager.cache.diff<TData>({
       query: this.options.query,
       variables: this.variables,
       returnPartialData: true,
       optimistic: false,
     });
 
-    const newResult = mapFn(result! as Unmasked<TData>, {
-      variables: (this as any).variables,
-    });
+    const newResult = mapFn(
+      result! as Unmasked<TData>,
+      {
+        variables: this.variables,
+        complete: !!complete,
+        previousData: result,
+      } as UpdateQueryOptions<TData, TVariables>
+    );
 
     if (newResult) {
       queryManager.cache.writeQuery({

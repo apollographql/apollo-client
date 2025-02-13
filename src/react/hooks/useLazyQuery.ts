@@ -339,6 +339,7 @@ export function useLazyQuery<
 
   React.useEffect(() => {
     const options: Partial<WatchQueryOptions<TVariables, TData>> = {
+      query,
       errorPolicy: stableOptions?.errorPolicy,
       context: stableOptions?.context,
       refetchWritePolicy: stableOptions?.refetchWritePolicy,
@@ -357,7 +358,7 @@ export function useLazyQuery<
     }
 
     observable.silentSetOptions(options);
-  }, [observable, stableOptions]);
+  }, [query, observable, stableOptions]);
 
   const result = React.useMemo(
     () => ({
@@ -381,13 +382,10 @@ export function useLazyQuery<
 
       const [executeOptions] = args;
 
-      const options: WatchQueryOptions<TVariables, TData> = {
+      const options: Partial<WatchQueryOptions<TVariables, TData>> = {
         ...executeOptions,
         // TODO: Figure out a better way to reset variables back to empty
         variables: (executeOptions?.variables ?? {}) as TVariables,
-        // TODO: Determine when query is applied. Should it be applied right
-        // away? If so, move this to the useEffect above
-        query,
       };
 
       if (observable.options.fetchPolicy === "standby") {

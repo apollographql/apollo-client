@@ -12,6 +12,7 @@ import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
 import {
+  DeepPartial,
   DocumentTransform,
   Observable,
   removeDirectivesFromDocument,
@@ -21,6 +22,7 @@ import { InMemoryCache } from "../../cache";
 import { ApolloError } from "../../errors";
 
 import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
+import { expectTypeOf } from "expect-type";
 
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
@@ -3472,6 +3474,68 @@ describe("ObservableQuery", () => {
           }
         }
       `);
+    });
+  });
+
+  describe("updateQuery", () => {
+    it("should be able to determine if the previous result is complete", async () => {
+      const client = new ApolloClient({
+        cache: new InMemoryCache({ addTypename: false }),
+        link: new MockLink([
+          {
+            request: { query, variables },
+            result: { data: dataOne },
+          },
+        ]),
+      });
+
+      const observable = client.watchQuery({
+        query,
+        variables,
+      });
+
+      let updateQuerySpy = jest.fn();
+      observable.updateQuery((previous, { complete, previousData }) => {
+        updateQuerySpy();
+        expect(previous).toEqual({});
+        expect(complete).toBe(false);
+        expect(previousData).toStrictEqual(previous);
+
+        if (complete) {
+          expectTypeOf(previousData).toEqualTypeOf<typeof dataOne>();
+        } else {
+          expectTypeOf(previousData).toEqualTypeOf<
+            DeepPartial<typeof previous> | undefined
+          >();
+        }
+      });
+
+      observable.subscribe(jest.fn());
+
+      await waitFor(() => {
+        expect(observable.getCurrentResult(false)).toEqual({
+          data: dataOne,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        });
+      });
+
+      observable.updateQuery((previous, { complete, previousData }) => {
+        updateQuerySpy();
+        expect(previous).toEqual(dataOne);
+        expect(complete).toBe(true);
+        expect(previousData).toStrictEqual(previous);
+
+        if (complete) {
+          expectTypeOf(previousData).toEqualTypeOf<typeof dataOne>();
+        } else {
+          expectTypeOf(previousData).toEqualTypeOf<
+            DeepPartial<typeof previous> | undefined
+          >();
+        }
+      });
+
+      expect(updateQuerySpy).toHaveBeenCalledTimes(2);
     });
   });
 

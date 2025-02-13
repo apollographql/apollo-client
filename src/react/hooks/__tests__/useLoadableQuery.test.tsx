@@ -18,6 +18,7 @@ import {
   SubscribeToMoreOptions,
   split,
 } from "../../../core";
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
 import {
   MockedResponse,
   MockLink,
@@ -37,11 +38,7 @@ import { ApolloProvider } from "../../context";
 import { InMemoryCache } from "../../../cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types";
 import { QueryRef } from "../../../react";
-import {
-  FetchMoreFunction,
-  RefetchFunction,
-  SubscribeToMoreFunction,
-} from "../useSuspenseQuery";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
 import invariant, { InvariantError } from "ts-invariant";
 import {
   SimpleCaseData,
@@ -5096,6 +5093,8 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
   expect(updateQuery).toHaveBeenCalledWith(
     { greeting: "Hello" },
     {
+      complete: true,
+      previousData: { greeting: "Hello" },
       subscriptionData: {
         data: { greetingUpdated: "Subscription hello" },
       },

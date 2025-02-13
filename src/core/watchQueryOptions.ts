@@ -14,7 +14,7 @@ import type { ApolloCache } from "../cache/index.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { Unmasked } from "../masking/index.js";
-import type { NoInfer } from "../utilities/index.js";
+import type { DeepPartial, NoInfer } from "../utilities/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -158,7 +158,12 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   context?: DefaultContext;
 }
 
-type UpdateQueryFn<
+/**
+ * @deprecated `UpdateQueryFn` is deprecated and will be removed or updated in a
+ * future version of Apollo Client. Use `SubscribeToMoreUpdateQueryFn` instead
+ * which provides a more type-safe result.
+ */
+export type UpdateQueryFn<
   TData = any,
   TSubscriptionVariables = OperationVariables,
   TSubscriptionData = TData,
@@ -170,19 +175,94 @@ type UpdateQueryFn<
   }
 ) => Unmasked<TData>;
 
-export type SubscribeToMoreOptions<
+export type UpdateQueryOptions<TData, TVariables> = {
+  variables?: TVariables;
+} & (
+  | {
+      /**
+       * Indicate if the previous query result has been found fully in the cache.
+       */
+      complete: true;
+      previousData: Unmasked<TData>;
+    }
+  | {
+      /**
+       * Indicate if the previous query result has not been found fully in the cache.
+       * Might have partial or missing data.
+       */
+      complete: false;
+      previousData: DeepPartial<Unmasked<TData>> | undefined;
+    }
+);
+
+export interface UpdateQueryMapFn<
   TData = any,
-  TSubscriptionVariables = OperationVariables,
+  TVariables = OperationVariables,
+> {
+  (
+    /**
+     * @deprecated This value is not type-safe and may contain partial data. This
+     * argument will be removed in the next major version of Apollo Client. Use
+     * `options.previousData` instead for a more type-safe value.
+     */
+    unsafePreviousData: Unmasked<TData>,
+    options: UpdateQueryOptions<TData, TVariables>
+  ): Unmasked<TData> | void;
+}
+
+export type SubscribeToMoreUpdateQueryFn<
+  TData = any,
+  TVariables extends OperationVariables = OperationVariables,
   TSubscriptionData = TData,
 > = {
+  (
+    /**
+     * @deprecated This value is not type-safe and may contain partial data. This
+     * argument will be removed in the next major version of Apollo Client. Use
+     * `options.previousData` instead for a more type-safe value.
+     */
+    unsafePreviousData: Unmasked<TData>,
+    options: UpdateQueryOptions<TData, TVariables> & {
+      subscriptionData: { data: Unmasked<TSubscriptionData> };
+    }
+  ): Unmasked<TData> | void;
+};
+
+export interface SubscribeToMoreOptions<
+  TData = any,
+  TSubscriptionVariables extends OperationVariables = OperationVariables,
+  TSubscriptionData = TData,
+  TVariables extends OperationVariables = TSubscriptionVariables,
+> {
   document:
     | DocumentNode
     | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
   variables?: TSubscriptionVariables;
-  updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
+  updateQuery?: SubscribeToMoreUpdateQueryFn<
+    TData,
+    TVariables,
+    TSubscriptionData
+  >;
   onError?: (error: Error) => void;
   context?: DefaultContext;
-};
+}
+
+export interface SubscribeToMoreFunction<
+  TData,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  <
+    TSubscriptionData = TData,
+    TSubscriptionVariables extends OperationVariables = TVariables,
+  >(
+    options: SubscribeToMoreOptions<
+      TData,
+      TSubscriptionVariables,
+      TSubscriptionData,
+      TVariables
+    >
+  ): () => void;
+}
 
 export interface SubscriptionOptions<
   TVariables = OperationVariables,

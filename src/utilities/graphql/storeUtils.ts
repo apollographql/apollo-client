@@ -245,12 +245,12 @@ export const getStoreKeyName = Object.assign(
           filteredArgs[key] = args[key];
         });
 
-        return `${directives["connection"]["key"]}(${storeKeyNameStringify(
-          filteredArgs
-        )})`;
-      } else {
-        return directives["connection"]["key"];
+        const stringifiedArgs: string = storeKeyNameStringify(filteredArgs);
+        if (stringifiedArgs !== "{}") {
+          return `${directives["connection"]["key"]}(${stringifiedArgs})`;
+        }
       }
+      return directives["connection"]["key"];
     }
 
     let completeFieldName: string = fieldName;
@@ -260,7 +260,9 @@ export const getStoreKeyName = Object.assign(
       // and can lead to different store key names being created even though
       // the `args` object used during creation has the same properties/values.
       const stringifiedArgs: string = storeKeyNameStringify(args);
-      completeFieldName += `(${stringifiedArgs})`;
+      if (stringifiedArgs !== "{}") {
+        completeFieldName += `(${stringifiedArgs})`;
+      }
     }
 
     if (directives) {

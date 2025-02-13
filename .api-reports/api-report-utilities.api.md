@@ -926,7 +926,7 @@ abstract class EntityStore implements NormalizedCache {
     // (undocumented)
     merge(older: string | StoreObject, newer: StoreObject | string): void;
     // (undocumented)
-    modify(dataId: string, fields: Modifier<any> | Modifiers<Record<string, any>>): boolean;
+    modify(dataId: string, fields: Modifier<any> | Modifiers<Record<string, any>>, exact: boolean): boolean;
     // Warning: (ae-forgotten-export) The symbol "Policies" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1941,7 +1941,7 @@ interface NormalizedCache {
     // (undocumented)
     merge(olderObject: StoreObject, newerId: string): void;
     // (undocumented)
-    modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>): boolean;
+    modify<Entity extends Record<string, any>>(dataId: string, fields: Modifiers<Entity> | AllFieldsModifier<Entity>, exact: boolean): boolean;
     // (undocumented)
     release(rootId: string): number;
     replace(newData: NormalizedCacheObject): void;
@@ -2901,7 +2901,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:163:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:164:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:140:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/writeToStore.ts:65:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts

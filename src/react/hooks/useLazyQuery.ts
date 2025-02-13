@@ -20,6 +20,7 @@ import type {
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { NoInfer } from "@apollo/client/react";
+import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -28,7 +29,7 @@ import type {
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
-import type { ObservableQueryFields } from "../types/types.js";
+import type { ObservableQueryFields, VariablesOption } from "../types/types.js";
 
 import { useRenderGuard } from "./internal/index.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
@@ -84,15 +85,12 @@ export interface LazyQueryHookOptions<
   context?: DefaultContext;
 }
 
-export interface LazyQueryHookExecOptions<
+export type LazyQueryHookExecOptions<
   TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-
+> = {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
-}
+} & VariablesOption<TVariables>;
 
 export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
@@ -159,7 +157,11 @@ export type LazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,
 > = (
-  options?: LazyQueryHookExecOptions<TVariables>
+  ...args: [TVariables] extends [never] ?
+    [options?: LazyQueryHookExecOptions<TVariables>]
+  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    [options?: LazyQueryHookExecOptions<TVariables>]
+  : [options: LazyQueryHookExecOptions<TVariables>]
 ) => Promise<ApolloQueryResult<TData>>;
 
 // The following methods, when called will execute the query, regardless of

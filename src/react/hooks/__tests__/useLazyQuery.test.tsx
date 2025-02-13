@@ -5315,4 +5315,145 @@ describe.skip("Type Tests", () => {
       expectTypeOf(data).toEqualTypeOf<Query | undefined>();
     }
   });
+
+  test("variables are optional and can be anything with an DocumentNode", () => {
+    const query = gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    void execute();
+    void execute({});
+    void execute({ variables: {} });
+    void execute({ variables: { foo: "bar" } });
+    void execute({ variables: { bar: "baz" } });
+  });
+
+  test("variables are optional and can be anything with unspecified TVariables on a TypedDocumentNode", () => {
+    const query: TypedDocumentNode<{ greeting: string }> = gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    void execute();
+    void execute({});
+    void execute({ variables: {} });
+    void execute({ variables: { foo: "bar" } });
+    void execute({ variables: { bar: "baz" } });
+  });
+
+  test("variables are optional when TVariables are empty", () => {
+    const query: TypedDocumentNode<
+      { greeting: string },
+      Record<string, never>
+    > = gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    void execute();
+    void execute({});
+    void execute({ variables: {} });
+    // @ts-expect-error unknown variables
+    void execute({ variables: { foo: "bar" } });
+  });
+
+  test("does not allow variables when TVariables is `never`", () => {
+    const query: TypedDocumentNode<{ greeting: string }, never> = gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    void execute();
+    void execute({});
+    void execute({ variables: {} });
+    // @ts-expect-error unknown variables
+    void execute({ variables: { foo: "bar" } });
+  });
+
+  test("optional variables are optional", () => {
+    const query: TypedDocumentNode<{ posts: string[] }, { limit?: number }> =
+      gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    void execute();
+    void execute({});
+    void execute({ variables: {} });
+    void execute({ variables: { limit: 10 } });
+    void execute({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    void execute({
+      variables: {
+        limit: 10,
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("enforces required variables when TVariables includes required variables", () => {
+    const query: TypedDocumentNode<{ character: string }, { id: string }> =
+      gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    // @ts-expect-error empty variables
+    void execute();
+    // @ts-expect-error empty variables
+    void execute({});
+    // @ts-expect-error empty variables
+    void execute({ variables: {} });
+    void execute({ variables: { id: "1" } });
+    void execute({
+      variables: {
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    void execute({
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
+
+  test("requires variables with mixed TVariables", () => {
+    const query: TypedDocumentNode<
+      { character: string },
+      { id: string; language?: string }
+    > = gql``;
+
+    const [execute] = useLazyQuery(query);
+
+    // @ts-expect-error empty variables
+    void execute();
+    // @ts-expect-error empty variables
+    void execute({});
+    // @ts-expect-error empty variables
+    void execute({ variables: {} });
+    void execute({ variables: { id: "1" } });
+    void execute({
+      // @ts-expect-error missing required variables
+      variables: { language: "en" },
+    });
+    void execute({ variables: { id: "1", language: "en" } });
+    void execute({
+      variables: {
+        id: "1",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+    void execute({
+      variables: {
+        id: "1",
+        language: "en",
+        // @ts-expect-error unknown variables
+        foo: "bar",
+      },
+    });
+  });
 });

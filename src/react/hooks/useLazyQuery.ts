@@ -372,17 +372,19 @@ export function useLazyQuery<
     [client, observableResult, eagerMethods, observable]
   );
 
-  const execute = React.useCallback<LazyQueryExecFunction<TData, TVariables>>(
-    (executeOptions) => {
+  const execute: LazyQueryExecFunction<TData, TVariables> = React.useCallback(
+    (...args) => {
       invariant(
         !calledDuringRender(),
         "useLazyQuery: 'execute' should not be called during render. To start a query during render, use the 'useQuery' hook."
       );
 
+      const [executeOptions] = args;
+
       const options: WatchQueryOptions<TVariables, TData> = {
         ...executeOptions,
         // TODO: Figure out a better way to reset variables back to empty
-        variables: executeOptions?.variables ?? ({} as TVariables),
+        variables: (executeOptions?.variables ?? {}) as TVariables,
         // TODO: Determine when query is applied. Should it be applied right
         // away? If so, move this to the useEffect above
         query,

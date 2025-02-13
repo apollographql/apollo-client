@@ -204,7 +204,8 @@ export abstract class EntityStore implements NormalizedCache {
 
   public modify(
     dataId: string,
-    fields: Modifier<any> | Modifiers<Record<string, any>>
+    fields: Modifier<any> | Modifiers<Record<string, any>>,
+    exact: boolean
   ): boolean {
     const storeObject = this.lookup(dataId);
 
@@ -240,7 +241,7 @@ export abstract class EntityStore implements NormalizedCache {
         if (fieldValue === void 0) return;
         const modify: Modifier<StoreValue> | undefined =
           typeof fields === "function" ? fields : (
-            fields[storeFieldName] || fields[fieldName]
+            fields[storeFieldName] || (exact ? undefined : fields[fieldName])
           );
         if (modify) {
           let newValue =
@@ -356,7 +357,8 @@ export abstract class EntityStore implements NormalizedCache {
           {
             [storeFieldName]: delModifier,
           }
-        : delModifier
+        : delModifier,
+        args ? true : false
       );
     }
     return false;

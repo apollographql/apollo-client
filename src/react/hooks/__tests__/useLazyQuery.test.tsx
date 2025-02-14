@@ -1895,6 +1895,106 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it("the promise returned from execute resolves when GraphQL errors are returned and errorPolicy is `all`", async () => {
+    const query: TypedDocumentNode<{
+      currentUser: { __typename: "User"; id: string } | null;
+    }> = gql`
+      query currentUser {
+        id
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: { currentUser: null },
+          errors: [{ message: "Not logged in" }],
+        },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: {
+          data: { currentUser: null },
+          errors: [{ message: "Not logged in 2" }],
+        },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(query, { errorPolicy: "all" }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { currentUser: null },
+      errors: [{ message: "Not logged in" }],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { currentUser: null },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        errors: [{ message: "Not logged in" }],
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqual({
+      data: { currentUser: null },
+      errors: [{ message: "Not logged in 2" }],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { currentUser: null },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        errors: [{ message: "Not logged in 2" }],
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   // TODO: Need to determine whether to keep this test depending on whether we
   // keep the promise rejection behavior in 4.x. With the updated behavior, the
   // execute function throws

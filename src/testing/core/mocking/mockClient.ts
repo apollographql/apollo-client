@@ -17,6 +17,6 @@ export function createMockClient<TData>(
     }).setOnError((error) => {
       throw error;
     }),
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
   });
 }

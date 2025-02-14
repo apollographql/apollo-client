@@ -236,6 +236,9 @@ export function useLazyQuery<
     setObservable(createObservable());
   }
 
+  // TODO: Revisit after we have RxJS in place. We should be able to use
+  // observable.getCurrentResult() (or equivalent) to get these values which
+  // will hopefully alleviate the need for us to use refs to track these values.
   const updateResult = React.useCallback(
     (result: ApolloQueryResult<TData>, forceUpdate: () => void) => {
       const previousData = resultRef.current?.data;

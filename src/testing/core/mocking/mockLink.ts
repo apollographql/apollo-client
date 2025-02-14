@@ -259,6 +259,8 @@ export interface MockApolloLink extends ApolloLink {
 
 // Pass in multiple mocked responses, so that you can test flows that end up
 // making multiple queries to the server.
-export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink {
+export function mockSingleLink(
+  ...mockedResponses: Array<MockedResponse<any, any>>
+): MockApolloLink {
   return new MockLink(mockedResponses);
 }

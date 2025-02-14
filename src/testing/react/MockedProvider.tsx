@@ -56,7 +56,7 @@ export class MockedProvider extends React.Component<
       cache: cache || new Cache({ addTypename }),
       defaultOptions,
       connectToDevTools,
-      link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
+      link: link || new MockLink(mocks || [], { showWarnings }),
       resolvers,
     });
 

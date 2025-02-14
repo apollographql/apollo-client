@@ -2,7 +2,7 @@
 "@apollo/client": major
 ---
 
-`useLazyQuery` will no longer rerender with the loading state when calling the execute function the first time unless the `notifyOnNetworkStatusChange` option is set to `true`.
+`useLazyQuery` will no longer rerender with the loading state when calling the execute function the first time unless the `notifyOnNetworkStatusChange` option is set to `true` (which is the new default).
 
 If you prefer the behavior from 3.x, rerender the component with
 `notifyOnNetworkStatusChange` set to `false` after the execute function is

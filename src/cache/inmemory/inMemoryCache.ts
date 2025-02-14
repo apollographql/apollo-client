@@ -49,7 +49,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
-  private addTypename: boolean;
 
   private storeReader!: StoreReader;
   private storeWriter!: StoreWriter;
@@ -75,7 +74,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = normalizeConfig(config);
-    this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
       cache: this,
@@ -117,7 +115,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this,
       (this.storeReader = new StoreReader({
         cache: this,
-        addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
         canonizeResults: shouldCanonizeResults(this.config),
         canon:
@@ -551,10 +548,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   private addTypenameToDocument(document: DocumentNode) {
-    if (this.addTypename) {
-      return this.addTypenameTransform.transformDocument(document);
-    }
-    return document;
+    return this.addTypenameTransform.transformDocument(document);
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

@@ -348,8 +348,8 @@ export class StoreReader {
 
     if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
-      // field, if we have one, and this.config.addTypename is true. Note
-      // that this field can be overridden by other merged objects.
+      // field, if we have one. Note that this field can be overridden by other
+      // merged objects.
       objectsToMerge.push({ __typename: typename });
     }
 

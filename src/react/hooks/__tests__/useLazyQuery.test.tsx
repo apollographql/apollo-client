@@ -46,8 +46,6 @@ import {
 import { useLazyQuery } from "../useLazyQuery.js";
 
 
-const IS_REACT_19 = React.version.startsWith("19");
-
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
@@ -3800,8 +3798,6 @@ test("throws when calling `stopPolling` before execute function is called", asyn
 });
 
 test("throws when calling execute function during first render", async () => {
-  // We don't provide this functionality with React 19 anymore since it requires internals access
-  if (IS_REACT_19) return;
   using _consoleSpy = spyOnConsole("error");
   const { query, mocks } = setupSimpleCase();
 
@@ -3829,8 +3825,6 @@ test("throws when calling execute function during first render", async () => {
 });
 
 test("throws when calling execute function during subsequent render", async () => {
-  // We don't provide this functionality with React 19 anymore since it requires internals access
-  if (IS_REACT_19) return;
   using _consoleSpy = spyOnConsole("error");
   const { query, mocks } = setupSimpleCase();
   const user = userEvent.setup();

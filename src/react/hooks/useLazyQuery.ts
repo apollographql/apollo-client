@@ -356,19 +356,6 @@ export function useLazyQuery<
     observable.silentSetOptions(options);
   }, [query, observable, stableOptions]);
 
-  const result = React.useMemo(
-    () => ({
-      ...eagerMethods,
-      ...observableResult,
-      client,
-      previousData: previousDataRef.current,
-      variables: observable.variables,
-      observable,
-      called: !!resultRef.current,
-    }),
-    [client, observableResult, eagerMethods, observable]
-  );
-
   const execute: LazyQueryExecFunction<TData, TVariables> = React.useCallback(
     (...args) => {
       invariant(
@@ -431,6 +418,20 @@ export function useLazyQuery<
     (...args) => executeRef.current(...args),
     []
   );
+
+  const result = React.useMemo(
+    () => ({
+      ...eagerMethods,
+      ...observableResult,
+      client,
+      previousData: previousDataRef.current,
+      variables: observable.variables,
+      observable,
+      called: !!resultRef.current,
+    }),
+    [client, observableResult, eagerMethods, observable]
+  );
+
   return [stableExecute, result];
 }
 

@@ -2855,7 +2855,6 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      // TODO: Determine if this is the correct behavior for 4.x
       await expect(execute()).rejects.toEqual(
         new ApolloError({ networkError })
       );
@@ -4422,10 +4421,6 @@ test("renders loading states when switching to variables already written to the 
   await expect(takeSnapshot).not.toRerender();
 });
 
-// TODO: For this test and the following tests that check for changed options,
-// we need to determine whether those options take effect immediately (which
-// would affect `refetch` for example), or the next time the query is evaluated
-// (callng execute applies them)
 test("applies `errorPolicy` on next fetch when it changes between renders", async () => {
   const query: TypedDocumentNode<
     {

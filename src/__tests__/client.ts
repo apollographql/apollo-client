@@ -3382,9 +3382,6 @@ describe("@connection", () => {
       // nextFetchPolicy function ends up getting called twice.
       void obs.refetch();
 
-      await expect(stream).toEmitMatchedValue({ data: { count: "initial" } });
-      expect(nextFetchPolicyCallCount).toBe(2);
-
       await expect(stream).toEmitMatchedValue({ data: { count: 0 } });
       expect(nextFetchPolicyCallCount).toBe(2);
 

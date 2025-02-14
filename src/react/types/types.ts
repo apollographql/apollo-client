@@ -336,13 +336,6 @@ export interface BaseMutationOptions<
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-  /**
-   * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
-   *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
-   */
-  ignoreResults?: boolean;
 }
 
 export interface MutationFunctionOptions<

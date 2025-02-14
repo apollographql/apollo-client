@@ -35,7 +35,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -93,7 +93,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -164,7 +164,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -229,7 +229,7 @@ describe("mutiple results", () => {
     };
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -294,7 +294,7 @@ describe("mutiple results", () => {
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 

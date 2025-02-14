@@ -1045,8 +1045,6 @@ describe("ApolloClient", () => {
             id: "1",
           },
           notifyOnNetworkStatusChange,
-          // This causes a loading:true result to be delivered from the cache
-          // before the final data2 result is delivered.
           fetchPolicy,
         };
 

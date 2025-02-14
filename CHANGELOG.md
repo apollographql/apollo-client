@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.13.1
+
+### Patch Changes
+
+- [#12369](https://github.com/apollographql/apollo-client/pull/12369) [`bdfc5b2`](https://github.com/apollographql/apollo-client/commit/bdfc5b2e386ed5f835716a542de0cf17da37f7fc) Thanks [@phryneas](https://github.com/phryneas)! - `ObervableQuery.refetch`: don't refetch with `cache-and-network`, swich to `network-only` instead
+
+- [#12375](https://github.com/apollographql/apollo-client/pull/12375) [`d3f8f13`](https://github.com/apollographql/apollo-client/commit/d3f8f130718ef50531ca0079192c2672a513814a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export the `UseSuspenseFragmentOptions` type.
+
 ## 3.13.0
 
 ### Minor Changes

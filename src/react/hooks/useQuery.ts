@@ -276,14 +276,7 @@ function useQueryInternals<
     isSyncSSR
   );
 
-  return {
-    result,
-    obsQueryFields,
-    observable,
-    resultData,
-    client,
-    onQueryExecuted,
-  };
+  return { result, obsQueryFields };
 }
 
 function useObservableSubscriptionResult<

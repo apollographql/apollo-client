@@ -522,7 +522,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
+    return this.addTypenameTransform.transformDocument(
+      this.addFragmentsToDocument(document)
+    );
   }
 
   public fragmentMatches(
@@ -545,10 +547,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private addFragmentsToDocument(document: DocumentNode) {
     const { fragments } = this.config;
     return fragments ? fragments.transform(document) : document;
-  }
-
-  private addTypenameToDocument(document: DocumentNode) {
-    return this.addTypenameTransform.transformDocument(document);
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

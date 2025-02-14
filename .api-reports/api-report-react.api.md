@@ -2435,8 +2435,6 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     variables?: TVariables | undefined;
 };
 
-// Warning: (ae-forgotten-export) The symbol "UseSuspenseFragmentOptions" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
     from: NonNullable<From<TData>>;
@@ -2456,7 +2454,7 @@ export function useSuspenseFragment<TData, TVariables extends OperationVariables
 export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables>): UseSuspenseFragmentResult<TData>;
 
 // @public (undocumented)
-type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariables> = {
+export type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariables> = {
     fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
     fragmentName?: string;
     from: From<TData>;

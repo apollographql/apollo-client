@@ -1734,6 +1734,7 @@ describe("ObservableQuery", () => {
         query,
         fetchPolicy: "cache-and-network",
         returnPartialData: true,
+        notifyOnNetworkStatusChange: true,
       });
 
       const stream = new ObservableStream(observable);
@@ -1776,7 +1777,7 @@ describe("ObservableQuery", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: {
-          counter: 5,
+          counter: 4,
           name: "Ben",
         },
         loading: false,

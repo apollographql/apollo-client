@@ -3527,7 +3527,6 @@ describe("type policies", function () {
 
     it("can handle Relay-style pagination without args", async () => {
       const cache = new InMemoryCache({
-        addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -3711,7 +3710,6 @@ describe("type policies", function () {
 
     it("can handle Relay-style pagination", async () => {
       const cache = new InMemoryCache({
-        addTypename: false,
         typePolicies: {
           Query: {
             fields: {

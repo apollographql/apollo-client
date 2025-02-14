@@ -161,6 +161,8 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: Partial<TVariables>;
+  /** {@inheritdoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
   context?: DefaultContext;
 }
 

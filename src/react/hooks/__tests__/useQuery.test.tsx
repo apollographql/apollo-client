@@ -5225,6 +5225,27 @@ describe("useQuery Hook", () => {
       },
     ];
 
+    const mocksWithPartialPaginationError = [
+      {
+        request: { query, variables: { limit: 2 } },
+        result: {
+          data: {
+            letters: ab,
+          },
+        },
+      },
+      {
+        request: { query, variables: { limit: 2 } },
+        result: {
+          data: {
+            letters: cd,
+          },
+          errors: [new GraphQLError("Partial pagination error")],
+        },
+        delay: 10,
+      },
+    ];
+
     it("should fetchMore with updateQuery", async () => {
       const wrapper = ({ children }: any) => (
         <MockedProvider mocks={mocks}>{children}</MockedProvider>
@@ -6005,6 +6026,214 @@ describe("useQuery Hook", () => {
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("fetchMore inherits errorPolicy 'all' from original query if 'variables' is defined as a parameter in fetchMore", async () => {
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocksWithPartialPaginationError}>
+          {children}
+        </MockedProvider>
+      );
+      using _disabledAct = disableActEnvironment();
+
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              variables: { limit: 2 },
+              errorPolicy: "all",
+            }),
+          { wrapper }
+        );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      const fetchMoreResult = await getCurrentSnapshot().fetchMore({
+        variables: { limit: 2 },
+        updateQuery: (prev, { fetchMoreResult }) => ({
+          letters: prev.letters.concat(fetchMoreResult.letters),
+        }),
+      });
+
+      expect(fetchMoreResult).toEqualApolloQueryResult({
+        data: { letters: cd },
+        loading: false,
+        errors: [new GraphQLError("Partial pagination error")],
+        networkStatus: NetworkStatus.error,
+      });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab.concat(cd) },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    // TODO: This test is intended to document the existing behavior. However, we should revisit to determine if this is the desired behavior
+    it("fetchMore does not inherit errorPolicy 'all' from original query if 'query' is defined as a parameter in fetchMore", async () => {
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocksWithPartialPaginationError}>
+          {children}
+        </MockedProvider>
+      );
+      using _disabledAct = disableActEnvironment();
+
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              variables: { limit: 2 },
+              errorPolicy: "all",
+            }),
+          { wrapper }
+        );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      await expect(
+        getCurrentSnapshot().fetchMore({
+          query,
+          variables: { limit: 2 },
+          updateQuery: (prev, { fetchMoreResult }) => ({
+            letters: prev.letters.concat(fetchMoreResult.letters),
+          }),
+        })
+      ).rejects.toThrow("Partial pagination error");
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("fetchMore applies specified errorPolicy if 'query' is defined as a parameter in fetchMore", async () => {
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocksWithPartialPaginationError}>
+          {children}
+        </MockedProvider>
+      );
+      using _disabledAct = disableActEnvironment();
+
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useQuery(query, {
+              variables: { limit: 2 },
+              errorPolicy: "all",
+            }),
+          { wrapper }
+        );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: { limit: 2 },
+        });
+      }
+
+      const fetchMoreResult = await getCurrentSnapshot().fetchMore({
+        query,
+        variables: { limit: 2 },
+        errorPolicy: "all",
+        updateQuery: (prev, { fetchMoreResult }) => ({
+          letters: prev.letters.concat(fetchMoreResult.letters),
+        }),
+      });
+
+      expect(fetchMoreResult).toEqualApolloQueryResult({
+        data: { letters: cd },
+        loading: false,
+        errors: [new GraphQLError("Partial pagination error")],
+        networkStatus: NetworkStatus.error,
+      });
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: { letters: ab.concat(cd) },
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: { letters: ab },
+          variables: { limit: 2 },
         });
       }
 

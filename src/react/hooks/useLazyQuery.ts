@@ -37,10 +37,6 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-const {
-  prototype: { hasOwnProperty },
-} = Object;
-
 export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
@@ -276,7 +272,7 @@ export function useLazyQuery<
           );
 
           // TODO: Determine if this is still needed.
-          if (!hasOwnProperty.call(error, "graphQLErrors")) {
+          if (!Object.prototype.hasOwnProperty.call(error, "graphQLErrors")) {
             // The error is not a GraphQL error
             throw error;
           }

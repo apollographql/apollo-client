@@ -5363,7 +5363,7 @@ test("renders loading states at appropriate times on next fetch after updating `
 });
 
 describe.skip("Type Tests", () => {
-  test.skip("NoInfer prevents adding arbitrary additional variables", () => {
+  test("NoInfer prevents adding arbitrary additional variables", () => {
     const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
     const [execute, { variables }] = useLazyQuery(typedNode);
 
@@ -5380,7 +5380,7 @@ describe.skip("Type Tests", () => {
     variables?.nonExistingVariable;
   });
 
-  test.skip("uses masked types when using masked document", async () => {
+  test("uses masked types when using masked document", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;
@@ -5491,7 +5491,7 @@ describe.skip("Type Tests", () => {
     }
   });
 
-  test.skip("uses unmodified types when using TypedDocumentNode", async () => {
+  test("uses unmodified types when using TypedDocumentNode", async () => {
     type UserFieldsFragment = {
       __typename: "User";
       age: number;

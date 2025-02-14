@@ -49,7 +49,7 @@ describe("Link interactions", () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -93,7 +93,7 @@ describe("Link interactions", () => {
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -165,7 +165,7 @@ describe("Link interactions", () => {
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -236,7 +236,7 @@ describe("Link interactions", () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -265,7 +265,7 @@ describe("Link interactions", () => {
     const mockLink = new MockSubscriptionLink();
     const link = ApolloLink.from([evictionLink, mockLink]);
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -361,6 +361,7 @@ describe("Link interactions", () => {
         books {
           id
           title
+          __typename
         }
       }
     `;
@@ -380,7 +381,7 @@ describe("Link interactions", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });

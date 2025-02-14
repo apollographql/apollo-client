@@ -186,10 +186,10 @@ function useInternalState<
     // triggered with the new state.
     const newInternalState = createInternalState(internalState);
     updateInternalState(newInternalState);
-    return [newInternalState] as const;
+    return newInternalState;
   }
 
-  return [internalState] as const;
+  return internalState;
 }
 
 function useQueryInternals<
@@ -213,7 +213,7 @@ function useQueryInternals<
     isSyncSSR
   );
 
-  const [{ observable, resultData }] = useInternalState(
+  const { observable, resultData } = useInternalState(
     client,
     query,
     options,

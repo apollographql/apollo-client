@@ -177,33 +177,6 @@ function useInternalState<
   let [internalState, updateInternalState] =
     React.useState(createInternalState);
 
-  /**
-   * Used by `useLazyQuery` when a new query is executed.
-   * We keep this logic here since it needs to update things in unsafe
-   * ways and here we at least can keep track of that in a single place.
-   */
-  function onQueryExecuted(
-    watchQueryOptions: WatchQueryOptions<TVariables, TData>
-  ) {
-    // this needs to be set to prevent an immediate `resubscribe` in the
-    // next rerender of the `useQuery` internals
-    Object.assign(internalState.observable, {
-      [lastWatchOptions]: watchQueryOptions,
-    });
-    const resultData = internalState.resultData;
-    updateInternalState({
-      ...internalState,
-      // might be a different query
-      query: watchQueryOptions.query,
-      resultData: Object.assign(resultData, {
-        // We need to modify the previous `resultData` object as we rely on the
-        // object reference in other places
-        previousData: resultData.current?.data || resultData.previousData,
-        current: undefined,
-      }),
-    });
-  }
-
   if (client !== internalState.client || query !== internalState.query) {
     // If the client or query have changed, we need to create a new InternalState.
     // This will trigger a re-render with the new state, but it will also continue
@@ -213,10 +186,10 @@ function useInternalState<
     // triggered with the new state.
     const newInternalState = createInternalState(internalState);
     updateInternalState(newInternalState);
-    return [newInternalState, onQueryExecuted] as const;
+    return [newInternalState] as const;
   }
 
-  return [internalState, onQueryExecuted] as const;
+  return [internalState] as const;
 }
 
 function useQueryInternals<
@@ -240,7 +213,7 @@ function useQueryInternals<
     isSyncSSR
   );
 
-  const [{ observable, resultData }, onQueryExecuted] = useInternalState(
+  const [{ observable, resultData }] = useInternalState(
     client,
     query,
     options,

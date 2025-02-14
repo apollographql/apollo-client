@@ -3605,6 +3605,7 @@ describe("type policies", function () {
           result: {
             data: {
               todos: {
+                __typename: "TodosConnection",
                 totalCount: 1292,
               },
             },
@@ -3618,6 +3619,7 @@ describe("type policies", function () {
           result: {
             data: {
               todos: {
+                __typename: "TodosConnection",
                 edges: secondEdges,
                 pageInfo: secondPageInfo,
                 totalCount: 1292,
@@ -3632,6 +3634,7 @@ describe("type policies", function () {
           result: {
             data: {
               todos: {
+                __typename: "TodosConnection",
                 totalCount: 1293,
                 extraMetaData: "extra",
               },
@@ -3651,6 +3654,7 @@ describe("type policies", function () {
         networkStatus: NetworkStatus.ready,
         data: {
           todos: {
+            __typename: "TodosConnection",
             totalCount: 1292,
           },
         },
@@ -3661,6 +3665,7 @@ describe("type policies", function () {
         ROOT_QUERY: {
           __typename: "Query",
           todos: {
+            __typename: "TodosConnection",
             edges: [],
             pageInfo: {
               endCursor: "",
@@ -3683,6 +3688,7 @@ describe("type policies", function () {
         networkStatus: NetworkStatus.ready,
         data: {
           todos: {
+            __typename: "TodosConnection",
             edges: secondEdges,
             pageInfo: secondPageInfo,
             totalCount: 1292,
@@ -3699,6 +3705,7 @@ describe("type policies", function () {
         networkStatus: NetworkStatus.ready,
         data: {
           todos: {
+            __typename: "TodosConnection",
             totalCount: 1293,
             extraMetaData: "extra",
           },

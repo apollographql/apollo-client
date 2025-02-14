@@ -1995,6 +1995,91 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it("the promise returned from execute resolves when GraphQL errors are returned and errorPolicy is `ignore`", async () => {
+    const query: TypedDocumentNode<{
+      currentUser: { __typename: "User"; id: string } | null;
+    }> = gql`
+      query currentUser {
+        id
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        result: {
+          data: { currentUser: null },
+          errors: [{ message: "Not logged in" }],
+        },
+        delay: 20,
+      },
+      {
+        request: { query },
+        result: {
+          data: { currentUser: null },
+          errors: [{ message: "Not logged in 2" }],
+        },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(query, { errorPolicy: "ignore" }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { currentUser: null },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { currentUser: null },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqual({
+      data: { currentUser: null },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    // We don't see an extra render here since the result is deeply equal to the
+    // previous result.
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   // TODO: Need to determine whether to keep this test depending on whether we
   // keep the promise rejection behavior in 4.x. With the updated behavior, the
   // execute function throws

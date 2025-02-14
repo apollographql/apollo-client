@@ -223,10 +223,7 @@ export function useLazyQuery<
     return client.watchQuery({
       ...options,
       query,
-      initialFetchPolicy:
-        options?.fetchPolicy ??
-        client.defaultOptions.watchQuery?.fetchPolicy ??
-        "cache-first",
+      initialFetchPolicy: options?.fetchPolicy,
       fetchPolicy: "standby",
     });
   }

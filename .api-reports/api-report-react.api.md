@@ -372,8 +372,6 @@ type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariab
 // @public (undocumented)
 export interface BaseMutationOptions<TData = any, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache<any> = ApolloCache<any>> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
     client?: ApolloClient<object>;
-    // @deprecated
-    ignoreResults?: boolean;
     notifyOnNetworkStatusChange?: boolean;
     onCompleted?: (data: MaybeMasked<TData>, clientOptions?: BaseMutationOptions) => void;
     onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;

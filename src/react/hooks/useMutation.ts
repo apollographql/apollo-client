@@ -117,11 +117,7 @@ export function useMutation<
       const baseOptions = { ...options, mutation };
       const client = executeOptions.client || ref.current.client;
 
-      if (
-        !ref.current.result.loading &&
-        !baseOptions.ignoreResults &&
-        ref.current.isMounted
-      ) {
+      if (!ref.current.result.loading && ref.current.isMounted) {
         setResult(
           (ref.current.result = {
             loading: true,
@@ -156,10 +152,7 @@ export function useMutation<
               );
             }
 
-            if (
-              mutationId === ref.current.mutationId &&
-              !clientOptions.ignoreResults
-            ) {
+            if (mutationId === ref.current.mutationId) {
               const result = {
                 called: true,
                 loading: false,

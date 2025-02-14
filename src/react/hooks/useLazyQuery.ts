@@ -376,11 +376,6 @@ export function useLazyQuery<
         "useLazyQuery: 'execute' should not be called during render. To start a query during render, use the 'useQuery' hook."
       );
 
-      invariant(
-        typeof window !== "undefined",
-        "useLazyQuery does not support SSR"
-      );
-
       const [executeOptions] = args;
 
       const options: Partial<WatchQueryOptions<TVariables, TData>> = {

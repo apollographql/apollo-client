@@ -132,7 +132,12 @@ function useQuery_<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const { result, obsQueryFields } = useQueryInternals(query, options);
+  const { result } = useQueryInternals(query, options);
+  const obsQueryFields = React.useMemo(
+    () => bindObservableMethods(result.observable),
+    [result.observable]
+  );
+
   return React.useMemo(
     () => ({ ...result, ...obsQueryFields }),
     [result, obsQueryFields]
@@ -232,11 +237,6 @@ function useQueryInternals<
     watchQueryOptions
   );
 
-  const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(observable),
-    [observable]
-  );
-
   useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
@@ -249,7 +249,7 @@ function useQueryInternals<
     isSyncSSR
   );
 
-  return { result, obsQueryFields };
+  return { result };
 }
 
 function useObservableSubscriptionResult<

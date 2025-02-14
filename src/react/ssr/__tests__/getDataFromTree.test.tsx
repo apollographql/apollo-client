@@ -48,7 +48,7 @@ describe("SSR", () => {
       });
       const apolloClient = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new Cache(),
       });
 
       interface Data {
@@ -103,7 +103,7 @@ describe("SSR", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new Cache(),
       });
 
       function App() {

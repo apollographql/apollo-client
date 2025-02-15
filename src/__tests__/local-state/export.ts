@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { print } from "graphql";
 
-import { Observable } from "../../utilities";
+import { of } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { ApolloClient } from "../../core";
 import { InMemoryCache } from "../../cache";
@@ -183,7 +183,7 @@ describe("@client @export tests", () => {
       const testPostCount = 200;
 
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: {
             postCount: testPostCount,
           },
@@ -244,7 +244,7 @@ describe("@client @export tests", () => {
     const testPostCount = 200;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           postCount: testPostCount,
         },
@@ -295,7 +295,7 @@ describe("@client @export tests", () => {
     const testPostCount = 200;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           currentAuthor: testAuthor,
           postCount: testPostCount,
@@ -345,7 +345,7 @@ describe("@client @export tests", () => {
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ reviewerId: loggedInReviewerId });
 
-      return Observable.of({
+      return of({
         data: {
           postRequiringReview,
           reviewerDetails,
@@ -419,7 +419,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ reviewerId: currentReviewer.id });
-      return Observable.of({
+      return of({
         data: {
           postRequiringReview,
           reviewerDetails,
@@ -484,7 +484,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ postId: testPostId });
-      return Observable.of({
+      return of({
         data: {
           upvotePost: testPost,
         },
@@ -531,7 +531,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ postId: testPostId });
-      return Observable.of({
+      return of({
         data: {
           upvotePost: testPost,
         },
@@ -614,7 +614,7 @@ describe("@client @export tests", () => {
       link: new ApolloLink((request) => {
         expect(request.variables.where).toEqual(currentFilter);
         expect(print(request.query)).toBe(print(expectedServerQuery));
-        return Observable.of({ data });
+        return of({ data });
       }),
       cache: new InMemoryCache(),
       resolvers: {
@@ -654,7 +654,7 @@ describe("@client @export tests", () => {
 
     const link = new ApolloLink(({ variables }) => {
       expect(variables).toMatchObject({ reviewerId: secondaryReviewerId });
-      return Observable.of({
+      return of({
         data: {
           post,
         },
@@ -706,7 +706,7 @@ describe("@client @export tests", () => {
     let currentAuthorId = testAuthorId1;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           postCount:
             currentAuthorId === testAuthorId1 ? testPostCount1 : testPostCount2,
@@ -767,7 +767,7 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink(() => {
       fetchCount += 1;
-      return Observable.of({
+      return of({
         data: {
           postCount: testPostCount1,
         },
@@ -824,7 +824,7 @@ describe("@client @export tests", () => {
     let fetchCount = 0;
     const link = new ApolloLink(() => {
       fetchCount += 1;
-      return Observable.of({
+      return of({
         data: {
           postCount: testPostCount1,
         },

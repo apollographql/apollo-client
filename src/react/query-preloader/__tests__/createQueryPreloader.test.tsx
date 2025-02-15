@@ -9,6 +9,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { Observable } from "rxjs";
 
 import {
   ApolloClient,
@@ -34,7 +35,7 @@ import {
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
-import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { DeepPartial } from "@apollo/client/utilities";
 
 import {
   createClientWrapper,

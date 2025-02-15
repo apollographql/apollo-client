@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "@testing-library/react";
+import { Observable } from "rxjs";
 
 import {
   UseFragmentOptions,
@@ -21,7 +22,6 @@ import {
   TypedDocumentNode,
   Reference,
   ApolloClient,
-  Observable,
   ApolloLink,
   StoreObject,
   DocumentNode,

@@ -18,11 +18,9 @@ import {
 import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 
-import type {
-  ObservableSubscription,
-  ConcastSourcesArray,
-  DeepPartial,
-} from "../utilities/index.js";
+import type { ConcastSourcesArray, DeepPartial } from "../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { Observable, of, map } from "rxjs";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -30,7 +28,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  Observable,
   asyncMap,
   isNonEmptyArray,
   Concast,
@@ -1038,8 +1035,8 @@ export class QueryManager<TStore> {
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(query, context, variables, extensions).map(
-        (result) => {
+      this.getObservableFromLink<T>(query, context, variables, extensions).pipe(
+        map((result) => {
           if (fetchPolicy !== "no-cache") {
             // the subscription interface should handle not sending us results we no longer subscribe to.
             // XXX I don't think we ever send in an object with errors, but we might in the future...
@@ -1079,7 +1076,7 @@ export class QueryManager<TStore> {
           }
 
           return result;
-        }
+        })
       );
 
     if (this.getDocumentInfo(query).hasClientExports) {
@@ -1088,7 +1085,7 @@ export class QueryManager<TStore> {
         .then(makeObservable);
 
       return new Observable<FetchResult<T>>((observer) => {
-        let sub: ObservableSubscription | null = null;
+        let sub: Subscription | null = null;
         observablePromise.then(
           (observable) => (sub = observable.subscribe(observer)),
           observer.error
@@ -1196,7 +1193,7 @@ export class QueryManager<TStore> {
         ]);
       }
     } else {
-      observable = new Concast([Observable.of({ data: {} } as FetchResult<T>)]);
+      observable = new Concast([of({ data: {} } as FetchResult<T>)]);
       context = this.prepareContext(context);
     }
 
@@ -1668,7 +1665,7 @@ export class QueryManager<TStore> {
           partial: !diff.complete,
         };
 
-        return Observable.of(result);
+        return of(result);
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {

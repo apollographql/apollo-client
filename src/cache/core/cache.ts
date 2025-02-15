@@ -11,8 +11,8 @@ import type {
   DeepPartial,
   NoInfer,
 } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import {
-  Observable,
   cacheSizes,
   defaultCacheSizes,
   getFragmentDefinition,

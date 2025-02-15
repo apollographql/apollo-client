@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 import { BatchLink } from "@apollo/client/link/batch";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
@@ -15,7 +17,6 @@ import { fromError } from "@apollo/client/link/utils";
 import {
   hasDirectives,
   maybe,
-  Observable,
   removeClientSetsFromDocument,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";

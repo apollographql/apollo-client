@@ -5,7 +5,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
 } from "../../errors/index.js";
 import type { NetworkError } from "../../errors/index.js";
-import { Observable } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import type { Operation, FetchResult, NextLink } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 

@@ -11,7 +11,7 @@ import { gql } from "graphql-tag";
 import React, { Fragment, ReactNode, useEffect, useState } from "react";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { Observable } from "rxjs";
+import { Observable, of } from "rxjs";
 import {
   ApolloClient,
   ApolloError,
@@ -1094,7 +1094,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -7356,7 +7356,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(() => Observable.of({ data: {} })),
+        link: new ApolloLink(() => of({ data: {} })),
         resolvers: {
           ClientData: {
             titleLength(data) {
@@ -7601,7 +7601,7 @@ describe("useQuery Hook", () => {
 
     it("should tear down the query if `skip` is `true`", async () => {
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -7684,7 +7684,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: { hello: "world" },
         })
       );
@@ -7739,7 +7739,7 @@ describe("useQuery Hook", () => {
       `;
       let linkCount = 0;
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: { hello: ++linkCount },
         })
       );

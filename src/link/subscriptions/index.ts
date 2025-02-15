@@ -33,7 +33,8 @@ import type { Client, Sink } from "graphql-ws";
 
 import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
-import { isNonNullObject, Observable } from "../../utilities/index.js";
+import { isNonNullObject } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import { ApolloError } from "../../errors/index.js";
 import type { FormattedExecutionResult } from "graphql";
 

@@ -20,7 +20,7 @@ import { canonicalStringify } from "../cache/index.js";
 
 import type { ConcastSourcesArray, DeepPartial } from "../utilities/index.js";
 import type { Subscription } from "rxjs";
-import { Observable, of, map, from, mergeMap } from "rxjs";
+import { Observable, of, map, from, mergeMap, catchError } from "rxjs";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -28,7 +28,6 @@ import {
   hasClientExports,
   graphQLResultHasError,
   getGraphQLErrorsFromResult,
-  asyncMap,
   isNonEmptyArray,
   Concast,
   makeUniqueId,
@@ -1236,14 +1235,25 @@ export class QueryManager<TStore> {
     // through the link chain.
     const linkDocument = this.cache.transformForLink(options.query);
 
-    return asyncMap(
-      this.getObservableFromLink(
-        linkDocument,
-        options.context,
-        options.variables
-      ),
+    return this.getObservableFromLink(
+      linkDocument,
+      options.context,
+      options.variables
+    ).pipe(
+      catchError((networkError) => {
+        const error =
+          isApolloError(networkError) ? networkError : (
+            new ApolloError({ networkError })
+          );
 
-      (result) => {
+        // Avoid storing errors from older interrupted queries.
+        if (requestId >= queryInfo.lastRequestId) {
+          queryInfo.markError(error);
+        }
+
+        throw error;
+      }),
+      map((result) => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;
         const { errorPolicy } = options;
@@ -1292,21 +1302,7 @@ export class QueryManager<TStore> {
         }
 
         return aqr;
-      },
-
-      (networkError) => {
-        const error =
-          isApolloError(networkError) ? networkError : (
-            new ApolloError({ networkError })
-          );
-
-        // Avoid storing errors from older interrupted queries.
-        if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError(error);
-        }
-
-        throw error;
-      }
+      })
     );
   }
 

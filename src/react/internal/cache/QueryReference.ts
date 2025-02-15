@@ -6,10 +6,9 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from "../../../core/index.js";
-import type {
-  ObservableSubscription,
-  PromiseWithState,
-} from "../../../utilities/index.js";
+import type { PromiseWithState } from "../../../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { filter } from "rxjs";
 import {
   createFulfilledPromise,
   createRejectedPromise,
@@ -211,7 +210,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise!: QueryRefPromise<TData>;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
@@ -500,10 +499,12 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscribeToQuery() {
     this.subscription = this.observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
+      .pipe(
+        filter(
+          (result) => !equal(result.data, {}) && !equal(result, this.result)
+        )
       )
-      .subscribe(this.handleNext, this.handleError);
+      .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
   private setResult() {

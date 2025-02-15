@@ -1,4 +1,6 @@
 import { equal } from "@wry/equality";
+import type { Subscription } from "rxjs";
+import { filter } from "rxjs";
 
 import type {
   ApolloError,
@@ -8,10 +10,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type {
-  ObservableSubscription,
-  PromiseWithState,
-} from "@apollo/client/utilities";
+import type { PromiseWithState } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   createRejectedPromise,
@@ -213,7 +212,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise!: QueryRefPromise<TData>;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
@@ -502,10 +501,12 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscribeToQuery() {
     this.subscription = this.observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
+      .pipe(
+        filter(
+          (result) => !equal(result.data, {}) && !equal(result, this.result)
+        )
       )
-      .subscribe(this.handleNext, this.handleError);
+      .subscribe({ next: this.handleNext, error: this.handleError });
   }
 
   private setResult() {

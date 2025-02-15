@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
 import type { Subscription } from "rxjs";
-import { from, map, mergeMap, Observable, of } from "rxjs";
+import { catchError, from, map, mergeMap, Observable, of } from "rxjs";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
@@ -32,7 +32,6 @@ import {
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 import {
-  asyncMap,
   Concast,
   DocumentTransform,
   getDefaultValues,
@@ -1220,14 +1219,25 @@ export class QueryManager<TStore> {
     // through the link chain.
     const linkDocument = this.cache.transformForLink(options.query);
 
-    return asyncMap(
-      this.getObservableFromLink(
-        linkDocument,
-        options.context,
-        options.variables
-      ),
+    return this.getObservableFromLink(
+      linkDocument,
+      options.context,
+      options.variables
+    ).pipe(
+      catchError((networkError) => {
+        const error =
+          isApolloError(networkError) ? networkError : (
+            new ApolloError({ networkError })
+          );
 
-      (result) => {
+        // Avoid storing errors from older interrupted queries.
+        if (requestId >= queryInfo.lastRequestId) {
+          queryInfo.markError();
+        }
+
+        throw error;
+      }),
+      map((result) => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;
         const { errorPolicy } = options;
@@ -1273,21 +1283,7 @@ export class QueryManager<TStore> {
         }
 
         return aqr;
-      },
-
-      (networkError) => {
-        const error =
-          isApolloError(networkError) ? networkError : (
-            new ApolloError({ networkError })
-          );
-
-        // Avoid storing errors from older interrupted queries.
-        if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError();
-        }
-
-        throw error;
-      }
+      })
     );
   }
 

@@ -7,6 +7,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
+import { Observable } from "rxjs";
 
 import {
   ApolloClient,
@@ -27,7 +28,7 @@ import {
   wait,
 } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { DeepPartial } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { QueryResult } from "../../types/types.js";

@@ -23,11 +23,7 @@ import type {
 import type { ApolloError } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type {
-  Observable,
-  ObservableSubscription,
-  OnlyRequiredProperties,
-} from "@apollo/client/utilities";
+import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
 import type {
   MutationSharedOptions,
@@ -485,11 +481,6 @@ export interface SubscriptionDataOptions<
   children?:
     | null
     | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
-}
-
-export interface SubscriptionCurrentObservable {
-  query?: Observable<any>;
-  subscription?: ObservableSubscription;
 }
 
 export type VariablesOption<TVariables extends OperationVariables> =

@@ -11,6 +11,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import React, { Suspense, useState } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -20,7 +21,6 @@ import {
   ErrorPolicy,
   gql,
   NetworkStatus,
-  Observable,
   OperationVariables,
   RefetchWritePolicy,
   split,

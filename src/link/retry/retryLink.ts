@@ -1,4 +1,5 @@
 import type { Subscription } from "rxjs";
+import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
 import {
@@ -41,7 +42,7 @@ class RetryableOperation {
   private timerId: number | undefined;
 
   constructor(
-    private observer: SubscriptionObserver<FetchResult>,
+    private observer: Observer<FetchResult>,
     private operation: Operation,
     private forward: NextLink,
     private delayFor: DelayFunction,

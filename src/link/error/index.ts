@@ -1,4 +1,5 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
+import { Observable } from "rxjs";
 
 import type { NetworkError } from "@apollo/client/errors";
 import {
@@ -11,7 +12,6 @@ import type {
   Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { Observable } from "@apollo/client/utilities";
 
 export interface ErrorResponse {
   /**

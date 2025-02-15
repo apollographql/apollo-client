@@ -625,12 +625,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         context: options.context,
       })
       .subscribe({
-        next: (subscriptionData: { data: Unmasked<TSubscriptionData> }) => {
+        next: (subscriptionData) => {
           const { updateQuery } = options;
           if (updateQuery) {
             this.updateQuery((previous, updateOptions) =>
               updateQuery(previous, {
-                subscriptionData,
+                subscriptionData: subscriptionData as {
+                  data: Unmasked<TSubscriptionData>;
+                },
                 ...updateOptions,
               })
             );

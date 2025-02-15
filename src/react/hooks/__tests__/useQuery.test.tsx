@@ -4,6 +4,7 @@ import gql from "graphql-tag";
 import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
+import { Observable } from "rxjs";
 import {
   ApolloClient,
   ApolloError,
@@ -16,7 +17,7 @@ import {
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { Observable, Reference, concatPagination } from "../../../utilities";
+import { Reference, concatPagination } from "../../../utilities";
 import { ApolloLink } from "../../../link/core";
 import {
   MockLink,

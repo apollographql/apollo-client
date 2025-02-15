@@ -11,6 +11,7 @@ import { gql } from "graphql-tag";
 import React, { Fragment, ReactNode, useEffect, useState } from "react";
 
 import { InMemoryCache } from "@apollo/client/cache";
+import { Observable } from "rxjs";
 import {
   ApolloClient,
   ApolloError,
@@ -33,11 +34,7 @@ import {
   wait,
 } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
-import {
-  concatPagination,
-  Observable,
-  Reference,
-} from "@apollo/client/utilities";
+import { concatPagination, Reference } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";

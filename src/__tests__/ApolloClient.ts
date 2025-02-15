@@ -2,6 +2,7 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { expectTypeOf } from "expect-type";
 import { Kind } from "graphql";
 import { gql } from "graphql-tag";
+import { Observable, of } from "rxjs";
 
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
@@ -16,7 +17,7 @@ import {
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { Masked } from "@apollo/client/masking";
-import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
@@ -1155,7 +1156,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return Observable.of({ data });
+        return of({ data });
       });
       function newClient() {
         return new ApolloClient({
@@ -2821,7 +2822,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return Observable.of();
+          return of();
         });
 
       const client = new ApolloClient({

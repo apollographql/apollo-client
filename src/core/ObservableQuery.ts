@@ -3,18 +3,14 @@ import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type {
-  Concast,
-  Observer,
-  ObservableSubscription,
-} from "../utilities/index.js";
+import type { Concast } from "../utilities/index.js";
+import type { Observer, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import {
   cloneDeep,
   compact,
   getOperationDefinition,
-  Observable,
   iterateObserversSafely,
-  fixObservableSubclass,
   getQueryDefinition,
   preventUnhandledRejection,
 } from "../utilities/index.js";
@@ -92,7 +88,7 @@ export class ObservableQuery<
   private observers = new Set<
     Observer<ApolloQueryResult<MaybeMasked<TData>>>
   >();
-  private subscriptions = new Set<ObservableSubscription>();
+  private subscriptions = new Set<Subscription>();
 
   private waitForOwnResult: boolean;
   private last?: Last<TData, TVariables>;
@@ -119,7 +115,7 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
+    super((observer) => {
       // Zen Observable has its own error function, so in order to log correctly
       // we need to provide a custom error callback.
       try {
@@ -228,6 +224,7 @@ export class ObservableQuery<
           }, 0);
         },
         error: reject,
+        complete: () => {},
       };
       const subscription = this.subscribe(observer);
     });
@@ -1002,6 +999,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           this.reportError(error, variables);
         }
       },
+      complete: () => {},
     };
 
     if (!useDisposableConcast && (fromLink || !this.concast)) {
@@ -1035,11 +1033,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void,
     onError?: (error: any) => void,
     onComplete?: () => void
-  ): ObservableSubscription;
+  ): Subscription;
 
   public resubscribeAfterError(
     observer: Observer<ApolloQueryResult<TData>>
-  ): ObservableSubscription;
+  ): Subscription;
 
   public resubscribeAfterError(...args: [any, any?, any?]) {
     // If `lastError` is set in the current when the subscription is re-created,
@@ -1145,10 +1143,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       : result;
   }
 }
-
-// Necessary because the ObservableQuery constructor has a different
-// signature than the Observable constructor.
-fixObservableSubclass(ObservableQuery);
 
 // Reobserve with fetchPolicy effectively set to "cache-first", triggering
 // delivery of any new data from the cache, possibly falling back to the network

@@ -17,8 +17,8 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import * as React from "react";
+import { Observer } from "rxjs";
 import { Observable } from "rxjs";
-import { SubscriptionObserver } from "zen-observable-ts";
 
 import {
   ApolloClient,
@@ -2184,7 +2184,7 @@ describe("has the same timing as `useQuery`", () => {
       }
       ${itemFragment}
     `;
-    let observer: SubscriptionObserver<FetchResult>;
+    let observer: Observer<FetchResult>;
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,

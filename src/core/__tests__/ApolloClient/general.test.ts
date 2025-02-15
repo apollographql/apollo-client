@@ -4,11 +4,8 @@ import { map } from "rxjs/operators";
 import gql from "graphql-tag";
 import { DocumentNode, GraphQLError } from "graphql";
 import { InvariantError, setVerbosity } from "ts-invariant";
+import { Observable, Observer } from "rxjs";
 
-import {
-  Observable,
-  Observer,
-} from "../../../utilities/observables/Observable";
 import {
   ApolloLink,
   FetchResult,

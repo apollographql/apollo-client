@@ -805,12 +805,12 @@ describe("BatchLink", () => {
       const batchInterval = intervals.pop();
       if (!batchInterval) return done();
 
-      const batchHandler = jest.fn((operation, forward) => {
+      const batchHandler = jest.fn(((operation, forward) => {
         expect(operation.length).toBe(1);
-        expect(forward.length).toBe(1);
+        expect(forward!.length).toBe(1);
 
-        return forward[0](operation[0]).map((d: any) => [d]);
-      });
+        return forward![0]!(operation[0]).pipe(map((d: any) => [d]));
+      }) as BatchHandler);
 
       const link = ApolloLink.from([
         new BatchLink({

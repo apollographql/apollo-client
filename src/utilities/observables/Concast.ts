@@ -1,11 +1,9 @@
+import type { Observer, Subscriber, Subscription } from "rxjs";
+import { Observable } from "rxjs";
+
+import type { TODO } from "../types/TODO.js";
+
 import { iterateObserversSafely } from "./iteration.js";
-import type {
-  ObservableSubscription,
-  Observer,
-  Subscriber,
-} from "./Observable.js";
-import { Observable } from "./Observable.js";
-import { fixObservableSubclass } from "./subclassing.js";
 
 type MaybeAsync<T> = T | PromiseLike<T>;
 
@@ -48,6 +46,8 @@ export type ConcastSourcesArray<T> = Array<Source<T>>;
 // concatenated sources. If we ever switch to RxJS, there may be some
 // value in reusing their code, but for now we use zen-observable, which
 // does not contain any Subject implementations.
+
+// TODO: Determine if we can replace this with an rxjs alternative
 export class Concast<T> extends Observable<T> {
   // Active observers receiving broadcast messages. Thanks to this.latest,
   // we can assume all observers in this Set have received the same most
@@ -58,7 +58,7 @@ export class Concast<T> extends Observable<T> {
   // subscription has not yet begun, then points to each source
   // subscription in turn, and finally becomes null after the sources have
   // been exhausted. After that, it stays null.
-  private sub?: ObservableSubscription | null;
+  private sub?: Subscription | null;
 
   // Not only can the individual elements of the iterable be promises, but
   // also the iterable itself can be wrapped in a promise.
@@ -77,13 +77,13 @@ export class Concast<T> extends Observable<T> {
     // function, recover by creating an Observable from that subscriber and
     // using it as the source.
     if (typeof sources === "function") {
-      sources = [new Observable(sources)];
+      sources = [new Observable<T>(sources)];
     }
 
     if (isPromiseLike(sources)) {
       sources.then((iterable) => this.start(iterable), this.handlers.error);
     } else {
-      this.start(sources);
+      this.start(sources as TODO);
     }
   }
 
@@ -264,7 +264,3 @@ type NextResultListener = (
   method: "next" | "error" | "complete",
   arg?: any
 ) => any;
-
-// Necessary because the Concast constructor has a different signature
-// than the Observable constructor.
-fixObservableSubclass(Concast);

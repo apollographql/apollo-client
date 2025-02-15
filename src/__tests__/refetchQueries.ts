@@ -1,11 +1,10 @@
-import { Subscription } from "zen-observable-ts";
+import { Observable, Subscription } from "rxjs";
 
 import {
   ApolloClient,
   ApolloLink,
   gql,
   InMemoryCache,
-  Observable,
   ObservableQuery,
   TypedDocumentNode,
 } from "@apollo/client/core";

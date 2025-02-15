@@ -1,3 +1,5 @@
+import { Observable } from "rxjs";
+
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
@@ -5,7 +7,7 @@ import {
   gql,
   NetworkStatus,
 } from "@apollo/client/core";
-import { getFragmentDefinitions, Observable } from "@apollo/client/utilities";
+import { getFragmentDefinitions } from "@apollo/client/utilities";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 

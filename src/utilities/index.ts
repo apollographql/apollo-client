@@ -117,7 +117,6 @@ export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
 export * from "./observables/iteration.js";
 export * from "./observables/asyncMap.js";
 export * from "./observables/Concast.js";
-export * from "./observables/subclassing.js";
 export * from "./common/arrays.js";
 export * from "./common/objects.js";
 export * from "./common/errorHandling.js";

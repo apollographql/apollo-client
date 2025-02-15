@@ -200,16 +200,11 @@ describe("OperationBatcher", () => {
         lastName: "Smith",
       },
     };
-    const batchHandler = createMockBatchHandler(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        result: { data },
-      }
-    );
+    const batchHandler = createMockBatchHandler({
+      request: { query },
+      result: { data },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    });
     const operation: Operation = createOperation(
       {},
       {

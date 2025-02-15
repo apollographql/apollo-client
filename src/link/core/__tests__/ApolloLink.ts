@@ -1,8 +1,8 @@
 import { print } from "graphql";
 import { gql } from "graphql-tag";
+import { map, Observable, of } from "rxjs";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { Observable } from "../../../utilities/observables/Observable.js";
 import { ApolloLink } from "../ApolloLink.js";
 import { execute } from "../execute.js";
 import { FetchResult, GraphQLRequest, NextLink, Operation } from "../types.js";
@@ -50,7 +50,7 @@ describe("ApolloClient", () => {
           add: 3,
           substract: 1,
         });
-        return Observable.of({ data: op.getContext().add });
+        return of({ data: op.getContext().add });
       });
       const stream = new ObservableStream(
         execute(link, { query: sampleQuery })
@@ -73,7 +73,7 @@ describe("ApolloClient", () => {
           add: 3,
           substract: 1,
         });
-        return Observable.of({ data: op.getContext().add });
+        return of({ data: op.getContext().add });
       });
       const stream = new ObservableStream(
         execute(link, { query: sampleQuery })
@@ -88,7 +88,7 @@ describe("ApolloClient", () => {
     it("should concat a function", async () => {
       const returnOne = new SetContextLink(setContext);
       const link = returnOne.concat((operation, forward) => {
-        return Observable.of({ data: { count: operation.getContext().add } });
+        return of({ data: { count: operation.getContext().add } });
       });
       const stream = new ObservableStream(
         execute(link, { query: sampleQuery })
@@ -100,9 +100,7 @@ describe("ApolloClient", () => {
 
     it("should concat a Link", async () => {
       const returnOne = new SetContextLink(setContext);
-      const mock = new ApolloLink((op) =>
-        Observable.of({ data: op.getContext().add })
-      );
+      const mock = new ApolloLink((op) => of({ data: op.getContext().add }));
       const link = returnOne.concat(mock);
 
       const stream = new ObservableStream(
@@ -140,7 +138,7 @@ describe("ApolloClient", () => {
         return forward(op);
       });
       const link = returnOne.concat(mock).concat((op) => {
-        return Observable.of({ data: op.getContext().add });
+        return of({ data: op.getContext().add });
       });
 
       const stream = new ObservableStream(
@@ -154,7 +152,7 @@ describe("ApolloClient", () => {
     it("should concat a function and Link", async () => {
       const returnOne = new SetContextLink(setContext);
       const mock = new ApolloLink((op, forward) =>
-        Observable.of({ data: op.getContext().add })
+        of({ data: op.getContext().add })
       );
 
       const link = returnOne
@@ -183,7 +181,7 @@ describe("ApolloClient", () => {
           });
           return forward(operation);
         })
-        .concat((op, forward) => Observable.of({ data: op.getContext().add }));
+        .concat((op, forward) => of({ data: op.getContext().add }));
 
       const stream = new ObservableStream(
         execute(link, { query: sampleQuery })
@@ -202,7 +200,7 @@ describe("ApolloClient", () => {
         return forward(operation);
       });
       const mock2 = new ApolloLink((op, forward) =>
-        Observable.of({ data: op.getContext().add })
+        of({ data: op.getContext().add })
       );
 
       const link = returnOne.concat(mock1).concat(mock2);
@@ -224,10 +222,10 @@ describe("ApolloClient", () => {
         return forward(operation);
       });
       const mock2 = new ApolloLink((op, forward) =>
-        Observable.of({ data: op.getContext().add + 2 })
+        of({ data: op.getContext().add + 2 })
       );
       const mock3 = new ApolloLink((op, forward) =>
-        Observable.of({ data: op.getContext().add + 3 })
+        of({ data: op.getContext().add + 3 })
       );
       const link = returnOne.concat(mock1);
 
@@ -281,7 +279,7 @@ describe("ApolloClient", () => {
             query: print(operation.query),
           })
         );
-        return Observable.of();
+        return of();
       });
       const stream = new ObservableStream(
         execute(link, {
@@ -345,7 +343,7 @@ describe("ApolloClient", () => {
         let context = { test: true };
         const link = new SetContextLink(() => context).split(
           (op) => op.getContext().test,
-          () => Observable.of(),
+          () => of(),
           () => null
         );
 
@@ -384,7 +382,7 @@ describe("ApolloClient", () => {
           expect(op["variables"]).toBeDefined();
           expect((op as any)["context"]).toBeUndefined();
           expect(op["extensions"]).toBeDefined();
-          return Observable.of();
+          return of();
         });
 
         const stream = new ObservableStream(execute(link, operation));
@@ -430,9 +428,7 @@ describe("ApolloClient", () => {
           hello: "world",
         },
       };
-      const chain = ApolloLink.from([
-        new ApolloLink(() => Observable.of(data)),
-      ]);
+      const chain = ApolloLink.from([new ApolloLink(() => of(data))]);
       // Smoke tests execute as a static method
       const observable = ApolloLink.execute(chain, uniqueOperation);
       const stream = new ObservableStream(observable);
@@ -498,7 +494,7 @@ describe("ApolloClient", () => {
         new ApolloLink((op, forward) => {
           return forward(op);
         }),
-        new ApolloLink(() => Observable.of(data)),
+        new ApolloLink(() => of(data)),
       ]);
       const observable = ApolloLink.execute(chain, uniqueOperation);
       const stream = new ObservableStream(observable);
@@ -534,7 +530,7 @@ describe("ApolloClient", () => {
             });
           });
         }),
-        new ApolloLink(() => Observable.of(data)),
+        new ApolloLink(() => of(data)),
       ]);
 
       const result = ApolloLink.execute(chain, uniqueOperation);
@@ -569,9 +565,7 @@ describe("ApolloClient", () => {
         add1Link,
         add1,
         add1Link,
-        new ApolloLink((operation) =>
-          Observable.of({ data: operation.getContext() })
-        ),
+        new ApolloLink((operation) => of({ data: operation.getContext() })),
       ]);
 
       const stream = new ObservableStream(
@@ -588,10 +582,10 @@ describe("ApolloClient", () => {
       const context = { add: 1 };
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat((operation, forward) =>
-        Observable.of({ data: operation.getContext().add + 1 })
+        of({ data: operation.getContext().add + 1 })
       );
       const link2 = returnOne.concat((operation, forward) =>
-        Observable.of({ data: operation.getContext().add + 2 })
+        of({ data: operation.getContext().add + 2 })
       );
       const link = returnOne.split(
         (operation) => operation.getContext().add === 1,
@@ -625,12 +619,12 @@ describe("ApolloClient", () => {
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat(
         new ApolloLink((operation, forward) =>
-          Observable.of({ data: operation.getContext().add + 1 })
+          of({ data: operation.getContext().add + 1 })
         )
       );
       const link2 = returnOne.concat(
         new ApolloLink((operation, forward) =>
-          Observable.of({ data: operation.getContext().add + 2 })
+          of({ data: operation.getContext().add + 2 })
         )
       );
       const link = returnOne.split(
@@ -664,11 +658,11 @@ describe("ApolloClient", () => {
       const context = { add: 1 };
       const returnOne = new SetContextLink(() => context);
       const link1 = returnOne.concat((operation, forward) =>
-        Observable.of({ data: operation.getContext().add + 1 })
+        of({ data: operation.getContext().add + 1 })
       );
       const link2 = returnOne.concat(
         new ApolloLink((operation, forward) =>
-          Observable.of({ data: operation.getContext().add + 2 })
+          of({ data: operation.getContext().add + 2 })
         )
       );
       const link = returnOne.split(
@@ -717,9 +711,7 @@ describe("ApolloClient", () => {
             return forward(operation);
           }
         )
-        .concat((operation) =>
-          Observable.of({ data: operation.getContext().add })
-        );
+        .concat((operation) => of({ data: operation.getContext().add }));
 
       {
         const stream = new ObservableStream(
@@ -748,14 +740,14 @@ describe("ApolloClient", () => {
       const link = start.split(
         (operation) => operation.getContext().test,
         (operation) =>
-          Observable.of({
+          of({
             data: {
               count: 1,
             },
           })
       );
       const concat = link.concat((operation) =>
-        Observable.of({
+        of({
           data: {
             count: 2,
           },
@@ -794,7 +786,7 @@ describe("ApolloClient", () => {
     it("should create filter when single link passed in", async () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) => Observable.of({ data: { count: 1 } })
+        (operation, forward) => of({ data: { count: 1 } })
       );
 
       let context = { test: true };
@@ -822,8 +814,8 @@ describe("ApolloClient", () => {
     it("should split two functions", async () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) => Observable.of({ data: { count: 1 } }),
-        (operation, forward) => Observable.of({ data: { count: 2 } })
+        (operation, forward) => of({ data: { count: 1 } }),
+        (operation, forward) => of({ data: { count: 2 } })
       );
 
       let context = { test: true };
@@ -852,10 +844,8 @@ describe("ApolloClient", () => {
     it("should split two Links", async () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) => Observable.of({ data: { count: 1 } }),
-        new ApolloLink((operation, forward) =>
-          Observable.of({ data: { count: 2 } })
-        )
+        (operation, forward) => of({ data: { count: 1 } }),
+        new ApolloLink((operation, forward) => of({ data: { count: 2 } }))
       );
 
       let context = { test: true };
@@ -884,10 +874,8 @@ describe("ApolloClient", () => {
     it("should split a link and a function", async () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation, forward) => Observable.of({ data: { count: 1 } }),
-        new ApolloLink((operation, forward) =>
-          Observable.of({ data: { count: 2 } })
-        )
+        (operation, forward) => of({ data: { count: 1 } }),
+        new ApolloLink((operation, forward) => of({ data: { count: 2 } }))
       );
 
       let context = { test: true };
@@ -918,10 +906,12 @@ describe("ApolloClient", () => {
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
         (operation, forward) =>
-          forward(operation).map((data) => ({
-            data: { count: data.data!.count + 1 },
-          }))
-      ).concat(() => Observable.of({ data: { count: 1 } }));
+          forward(operation).pipe(
+            map((data) => ({
+              data: { count: data.data!.count + 1 },
+            }))
+          )
+      ).concat(() => of({ data: { count: 1 } }));
 
       {
         const stream = new ObservableStream(
@@ -947,8 +937,8 @@ describe("ApolloClient", () => {
       const context = { test: true };
       const link = ApolloLink.split(
         (operation) => operation.getContext().test,
-        (operation) => Observable.of({ data: { count: 2 } })
-      ).concat((operation) => Observable.of({ data: { count: 1 } }));
+        (operation) => of({ data: { count: 2 } })
+      ).concat((operation) => of({ data: { count: 1 } }));
 
       {
         const stream = new ObservableStream(
@@ -999,7 +989,7 @@ describe("ApolloClient", () => {
       it("should not warn if attempting to split a terminating and non-terminating Link", () => {
         const split = ApolloLink.split(
           () => true,
-          (operation) => Observable.of({ data }),
+          (operation) => of({ data }),
           (operation, forward) => forward(operation)
         );
         split.concat((operation, forward) => forward(operation));
@@ -1009,8 +999,8 @@ describe("ApolloClient", () => {
       it("should warn if attempting to concat to split two terminating links", () => {
         const split = ApolloLink.split(
           () => true,
-          (operation) => Observable.of({ data }),
-          (operation) => Observable.of({ data })
+          (operation) => of({ data }),
+          (operation) => of({ data })
         );
         expect(
           split.concat((operation, forward) => forward(operation))
@@ -1021,8 +1011,8 @@ describe("ApolloClient", () => {
       it("should warn if attempting to split to split two terminating links", () => {
         const split = ApolloLink.split(
           () => true,
-          (operation) => Observable.of({ data }),
-          (operation) => Observable.of({ data })
+          (operation) => of({ data }),
+          (operation) => of({ data })
         );
         expect(
           split.split(
@@ -1039,7 +1029,7 @@ describe("ApolloClient", () => {
       it("should not warn if attempting to form a terminating then non-terminating Link", () => {
         ApolloLink.from([
           (operation, forward) => forward(operation),
-          (operation) => Observable.of({ data }),
+          (operation) => of({ data }),
         ]);
         expect(warningStub).not.toBeCalled();
       });
@@ -1047,7 +1037,7 @@ describe("ApolloClient", () => {
       it("should warn if attempting to add link after termination", () => {
         ApolloLink.from([
           (operation, forward) => forward(operation),
-          (operation) => Observable.of({ data }),
+          (operation) => of({ data }),
           (operation, forward) => forward(operation),
         ]);
         expect(warningStub).toHaveBeenCalledTimes(1);
@@ -1056,7 +1046,7 @@ describe("ApolloClient", () => {
       it("should warn if attempting to add link after termination", () => {
         ApolloLink.from([
           new ApolloLink((operation, forward) => forward(operation)),
-          new ApolloLink((operation) => Observable.of({ data })),
+          new ApolloLink((operation) => of({ data })),
           new ApolloLink((operation, forward) => forward(operation)),
         ]);
         expect(warningStub).toHaveBeenCalledTimes(1);
@@ -1065,7 +1055,7 @@ describe("ApolloClient", () => {
 
     describe("concat", () => {
       it("should warn if attempting to concat to a terminating Link from function", () => {
-        const link = new ApolloLink((operation) => Observable.of({ data }));
+        const link = new ApolloLink((operation) => of({ data }));
         expect(
           ApolloLink.concat(link, (operation, forward) => forward(operation))
         ).toEqual(link);
@@ -1074,7 +1064,7 @@ describe("ApolloClient", () => {
       });
 
       it("should warn if attempting to concat to a terminating Link", () => {
-        const link = new ApolloLink((operation) => Observable.of());
+        const link = new ApolloLink((operation) => of());
         expect(link.concat((operation, forward) => forward(operation))).toEqual(
           link
         );
@@ -1084,23 +1074,21 @@ describe("ApolloClient", () => {
 
       it("should not warn if attempting concat a terminating Link at end", () => {
         const link = new ApolloLink((operation, forward) => forward(operation));
-        link.concat((operation) => Observable.of());
+        link.concat((operation) => of());
         expect(warningStub).not.toBeCalled();
       });
     });
 
     describe("warning", () => {
       it("should include link that terminates", () => {
-        const terminatingLink = new ApolloLink((operation) =>
-          Observable.of({ data })
-        );
+        const terminatingLink = new ApolloLink((operation) => of({ data }));
         ApolloLink.from([
           new ApolloLink((operation, forward) => forward(operation)),
           new ApolloLink((operation, forward) => forward(operation)),
           terminatingLink,
           new ApolloLink((operation, forward) => forward(operation)),
           new ApolloLink((operation, forward) => forward(operation)),
-          new ApolloLink((operation) => Observable.of({ data })),
+          new ApolloLink((operation) => of({ data })),
           new ApolloLink((operation, forward) => forward(operation)),
         ]);
         expect(warningStub).toHaveBeenCalledTimes(4);

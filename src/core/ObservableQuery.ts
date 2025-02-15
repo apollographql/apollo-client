@@ -87,7 +87,7 @@ export class ObservableQuery<
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
   private observers = new Set<
-    Observer<ApolloQueryResult<MaybeMasked<TData>>>
+    Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
   >();
   private subscriptions = new Set<Subscription>();
 
@@ -201,32 +201,32 @@ export class ObservableQuery<
       // TODO: this code doesn’t actually make sense insofar as the observer
       // will never exist in this.observers due how zen-observable wraps observables.
       // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
-      const observer: Observer<ApolloQueryResult<MaybeMasked<TData>>> = {
-        next: (result) => {
-          resolve(result);
+      const observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> =
+        {
+          next: (result) => {
+            resolve(result);
 
-          // Stop the query within the QueryManager if we can before
-          // this function returns.
-          //
-          // We do this in order to prevent observers piling up within
-          // the QueryManager. Notice that we only fully unsubscribe
-          // from the subscription in a setTimeout(..., 0)  call. This call can
-          // actually be handled by the browser at a much later time. If queries
-          // are fired in the meantime, observers that should have been removed
-          // from the QueryManager will continue to fire, causing an unnecessary
-          // performance hit.
-          this.observers.delete(observer);
-          if (!this.observers.size) {
-            this.queryManager.removeQuery(this.queryId);
-          }
+            // Stop the query within the QueryManager if we can before
+            // this function returns.
+            //
+            // We do this in order to prevent observers piling up within
+            // the QueryManager. Notice that we only fully unsubscribe
+            // from the subscription in a setTimeout(..., 0)  call. This call can
+            // actually be handled by the browser at a much later time. If queries
+            // are fired in the meantime, observers that should have been removed
+            // from the QueryManager will continue to fire, causing an unnecessary
+            // performance hit.
+            this.observers.delete(observer);
+            if (!this.observers.size) {
+              this.queryManager.removeQuery(this.queryId);
+            }
 
-          setTimeout(() => {
-            subscription.unsubscribe();
-          }, 0);
-        },
-        error: reject,
-        complete: () => {},
-      };
+            setTimeout(() => {
+              subscription.unsubscribe();
+            }, 0);
+          },
+          error: reject,
+        };
       const subscription = this.subscribe(observer);
     });
   }
@@ -983,7 +983,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const variables = options.variables && { ...options.variables };
     const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
-    const observer: Observer<ApolloQueryResult<TData>> = {
+    const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
       next: (result) => {
         if (equal(this.variables, variables)) {
           finishWaitingForOwnResult();
@@ -1002,7 +1002,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           this.reportError(error, variables);
         }
       },
-      complete: () => {},
     };
 
     if (!useDisposableConcast && (fromLink || !this.concast)) {

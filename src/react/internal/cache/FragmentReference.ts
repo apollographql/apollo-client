@@ -9,11 +9,8 @@ import {
   createFulfilledPromise,
   wrapPromiseWithState,
 } from "../../../utilities/index.js";
-import type {
-  Observable,
-  ObservableSubscription,
-  PromiseWithState,
-} from "../../../utilities/index.js";
+import type { PromiseWithState } from "../../../utilities/index.js";
+import type { Observable, Subscription } from "rxjs";
 import type { FragmentKey } from "./types.js";
 
 type FragmentRefPromise<TData> = PromiseWithState<TData>;
@@ -35,7 +32,7 @@ export class FragmentReference<
   private resolve: ((result: MaybeMasked<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<MaybeMasked<TData>>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 

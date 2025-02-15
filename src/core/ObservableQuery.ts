@@ -103,7 +103,7 @@ export class ObservableQuery<
   // When this.concast is defined, this.observer is the Observer currently
   // subscribed to that Concast.
   private concast?: Concast<ApolloQueryResult<TData>>;
-  private observer?: Observer<ApolloQueryResult<TData>>;
+  private observer?: Partial<Observer<ApolloQueryResult<TData>>>;
 
   private pollingInfo?: {
     interval: number;

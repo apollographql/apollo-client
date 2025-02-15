@@ -1,7 +1,7 @@
-import type { Operation, GraphQLRequest, NextLink } from "../core/index.js";
+import type { GraphQLRequest } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import type { DefaultContext } from "../../core/index.js";
 
 export type ContextSetter = (
@@ -10,11 +10,11 @@ export type ContextSetter = (
 ) => Promise<DefaultContext> | DefaultContext;
 
 export function setContext(setter: ContextSetter): ApolloLink {
-  return new ApolloLink((operation: Operation, forward: NextLink) => {
+  return new ApolloLink((operation, forward) => {
     const { ...request } = operation;
 
     return new Observable((observer) => {
-      let handle: ObservableSubscription;
+      let handle: Subscription;
       let closed = false;
       Promise.resolve(request)
         .then((req) => setter(req, operation.getContext()))

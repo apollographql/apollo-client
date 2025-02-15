@@ -1,5 +1,6 @@
 import { Observable } from "rxjs";
 
+import type { BatchHandler } from "@apollo/client/link/batch";
 import { BatchLink } from "@apollo/client/link/batch";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
@@ -78,7 +79,7 @@ export class BatchHttpLink extends ApolloLink {
     this.batchInterval = batchInterval || 10;
     this.batchMax = batchMax || 10;
 
-    const batchHandler = (operations: Operation[]) => {
+    const batchHandler: BatchHandler = (operations) => {
       const chosenURI = selectURI(operations[0], uri);
 
       const context = operations[0].getContext();
@@ -164,7 +165,7 @@ export class BatchHttpLink extends ApolloLink {
         options.signal = controller.signal;
       }
 
-      return new Observable<FetchResult[]>((observer) => {
+      return new Observable((observer) => {
         // Prefer BatchHttpLink.Options.fetch (preferredFetch) if provided, and
         // otherwise fall back to the *current* global window.fetch function
         // (see issue #7832), or (if all else fails) the backupFetch function we

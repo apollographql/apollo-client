@@ -24,7 +24,7 @@ import { ApolloError } from "../../errors";
 import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
 import { expectTypeOf } from "expect-type";
 
-import { SubscriptionObserver } from "zen-observable-ts";
+import { Observer } from "rxjs";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
 
@@ -1297,7 +1297,7 @@ describe("ObservableQuery", () => {
     });
 
     it("calling refetch with different variables before the query itself resolved will only yield the result for the new variables", async () => {
-      const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
+      const observers: Observer<FetchResult<typeof dataOne>>[] = [];
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink((operation, forward) => {
@@ -1331,7 +1331,7 @@ describe("ObservableQuery", () => {
     });
 
     it("calling refetch multiple times with different variables will return only results for the most recent variables", async () => {
-      const observers: SubscriptionObserver<FetchResult<typeof dataOne>>[] = [];
+      const observers: Observer<FetchResult<typeof dataOne>>[] = [];
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new ApolloLink((operation, forward) => {
@@ -3032,7 +3032,7 @@ describe("ObservableQuery", () => {
               hello
             }
           `;
-          let observer!: SubscriptionObserver<FetchResult>;
+          let observer!: Observer<FetchResult>;
           const link = new ApolloLink(() => {
             return new Observable((o) => {
               observer = o;
@@ -3663,7 +3663,7 @@ describe("ObservableQuery", () => {
 });
 
 test("regression test for #10587", async () => {
-  let observers: Record<string, SubscriptionObserver<FetchResult>> = {};
+  let observers: Record<string, Observer<FetchResult>> = {};
   const link = new ApolloLink((operation) => {
     return new Observable((observer) => {
       observers[operation.operationName] = observer;

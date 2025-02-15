@@ -1,4 +1,5 @@
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type { Observable } from "rxjs";
 
 import type { ApolloCache, DataProxy, Reference } from "@apollo/client/cache";
 import type {
@@ -11,7 +12,6 @@ import type { UriFunction } from "@apollo/client/link/http";
 import { HttpLink } from "@apollo/client/link/http";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
-import type { Observable } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {

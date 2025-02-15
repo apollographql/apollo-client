@@ -1,4 +1,4 @@
-import { from, ObservableInput } from "rxjs";
+import { from, Observable, ObservableInput } from "rxjs";
 import { take, toArray, map } from "rxjs/operators";
 import { assign, cloneDeep } from "lodash";
 import gql from "graphql-tag";
@@ -17,7 +17,7 @@ import { QueryManager } from "../core/QueryManager";
 
 import { Cache, InMemoryCache } from "../cache";
 
-import { Observable, addTypenameToDocument } from "../utilities";
+import { addTypenameToDocument } from "../utilities";
 
 import { MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream } from "../testing/internal";

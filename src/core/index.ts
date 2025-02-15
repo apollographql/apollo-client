@@ -81,8 +81,6 @@ export type {
 
 export type {
   DocumentTransformCacheKey,
-  Observer,
-  ObservableSubscription,
   Reference,
   StoreObject,
 } from "../utilities/index.js";

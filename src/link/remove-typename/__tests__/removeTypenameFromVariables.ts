@@ -3,7 +3,8 @@ import {
   removeTypenameFromVariables,
 } from "../removeTypenameFromVariables";
 import { ApolloLink, Operation } from "../../core";
-import { Observable, gql } from "../../../core";
+import { gql } from "../../../core";
+import { of } from "rxjs";
 import { createOperation, toPromise } from "../../utils";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &
@@ -16,7 +17,7 @@ async function execute(link: ApolloLink, operation: PartialOperation) {
   function forward(operation: Operation) {
     // use the `data` key to satisfy the TypeScript types required by
     // `forward`'s' return value
-    return Observable.of({ data: operation });
+    return of({ data: operation });
   }
 
   const { data } = await toPromise(

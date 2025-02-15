@@ -99,7 +99,6 @@ export type {
   Observer,
   ObservableSubscription,
 } from "./observables/Observable.js";
-export { Observable } from "./observables/Observable.js";
 
 export type { PromiseWithState } from "./promises/decoration.js";
 export {

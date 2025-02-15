@@ -88,7 +88,6 @@ export type {
 } from "../utilities/index.js";
 export {
   DocumentTransform,
-  Observable,
   isReference,
   makeReference,
 } from "../utilities/index.js";

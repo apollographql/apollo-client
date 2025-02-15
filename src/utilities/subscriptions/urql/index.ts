@@ -1,4 +1,4 @@
-import { Observable } from "../../index.js";
+import { Observable } from "rxjs";
 import {
   handleError,
   readMultipartBody,

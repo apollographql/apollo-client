@@ -1,4 +1,5 @@
-import type { SubscriptionObserver } from "zen-observable-ts";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
 import {
   ApolloError,
@@ -11,8 +12,6 @@ import type {
   Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type { ObservableSubscription } from "@apollo/client/utilities";
-import { Observable } from "@apollo/client/utilities";
 
 import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
 import { buildDelayFunction } from "./delayFunction.js";
@@ -38,7 +37,7 @@ export namespace RetryLink {
  */
 class RetryableOperation {
   private retryCount: number = 0;
-  private currentSubscription: ObservableSubscription | null = null;
+  private currentSubscription: Subscription | null = null;
   private timerId: number | undefined;
 
   constructor(

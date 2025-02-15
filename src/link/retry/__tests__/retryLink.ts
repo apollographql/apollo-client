@@ -1,4 +1,5 @@
 import { gql } from "graphql-tag";
+import { Observable, of } from "rxjs";
 
 import { ApolloError } from "@apollo/client/core";
 
@@ -6,7 +7,6 @@ import {
   mockMultipartSubscriptionStream,
   ObservableStream,
 } from "../../../testing/internal/index.js";
-import { Observable } from "../../../utilities/observables/Observable.js";
 import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { fromError } from "../../utils/fromError.js";
@@ -38,7 +38,7 @@ describe("RetryLink", () => {
   it("returns data from the underlying link on a successful operation", async () => {
     const retry = new RetryLink();
     const data = { data: { hello: "world" } };
-    const stub = jest.fn(() => Observable.of(data));
+    const stub = jest.fn(() => of(data));
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -56,7 +56,7 @@ describe("RetryLink", () => {
     const data = { data: { hello: "world" } };
     const stub = jest.fn();
     stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(Observable.of(data));
+    stub.mockReturnValueOnce(of(data));
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -116,10 +116,10 @@ describe("RetryLink", () => {
     const stub = jest.fn();
     stub.mockReturnValueOnce(fromError(standardError));
     stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(Observable.of(data));
+    stub.mockReturnValueOnce(of(data));
     stub.mockReturnValueOnce(fromError(standardError));
     stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(Observable.of(data));
+    stub.mockReturnValueOnce(of(data));
     const link = ApolloLink.from([retry, stub]);
 
     const observable = execute(link, { query });

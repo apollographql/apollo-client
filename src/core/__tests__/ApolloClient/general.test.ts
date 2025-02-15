@@ -3,6 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { DocumentNode, GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { from } from "rxjs";
+import { Observable, Observer } from "rxjs";
 import { map } from "rxjs/operators";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -33,10 +34,6 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import {
-  Observable,
-  Observer,
-} from "../../../utilities/observables/Observable.js";
 import { NetworkStatus } from "../../networkStatus.js";
 import { QueryManager } from "../../QueryManager.js";
 import {

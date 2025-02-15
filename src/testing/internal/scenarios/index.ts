@@ -1,5 +1,7 @@
+import { Observable } from "rxjs";
+
 import type { TypedDocumentNode } from "@apollo/client/core";
-import { ApolloLink, gql, Observable } from "@apollo/client/core";
+import { ApolloLink, gql } from "@apollo/client/core";
 import type { MaskedDocumentNode } from "@apollo/client/masking";
 import type { MockedResponse } from "@apollo/client/testing/core";
 

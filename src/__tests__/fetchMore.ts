@@ -1,5 +1,6 @@
 import { assign, cloneDeep } from "lodash";
 import gql from "graphql-tag";
+import { Observable } from "rxjs";
 
 import {
   ApolloClient,
@@ -8,11 +9,7 @@ import {
   TypedDocumentNode,
 } from "../core";
 
-import {
-  Observable,
-  offsetLimitPagination,
-  concatPagination,
-} from "../utilities";
+import { offsetLimitPagination, concatPagination } from "../utilities";
 
 import {
   ApolloCache,

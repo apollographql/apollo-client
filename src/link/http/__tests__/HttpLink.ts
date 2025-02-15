@@ -4,6 +4,7 @@ import { TextDecoder } from "util";
 import fetchMock from "fetch-mock";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
+import { map, Observable, Observer, Subscription } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import { FetchResult, ServerError } from "@apollo/client";
@@ -11,11 +12,6 @@ import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import {
-  Observable,
-  ObservableSubscription,
-  Observer,
-} from "../../../utilities/observables/Observable.js";
 import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { createHttpLink } from "../createHttpLink.js";
@@ -103,7 +99,7 @@ describe("HttpLink", () => {
     const data2 = { data: { hello: "everyone" } };
     const mockError = { throws: new TypeError("mock me") };
     let subscriber: Observer<any>;
-    const subscriptions = new Set<ObservableSubscription>();
+    const subscriptions = new Set<Subscription>();
 
     beforeEach(() => {
       fetchMock.restore();
@@ -629,12 +625,14 @@ describe("HttpLink", () => {
         operation.setContext({
           headers: { authorization: "1234" },
         });
-        return forward(operation).map((result) => {
-          const { headers } = operation.getContext();
-          expect(headers).toBeDefined();
+        return forward(operation).pipe(
+          map((result) => {
+            const { headers } = operation.getContext();
+            expect(headers).toBeDefined();
 
-          return result;
-        });
+            return result;
+          })
+        );
       });
       const link = middleware.concat(createHttpLink({ uri: "data" }));
 

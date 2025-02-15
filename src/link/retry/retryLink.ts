@@ -6,7 +6,7 @@ import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
 import { buildDelayFunction } from "./delayFunction.js";
 import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
-import type { SubscriptionObserver } from "zen-observable-ts";
+import type { Observer } from "rxjs";
 import {
   ApolloError,
   graphQLResultHasProtocolErrors,
@@ -36,7 +36,7 @@ class RetryableOperation {
   private timerId: number | undefined;
 
   constructor(
-    private observer: SubscriptionObserver<FetchResult>,
+    private observer: Observer<FetchResult>,
     private operation: Operation,
     private forward: NextLink,
     private delayFor: DelayFunction,

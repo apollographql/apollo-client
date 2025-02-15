@@ -17,6 +17,7 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import * as React from "react";
+import { Observable } from "rxjs";
 import { SubscriptionObserver } from "zen-observable-ts";
 
 import {
@@ -26,7 +27,6 @@ import {
   FetchResult,
   gql,
   InMemoryCache,
-  Observable,
   Reference,
   StoreObject,
   TypedDocumentNode,

@@ -12,7 +12,7 @@ import {
   GraphQLString,
 } from "graphql";
 
-import { Observable } from "../../utilities";
+import { Observable, of } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { Operation } from "../../link/core";
 import { ApolloClient } from "../../core";
@@ -27,7 +27,7 @@ describe("General functionality", () => {
       }
     `;
 
-    const link = new ApolloLink(() => Observable.of({ data: { field: 1 } }));
+    const link = new ApolloLink(() => of({ data: { field: 1 } }));
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
@@ -49,7 +49,7 @@ describe("General functionality", () => {
     `;
 
     const error = new GraphQLError("no introspection result found");
-    const link = new ApolloLink(() => Observable.of({ errors: [error] }));
+    const link = new ApolloLink(() => of({ errors: [error] }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -180,7 +180,7 @@ describe("General functionality", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: { foo: [{ __typename: "Bar" }, { __typename: "Baz" }] },
       })
     );
@@ -392,7 +392,7 @@ describe("Cache manipulation", () => {
     let selectedItemId = -1;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new ApolloLink(() => Observable.of({ data: { serverData } })),
+      link: new ApolloLink(() => of({ data: { serverData } })),
       resolvers: {
         Query: {
           selectedItemId() {
@@ -461,7 +461,7 @@ describe("Cache manipulation", () => {
     `;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new ApolloLink(() => Observable.of({ data: {} })),
+      link: new ApolloLink(() => of({ data: {} })),
       resolvers: {
         ClientData: {
           titleLength(data) {
@@ -559,7 +559,7 @@ describe("Sample apps", () => {
 
     const link = new ApolloLink((operation) => {
       expect(operation.operationName).toBe("GetCount");
-      return Observable.of({ data: { lastCount: 1 } });
+      return of({ data: { lastCount: 1 } });
     });
 
     const client = new ApolloClient({
@@ -737,7 +737,7 @@ describe("Combining client and server state/operations", () => {
       },
     };
 
-    const link = new ApolloLink(() => Observable.of({ data }));
+    const link = new ApolloLink(() => of({ data }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -903,7 +903,7 @@ describe("Combining client and server state/operations", () => {
       },
     };
 
-    const link = new ApolloLink(() => Observable.of({ data }));
+    const link = new ApolloLink(() => of({ data }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -956,7 +956,7 @@ describe("Combining client and server state/operations", () => {
 
     const link = new ApolloLink((operation) => {
       expect(operation.operationName).toBe("GetCount");
-      return Observable.of({ data: { lastCount: 1 } });
+      return of({ data: { lastCount: 1 } });
     });
 
     const client = new ApolloClient({
@@ -993,7 +993,7 @@ describe("Combining client and server state/operations", () => {
     const cache = new InMemoryCache();
     const link = new ApolloLink((operation) => {
       expect(operation.operationName).toBe("GetUser");
-      return Observable.of({
+      return of({
         data: {
           user: {
             __typename: "User",
@@ -1073,16 +1073,16 @@ describe("Combining client and server state/operations", () => {
 
     const link = new ApolloLink((operation: Operation): Observable<{}> => {
       if (operation.operationName === "SampleQuery") {
-        return Observable.of({
+        return of({
           data: { user: { __typename: "User", firstName: "John" } },
         });
       }
       if (operation.operationName === "SampleMutation") {
-        return Observable.of({
+        return of({
           data: { updateUser: { __typename: "User", firstName: "Harry" } },
         });
       }
-      return Observable.of({
+      return of({
         errors: [new Error(`Unknown operation ${operation.operationName}`)],
       });
     });
@@ -1154,7 +1154,7 @@ describe("Combining client and server state/operations", () => {
 
     const cache = new InMemoryCache();
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: null,
         errors: [
           new GraphQLError("something went wrong", {

@@ -9,8 +9,8 @@ import type {
 } from "../../../link/core/index.js";
 import { ApolloLink } from "../../../link/core/index.js";
 
+import { Observable } from "rxjs";
 import {
-  Observable,
   addTypenameToDocument,
   removeClientSetsFromDocument,
   cloneDeep,

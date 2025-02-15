@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
 import type { Subscription } from "rxjs";
-import { map, Observable, of } from "rxjs";
+import { from, map, mergeMap, Observable, of } from "rxjs";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
@@ -300,8 +300,8 @@ export class QueryManager<TStore> {
     const self = this;
 
     return new Promise((resolve, reject) => {
-      return asyncMap(
-        self.getObservableFromLink(
+      return self
+        .getObservableFromLink(
           mutation,
           {
             ...context,
@@ -310,92 +310,98 @@ export class QueryManager<TStore> {
           variables,
           {},
           false
-        ),
+        )
+        .pipe(
+          mergeMap((result) => {
+            if (graphQLResultHasError(result) && errorPolicy === "none") {
+              throw new ApolloError({
+                graphQLErrors: getGraphQLErrorsFromResult(result),
+              });
+            }
 
-        (result: FetchResult<TData>) => {
-          if (graphQLResultHasError(result) && errorPolicy === "none") {
-            throw new ApolloError({
-              graphQLErrors: getGraphQLErrorsFromResult(result),
-            });
-          }
+            if (mutationStoreValue) {
+              mutationStoreValue.loading = false;
+              mutationStoreValue.error = null;
+            }
 
-          if (mutationStoreValue) {
-            mutationStoreValue.loading = false;
-            mutationStoreValue.error = null;
-          }
+            const storeResult: typeof result = { ...result };
 
-          const storeResult: typeof result = { ...result };
+            if (typeof refetchQueries === "function") {
+              refetchQueries = refetchQueries(
+                storeResult as FetchResult<Unmasked<TData>>
+              );
+            }
 
-          if (typeof refetchQueries === "function") {
-            refetchQueries = refetchQueries(
-              storeResult as FetchResult<Unmasked<TData>>
-            );
-          }
+            if (
+              errorPolicy === "ignore" &&
+              graphQLResultHasError(storeResult)
+            ) {
+              delete storeResult.errors;
+            }
 
-          if (errorPolicy === "ignore" && graphQLResultHasError(storeResult)) {
-            delete storeResult.errors;
-          }
-
-          return self.markMutationResult<TData, TVariables, TContext, TCache>({
-            mutationId,
-            result: storeResult,
-            document: mutation,
-            variables,
-            fetchPolicy,
-            errorPolicy,
-            context,
-            update: updateWithProxyFn,
-            updateQueries,
-            awaitRefetchQueries,
-            refetchQueries,
-            removeOptimistic: isOptimistic ? mutationId : void 0,
-            onQueryUpdated,
-            keepRootFields,
-          });
-        }
-      ).subscribe({
-        next(storeResult) {
-          self.broadcastQueries();
-
-          // Since mutations might receive multiple payloads from the
-          // ApolloLink chain (e.g. when used with @defer),
-          // we resolve with a SingleExecutionResult or after the final
-          // ExecutionPatchResult has arrived and we have assembled the
-          // multipart response into a single result.
-          if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
-            resolve({
-              ...storeResult,
-              data: self.maskOperation({
+            return from(
+              self.markMutationResult<TData, TVariables, TContext, TCache>({
+                mutationId,
+                result: storeResult,
                 document: mutation,
-                data: storeResult.data,
+                variables,
                 fetchPolicy,
-                id: mutationId,
-              }) as any,
-            });
-          }
-        },
-
-        error(err: Error) {
-          if (mutationStoreValue) {
-            mutationStoreValue.loading = false;
-            mutationStoreValue.error = err;
-          }
-
-          if (isOptimistic) {
-            self.cache.removeOptimistic(mutationId);
-          }
-
-          self.broadcastQueries();
-
-          reject(
-            err instanceof ApolloError ? err : (
-              new ApolloError({
-                networkError: err,
+                errorPolicy,
+                context,
+                update: updateWithProxyFn,
+                updateQueries,
+                awaitRefetchQueries,
+                refetchQueries,
+                removeOptimistic: isOptimistic ? mutationId : void 0,
+                onQueryUpdated,
+                keepRootFields,
               })
-            )
-          );
-        },
-      });
+            );
+          })
+        )
+        .subscribe({
+          next(storeResult) {
+            self.broadcastQueries();
+
+            // Since mutations might receive multiple payloads from the
+            // ApolloLink chain (e.g. when used with @defer),
+            // we resolve with a SingleExecutionResult or after the final
+            // ExecutionPatchResult has arrived and we have assembled the
+            // multipart response into a single result.
+            if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
+              resolve({
+                ...storeResult,
+                data: self.maskOperation({
+                  document: mutation,
+                  data: storeResult.data,
+                  fetchPolicy,
+                  id: mutationId,
+                }) as any,
+              });
+            }
+          },
+
+          error(err: Error) {
+            if (mutationStoreValue) {
+              mutationStoreValue.loading = false;
+              mutationStoreValue.error = err;
+            }
+
+            if (isOptimistic) {
+              self.cache.removeOptimistic(mutationId);
+            }
+
+            self.broadcastQueries();
+
+            reject(
+              err instanceof ApolloError ? err : (
+                new ApolloError({
+                  networkError: err,
+                })
+              )
+            );
+          },
+        });
     });
   }
 
@@ -1182,14 +1188,18 @@ export class QueryManager<TStore> {
     }
 
     if (clientQuery) {
-      observable = asyncMap(observable, (result) => {
-        return this.localState.runResolvers({
-          document: clientQuery,
-          remoteResult: result,
-          context,
-          variables,
-        });
-      });
+      observable = observable.pipe(
+        mergeMap((result) => {
+          return from(
+            this.localState.runResolvers({
+              document: clientQuery,
+              remoteResult: result,
+              context,
+              variables,
+            })
+          );
+        })
+      );
     }
 
     return observable;

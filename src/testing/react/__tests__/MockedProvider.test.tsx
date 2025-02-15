@@ -9,7 +9,7 @@ import { useQuery } from "../../../react/hooks";
 import { InMemoryCache } from "../../../cache";
 import { QueryResult } from "../../../react/types/types";
 import { ApolloLink, FetchResult } from "../../../link/core";
-import { Observable } from "zen-observable-ts";
+import { Observable } from "rxjs";
 import { ApolloError } from "../../../errors";
 
 const variables = {

@@ -1,4 +1,4 @@
-import { Observable } from "../../../utilities/observables/Observable";
+import { of } from "rxjs";
 import { toPromise } from "../toPromise";
 import { fromError } from "../fromError";
 
@@ -11,9 +11,7 @@ describe("toPromise", () => {
   const error = new Error("I always error");
 
   it("return next call as Promise resolution", () => {
-    return toPromise(Observable.of(data)).then((result) =>
-      expect(data).toEqual(result)
-    );
+    return toPromise(of(data)).then((result) => expect(data).toEqual(result));
   });
 
   it("return error call as Promise rejection", () => {
@@ -38,7 +36,7 @@ describe("toPromise", () => {
     });
 
     it("return error call as Promise rejection", async () => {
-      const result = await toPromise(Observable.of(data, data));
+      const result = await toPromise(of(data, data));
 
       expect(data).toEqual(result);
       expect(spy).toHaveBeenCalled();

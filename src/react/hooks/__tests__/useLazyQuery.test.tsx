@@ -2,6 +2,7 @@ import React from "react";
 import { GraphQLError } from "graphql";
 import gql from "graphql-tag";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import { Observable } from "rxjs";
 
 import {
   ApolloClient,
@@ -12,7 +13,7 @@ import {
   NetworkStatus,
   TypedDocumentNode,
 } from "../../../core";
-import { DeepPartial, Observable } from "../../../utilities";
+import { DeepPartial } from "../../../utilities";
 import { ApolloProvider } from "../../../react";
 import {
   mockSingleLink,

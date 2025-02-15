@@ -4,6 +4,7 @@ import fetchMock from "fetch-mock";
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { times } from "lodash";
+import { Observable } from "rxjs";
 
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import {
@@ -12,7 +13,6 @@ import {
 } from "@apollo/client/link/persisted-queries";
 import { toPromise } from "@apollo/client/link/utils";
 import { wait } from "@apollo/client/testing";
-import { Observable } from "@apollo/client/utilities";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 import { createHttpLink } from "../../http/createHttpLink.js";

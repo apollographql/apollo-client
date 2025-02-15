@@ -2,11 +2,7 @@ import type * as ReactTypes from "react";
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type {
-  Observable,
-  ObservableSubscription,
-  OnlyRequiredProperties,
-} from "../../utilities/index.js";
+import type { OnlyRequiredProperties } from "../../utilities/index.js";
 import type { FetchResult } from "../../link/core/index.js";
 import type { ApolloError } from "../../errors/index.js";
 import type {
@@ -484,11 +480,6 @@ export interface SubscriptionDataOptions<
   children?:
     | null
     | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
-}
-
-export interface SubscriptionCurrentObservable {
-  query?: Observable<any>;
-  subscription?: ObservableSubscription;
 }
 
 export type VariablesOption<TVariables extends OperationVariables> =

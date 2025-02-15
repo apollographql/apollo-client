@@ -58,6 +58,7 @@ interface Last<TData, TVariables> {
   error?: ApolloError;
 }
 
+// TODO: Make this a BehaviorSubject
 export class ObservableQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,

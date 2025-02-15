@@ -9,7 +9,16 @@ import { Observable } from "zen-observable-ts";
 // proposal (https://github.com/zenparsing/es-observable)
 import "symbol-observable";
 
-export type { ObservableSubscription, Observer, Subscriber };
+export type {
+  /** @deprecated */
+  ObservableSubscription,
+
+  /** @deprecated */
+  Observer,
+
+  /** @deprecated */
+  Subscriber,
+};
 
 // The zen-observable package defines Observable.prototype[Symbol.observable]
 // when Symbol is supported, but RxJS interop depends on also setting this fake
@@ -23,4 +32,7 @@ if (!prototype[fakeObsSymbol]) {
   };
 }
 
-export { Observable };
+export {
+  /** @deprecated */
+  Observable,
+};

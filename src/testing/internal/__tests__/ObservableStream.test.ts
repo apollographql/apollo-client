@@ -1,4 +1,4 @@
-import { Observable } from "../../../utilities";
+import { Observable } from "rxjs";
 import { ObservableStream } from "../ObservableStream";
 
 it("allows to step through an observable until completion", async () => {

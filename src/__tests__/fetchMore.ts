@@ -1,5 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
+import { Observable } from "rxjs";
 
 import {
   ApolloCache,
@@ -16,7 +17,6 @@ import {
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import {
   concatPagination,
-  Observable,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 

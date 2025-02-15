@@ -95,11 +95,6 @@ export {
   relayStylePagination,
 } from "./policies/pagination.js";
 
-export type {
-  ObservableSubscription,
-  Observer,
-} from "./observables/Observable.js";
-
 export type { PromiseWithState } from "./promises/decoration.js";
 export {
   createFulfilledPromise,

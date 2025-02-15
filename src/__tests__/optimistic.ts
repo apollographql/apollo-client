@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { from, ObservableInput } from "rxjs";
+import { from, Observable, ObservableInput } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
 import { Cache, InMemoryCache } from "@apollo/client/cache";
@@ -14,7 +14,7 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
-import { addTypenameToDocument, Observable } from "@apollo/client/utilities";
+import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import { QueryManager } from "../core/QueryManager.js";
 import { ObservableStream } from "../testing/internal/index.js";

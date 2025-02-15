@@ -30,12 +30,13 @@
 
 import type { FormattedExecutionResult } from "graphql";
 import type { Client, Sink } from "graphql-ws";
+import { Observable } from "rxjs";
 
 import { ApolloError } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
-import { isNonNullObject, Observable } from "@apollo/client/utilities";
+import { isNonNullObject } from "@apollo/client/utilities";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
 function isLikeCloseEvent(val: unknown): val is CloseEvent {

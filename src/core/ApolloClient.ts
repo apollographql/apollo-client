@@ -6,7 +6,7 @@ import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
 import { ApolloLink, execute } from "../link/core/index.js";
 import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
 import type { DocumentTransform } from "../utilities/index.js";
-import type { Observable } from "../utilities/index.js";
+import type { Observable } from "rxjs";
 import { version } from "../version.js";
 import type { UriFunction } from "../link/http/index.js";
 import { HttpLink } from "../link/http/index.js";

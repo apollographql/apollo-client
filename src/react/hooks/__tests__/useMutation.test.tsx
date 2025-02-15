@@ -5,6 +5,7 @@ import { act } from "@testing-library/react";
 import { render, waitFor, screen, renderHook } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import fetchMock from "fetch-mock";
+import { Observable } from "rxjs";
 
 import {
   ApolloClient,
@@ -13,7 +14,6 @@ import {
   ApolloQueryResult,
   Cache,
   NetworkStatus,
-  Observable,
   ObservableQuery,
   TypedDocumentNode,
 } from "../../../core";

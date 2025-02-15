@@ -3,7 +3,8 @@ import { invariant } from "../../utilities/globals/index.js";
 import type { DefinitionNode } from "graphql";
 
 import { ApolloLink } from "../core/index.js";
-import { Observable, hasDirectives } from "../../utilities/index.js";
+import { hasDirectives } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import { serializeFetchParameter } from "./serializeFetchParameter.js";
 import { selectURI } from "./selectURI.js";
 import {

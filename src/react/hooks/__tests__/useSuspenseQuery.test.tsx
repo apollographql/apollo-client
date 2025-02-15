@@ -16,6 +16,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import { Observable, of } from "rxjs";
 
 import {
   ApolloCache,
@@ -28,7 +29,6 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
-  Observable,
   OperationVariables,
   split,
   SubscribeToMoreOptions,
@@ -717,7 +717,7 @@ describe("useSuspenseQuery", () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of(mocks[0].result)),
+      link: new ApolloLink(() => of(mocks[0].result)),
       cache: new InMemoryCache(),
     });
 
@@ -1074,16 +1074,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1109,16 +1105,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1151,9 +1143,7 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -6213,7 +6203,7 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
           context: operation.getContext(),
         },

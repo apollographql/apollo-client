@@ -9,11 +9,9 @@ import type {
 
 import type { Operation } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
-import type {
-  Observer,
-  ObservableSubscription,
-} from "../../utilities/index.js";
-import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
+import type { Observer, Subscription } from "rxjs";
+import { compact, isNonEmptyArray } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import type { NetworkError } from "../../errors/index.js";
 import type { ServerError } from "../utils/index.js";
 import {
@@ -173,7 +171,7 @@ export const createPersistedQueryLink = (
       const { query } = operation;
 
       return new Observable((observer: Observer<FormattedExecutionResult>) => {
-        let subscription: ObservableSubscription;
+        let subscription: Subscription;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;

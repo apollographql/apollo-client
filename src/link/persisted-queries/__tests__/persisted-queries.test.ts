@@ -5,7 +5,7 @@ import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
 import { ApolloLink, execute } from "../../core";
-import { Observable } from "../../../utilities";
+import { Observable } from "rxjs";
 import { createHttpLink } from "../../http/createHttpLink";
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";

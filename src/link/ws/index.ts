@@ -3,7 +3,7 @@ import { SubscriptionClient } from "subscriptions-transport-ws";
 
 import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
-import type { Observable } from "../../utilities/index.js";
+import type { Observable } from "rxjs";
 
 export namespace WebSocketLink {
   /**

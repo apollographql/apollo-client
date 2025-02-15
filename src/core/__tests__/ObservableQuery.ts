@@ -3,6 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
+import { map, Observable, of } from "rxjs";
 import { SubscriptionObserver } from "zen-observable-ts";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -23,7 +24,6 @@ import {
 import {
   DeepPartial,
   DocumentTransform,
-  Observable,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 
@@ -1700,7 +1700,7 @@ describe("ObservableQuery", () => {
 
       let count = 0;
 
-      let linkObservable = Observable.of({
+      let linkObservable = of({
         data: {
           name: "Ben",
         },
@@ -3571,18 +3571,20 @@ describe("ObservableQuery", () => {
     expect(observable).toBeInstanceOf(Observable);
     expect(observable).toBeInstanceOf(ObservableQuery);
 
-    const mapped = observable.map((result) => {
-      expect(result).toEqualApolloQueryResult({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        data: dataOne,
-        partial: false,
-      });
-      return {
-        ...result,
-        data: { mapped: true },
-      };
-    });
+    const mapped = observable.pipe(
+      map((result) => {
+        expect(result).toEqualApolloQueryResult({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          data: dataOne,
+          partial: false,
+        });
+        return {
+          ...result,
+          data: { mapped: true },
+        };
+      })
+    );
     expect(mapped).toBeInstanceOf(Observable);
     expect(mapped).not.toBeInstanceOf(ObservableQuery);
 

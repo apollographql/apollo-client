@@ -1,7 +1,7 @@
 import type { Operation, FetchResult, NextLink } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { Observable } from "rxjs";
 import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
 import { buildDelayFunction } from "./delayFunction.js";
 import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
@@ -32,7 +32,7 @@ export namespace RetryLink {
  */
 class RetryableOperation {
   private retryCount: number = 0;
-  private currentSubscription: ObservableSubscription | null = null;
+  private currentSubscription: Subscription | null = null;
   private timerId: number | undefined;
 
   constructor(

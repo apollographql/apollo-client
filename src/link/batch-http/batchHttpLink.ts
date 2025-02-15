@@ -1,11 +1,11 @@
 import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 import {
-  Observable,
   hasDirectives,
   maybe,
   removeClientSetsFromDocument,
 } from "../../utilities/index.js";
+import { Observable } from "rxjs";
 import { fromError } from "../utils/index.js";
 import type { HttpOptions } from "../http/index.js";
 import {

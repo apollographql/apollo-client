@@ -4,11 +4,7 @@ import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
-import {
-  Observable,
-  ObservableSubscription,
-  Observer,
-} from "../../../utilities/observables/Observable";
+import { Observable, Subscription, Observer, map } from "rxjs";
 import { BatchHttpLink } from "../batchHttpLink";
 import { FetchResult } from "../../core";
 import { ObservableStream } from "../../../testing/internal";
@@ -238,7 +234,7 @@ const createHttpLink = (httpArgs?: any) => {
   return new BatchHttpLink(args);
 };
 
-const subscriptions = new Set<ObservableSubscription>();
+const subscriptions = new Set<Subscription>();
 
 describe("SharedHttpTest", () => {
   const data = { data: { hello: "world" } };
@@ -503,11 +499,13 @@ describe("SharedHttpTest", () => {
       operation.setContext({
         headers: { authorization: "1234" },
       });
-      return forward(operation).map((result) => {
-        const { headers } = operation.getContext();
-        expect(headers).toBeDefined();
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          const { headers } = operation.getContext();
+          expect(headers).toBeDefined();
+          return result;
+        })
+      );
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
     const stream = new ObservableStream(

@@ -50,7 +50,7 @@ export class Concast<T> extends Observable<T> {
   // Active observers receiving broadcast messages. Thanks to this.latest,
   // we can assume all observers in this Set have received the same most
   // recent message, though possibly at different times in the past.
-  private observers = new Set<Observer<T>>();
+  private observers = new Set<Partial<Observer<T>>>();
 
   // This property starts off undefined to indicate the initial
   // subscription has not yet begun, then points to each source
@@ -107,7 +107,7 @@ export class Concast<T> extends Observable<T> {
     this.handlers.complete();
   }
 
-  private deliverLastMessage(observer: Observer<T>) {
+  private deliverLastMessage(observer: Partial<Observer<T>>) {
     if (this.latest) {
       const nextOrError = this.latest[0];
       const method = observer[nextOrError];
@@ -123,7 +123,7 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  public addObserver(observer: Observer<T>) {
+  public addObserver(observer: Partial<Observer<T>>) {
     if (!this.observers.has(observer)) {
       // Immediately deliver the most recent message, so we can always
       // be sure all observers have the latest information.
@@ -132,7 +132,7 @@ export class Concast<T> extends Observable<T> {
     }
   }
 
-  public removeObserver(observer: Observer<T>) {
+  public removeObserver(observer: Partial<Observer<T>>) {
     if (this.observers.delete(observer) && this.observers.size < 1) {
       // In case there are still any listeners in this.nextResultListeners, and
       // no error or completion has been broadcast yet, make sure those

@@ -18,6 +18,7 @@ interface MockedResponse {
   result?: FetchResult;
   error?: Error;
   delay?: number;
+  maxUsageCount?: number;
 }
 
 function getKey(operation: GraphQLRequest) {
@@ -84,7 +85,16 @@ function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
           );
         }
 
-        const { result, error } = responses.shift()!;
+        let response: MockedResponse;
+
+        if (responses[0].maxUsageCount && responses[0].maxUsageCount > 1) {
+          responses[0].maxUsageCount--;
+          response = responses[0];
+        } else {
+          response = responses.shift()!;
+        }
+
+        const { result, error } = response;
 
         if (!result && !error) {
           throw new Error(

@@ -1,6 +1,7 @@
 import { invariant } from "../../utilities/globals/index.js";
-import type { Observable } from "../../utilities/index.js";
+import type { Observable } from "rxjs";
 
+// TODO: Determine if we can replace this with an rxjs alternative
 export function toPromise<R>(observable: Observable<R>): Promise<R> {
   let completed = false;
   return new Promise<R>((resolve, reject) => {

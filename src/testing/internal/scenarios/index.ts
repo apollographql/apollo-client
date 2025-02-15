@@ -1,4 +1,5 @@
-import { ApolloLink, Observable, gql } from "../../../core/index.js";
+import { Observable } from "rxjs";
+import { ApolloLink, gql } from "../../../core/index.js";
 import type { TypedDocumentNode } from "../../../core/index.js";
 import type { MaskedDocumentNode } from "../../../masking/index.js";
 import type { MockedResponse } from "../../core/index.js";

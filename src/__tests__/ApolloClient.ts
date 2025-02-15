@@ -11,7 +11,8 @@ import {
 } from "../core";
 import { Kind } from "graphql";
 
-import { DeepPartial, Observable } from "../utilities";
+import { DeepPartial } from "../utilities";
+import { Observable, of } from "rxjs";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
@@ -1155,7 +1156,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return Observable.of({ data });
+        return of({ data });
       });
       function newClient() {
         return new ApolloClient({
@@ -2821,7 +2822,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return Observable.of();
+          return of();
         });
 
       const client = new ApolloClient({

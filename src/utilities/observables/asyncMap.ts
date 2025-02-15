@@ -1,8 +1,9 @@
-import type { Observer } from "./Observable.js";
-import { Observable } from "./Observable.js";
+import type { Observer } from "rxjs";
+import { Observable } from "rxjs";
 
 // Like Observable.prototype.map, except that the mapping function can
 // optionally return a Promise (or be async).
+// TODO: Determine if we can replace this with an rxjs alternative
 export function asyncMap<V, R>(
   observable: Observable<V>,
   mapFn: (value: V) => R | PromiseLike<R>,

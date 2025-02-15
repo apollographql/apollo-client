@@ -2,7 +2,7 @@ import { Client } from "graphql-ws";
 import { ExecutionResult, GraphQLError } from "graphql";
 import gql from "graphql-tag";
 
-import { Observable } from "../../../utilities";
+import { Observable } from "rxjs";
 import { ApolloError } from "../../../errors";
 import { execute } from "../../core";
 import { GraphQLWsLink } from "..";

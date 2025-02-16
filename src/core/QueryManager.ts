@@ -30,6 +30,7 @@ import {
   tap,
   observeOn,
   asyncScheduler,
+  share,
 } from "rxjs";
 import {
   getDefaultValues,
@@ -1174,7 +1175,8 @@ export class QueryManager<TStore> {
               if (!("hasNext" in arg) || !arg.hasNext) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
-            })
+            }),
+            share({ resetOnComplete: false })
           );
         }
       } else {

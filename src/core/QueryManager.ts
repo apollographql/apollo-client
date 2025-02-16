@@ -30,7 +30,7 @@ import {
   tap,
   observeOn,
   asyncScheduler,
-  share,
+  shareReplay,
 } from "rxjs";
 import {
   getDefaultValues,
@@ -1202,7 +1202,7 @@ export class QueryManager<TStore> {
               inFlightLinkObservables.remove(printedServerQuery, varJson);
               throw error;
             }),
-            share({ resetOnComplete: false })
+            shareReplay(1)
           );
         }
       } else {

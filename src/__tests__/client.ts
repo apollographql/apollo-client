@@ -1560,6 +1560,11 @@ describe("client", () => {
     });
   });
 
+  // TODO: This is a bit of an odd test because its half testing that
+  // deduplication kicks in, but its also testing some of the behavior of the
+  // observable itself. With the move to RxJS, the unsubscribe cleanup function
+  // is called with `complete` which means it might be called synchronously
+  // (hence why the `complete` needs to be wrapped in setTimeout for this test).
   it("unsubscribes from deduplicated observables only once", async () => {
     const document: DocumentNode = gql`
       query test1($x: String) {
@@ -1575,7 +1580,7 @@ describe("client", () => {
     const client = new ApolloClient({
       link: new ApolloLink(() => {
         return new Observable((observer) => {
-          observer.complete();
+          setTimeout(() => observer.complete());
           return () => {
             unsubscribeCount++;
           };

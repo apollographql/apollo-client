@@ -1192,7 +1192,7 @@ export class QueryManager<TStore> {
         if (!observable) {
           observable = entry.observable = execute(link, operation).pipe(
             // TODO: This does not handle removing in-flight observable if it
-            // completes or errors
+            // completes without emitting a result
             tap((arg) => {
               if (!("hasNext" in arg) || !arg.hasNext) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);

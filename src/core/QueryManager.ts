@@ -20,7 +20,7 @@ import { canonicalStringify } from "../cache/index.js";
 
 import type { ConcastSourcesArray, DeepPartial } from "../utilities/index.js";
 import type { Subscription } from "rxjs";
-import { Observable, of, map, from, mergeMap, catchError } from "rxjs";
+import { Observable, of, map, from, mergeMap, catchError, tap } from "rxjs";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -1179,26 +1179,19 @@ export class QueryManager<TStore> {
 
         observable = entry.observable;
         if (!observable) {
-          const concast = new Concast([
-            execute(link, operation) as Observable<FetchResult<T>>,
-          ]);
-          observable = entry.observable = concast;
-
-          concast.beforeNext(function cb(method, arg: FetchResult) {
-            if (method === "next" && "hasNext" in arg && arg.hasNext) {
-              concast.beforeNext(cb);
-            } else {
-              inFlightLinkObservables.remove(printedServerQuery, varJson);
-            }
-          });
+          observable = entry.observable = execute(link, operation).pipe(
+            tap((arg) => {
+              if (!("hasNext" in arg) || !arg.hasNext) {
+                inFlightLinkObservables.remove(printedServerQuery, varJson);
+              }
+            })
+          );
         }
       } else {
-        observable = new Concast([
-          execute(link, operation) as Observable<FetchResult<T>>,
-        ]);
+        observable = execute(link, operation) as Observable<FetchResult<T>>;
       }
     } else {
-      observable = new Concast([of({ data: {} } as FetchResult<T>)]);
+      observable = of({ data: {} } as FetchResult<T>);
       context = this.prepareContext(context);
     }
 

@@ -2822,7 +2822,10 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return of();
+          // TODO: This test fails without passing an argument to `of`.
+          // Investigate further to understand the impact here and if we need to
+          // do some more in the client to safeguard against this kind of thing.
+          return of({ data: null });
         });
 
       const client = new ApolloClient({
@@ -2843,7 +2846,12 @@ describe("ApolloClient", () => {
         fetchPolicy: "network-only",
       });
 
-      observable.subscribe({});
+      observable.subscribe({
+        // TODO: The test fails without this line which means RxJS must do some
+        // type of assertion where it throws when this is not there. Dig into
+        // this a bit further to see what's going on.
+        error: () => {},
+      });
 
       function refetchQueries() {
         const result = client.refetchQueries({

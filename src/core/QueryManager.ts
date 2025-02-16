@@ -10,7 +10,7 @@ import {
   Observable,
   observeOn,
   of,
-  share,
+  shareReplay,
   tap,
 } from "rxjs";
 
@@ -1186,7 +1186,7 @@ export class QueryManager<TStore> {
               inFlightLinkObservables.remove(printedServerQuery, varJson);
               throw error;
             }),
-            share({ resetOnComplete: false })
+            shareReplay(1)
           );
         }
       } else {

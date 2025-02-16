@@ -4930,24 +4930,20 @@ describe("custom document transforms", () => {
     });
 
     const observable = client.watchQuery({ query, variables: { offset: 0 } });
-    const handleNext = jest.fn();
+    const stream = new ObservableStream(observable);
 
-    observable.subscribe(handleNext);
-
-    await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith({
-        data: {
-          products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
-      expect(document).toMatchDocument(enabledQuery);
-      expect(observable.options.query).toMatchDocument(query);
-      expect(observable.query).toMatchDocument(enabledQuery);
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    expect(document!).toMatchDocument(enabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(enabledQuery);
 
     enabled = false;
 
@@ -4961,7 +4957,7 @@ describe("custom document transforms", () => {
       products: [{ __typename: "Product", id: 2 }],
     });
 
-    expect(handleNext).toHaveBeenLastCalledWith({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         products: [
           { __typename: "Product", id: 1 },
@@ -4972,6 +4968,8 @@ describe("custom document transforms", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("runs custom document transforms on the passed query and original query when calling `fetchMore` with a different query", async () => {

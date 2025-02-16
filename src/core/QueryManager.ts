@@ -1,7 +1,17 @@
 import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
 import type { Subscription } from "rxjs";
-import { catchError, from, map, mergeMap, Observable, of, tap } from "rxjs";
+import {
+  asyncScheduler,
+  catchError,
+  from,
+  map,
+  mergeMap,
+  Observable,
+  observeOn,
+  of,
+  tap,
+} from "rxjs";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
@@ -1645,7 +1655,8 @@ export class QueryManager<TStore> {
           partial: !diff.complete,
         };
 
-        return of(result);
+        // TODO: Determine why we need the async scheduler here.
+        return of(result).pipe(observeOn(asyncScheduler));
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {

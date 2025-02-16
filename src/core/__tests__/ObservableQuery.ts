@@ -3,7 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { map, Observable, of } from "rxjs";
+import { map, Observable, of, Subject } from "rxjs";
 import { Observer } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -34,7 +34,6 @@ import {
 import { ObservableQuery } from "../ObservableQuery.js";
 import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
 import { QueryManager } from "../QueryManager.js";
-
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const mocks = {
@@ -3031,12 +3030,8 @@ describe("ObservableQuery", () => {
               hello
             }
           `;
-          let observer!: Observer<FetchResult>;
-          const link = new ApolloLink(() => {
-            return new Observable((o) => {
-              observer = o;
-            });
-          });
+          let subject = new Subject<FetchResult>();
+          const link = new ApolloLink(() => subject);
           const cache = new InMemoryCache({});
           cache.writeQuery({ query, data: cacheValues.initial });
 
@@ -3061,10 +3056,12 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1
           );
 
-          if (observer) {
-            observer.next({ data: cacheValues.link });
-            observer.complete();
-          }
+          setTimeout(() => {
+            subject.next({ data: cacheValues.link });
+            subject.complete();
+            subject = new Subject();
+          });
+
           await waitFor(
             () =>
               void expect(
@@ -3085,10 +3082,11 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate3
           );
 
-          if (observer) {
-            observer.next({ data: cacheValues.refetch });
-            observer.complete();
-          }
+          setTimeout(() => {
+            subject.next({ data: cacheValues.refetch });
+            subject.complete();
+          });
+
           await waitFor(
             () =>
               void expect(

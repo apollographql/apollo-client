@@ -1198,6 +1198,10 @@ export class QueryManager<TStore> {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
             }),
+            catchError((error) => {
+              inFlightLinkObservables.remove(printedServerQuery, varJson);
+              throw error;
+            }),
             share({ resetOnComplete: false })
           );
         }

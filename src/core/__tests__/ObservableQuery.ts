@@ -11,7 +11,7 @@ import {
 import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
-import { Observable, of, map } from "rxjs";
+import { Observable, of, map, Subject } from "rxjs";
 import {
   DeepPartial,
   DocumentTransform,
@@ -3032,12 +3032,8 @@ describe("ObservableQuery", () => {
               hello
             }
           `;
-          let observer!: Observer<FetchResult>;
-          const link = new ApolloLink(() => {
-            return new Observable((o) => {
-              observer = o;
-            });
-          });
+          let subject = new Subject<FetchResult>();
+          const link = new ApolloLink(() => subject);
           const cache = new InMemoryCache({});
           cache.writeQuery({ query, data: cacheValues.initial });
 
@@ -3062,10 +3058,12 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate1
           );
 
-          if (observer) {
-            observer.next({ data: cacheValues.link });
-            observer.complete();
-          }
+          setTimeout(() => {
+            subject.next({ data: cacheValues.link });
+            subject.complete();
+            subject = new Subject();
+          });
+
           await waitFor(
             () =>
               void expect(
@@ -3086,10 +3084,11 @@ describe("ObservableQuery", () => {
             resultAfterCacheUpdate3
           );
 
-          if (observer) {
-            observer.next({ data: cacheValues.refetch });
-            observer.complete();
-          }
+          setTimeout(() => {
+            subject.next({ data: cacheValues.refetch });
+            subject.complete();
+          });
+
           await waitFor(
             () =>
               void expect(

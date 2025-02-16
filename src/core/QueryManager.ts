@@ -20,7 +20,17 @@ import { canonicalStringify } from "../cache/index.js";
 
 import type { ConcastSourcesArray, DeepPartial } from "../utilities/index.js";
 import type { Subscription } from "rxjs";
-import { Observable, of, map, from, mergeMap, catchError, tap } from "rxjs";
+import {
+  Observable,
+  of,
+  map,
+  from,
+  mergeMap,
+  catchError,
+  tap,
+  observeOn,
+  asyncScheduler,
+} from "rxjs";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -1664,7 +1674,8 @@ export class QueryManager<TStore> {
           partial: !diff.complete,
         };
 
-        return of(result);
+        // TODO: Determine why we need the async scheduler here.
+        return of(result).pipe(observeOn(asyncScheduler));
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {

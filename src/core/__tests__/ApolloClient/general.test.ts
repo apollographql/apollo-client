@@ -7141,11 +7141,6 @@ describe("ApolloClient", () => {
             (operation) =>
               new Observable((observer) => {
                 ({ cache: _, ...context } = operation.getContext());
-                // TODO: This was added to the test temporarily since query
-                // deduplication is not removing the query when the observer
-                // completes without emitting a next value. Ideally we fix this at
-                // the core so we can remove this.
-                observer.next({ data: null });
                 observer.complete();
               })
           ),
@@ -7175,11 +7170,6 @@ describe("ApolloClient", () => {
           (operation) =>
             new Observable((observer) => {
               ({ cache: _, ...context } = operation.getContext());
-              // TODO: This was added to the test temporarily since query
-              // deduplication is not removing the query when the observer
-              // completes without emitting a next value. Ideally we fix this at
-              // the core so we can remove this.
-              observer.next({ data: null });
               observer.complete();
             })
         ),

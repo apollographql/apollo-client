@@ -721,7 +721,7 @@ describe("[queries] lifecycle", () => {
 
   it.only("handles synchronous racecondition with prefilled data from the server", async () => {
     using _act = disableActEnvironment();
-    const stream = createRenderStream<ChildProps<Vars, Data>>();
+    const renderStream = createRenderStream<ChildProps<Vars, Data>>();
 
     const query: DocumentNode = gql`
       query GetUser($first: Int) {
@@ -760,21 +760,21 @@ describe("[queries] lifecycle", () => {
     const Container = graphql<Vars, Data>(query)(
       class extends React.Component<ChildProps<Vars, Data>> {
         render() {
-          stream.replaceSnapshot(this.props);
+          renderStream.replaceSnapshot(this.props);
           return null;
         }
       }
     );
 
-    await stream.render(
+    await renderStream.render(
       <ApolloProvider client={client}>
         <Container first={1} />
       </ApolloProvider>
     );
     {
-      await stream.takeRender();
+      await renderStream.takeRender();
     }
-    const done = stream
+    const done = renderStream
       .getCurrentRender()
       .snapshot.data!.refetch()
       .then((result) => {
@@ -782,7 +782,7 @@ describe("[queries] lifecycle", () => {
       });
 
     {
-      const { snapshot } = await stream.takeRender();
+      const { snapshot } = await renderStream.takeRender();
 
       const user = snapshot.data!.user;
       const name = user ? user.name : "";

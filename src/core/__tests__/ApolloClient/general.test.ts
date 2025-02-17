@@ -34,7 +34,7 @@ import { waitFor } from "@testing-library/react";
 import { wait } from "../../../testing/core";
 import { ApolloClient, ApolloQueryResult } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
-import { addTypenameToDocument, Concast, print } from "../../../utilities";
+import { addTypenameToDocument, print } from "../../../utilities";
 import {
   mockDeferStream,
   ObservableStream,
@@ -6765,7 +6765,7 @@ describe("ApolloClient", () => {
           "{}"
         )
       ).toEqual({
-        observable: expect.any(Concast),
+        observable: expect.any(Observable),
       });
     });
 

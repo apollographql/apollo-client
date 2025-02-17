@@ -17,6 +17,7 @@ import {
 } from "../utilities/index.js";
 import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
+import { onAnyEvent } from "../utilities/internal/index.js";
 
 import type { ConcastSourcesArray, DeepPartial } from "../utilities/index.js";
 import type { Subscription } from "rxjs";
@@ -1191,16 +1192,14 @@ export class QueryManager<TStore> {
         observable = entry.observable;
         if (!observable) {
           observable = entry.observable = execute(link, operation).pipe(
-            // TODO: This does not handle removing in-flight observable if it
-            // completes without emitting a result
-            tap((arg) => {
-              if (!("hasNext" in arg) || !arg.hasNext) {
+            onAnyEvent((event) => {
+              if (
+                event.type !== "next" ||
+                !("hasNext" in event.value) ||
+                !event.value.hasNext
+              ) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
-            }),
-            catchError((error) => {
-              inFlightLinkObservables.remove(printedServerQuery, varJson);
-              throw error;
             }),
             shareReplay(1)
           );

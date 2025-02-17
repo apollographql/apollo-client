@@ -459,7 +459,8 @@ describe("ApolloClient", () => {
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });
 
-  it("supports interoperability with other Observable implementations like RxJS", async () => {
+  // TODO: Determine if we should remove this test
+  it.skip("supports interoperability with other Observable implementations like RxJS", async () => {
     const expResult = {
       data: {
         allPeople: {

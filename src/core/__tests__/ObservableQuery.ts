@@ -2479,7 +2479,9 @@ describe("ObservableQuery", () => {
         returnPartialData: true,
       });
 
-      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+      // TODO: Determine why this worked without the `false` argument before
+      // since this updates the last value to be equal to the partial result.
+      expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -2517,6 +2519,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    // TODO: Update this behavior when enforcing notifyOnNetworkStatusChange
     it("returns loading even if full data is available when using network-only fetchPolicy", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),

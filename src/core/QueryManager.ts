@@ -780,7 +780,7 @@ export class QueryManager<TStore> {
     });
     observable["lastQuery"] = query;
 
-    if (!ObservableQuery.inactiveOnCreation.getValue()) {
+    if (!ObservableQuery["inactiveOnCreation"].getValue()) {
       this.queries.set(observable.queryId, queryInfo);
     }
 

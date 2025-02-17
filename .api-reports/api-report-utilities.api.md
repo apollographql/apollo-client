@@ -1991,13 +1991,6 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined;
     // (undocumented)
     hasObservers(): boolean;
-    // @internal
-    static inactiveOnCreation: {
-        readonly id: string;
-        hasValue(): boolean;
-        getValue(): boolean | undefined;
-        withValue<TResult, TArgs extends any[], TThis = any>(value: boolean, callback: (this: TThis, ...args: TArgs) => TResult, args?: TArgs | undefined, thisArg?: TThis | undefined): TResult;
-    };
     // (undocumented)
     isDifferentFromLastResult(newResult: ApolloQueryResult<TData>, variables?: TVariables): boolean | undefined;
     // (undocumented)

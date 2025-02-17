@@ -76,7 +76,7 @@ export class ObservableQuery<
    * be started registered with the `QueryManager` when `useSyncExternalStore`
    * actively subscribes to it.
    */
-  public static inactiveOnCreation = new Slot<boolean>();
+  private static inactiveOnCreation = new Slot<boolean>();
 
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;

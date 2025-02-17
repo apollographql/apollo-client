@@ -186,7 +186,7 @@ function useInternalState<
         // to fetch the result set. This is used during SSR.
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
-        ObservableQuery.inactiveOnCreation.withValue(!renderPromises, () =>
+        ObservableQuery["inactiveOnCreation"].withValue(!renderPromises, () =>
           client.watchQuery(
             getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
           )

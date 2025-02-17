@@ -7129,7 +7129,8 @@ describe("ApolloClient", () => {
       ["query", { method: "query", option: "query" }],
       ["mutation", { method: "mutate", option: "mutation" }],
       // TODO: Revisit when trying to understand why this passes on release-4.0
-      // branch
+      // branch since client.subscribe returns an observable that isn't
+      // subscribed to in this test
       // ["subscription", { method: "subscribe", option: "query" }],
     ] as const)(
       "`defaultContext` will be applied to the context of a %s",

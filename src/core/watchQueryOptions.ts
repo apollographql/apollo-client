@@ -94,8 +94,6 @@ export interface WatchQueryOptions<
 > extends SharedWatchQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  /** @internal */
-  inactiveBeforeSubscription?: boolean;
 }
 
 export interface SharedWatchQueryOptions<

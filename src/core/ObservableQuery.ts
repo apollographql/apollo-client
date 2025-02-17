@@ -38,6 +38,7 @@ import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import { Slot } from "optimism";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -68,6 +69,8 @@ export class ObservableQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
+  public static inactiveOnCreation = new Slot<boolean>();
+
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
@@ -121,7 +124,7 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    let startedInactive = options.inactiveBeforeSubscription;
+    let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
     super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
       if (startedInactive && !queryManager["queries"].has(this.queryId)) {
         queryManager["queries"].set(this.queryId, queryInfo);

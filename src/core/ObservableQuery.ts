@@ -177,6 +177,12 @@ export class ObservableQuery<
         subscribe: () => {
           if (!this.subject.observed) {
             this.reobserve();
+            // TODO: See if we can rework updatePolling to better handle this.
+            // reobserve calls updatePolling but this `subscribe` callback is
+            // called before the subject is subscribed to so `updatePolling`
+            // can't accurately detect if there is an active subscription.
+            // Calling it again here ensures that it can detect if it can poll
+            setTimeout(() => this.updatePolling());
           }
         },
         unsubscribe: () => {
@@ -970,7 +976,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options: { pollInterval },
     } = this;
 
-    if (!pollInterval || !this.hasObservers()) {
+    if (!pollInterval || !this.subject.observed) {
       if (pollingInfo) {
         clearTimeout(pollingInfo.timeout);
         delete this.pollingInfo;

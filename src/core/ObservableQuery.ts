@@ -1256,7 +1256,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   public hasObservers() {
-    return this.observers.size > 0;
+    return this.subject.observed;
   }
 
   private tearDownQuery() {

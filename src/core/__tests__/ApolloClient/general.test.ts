@@ -3333,7 +3333,7 @@ describe("ApolloClient", () => {
       stream.unsubscribe();
 
       // Ensure polling has stopped by ensuring the error is not thrown from the mocks
-      await wait(60);
+      await wait(200);
     });
 
     it("exposes a way to start a polling query", async () => {

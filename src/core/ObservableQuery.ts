@@ -236,7 +236,17 @@ export class ObservableQuery<
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) {
-    return this.observable.subscribe(observer);
+    return this.observable.subscribe(
+      typeof observer === "function" ?
+        {
+          next: observer,
+          error: defaultSubscriptionObserverErrorCallback,
+        }
+      : {
+          ...observer,
+          error: observer.error || defaultSubscriptionObserverErrorCallback,
+        }
+    );
   }
 
   pipe(): Observable<ApolloQueryResult<MaybeMasked<TData>>>;

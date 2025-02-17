@@ -1184,8 +1184,12 @@ export class QueryManager<TStore> {
           ]);
           observable = entry.observable = concast;
 
-          concast.beforeNext(() => {
-            inFlightLinkObservables.remove(printedServerQuery, varJson);
+          concast.beforeNext(function cb(method, arg: FetchResult) {
+            if (method === "next" && "hasNext" in arg && arg.hasNext) {
+              concast.beforeNext(cb);
+            } else {
+              inFlightLinkObservables.remove(printedServerQuery, varJson);
+            }
           });
         }
       } else {

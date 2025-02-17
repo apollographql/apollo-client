@@ -11,6 +11,7 @@ import type {
   WatchQueryOptions,
 } from "../../core/index.js";
 import { ApolloError, NetworkStatus } from "../../core/index.js";
+import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import type { DeepPartial } from "../../utilities/index.js";
 import { isNonEmptyArray } from "../../utilities/index.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -57,11 +58,6 @@ export type RefetchFunction<
   TData,
   TVariables extends OperationVariables,
 > = ObservableQueryFields<TData, TVariables>["refetch"];
-
-export type SubscribeToMoreFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>["subscribeToMore"];
 
 export function useSuspenseQuery<
   TData,
@@ -178,12 +174,13 @@ export function useSuspenseQuery<
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
-    _useSuspenseQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useSuspenseQuery_,
     useApolloClient(typeof options === "object" ? options.client : undefined)
   )(query, options);
 }
 
-function _useSuspenseQuery<
+function useSuspenseQuery_<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -218,6 +215,7 @@ function _useSuspenseQuery<
 
   // This saves us a re-execution of the render function when a variable changed.
   if (current[0] !== queryRef.key) {
+    // eslint-disable-next-line react-compiler/react-compiler
     current[0] = queryRef.key;
     current[1] = queryRef.promise;
   }
@@ -275,7 +273,9 @@ function _useSuspenseQuery<
     [queryRef]
   );
 
-  const subscribeToMore = queryRef.observable.subscribeToMore;
+  // TODO: The internalQueryRef doesn't have TVariables' type information so we have to cast it here
+  const subscribeToMore = queryRef.observable
+    .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
     UseSuspenseQueryResult<TData | undefined, TVariables>

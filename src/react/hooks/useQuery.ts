@@ -145,12 +145,13 @@ export function useQuery<
 ): QueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
-    _useQuery,
+    // eslint-disable-next-line react-compiler/react-compiler
+    useQuery_,
     useApolloClient(options && options.client)
   )(query, options);
 }
 
-function _useQuery<
+function useQuery_<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -287,9 +288,10 @@ export function useQueryInternals<
     watchQueryOptions
   );
 
-  const obsQueryFields = React.useMemo<
-    Omit<ObservableQueryFields<TData, TVariables>, "variables">
-  >(() => bindObservableMethods(observable), [observable]);
+  const obsQueryFields = React.useMemo(
+    () => bindObservableMethods(observable),
+    [observable]
+  );
 
   useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
 
@@ -343,6 +345,7 @@ function useObservableSubscriptionResult<
     // Like the forceUpdate method, the versions of these methods inherited from
     // InternalState.prototype are empty no-ops, but we can override them on the
     // base state object (without modifying the prototype).
+    // eslint-disable-next-line react-compiler/react-compiler
     callbackRef.current = callbacks;
   });
 
@@ -822,7 +825,7 @@ const skipStandbyResult = maybeDeepFreeze({
 
 function bindObservableMethods<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>
-) {
+): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
   return {
     refetch: observable.refetch.bind(observable),
     reobserve: observable.reobserve.bind(observable),

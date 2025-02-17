@@ -11,7 +11,7 @@ import {
 } from "../core";
 import { Kind } from "graphql";
 
-import { Observable } from "../utilities";
+import { DeepPartial, Observable } from "../utilities";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
@@ -2465,6 +2465,75 @@ describe("ApolloClient", () => {
       }
     });
 
+    it("supports the @includes directive with `variables` - parallel cache modification", async () => {
+      const cache = new InMemoryCache();
+      const client = new ApolloClient({ cache });
+
+      const FullFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          text
+        }
+      `;
+
+      const ItemFragment = gql`
+        fragment ItemFragment on Item {
+          id
+          ...IncludedFragment @include(if: $withText)
+        }
+
+        fragment IncludedFragment on Item {
+          id
+          text
+        }
+      `;
+
+      cache.writeFragment({
+        fragment: FullFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+      });
+
+      const observable = client.watchFragment({
+        fragment: ItemFragment,
+        from: { __typename: "Item", id: 5 },
+        variables: { withText: true },
+        fragmentName: "ItemFragment",
+      });
+
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitValueStrict({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "Item #5",
+        },
+        complete: true,
+      });
+
+      client.writeFragment({
+        fragment: FullFragment,
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "changed Item #5",
+        },
+      });
+
+      await expect(stream).toEmitValueStrict({
+        data: {
+          __typename: "Item",
+          id: 5,
+          text: "changed Item #5",
+        },
+        complete: true,
+      });
+    });
+
     it("works with nested fragments", async () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
@@ -3149,25 +3218,39 @@ describe("ApolloClient", () => {
         UnmaskedQuery | undefined
       >();
 
-      observableQuery.updateQuery((previousData) => {
-        expectTypeOf(previousData).toMatchTypeOf<UnmaskedQuery>();
-        expectTypeOf(previousData).not.toMatchTypeOf<Query>();
+      observableQuery.updateQuery(
+        (_previousData, { complete, previousData }) => {
+          expectTypeOf(_previousData).toEqualTypeOf<UnmaskedQuery>();
+          expectTypeOf(_previousData).not.toMatchTypeOf<Query>();
 
-        return {} as UnmaskedQuery;
-      });
+          if (complete) {
+            expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+          } else {
+            expectTypeOf(previousData).toEqualTypeOf<
+              DeepPartial<UnmaskedQuery> | undefined
+            >();
+          }
+        }
+      );
 
       observableQuery.subscribeToMore({
         document: subscription,
-        updateQuery(queryData, { subscriptionData }) {
-          expectTypeOf(queryData).toMatchTypeOf<UnmaskedQuery>();
+        updateQuery(queryData, { subscriptionData, complete, previousData }) {
+          expectTypeOf(queryData).toEqualTypeOf<UnmaskedQuery>();
           expectTypeOf(queryData).not.toMatchTypeOf<Query>();
+
+          if (complete) {
+            expectTypeOf(previousData).toEqualTypeOf<UnmaskedQuery>();
+          } else {
+            expectTypeOf(previousData).toEqualTypeOf<
+              DeepPartial<UnmaskedQuery> | undefined
+            >();
+          }
 
           expectTypeOf(
             subscriptionData.data
           ).toMatchTypeOf<UnmaskedSubscription>();
           expectTypeOf(subscriptionData.data).not.toMatchTypeOf<Subscription>();
-
-          return {} as UnmaskedQuery;
         },
       });
     });

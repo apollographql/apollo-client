@@ -122,6 +122,7 @@ export function useSubscription<
   verifyDocumentType(subscription, DocumentType.Subscription);
 
   if (!hasIssuedDeprecationWarningRef.current) {
+    // eslint-disable-next-line react-compiler/react-compiler
     hasIssuedDeprecationWarningRef.current = true;
 
     if (options.onSubscriptionData) {

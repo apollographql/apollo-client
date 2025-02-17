@@ -2684,6 +2684,7 @@ describe("useQuery Hook", () => {
     // https://github.com/apollographql/apollo-client/issues/9431
     // https://github.com/apollographql/apollo-client/issues/11750
     it("stops polling when component unmounts with cache-and-network fetch policy", async () => {
+      jest.useFakeTimers();
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {
           hello
@@ -2694,17 +2695,17 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
-          delay: 3,
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
-          delay: 3,
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
-          delay: 3,
+          delay: 20,
         },
       ];
 
@@ -2725,7 +2726,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
-            pollInterval: 10,
+            pollInterval: 100,
             fetchPolicy: "cache-and-network",
           }),
         {
@@ -2736,9 +2737,10 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const result = await takeSnapshot();
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
 
-        expect(result).toEqualQueryResult({
+        await expect(promise).resolves.toEqualQueryResult({
           data: undefined,
           called: true,
           loading: true,
@@ -2748,10 +2750,13 @@ describe("useQuery Hook", () => {
         });
       }
 
-      {
-        const result = await takeSnapshot();
+      jest.advanceTimersByTime(20);
 
-        expect(result).toEqualQueryResult({
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
           data: { hello: "world 1" },
           called: true,
           loading: false,
@@ -2762,12 +2767,13 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      await wait(10);
+      jest.advanceTimersByTime(100);
 
       {
-        const result = await takeSnapshot();
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
 
-        expect(result).toEqualQueryResult({
+        await expect(promise).resolves.toEqualQueryResult({
           data: { hello: "world 2" },
           called: true,
           loading: false,
@@ -2780,11 +2786,12 @@ describe("useQuery Hook", () => {
 
       unmount();
 
-      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
+      jest.advanceTimersByTime(200);
 
-      // TODO rarely seeing 3 here (also old `useQuery` implementation)
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+
+      jest.useRealTimers();
     });
 
     it("should stop polling when component is unmounted in Strict Mode", async () => {
@@ -2916,7 +2923,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
-            pollInterval: 10,
+            pollInterval: 25,
             fetchPolicy: "cache-and-network",
           }),
         {
@@ -2955,7 +2962,7 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      await wait(10);
+      await wait(25);
 
       {
         const result = await takeSnapshot();

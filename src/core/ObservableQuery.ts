@@ -133,7 +133,7 @@ export class ObservableQuery<
   }) {
     let startedInactive = ObservableQuery.inactiveOnCreation.getValue();
     super((observer: Observer<ApolloQueryResult<MaybeMasked<TData>>>) => {
-      if (startedInactive && !queryManager["queries"].has(this.queryId)) {
+      if (startedInactive) {
         queryManager["queries"].set(this.queryId, queryInfo);
         startedInactive = false;
       }

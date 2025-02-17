@@ -719,7 +719,10 @@ describe("[queries] lifecycle", () => {
     });
   });
 
-  it("handles synchronous racecondition with prefilled data from the server", async () => {
+  it.only("handles synchronous racecondition with prefilled data from the server", async () => {
+    using _act = disableActEnvironment();
+    const stream = createRenderStream<ChildProps<Vars, Data>>();
+
     const query: DocumentNode = gql`
       query GetUser($first: Int) {
         user(first: $first) {
@@ -754,36 +757,40 @@ describe("[queries] lifecycle", () => {
       cache: new Cache({ addTypename: false }).restore(initialState),
     });
 
-    let count = 0;
-    let done = false;
     const Container = graphql<Vars, Data>(query)(
       class extends React.Component<ChildProps<Vars, Data>> {
-        componentDidMount() {
-          void this.props.data!.refetch().then((result) => {
-            expect(result.data!.user.name).toBe("Luke Skywalker");
-            done = true;
-          });
-        }
-
         render() {
-          count++;
-          const user = this.props.data!.user;
-          const name = user ? user.name : "";
-          if (count === 2) {
-            expect(name).toBe("Luke Skywalker");
-          }
+          stream.replaceSnapshot(this.props);
           return null;
         }
       }
     );
 
-    render(
+    await stream.render(
       <ApolloProvider client={client}>
         <Container first={1} />
       </ApolloProvider>
     );
+    {
+      await stream.takeRender();
+    }
+    const done = stream
+      .getCurrentRender()
+      .snapshot.data!.refetch()
+      .then((result) => {
+        expect(result.data!.user.name).toBe("Luke Skywalker");
+      });
 
-    await waitFor(() => expect(done).toBeTruthy());
+    {
+      const { snapshot } = await stream.takeRender();
+
+      const user = snapshot.data!.user;
+      const name = user ? user.name : "";
+
+      expect(name).toBe("Luke Skywalker");
+    }
+
+    await done;
   });
 
   it("handles asynchronous racecondition with prefilled data from the server", async () => {

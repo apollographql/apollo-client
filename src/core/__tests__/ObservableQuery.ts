@@ -2573,6 +2573,8 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
+    // TODO: Update this behavior to not emit loading state when
+    // notifyOnNetworkStatusChange is false
     it("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),

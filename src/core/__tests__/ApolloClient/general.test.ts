@@ -270,9 +270,7 @@ describe("ApolloClient", () => {
     );
   });
 
-  // XXX this looks like a bug in zen-observable but we should figure
-  // out a solution for it
-  it.skip("handles an unsubscribe action that happens before data returns", async () => {
+  it("handles an unsubscribe action that happens before data returns", async () => {
     const stream = getObservableStream({
       query: gql`
         query people {

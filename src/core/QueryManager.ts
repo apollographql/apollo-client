@@ -64,6 +64,7 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
+import { onAnyEvent } from "../utilities/internal/index.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
 import type { DefaultOptions } from "./ApolloClient.js";
@@ -1175,16 +1176,14 @@ export class QueryManager<TStore> {
         observable = entry.observable;
         if (!observable) {
           observable = entry.observable = execute(link, operation).pipe(
-            // TODO: This does not handle removing in-flight observable if it
-            // completes without emitting a result
-            tap((arg) => {
-              if (!("hasNext" in arg) || !arg.hasNext) {
+            onAnyEvent((event) => {
+              if (
+                event.type !== "next" ||
+                !("hasNext" in event.value) ||
+                !event.value.hasNext
+              ) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
-            }),
-            catchError((error) => {
-              inFlightLinkObservables.remove(printedServerQuery, varJson);
-              throw error;
             }),
             shareReplay(1)
           );

@@ -20,6 +20,7 @@ export class ObservableStream<T> {
   private readerQueue: Array<Promise<ObservableEvent<T>>> = [];
 
   constructor(observable: Subscribable<T>) {
+    this.unsubscribe = this.unsubscribe.bind(this);
     this.reader = new ReadableStream<ObservableEvent<T>>({
       start: (controller) => {
         this.subscription = observable.subscribe({

@@ -985,7 +985,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options: { pollInterval },
     } = this;
 
-    if (!pollInterval || !this.subject.observed) {
+    if (!pollInterval || !this.hasObservers()) {
       if (pollingInfo) {
         clearTimeout(pollingInfo.timeout);
         delete this.pollingInfo;

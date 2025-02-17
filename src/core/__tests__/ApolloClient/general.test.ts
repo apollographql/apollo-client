@@ -15,11 +15,7 @@ import {
   type RequestHandler,
 } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing/core";
-import {
-  addTypenameToDocument,
-  Concast,
-  print,
-} from "@apollo/client/utilities";
+import { addTypenameToDocument, print } from "@apollo/client/utilities";
 import {
   InvariantError,
   setVerbosity,
@@ -6765,7 +6761,7 @@ describe("ApolloClient", () => {
           "{}"
         )
       ).toEqual({
-        observable: expect.any(Concast),
+        observable: expect.any(Observable),
       });
     });
 

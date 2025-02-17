@@ -194,6 +194,9 @@ export class ObservableQuery<
           }
         },
       }),
+      // TODO: Conditionally filter when notifyOnNetworkStatusChange is true or
+      // not. We want to emit the loading result if notifyOnNetworkStatusChange
+      // is true.
       filter((result) => result !== this.initialResult),
       map((result) => this.maskResult(result))
     );

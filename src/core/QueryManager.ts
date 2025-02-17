@@ -11,7 +11,6 @@ import {
   observeOn,
   of,
   shareReplay,
-  tap,
 } from "rxjs";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";

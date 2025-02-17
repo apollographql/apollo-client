@@ -407,7 +407,9 @@ function useObservableSubscriptionResult<
         // like this is fine.
         // was:
         // let subscription = observable.subscribe(onNext, onError);
-        const subscription = { current: observable.subscribe(onNext, onError) };
+        const subscription = {
+          current: observable.subscribe({ next: onNext, error: onError }),
+        };
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional

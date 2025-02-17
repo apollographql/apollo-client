@@ -203,7 +203,12 @@ export class ObservableQuery<
       // TODO: Conditionally filter when notifyOnNetworkStatusChange is true or
       // not. We want to emit the loading result if notifyOnNetworkStatusChange
       // is true.
-      filter((result) => result !== this.initialResult),
+      filter(
+        (result) =>
+          // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
+          this.options.fetchPolicy === "no-cache" ||
+          result !== this.initialResult
+      ),
       map((result) => this.maskResult(result))
     );
 

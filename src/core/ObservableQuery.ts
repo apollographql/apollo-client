@@ -1202,6 +1202,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // getCurrentResult is called), even though we skip broadcasting changes.
     this.updateLastResult(result, variables);
     if (lastError || isDifferent) {
+      this.subject.next(result);
       iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }
   }
@@ -1221,6 +1222,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.updateLastResult(errorResult, variables);
 
+    this.subject.error(error);
     iterateObserversSafely(this.observers, "error", (this.last!.error = error));
   }
 

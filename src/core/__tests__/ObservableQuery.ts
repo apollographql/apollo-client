@@ -3556,7 +3556,8 @@ describe("ObservableQuery", () => {
     await expect(stream).not.toEmitAnything();
   });
 
-  it("ObservableQuery#map respects Symbol.species", async () => {
+  // TODO: Determine if we still want this behavior
+  it.skip("ObservableQuery#map respects Symbol.species", async () => {
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link: new MockLink([

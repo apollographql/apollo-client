@@ -69,6 +69,13 @@ export class ObservableQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
+  /**
+   * @internal
+   * A slot used by the `useQuery` hook to indicate that `client.watchQuery`
+   * should not register the query immediately, but instead wait for the query to
+   * be started registered with the `QueryManager` when `useSyncExternalStore`
+   * actively subscribes to it.
+   */
   public static inactiveOnCreation = new Slot<boolean>();
 
   public readonly options: WatchQueryOptions<TVariables, TData>;

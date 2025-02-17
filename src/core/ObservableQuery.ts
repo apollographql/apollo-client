@@ -4,8 +4,14 @@ import { equal } from "@wry/equality";
 
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type { Concast } from "../utilities/index.js";
-import type { Observer, Subscription } from "rxjs";
-import { Observable } from "rxjs";
+import type {
+  Observer,
+  Subscribable,
+  Subscription,
+  OperatorFunction,
+} from "rxjs";
+import type { Observable } from "rxjs";
+import { BehaviorSubject, filter, map, tap } from "rxjs";
 import {
   cloneDeep,
   compact,
@@ -58,11 +64,11 @@ interface Last<TData, TVariables> {
   error?: ApolloError;
 }
 
-// TODO: Make this a BehaviorSubject as this should be multicast
 export class ObservableQuery<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
-> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
+> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>>
+{
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
   public readonly queryName?: string;
@@ -83,6 +89,10 @@ export class ObservableQuery<
   public get variables(): TVariables | undefined {
     return this.options.variables;
   }
+
+  private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
+  private observable: Observable<ApolloQueryResult<MaybeMasked<TData>>>;
+  private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
@@ -116,43 +126,68 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    super((observer) => {
-      // Zen Observable has its own error function, so in order to log correctly
-      // we need to provide a custom error callback.
-      try {
-        var subObserver = (observer as any)._subscription._observer;
-        if (subObserver && !subObserver.error) {
-          subObserver.error = defaultSubscriptionObserverErrorCallback;
-        }
-      } catch {}
+    // super((observer) => {
+    //   // Zen Observable has its own error function, so in order to log correctly
+    //   // we need to provide a custom error callback.
+    //   try {
+    //     var subObserver = (observer as any)._subscription._observer;
+    //     if (subObserver && !subObserver.error) {
+    //       subObserver.error = defaultSubscriptionObserverErrorCallback;
+    //     }
+    //   } catch {}
+    //
+    //   const first = !this.observers.size;
+    //   this.observers.add(observer);
+    //
+    //   // Deliver most recent error or result.
+    //   const last = this.last;
+    //   if (last && last.error) {
+    //     observer.error && observer.error(last.error);
+    //   } else if (last && last.result) {
+    //     observer.next && observer.next(this.maskResult(last.result));
+    //   }
+    //
+    //   // Initiate observation of this query if it hasn't been reported to
+    //   // the QueryManager yet.
+    //   if (first) {
+    //     // Blindly catching here prevents unhandled promise rejections,
+    //     // and is safe because the ObservableQuery handles this error with
+    //     // this.observer.error, so we're not just swallowing the error by
+    //     // ignoring it here.
+    //     this.reobserve().catch(() => {});
+    //   }
+    //
+    //   return () => {
+    //     if (this.observers.delete(observer) && !this.observers.size) {
+    //       this.tearDownQuery();
+    //     }
+    //   };
+    // });
 
-      const first = !this.observers.size;
-      this.observers.add(observer);
+    this.initialResult = {
+      data: undefined,
+      loading: true,
+      networkStatus: NetworkStatus.loading,
+      partial: true,
+    };
 
-      // Deliver most recent error or result.
-      const last = this.last;
-      if (last && last.error) {
-        observer.error && observer.error(last.error);
-      } else if (last && last.result) {
-        observer.next && observer.next(this.maskResult(last.result));
-      }
-
-      // Initiate observation of this query if it hasn't been reported to
-      // the QueryManager yet.
-      if (first) {
-        // Blindly catching here prevents unhandled promise rejections,
-        // and is safe because the ObservableQuery handles this error with
-        // this.observer.error, so we're not just swallowing the error by
-        // ignoring it here.
-        this.reobserve().catch(() => {});
-      }
-
-      return () => {
-        if (this.observers.delete(observer) && !this.observers.size) {
-          this.tearDownQuery();
-        }
-      };
-    });
+    this.subject = new BehaviorSubject(this.initialResult);
+    this.observable = this.subject.pipe(
+      tap({
+        subscribe: () => {
+          if (!this.subject.observed) {
+            this.reobserve();
+          }
+        },
+        unsubscribe: () => {
+          if (!this.subject.observed) {
+            this.tearDownQuery();
+          }
+        },
+      }),
+      filter((result) => result !== this.initialResult),
+      map((result) => this.maskResult(result))
+    );
 
     // related classes
     this.queryInfo = queryInfo;
@@ -194,6 +229,95 @@ export class ObservableQuery<
 
     const opDef = getOperationDefinition(this.query);
     this.queryName = opDef && opDef.name && opDef.name.value;
+  }
+
+  subscribe(
+    observer:
+      | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
+      | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
+  ) {
+    return this.observable.subscribe(observer);
+  }
+
+  pipe(): Observable<ApolloQueryResult<MaybeMasked<TData>>>;
+  pipe<A>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>
+  ): Observable<A>;
+  pipe<A, B>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>
+  ): Observable<B>;
+  pipe<A, B, C>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>
+  ): Observable<C>;
+  pipe<A, B, C, D>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>
+  ): Observable<D>;
+  pipe<A, B, C, D, E>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>,
+    op5: OperatorFunction<D, E>
+  ): Observable<E>;
+  pipe<A, B, C, D, E, F>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>,
+    op5: OperatorFunction<D, E>,
+    op6: OperatorFunction<E, F>
+  ): Observable<F>;
+  pipe<A, B, C, D, E, F, G>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>,
+    op5: OperatorFunction<D, E>,
+    op6: OperatorFunction<E, F>,
+    op7: OperatorFunction<F, G>
+  ): Observable<G>;
+  pipe<A, B, C, D, E, F, G, H>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>,
+    op5: OperatorFunction<D, E>,
+    op6: OperatorFunction<E, F>,
+    op7: OperatorFunction<F, G>,
+    op8: OperatorFunction<G, H>
+  ): Observable<H>;
+  pipe<A, B, C, D, E, F, G, H, I>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>,
+    op5: OperatorFunction<D, E>,
+    op6: OperatorFunction<E, F>,
+    op7: OperatorFunction<F, G>,
+    op8: OperatorFunction<G, H>,
+    op9: OperatorFunction<H, I>
+  ): Observable<I>;
+  pipe<A, B, C, D, E, F, G, H, I>(
+    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
+    op2: OperatorFunction<A, B>,
+    op3: OperatorFunction<B, C>,
+    op4: OperatorFunction<C, D>,
+    op5: OperatorFunction<D, E>,
+    op6: OperatorFunction<E, F>,
+    op7: OperatorFunction<F, G>,
+    op8: OperatorFunction<G, H>,
+    op9: OperatorFunction<H, I>,
+    ...operations: OperatorFunction<any, any>[]
+  ): Observable<unknown>;
+
+  pipe(...args: any[]) {
+    return (this.subject as any).pipe(...args);
   }
 
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {

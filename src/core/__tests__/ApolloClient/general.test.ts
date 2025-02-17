@@ -6260,7 +6260,6 @@ describe("ApolloClient", () => {
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
-      let mutationComplete = false;
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6269,29 +6268,14 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      void client
-        .mutate({
-          mutation,
-          refetchQueries: ["getAuthors"],
-          awaitRefetchQueries: false,
-        })
-        .then(() => {
-          mutationComplete = true;
-        });
+      await client.mutate({ mutation, refetchQueries: ["getAuthors"] });
 
-      await expect(stream).toEmitApolloQueryResult({
-        data: secondReqData,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
-        data: secondReqData,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        data: queryData,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
         partial: false,
       });
-      expect(mutationComplete).toBe(true);
     });
 
     it("should not wait for `refetchQueries` to complete before resolving the mutation, when `awaitRefetchQueries` is false", async () => {
@@ -6360,7 +6344,6 @@ describe("ApolloClient", () => {
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
-      let mutationComplete = false;
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6369,25 +6352,18 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      void client
-        .mutate({ mutation, refetchQueries: ["getAuthors"] })
-        .then(() => {
-          mutationComplete = true;
-        });
+      await client.mutate({
+        mutation,
+        refetchQueries: ["getAuthors"],
+        awaitRefetchQueries: false,
+      });
 
-      await expect(stream).toEmitApolloQueryResult({
-        data: secondReqData,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
-        data: secondReqData,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
+        data: queryData,
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
         partial: false,
       });
-      expect(mutationComplete).toBe(true);
     });
 
     it("should wait for `refetchQueries` to complete before resolving the mutation, when `awaitRefetchQueries` is `true`", async () => {
@@ -6456,7 +6432,6 @@ describe("ApolloClient", () => {
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
-      let mutationComplete = false;
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6465,29 +6440,18 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      void client
-        .mutate({
-          mutation,
-          refetchQueries: ["getAuthors"],
-          awaitRefetchQueries: true,
-        })
-        .then(() => {
-          mutationComplete = true;
-        });
-
-      await expect(stream).toEmitApolloQueryResult({
-        data: secondReqData,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
+      await client.mutate({
+        mutation,
+        refetchQueries: ["getAuthors"],
+        awaitRefetchQueries: true,
       });
+
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(mutationComplete).toBe(false);
     });
 
     it("should allow catching errors from `refetchQueries` when `awaitRefetchQueries` is `true`", async () => {

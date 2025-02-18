@@ -41,3 +41,6 @@ expect.addEqualityTesters([
   areGraphQLErrorsEqual,
   areMissingFieldErrorsEqual,
 ]);
+
+// not available in JSDOM 🙄
+global.structuredClone = (val) => JSON.parse(JSON.stringify(val));

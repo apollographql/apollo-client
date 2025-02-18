@@ -1,6 +1,6 @@
 {
   "name": "@apollo/client",
-  "version": "3.12.11",
+  "version": "3.13.0",
   "description": "A fully-featured caching GraphQL client.",
   "private": true,
   "keywords": [
@@ -13,7 +13,8 @@
   ],
   "author": "packages@apollographql.com",
   "license": "MIT",
-  "main": "./dist/main.cjs",
+  "type": "module",
+  "main": "./dist/__cjs/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "sideEffects": false,
@@ -184,7 +185,7 @@
     "rxjs": "7.8.1",
     "size-limit": "11.1.4",
     "sorcery": "^1.0.0",
-    "source-map": "^0.7.4",
+    "source-map": "^0.6.1",
     "sourcemap-validator": "^2.1.0",
     "subscriptions-transport-ws": "0.11.0",
     "terser": "5.31.3",

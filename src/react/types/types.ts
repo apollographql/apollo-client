@@ -5,6 +5,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type {
   Observable,
   ObservableSubscription,
+  OnlyRequiredProperties,
 } from "../../utilities/index.js";
 import type { FetchResult } from "../../link/core/index.js";
 import type { ApolloError } from "../../errors/index.js";
@@ -19,7 +20,6 @@ import type {
   InternalRefetchQueriesInclude,
   WatchQueryOptions,
   WatchQueryFetchPolicy,
-  SubscribeToMoreOptions,
   ApolloQueryResult,
   FetchMoreQueryOptions,
   ErrorPolicy,
@@ -28,6 +28,8 @@ import type {
 import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
 import type { MaybeMasked, Unmasked } from "../../masking/index.js";
 
@@ -85,23 +87,9 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
   stopPolling: () => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: <
-    TSubscriptionData = TData,
-    TSubscriptionVariables extends OperationVariables = TVariables,
-  >(
-    options: SubscribeToMoreOptions<
-      TData,
-      TSubscriptionVariables,
-      TSubscriptionData
-    >
-  ) => () => void;
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: <TVars extends OperationVariables = TVariables>(
-    mapFn: (
-      previousQueryResult: Unmasked<TData>,
-      options: Pick<WatchQueryOptions<TVars, TData>, "variables">
-    ) => Unmasked<TData>
-  ) => void;
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>
@@ -348,8 +336,6 @@ export interface BaseMutationOptions<
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member} */
-  ignoreResults?: boolean;
 }
 
 export interface MutationFunctionOptions<
@@ -504,5 +490,21 @@ export interface SubscriptionCurrentObservable {
   query?: Observable<any>;
   subscription?: ObservableSubscription;
 }
+
+export type VariablesOption<TVariables extends OperationVariables> =
+  [TVariables] extends [never] ?
+    {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: Record<string, never>;
+    }
+  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+    {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables?: TVariables;
+    }
+  : {
+      /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+      variables: TVariables;
+    };
 
 export type { NoInfer } from "../../utilities/index.js";

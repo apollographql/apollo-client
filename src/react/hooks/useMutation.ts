@@ -117,11 +117,7 @@ export function useMutation<
       const baseOptions = { ...options, mutation };
       const client = executeOptions.client || ref.current.client;
 
-      if (
-        !ref.current.result.loading &&
-        !baseOptions.ignoreResults &&
-        ref.current.isMounted
-      ) {
+      if (!ref.current.result.loading && ref.current.isMounted) {
         setResult(
           (ref.current.result = {
             loading: true,
@@ -138,82 +134,84 @@ export function useMutation<
 
       return client
         .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
-        .then((response) => {
-          const { data, errors } = response;
-          const error =
-            errors && errors.length > 0 ?
-              new ApolloError({ graphQLErrors: errors })
-            : void 0;
+        .then(
+          (response) => {
+            const { data, errors } = response;
+            const error =
+              errors && errors.length > 0 ?
+                new ApolloError({ graphQLErrors: errors })
+              : void 0;
 
-          const onError =
-            executeOptions.onError || ref.current.options?.onError;
+            const onError =
+              executeOptions.onError || ref.current.options?.onError;
 
-          if (error && onError) {
-            onError(
-              error,
-              clientOptions as MutationOptions<TData, OperationVariables>
-            );
-          }
-
-          if (
-            mutationId === ref.current.mutationId &&
-            !clientOptions.ignoreResults
-          ) {
-            const result = {
-              called: true,
-              loading: false,
-              data,
-              error,
-              client,
-            };
-
-            if (ref.current.isMounted && !equal(ref.current.result, result)) {
-              setResult((ref.current.result = result));
+            if (error && onError) {
+              onError(
+                error,
+                clientOptions as MutationOptions<TData, OperationVariables>
+              );
             }
-          }
 
-          const onCompleted =
-            executeOptions.onCompleted || ref.current.options?.onCompleted;
+            if (mutationId === ref.current.mutationId) {
+              const result = {
+                called: true,
+                loading: false,
+                data,
+                error,
+                client,
+              };
 
-          if (!error) {
-            onCompleted?.(
-              response.data!,
-              clientOptions as MutationOptions<TData, OperationVariables>
-            );
-          }
-
-          return response;
-        })
-        .catch((error) => {
-          if (mutationId === ref.current.mutationId && ref.current.isMounted) {
-            const result = {
-              loading: false,
-              error,
-              data: void 0,
-              called: true,
-              client,
-            };
-
-            if (!equal(ref.current.result, result)) {
-              setResult((ref.current.result = result));
+              if (ref.current.isMounted && !equal(ref.current.result, result)) {
+                setResult((ref.current.result = result));
+              }
             }
+
+            const onCompleted =
+              executeOptions.onCompleted || ref.current.options?.onCompleted;
+
+            if (!error) {
+              onCompleted?.(
+                response.data!,
+                clientOptions as MutationOptions<TData, OperationVariables>
+              );
+            }
+
+            return response;
+          },
+          (error) => {
+            if (
+              mutationId === ref.current.mutationId &&
+              ref.current.isMounted
+            ) {
+              const result = {
+                loading: false,
+                error,
+                data: void 0,
+                called: true,
+                client,
+              };
+
+              if (!equal(ref.current.result, result)) {
+                setResult((ref.current.result = result));
+              }
+            }
+
+            const onError =
+              executeOptions.onError || ref.current.options?.onError;
+
+            if (onError) {
+              onError(
+                error,
+                clientOptions as MutationOptions<TData, OperationVariables>
+              );
+
+              // TODO(brian): why are we returning this here???
+              return { data: void 0, errors: error };
+            }
+
+            throw error;
           }
-
-          const onError =
-            executeOptions.onError || ref.current.options?.onError;
-
-          if (onError) {
-            onError(
-              error,
-              clientOptions as MutationOptions<TData, OperationVariables>
-            );
-
-            // TODO(brian): why are we returning this here???
-            return { data: void 0, errors: error };
-          }
-
-          throw error;
-        });
+        );
     },
     []
   );

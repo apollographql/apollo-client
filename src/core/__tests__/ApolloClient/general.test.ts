@@ -9,7 +9,11 @@ import {
   Observable,
   Observer,
 } from "../../../utilities/observables/Observable";
-import { ApolloLink, FetchResult } from "../../../link/core";
+import {
+  ApolloLink,
+  FetchResult,
+  type RequestHandler,
+} from "../../../link/core";
 import { InMemoryCache } from "../../../cache";
 
 // mocks
@@ -20,7 +24,10 @@ import {
 
 // core
 import { NetworkStatus } from "../../networkStatus";
-import { WatchQueryOptions } from "../../watchQueryOptions";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../../watchQueryOptions";
 import { QueryManager } from "../../QueryManager";
 
 import { ApolloError } from "../../../errors";
@@ -28,10 +35,14 @@ import { ApolloError } from "../../../errors";
 // testing utils
 import { waitFor } from "@testing-library/react";
 import { wait } from "../../../testing/core";
-import { ApolloClient } from "../../../core";
+import { ApolloClient, ApolloQueryResult } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
 import { Concast, print } from "../../../utilities";
-import { ObservableStream, spyOnConsole } from "../../../testing/internal";
+import {
+  mockDeferStream,
+  ObservableStream,
+  spyOnConsole,
+} from "../../../testing/internal";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({
@@ -877,23 +888,7 @@ describe("ApolloClient", () => {
     expect(data).toBe(observable.getCurrentResult().data);
   });
 
-  it("sets networkStatus to `refetch` when refetching", async () => {
-    const request: WatchQueryOptions = {
-      query: gql`
-        query fetchLuke($id: String) {
-          people_one(id: $id) {
-            name
-          }
-        }
-      `,
-      variables: {
-        id: "1",
-      },
-      notifyOnNetworkStatusChange: true,
-      // This causes a loading:true result to be delivered from the cache
-      // before the final data2 result is delivered.
-      fetchPolicy: "cache-and-network",
-    };
+  {
     const data1 = {
       people_one: {
         name: "Luke Skywalker",
@@ -905,40 +900,202 @@ describe("ApolloClient", () => {
         name: "Luke Skywalker has a new name",
       },
     };
+    it.each<
+      [
+        notifyOnNetworkStatusChange: boolean,
+        fetchPolicy: WatchQueryFetchPolicy,
+        expectedInitialResults: ApolloQueryResult<typeof data1>[],
+        expectedRefetchedResults: ApolloQueryResult<typeof data1>[],
+      ]
+    >([
+      [
+        false,
+        "cache-first",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        false,
+        "network-only",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        false,
+        "cache-and-network",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          // {
+          //   data: data1,
+          //   loading: true,
+          //   networkStatus: NetworkStatus.refetch,
+          //   partial: false,
+          // },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        true,
+        "cache-first",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data1,
+            loading: true,
+            networkStatus: NetworkStatus.refetch,
+            partial: false,
+          },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        true,
+        "network-only",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data1,
+            loading: true,
+            networkStatus: NetworkStatus.refetch,
+            partial: false,
+          },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+      [
+        true,
+        "cache-and-network",
+        [
+          {
+            data: data1,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+        [
+          {
+            data: data1,
+            loading: true,
+            networkStatus: NetworkStatus.refetch,
+            partial: false,
+          },
+          {
+            data: data2,
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          },
+        ],
+      ],
+    ])(
+      "networkStatus changes (notifyOnNetworkStatusChange: %s, fetchPolicy %s)",
+      async (
+        notifyOnNetworkStatusChange,
+        fetchPolicy,
+        expectedInitialResults,
+        expectedRefetchedResults
+      ) => {
+        const request: WatchQueryOptions = {
+          query: gql`
+            query fetchLuke($id: String) {
+              people_one(id: $id) {
+                name
+              }
+            }
+          `,
+          variables: {
+            id: "1",
+          },
+          notifyOnNetworkStatusChange,
+          fetchPolicy,
+        };
 
-    const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
-      link: new MockLink([
-        { request, result: { data: data1 } },
-        { request, result: { data: data2 } },
-      ]),
-    });
+        const client = new ApolloClient({
+          cache: new InMemoryCache({ addTypename: false }),
+          link: new MockLink([
+            { request, result: { data: data1 } },
+            { request, result: { data: data2 } },
+          ]),
+        });
 
-    const observable = client.watchQuery(request);
-    const stream = new ObservableStream(observable);
-
-    await expect(stream).toEmitApolloQueryResult({
-      data: data1,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
-
-    void observable.refetch();
-
-    await expect(stream).toEmitApolloQueryResult({
-      data: data1,
-      loading: true,
-      networkStatus: NetworkStatus.refetch,
-      partial: false,
-    });
-    await expect(stream).toEmitApolloQueryResult({
-      data: data2,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
-  });
+        const observable = client.watchQuery(request);
+        const stream = new ObservableStream(observable);
+        for (const expected of expectedInitialResults) {
+          await expect(stream).toEmitApolloQueryResult(expected);
+        }
+        void observable.refetch();
+        for (const expected of expectedRefetchedResults) {
+          await expect(stream).toEmitApolloQueryResult(expected);
+        }
+        expect(stream).not.toEmitAnything();
+      }
+    );
+  }
 
   it("allows you to refetch queries with promises", async () => {
     const request = {
@@ -6654,6 +6811,130 @@ describe("ApolloClient", () => {
           "{}"
         )
       ).toBeUndefined();
+    });
+
+    it("deduplicates queries as long as a query still has deferred chunks", async () => {
+      const query = gql`
+        query LazyLoadLuke {
+          people(id: 1) {
+            id
+            name
+            friends {
+              id
+              ... @defer {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const outgoingRequestSpy = jest.fn(((operation, forward) =>
+        forward(operation)) satisfies RequestHandler);
+      const defer = mockDeferStream();
+      const client = new ApolloClient({
+        cache: new InMemoryCache({}),
+        link: new ApolloLink(outgoingRequestSpy).concat(defer.httpLink),
+      });
+
+      const query1 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      const query2 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+
+      const initialData = {
+        people: {
+          __typename: "Person",
+          id: 1,
+          name: "Luke",
+          friends: [
+            {
+              __typename: "Person",
+              id: 5,
+            } as { __typename: "Person"; id: number; name?: string },
+            {
+              __typename: "Person",
+              id: 8,
+            } as { __typename: "Person"; id: number; name?: string },
+          ],
+        },
+      };
+      const initialResult = {
+        data: initialData,
+        loading: false,
+        networkStatus: 7,
+        partial: false,
+      };
+
+      defer.enqueueInitialChunk({
+        data: initialData,
+        hasNext: true,
+      });
+
+      await expect(query1).toEmitFetchResult(initialResult);
+      await expect(query2).toEmitFetchResult(initialResult);
+
+      const query3 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      await expect(query3).toEmitFetchResult(initialResult);
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+
+      const firstChunk = {
+        incremental: [
+          {
+            data: {
+              name: "Leia",
+            },
+            path: ["people", "friends", 0],
+          },
+        ],
+        hasNext: true,
+      };
+      const resultAfterFirstChunk = structuredClone(initialResult);
+      resultAfterFirstChunk.data.people.friends[0].name = "Leia";
+
+      defer.enqueueSubsequentChunk(firstChunk);
+
+      await expect(query1).toEmitFetchResult(resultAfterFirstChunk);
+      await expect(query2).toEmitFetchResult(resultAfterFirstChunk);
+      await expect(query3).toEmitFetchResult(resultAfterFirstChunk);
+
+      const query4 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      expect(query4).toEmitFetchResult(resultAfterFirstChunk);
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(1);
+
+      const secondChunk = {
+        incremental: [
+          {
+            data: {
+              name: "Han Solo",
+            },
+            path: ["people", "friends", 1],
+          },
+        ],
+        hasNext: false,
+      };
+      const resultAfterSecondChunk = structuredClone(resultAfterFirstChunk);
+      resultAfterSecondChunk.data.people.friends[1].name = "Han Solo";
+
+      defer.enqueueSubsequentChunk(secondChunk);
+
+      await expect(query1).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query2).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query3).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query4).toEmitFetchResult(resultAfterSecondChunk);
+
+      const query5 = new ObservableStream(
+        client.watchQuery({ query, fetchPolicy: "network-only" })
+      );
+      expect(query5).not.toEmitAnything();
+      expect(outgoingRequestSpy).toHaveBeenCalledTimes(2);
     });
   });
 

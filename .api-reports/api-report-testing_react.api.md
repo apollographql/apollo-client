@@ -1291,8 +1291,9 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     startPolling(pollInterval: number): void;
     stopPolling(): void;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreOptions" needs to be exported by the entry point index.d.ts
-    subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData>): () => void;
-    updateQuery<TVars extends OperationVariables = TVariables>(mapFn: (previousQueryResult: Unmasked<TData>, options: Pick<WatchQueryOptions<TVars, TData>, "variables">) => Unmasked<TData>): void;
+    subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
+    // Warning: (ae-forgotten-export) The symbol "UpdateQueryMapFn" needs to be exported by the entry point index.d.ts
+    updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
     get variables(): TVariables | undefined;
 }
 
@@ -1732,12 +1733,29 @@ Item
 type StoreValue = number | string | string[] | Reference | Reference[] | null | undefined | void | Object;
 
 // @public (undocumented)
-type SubscribeToMoreOptions<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = {
-    document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
-    variables?: TSubscriptionVariables;
-    updateQuery?: UpdateQueryFn<TData, TSubscriptionVariables, TSubscriptionData>;
-    onError?: (error: Error) => void;
+interface SubscribeToMoreOptions<TData = any, TSubscriptionVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData, TVariables extends OperationVariables = TSubscriptionVariables> {
+    // (undocumented)
     context?: DefaultContext;
+    // (undocumented)
+    document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
+    // (undocumented)
+    onError?: (error: Error) => void;
+    // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreUpdateQueryFn" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    updateQuery?: SubscribeToMoreUpdateQueryFn<TData, TVariables, TSubscriptionData>;
+    // (undocumented)
+    variables?: TSubscriptionVariables;
+}
+
+// @public (undocumented)
+type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData> = {
+    (
+    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables> & {
+        subscriptionData: {
+            data: Unmasked<TSubscriptionData>;
+        };
+    }): Unmasked<TData> | void;
 };
 
 // @public (undocumented)
@@ -1811,12 +1829,22 @@ type UnwrapFragmentRefs<TData> = true extends IsAny<TData> ? TData : TData exten
 type UpdateQueries<TData> = MutationOptions<TData, any, any>["updateQueries"];
 
 // @public (undocumented)
-type UpdateQueryFn<TData = any, TSubscriptionVariables = OperationVariables, TSubscriptionData = TData> = (previousQueryResult: Unmasked<TData>, options: {
-    subscriptionData: {
-        data: Unmasked<TSubscriptionData>;
-    };
-    variables?: TSubscriptionVariables;
-}) => Unmasked<TData>;
+interface UpdateQueryMapFn<TData = any, TVariables = OperationVariables> {
+    // (undocumented)
+    (
+    unsafePreviousData: Unmasked<TData>, options: UpdateQueryOptions<TData, TVariables>): Unmasked<TData> | void;
+}
+
+// @public (undocumented)
+type UpdateQueryOptions<TData, TVariables> = {
+    variables?: TVariables;
+} & ({
+    complete: true;
+    previousData: Unmasked<TData>;
+} | {
+    complete: false;
+    previousData: DeepPartial<Unmasked<TData>> | undefined;
+});
 
 // @public (undocumented)
 interface UriFunction {
@@ -1869,13 +1897,13 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:121:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:207:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:182:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:201:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

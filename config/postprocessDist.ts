@@ -13,7 +13,6 @@ export const postprocessDist: BuildStep = async (options) => {
           visitVariableDeclarator(path) {
             const node = path.node;
             if (node.id.type === "Identifier" && node.id.name === "__DEV__") {
-              console.log(node);
               path.prune();
             }
             return false;

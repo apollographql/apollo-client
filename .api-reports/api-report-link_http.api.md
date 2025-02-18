@@ -329,7 +329,7 @@ export interface UriFunction {
 
 // Warnings were encountered during analysis:
 //
-// src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
+// src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

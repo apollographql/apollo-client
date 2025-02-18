@@ -1,9 +1,9 @@
 import { $ } from "zx";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
 import { compileTs } from "./compileTs.ts";
-// import { inlineInheritDoc } from "./inlineInheritDoc.ts";
+import { inlineInheritDoc } from "./inlineInheritDoc.ts";
 import { updateVersion, verifyVersion } from "./version.ts";
 import { processInvariants } from "./processInvariants.ts";
 import { prepareDist } from "./prepareDist.ts";
@@ -32,7 +32,7 @@ $.verbose = true;
 const buildSteps = {
   typescript: compileTs,
   updateVersion,
-  // inlineInheritDoc,
+  inlineInheritDoc,
   processInvariants,
   // postprocessDist,
   verifyVersion,
@@ -74,22 +74,11 @@ if (wrongSteps.length) {
 
 console.log("Running build steps: %s", runSteps.join(", "));
 
+const rootDir = resolve(import.meta.dirname, "..");
 const buildStepOptions = [
   // this order is important so that globs on the esm build don't accidentally match the cjs build
-  {
-    type: "esm",
-    rootDir: import.meta.dirname,
-    targetDir: "dist",
-    jsExt: "js",
-    tsExt: "ts",
-  },
-  {
-    type: "cjs",
-    rootDir: import.meta.dirname,
-    targetDir: "dist/__cjs",
-    jsExt: "cjs",
-    tsExt: "cts",
-  },
+  { type: "esm", rootDir, targetDir: "dist", jsExt: "js", tsExt: "ts" },
+  { type: "cjs", rootDir, targetDir: "dist/__cjs", jsExt: "cjs", tsExt: "cts" },
 ] satisfies BuildStepOptions[];
 for (const options of buildStepOptions)
   for (const step of runSteps) {

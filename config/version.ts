@@ -1,10 +1,9 @@
 import assert from "assert";
-import fs from "fs";
 import path from "path";
 import { createRequire } from "node:module";
-
-const distRoot = path.join(import.meta.dirname, "..", "dist");
-const versionPath = path.join(distRoot, "version.js");
+import { applyRecast } from "./helpers.ts";
+import { visit } from "recast";
+import type { BuildStep } from "./build.ts";
 
 const require = createRequire(import.meta.url);
 
@@ -16,10 +15,6 @@ assert.strictEqual(
   "string",
   '"version" field missing from package.json'
 );
-
-import { applyRecast } from "./helpers.ts";
-import { visit } from "recast";
-import type { BuildStep } from "./build.ts";
 
 export const updateVersion: BuildStep = async (options) => {
   await applyRecast({

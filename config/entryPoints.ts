@@ -1,6 +1,7 @@
 import path from "path";
 // @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
 import { __dirname } from "./dirname.cts";
+import type { BuildStepOptions } from "./build.ts";
 
 type EntryPoint = {
   dirs: string[];
@@ -137,13 +138,25 @@ function arraysEqualUpTo(a: unknown[], b: unknown[], end: number) {
   return true;
 }
 
-export const buildDocEntryPoints = () => {
-  const dist = path.resolve(__dirname, "../dist");
+export const buildDocEntryPoints = (
+  options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt">
+) => {
   const entryPoints = map((entryPoint) => {
-    return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
+    return `export * from "${path.join(
+      options.rootDir,
+      options.targetDir,
+      ...entryPoint.dirs,
+      `index.${options.jsExt}`
+    )}";`;
   });
   entryPoints.push(
-    `export * from "${dist}/react/types/types.documentation.ts";`
+    `export * from "${path.join(
+      options.rootDir,
+      options.targetDir,
+      "react",
+      "types",
+      `types.documentation.${options.jsExt}`
+    )}";`
   );
   return entryPoints.join("\n");
 };

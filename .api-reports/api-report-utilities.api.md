@@ -2877,7 +2877,7 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:154:7 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:141:9 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:58:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
@@ -2892,8 +2892,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:175:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:271:2 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/storeUtils.ts:226:12 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:182:3 - (ae-forgotten-export) The symbol "UpdateQueryFn" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/storeUtils.ts:282:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 

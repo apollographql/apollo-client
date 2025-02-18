@@ -54,7 +54,14 @@ try {
       "\n\nCreating API extractor docmodel for the a combination of all entry points"
     );
     const entryPointFile = path.join(tempDir, "entry.d.ts");
-    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
+    fs.writeFileSync(
+      entryPointFile,
+      buildDocEntryPoints({
+        rootDir: path.resolve(import.meta.dirname, ".."),
+        targetDir: "dist",
+        jsExt: "js",
+      })
+    );
 
     buildReport(entryPointFile, "docModel");
   }

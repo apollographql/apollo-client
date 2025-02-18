@@ -473,7 +473,7 @@ function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
 
   useEffect(() => {
     if (result.data) {
-      subscribeToMore({
+      const unsubscribe = subscribeToMore({
         document: COMMENTS_SUBSCRIPTION,
         variables: { postID: params.postID },
         updateQuery: (prev, { subscriptionData }) => {
@@ -487,8 +487,10 @@ function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
           });
         }
       });
+
+      return () => { unsubscribe(); };
     }
-  }, [result.data]);
+  }, [result.data, params.postID]);
 
   return (
     <CommentsPage {...result} />
@@ -505,7 +507,7 @@ function CommentsPageWithData({ params }) {
 
   useEffect(() => {
     if (result.data) {
-      subscribeToMore({
+      const unsubscribe = subscribeToMore({
         document: COMMENTS_SUBSCRIPTION,
         variables: { postID: params.postID },
         updateQuery: (prev, { subscriptionData }) => {
@@ -519,8 +521,10 @@ function CommentsPageWithData({ params }) {
           });
         }
       });
+
+      return () => { unsubscribe(); };
     }
-  }, [result.data]);
+  }, [result.data, params.postID]);
 
   return (
     <CommentsPage {...result} />

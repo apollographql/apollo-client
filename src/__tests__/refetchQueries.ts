@@ -65,13 +65,17 @@ describe("client.refetchQueries", () => {
             operation.operationName.split("").forEach((letter) => {
               data[letter.toLowerCase()] = letter.toUpperCase();
             });
-            function finish() {
-              observer.next({ data });
-              observer.complete();
+            function finish(delay: number) {
+              // We need to add a delay here since RxJS emits synchronously.
+              // Some tests fail if this value is emitted synchronously.
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              }, delay);
             }
             if (typeof operation.variables.delay === "number") {
-              setTimeout(finish, operation.variables.delay);
-            } else finish();
+              finish(operation.variables.delay);
+            } else finish(0);
           })
       ),
     });

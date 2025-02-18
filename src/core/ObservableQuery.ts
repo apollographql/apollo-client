@@ -11,7 +11,7 @@ import type {
   OperatorFunction,
 } from "rxjs";
 import type { Observable } from "rxjs";
-import { BehaviorSubject, filter, map, tap } from "rxjs";
+import { BehaviorSubject, filter, tap } from "rxjs";
 import {
   cloneDeep,
   compact,
@@ -168,8 +168,7 @@ export class ObservableQuery<
           (this.options.fetchPolicy === "network-only" &&
             this.queryInfo.getDiff().complete) ||
           result !== this.initialResult
-      ),
-      map((result) => this.maskResult(result))
+      )
     );
 
     // related classes
@@ -1205,7 +1204,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // getCurrentResult is called), even though we skip broadcasting changes.
     this.updateLastResult(result, variables);
     if (lastError || isDifferent) {
-      this.subject.next(result);
+      this.subject.next(this.maskResult(result));
       iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }
   }

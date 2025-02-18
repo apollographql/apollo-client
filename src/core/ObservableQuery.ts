@@ -314,7 +314,7 @@ export class ObservableQuery<
   ): Observable<unknown>;
 
   pipe(...args: any[]) {
-    return (this.subject as any).pipe(...args);
+    return (this.observable as any).pipe(...args);
   }
 
   // TODO: Consider deprecating this method

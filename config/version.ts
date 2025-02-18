@@ -17,23 +17,33 @@ assert.strictEqual(
   '"version" field missing from package.json'
 );
 
-export function updateVersion() {
-  const updated = fs
-    .readFileSync(versionPath, "utf8")
-    .replace(/\blocal\b/, version);
+import { applyRecast } from "./helpers.ts";
+import { visit } from "recast";
+import type { BuildStep } from "./build.ts";
 
-  assert.notEqual(
-    updated.indexOf(version),
-    -1,
-    "Failed to update dist/version.js with @apollo/client version"
-  );
+export const updateVersion: BuildStep = async (options) => {
+  await applyRecast({
+    glob: `version.{${options.jsExt},d.${options.tsExt}}`,
+    cwd: options.baseDir,
+    transformStep({ ast }) {
+      return {
+        ast: visit(ast, {
+          visitStringLiteral(path) {
+            const node = path.node;
+            if (node.value === "local") {
+              node.value = version;
+            }
+            this.traverse(path);
+          },
+        }),
+      };
+    },
+  });
+};
 
-  fs.writeFileSync(versionPath, updated);
-}
-
-export function verifyVersion() {
+export const verifyVersion: BuildStep = async (options) => {
   const { ApolloClient, InMemoryCache } = require(
-    path.join(distRoot, "index.js")
+    path.join(options.rootDir, options.baseDir, `index.${options.jsExt}`)
   );
 
   // Though this may seem like overkill, verifying that ApolloClient is
@@ -57,4 +67,4 @@ export function verifyVersion() {
     version,
     "Failed to update dist/version.js and dist/core/core.cjs"
   );
-}
+};

@@ -4,7 +4,7 @@ import { parseArgs } from "node:util";
 
 import { compileTs } from "./compileTs.ts";
 // import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-// import { updateVersion, verifyVersion } from "./version.ts";
+import { updateVersion, verifyVersion } from "./version.ts";
 import { processInvariants } from "./processInvariants.ts";
 import { prepareDist } from "./prepareDist.ts";
 // import { postprocessDist } from "./postprocessDist.ts";
@@ -13,6 +13,7 @@ import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 
 export interface BuildStepOptions {
   type: "esm" | "cjs";
+  rootDir: string;
   baseDir: string;
   jsExt: "js" | "cjs";
   tsExt: "ts" | "cts";
@@ -29,11 +30,11 @@ $.verbose = true;
 
 const buildSteps = {
   typescript: compileTs,
-  // updateVersion,
+  updateVersion,
   // inlineInheritDoc,
   processInvariants,
   // postprocessDist,
-  // verifyVersion,
+  verifyVersion,
   verifySourceMaps,
   prepareDist,
 } satisfies BuildSteps;
@@ -74,8 +75,20 @@ console.log("Running build steps: %s", runSteps.join(", "));
 
 const buildStepOptions = [
   // this order is important so that globs on the esm build don't accidentally match the cjs build
-  { type: "esm", baseDir: "dist", jsExt: "js", tsExt: "ts" },
-  { type: "cjs", baseDir: "dist/__cjs", jsExt: "cjs", tsExt: "cts" },
+  {
+    type: "esm",
+    rootDir: import.meta.dirname,
+    baseDir: "dist",
+    jsExt: "js",
+    tsExt: "ts",
+  },
+  {
+    type: "cjs",
+    rootDir: import.meta.dirname,
+    baseDir: "dist/__cjs",
+    jsExt: "cjs",
+    tsExt: "cts",
+  },
 ] satisfies BuildStepOptions[];
 for (const options of buildStepOptions)
   for (const step of runSteps) {

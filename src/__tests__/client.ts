@@ -6071,7 +6071,7 @@ describe("custom document transforms", () => {
   });
 });
 
-function clientRoundtrip(
+async function clientRoundtrip(
   query: DocumentNode,
   data: FormattedExecutionResult,
   variables?: any,
@@ -6089,7 +6089,6 @@ function clientRoundtrip(
     }),
   });
 
-  return client.query({ query, variables }).then((result) => {
-    expect(result.data).toEqual(data.data);
-  });
+  const result = await client.query({ query, variables });
+  expect(result.data).toEqual(data.data);
 }

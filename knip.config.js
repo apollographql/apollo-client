@@ -41,6 +41,7 @@ const config = {
   ],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [
+    /@actions\/.*/,
     /@size-limit\/.*/,
     /eslint-.*/,
     // used by `recast`

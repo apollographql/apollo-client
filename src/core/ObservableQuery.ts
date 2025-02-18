@@ -251,11 +251,13 @@ export class ObservableQuery<
       (lastResult && lastResult.networkStatus) ||
       NetworkStatus.ready;
 
-    const result = {
+    const result: ApolloQueryResult<TData> = {
+      data: undefined,
+      partial: true,
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
       networkStatus,
-    } as ApolloQueryResult<TData>;
+    };
 
     const { fetchPolicy = "cache-first" } = this.options;
     if (
@@ -277,6 +279,8 @@ export class ObservableQuery<
     } else {
       const diff = this.queryInfo.getDiff();
 
+      result.partial = !diff.complete;
+
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
       }
@@ -286,10 +290,6 @@ export class ObservableQuery<
       }
 
       if (diff.complete) {
-        // Similar to setting result.partial to false, but taking advantage of the
-        // falsiness of missing fields.
-        delete result.partial;
-
         // If the diff is complete, and we're using a FetchPolicy that
         // terminates after a complete cache read, we can assume the next result
         // we receive will have NetworkStatus.ready and !loading.
@@ -301,8 +301,6 @@ export class ObservableQuery<
           result.networkStatus = NetworkStatus.ready;
           result.loading = false;
         }
-      } else {
-        result.partial = true;
       }
 
       if (
@@ -584,7 +582,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           });
 
           this.reportResult(
-            { ...lastResult, data: data as TData },
+            {
+              ...lastResult,
+              networkStatus: originalNetworkStatus!,
+              loading: isNetworkRequestInFlight(originalNetworkStatus),
+              data: data as TData,
+            },
             this.variables
           );
         }
@@ -1081,9 +1084,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // because the query may be using the @nonreactive directive, and we want to
     // save the the latest version of any nonreactive subtrees (in case
     // getCurrentResult is called), even though we skip broadcasting changes.
-    if (lastError || !result.partial || this.options.returnPartialData) {
-      this.updateLastResult(result, variables);
-    }
+    this.updateLastResult(result, variables);
     if (lastError || isDifferent) {
       iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }
@@ -1092,13 +1093,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private reportError(error: ApolloError, variables: TVariables | undefined) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
-    const errorResult = {
+    const errorResult: ApolloQueryResult<TData> = {
+      data: undefined,
+      partial: true,
       ...this.getLastResult(),
       error,
       errors: error.graphQLErrors,
       networkStatus: NetworkStatus.error,
       loading: false,
-    } as ApolloQueryResult<TData>;
+    };
 
     this.updateLastResult(errorResult, variables);
 

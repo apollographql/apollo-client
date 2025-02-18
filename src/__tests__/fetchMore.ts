@@ -22,7 +22,7 @@ import {
 } from "../cache";
 
 import { MockedResponse, mockSingleLink } from "../testing";
-import { ObservableStream } from "../testing/internal";
+import { ObservableStream, setupPaginatedCase } from "../testing/internal";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`
@@ -293,7 +293,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -314,12 +314,12 @@ describe("fetchMore on an observable query", () => {
 
         // This is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(combinedComments).toHaveLength(20);
 
@@ -354,7 +354,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -365,12 +365,12 @@ describe("fetchMore on an observable query", () => {
 
         // This is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -400,7 +400,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -417,7 +417,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        const fetchMoreComments = fetchMoreResult.data.entry.comments;
+        const fetchMoreComments = fetchMoreResult.data!.entry.comments;
 
         expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreComments).toHaveLength(10);
@@ -428,7 +428,7 @@ describe("fetchMore on an observable query", () => {
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -467,7 +467,7 @@ describe("fetchMore on an observable query", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -477,12 +477,12 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10); // this is the server result
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10); // this is the server result
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(result.loading).toBe(false);
         expect(combinedComments).toHaveLength(20);
@@ -612,12 +612,13 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -631,21 +632,23 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -661,21 +664,23 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -706,12 +711,13 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -725,29 +731,32 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -763,29 +772,32 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -815,12 +827,13 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -834,21 +847,23 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -864,21 +879,23 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -908,12 +925,13 @@ describe("fetchMore on an observable query", () => {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -927,29 +945,32 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 2),
         },
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -965,29 +986,32 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqual({
+        expect(fetchMoreResult).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
+          partial: false,
         });
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         networkStatus: NetworkStatus.fetchMore,
         data: {
           TODO: tasks.slice(0, 4),
         },
+        partial: false,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           TODO: [...tasks.slice(0, 4), ...tasks.slice(5, 8)],
         },
+        partial: false,
       });
 
       expect(linkRequests).toEqual([
@@ -1118,12 +1142,13 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         groceries: initialGroceries,
       },
+      partial: false,
     });
 
     expect(mergeArgsHistory).toEqual([{ offset: 0, limit: 2 }]);
@@ -1136,12 +1161,13 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
-      expect(fetchMoreResult).toEqual({
+      expect(fetchMoreResult).toEqualApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
           groceries: additionalGroceries,
         },
+        partial: false,
       });
 
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1150,12 +1176,13 @@ describe("fetchMore on an observable query", () => {
     // This result comes entirely from the cache, without updating the
     // original variables for the ObservableQuery, because the
     // offsetLimitPagination field policy has keyArgs:false.
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         groceries: finalGroceries,
       },
+      partial: false,
     });
 
     expect(mergeArgsHistory).toEqual([
@@ -1181,7 +1208,7 @@ describe("fetchMore on an observable query", () => {
       const result = await stream.takeNext();
 
       expect(result.loading).toBe(false);
-      expect(result.data.entry.comments).toHaveLength(10);
+      expect(result.data!.entry.comments).toHaveLength(10);
     }
 
     {
@@ -1199,12 +1226,12 @@ describe("fetchMore on an observable query", () => {
       });
 
       expect(fetchMoreResult.loading).toBe(false);
-      expect(fetchMoreResult.data.comments).toHaveLength(10);
+      expect(fetchMoreResult.data!.comments).toHaveLength(10);
     }
 
     {
       const result = await stream.takeNext();
-      const combinedComments = result.data.entry.comments;
+      const combinedComments = result.data!.entry.comments;
 
       expect(result.loading).toBe(false);
       expect(combinedComments).toHaveLength(20);
@@ -1252,7 +1279,7 @@ describe("fetchMore on an observable query", () => {
       const { data, networkStatus } = await stream.takeNext();
 
       expect(networkStatus).toBe(NetworkStatus.ready);
-      expect(data.entry.comments.length).toBe(10);
+      expect(data!.entry.comments.length).toBe(10);
 
       const error = await observable
         .fetchMore({
@@ -1315,7 +1342,7 @@ describe("fetchMore on an observable query", () => {
       const { data, networkStatus } = await stream.takeNext();
 
       expect(networkStatus).toBe(NetworkStatus.ready);
-      expect(data.entry.comments.length).toBe(10);
+      expect(data!.entry.comments.length).toBe(10);
 
       const error = await observable
         .fetchMore({
@@ -1393,38 +1420,42 @@ describe("fetchMore on an observable query", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         emptyItems: [],
       },
+      partial: false,
     });
 
     const fetchMoreResult = await observable.fetchMore({
       variables,
     });
 
-    expect(fetchMoreResult).toEqual({
+    expect(fetchMoreResult).toEqualApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { emptyItems: [] },
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.fetchMore,
       data: {
         emptyItems: [],
       },
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         emptyItems: [],
       },
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -1574,7 +1605,7 @@ describe("fetchMore on an observable query with connection", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -1590,13 +1621,13 @@ describe("fetchMore on an observable query with connection", () => {
           },
         });
 
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
         expect(fetchMoreResult.loading).toBe(false);
       }
 
       {
         const result = await stream.takeNext();
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
 
         expect(combinedComments).toHaveLength(20);
         combinedComments.forEach((comment, i) => {
@@ -1633,7 +1664,7 @@ describe("fetchMore on an observable query with connection", () => {
         const result = await stream.takeNext();
 
         expect(result.loading).toBe(false);
-        expect(result.data.entry.comments).toHaveLength(10);
+        expect(result.data!.entry.comments).toHaveLength(10);
       }
 
       {
@@ -1644,13 +1675,13 @@ describe("fetchMore on an observable query with connection", () => {
 
         // this is the server result
         expect(fetchMoreResult.loading).toBe(false);
-        expect(fetchMoreResult.data.entry.comments).toHaveLength(10);
+        expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
       {
         const result = await stream.takeNext();
 
-        const combinedComments = result.data.entry.comments;
+        const combinedComments = result.data!.entry.comments;
         expect(combinedComments).toHaveLength(20);
         combinedComments.forEach((comment, i) => {
           expect(comment.text).toBe(`comment ${i + 1}`);
@@ -1693,7 +1724,7 @@ describe("fetchMore on an observable query with connection", () => {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data.entry.comments.length).toBe(10);
+        expect(data!.entry.comments.length).toBe(10);
       }
 
       void observable.fetchMore({
@@ -1712,7 +1743,7 @@ describe("fetchMore on an observable query with connection", () => {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data.entry.comments.length).toBe(10);
+        expect(data!.entry.comments.length).toBe(10);
       }
 
       {
@@ -1775,17 +1806,163 @@ describe("fetchMore on an observable query with connection", () => {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.fetchMore);
-        expect(data.entry.comments.length).toBe(10);
+        expect(data!.entry.comments.length).toBe(10);
       }
 
       {
         const { data, networkStatus } = await stream.takeNext();
 
         expect(networkStatus).toBe(NetworkStatus.ready);
-        expect(data.entry.comments.length).toBe(20);
+        expect(data!.entry.comments.length).toBe(20);
       }
 
       await expect(stream).not.toEmitAnything();
     });
   });
+});
+
+test("uses updateQuery to update the result of the query with no-cache queries", async () => {
+  const { query, link } = setupPaginatedCase();
+
+  const client = new ApolloClient({ cache: new InMemoryCache(), link });
+
+  const observable = client.watchQuery({
+    query,
+    fetchPolicy: "no-cache",
+    notifyOnNetworkStatusChange: true,
+    variables: { limit: 2 },
+  });
+
+  const stream = new ObservableStream(observable);
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  let fetchMoreResult = await observable.fetchMore({
+    variables: { offset: 2 },
+    updateQuery: (prev, { fetchMoreResult }) => ({
+      letters: prev.letters.concat(fetchMoreResult.letters),
+    }),
+  });
+
+  expect(fetchMoreResult).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+      ],
+    },
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+    partial: false,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  // Ensure we store the merged result as the last result
+  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
+
+  fetchMoreResult = await observable.fetchMore({
+    variables: { offset: 4 },
+    updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
+  });
+
+  expect(fetchMoreResult).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "E", position: 5 },
+        { __typename: "Letter", letter: "F", position: 6 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "A", position: 1 },
+        { __typename: "Letter", letter: "B", position: 2 },
+        { __typename: "Letter", letter: "C", position: 3 },
+        { __typename: "Letter", letter: "D", position: 4 },
+      ],
+    },
+    loading: true,
+    networkStatus: NetworkStatus.fetchMore,
+    partial: false,
+  });
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "E", position: 5 },
+        { __typename: "Letter", letter: "F", position: 6 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
+    data: {
+      letters: [
+        { __typename: "Letter", letter: "E", position: 5 },
+        { __typename: "Letter", letter: "F", position: 6 },
+      ],
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  await expect(stream).not.toEmitAnything();
 });

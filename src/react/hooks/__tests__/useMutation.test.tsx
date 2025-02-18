@@ -1845,12 +1845,13 @@ describe("useMutation Hook", () => {
             todoCount: 1,
           },
         });
-        expect(onUpdateResult.result).toEqual({
+        expect(onUpdateResult.result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             todoCount: 1,
           },
+          partial: false,
         });
       });
 

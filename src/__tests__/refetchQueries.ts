@@ -822,6 +822,7 @@ describe("client.refetchQueries", () => {
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });
@@ -891,6 +892,7 @@ describe("client.refetchQueries", () => {
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });
@@ -957,6 +959,7 @@ describe("client.refetchQueries", () => {
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });

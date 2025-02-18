@@ -7,7 +7,6 @@ import { render, screen, waitFor, renderHook } from "@testing-library/react";
 import {
   ApolloClient,
   ApolloError,
-  ApolloQueryResult,
   FetchPolicy,
   NetworkStatus,
   OperationVariables,
@@ -1854,6 +1853,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -1907,6 +1907,7 @@ describe("useQuery Hook", () => {
         data: { vars: { sourceOfVar: "reobserve without variable merge" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -2243,12 +2244,13 @@ describe("useQuery Hook", () => {
           if (obsQuery.hasObservers()) {
             expect(inactiveSet.has(obsQuery)).toBe(false);
             activeSet.add(obsQuery);
-            expect(obsQuery.getCurrentResult()).toEqual({
+            expect(obsQuery.getCurrentResult()).toEqualApolloQueryResult({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
                 linkCount: expectedLinkCount,
               },
+              partial: false,
             });
           } else {
             expect(activeSet.has(obsQuery)).toBe(false);
@@ -2267,6 +2269,7 @@ describe("useQuery Hook", () => {
         data: { linkCount: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -2684,6 +2687,7 @@ describe("useQuery Hook", () => {
     // https://github.com/apollographql/apollo-client/issues/9431
     // https://github.com/apollographql/apollo-client/issues/11750
     it("stops polling when component unmounts with cache-and-network fetch policy", async () => {
+      jest.useFakeTimers();
       const query: TypedDocumentNode<{ hello: string }> = gql`
         query {
           hello
@@ -2694,17 +2698,17 @@ describe("useQuery Hook", () => {
         {
           request: { query },
           result: { data: { hello: "world 1" } },
-          delay: 3,
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "world 2" } },
-          delay: 3,
+          delay: 20,
         },
         {
           request: { query },
           result: { data: { hello: "world 3" } },
-          delay: 3,
+          delay: 20,
         },
       ];
 
@@ -2725,7 +2729,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
         () =>
           useQuery(query, {
-            pollInterval: 10,
+            pollInterval: 100,
             fetchPolicy: "cache-and-network",
           }),
         {
@@ -2736,9 +2740,10 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const result = await takeSnapshot();
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
 
-        expect(result).toEqualQueryResult({
+        await expect(promise).resolves.toEqualQueryResult({
           data: undefined,
           called: true,
           loading: true,
@@ -2748,10 +2753,13 @@ describe("useQuery Hook", () => {
         });
       }
 
-      {
-        const result = await takeSnapshot();
+      jest.advanceTimersByTime(20);
 
-        expect(result).toEqualQueryResult({
+      {
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
+
+        await expect(promise).resolves.toEqualQueryResult({
           data: { hello: "world 1" },
           called: true,
           loading: false,
@@ -2762,12 +2770,13 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      await wait(10);
+      jest.advanceTimersByTime(100);
 
       {
-        const result = await takeSnapshot();
+        const promise = takeSnapshot();
+        await jest.advanceTimersByTimeAsync(0);
 
-        expect(result).toEqualQueryResult({
+        await expect(promise).resolves.toEqualQueryResult({
           data: { hello: "world 2" },
           called: true,
           loading: false,
@@ -2780,11 +2789,12 @@ describe("useQuery Hook", () => {
 
       unmount();
 
-      await expect(takeSnapshot).not.toRerender({ timeout: 50 });
+      jest.advanceTimersByTime(200);
 
-      // TODO rarely seeing 3 here (also old `useQuery` implementation)
       expect(requestSpy).toHaveBeenCalledTimes(2);
       expect(onErrorFn).toHaveBeenCalledTimes(0);
+
+      jest.useRealTimers();
     });
 
     it("should stop polling when component is unmounted in Strict Mode", async () => {
@@ -3474,134 +3484,6 @@ describe("useQuery Hook", () => {
       }
     });
 
-    it("calls `onError` when a GraphQL error is returned", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ graphQLErrors: [{ message: "error" }] })
-      );
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("calls `onError` when a network error has occurred", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          error: new Error("Could not fetch"),
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({
-            networkError: new Error("Could not fetch"),
-          }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ networkError: new Error("Could not fetch") })
-      );
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
     it("removes partial data from result when response has errors", async () => {
       const query = gql`
         {
@@ -3625,10 +3507,9 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const onError = jest.fn();
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError }),
+        () => useQuery(query),
         { wrapper }
       );
 
@@ -3660,132 +3541,6 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('does not call `onError` when returning GraphQL errors while using an `errorPolicy` set to "ignore"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "ignore" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      await tick();
-
-      expect(onError).not.toHaveBeenCalled();
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('calls `onError` when a network error has occurred while using an `errorPolicy` set to "ignore"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          error: new Error("Could not fetch"),
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "ignore" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({
-            networkError: new Error("Could not fetch"),
-          }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ networkError: new Error("Could not fetch") })
-      );
 
       await expect(takeSnapshot).not.toRerender();
     });
@@ -3848,136 +3603,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it('calls `onCompleted` with partial data but avoids calling `onError` when using an `errorPolicy` set to "ignore"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            data: { hello: null },
-            errors: [new GraphQLError('Could not fetch "hello"')],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      const onCompleted = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, onCompleted, errorPolicy: "ignore" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: null },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: null });
-      expect(onError).not.toHaveBeenCalled();
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('calls `onError` when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "all" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          // TODO: Why does this only populate when errorPolicy is "all"?
-          errors: [{ message: "error" }],
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
-      );
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
     it('returns partial data when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
       const query = gql`
         {
@@ -4001,10 +3626,9 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const onError = jest.fn();
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "all" }),
+        () => useQuery(query, { errorPolicy: "all" }),
         { wrapper }
       );
 
@@ -4037,181 +3661,6 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('calls `onError` but not `onCompleted` when returning partial data with GraphQL errors while using an `errorPolicy` set to "all"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            data: { hello: null },
-            errors: [new GraphQLError('Could not fetch "hello"')],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      const onCompleted = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, onCompleted, errorPolicy: "all" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: null },
-          error: new ApolloError({
-            graphQLErrors: [{ message: 'Could not fetch "hello"' }],
-          }),
-          errors: [{ message: 'Could not fetch "hello"' }],
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError('Could not fetch "hello"')],
-        })
-      );
-      expect(onCompleted).not.toHaveBeenCalled();
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("calls `onError` a single time when refetching returns a successful result", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-        {
-          request: { query },
-          result: {
-            data: { hello: "world" },
-          },
-          delay: 10,
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () =>
-            useQuery(query, {
-              onError,
-              notifyOnNetworkStatusChange: true,
-            }),
-          { wrapper }
-        );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-
-      void getCurrentSnapshot().refetch();
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.refetch,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "world" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
 
       await expect(takeSnapshot).not.toRerender();
     });
@@ -4513,85 +3962,6 @@ describe("useQuery Hook", () => {
       // Data from the cache remains onscreen while network request
       // is made
       expect(screen.getByText("Data rendered")).toBeTruthy();
-    });
-
-    it("should persist errors on re-render with inline onError/onCompleted callbacks", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const link = new MockLink(mocks);
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} link={link} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError: () => {}, onCompleted: () => {} }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      await rerender(undefined);
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
-
-      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should not persist errors when variables change", async () => {
@@ -5056,124 +4426,6 @@ describe("useQuery Hook", () => {
         });
       }
     });
-
-    it("should call onCompleted when variables change", async () => {
-      const query = gql`
-        query people($first: Int) {
-          allPeople(first: $first) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
-      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
-      const mocks = [
-        {
-          request: { query, variables: { first: 1 } },
-          result: { data: data1 },
-        },
-        {
-          request: { query, variables: { first: 2 } },
-          result: { data: data2 },
-        },
-      ];
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ variables }) => useQuery(query, { variables, onCompleted }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-          initialProps: {
-            variables: { first: 1 },
-          },
-        }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: { first: 1 },
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: data1,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: { first: 1 },
-        });
-      }
-
-      expect(onCompleted).toHaveBeenLastCalledWith(data1);
-
-      await rerender({ variables: { first: 2 } });
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.setVariables,
-          previousData: data1,
-          variables: { first: 2 },
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: data2,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: data1,
-          variables: { first: 2 },
-        });
-      }
-
-      expect(onCompleted).toHaveBeenLastCalledWith(data2);
-
-      await rerender({ variables: { first: 1 } });
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: data1,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: data2,
-          variables: { first: 1 },
-        });
-      }
-
-      expect(onCompleted).toHaveBeenLastCalledWith(data1);
-      expect(onCompleted).toHaveBeenCalledTimes(3);
-
-      await expect(takeSnapshot).not.toRerender();
-    });
   });
 
   describe("Pagination", () => {
@@ -5267,6 +4519,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5338,6 +4591,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5427,6 +4681,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5507,6 +4762,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5722,6 +4978,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -5799,6 +5056,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -6207,6 +5465,7 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -6214,10 +5473,7 @@ describe("useQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
-        // TODO: Fix ApolloQueryResult type to allow `data` to be an optional property.
-        // This fails without the type case for now even though the runtime
-        // code doesn't include a `data` property.
-      } as unknown as ApolloQueryResult<Query1>);
+      });
 
       expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
@@ -6273,8 +5529,7 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
-        // TODO: Fix TypeScript types to allow for `data` to be `undefined`
-        data: undefined as unknown as Query1,
+        data: undefined,
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
@@ -7288,6 +6543,7 @@ describe("useQuery Hook", () => {
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -7422,6 +6678,7 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7532,6 +6789,7 @@ describe("useQuery Hook", () => {
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7640,6 +6898,7 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7861,685 +7120,6 @@ describe("useQuery Hook", () => {
           variables: { id: 2 },
         });
       }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-  });
-
-  describe("Callbacks", () => {
-    it("onCompleted is called once with cached data", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      cache.writeQuery({
-        query,
-        data: { hello: "world" },
-      });
-
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={[]} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            fetchPolicy: "cache-only",
-            onCompleted,
-          }),
-        { wrapper }
-      );
-
-      const result = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
-        data: { hello: "world" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("onCompleted is called once despite state changes", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onCompleted }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "world" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-
-      await rerender(undefined);
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "world" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("should not call onCompleted if skip is true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            skip: true,
-            onCompleted,
-          }),
-        { wrapper }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        error: undefined,
-        called: false,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(0);
-      await expect(takeSnapshot).not.toRerender();
-      expect(onCompleted).toHaveBeenCalledTimes(0);
-    });
-
-    it("should not make extra network requests when `onCompleted` is defined with a `network-only` fetch policy", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => {
-          return useQuery(query, {
-            fetchPolicy: "network-only",
-            onCompleted,
-          });
-        },
-        { wrapper }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot).not.toRerender();
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-    });
-
-    it("onCompleted should not fire for polling queries without notifyOnNetworkStatusChange: true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world 1" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 2" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 3" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            onCompleted,
-            pollInterval: 10,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 1" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 2" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world 1" },
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 3" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world 2" },
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-    });
-
-    it("onCompleted should fire when polling with notifyOnNetworkStatusChange: true", async () => {
-      jest.useFakeTimers();
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world 1" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 2" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 3" } },
-          delay: 20,
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            onCompleted,
-            notifyOnNetworkStatusChange: true,
-            pollInterval: 200,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(0);
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 1" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      // Polling is started with the first request, so we only need to advance
-      // the timer by 180 (200 poll time - 20 result delay)
-      jest.advanceTimersByTime(180);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 1" },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.poll,
-          previousData: { hello: "world 1" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 2" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 1" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-      jest.advanceTimersByTime(200);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 2" },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.poll,
-          previousData: { hello: "world 2" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 3" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 2" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(3);
-
-      jest.runOnlyPendingTimers();
-      jest.useRealTimers();
-    });
-
-    // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794
-    it("onCompleted can set state without causing react errors", async () => {
-      using consoleSpy = spyOnConsole("error");
-      const query = gql`
-        {
-          hello
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      cache.writeQuery({
-        query,
-        data: { hello: "world" },
-      });
-
-      const ChildComponent: React.FC<{
-        setOnCompletedCalled: React.Dispatch<React.SetStateAction<boolean>>;
-      }> = ({ setOnCompletedCalled }) => {
-        useQuery(query, {
-          fetchPolicy: "cache-only",
-          onCompleted: () => {
-            setOnCompletedCalled(true);
-          },
-        });
-
-        return null;
-      };
-
-      const ParentComponent: React.FC = () => {
-        const [onCompletedCalled, setOnCompletedCalled] = useState(false);
-        return (
-          <MockedProvider mocks={[]} cache={cache}>
-            <div>
-              <ChildComponent setOnCompletedCalled={setOnCompletedCalled} />
-              onCompletedCalled: {String(onCompletedCalled)}
-            </div>
-          </MockedProvider>
-        );
-      };
-
-      render(<ParentComponent />);
-      await screen.findByText("onCompletedCalled: true");
-      expect(consoleSpy.error).not.toHaveBeenCalled();
-    });
-
-    it("onCompleted should not execute on cache writes after initial query execution", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "foo" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "bar" } },
-        },
-      ];
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink(mocks),
-      });
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onCompleted }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "foo" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      void client.refetchQueries({ include: "active" });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "bar" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "foo" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      client.writeQuery({ query, data: { hello: "baz" } });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "baz" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "bar" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("onCompleted should execute on cache writes after initial query execution with notifyOnNetworkStatusChange: true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "foo" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "bar" } },
-          delay: 20,
-        },
-      ];
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink(mocks),
-      });
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, { onCompleted, notifyOnNetworkStatusChange: true }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "foo" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      void client.refetchQueries({ include: "active" });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "foo" },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-        previousData: { hello: "foo" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "bar" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "foo" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-
-      client.writeQuery({ query, data: { hello: "baz" } });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "baz" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "bar" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(2);
 
       await expect(takeSnapshot).not.toRerender();
     });
@@ -9136,6 +7716,7 @@ describe("useQuery Hook", () => {
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(requestSpy).toHaveBeenCalledTimes(1);
@@ -9249,6 +7830,7 @@ describe("useQuery Hook", () => {
         data: { hello: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
 
@@ -10122,6 +8704,7 @@ describe("useQuery Hook", () => {
         data: { a: "aaa", b: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({

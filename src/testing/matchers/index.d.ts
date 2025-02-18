@@ -2,6 +2,7 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   DocumentNode,
+  FetchResult,
   OperationVariables,
 } from "../../core/index.js";
 import type { QueryRef, QueryResult } from "../../react/index.js";
@@ -42,6 +43,12 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  toEmitApolloQueryResult: T extends ObservableStream<infer QueryResult> ?
+    QueryResult extends ApolloQueryResult<infer TData> ?
+      (value: ApolloQueryResult<TData>, options?: TakeOptions) => Promise<R>
+    : { error: "matcher needs to be matched with an ApolloQueryResult" }
+  : { error: "matcher needs to be called on an ObservableStream instance" };
+
   toEmitAnything: T extends ObservableStream<any> ?
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
@@ -49,6 +56,12 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   toEmitError: T extends ObservableStream<any> ?
     (error?: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
+
+  toEmitFetchResult: T extends ObservableStream<FetchResult<infer TData>> ?
+    (value: FetchResult<TData>, options?: TakeOptions) => Promise<R>
+  : {
+      error: "matcher needs to be called on an ObservableStream<FetchResult<TData>> instance";
+    };
 
   /**
    * Used to determine if the observable stream emitted a `next` event. Use
@@ -81,6 +94,16 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : T extends Promise<QueryResult<infer TData, infer TVariables>> ?
     (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
   : { error: "matchers needs to be called on a QueryResult" };
+
+  toEqualFetchResult: T extends (
+    FetchResult<infer TData, infer TContext, infer TExtensions>
+  ) ?
+    (expected: FetchResult<TData, TContext, TExtensions>) => R
+  : T extends (
+    Promise<FetchResult<infer TData, infer TContext, infer TExtensions>>
+  ) ?
+    (expected: FetchResult<TData, TContext, TExtensions>) => R
+  : { error: "matchers needs to be called on a FetchResult" };
 }
 
 declare global {

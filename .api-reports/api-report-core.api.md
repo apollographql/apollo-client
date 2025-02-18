@@ -199,10 +199,7 @@ export class ApolloError extends Error {
     // (undocumented)
     networkError: Error | ServerParseError | ServerError | null;
     // (undocumented)
-    protocolErrors: ReadonlyArray<{
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    }>;
+    protocolErrors: ReadonlyArray<GraphQLFormattedError>;
 }
 
 // @public (undocumented)
@@ -218,10 +215,7 @@ interface ApolloErrorOptions {
     // (undocumented)
     networkError?: Error | ServerParseError | ServerError | null;
     // (undocumented)
-    protocolErrors?: ReadonlyArray<{
-        message: string;
-        extensions?: GraphQLErrorExtensions[];
-    }>;
+    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
 }
 
 // @public (undocumented)
@@ -266,15 +260,15 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
 // @public (undocumented)
 export interface ApolloQueryResult<T> {
     // (undocumented)
-    data: T;
+    data: T | undefined;
     error?: ApolloError;
     errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     loading: boolean;
     // (undocumented)
     networkStatus: NetworkStatus;
-    // (undocumented)
-    partial?: boolean;
+    // @deprecated
+    partial: boolean;
 }
 
 // @public (undocumented)

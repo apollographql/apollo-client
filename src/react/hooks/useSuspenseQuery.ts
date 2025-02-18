@@ -242,14 +242,17 @@ function useSuspenseQuery_<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo(() => {
+  const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
     const error = toApolloError(queryRef.result);
+    const complete = !!queryRef.result.data;
 
     return {
       loading: false,
       data: queryRef.result.data,
       networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
       error,
+      complete,
+      partial: !complete,
     };
   }, [queryRef.result]);
 

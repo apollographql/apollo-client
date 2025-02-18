@@ -11,17 +11,18 @@ jobs:
     if: |
       github.repository == 'apollographql/apollo-client' &&
       github.event.review.state == 'APPROVED' &&
+      github.event.review.author_association == 'MEMBER' &&
       contains(github.event.pull_request.labels.*.name, 'auto-cleanup') == false
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
       - name: add label
-        uses: actions-ecosystem/action-add-labels@v1
+        uses: actions/github-script@v7.0.1
         with:
-          labels: auto-cleanup
+          script: |
+            const script = (await import('${{ github.workspace }}/.github/workflows/cleanup-checks.mjs')).setup({context,core,github,exec,glob,io})
+            await script.add_cleanup_label()
 
   cleanup:
     if: |

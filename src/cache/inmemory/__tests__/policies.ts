@@ -3647,7 +3647,7 @@ describe("type policies", function () {
 
       let result = await client.query({ query: firstQuery });
 
-      expect(result).toEqual({
+      expect(result).toEqualApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -3655,6 +3655,7 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        partial: false,
       });
 
       expect(cache.extract()).toEqual({
@@ -3678,7 +3679,7 @@ describe("type policies", function () {
         variables: secondVariables,
       });
 
-      expect(result).toEqual({
+      expect(result).toEqualApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -3688,12 +3689,13 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        partial: false,
       });
 
       expect(cache.extract()).toMatchSnapshot();
 
       result = await client.query({ query: thirdQuery });
-      expect(result).toEqual({
+      expect(result).toEqualApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -3702,6 +3704,7 @@ describe("type policies", function () {
             extraMetaData: "extra",
           },
         },
+        partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
     });
@@ -4108,7 +4111,7 @@ describe("type policies", function () {
 
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -4118,6 +4121,7 @@ describe("type policies", function () {
             totalCount: 1292,
           },
         },
+        partial: false,
       });
       expect(cache.extract()).toMatchSnapshot();
 
@@ -4126,7 +4130,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4142,6 +4146,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
         expect(cache.extract()).toMatchSnapshot();
       }
@@ -4153,7 +4158,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(5);
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4169,6 +4174,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(cache.extract()).toMatchSnapshot();
@@ -4179,7 +4185,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4195,6 +4201,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(result.data.search.edges).toEqual([
@@ -4212,7 +4219,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(7);
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4228,6 +4235,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(cache.extract()).toMatchSnapshot();
@@ -4246,7 +4254,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4256,6 +4264,7 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
+          partial: false,
         });
 
         expect(snapshot).toMatchSnapshot();
@@ -4308,7 +4317,7 @@ describe("type policies", function () {
           },
         });
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4324,6 +4333,7 @@ describe("type policies", function () {
               totalCount: 1292,
             },
           },
+          partial: false,
         });
 
         expect(cache.extract()).toMatchSnapshot();
@@ -4341,7 +4351,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqual({
+        expect(result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4351,6 +4361,7 @@ describe("type policies", function () {
               totalCount: 13531,
             },
           },
+          partial: false,
         });
 
         expect(snapshot).toMatchSnapshot();

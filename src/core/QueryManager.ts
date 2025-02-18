@@ -124,7 +124,7 @@ interface MaskOperationOptions<TData> {
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-export interface QueryManagerOptions<TStore> {
+interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
   link: ApolloLink;
   defaultOptions: DefaultOptions;
@@ -1264,6 +1264,7 @@ export class QueryManager<TStore> {
           data: result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: !result.data,
         };
 
         // In the case we start multiple network requests simulatenously, we
@@ -1654,13 +1655,17 @@ export class QueryManager<TStore> {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | DeepPartial<TData> | undefined) =>
-        Observable.of({
-          data,
+      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
+        const result: ApolloQueryResult<TData> = {
+          // TODO: Handle partial data
+          data: data as TData | undefined,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
-          ...(diff.complete ? null : { partial: true }),
-        } as ApolloQueryResult<TData>);
+          partial: !diff.complete,
+        };
+
+        return Observable.of(result);
+      };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState

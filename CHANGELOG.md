@@ -1,5 +1,42 @@
 # @apollo/client
 
+## 3.12.11
+
+### Patch Changes
+
+- [#12351](https://github.com/apollographql/apollo-client/pull/12351) [`3da908b`](https://github.com/apollographql/apollo-client/commit/3da908b1dde73847805a41c287a83700b2b88887) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where the wrong `networkStatus` and `loading` value was emitted from `observableQuery` when calling `fetchMore` with a `no-cache` fetch policy. The `networkStatus` now properly reports as `ready` and `loading` as `false` after the result is returned.
+
+- [#12354](https://github.com/apollographql/apollo-client/pull/12354) [`a24ef94`](https://github.com/apollographql/apollo-client/commit/a24ef9474f8f7a864f8b866563f8f7e661d2533f) Thanks [@phryneas](https://github.com/phryneas)! - Fix missing `main.d.cts` file
+
+## 3.12.10
+
+### Patch Changes
+
+- [#12341](https://github.com/apollographql/apollo-client/pull/12341) [`f2bb0b9`](https://github.com/apollographql/apollo-client/commit/f2bb0b9955564e432345ee8bd431290e698d092c) Thanks [@phryneas](https://github.com/phryneas)! - `useReadQuery`/`useQueryRefHandlers`: Fix a "hook order" warning that might be emitted in React 19 dev mode.
+
+- [#12342](https://github.com/apollographql/apollo-client/pull/12342) [`219b26b`](https://github.com/apollographql/apollo-client/commit/219b26ba5a697981ad700e05b926d42db0fb8e59) Thanks [@phryneas](https://github.com/phryneas)! - Add `graphql-ws` `^6.0.3` as a valid `peerDependency`
+
+## 3.12.9
+
+### Patch Changes
+
+- [#12321](https://github.com/apollographql/apollo-client/pull/12321) [`daa4f33`](https://github.com/apollographql/apollo-client/commit/daa4f3303cfb81e8dca66c21ce3f3dc24946cafb) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `extensions` in `protocolErrors` for `ApolloError` and the `onError` link. According to the [multipart HTTP subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol), fatal tranport errors follow the [GraphQL error format](https://spec.graphql.org/draft/#sec-Errors.Error-Result-Format) which require `extensions` to be a map as its value instead of an array.
+
+- [#12318](https://github.com/apollographql/apollo-client/pull/12318) [`b17968b`](https://github.com/apollographql/apollo-client/commit/b17968b61f0e35b1ba20d081dacee66af8225491) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Allow `RetryLink` to retry an operation when fatal [transport-level errors](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) are emitted from multipart subscriptions.
+
+  ```js
+  const retryLink = new RetryLink({
+    attempts: (count, operation, error) => {
+      if (error instanceof ApolloError) {
+        // errors available on the `protocolErrors` field in `ApolloError`
+        console.log(error.protocolErrors);
+      }
+
+      return true;
+    },
+  });
+  ```
+
 ## 3.12.8
 
 ### Patch Changes

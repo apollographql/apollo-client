@@ -517,10 +517,7 @@ export class InternalQueryReference<TData = unknown> {
 
     this.result = result;
     this.promise =
-      (
-        result.data &&
-        (!result.partial || this.watchQueryOptions.returnPartialData)
-      ) ?
+      result.data ?
         createFulfilledPromise(result)
       : this.createPendingPromise();
   }

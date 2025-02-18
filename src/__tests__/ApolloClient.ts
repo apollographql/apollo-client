@@ -3167,7 +3167,7 @@ describe("ApolloClient", () => {
 
       observableQuery.subscribe({
         next: (result) => {
-          expectTypeOf(result.data).toMatchTypeOf<Query>();
+          expectTypeOf(result.data).toMatchTypeOf<Query | undefined>();
           expectTypeOf(result.data).not.toMatchTypeOf<UnmaskedQuery>();
         },
       });
@@ -3191,12 +3191,12 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query | undefined>();
       expectTypeOf(fetchMoreResult.data).not.toMatchTypeOf<UnmaskedQuery>();
 
       const refetchResult = await observableQuery.refetch();
 
-      expectTypeOf(refetchResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(refetchResult.data).toMatchTypeOf<Query | undefined>();
       expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
 
       const setVariablesResult = await observableQuery.setVariables({

@@ -141,7 +141,7 @@ export type { QueryOptions as PureQueryOptions };
 export type OperationVariables = Record<string, any>;
 
 export interface ApolloQueryResult<T> {
-  data: T;
+  data: T | undefined;
   /**
    * A list of any errors that occurred during server-side execution of a GraphQL operation.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
@@ -155,10 +155,13 @@ export interface ApolloQueryResult<T> {
   error?: ApolloError;
   loading: boolean;
   networkStatus: NetworkStatus;
-  // If result.data was read from the cache with missing fields,
-  // result.partial will be true. Otherwise, result.partial will be falsy
-  // (usually because the property is absent from the result object).
-  partial?: boolean;
+  /**
+   * Describes whether `data` is a complete or partial result. This flag is only
+   * set when `returnPartialData` is `true` in query options.
+   *
+   * @deprecated This field will be removed in a future version of Apollo Client.
+   */
+  partial: boolean;
 }
 
 // This is part of the public API, people write these functions in `updateQueries`.

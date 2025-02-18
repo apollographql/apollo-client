@@ -859,20 +859,21 @@ describe("Combining client and server state/operations", () => {
 
     const link = new ApolloLink((operation) => {
       // @ts-ignore
-      return new Observable(async (observer) => {
+      return new Observable((observer) => {
         const { query, operationName, variables } = operation;
-        try {
-          const result = await graphql({
-            schema,
-            source: print(query),
-            variableValues: variables,
-            operationName,
+        graphql({
+          schema,
+          source: print(query),
+          variableValues: variables,
+          operationName,
+        })
+          .then((result) => {
+            observer.next(result);
+            observer.complete();
+          })
+          .catch((err) => {
+            observer.error(err);
           });
-          observer.next(result);
-          observer.complete();
-        } catch (err) {
-          observer.error(err);
-        }
       });
     });
 

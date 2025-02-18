@@ -2,7 +2,7 @@ import type { Tester } from "@jest/expect-utils";
 import { equals, iterableEquality } from "@jest/expect-utils";
 import { expect } from "@jest/globals";
 import * as matcherUtils from "jest-matcher-utils";
-import type { Subscribable, Unsubscribable } from "rxjs";
+import type { Observable, Subscribable, Unsubscribable } from "rxjs";
 import { ReadableStream } from "node:stream/web";
 
 export interface TakeOptions {
@@ -18,7 +18,7 @@ export class ObservableStream<T> {
   private subscription!: Unsubscribable;
   private readerQueue: Array<Promise<ObservableEvent<T>>> = [];
 
-  constructor(observable: Subscribable<T>) {
+  constructor(observable: Observable<T> | Subscribable<T>) {
     this.unsubscribe = this.unsubscribe.bind(this);
     this.reader = new ReadableStream<ObservableEvent<T>>({
       start: (controller) => {

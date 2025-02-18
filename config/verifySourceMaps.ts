@@ -8,7 +8,7 @@ import { join } from "node:path";
 export const verifySourceMaps: BuildStep = async (options) => {
   // this only checks source maps for JavaScript files, not TypeScript declarations
   // as we won't ship declaration maps in the end
-  for await (const file of glob(`${options.baseDir}/**/*.{js,cjs}`, {
+  for await (const file of glob(`${options.targetDir}/**/*.{js,cjs}`, {
     withFileTypes: true,
   })) {
     const filePath = join(file.parentPath, file.name);

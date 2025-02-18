@@ -34,13 +34,13 @@ export async function processInvariants(options: BuildStepOptions) {
   ];
 
   await applyRecast({
-    cwd: options.baseDir,
+    cwd: options.targetDir,
     glob: `**/*.${options.jsExt}`,
     transformStep: transform,
   });
 
   fs.writeFileSync(
-    osPathJoin(options.baseDir, `invariantErrorCodes.${options.jsExt}`),
+    osPathJoin(options.targetDir, `invariantErrorCodes.${options.jsExt}`),
     recast.print(program, {
       tabWidth: 2,
     }).code + "\n"
@@ -105,7 +105,7 @@ export async function processInvariants(options: BuildStepOptions) {
             "init",
             b.identifier("file"),
             b.stringLiteral(
-              options.baseDir.replace(/^dist/, "@apollo/client") + "/" + file
+              options.targetDir.replace(/^dist/, "@apollo/client") + "/" + file
             )
           )
         );
@@ -125,7 +125,7 @@ export async function processInvariants(options: BuildStepOptions) {
         return numLit;
       } else {
         throw new Error(`invariant minification error: node cannot have dynamical error argument!
-        file: ${posix.join(options.baseDir, file)}:${expr.loc?.start.line}
+        file: ${posix.join(options.targetDir, file)}:${expr.loc?.start.line}
         code:
 
         ${reprint(message)}

@@ -14,7 +14,8 @@ import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 export interface BuildStepOptions {
   type: "esm" | "cjs";
   rootDir: string;
-  baseDir: string;
+  /** build target directory, relative to `rootDir` */
+  targetDir: string;
   jsExt: "js" | "cjs";
   tsExt: "ts" | "cts";
 }
@@ -78,14 +79,14 @@ const buildStepOptions = [
   {
     type: "esm",
     rootDir: import.meta.dirname,
-    baseDir: "dist",
+    targetDir: "dist",
     jsExt: "js",
     tsExt: "ts",
   },
   {
     type: "cjs",
     rootDir: import.meta.dirname,
-    baseDir: "dist/__cjs",
+    targetDir: "dist/__cjs",
     jsExt: "cjs",
     tsExt: "cts",
   },

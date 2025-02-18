@@ -5,12 +5,12 @@ import type { BuildStep } from "./build.ts";
 
 export const compileTs: BuildStep = async (options) => {
   if (options.type === "esm") {
-    await $`npx tsc --outDir ${options.baseDir}`;
+    await $`npx tsc --outDir ${options.targetDir}`;
   } else {
-    await $`npx tsc --outDir ${options.baseDir} --module commonjs`;
+    await $`npx tsc --outDir ${options.targetDir} --module commonjs`;
     await applyRecast({
       glob: `**/*.{js,d.ts}`,
-      cwd: options.baseDir,
+      cwd: options.targetDir,
       transformStep({ ast, sourceName }) {
         return {
           ast: visit(ast, {

@@ -24,7 +24,7 @@ import type { BuildStep } from "./build.ts";
 export const updateVersion: BuildStep = async (options) => {
   await applyRecast({
     glob: `version.{${options.jsExt},d.${options.tsExt}}`,
-    cwd: options.baseDir,
+    cwd: options.targetDir,
     transformStep({ ast }) {
       return {
         ast: visit(ast, {
@@ -43,7 +43,7 @@ export const updateVersion: BuildStep = async (options) => {
 
 export const verifyVersion: BuildStep = async (options) => {
   const { ApolloClient, InMemoryCache } = require(
-    path.join(options.rootDir, options.baseDir, `index.${options.jsExt}`)
+    path.join(options.rootDir, options.targetDir, `index.${options.jsExt}`)
   );
 
   // Though this may seem like overkill, verifying that ApolloClient is

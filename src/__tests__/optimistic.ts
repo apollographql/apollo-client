@@ -218,7 +218,7 @@ describe("optimistic mutation results", () => {
         });
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(true);
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(4);
           expect((dataInStore["Todo99"] as any).text).toBe(
             "Optimistically generated"
@@ -230,7 +230,7 @@ describe("optimistic mutation results", () => {
         );
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(true);
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
           expect(dataInStore).not.toHaveProperty("Todo99");
         }

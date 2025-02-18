@@ -69,6 +69,7 @@ describe("client.refetchQueries", () => {
             function finish(delay: number) {
               // We need to add a delay here since RxJS emits synchronously.
               // Some tests fail if this value is emitted synchronously.
+              // TODO: Determine root cause
               setTimeout(() => {
                 observer.next({ data });
                 observer.complete();

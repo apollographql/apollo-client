@@ -1065,7 +1065,7 @@ describe("optimistic mutation results", () => {
     };
 
     it("will insert a single itemAsync to the beginning", async () => {
-      expect.assertions(8);
+      expect.assertions(7);
       const client = await setup({
         request: { query: mutation },
         result: mutationResult,

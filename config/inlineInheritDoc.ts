@@ -179,6 +179,5 @@ function frameComment(text: string) {
     .map((t) => (!t.startsWith("*") ? "* " + t : t))
     .join("\n")
     .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
-  console.log(`---\n${text}\n-${framed}\n---`);
   return `*\n${framed}\n`;
 }

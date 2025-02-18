@@ -458,6 +458,7 @@ describe("client", () => {
       allPeople: {
         people: [
           {
+            __typename: "Person",
             name: "Luke Skywalker",
           },
         ],
@@ -475,6 +476,7 @@ describe("client", () => {
           'allPeople({"first":1})': {
             people: [
               {
+                __typename: "Person",
                 name: "Luke Skywalker",
               },
             ],

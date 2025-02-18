@@ -95,9 +95,6 @@ export class ObservableQuery<
 
   private isTornDown: boolean;
   private queryManager: QueryManager<any>;
-  private observers = new Set<
-    Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
-  >();
   private subscriptions = new Set<Subscription>();
 
   private waitForOwnResult: boolean;
@@ -333,7 +330,6 @@ export class ObservableQuery<
             // are fired in the meantime, observers that should have been removed
             // from the QueryManager will continue to fire, causing an unnecessary
             // performance hit.
-            this.observers.delete(observer);
             if (!this.hasObservers()) {
               this.queryManager.removeQuery(this.queryId);
             }
@@ -1241,7 +1237,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
     this.queryManager.stopQuery(this.queryId);
-    this.observers.clear();
     this.isTornDown = true;
   }
 

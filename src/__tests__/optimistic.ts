@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { from, Observable, ObservableInput } from "rxjs";
+import { lastValueFrom, Observable } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
 import { Cache, InMemoryCache } from "@apollo/client/cache";
@@ -1341,15 +1341,13 @@ describe("optimistic mutation results", () => {
       });
 
       // wrap the QueryObservable with an rxjs observable
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
+      const promise = lastValueFrom(
+        client.watchQuery({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
         )
-        .toPromise();
+      );
 
       // Mutations will not trigger a watchQuery with the results of an optimistic response
       // if set in the same tick of the event loop.
@@ -1789,15 +1787,13 @@ describe("optimistic mutation results", () => {
         }),
       });
 
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
+      const promise = lastValueFrom(
+        client.watchQuery({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
         )
-        .toPromise();
+      );
 
       await new Promise((resolve) => setTimeout(resolve));
 

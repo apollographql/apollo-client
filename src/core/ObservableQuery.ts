@@ -168,8 +168,6 @@ export class ObservableQuery<
       filter(
         (result) =>
           // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
-          this.options.fetchPolicy === "no-cache" ||
-          // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
           (this.options.fetchPolicy === "network-only" &&
             this.queryInfo.getDiff().complete) ||
           result !== this.initialResult

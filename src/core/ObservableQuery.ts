@@ -354,6 +354,7 @@ export class ObservableQuery<
     return (this.subject as any).pipe(...args);
   }
 
+  // TODO: Consider deprecating this method
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer

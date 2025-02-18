@@ -616,9 +616,7 @@ describe("@client @export tests", () => {
         expect(print(request.query)).toBe(print(expectedServerQuery));
         return Observable.of({ data });
       }),
-      cache: new InMemoryCache({
-        addTypename: true,
-      }),
+      cache: new InMemoryCache(),
       resolvers: {
         Query: {
           currentFilter() {

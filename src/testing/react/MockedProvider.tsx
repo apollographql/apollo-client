@@ -12,7 +12,6 @@ import type { ApolloCache } from "../../cache/index.js";
 
 export interface MockedProviderProps<TSerializedCache = {}> {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
-  addTypename?: boolean;
   defaultOptions?: DefaultOptions;
   cache?: ApolloCache<TSerializedCache>;
   resolvers?: Resolvers;
@@ -35,16 +34,11 @@ export class MockedProvider extends React.Component<
   MockedProviderProps,
   MockedProviderState
 > {
-  public static defaultProps: MockedProviderProps = {
-    addTypename: true,
-  };
-
   constructor(props: MockedProviderProps) {
     super(props);
 
     const {
       mocks,
-      addTypename,
       defaultOptions,
       cache,
       resolvers,
@@ -53,10 +47,10 @@ export class MockedProvider extends React.Component<
       connectToDevTools = false,
     } = this.props;
     const client = new ApolloClient({
-      cache: cache || new Cache({ addTypename }),
+      cache: cache || new Cache(),
       defaultOptions,
       connectToDevTools,
-      link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
+      link: link || new MockLink(mocks || [], { showWarnings }),
       resolvers,
     });
 

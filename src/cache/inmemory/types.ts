@@ -137,7 +137,6 @@ export type DiffQueryAgainstStoreOptions = ReadQueryOptions & {
 
 export type ApolloReducerConfig = {
   dataIdFromObject?: KeyFieldsFunction;
-  addTypename?: boolean;
 };
 
 export interface InMemoryCacheConfig extends ApolloReducerConfig {

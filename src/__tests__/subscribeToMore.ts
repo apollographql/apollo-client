@@ -65,7 +65,7 @@ describe("subscribeToMore", () => {
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 
@@ -117,7 +117,7 @@ describe("subscribeToMore", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obsHandle = client.watchQuery<(typeof req1)["result"]["data"]>({
@@ -172,7 +172,7 @@ describe("subscribeToMore", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obsHandle = client.watchQuery({
@@ -219,7 +219,7 @@ describe("subscribeToMore", () => {
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }).restore({
+      cache: new InMemoryCache().restore({
         ROOT_QUERY: {
           entry: [
             {
@@ -335,7 +335,7 @@ describe("subscribeToMore", () => {
     const link = ApolloLink.split(isSub, wSLink, httpLink);
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link,
     });
 

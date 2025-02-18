@@ -91,7 +91,7 @@ describe("ObservableQuery", () => {
     describe("to change pollInterval", () => {
       it("starts polling if goes from 0 -> something", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -139,7 +139,7 @@ describe("ObservableQuery", () => {
 
       it("stops polling if goes from something -> 0", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -178,7 +178,7 @@ describe("ObservableQuery", () => {
 
       it("can change from x>0 to y>0", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -245,7 +245,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -316,7 +316,7 @@ describe("ObservableQuery", () => {
       const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -388,7 +388,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -450,7 +450,7 @@ describe("ObservableQuery", () => {
 
     it("if query is refetched, and an error is returned, no other observer callbacks will be called", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -496,7 +496,7 @@ describe("ObservableQuery", () => {
 
     it("does a network request if fetchPolicy becomes networkOnly", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -558,7 +558,7 @@ describe("ObservableQuery", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       // fetch first data from server
@@ -620,7 +620,7 @@ describe("ObservableQuery", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -680,7 +680,7 @@ describe("ObservableQuery", () => {
         },
       ]);
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({
@@ -734,7 +734,7 @@ describe("ObservableQuery", () => {
         },
       ]);
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -766,7 +766,7 @@ describe("ObservableQuery", () => {
 
     it("returns a promise which eventually returns data", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -820,7 +820,7 @@ describe("ObservableQuery", () => {
   describe("setVariables", () => {
     it("reruns query if the variables change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -869,7 +869,7 @@ describe("ObservableQuery", () => {
 
     it("does invalidate the currentResult data if the variables change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -952,7 +952,7 @@ describe("ObservableQuery", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -1001,7 +1001,7 @@ describe("ObservableQuery", () => {
 
     it("does not invalidate the currentResult errors if the variables change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -1058,7 +1058,7 @@ describe("ObservableQuery", () => {
     it("does not perform a query when unsubscribed if variables change", async () => {
       // Note: no responses, will throw if a query is made
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
       const observable = client.watchQuery({ query, variables });
@@ -1079,7 +1079,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1130,7 +1130,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1170,7 +1170,7 @@ describe("ObservableQuery", () => {
 
     it("does not rerun query if variables do not change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -1199,7 +1199,7 @@ describe("ObservableQuery", () => {
 
     it("handles variables changing while a query is in-flight", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -1246,7 +1246,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1398,7 +1398,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1448,7 +1448,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -1544,7 +1544,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -1825,7 +1825,7 @@ describe("ObservableQuery", () => {
         }
 
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
         });
         const observableWithoutVariables = client.watchQuery({
@@ -1913,8 +1913,8 @@ describe("ObservableQuery", () => {
         const mocks = [makeMock("a", "b", "c"), makeMock("d", "e")];
         const firstRequest = mocks[0].request;
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
-          link: new MockLink(mocks, true, { showWarnings: false }),
+          cache: new InMemoryCache(),
+          link: new MockLink(mocks, { showWarnings: false }),
         });
 
         const observableWithVarsVar = client.watchQuery({
@@ -2009,7 +2009,7 @@ describe("ObservableQuery", () => {
         }
 
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
         });
 
@@ -2196,7 +2196,7 @@ describe("ObservableQuery", () => {
 
     it("returns the current query status immediately", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2236,7 +2236,7 @@ describe("ObservableQuery", () => {
 
     it("returns results from the store immediately", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2266,7 +2266,7 @@ describe("ObservableQuery", () => {
 
     it("returns errors from the store immediately", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2293,7 +2293,7 @@ describe("ObservableQuery", () => {
 
     it("returns referentially equal errors", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2325,7 +2325,7 @@ describe("ObservableQuery", () => {
 
     it("returns errors with data if errorPolicy is all", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2363,7 +2363,7 @@ describe("ObservableQuery", () => {
 
     it("errors out if errorPolicy is none", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2385,7 +2385,7 @@ describe("ObservableQuery", () => {
 
     it("errors out if errorPolicy is none and the observable has completed", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2408,7 +2408,7 @@ describe("ObservableQuery", () => {
 
     it("ignores errors with data if errorPolicy is ignore", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2458,7 +2458,7 @@ describe("ObservableQuery", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2519,7 +2519,7 @@ describe("ObservableQuery", () => {
 
     it("returns loading even if full data is available when using network-only fetchPolicy", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2575,7 +2575,7 @@ describe("ObservableQuery", () => {
 
     it("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3131,7 +3131,7 @@ describe("ObservableQuery", () => {
 
       it("returns optimistic mutation results from the store", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -3300,7 +3300,7 @@ describe("ObservableQuery", () => {
       const graphQLError = new GraphQLError("oh no!");
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3330,7 +3330,7 @@ describe("ObservableQuery", () => {
       const networkError = new Error("oh no!");
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3481,7 +3481,7 @@ describe("ObservableQuery", () => {
   describe("updateQuery", () => {
     it("should be able to determine if the previous result is complete", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3543,7 +3543,7 @@ describe("ObservableQuery", () => {
 
   it("QueryInfo does not notify for !== but deep-equal results", async () => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query, variables },
@@ -3620,7 +3620,7 @@ describe("ObservableQuery", () => {
 
   it("ObservableQuery#map respects Symbol.species", async () => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query, variables },

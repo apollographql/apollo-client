@@ -274,7 +274,6 @@ export interface ApolloQueryResult<T> {
 // @public (undocumented)
 export type ApolloReducerConfig = {
     dataIdFromObject?: KeyFieldsFunction;
-    addTypename?: boolean;
 };
 
 // @public

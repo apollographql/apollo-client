@@ -110,7 +110,7 @@ describe("network-only", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -135,7 +135,7 @@ describe("network-only", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query, fetchPolicy: "network-only" });
@@ -157,7 +157,7 @@ describe("network-only", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createFailureLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     let didFail = false;
@@ -183,7 +183,7 @@ describe("network-only", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createMutationLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -210,7 +210,7 @@ describe("no-cache", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ fetchPolicy: "no-cache", query });
@@ -231,7 +231,7 @@ describe("no-cache", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -253,7 +253,7 @@ describe("no-cache", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query, fetchPolicy: "no-cache" });
@@ -276,7 +276,7 @@ describe("no-cache", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createFailureLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     let didFail = false;
@@ -302,7 +302,7 @@ describe("no-cache", () => {
 
     const client = new ApolloClient({
       link: inspector.concat(createMutationLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -325,7 +325,7 @@ describe("no-cache", () => {
 
       const client = new ApolloClient({
         link: inspector.concat(createLink()),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       await client.query({
@@ -352,7 +352,7 @@ describe("no-cache", () => {
 
       const client = new ApolloClient({
         link: inspector.concat(createFailureLink()),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       let didFail = false;
@@ -834,9 +834,7 @@ describe("nextFetchPolicy", () => {
     } (${args.useDefaultOptions ? "" : "not "}using defaults)`, async () => {
       const client = new ApolloClient({
         link: makeLink(),
-        cache: new InMemoryCache({
-          addTypename: true,
-        }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           watchQuery:
             args.useDefaultOptions ?

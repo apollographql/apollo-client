@@ -50,7 +50,7 @@ describe("GraphQL Subscriptions", () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const stream = new ObservableStream(client.subscribe(defaultOptions));
@@ -66,7 +66,7 @@ describe("GraphQL Subscriptions", () => {
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const stream = new ObservableStream(client.subscribe(options));
@@ -82,7 +82,7 @@ describe("GraphQL Subscriptions", () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obs = client.subscribe(options);
@@ -99,7 +99,7 @@ describe("GraphQL Subscriptions", () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const stream = new ObservableStream(client.subscribe(options));
@@ -117,7 +117,7 @@ describe("GraphQL Subscriptions", () => {
 
   it("should not cache subscription data if a `no-cache` fetch policy is used", async () => {
     const link = mockObservableLink();
-    const cache = new InMemoryCache({ addTypename: false });
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
       link,
       cache,
@@ -138,7 +138,7 @@ describe("GraphQL Subscriptions", () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obs = client.subscribe(options);
@@ -372,7 +372,7 @@ describe("GraphQL Subscriptions", () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const stream = new ObservableStream(client.subscribe(defaultOptions));
@@ -404,7 +404,7 @@ describe("GraphQL Subscriptions", () => {
     const link = mockObservableLink();
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const obs = client.subscribe(options);

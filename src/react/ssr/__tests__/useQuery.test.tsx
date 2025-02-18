@@ -324,7 +324,7 @@ describe("useQuery Hook SSR", () => {
     };
 
     const app = (
-      <MockedProvider addTypename cache={cache}>
+      <MockedProvider cache={cache}>
         <Component />
       </MockedProvider>
     );

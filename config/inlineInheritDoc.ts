@@ -47,7 +47,7 @@ export const inlineInheritDoc: BuildStep = async (options) => {
   );
 
   const model = loadApiModel(options);
-  processComments(model, options);
+  await processComments(model, options);
 };
 
 function getCommentFor(canonicalReference: string, model: ApiModel) {
@@ -139,7 +139,7 @@ function loadApiModel(options: BuildStepOptions) {
 function processComments(model: ApiModel, options: BuildStepOptions) {
   const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
 
-  applyRecast({
+  return applyRecast({
     glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
     cwd: options.targetDir,
     transformStep({ ast, sourceName }) {

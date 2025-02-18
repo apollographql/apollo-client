@@ -7,7 +7,7 @@ import { inlineInheritDoc } from "./inlineInheritDoc.ts";
 import { updateVersion, verifyVersion } from "./version.ts";
 import { processInvariants } from "./processInvariants.ts";
 import { prepareDist } from "./prepareDist.ts";
-// import { postprocessDist } from "./postprocessDist.ts";
+import { postprocessDist } from "./postprocessDist.ts";
 import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 
@@ -34,7 +34,7 @@ const buildSteps = {
   updateVersion,
   inlineInheritDoc,
   processInvariants,
-  // postprocessDist,
+  postprocessDist,
   verifyVersion,
   verifySourceMaps,
   prepareDist,

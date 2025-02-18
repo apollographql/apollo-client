@@ -520,21 +520,25 @@ export class ObservableQuery<
     }
   }
 
+  // TODO: Consider deprecating this function
   public getLastResult(
     variablesMustMatch?: boolean
   ): ApolloQueryResult<TData> | undefined {
     return this.getLast("result", variablesMustMatch);
   }
 
+  // TODO: Consider deprecating this function
   public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
     return this.getLast("error", variablesMustMatch);
   }
 
+  // TODO: Consider deprecating this function
   public resetLastResults(): void {
     delete this.last;
     this.isTornDown = false;
   }
 
+  // TODO: Consider deprecating this function
   public resetQueryStoreErrors() {
     this.queryManager.resetErrors(this.queryId);
   }

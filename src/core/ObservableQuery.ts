@@ -16,7 +16,6 @@ import {
   cloneDeep,
   compact,
   getOperationDefinition,
-  iterateObserversSafely,
   getQueryDefinition,
   preventUnhandledRejection,
 } from "../utilities/index.js";
@@ -1200,7 +1199,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.updateLastResult(result, variables);
     if (lastError || isDifferent) {
       this.subject.next(this.maskResult(result));
-      iterateObserversSafely(this.observers, "next", this.maskResult(result));
     }
   }
 
@@ -1218,9 +1216,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     this.updateLastResult(errorResult, variables);
-
-    this.subject.error(error);
-    iterateObserversSafely(this.observers, "error", (this.last!.error = error));
+    this.subject.error((this.last!.error = error));
   }
 
   public hasObservers() {

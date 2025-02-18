@@ -486,7 +486,7 @@ describe("client", () => {
       },
     };
 
-    const finalState = assign({}, initialState, {});
+    const finalState = assign({}, initialState);
 
     const client = new ApolloClient({
       link,

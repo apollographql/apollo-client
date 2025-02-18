@@ -21,6 +21,8 @@ export function reprint(ast: ReturnType<typeof reparse>) {
   return recast.print(ast).code;
 }
 
+type MaybePromise<T> = T | Promise<T>;
+
 export async function applyRecast({
   glob,
   cwd,
@@ -32,7 +34,7 @@ export async function applyRecast({
     ast: recast.types.ASTNode;
     sourceName: string;
     relativeSourcePath: string;
-  }) => { ast: recast.types.ASTNode; targetFileName?: string };
+  }) => MaybePromise<{ ast: recast.types.ASTNode; targetFileName?: string }>;
 }) {
   for await (let sourceFile of nodeGlob(glob, { withFileTypes: true, cwd })) {
     const baseDir = sourceFile.parentPath;
@@ -61,7 +63,7 @@ export async function applyRecast({
       parser: tsParser,
       sourceFileName: intermediateName,
     });
-    const transformResult = transformStep({
+    const transformResult = await transformStep({
       ast,
       sourceName: sourceFileName,
       relativeSourcePath: relative(cwd, sourcePath),

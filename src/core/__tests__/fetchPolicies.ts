@@ -441,6 +441,13 @@ describe("no-cache", () => {
       }
 
       await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(1),
         loading: false,
         networkStatus: NetworkStatus.ready,

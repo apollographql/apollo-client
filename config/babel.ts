@@ -20,7 +20,7 @@ export const babelTransform: BuildStep = async (options) => {
             "@babel/preset-env",
             {
               modules: false,
-              targets: "last 2 versions, since 2023, node >= 20, not dead",
+              targets: "since 2023, node >= 20, not dead",
             } satisfies import("@babel/preset-env").Options,
           ],
         ],

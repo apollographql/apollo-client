@@ -129,44 +129,6 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
-    // super((observer) => {
-    //   // Zen Observable has its own error function, so in order to log correctly
-    //   // we need to provide a custom error callback.
-    //   try {
-    //     var subObserver = (observer as any)._subscription._observer;
-    //     if (subObserver && !subObserver.error) {
-    //       subObserver.error = defaultSubscriptionObserverErrorCallback;
-    //     }
-    //   } catch {}
-    //
-    //   const first = !this.observers.size;
-    //   this.observers.add(observer);
-    //
-    //   // Deliver most recent error or result.
-    //   const last = this.last;
-    //   if (last && last.error) {
-    //     observer.error && observer.error(last.error);
-    //   } else if (last && last.result) {
-    //     observer.next && observer.next(this.maskResult(last.result));
-    //   }
-    //
-    //   // Initiate observation of this query if it hasn't been reported to
-    //   // the QueryManager yet.
-    //   if (first) {
-    //     // Blindly catching here prevents unhandled promise rejections,
-    //     // and is safe because the ObservableQuery handles this error with
-    //     // this.observer.error, so we're not just swallowing the error by
-    //     // ignoring it here.
-    //     this.reobserve().catch(() => {});
-    //   }
-    //
-    //   return () => {
-    //     if (this.observers.delete(observer) && !this.observers.size) {
-    //       this.tearDownQuery();
-    //     }
-    //   };
-    // });
-
     this.initialResult = {
       data: undefined,
       loading: true,

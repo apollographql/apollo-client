@@ -1147,6 +1147,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
   }
 
+  // TODO: Deprecate and remove this function after observable query handles
+  // emitting errors differently to avoid terminating the observable.
   public resubscribeAfterError(
     onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void,
     onError?: (error: any) => void,

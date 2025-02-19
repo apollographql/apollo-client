@@ -6,13 +6,17 @@ import {
   catchError,
   concat,
   from,
+  lastValueFrom,
   map,
   mergeMap,
+  mergeWith,
   Observable,
   observeOn,
   of,
   shareReplay,
+  Subject,
   switchMap,
+  tap,
 } from "rxjs";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
@@ -41,7 +45,6 @@ import {
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
 import {
-  Concast,
   DocumentTransform,
   getDefaultValues,
   getGraphQLErrorsFromResult,
@@ -675,8 +678,10 @@ export class QueryManager<TStore> {
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
-    return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
-      .promise as TODO;
+    return lastValueFrom(
+      this.fetchConcastWithInfo(queryId, options, networkStatus).concast,
+      { defaultValue: undefined }
+    ) as TODO;
   }
 
   public transform(document: DocumentNode) {
@@ -1359,10 +1364,11 @@ export class QueryManager<TStore> {
     this.fetchCancelFns.set(queryId, (reason) => {
       cleanupCancelFn();
       // This delay ensures the concast variable has been initialized.
-      setTimeout(() => concast.cancel(reason));
+      setTimeout(() => subject.error(reason));
     });
 
-    let concast: Concast<ApolloQueryResult<TData>>,
+    const subject = new Subject<ApolloQueryResult<TData>>();
+    let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
     // process those directives asynchronously. When there are no
@@ -1372,15 +1378,14 @@ export class QueryManager<TStore> {
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
     if (this.getDocumentInfo(normalized.query).hasClientExports) {
-      concast = new Concast([
-        from(
-          this.localState.addExportedVariables(
-            normalized.query,
-            normalized.variables,
-            normalized.context
-          )
-        ).pipe(switchMap((variables) => fromVariables(variables).observable)),
-      ]);
+      observable = from(
+        this.localState.addExportedVariables(
+          normalized.query,
+          normalized.variables,
+          normalized.context
+        )
+      ).pipe(switchMap((variables) => fromVariables(variables).observable));
+
       // there is just no way we can synchronously get the *right* value here,
       // so we will assume `true`, which is the behaviour before the bug fix in
       // #10597. This means that bug is not fixed in that case, and is probably
@@ -1390,13 +1395,20 @@ export class QueryManager<TStore> {
     } else {
       const sourcesWithInfo = fromVariables(normalized.variables);
       containsDataFromLink = sourcesWithInfo.fromLink;
-      concast = new Concast([sourcesWithInfo.observable]);
+      observable = sourcesWithInfo.observable;
     }
 
-    concast.promise.then(cleanupCancelFn, cleanupCancelFn);
-
     return {
-      concast,
+      concast: observable.pipe(
+        tap({
+          error: cleanupCancelFn,
+          complete: () => {
+            cleanupCancelFn();
+            subject.complete();
+          },
+        }),
+        mergeWith(subject)
+      ),
       fromLink: containsDataFromLink,
     };
   }
@@ -1828,6 +1840,6 @@ interface FetchConcastInfo {
 interface ObservableAndInfo<TData> extends FetchConcastInfo {
   observable: Observable<ApolloQueryResult<TData>>;
 }
-export interface ConcastAndInfo<TData> extends FetchConcastInfo {
-  concast: Concast<ApolloQueryResult<TData>>;
+interface ConcastAndInfo<TData> extends FetchConcastInfo {
+  concast: Observable<ApolloQueryResult<TData>>;
 }

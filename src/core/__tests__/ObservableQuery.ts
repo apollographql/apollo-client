@@ -1804,6 +1804,20 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
+      await expect(stream).toEmitApolloQueryResult({
+        data: { counter: 4, name: "Ben" },
+        loading: true,
+        networkStatus: NetworkStatus.refetch,
+        partial: false,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: { counter: 5, name: "Ben" },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
       await expect(stream).not.toEmitAnything();
     });
 

@@ -3,7 +3,6 @@ import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { Concast } from "../utilities/index.js";
 import type {
   Observer,
   Subscribable,
@@ -103,12 +102,8 @@ export class ObservableQuery<
 
   private queryInfo: QueryInfo;
 
-  // When this.concast is defined, this.observer is the Observer currently
-  // subscribed to that Concast.
-  private concast?: Concast<ApolloQueryResult<TData>>;
   private subscription?: Subscription;
   private obs?: Observable<ApolloQueryResult<TData>>;
-  private observer?: Partial<Observer<ApolloQueryResult<TData>>>;
 
   private pollingInfo?: {
     interval: number;
@@ -1233,11 +1228,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    if (this.concast && this.observer) {
-      this.concast.removeObserver(this.observer);
-      delete this.concast;
-      delete this.observer;
-    }
     if (this.obs && this.subscription) {
       this.subscription.unsubscribe();
       delete this.obs;

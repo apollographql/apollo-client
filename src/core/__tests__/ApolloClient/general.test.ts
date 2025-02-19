@@ -2518,17 +2518,15 @@ describe("ApolloClient", () => {
       link: new ApolloLink(
         (operation) =>
           new Observable((observer) => {
-            setTimeout(() => {
-              switch (operation.operationName) {
-                case "A":
-                  observer.next({ data: { info: { a: "ay" } } });
-                  break;
-                case "B":
-                  observer.next({ data: { info: { b: "bee" } } });
-                  break;
-              }
-              observer.complete!();
-            });
+            switch (operation.operationName) {
+              case "A":
+                observer.next({ data: { info: { a: "ay" } } });
+                break;
+              case "B":
+                observer.next({ data: { info: { b: "bee" } } });
+                break;
+            }
+            observer.complete!();
           })
       ),
     });

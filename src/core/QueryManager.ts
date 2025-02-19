@@ -795,7 +795,7 @@ export class QueryManager<TStore> {
     return observable;
   }
 
-  // TODO: catch `EmptyError` and rethrow as `ApolloError` if `complete`
+  // TODO: catch `EmptyError` and rethrow as network error if `complete`
   // notification is emitted without a value.
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,

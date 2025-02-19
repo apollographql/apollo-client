@@ -29,12 +29,6 @@ const packageJson: Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {
 
 prepareDist.runOnce = "trailing" as const;
 export function prepareDist() {
-  // Enable default interpretation of .js files as ECMAScript modules. We don't
-  // put this in the source ../package.json file because it interferes with tools
-  // like ts-node, which we use to run various ../config/*.ts scripts.
-  // TODO(benjamn) Fully diagnose that interference.
-  packageJson.type = "module";
-
   // The root package.json is marked as private to prevent publishing
   // from happening in the root of the project. This sets the package back to
   // public so it can be published from the "dist" directory.

@@ -2288,9 +2288,15 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      await expect(stream).toEmitError(
-        new ApolloError({ graphQLErrors: [error] })
-      );
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: [error] }),
+        errors: [error],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [error] }),

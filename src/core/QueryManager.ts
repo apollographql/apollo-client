@@ -1390,9 +1390,8 @@ export class QueryManager<TStore> {
       subject.complete();
     };
     this.fetchCancelFns.set(queryId, (reason) => {
+      subject.error(reason);
       cleanupCancelFn();
-      // This delay ensures the concast variable has been initialized.
-      setTimeout(() => subject.error(reason));
     });
 
     const subject = new Subject<ApolloQueryResult<TData>>();

@@ -15,9 +15,10 @@ import {
 import { Observable, of } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { Operation } from "../../link/core";
-import { ApolloClient } from "../../core";
+import { ApolloClient, ApolloError, NetworkStatus } from "../../core";
 import { ApolloCache, InMemoryCache } from "../../cache";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { GraphQLFormattedError } from "graphql-17-alpha2";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {
@@ -1154,18 +1155,19 @@ describe("Combining client and server state/operations", () => {
       }
     `;
 
+    const error: GraphQLFormattedError = {
+      message: "something went wrong",
+      extensions: {
+        code: "INTERNAL_SERVER_ERROR",
+      },
+      path: ["user"],
+    };
+
     const cache = new InMemoryCache();
     const link = new ApolloLink((operation) => {
       return of({
         data: null,
-        errors: [
-          new GraphQLError("something went wrong", {
-            extensions: {
-              code: "INTERNAL_SERVER_ERROR",
-            },
-            path: ["user"],
-          }),
-        ],
+        errors: [error],
       });
     });
 
@@ -1177,6 +1179,13 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitError("something went wrong");
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({ graphQLErrors: [error] }),
+      errors: [error],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
   });
 });

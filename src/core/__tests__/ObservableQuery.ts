@@ -711,7 +711,9 @@ describe("ObservableQuery", () => {
       });
       expect(timesFired).toBe(1);
 
-      await observable.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        observable.setOptions({ query, fetchPolicy: "standby" })
+      ).rejects.toThrow(new EmptyError());
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();

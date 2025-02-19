@@ -7,6 +7,7 @@ import {
   gql,
   TypedDocumentNode,
   ObservableQuery,
+  NetworkStatus,
 } from "../core";
 import { ObservableStream } from "../testing/internal";
 
@@ -477,7 +478,12 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqual({ a: "A", b: "B" });
+          expect(result).toEqualApolloQueryResult({
+            data: { a: "A", b: "B" },
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         },
       })
     );

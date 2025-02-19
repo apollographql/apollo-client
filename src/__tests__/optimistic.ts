@@ -13,7 +13,11 @@ import {
   MutationQueryReducersMap,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
+import {
+  MockedResponse,
+  MockLink,
+  mockSingleLink,
+} from "@apollo/client/testing";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import { QueryManager } from "../core/QueryManager.js";
@@ -1066,10 +1070,43 @@ describe("optimistic mutation results", () => {
 
     it("will insert a single itemAsync to the beginning", async () => {
       expect.assertions(7);
-      const client = await setup({
-        request: { query: mutation },
-        result: mutationResult,
+      const link = new MockLink([
+        {
+          request: { query },
+          result,
+        },
+        {
+          request: { query: mutation },
+          result: mutationResult,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            TodoList: {
+              fields: {
+                todos: {
+                  // Deliberately silence "Cache data may be lost..."
+                  // warnings by favoring the incoming data, rather than
+                  // (say) concatenating the arrays together.
+                  merge: false,
+                },
+              },
+            },
+          },
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        }),
+        // Enable client.queryManager.mutationStore tracking.
+        connectToDevTools: true,
       });
+
       const stream = new ObservableStream(client.watchQuery({ query }));
 
       await expect(stream).toEmitNext();

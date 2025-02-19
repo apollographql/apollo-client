@@ -11,7 +11,7 @@ import {
 import { ObservableQuery } from "../ObservableQuery";
 import { QueryManager } from "../QueryManager";
 
-import { Observable, of, map, Subject } from "rxjs";
+import { Observable, of, map, Subject, EmptyError } from "rxjs";
 import {
   DeepPartial,
   DocumentTransform,
@@ -769,7 +769,12 @@ describe("ObservableQuery", () => {
 
       expect(timesFired).toBe(1);
 
-      await observable.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        observable.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Dertermine how we want to handle this. We likely should swallow
+        // the error since standby currently does not emit a value but completes
+        // instead.
+      ).rejects.toThrow(new EmptyError());
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();

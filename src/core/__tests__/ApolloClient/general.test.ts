@@ -37,7 +37,7 @@ import { waitFor } from "@testing-library/react";
 import { wait } from "../../../testing/core";
 import { ApolloClient, ApolloQueryResult } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
-import { Concast, print } from "../../../utilities";
+import { addTypenameToDocument, Concast, print } from "../../../utilities";
 import {
   mockDeferStream,
   ObservableStream,
@@ -61,7 +61,7 @@ describe("ApolloClient", () => {
     delay?: number;
   }) => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request: { query, variables }, result, error, delay },
       ]),
@@ -253,7 +253,7 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       link: new MockLink([{ request: { query }, error }]),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const observable = client.watchQuery({ query });
@@ -347,7 +347,7 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       link: mockedSingleLink,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const observableQuery = client.watchQuery({
@@ -420,7 +420,7 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       link: mockedSingleLink,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       defaultOptions: {
         watchQuery: {
           fetchPolicy: "cache-and-network",
@@ -487,7 +487,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([{ request: { query }, result: expResult }]),
     });
     const handle = client.watchQuery({
@@ -548,7 +548,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request,
@@ -673,7 +673,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request,
@@ -749,7 +749,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: { data: data1 } },
         { request, result: { data: data2 } },
@@ -813,7 +813,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: { data: data1 } },
         { request, result: { data: data2 } },
@@ -875,7 +875,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([{ request, result: { data: data1 } }]),
     });
 
@@ -1076,7 +1076,7 @@ describe("ApolloClient", () => {
         };
 
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             { request, result: { data: data1 } },
             { request, result: { data: data2 } },
@@ -1120,7 +1120,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: { data: data1 } },
         { request, result: { data: data2 } },
@@ -1189,7 +1189,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query },
@@ -1273,7 +1273,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query },
@@ -1343,7 +1343,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -1424,7 +1424,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -1475,7 +1475,7 @@ describe("ApolloClient", () => {
     `;
     const data = { list: [null, { value: 1 }] };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([{ request: { query }, result: { data } }]),
     });
     const observable = client.watchQuery({ query });
@@ -1517,7 +1517,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request: { query: primeQuery }, result: { data: data1 } },
       ]),
@@ -1551,7 +1551,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1573,7 +1573,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1599,7 +1599,7 @@ describe("ApolloClient", () => {
     const errors = [new GraphQLError("foo")];
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1621,7 +1621,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation, variables: { listId: "1" } },
@@ -1659,7 +1659,6 @@ describe("ApolloClient", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache({
         dataIdFromObject: getIdField,
-        addTypename: false,
       }),
       link: new MockLink([
         {
@@ -1697,7 +1696,6 @@ describe("ApolloClient", () => {
     };
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         dataIdFromObject: getIdField,
       }),
       link: new MockLink([
@@ -1738,7 +1736,6 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         dataIdFromObject: getIdField,
       }),
       link: new MockLink([
@@ -1790,7 +1787,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query1 },
@@ -1868,7 +1865,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query1 },
@@ -1913,7 +1910,7 @@ describe("ApolloClient", () => {
 
   it("warns if you forget the template literal tag", async () => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
     expect(() => {
       void client.query({
@@ -2037,7 +2034,7 @@ describe("ApolloClient", () => {
 
     await expect(
       new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([{ request: { query }, error: networkError }]),
       }).query({ query })
     ).rejects.toEqual(new ApolloError({ networkError }));
@@ -2055,7 +2052,7 @@ describe("ApolloClient", () => {
     const graphQLErrors = [new GraphQLError("GraphQL error")];
     await expect(
       new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -2082,7 +2079,7 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2127,7 +2124,7 @@ describe("ApolloClient", () => {
     };
 
     const observable = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2172,7 +2169,7 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2222,7 +2219,7 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2299,7 +2296,6 @@ describe("ApolloClient", () => {
     };
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         dataIdFromObject: (object) => {
           if (object.__typename && object.id) {
             return object.__typename + "__" + object.id;
@@ -2390,7 +2386,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query1 },
@@ -2707,7 +2703,6 @@ describe("ApolloClient", () => {
     let mergeCount = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -2791,7 +2786,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: firstResult },
         { request, result: secondResult },
@@ -2921,7 +2916,7 @@ describe("ApolloClient", () => {
     ];
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink(mockedResponses),
     });
     const queryManager = client["queryManager"];
@@ -2990,7 +2985,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3051,7 +3046,7 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         ssrMode: true,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3136,7 +3131,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },
@@ -3228,7 +3223,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3299,7 +3294,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3372,7 +3367,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3433,7 +3428,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3490,7 +3485,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3587,7 +3582,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -3645,7 +3640,7 @@ describe("ApolloClient", () => {
 
     it("should change the store state to an empty state", () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -3696,7 +3691,7 @@ describe("ApolloClient", () => {
           })
       );
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -3751,7 +3746,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -3804,7 +3799,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -3858,7 +3853,7 @@ describe("ApolloClient", () => {
       );
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -3890,7 +3885,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -3932,7 +3927,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -3962,7 +3957,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -3998,7 +3993,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4034,7 +4029,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4142,7 +4137,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4236,7 +4231,7 @@ describe("ApolloClient", () => {
           })
       );
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -4289,7 +4284,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -4338,7 +4333,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -4385,7 +4380,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4419,7 +4414,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4450,7 +4445,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4486,7 +4481,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4522,7 +4517,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4559,7 +4554,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4609,7 +4604,7 @@ describe("ApolloClient", () => {
       );
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -4666,7 +4661,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4736,7 +4731,7 @@ describe("ApolloClient", () => {
         fortuneCookie: "Buy it",
       };
       const result = await new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4775,7 +4770,7 @@ describe("ApolloClient", () => {
       const fullData = { fortuneCookie, author };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4861,7 +4856,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: testQuery },
@@ -4933,7 +4928,7 @@ describe("ApolloClient", () => {
         b: { x2: 3, y2: 2, z2: 1 },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },
@@ -5024,7 +5019,7 @@ describe("ApolloClient", () => {
       };
       const variables = { id: "1234" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5106,7 +5101,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5188,7 +5183,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5263,7 +5258,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5339,7 +5334,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5417,7 +5412,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5510,7 +5505,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5603,7 +5598,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5694,7 +5689,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5765,7 +5760,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5844,7 +5839,7 @@ describe("ApolloClient", () => {
       };
       const variables = { id: "1234" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5925,7 +5920,7 @@ describe("ApolloClient", () => {
       };
       const variables = { id: "1234" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6020,7 +6015,7 @@ describe("ApolloClient", () => {
 
     function makeClient() {
       return new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6249,7 +6244,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6349,7 +6344,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6445,7 +6440,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6546,7 +6541,7 @@ describe("ApolloClient", () => {
       const refetchError = new Error("Refetch failed");
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6659,7 +6654,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -6721,7 +6716,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
         ...clientAwareness,
       });
@@ -6750,13 +6745,13 @@ describe("ApolloClient", () => {
         }
       `;
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
             result: {
               data: {
-                author: { firstName: "John" },
+                author: { __typename: "Author", firstName: "John" },
               },
             },
           },
@@ -6769,7 +6764,7 @@ describe("ApolloClient", () => {
       // without reaching into internal state
       expect(
         client["queryManager"]["inFlightLinkObservables"].peek(
-          print(query),
+          print(addTypenameToDocument(query)),
           "{}"
         )
       ).toEqual({
@@ -6787,7 +6782,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -6807,7 +6802,7 @@ describe("ApolloClient", () => {
       // without checking internal state
       expect(
         client["queryManager"]["inFlightLinkObservables"].peek(
-          print(query),
+          print(addTypenameToDocument(query)),
           "{}"
         )
       ).toBeUndefined();
@@ -6985,7 +6980,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },
@@ -7057,7 +7052,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },

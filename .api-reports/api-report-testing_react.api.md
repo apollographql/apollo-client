@@ -1041,15 +1041,11 @@ export class MockedProvider extends React_2.Component<MockedProviderProps, Mocke
     // (undocumented)
     componentWillUnmount(): void;
     // (undocumented)
-    static defaultProps: MockedProviderProps;
-    // (undocumented)
     render(): React_2.JSX.Element | null;
 }
 
 // @public (undocumented)
 export interface MockedProviderProps<TSerializedCache = {}> {
-    // (undocumented)
-    addTypename?: boolean;
     // (undocumented)
     cache?: ApolloCache<TSerializedCache>;
     // (undocumented)

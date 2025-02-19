@@ -82,7 +82,6 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
 // @public (undocumented)
 export type ApolloReducerConfig = {
     dataIdFromObject?: KeyFieldsFunction;
-    addTypename?: boolean;
 };
 
 // @public

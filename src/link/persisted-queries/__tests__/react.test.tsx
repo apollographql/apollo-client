@@ -14,6 +14,7 @@ import { getDataFromTree } from "../../../react/ssr/getDataFromTree";
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
 import { useQuery } from "../../../react";
 import { OperationVariables } from "../../../core";
+import { addTypenameToDocument } from "../../../utilities";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");
@@ -54,7 +55,7 @@ const data2 = {
 };
 const response = JSON.stringify({ data });
 const response2 = JSON.stringify({ data: data2 });
-const queryString = print(query);
+const queryString = print(addTypenameToDocument(query));
 
 const hash = sha256(queryString);
 
@@ -85,7 +86,7 @@ describe("react application", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
       ssrMode: true,
     });
 
@@ -134,7 +135,7 @@ describe("react application", () => {
     // reset client and try with different input object
     const client2 = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
       ssrMode: true,
     });
 

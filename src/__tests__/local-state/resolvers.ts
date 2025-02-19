@@ -36,7 +36,7 @@ const setupTestWithResolvers = ({
   delay?: number;
 }) => {
   const client = new ApolloClient({
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
     link: new MockLink([
       {
         request: { query: serverQuery || query, variables },
@@ -169,7 +169,7 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: {
         foo: { bar: true, __typename: "ClientData" },
-        bar: { baz: true },
+        bar: { baz: true, __typename: "Bar" },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -266,7 +266,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: 1 } },
+      data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -300,7 +300,7 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: 1 } },
+      data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -360,8 +360,10 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
+          __typename: "Author",
           name: "John Smith",
           stats: {
+            __typename: "Stats",
             totalPosts: 100,
             postsToday: 10,
           },
@@ -559,11 +561,14 @@ describe("Basic resolver capabilities", () => {
       resolvers,
       query,
       serverQuery,
-      serverResult: { data: { bar: { baz: true } } },
+      serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
     });
 
     await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: true }, bar: { baz: true } },
+      data: {
+        foo: { __typename: "Foo", bar: true },
+        bar: { __typename: "Bar", baz: true },
+      },
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

@@ -1076,11 +1076,9 @@ interface MockedSubscriptionResult {
 
 // @public (undocumented)
 export class MockLink extends ApolloLink {
-    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, addTypename?: Boolean, options?: MockLinkOptions);
+    constructor(mockedResponses: ReadonlyArray<MockedResponse<any, any>>, options?: MockLinkOptions);
     // (undocumented)
     addMockedResponse(mockedResponse: MockedResponse): void;
-    // (undocumented)
-    addTypename: Boolean;
     // (undocumented)
     operation: Operation;
     // (undocumented)
@@ -1101,7 +1099,7 @@ export function mockObservableLink(): MockSubscriptionLink;
 // Warning: (ae-forgotten-export) The symbol "MockApolloLink" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink;
+export function mockSingleLink(...mockedResponses: Array<MockedResponse<any, any>>): MockApolloLink;
 
 // @public (undocumented)
 export class MockSubscriptionLink extends ApolloLink {

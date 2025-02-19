@@ -84,7 +84,6 @@ type ExecSubSelectedArrayOptions = {
 
 interface StoreReaderConfig {
   cache: InMemoryCache;
-  addTypename?: boolean;
   resultCacheMaxSize?: number;
   canonizeResults?: boolean;
   canon?: ObjectCanon;
@@ -129,7 +128,6 @@ export class StoreReader {
 
   private config: {
     cache: InMemoryCache;
-    addTypename: boolean;
     resultCacheMaxSize?: number;
     canonizeResults: boolean;
     fragments?: InMemoryCacheConfig["fragments"];
@@ -147,7 +145,6 @@ export class StoreReader {
 
   constructor(config: StoreReaderConfig) {
     this.config = compact(config, {
-      addTypename: config.addTypename !== false,
       canonizeResults: shouldCanonizeResults(config),
     });
 
@@ -349,14 +346,10 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
 
-    if (
-      this.config.addTypename &&
-      typeof typename === "string" &&
-      !policies.rootIdsByTypename[typename]
-    ) {
+    if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
-      // field, if we have one, and this.config.addTypename is true. Note
-      // that this field can be overridden by other merged objects.
+      // field, if we have one. Note that this field can be overridden by other
+      // merged objects.
       objectsToMerge.push({ __typename: typename });
     }
 

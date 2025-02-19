@@ -31,13 +31,10 @@ describe("Cache", () => {
   ) {
     const cachesList: InMemoryCache[][] = [
       initialDataForCaches.map((data) =>
-        new InMemoryCache({
-          addTypename: false,
-        }).restore(cloneDeep(data))
+        new InMemoryCache().restore(cloneDeep(data))
       ),
       initialDataForCaches.map((data) =>
         new InMemoryCache({
-          addTypename: false,
           resultCaching: false,
         }).restore(cloneDeep(data))
       ),
@@ -56,12 +53,10 @@ describe("Cache", () => {
   ) {
     const caches = [
       new InMemoryCache({
-        addTypename: false,
         ...config,
         resultCaching: true,
       }),
       new InMemoryCache({
-        addTypename: false,
         ...config,
         resultCaching: false,
       }),
@@ -402,7 +397,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ e: 4, h: { i: 7 } });
+        ).toEqual({ __typename: "Foo", e: 4, h: { __typename: "Bar", i: 7 } });
         expect(
           proxy.readFragment({
             id: "foo",
@@ -419,7 +414,13 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
+        ).toEqual({
+          __typename: "Foo",
+          e: 4,
+          f: 5,
+          g: 6,
+          h: { __typename: "Bar", i: 7, j: 8, k: 9 },
+        });
         expect(
           proxy.readFragment({
             id: "bar",
@@ -429,7 +430,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ i: 7 });
+        ).toEqual({ __typename: "Bar", i: 7 });
         expect(
           proxy.readFragment({
             id: "bar",
@@ -441,7 +442,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ i: 7, j: 8, k: 9 });
+        ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
         expect(
           proxy.readFragment({
             id: "foo",
@@ -465,7 +466,13 @@ describe("Cache", () => {
             `,
             fragmentName: "fragmentFoo",
           })
-        ).toEqual({ e: 4, f: 5, g: 6, h: { i: 7, j: 8, k: 9 } });
+        ).toEqual({
+          __typename: "Foo",
+          e: 4,
+          f: 5,
+          g: 6,
+          h: { __typename: "Bar", i: 7, j: 8, k: 9 },
+        });
         expect(
           proxy.readFragment({
             id: "bar",
@@ -489,7 +496,7 @@ describe("Cache", () => {
             `,
             fragmentName: "fragmentBar",
           })
-        ).toEqual({ i: 7, j: 8, k: 9 });
+        ).toEqual({ __typename: "Bar", i: 7, j: 8, k: 9 });
       }
     );
 
@@ -519,7 +526,7 @@ describe("Cache", () => {
               value: 42,
             },
           })
-        ).toEqual({ a: 1, b: 2 });
+        ).toEqual({ __typename: "Foo", a: 1, b: 2 });
       }
     );
 
@@ -573,7 +580,7 @@ describe("Cache", () => {
               }
             `,
           })
-        ).toEqual({ a: 1, b: 2, c: 3 });
+        ).toEqual({ __typename: "Foo", a: 1, b: 2, c: 3 });
       }
     );
 
@@ -1129,7 +1136,6 @@ describe("Cache", () => {
       "will write some deeply nested data into the store at any id",
       {
         dataIdFromObject: (o: any) => o.id,
-        addTypename: false,
       },
       (proxy) => {
         proxy.writeFragment({
@@ -1248,42 +1254,34 @@ describe("Cache", () => {
       }
     );
 
-    itWithCacheConfig(
-      "writes data that can be read back",
-      {
-        addTypename: true,
-      },
-      (proxy) => {
-        const readWriteFragment = gql`
-          fragment aFragment on query {
-            getSomething {
-              id
-            }
+    itWithCacheConfig("writes data that can be read back", {}, (proxy) => {
+      const readWriteFragment = gql`
+        fragment aFragment on query {
+          getSomething {
+            id
           }
-        `;
-        const data = {
-          __typename: "query",
-          getSomething: { id: "123", __typename: "Something" },
-        };
-        proxy.writeFragment({
-          data,
-          id: "query",
-          fragment: readWriteFragment,
-        });
+        }
+      `;
+      const data = {
+        __typename: "query",
+        getSomething: { id: "123", __typename: "Something" },
+      };
+      proxy.writeFragment({
+        data,
+        id: "query",
+        fragment: readWriteFragment,
+      });
 
-        const result = proxy.readFragment({
-          fragment: readWriteFragment,
-          id: "query",
-        });
-        expect(result).toEqual(data);
-      }
-    );
+      const result = proxy.readFragment({
+        fragment: readWriteFragment,
+        id: "query",
+      });
+      expect(result).toEqual(data);
+    });
 
     itWithCacheConfig(
       "will write some data to the store with variables",
-      {
-        addTypename: true,
-      },
+      {},
       (proxy) => {
         proxy.writeFragment({
           data: {

@@ -6,12 +6,9 @@ import { hasOwn } from "../helpers";
 
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {
-    const cacheWithoutPossibleTypes = new InMemoryCache({
-      addTypename: true,
-    });
+    const cacheWithoutPossibleTypes = new InMemoryCache();
 
     const cacheWithPossibleTypes = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ["Cat", "Dog"],
       },
@@ -57,7 +54,6 @@ describe("fragment matching", () => {
 
   it("can match interface subtypes", () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ["Cat", "Dog"],
       },
@@ -89,7 +85,6 @@ describe("fragment matching", () => {
 
   it("can match union member types", () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Status: ["PASSING", "FAILING", "SKIPPED"],
       },
@@ -139,7 +134,6 @@ describe("fragment matching", () => {
 
   it("can match indirect subtypes while avoiding cycles", () => {
     const cache = new InMemoryCache({
-      addTypename: true,
       possibleTypes: {
         Animal: ["Animal", "Bug", "Mammal"],
         Bug: ["Ant", "Spider", "RolyPoly"],
@@ -186,9 +180,7 @@ describe("fragment matching", () => {
   });
 
   it("can match against the root Query", () => {
-    const cache = new InMemoryCache({
-      addTypename: true,
-    });
+    const cache = new InMemoryCache();
 
     const query = gql`
       query AllPeople {

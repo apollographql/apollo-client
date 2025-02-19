@@ -818,6 +818,7 @@ Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
     "todos": Object {
+      "__typename": "TodosConnection",
       "edges": Array [
         Object {
           "__ref": "TodoEdge:edge1",
@@ -854,6 +855,7 @@ Object {
   "ROOT_QUERY": Object {
     "__typename": "Query",
     "todos": Object {
+      "__typename": "TodosConnection",
       "edges": Array [
         Object {
           "__ref": "TodoEdge:edge1",

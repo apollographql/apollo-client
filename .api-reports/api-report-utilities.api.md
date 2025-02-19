@@ -334,7 +334,6 @@ interface ApolloQueryResult<T> {
 // @public (undocumented)
 type ApolloReducerConfig = {
     dataIdFromObject?: KeyFieldsFunction;
-    addTypename?: boolean;
 };
 
 // @public (undocumented)

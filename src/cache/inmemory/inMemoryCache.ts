@@ -49,7 +49,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
-  private addTypename: boolean;
 
   private storeReader!: StoreReader;
   private storeWriter!: StoreWriter;
@@ -75,7 +74,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = normalizeConfig(config);
-    this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
       cache: this,
@@ -117,7 +115,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this,
       (this.storeReader = new StoreReader({
         cache: this,
-        addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
         canonizeResults: shouldCanonizeResults(this.config),
         canon:
@@ -525,7 +522,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
+    return this.addTypenameTransform.transformDocument(
+      this.addFragmentsToDocument(document)
+    );
   }
 
   public fragmentMatches(
@@ -548,13 +547,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private addFragmentsToDocument(document: DocumentNode) {
     const { fragments } = this.config;
     return fragments ? fragments.transform(document) : document;
-  }
-
-  private addTypenameToDocument(document: DocumentNode) {
-    if (this.addTypename) {
-      return this.addTypenameTransform.transformDocument(document);
-    }
-    return document;
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by

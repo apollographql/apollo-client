@@ -1178,7 +1178,6 @@ describe("ApolloClient", () => {
                 return result.__typename + result.id;
               }
             },
-            addTypename: true,
           }),
         });
       }
@@ -1612,9 +1611,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1832,9 +1829,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if id is present and __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1881,9 +1876,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if _id is present but __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1930,9 +1923,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if either _id or id is present when __typename is not also present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({

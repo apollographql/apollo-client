@@ -121,7 +121,7 @@ describe("client.refetchQueries", () => {
   }
 
   it("includes watched queries affected by updateCache", async () => {
-    expect.assertions(9);
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -197,7 +197,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes watched queries named in options.include", async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -281,7 +281,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes query DocumentNode objects specified in options.include", async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -366,7 +366,7 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all queries when options.include === "all"', async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 

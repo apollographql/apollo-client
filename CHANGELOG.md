@@ -1,5 +1,110 @@
 # @apollo/client
 
+## 4.0.0-alpha.0
+
+### Major Changes
+
+- [#12379](https://github.com/apollographql/apollo-client/pull/12379) [`ef892b4`](https://github.com/apollographql/apollo-client/commit/ef892b4dc505b02049525f9aba32c51f1c00c922) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`. `__typename` is now always added to the outgoing query document when using `InMemoryCache` and cannot be disabled.
+
+  If you are using `<MockedProvider />` with `addTypename={false}`, ensure that your mocked responses include a `__typename` field. This will ensure cache normalization kicks in and behaves more like production.
+
+- [#12222](https://github.com/apollographql/apollo-client/pull/12222) [`d1a9054`](https://github.com/apollographql/apollo-client/commit/d1a905461d4378522c3257de00afba2ae8decd22) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Drop support for React 16.
+
+- [#12376](https://github.com/apollographql/apollo-client/pull/12376) [`a0c996a`](https://github.com/apollographql/apollo-client/commit/a0c996a816fbb6a2323231c0422d1c8a3e20cbaf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `ignoreResults` option from `useMutation`. If you don't want to synchronize component state with the mutation, use `useApolloClient` to access your client instance and use `client.mutate` directly.
+
+- [#12224](https://github.com/apollographql/apollo-client/pull/12224) [`51e6c0f`](https://github.com/apollographql/apollo-client/commit/51e6c0f8657d20cedc570c6e9a244f877047dd61) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `partialRefetch` option.
+
+- [#12211](https://github.com/apollographql/apollo-client/pull/12211) [`c2736db`](https://github.com/apollographql/apollo-client/commit/c2736db3ad6f8b6e56f065682d5b76614f41bfd4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `graphql`, `withQuery`, `withMutation`, `withSubscription`, and `withApollo` hoc components. Use the provided React hooks instead.
+
+- [#12262](https://github.com/apollographql/apollo-client/pull/12262) [`10ef733`](https://github.com/apollographql/apollo-client/commit/10ef7338cdcbbaf75d806f426e9708c9e095c2da) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `itAsync` test utility.
+
+- [#12304](https://github.com/apollographql/apollo-client/pull/12304) [`86469a2`](https://github.com/apollographql/apollo-client/commit/86469a25abb72dbd68adff3554e3909036e77eee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `Cache.DiffResult<T>` type is now a union type with better type safety for both complete and partial results. Checking `diff.complete` will now narrow the type of `result` depending on whether the value is `true` or `false`.
+
+  When `true`, `diff.result` will be a non-null value equal to the `T` generic type. When `false`, `diff.result` now reports `result` as `DeepPartial<T> | null` indicating that fields in the result may be missing (`DeepPartial<T>`) or empty entirely (`null`).
+
+- [#12254](https://github.com/apollographql/apollo-client/pull/12254) [`0028ac0`](https://github.com/apollographql/apollo-client/commit/0028ac0147aaea9ab559f15630200a132b43da42) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Changes the default `Accept` header to `application/graphql-response+json`.
+
+- [#12333](https://github.com/apollographql/apollo-client/pull/12333) [`3e4beaa`](https://github.com/apollographql/apollo-client/commit/3e4beaa8b768a893da80aae0428f79ee01d6aa38) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `data` property on `ApolloQueryResult`. Previously this field was non-optional, non-null `TData`, however at runtime this value could be set to `undefined`. This field is now reported as `TData | undefined`.
+
+  This will affect you in a handful of places:
+
+  - The `data` property emitted from the result passed to the `next` callback from `client.watchQuery`
+  - Fetch-based APIs that return an `ApolloQueryResult` type such as `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+
+- [#12223](https://github.com/apollographql/apollo-client/pull/12223) [`69c1cb6`](https://github.com/apollographql/apollo-client/commit/69c1cb6f831941598987185238a299b050a364bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `subscribeAndCount` testing utility from `@apollo/client/testing`.
+
+- [#12300](https://github.com/apollographql/apollo-client/pull/12300) [`4d581e4`](https://github.com/apollographql/apollo-client/commit/4d581e4f5a3c5409e5f06a5f164beabdada150f1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Moves all React-related exports to the `@apollo/client/react` entrypoint and out of the main `@apollo/client` entrypoint. This prevents the need to install React in order to use the core client.
+
+  The following is a list of exports available in `@apollo/client` that should now import from `@apollo/client/react`.
+
+  - `ApolloConsumer`
+  - `ApolloProvider`
+  - `createQueryPreloader`
+  - `getApolloContext`
+  - `skipToken`
+  - `useApolloClient`
+  - `useBackgroundQuery`
+  - `useFragment`
+  - `useLazyQuery`
+  - `useLoadableQuery`
+  - `useMutation`
+  - `useQuery`
+  - `useQueryRefHandlers`
+  - `useReactiveVar`
+  - `useReadQuery`
+  - `useSubscription`
+  - `useSuspenseQuery`
+
+  The following is a list of exports available in `@apollo/client/testing` that should now import from `@apollo/client/testing/react`:
+
+  - `MockedProvider`
+
+- [#12329](https://github.com/apollographql/apollo-client/pull/12329) [`61febe4`](https://github.com/apollographql/apollo-client/commit/61febe4ef8712a2035d7ac89ea7283138db5229d) Thanks [@phryneas](https://github.com/phryneas)! - Rework package publish format (#12329, #12382)
+
+  We have reworked the way Apollo Client is packaged.
+
+  - shipping ESM and CJS
+  - fixing up source maps
+  - the build targets a modern runtime environment (browserslist query: `"since 2023, node >= 20, not dead"`)
+
+- [#12304](https://github.com/apollographql/apollo-client/pull/12304) [`86469a2`](https://github.com/apollographql/apollo-client/commit/86469a25abb72dbd68adff3554e3909036e77eee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - ### Changes for users of `InMemoryCache`
+
+  `cache.diff` now returns `null` instead of an empty object (`{}`) when `returnPartialData` is `true` and the result is empty.
+
+  If you use `cache.diff` directly with `returnPartialData: true`, you will need to check for `null` before accessing any other fields on the `result` property. A non-null value indicates that at least one field was present in the cache for the given query document.
+
+  ### Changes for third-party cache implementations
+
+  The client now expects `cache.diff` to return `null` instead of an empty object when there is no data that can be fulfilled from the cache and `returnPartialData` is `true`. If your cache implementation returns an empty object, please update this to return `null`.
+
+- [#12359](https://github.com/apollographql/apollo-client/pull/12359) [`ebb4d96`](https://github.com/apollographql/apollo-client/commit/ebb4d9644104244fb066b93a32df778928f2f8a9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `onCompleted` and `onError` callbacks from `useQuery` and `useLazyQuery`.
+
+  See [#12352](https://github.com/apollographql/apollo-client/issues/12352) for more context on this change.
+
+- [#12304](https://github.com/apollographql/apollo-client/pull/12304) [`86469a2`](https://github.com/apollographql/apollo-client/commit/86469a25abb72dbd68adff3554e3909036e77eee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - ### Changes for users of `InMemoryCache`
+
+  `cache.diff` no longer throws when `returnPartialData` is set to `false` without a complete result. Instead, `cache.diff` will return `null` when it is unable to read a full cache result.
+
+  If you use `cache.diff` directly with `returnPartialData: false`, remove the `try`/`catch` block and replace with a check for `null`.
+
+  ### Changes for third-party cache implementations
+
+  The client now expects `cache.diff` to return `null` instead of throwing when the cache returns an incomplete result and `returnPartialData` is `false`. The internal `try`/`catch` blocks have been removed around `cache.diff`. If your cache implementation throws for incomplete results, please update this to return `null`.
+
+- [#12211](https://github.com/apollographql/apollo-client/pull/12211) [`c2736db`](https://github.com/apollographql/apollo-client/commit/c2736db3ad6f8b6e56f065682d5b76614f41bfd4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `Query`, `Mutation`, and `Subscription` components. Use the provided React hooks instead.
+
+### Minor Changes
+
+- [#12333](https://github.com/apollographql/apollo-client/pull/12333) [`3e4beaa`](https://github.com/apollographql/apollo-client/commit/3e4beaa8b768a893da80aae0428f79ee01d6aa38) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deprecate the `partial` flag on `ApolloQueryResult` and make it a non-optional property. Previously `partial` was only set conditionally if the result emitted was partial. This value is now available with all results that return an `ApolloQueryResult`.
+
+### Patch Changes
+
+- [#12291](https://github.com/apollographql/apollo-client/pull/12291) [`ae5d06a`](https://github.com/apollographql/apollo-client/commit/ae5d06ac45ca6584d3c79aa417dae22f37a7d3b6) Thanks [@phryneas](https://github.com/phryneas)! - Remove deprecated `resetApolloContext` export
+
+- [#12369](https://github.com/apollographql/apollo-client/pull/12369) [`bdfc5b2`](https://github.com/apollographql/apollo-client/commit/bdfc5b2e386ed5f835716a542de0cf17da37f7fc) Thanks [@phryneas](https://github.com/phryneas)! - `ObervableQuery.refetch`: don't refetch with `cache-and-network`, swich to `network-only` instead
+
+- [#12375](https://github.com/apollographql/apollo-client/pull/12375) [`d3f8f13`](https://github.com/apollographql/apollo-client/commit/d3f8f130718ef50531ca0079192c2672a513814a) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Export the `UseSuspenseFragmentOptions` type.
+
 ## 3.13.0
 
 ### Minor Changes

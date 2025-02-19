@@ -4,5 +4,26 @@
   "initialVersions": {
     "@apollo/client": "3.12.2"
   },
-  "changesets": []
+  "changesets": [
+    "calm-frogs-remain",
+    "chatty-planes-grin",
+    "clever-zebras-mate",
+    "curvy-pianos-count",
+    "fluffy-shoes-applaud",
+    "fresh-spies-burn",
+    "hot-cycles-notice",
+    "itchy-drinks-refuse",
+    "moody-lobsters-listen",
+    "popular-games-sleep",
+    "rich-kids-carry",
+    "rude-fans-study",
+    "shiny-carrots-invent",
+    "shiny-sheep-behave",
+    "short-jokes-jam",
+    "small-kids-film",
+    "tall-cups-suffer",
+    "tough-taxis-smoke",
+    "yellow-cats-judge",
+    "young-turtles-explode"
+  ]
 }

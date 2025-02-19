@@ -212,17 +212,7 @@ export class ObservableQuery<
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) {
-    return this.observable.subscribe(
-      typeof observer === "function" ?
-        {
-          next: observer,
-          error: defaultSubscriptionObserverErrorCallback,
-        }
-      : {
-          ...observer,
-          error: observer.error || defaultSubscriptionObserverErrorCallback,
-        }
-    );
+    return this.observable.subscribe(observer);
   }
 
   pipe(): Observable<ApolloQueryResult<MaybeMasked<TData>>>;
@@ -1302,10 +1292,6 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
   }
 
   return obsQuery.reobserve();
-}
-
-function defaultSubscriptionObserverErrorCallback(error: ApolloError) {
-  invariant.error("Unhandled error", error.message, error.stack);
 }
 
 export function logMissingFieldErrors(

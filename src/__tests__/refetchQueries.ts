@@ -5,6 +5,7 @@ import {
   ApolloLink,
   gql,
   InMemoryCache,
+  NetworkStatus,
   ObservableQuery,
   TypedDocumentNode,
 } from "@apollo/client/core";
@@ -478,7 +479,12 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqual({ a: "A", b: "B" });
+          expect(result).toEqualApolloQueryResult({
+            data: { a: "A", b: "B" },
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         },
       })
     );

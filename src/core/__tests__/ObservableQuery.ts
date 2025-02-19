@@ -1780,7 +1780,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await expect(stream).toEmitError(intentionalNetworkFailure);
+      await expect(stream).toEmitApolloQueryResult({
+        data: { counter: 3, name: "Ben" },
+        error: intentionalNetworkFailure,
+        errors: [],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
       // Switch back from errorObservable.
       linkObservable = oldLinkObs;
@@ -1789,7 +1796,7 @@ describe("ObservableQuery", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: {
-          counter: 4,
+          counter: 5,
           name: "Ben",
         },
         loading: false,
@@ -1957,13 +1964,13 @@ describe("ObservableQuery", () => {
           variables: { vars: ["d", "e"] },
         });
 
-        await expect(stream).toEmitError(
-          expect.objectContaining({
+        await expect(stream).toEmitMatchedValue({
+          error: expect.objectContaining({
             message: expect.stringMatching(
               /No more mocked responses for the query: query QueryWithVarsVar\(\$vars: \[String!\]\)/
             ),
-          })
-        );
+          }),
+        });
 
         await expect(promise).rejects.toEqual(
           expect.objectContaining({

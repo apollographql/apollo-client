@@ -287,8 +287,7 @@ describe("ApolloClient", () => {
     expect(stream.unsubscribe).not.toThrow();
   });
 
-  // Query should be aborted on last .unsubscribe()
-  it("causes link unsubscription if unsubscribed", async () => {
+  it("unsubscribes from link after initial reobserve when unsubscribing immediately", async () => {
     const expResult = {
       data: {
         allPeople: {
@@ -326,12 +325,10 @@ describe("ApolloClient", () => {
       return new Observable((observer) => {
         onRequestSubscribe();
 
-        // Delay (100ms) must be bigger than unsubscribe await (5ms)
-        // to show clearly that the connection was aborted before completing
         const timer = setTimeout(() => {
           observer.next(mockedResponse.result);
           observer.complete();
-        }, 100);
+        }, 20);
 
         return () => {
           onRequestUnsubscribe();
@@ -355,10 +352,15 @@ describe("ApolloClient", () => {
 
     stream.unsubscribe();
 
+    // Unsubscribing will not cause link unsubscription while the initial
+    // reobserve hasn't completed.
     await wait(10);
-
-    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
     expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(0);
+
+    await wait(10);
+    expect(onRequestSubscribe).toHaveBeenCalledTimes(1);
+    expect(onRequestUnsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it("causes link unsubscription after reobserve", async () => {

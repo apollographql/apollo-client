@@ -2302,9 +2302,9 @@ describe("ObservableQuery", () => {
 
       const observable = client.watchQuery({ query, variables });
 
-      await expect(observable.result()).rejects.toThrow(
-        new ApolloError({ graphQLErrors: [error] })
-      );
+      await expect(observable.result()).resolves.toMatchObject({
+        error: new ApolloError({ graphQLErrors: [error] }),
+      });
 
       const currentResult = observable.getCurrentResult();
       const currentResult2 = observable.getCurrentResult();
@@ -2376,7 +2376,9 @@ describe("ObservableQuery", () => {
         errorPolicy: "none",
       });
 
-      await expect(observable.result()).rejects.toEqual(wrappedError);
+      await expect(observable.result()).resolves.toMatchObject({
+        error: wrappedError,
+      });
 
       expect(observable.getLastError()).toEqual(wrappedError);
     });
@@ -2398,8 +2400,12 @@ describe("ObservableQuery", () => {
         errorPolicy: "none",
       });
 
-      await expect(observable.result()).rejects.toEqual(wrappedError);
-      await expect(observable.result()).rejects.toEqual(wrappedError);
+      await expect(observable.result()).resolves.toMatchObject({
+        error: wrappedError,
+      });
+      await expect(observable.result()).resolves.toMatchObject({
+        error: wrappedError,
+      });
 
       expect(observable.getLastError()).toEqual(wrappedError);
     });

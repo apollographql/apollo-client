@@ -3219,41 +3219,41 @@ describe("@connection", () => {
 
     expect(cache["watches"].size).toBe(2);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
-    expect(aSpy).not.toBeCalled();
-    expect(bSpy).not.toBeCalled();
+    expect(aSpy).not.toHaveBeenCalled();
+    expect(bSpy).not.toHaveBeenCalled();
 
     subs.forEach((sub) => sub.unsubscribe());
 
-    expect(aSpy).toBeCalledTimes(1);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(1);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(1);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(1);
+    expect(bSpy).toHaveBeenCalledWith(cache);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
     expect(cache["watches"].size).toBe(0);
     const abResults = watch(abQuery);
-    expect(abResults).toEqual([]);
+    expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
     expect(cache["watches"].size).toBe(1);
 
     await wait();
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
     expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
 
     client.stop();
 
     await wait();
 
-    expect(aSpy).toBeCalledTimes(2);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(2);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(2);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(2);
+    expect(bSpy).toHaveBeenCalledWith(cache);
   });
 
   describe("default settings", () => {

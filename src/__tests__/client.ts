@@ -25,7 +25,7 @@ import {
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "../utilities";
-import { Observable, Subscription, of } from "rxjs";
+import { EmptyError, Observable, Subscription, of } from "rxjs";
 import { ApolloLink } from "../link/core";
 import {
   createFragmentRegistry,
@@ -1900,7 +1900,10 @@ describe("client", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        obs.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Update this behavior
+      ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {

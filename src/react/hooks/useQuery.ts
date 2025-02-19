@@ -348,12 +348,8 @@ function useObservableSubscriptionResult<
           return () => {};
         }
 
-        const onNext = () => {
+        const onNext = (result: ApolloQueryResult<TData>) => {
           const previousResult = resultData.current;
-          // We use `getCurrentResult()` instead of the onNext argument because
-          // the values differ slightly. Specifically, loading results will have
-          // an empty object for data instead of `undefined` for some reason.
-          const result = observable.getCurrentResult();
           // Make sure we're not attempting to re-render similar results
           if (
             previousResult &&

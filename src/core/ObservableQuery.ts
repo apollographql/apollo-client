@@ -301,7 +301,8 @@ export class ObservableQuery<
     return (this.observable as any).pipe(...args);
   }
 
-  // TODO: Consider deprecating this method
+  // TODO: Consider deprecating this method. If not, use firstValueFrom helper
+  // instead.
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return new Promise((resolve, reject) => {
       // TODO: this code doesn’t actually make sense insofar as the observer

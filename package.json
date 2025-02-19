@@ -63,7 +63,12 @@
     "./utilities": "./src/utilities/index.ts",
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/subscriptions/urql": "./src/utilities/subscriptions/urql/index.ts",
-    "./utilities/globals": "./src/utilities/globals/index.ts"
+    "./utilities/globals": "./src/utilities/globals/index.ts",
+    "./utilities/globals/environment": {
+      "production": "./src/utilities/globals/environment/index.production.ts",
+      "development": "./src/utilities/globals/environment/index.development.ts",
+      "default": "./src/utilities/globals/environment/index.ts"
+    }
   },
   "scripts": {
     "prebuild": "npm run clean",

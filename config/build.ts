@@ -11,6 +11,7 @@ import { postprocessDist } from "./postprocessDist.ts";
 import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
 import { babelTransform } from "./babel.ts";
+import { addExports } from "./exports.ts";
 
 export interface BuildStepOptions {
   type: "esm" | "cjs";
@@ -32,6 +33,8 @@ $.cwd = join(import.meta.dirname, "..");
 $.verbose = true;
 
 const buildSteps = {
+  prepareDist,
+  addExports,
   typescript: compileTs,
   babelTransform,
   updateVersion,
@@ -40,7 +43,6 @@ const buildSteps = {
   postprocessDist,
   verifyVersion,
   verifySourceMaps,
-  prepareDist,
 } satisfies BuildSteps;
 const additionalSteps = {
   prepareChangesetsRelease,

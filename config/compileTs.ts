@@ -7,7 +7,8 @@ export const compileTs: BuildStep = async (options) => {
   if (options.type === "esm") {
     await $`npx tsc --outDir ${options.targetDir}`;
   } else {
-    await $`npx tsc --outDir ${options.targetDir} --module commonjs`;
+    // for a `commonjs` output, we have to specify `moduleResulution: node`, and as that will error because it cannot verify some imports, we add `--noCheck`
+    await $`npx tsc --outDir ${options.targetDir} --module commonjs --moduleResolution node --noCheck`;
     await renameJsFilesToCjs(options);
   }
 };

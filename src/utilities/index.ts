@@ -1,4 +1,4 @@
-export { DEV, maybe } from "./globals/index.js";
+export { maybe } from "./globals/index.js";
 
 export type {
   DirectiveInfo,

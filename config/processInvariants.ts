@@ -214,7 +214,13 @@ export async function processInvariants(options: BuildStepOptions) {
 
     if (
       ![
-        osPathJoin("utilities", "globals", `index.${options.jsExt}`),
+        osPathJoin(
+          `utilities`,
+          `globals`,
+          `environment`,
+          `index.${options.jsExt}`
+        ),
+        osPathJoin(`utilities`, `globals`, `index.${options.jsExt}`),
         osPathJoin("config", "jest", `setup.js`),
       ].includes(relativeSourcePath)
     )

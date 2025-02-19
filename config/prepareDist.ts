@@ -17,17 +17,19 @@ import path from "node:path";
 /* @apollo/client */
 
 import pkg from "../package.json" with { type: "json" };
-import * as entryPoints from "./entryPoints.ts";
 import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
 import type { BuildStep } from "./build.ts";
+import { mkdir } from "node:fs/promises";
 
 // the generated `Person` type is a bit weird - `author` as a string is valid
 const packageJson: Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {
   author: string;
 } = pkg;
 
-export const prepareDist: BuildStep = (options) => {
+export const prepareDist: BuildStep = async (options) => {
   if (!options.first) return;
+
+  await mkdir(options.packageRoot, { recursive: true });
 
   // The root package.json is marked as private to prevent publishing
   // from happening in the root of the project. This sets the package back to
@@ -40,7 +42,9 @@ export const prepareDist: BuildStep = (options) => {
   delete packageJson.devEngines;
   delete packageJson.devDependencies;
 
-  packageJson.exports = {};
+  packageJson.exports = {
+    "./package.json": "./package.json",
+  };
 
   // The root package.json points to the CJS/ESM source in "dist", to support
   // on-going package development (e.g. running tests, supporting npm link, etc.).

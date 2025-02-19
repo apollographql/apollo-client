@@ -5,21 +5,30 @@
     "noUnusedParameters": false,
     "noUnusedLocals": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "importHelpers": true,
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "NodeNext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable"],
+    "rootDir": "./src",
+    "lib": [
+      "es2015",
+      "esnext.asynciterable"
+    ],
     "jsx": "react",
     "strict": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/__tests__/**/*"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "src/**/__tests__/**/*"
+  ]
 }

@@ -3158,7 +3158,7 @@ describe("@connection", () => {
     const bVar = makeVar("asdf");
     const aSpy = jest.spyOn(aVar, "forgetCache");
     const bSpy = jest.spyOn(bVar, "forgetCache");
-    const cache: InMemoryCache = new InMemoryCache({
+    const cache = new InMemoryCache({
       typePolicies: {
         Query: {
           fields: {

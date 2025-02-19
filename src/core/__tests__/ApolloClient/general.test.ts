@@ -35,7 +35,32 @@ import {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "../../watchQueryOptions.js";
-import { mockFetchQuery } from "../ObservableQuery.js";
+
+const mockFetchQuery = (queryManager: QueryManager<any>) => {
+  const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
+  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
+    queryManager as any
+  ).fetchQueryByPolicy;
+
+  const mock = <
+    T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy,
+  >(
+    original: T
+  ) =>
+    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
+      // @ts-expect-error
+      return original.apply(queryManager, arguments);
+    });
+
+  const mocks = {
+    fetchConcastWithInfo: mock(fetchConcastWithInfo),
+    fetchQueryByPolicy: mock(fetchQueryByPolicy),
+  };
+
+  Object.assign(queryManager, mocks);
+
+  return mocks;
+};
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

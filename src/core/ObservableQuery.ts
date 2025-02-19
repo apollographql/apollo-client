@@ -107,6 +107,7 @@ export class ObservableQuery<
   // subscribed to that Concast.
   private concast?: Concast<ApolloQueryResult<TData>>;
   private subscription?: Subscription;
+  private obs?: Observable<ApolloQueryResult<TData>>;
   private observer?: Partial<Observer<ApolloQueryResult<TData>>>;
 
   private pollingInfo?: {
@@ -1089,7 +1090,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
-      if (this.concast === observable) {
+      if (this.obs === observable) {
         this.waitForOwnResult = false;
       }
     };
@@ -1126,6 +1127,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.subscription.unsubscribe();
       }
 
+      this.obs = observable;
       this.subscription = observable.subscribe(observer);
     } else {
       observable.subscribe(observer);
@@ -1231,8 +1233,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       delete this.concast;
       delete this.observer;
     }
-    if (this.subscription) {
+    if (this.obs && this.subscription) {
       this.subscription.unsubscribe();
+      delete this.obs;
       delete this.subscription;
     }
 

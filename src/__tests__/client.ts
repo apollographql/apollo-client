@@ -1802,7 +1802,12 @@ describe("client", () => {
     });
 
     it("fails if network request fails", async () => {
-      const link = mockSingleLink(); // no queries = no replies.
+      const link = new MockLink([
+        {
+          request: { query },
+          error: new Error("Oops"),
+        },
+      ]);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -1814,9 +1819,16 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: new ApolloError({ networkError: new Error("Oops") }),
+        errors: [],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
 
-      expect(error.message).toMatch(/No more mocked responses/);
+      await expect(stream).not.toEmitAnything();
     });
 
     it("fetches from cache first, then network and does not have an unhandled error", async () => {

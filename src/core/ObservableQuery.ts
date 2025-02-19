@@ -1223,7 +1223,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     this.updateLastResult(errorResult, variables);
-    this.subject.error((this.last!.error = error));
+    this.last!.error = error;
+    this.subject.next(errorResult);
   }
 
   public hasObservers() {

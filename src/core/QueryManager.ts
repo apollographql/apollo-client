@@ -679,7 +679,7 @@ export class QueryManager<TStore> {
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
     return lastValueFrom(
-      this.fetchConcastWithInfo(queryId, options, networkStatus).concast,
+      this.fetchConcastWithInfo(queryId, options, networkStatus).observable,
       { defaultValue: undefined }
     ) as TODO;
   }
@@ -1308,7 +1308,7 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus = NetworkStatus.loading,
     query = options.query
-  ): ConcastAndInfo<TData> {
+  ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
 
@@ -1399,7 +1399,7 @@ export class QueryManager<TStore> {
     }
 
     return {
-      concast: observable.pipe(
+      observable: observable.pipe(
         tap({
           error: cleanupCancelFn,
           complete: () => {
@@ -1839,7 +1839,4 @@ interface FetchConcastInfo {
 }
 interface ObservableAndInfo<TData> extends FetchConcastInfo {
   observable: Observable<ApolloQueryResult<TData>>;
-}
-interface ConcastAndInfo<TData> extends FetchConcastInfo {
-  concast: Observable<ApolloQueryResult<TData>>;
 }

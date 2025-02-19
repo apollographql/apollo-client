@@ -39,6 +39,9 @@ import {
   spyOnConsole,
 } from "../../../testing/internal";
 
+// TODO: Remove eventually as we should not be testing internals like this.
+// This was imported from the ObservableQuery test, but the import causes that
+// test file to run when trying to run just this file.
 const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (

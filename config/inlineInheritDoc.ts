@@ -146,25 +146,29 @@ function processComments(model: ApiModel, options: BuildStepOptions) {
       return {
         ast: visit(ast, {
           visitNode(path) {
+            this.traverse(path);
             const node = path.node;
-            if (node.comments)
-              for (const comment of node.comments) {
-                if (comment.type === "CommentBlock") {
-                  let newText = comment.value;
-                  while (inheritDocRegex.test(newText)) {
-                    newText = newText.replace(
-                      inheritDocRegex,
-                      (_, canonicalReference) => {
-                        return getCommentFor(canonicalReference, model) || "";
-                      }
-                    );
-                  }
-                  if (comment.value !== newText) {
-                    comment.value = frameComment(newText);
-                  }
+
+            if (!node.comments) {
+              return;
+            }
+
+            for (const comment of node.comments) {
+              if (comment.type === "CommentBlock") {
+                let newText = comment.value;
+                while (inheritDocRegex.test(newText)) {
+                  newText = newText.replace(
+                    inheritDocRegex,
+                    (_, canonicalReference) => {
+                      return getCommentFor(canonicalReference, model) || "";
+                    }
+                  );
+                }
+                if (comment.value !== newText) {
+                  comment.value = frameComment(newText);
                 }
               }
-            return this.traverse(path);
+            }
           },
         }),
       };

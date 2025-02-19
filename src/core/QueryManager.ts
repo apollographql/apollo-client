@@ -37,6 +37,7 @@ import {
   tap,
   lastValueFrom,
   mergeWith,
+  share,
 } from "rxjs";
 import {
   getDefaultValues,
@@ -1428,7 +1429,8 @@ export class QueryManager<TStore> {
     return {
       observable: observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(subject)
+        mergeWith(subject),
+        share()
       ),
       fromLink: containsDataFromLink,
     };

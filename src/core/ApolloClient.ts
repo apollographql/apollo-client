@@ -42,7 +42,7 @@ export interface DefaultOptions {
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
-export interface DevtoolsOptions {
+interface DevtoolsOptions {
   /**
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
    *

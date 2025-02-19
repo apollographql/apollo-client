@@ -155,6 +155,7 @@ workflows:
                 - dual-module-test-standard
                 - vite
                 - vite-swc
+                - wrapping-library
                 # -browser-esm would need a package publish to npm/CDNs
               react:
                 - latest
@@ -175,7 +176,6 @@ workflows:
                 - "graphql@15"
                 - "graphql@16"
                 - "graphql@^17.0.0-alpha"
-                - "@types/react@16.8 @types/react-dom@16.8"
                 - "@types/react@17 @types/react-dom@17"
                 - "@types/react@18 @types/react-dom@18"
                 - "@types/react@19 @types/react-dom@19"

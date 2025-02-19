@@ -1073,7 +1073,7 @@ describe("mutation results", () => {
           result: resetMutationResult,
         }
       ),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const watchedQuery = client.watchQuery({
@@ -1121,7 +1121,7 @@ describe("mutation results", () => {
     let count = 0;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: ApolloLink.from([
         ({ variables }: any) =>
           new Observable((observer) => {
@@ -1198,7 +1198,7 @@ describe("mutation results", () => {
     let count = 0;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: ApolloLink.from([
         ({ variables }: any) =>
           new Observable((observer) => {
@@ -1273,7 +1273,7 @@ describe("mutation results", () => {
     let count = 0;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: ApolloLink.from([
         ({ variables }: any) =>
           new Observable((observer) => {
@@ -1643,7 +1643,7 @@ describe("mutation results", () => {
           request: { query: mutation } as any,
           result: result1,
         }),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const result = await client.mutate<{ foo: { bar: string } }>({

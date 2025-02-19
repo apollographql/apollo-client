@@ -20,8 +20,6 @@ import {
 } from "../../../core";
 import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
 import {
-  MockedProvider,
-  MockedProviderProps,
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
@@ -57,6 +55,7 @@ import {
   useTrackRenders,
   AsyncRenderFn,
 } from "@testing-library/react-render-stream";
+import { MockedProvider, MockedProviderProps } from "../../../testing/react";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

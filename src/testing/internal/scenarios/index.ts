@@ -64,7 +64,7 @@ export function setupVariablesCase() {
   return { mocks, query };
 }
 
-export type MaskedVariablesCaseFragment = {
+type MaskedVariablesCaseFragment = {
   __typename: "Character";
   name: string;
 } & { " $fragmentName"?: "MaskedVariablesCaseFragment" };

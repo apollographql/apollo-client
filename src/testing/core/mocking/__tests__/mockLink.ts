@@ -164,7 +164,7 @@ describe("mockLink", () => {
     // in the operation before calling the Link, so we have to do the same here
     // when we call `execute`
     const defaults = { done: true };
-    const link = new MockLink(mocks, false, { showWarnings: false });
+    const link = new MockLink(mocks, { showWarnings: false });
     {
       // Non-optional variable is missing, should not match.
       const stream = new ObservableStream(

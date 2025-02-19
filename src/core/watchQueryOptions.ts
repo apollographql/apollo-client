@@ -78,9 +78,6 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
-  partialRefetch?: boolean;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 }
@@ -136,9 +133,6 @@ export interface SharedWatchQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
-  partialRefetch?: boolean;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 
@@ -163,23 +157,6 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   variables?: Partial<TVariables>;
   context?: DefaultContext;
 }
-
-/**
- * @deprecated `UpdateQueryFn` is deprecated and will be removed or updated in a
- * future version of Apollo Client. Use `SubscribeToMoreUpdateQueryFn` instead
- * which provides a more type-safe result.
- */
-export type UpdateQueryFn<
-  TData = any,
-  TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData,
-> = (
-  previousQueryResult: Unmasked<TData>,
-  options: {
-    subscriptionData: { data: Unmasked<TSubscriptionData> };
-    variables?: TSubscriptionVariables;
-  }
-) => Unmasked<TData>;
 
 export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;
@@ -293,7 +270,7 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-export interface MutationBaseOptions<
+interface MutationBaseOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,

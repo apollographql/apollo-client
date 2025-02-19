@@ -53,7 +53,7 @@ EOF
 git worktree add --force --detach --checkout "$comparison" "$upstream" || { cd "$comparison" && git checkout "$upstream"; } || exit 1
 
 cd "$comparison" || { echo "checkout failed"; exit 1; }
-cp -r "$root/node_modules" .
+[ -d node_modules ] || cp -r "$root/node_modules" .
 npm i >&2
 git status >&2
 npm run build >&2

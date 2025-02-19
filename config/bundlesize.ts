@@ -5,7 +5,7 @@ import bytes from "bytes";
 
 const gzipBundleByteLengthLimit = bytes("35.25KB");
 const minFile = join("dist", "apollo-client.min.cjs");
-const minPath = join(__dirname, "..", minFile);
+const minPath = join(import.meta.dirname, "..", minFile);
 const gzipByteLen = gzipSync(readFileSync(minPath)).byteLength;
 const overLimit = gzipByteLen > gzipBundleByteLengthLimit;
 

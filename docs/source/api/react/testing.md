@@ -11,7 +11,7 @@ api_reference: true
 
 
 ```js
-import { MockedProvider } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 ```
 
 The `MockedProvider` component is a mocked version of [`ApolloProvider`](./hooks/#the-apolloprovider-component) that doesn't send network requests to your API. Instead, it allows you to specify the exact response payload for a given GraphQL operation. This enables you to test your application's operations without communicating with a server.

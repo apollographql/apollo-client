@@ -46,7 +46,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(() => useSubscription(subscription), {
@@ -113,7 +113,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onError = jest.fn();
@@ -165,7 +165,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onComplete = jest.fn();
@@ -204,7 +204,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -260,7 +260,7 @@ describe("useSubscription Hook", () => {
     link.onSetup(onSetup);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -324,7 +324,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
     const { result, rerender } = renderHook(
       ({ skip }) => useSubscription(subscription, { skip }),
@@ -420,7 +420,7 @@ describe("useSubscription Hook", () => {
     });
     const client = new ApolloClient({
       link: concat(contextLink, link),
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -488,7 +488,7 @@ describe("useSubscription Hook", () => {
     });
     const client = new ApolloClient({
       link: concat(extensionsLink, link),
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -551,7 +551,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -620,7 +620,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(() => useSubscription(subscription), {
@@ -668,7 +668,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -746,7 +746,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     renderHook(
@@ -789,7 +789,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -837,7 +837,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onSubscriptionData = jest.fn();
@@ -876,7 +876,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { rerender } = renderHook(
@@ -909,7 +909,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     renderHook(
@@ -952,7 +952,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onComplete = jest.fn();
@@ -1002,7 +1002,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onSubscriptionComplete = jest.fn();
@@ -1043,7 +1043,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { rerender } = renderHook(
@@ -1098,7 +1098,7 @@ describe("useSubscription Hook", () => {
       const link = new MockSubscriptionLink();
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new Cache(),
       });
       let renderCount = 0;
 
@@ -1147,7 +1147,7 @@ followed by new in-flight setup", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result, unmount, rerender } = renderHook(
@@ -1798,7 +1798,7 @@ describe("ignoreResults", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
@@ -1872,7 +1872,7 @@ describe("ignoreResults", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
@@ -1942,7 +1942,7 @@ describe("ignoreResults", () => {
     link.onSetup(subscriptionCreated);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
@@ -2016,7 +2016,7 @@ describe("ignoreResults", () => {
     link.onSetup(subscriptionCreated);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);

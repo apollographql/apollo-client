@@ -57,8 +57,8 @@ import { getDataFromTree } from "@apollo/client/react/ssr";
 
 ## Testing
 
-React testing utilities are now available through the Apollo Client project, but they aren't included in the default bundle. To access the React testing utilities, you can use the `@apollo/client/testing` bundle like:
+React testing utilities are now available through the Apollo Client project, but they aren't included in the default bundle. To access the React testing utilities, you can use the `@apollo/client/testing/react` bundle like:
 
 ```
-import { MockedProvider } from '@apollo/client/testing';
+import { MockedProvider } from '@apollo/client/testing/react';
 ```

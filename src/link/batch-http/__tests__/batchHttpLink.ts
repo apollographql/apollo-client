@@ -520,7 +520,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers to the request from the setup", async () => {
@@ -540,7 +540,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("uses the latest window.fetch function if options.fetch not configured", (done) => {
@@ -620,7 +620,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers to the request from the context on an operation", async () => {
@@ -644,7 +644,7 @@ describe("SharedHttpTest", () => {
       .headers as Record<string, string>;
     expect(headers.authorization).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers w/ preserved case to the request from the setup", async () => {
@@ -668,7 +668,7 @@ describe("SharedHttpTest", () => {
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
     expect(headers["CONTENT-TYPE"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("prioritizes context headers w/ preserved case over setup headers", async () => {
@@ -697,7 +697,7 @@ describe("SharedHttpTest", () => {
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds headers w/ preserved case to the request from the context on an operation", async () => {
@@ -721,7 +721,7 @@ describe("SharedHttpTest", () => {
     const headers: any = fetchMock.lastCall()![1]!.headers;
     expect(headers.AUTHORIZATION).toBe("1234");
     expect(headers["content-type"]).toBe("application/json");
-    expect(headers.accept).toBe("*/*");
+    expect(headers.accept).toBe("application/graphql-response+json");
   });
 
   it("adds creds to the request from the context", async () => {

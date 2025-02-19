@@ -5,12 +5,12 @@ import { execute } from "../../core/execute";
 import { ServerError, throwServerError } from "../../utils/throwServerError";
 import { Observable } from "../../../utilities/observables/Observable";
 import { onError, ErrorLink } from "../";
-import { ObservableStream } from "../../../testing/internal";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 import {
+  ObservableStream,
   mockDeferStream,
   mockMultipartSubscriptionStream,
-} from "../../../testing/internal/incremental";
+} from "../../../testing/internal";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {

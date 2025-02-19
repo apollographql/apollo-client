@@ -3,15 +3,15 @@ title: Hooks
 description: Apollo Client react hooks API reference
 minVersion: 3.0.0
 api_doc:
-  - "@apollo/client!SuspenseQueryHookOptions:interface"
-  - "@apollo/client!useQuery:function(1)"
-  - "@apollo/client!useLazyQuery:function(1)"
-  - "@apollo/client!useMutation:function(1)"
-  - "@apollo/client!useSubscription:function(1)"
-  - "@apollo/client!useApolloClient:function(1)"
-  - "@apollo/client!useReactiveVar:function(1)"
-  - "@apollo/client!useLoadableQuery:function(5)"
-  - "@apollo/client!useQueryRefHandlers:function(1)"
+  - "@apollo/client/react!SuspenseQueryHookOptions:interface"
+  - "@apollo/client/react!useQuery:function(1)"
+  - "@apollo/client/react!useLazyQuery:function(1)"
+  - "@apollo/client/react!useMutation:function(1)"
+  - "@apollo/client/react!useSubscription:function(1)"
+  - "@apollo/client/react!useApolloClient:function(1)"
+  - "@apollo/client/react!useReactiveVar:function(1)"
+  - "@apollo/client/react!useLoadableQuery:function(5)"
+  - "@apollo/client/react!useQueryRefHandlers:function(1)"
 ---
 
 import UseFragmentOptions from '../../../shared/useFragment-options.mdx';
@@ -24,10 +24,10 @@ import { FunctionDetails, PropertySignatureTable, ManualTuple, InterfaceDetails 
 
 ## The `ApolloProvider` component
 
-The `ApolloProvider` component leverages [React's Context API](https://react.dev/reference/react/useContext) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client` package.
+The `ApolloProvider` component leverages [React's Context API](https://react.dev/reference/react/useContext) to make a configured Apollo Client instance available throughout a React component tree. This component can be imported directly from the `@apollo/client/react` package.
 
 ```js
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider } from '@apollo/client/react';
 ```
 
 ### Props
@@ -59,7 +59,7 @@ One way to access the configured Apollo Client instance directly is to create an
 ### Example
 
 ```jsx
-import { ApolloConsumer } from '@apollo/client';
+import { ApolloConsumer } from '@apollo/client/react';
 
 function WithApolloClient() {
   return (
@@ -70,9 +70,9 @@ function WithApolloClient() {
 }
 ```
 
-<FunctionDetails canonicalReference="@apollo/client!useQuery:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client/react!useQuery:function(1)" headingLevel={2} />
 
-<FunctionDetails canonicalReference="@apollo/client!useLazyQuery:function(1)" headingLevel={2}>
+<FunctionDetails canonicalReference="@apollo/client/react!useLazyQuery:function(1)" headingLevel={2}>
   ```ts
   [execute: LazyQueryExecFunction<TData, TVariables>, result: QueryResult<TData, TVariables>]
   ```
@@ -89,7 +89,7 @@ function WithApolloClient() {
     <ManualTupleItem
       name="result"
       type="QueryResult<TData, TVariables>"
-      canonicalReference="@apollo/client!QueryResult:interface"
+      canonicalReference="@apollo/client/react!QueryResult:interface"
     >
       The result of the query. See the `useQuery` hook for more details.
     </ManualTupleItem>
@@ -97,7 +97,7 @@ function WithApolloClient() {
 </FunctionDetails>
 
 <FunctionDetails
-  canonicalReference="@apollo/client!useMutation:function(1)"
+  canonicalReference="@apollo/client/react!useMutation:function(1)"
   headingLevel={2}
 >
   ```ts
@@ -257,7 +257,7 @@ function useSuspenseQuery<TData, TVariables>(
 Instead of passing a `SuspenseQueryHookOptions` object into the hook, you can also pass a [`skipToken`](#skiptoken) to prevent the `useSuspenseQuery` hook from executing the query or suspending.
 
 <InterfaceDetails
-  canonicalReference="@apollo/client!SuspenseQueryHookOptions:interface"
+  canonicalReference="@apollo/client/react!SuspenseQueryHookOptions:interface"
   customPropertyOrder={["variables", "errorPolicy", "skip"]}
   headingLevel={3}
 />
@@ -278,12 +278,8 @@ For a detailed explanation of `useBackgroundQuery`, see the [fetching with Suspe
 
 ```jsx
 import { Suspense } from 'react';
-import {
-  ApolloClient,
-  InMemoryCache,
-  useBackgroundQuery,
-  useReadQuery,
-} from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { useBackgroundQuery, useReadQuery } from '@apollo/client/react';
 
 const query = gql`
   foo {
@@ -400,7 +396,7 @@ function useReadQuery<TData>(
 <UseReadQueryResult />
 
 <FunctionDetails
-  canonicalReference="@apollo/client!useLoadableQuery:function(5)"
+  canonicalReference="@apollo/client/react!useLoadableQuery:function(5)"
   headingLevel={2}
 >
   ```ts
@@ -428,7 +424,7 @@ function useReadQuery<TData>(
       idPrefix="useloadablequery-result"
       name="queryRef"
       type="QueryRef<TData, TVariables> | null"
-      canonicalReference="@apollo/client!QueryRef:interface"
+      canonicalReference="@apollo/client/react!QueryRef:interface"
     >
       The `queryRef` used by `useReadQuery` to read the query result.
     </ManualTupleItem>
@@ -442,7 +438,7 @@ function useReadQuery<TData>(
   </ManualTuple>
 </FunctionDetails>
 
-<FunctionDetails canonicalReference="@apollo/client!useQueryRefHandlers:function(1)" headingLevel={2} />
+<FunctionDetails canonicalReference="@apollo/client/react!useQueryRefHandlers:function(1)" headingLevel={2} />
 
 <MinVersion version="3.8.0">
 
@@ -454,7 +450,7 @@ While not a hook by itself, `skipToken` is designed to be used with `useSuspense
 If a `skipToken` is passed into one of those hooks instead of the `options` object, that hook will not cause any requests or suspenseful behavior, while keeping the last `data` available.
 
 ```js title="Recommended usage of skipToken with useSuspenseQuery"
-import { skipToken, useSuspenseQuery } from '@apollo/client';
+import { skipToken, useSuspenseQuery } from '@apollo/client/react';
 const { data } = useSuspenseQuery(
   query,
   id ? { variables: { id } } : skipToken
@@ -463,7 +459,7 @@ const { data } = useSuspenseQuery(
 
 
 ```js title="Recommended usage of skipToken with useBackgroundQuery"
-import { skipToken, useBackgroundQuery } from '@apollo/client';
+import { skipToken, useBackgroundQuery } from '@apollo/client/react';
 const [queryRef] = useBackgroundQuery(
   query,
   id ? { variables: { id } } : skipToken

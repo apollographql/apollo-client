@@ -91,7 +91,7 @@ describe("ObservableQuery", () => {
     describe("to change pollInterval", () => {
       it("starts polling if goes from 0 -> something", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -120,6 +120,7 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await observable.setOptions({ query, pollInterval: 10 });
@@ -128,6 +129,7 @@ describe("ObservableQuery", () => {
           data: dataTwo,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         observable.stopPolling();
@@ -137,7 +139,7 @@ describe("ObservableQuery", () => {
 
       it("stops polling if goes from something -> 0", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -166,6 +168,7 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await observable.setOptions({ query, pollInterval: 0 });
@@ -175,7 +178,7 @@ describe("ObservableQuery", () => {
 
       it("can change from x>0 to y>0", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -205,6 +208,7 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await observable.setOptions({ query, pollInterval: 10 });
@@ -213,6 +217,7 @@ describe("ObservableQuery", () => {
           data: dataTwo,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         observable.stopPolling();
@@ -240,7 +245,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -271,13 +276,13 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.refetch(variables2);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Ensure this value is undefined instead of an empty object
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -287,6 +292,7 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -310,7 +316,7 @@ describe("ObservableQuery", () => {
       const data2 = { allPeople: { people: [{ name: "Leia Skywalker" }] } };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -341,6 +347,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.refetch();
@@ -349,12 +356,14 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -379,7 +388,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -398,6 +407,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setOptions({
@@ -406,7 +416,7 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -416,6 +426,7 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       // go back to first set of variables
@@ -424,12 +435,14 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -437,7 +450,7 @@ describe("ObservableQuery", () => {
 
     it("if query is refetched, and an error is returned, no other observer callbacks will be called", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -460,6 +473,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(observable.refetch()).rejects.toThrow(
@@ -474,6 +488,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -481,7 +496,7 @@ describe("ObservableQuery", () => {
 
     it("does a network request if fetchPolicy becomes networkOnly", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -501,6 +516,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setOptions({ fetchPolicy: "network-only" });
@@ -509,6 +525,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -541,7 +558,7 @@ describe("ObservableQuery", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       // fetch first data from server
@@ -555,6 +572,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(timesFired).toBe(1);
@@ -563,7 +581,7 @@ describe("ObservableQuery", () => {
       await client.resetStore();
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -602,7 +620,7 @@ describe("ObservableQuery", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -615,7 +633,7 @@ describe("ObservableQuery", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -628,6 +646,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
       await expect(stream).not.toEmitAnything();
@@ -661,7 +680,7 @@ describe("ObservableQuery", () => {
         },
       ]);
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({
@@ -676,6 +695,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -714,7 +734,7 @@ describe("ObservableQuery", () => {
         },
       ]);
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -732,6 +752,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(timesFired).toBe(1);
@@ -745,7 +766,7 @@ describe("ObservableQuery", () => {
 
     it("returns a promise which eventually returns data", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -764,6 +785,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const res = await observable.setOptions({
@@ -774,18 +796,21 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -795,7 +820,7 @@ describe("ObservableQuery", () => {
   describe("setVariables", () => {
     it("reruns query if the variables change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -820,14 +845,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error `ApolloQueryResult` needs to be updated to allow for `undefined` and this value needs to emit undefined instead of empty object
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -837,6 +861,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -844,7 +869,7 @@ describe("ObservableQuery", () => {
 
     it("does invalidate the currentResult data if the variables change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -864,11 +889,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
@@ -877,11 +904,13 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -923,7 +952,7 @@ describe("ObservableQuery", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -943,11 +972,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
@@ -956,11 +987,13 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -968,7 +1001,7 @@ describe("ObservableQuery", () => {
 
     it("does not invalidate the currentResult errors if the variables change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -990,21 +1023,17 @@ describe("ObservableQuery", () => {
       const stream = new ObservableStream(observable);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Need to update ApolloQueryResult type to allow for undefined
         data: undefined,
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
+        partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Need to update ApolloQueryResult type to allow for undefined
         data: undefined,
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This is not present on the emitted result so this should match
         partial: true,
       });
 
@@ -1014,11 +1043,13 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1027,7 +1058,7 @@ describe("ObservableQuery", () => {
     it("does not perform a query when unsubscribed if variables change", async () => {
       // Note: no responses, will throw if a query is made
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
       const observable = client.watchQuery({ query, variables });
@@ -1048,7 +1079,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1064,14 +1095,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setVariables(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Ensure ApolloQueryResult allows for undefined and fix this value to match
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1081,6 +1111,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1099,7 +1130,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1115,14 +1146,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.refetch(differentVariables);
 
       await expect(stream).toEmitApolloQueryResult({
-        // TODO: Fix this error
-        // @ts-expect-error Need to update ApolloQueryResult to allow undefined and fix this value
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1132,6 +1162,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1139,7 +1170,7 @@ describe("ObservableQuery", () => {
 
     it("does not rerun query if variables do not change", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -1158,6 +1189,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.setVariables(variables);
@@ -1167,7 +1199,7 @@ describe("ObservableQuery", () => {
 
     it("handles variables changing while a query is in-flight", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -1193,6 +1225,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1213,7 +1246,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1232,6 +1265,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.refetch(differentVariables);
@@ -1240,6 +1274,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const fqbpCalls = mocks.fetchQueryByPolicy.mock.calls;
@@ -1289,6 +1324,7 @@ describe("ObservableQuery", () => {
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1317,6 +1353,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void observableQuery.refetch({ id: 2 });
@@ -1342,6 +1379,7 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1360,7 +1398,7 @@ describe("ObservableQuery", () => {
       ];
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink(mockedResponses),
       });
       const firstRequest = mockedResponses[0].request;
@@ -1410,7 +1448,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -1449,12 +1487,13 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.refetch(variables2);
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1464,6 +1503,7 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await observable.refetch(variables1);
@@ -1472,12 +1512,14 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1502,7 +1544,7 @@ describe("ObservableQuery", () => {
       const variables2 = { first: 1 };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: {
@@ -1562,13 +1604,14 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
       await observable.refetch(variables2);
 
       await expect(stream).toEmitApolloQueryResult({
-        data: {},
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -1579,6 +1622,7 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1589,6 +1633,7 @@ describe("ObservableQuery", () => {
           data,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
@@ -1597,6 +1642,7 @@ describe("ObservableQuery", () => {
         data,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1604,6 +1650,7 @@ describe("ObservableQuery", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1614,6 +1661,7 @@ describe("ObservableQuery", () => {
           data: data2,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
         expect(observable.options.fetchPolicy).toBe("cache-first");
       }
@@ -1622,6 +1670,7 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1629,6 +1678,7 @@ describe("ObservableQuery", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1700,6 +1750,7 @@ describe("ObservableQuery", () => {
         data: { counter: 2, name: "Ben" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const oldLinkObs = linkObservable;
@@ -1714,6 +1765,7 @@ describe("ObservableQuery", () => {
         data: { counter: 3, name: "Ben" },
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
 
       await expect(stream).toEmitError(intentionalNetworkFailure);
@@ -1730,6 +1782,7 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -1772,7 +1825,7 @@ describe("ObservableQuery", () => {
         }
 
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
         });
         const observableWithoutVariables = client.watchQuery({
@@ -1792,6 +1845,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await observableWithoutVariables.refetch({
@@ -1807,6 +1861,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         expect(console.warn).toHaveBeenCalledTimes(1);
@@ -1858,8 +1913,8 @@ describe("ObservableQuery", () => {
         const mocks = [makeMock("a", "b", "c"), makeMock("d", "e")];
         const firstRequest = mocks[0].request;
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
-          link: new MockLink(mocks, true, { showWarnings: false }),
+          cache: new InMemoryCache(),
+          link: new MockLink(mocks, { showWarnings: false }),
         });
 
         const observableWithVarsVar = client.watchQuery({
@@ -1880,6 +1935,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         // It's a common mistake to call refetch({ variables }) when you meant
@@ -1953,7 +2009,7 @@ describe("ObservableQuery", () => {
         }
 
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([makeMock("a", "b", "c"), makeMock("d", "e")]),
         });
 
@@ -1974,6 +2030,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await observableWithVariablesVar.refetch({ variables: ["d", "e"] });
@@ -1987,6 +2044,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         expect(console.warn).not.toHaveBeenCalled();
@@ -2095,12 +2153,14 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOneWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void observable.refetch();
@@ -2109,22 +2169,26 @@ describe("ObservableQuery", () => {
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOneWithTypename,
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
-      expect(observable.getCurrentResult()).toEqual({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwoWithTypename,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2132,7 +2196,7 @@ describe("ObservableQuery", () => {
 
     it("returns the current query status immediately", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2144,9 +2208,8 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      // TODO: Fix this error
-      // @ts-expect-error ApolloQueryResult expects a `data` property, but the value returned from `getCurrentResult` does not include it
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2154,9 +2217,8 @@ describe("ObservableQuery", () => {
 
       await tick();
 
-      // TODO: Fix this error
-      // @ts-expect-error ApolloQueryResult expects a `data` property, but the value returned from `getCurrentResult` does not include it
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -2168,12 +2230,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: 7,
+        partial: false,
       });
     });
 
     it("returns results from the store immediately", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2188,6 +2251,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: 7,
+        partial: false,
       });
 
       const observable = client.watchQuery({ query, variables });
@@ -2196,12 +2260,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
     it("returns errors from the store immediately", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2216,9 +2281,8 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitError(
         new ApolloError({ graphQLErrors: [error] })
       );
-      // TODO: Fix this error
-      // @ts-expect-error ApolloQueryResult expects `data` property to be defined but it is not returned here
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({ graphQLErrors: [error] }),
         errors: [error],
         loading: false,
@@ -2229,7 +2293,7 @@ describe("ObservableQuery", () => {
 
     it("returns referentially equal errors", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2247,8 +2311,8 @@ describe("ObservableQuery", () => {
       const currentResult = observable.getCurrentResult();
       const currentResult2 = observable.getCurrentResult();
 
-      // @ts-expect-error ApolloQueryResult expects a `data` property to be returned
       expect(currentResult).toEqualApolloQueryResult({
+        data: undefined,
         error: new ApolloError({ graphQLErrors: [error] }),
         errors: [error],
         loading: false,
@@ -2261,7 +2325,7 @@ describe("ObservableQuery", () => {
 
     it("returns errors with data if errorPolicy is all", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2284,6 +2348,7 @@ describe("ObservableQuery", () => {
         errors: [error],
         loading: false,
         networkStatus: NetworkStatus.error,
+        partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
@@ -2292,12 +2357,13 @@ describe("ObservableQuery", () => {
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
     it("errors out if errorPolicy is none", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2319,7 +2385,7 @@ describe("ObservableQuery", () => {
 
     it("errors out if errorPolicy is none and the observable has completed", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2342,7 +2408,7 @@ describe("ObservableQuery", () => {
 
     it("ignores errors with data if errorPolicy is ignore", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2364,11 +2430,13 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -2390,7 +2458,7 @@ describe("ObservableQuery", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2437,11 +2505,13 @@ describe("ObservableQuery", () => {
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: superDataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2449,7 +2519,7 @@ describe("ObservableQuery", () => {
 
     it("returns loading even if full data is available when using network-only fetchPolicy", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2468,6 +2538,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const observable = client.watchQuery({
@@ -2476,26 +2547,27 @@ describe("ObservableQuery", () => {
         fetchPolicy: "network-only",
       });
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        partial: true,
       });
 
       const stream = new ObservableStream(observable);
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2503,7 +2575,7 @@ describe("ObservableQuery", () => {
 
     it("returns loading on no-cache fetchPolicy queries when calling getCurrentResult", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2524,37 +2596,39 @@ describe("ObservableQuery", () => {
         fetchPolicy: "no-cache",
       });
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        partial: true,
       });
 
       const stream = new ObservableStream(observable);
 
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        partial: true,
       });
-      // TODO: Fix this issue
-      // @ts-expect-error `ApolloQueryResult` expects a `data` property
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.loading,
+        partial: true,
       });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -2605,6 +2679,9 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        // TODO: This should be true since there are still outstanding chunks
+        // that haven't been processed.
+        partial: false,
       });
 
       expect(obs.getCurrentResult()).toEqualApolloQueryResult({
@@ -2616,8 +2693,6 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
-        // TODO: This should not be there since the observable did not emit this
-        // property.
         partial: true,
       });
 
@@ -2655,6 +2730,7 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(obs.getCurrentResult()).toEqualApolloQueryResult({
@@ -2670,6 +2746,7 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       // This 2nd identical check is intentional to ensure calling this function
@@ -2687,13 +2764,14 @@ describe("ObservableQuery", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
     });
 
     {
-      type Result = Partial<ApolloQueryResult<{ hello: string }>>;
+      type Result = ApolloQueryResult<{ hello: string }>;
 
       const cacheValues = {
         initial: { hello: "world (initial)" },
@@ -2744,66 +2822,85 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
           data: cacheValues.initial,
+          partial: false,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
           data: cacheValues.initial,
+          partial: false,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
           data: cacheValues.update1,
+          partial: false,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
+          partial: false,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.update2,
+          partial: false,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.update3,
+          partial: false,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
+          partial: false,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.update4,
+          partial: false,
         },
       };
 
       const linkOnly: TestDetails = {
         resultBeforeSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.link,
+          partial: false,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.done,
           data: cacheValues.link,
+          partial: false,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
           data: cacheValues.link,
+          partial: false,
         },
         resultAfterRefetchNext: {
           ...loadingStates.done,
           data: cacheValues.refetch,
+          partial: false,
         },
         resultAfterCacheUpdate4: {
           ...loadingStates.done,
           data: cacheValues.refetch,
+          partial: false,
         },
       };
 
@@ -2811,21 +2908,33 @@ describe("ObservableQuery", () => {
         ...linkOnly,
         resultBeforeSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterLinkNext: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterCacheUpdate2: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterCacheUpdate3: {
           ...loadingStates.refetching,
+          data: undefined,
+          partial: true,
         },
         // like linkOnly:
         // resultAfterRefetchNext
@@ -2836,12 +2945,18 @@ describe("ObservableQuery", () => {
         ...cacheAndLink,
         resultBeforeSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterSubscribe: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.loading,
+          data: undefined,
+          partial: true,
         },
         // like cacheAndLink:
         // resultAfterLinkNext
@@ -2856,18 +2971,22 @@ describe("ObservableQuery", () => {
         resultBeforeSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
+          partial: false,
         },
         resultAfterSubscribe: {
           ...loadingStates.done,
           data: cacheValues.initial,
+          partial: false,
         },
         resultAfterCacheUpdate1: {
           ...loadingStates.done,
           data: cacheValues.update1,
+          partial: false,
         },
         resultAfterLinkNext: {
           ...loadingStates.done,
           data: cacheValues.update1,
+          partial: false,
         },
         // like cacheAndLink:
         // resultAfterCacheUpdate2
@@ -2929,17 +3048,17 @@ describe("ObservableQuery", () => {
             nextFetchPolicy,
           });
 
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultBeforeSubscribe
           );
 
           observableQuery.subscribe({});
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterSubscribe
           );
 
           cache.writeQuery({ query, data: cacheValues.update1 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate1
           );
 
@@ -2949,21 +3068,21 @@ describe("ObservableQuery", () => {
           }
           await waitFor(
             () =>
-              void expect(observableQuery.getCurrentResult()).toStrictEqual(
-                resultAfterLinkNext
-              ),
+              void expect(
+                observableQuery.getCurrentResult()
+              ).toEqualApolloQueryResult(resultAfterLinkNext),
             { interval: 1 }
           );
 
           cache.writeQuery({ query, data: cacheValues.update2 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate2
           );
 
           void observableQuery.refetch();
 
           cache.writeQuery({ query, data: cacheValues.update3 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate3
           );
 
@@ -2973,14 +3092,14 @@ describe("ObservableQuery", () => {
           }
           await waitFor(
             () =>
-              void expect(observableQuery.getCurrentResult()).toStrictEqual(
-                resultAfterRefetchNext
-              ),
+              void expect(
+                observableQuery.getCurrentResult()
+              ).toEqualApolloQueryResult(resultAfterRefetchNext),
             { interval: 1 }
           );
 
           cache.writeQuery({ query, data: cacheValues.update4 });
-          expect(observableQuery.getCurrentResult()).toStrictEqual(
+          expect(observableQuery.getCurrentResult()).toEqualApolloQueryResult(
             resultAfterCacheUpdate4
           );
         }
@@ -3012,7 +3131,7 @@ describe("ObservableQuery", () => {
 
       it("returns optimistic mutation results from the store", async () => {
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             {
               request: { query, variables },
@@ -3036,11 +3155,13 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         void client.mutate({
@@ -3055,6 +3176,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: {
@@ -3062,6 +3184,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await expect(stream).toEmitApolloQueryResult({
@@ -3070,6 +3193,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
         expect(observable.getCurrentResult()).toEqualApolloQueryResult({
           data: {
@@ -3077,6 +3201,7 @@ describe("ObservableQuery", () => {
           },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         await expect(stream).not.toEmitAnything();
@@ -3175,7 +3300,7 @@ describe("ObservableQuery", () => {
       const graphQLError = new GraphQLError("oh no!");
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3205,7 +3330,7 @@ describe("ObservableQuery", () => {
       const networkError = new Error("oh no!");
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3356,7 +3481,7 @@ describe("ObservableQuery", () => {
   describe("updateQuery", () => {
     it("should be able to determine if the previous result is complete", async () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3373,7 +3498,7 @@ describe("ObservableQuery", () => {
       let updateQuerySpy = jest.fn();
       observable.updateQuery((previous, { complete, previousData }) => {
         updateQuerySpy();
-        expect(previous).toEqual({});
+        expect(previous).toEqual(null);
         expect(complete).toBe(false);
         expect(previousData).toStrictEqual(previous);
 
@@ -3393,6 +3518,7 @@ describe("ObservableQuery", () => {
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
       });
 
@@ -3417,7 +3543,7 @@ describe("ObservableQuery", () => {
 
   it("QueryInfo does not notify for !== but deep-equal results", async () => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query, variables },
@@ -3447,6 +3573,7 @@ describe("ObservableQuery", () => {
       data: dataOne,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     let invalidateCount = 0;
@@ -3493,7 +3620,7 @@ describe("ObservableQuery", () => {
 
   it("ObservableQuery#map respects Symbol.species", async () => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query, variables },
@@ -3510,6 +3637,7 @@ describe("ObservableQuery", () => {
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: dataOne,
+        partial: false,
       });
       return {
         ...result,
@@ -3525,6 +3653,7 @@ describe("ObservableQuery", () => {
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { mapped: true },
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -3598,6 +3727,7 @@ test("regression test for #10587", async () => {
           },
           loading: true,
           networkStatus: 1,
+          partial: false,
         },
       ],
       [
@@ -3610,6 +3740,7 @@ test("regression test for #10587", async () => {
           },
           loading: false,
           networkStatus: 7,
+          partial: false,
         },
       ],
     ],
@@ -3625,6 +3756,7 @@ test("regression test for #10587", async () => {
           },
           loading: true,
           networkStatus: 1,
+          partial: false,
         },
       ],
       [
@@ -3639,6 +3771,7 @@ test("regression test for #10587", async () => {
           // TODO: this should be `true`, but that seems to be a separate bug!
           loading: false,
           networkStatus: 7,
+          partial: false,
         },
       ],
       [
@@ -3652,6 +3785,7 @@ test("regression test for #10587", async () => {
           },
           loading: false,
           networkStatus: 7,
+          partial: false,
         },
       ],
     ],
@@ -3722,10 +3856,11 @@ test("handles changing variables in rapid succession before other request is com
   observable.subscribe(jest.fn());
 
   await waitFor(() => {
-    expect(observable.getCurrentResult(false)).toEqual({
+    expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
       data: { userCount: 10 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -3737,9 +3872,10 @@ test("handles changing variables in rapid succession before other request is com
   await wait(50);
 
   expect(observable.options.variables).toEqual({ department: null });
-  expect(observable.getCurrentResult(false)).toEqual({
+  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,
+    partial: false,
   });
 });

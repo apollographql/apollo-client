@@ -535,10 +535,10 @@ describe("client.refetchQueries", () => {
       onQueryUpdated(obs, diff) {
         if (obs === aObs) {
           expect(diff.complete).toBe(false);
-          expect(diff.result).toEqual({});
+          expect(diff.result).toEqual(null);
         } else if (obs === abObs) {
           expect(diff.complete).toBe(false);
-          expect(diff.result).toEqual({});
+          expect(diff.result).toEqual(null);
         } else {
           throw new Error(
             `unexpected ObservableQuery ${obs.queryId} with name ${obs.queryName}`
@@ -548,8 +548,7 @@ describe("client.refetchQueries", () => {
       },
     });
 
-    sortObjects(activeResults);
-    expect(activeResults).toEqual([{}, {}]);
+    expect(activeResults).toEqual([null, null]);
 
     const stream = new ObservableStream(abObs);
     subs.push(stream as unknown as Subscription);
@@ -823,6 +822,7 @@ describe("client.refetchQueries", () => {
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });
@@ -892,6 +892,7 @@ describe("client.refetchQueries", () => {
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });
@@ -958,6 +959,7 @@ describe("client.refetchQueries", () => {
         "data",
         "loading",
         "networkStatus",
+        "partial",
       ]);
       return result.data;
     });

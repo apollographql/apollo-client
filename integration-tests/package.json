@@ -15,6 +15,7 @@
     "vite-swc",
     "node-standard",
     "node-esm",
+    "wrapping-library",
     "shared"
   ],
   "devDependencies": {

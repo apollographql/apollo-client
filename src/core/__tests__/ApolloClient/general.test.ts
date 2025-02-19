@@ -176,11 +176,18 @@ describe("ApolloClient", () => {
       },
     });
 
-    await expect(stream).toEmitError(
-      new ApolloError({
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({
         graphQLErrors: [{ message: "This is an error message." }],
-      })
-    );
+      }),
+      errors: [{ message: "This is an error message." }],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("empty error array (handle non-spec-compliant server) #156", async () => {
@@ -238,11 +245,18 @@ describe("ApolloClient", () => {
       },
     });
 
-    await expect(stream).toEmitError(
-      new ApolloError({
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({
         graphQLErrors: [null as any],
-      })
-    );
+      }),
+      errors: [null as any],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("handles network errors", async () => {
@@ -259,11 +273,18 @@ describe("ApolloClient", () => {
       error: new Error("Network error"),
     });
 
-    await expect(stream).toEmitError(
-      new ApolloError({
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({
         networkError: new Error("Network error"),
-      })
-    );
+      }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   // Determine how/if we want to change this at all. ObservableQuery no longer
@@ -2300,9 +2321,16 @@ describe("ApolloClient", () => {
     });
     expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
 
-    await expect(stream).toEmitError(
-      new ApolloError({ networkError: new Error("Network error occurred.") })
-    );
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      error: new ApolloError({
+        networkError: new Error("Network error occurred."),
+      }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
     expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
   });
 

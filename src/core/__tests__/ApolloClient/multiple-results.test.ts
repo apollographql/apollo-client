@@ -274,7 +274,7 @@ describe("mutiple results", () => {
     });
   });
 
-  it("closes the observable if an error is set with the none policy", async () => {
+  it("emits error if an error is set with the none policy", async () => {
     const query = gql`
       query LazyLoadLuke {
         people_one(id: 1) {

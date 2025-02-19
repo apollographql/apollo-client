@@ -97,7 +97,7 @@ describe("General functionality", () => {
     });
   });
 
-  it("should cache data for future lookups", () => {
+  it("should cache data for future lookups", async () => {
     const query = gql`
       {
         field @client
@@ -118,18 +118,19 @@ describe("General functionality", () => {
       },
     });
 
-    return client
-      .query({ query })
-      .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ field: 1 });
-        expect(count).toBe(1);
-      })
-      .then(() =>
-        client.query({ query }).then(({ data }) => {
-          expect({ ...data }).toMatchObject({ field: 1 });
-          expect(count).toBe(1);
-        })
-      );
+    {
+      const { data } = await client.query({ query });
+
+      expect(data).toMatchObject({ field: 1 });
+      expect(count).toBe(1);
+    }
+
+    {
+      const { data } = await client.query({ query });
+
+      expect(data).toMatchObject({ field: 1 });
+      expect(count).toBe(1);
+    }
   });
 
   it("should honour `fetchPolicy` settings", () => {

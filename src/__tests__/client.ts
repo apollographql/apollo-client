@@ -1881,7 +1881,10 @@ describe("client", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        obs.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Update this behavior
+      ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 

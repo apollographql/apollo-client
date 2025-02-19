@@ -5,6 +5,7 @@ import { GraphQLError } from "graphql";
 import { ObservableStream } from "../../../testing/internal";
 import { ApolloError } from "../../../errors";
 import { ApolloClient } from "../../ApolloClient";
+import { NetworkStatus } from "../../networkStatus";
 
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {
@@ -314,12 +315,8 @@ describe("mutiple results", () => {
           expect(result.errors).toBeUndefined();
         }
         if (count === 2) {
-          console.log(new Error("result came after an error"));
+          expect(result.error).toBeDefined();
         }
-      },
-      error: (e) => {
-        expect(e).toBeDefined();
-        expect(e.graphQLErrors).toBeDefined();
       },
     });
 
@@ -335,8 +332,15 @@ describe("mutiple results", () => {
 
     link.simulateResult({ error: new Error("defer failed") });
 
-    await expect(stream).toEmitError(
-      new ApolloError({ networkError: new Error("defer failed") })
-    );
+    await expect(stream).toEmitApolloQueryResult({
+      data: initialData,
+      error: new ApolloError({ networkError: new Error("defer failed") }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 });

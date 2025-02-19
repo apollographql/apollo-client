@@ -127,16 +127,19 @@ describe("Link interactions", () => {
     setTimeout(() => {
       one.unsubscribe();
 
-      link.simulateResult({
-        result: {
-          data: {
-            people_one: {
-              name: "Luke Skywalker",
-              friends: [{ name: "R2D2" }],
+      link.simulateResult(
+        {
+          result: {
+            data: {
+              people_one: {
+                name: "Luke Skywalker",
+                friends: [{ name: "R2D2" }],
+              },
             },
           },
         },
-      });
+        true
+      );
       setTimeout(() => {
         four.unsubscribe();
         // final unsubscribe should be called now

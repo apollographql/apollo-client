@@ -1846,9 +1846,18 @@ describe("client", () => {
         partial: false,
       });
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitApolloQueryResult({
+        data: initialData,
+        error: new ApolloError({
+          graphQLErrors: [{ message: "network failure" }],
+        }),
+        errors: [{ message: "network failure" }],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
-      expect(error.message).toMatch(/network failure/);
+      await expect(stream).not.toEmitAnything();
     });
   });
 

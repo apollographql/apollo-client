@@ -3,7 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { map, Observable, of, Subject } from "rxjs";
+import { EmptyError, map, Observable, of, Subject } from "rxjs";
 import { Observer } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -767,7 +767,12 @@ describe("ObservableQuery", () => {
 
       expect(timesFired).toBe(1);
 
-      await observable.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        observable.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Dertermine how we want to handle this. We likely should swallow
+        // the error since standby currently does not emit a value but completes
+        // instead.
+      ).rejects.toThrow(new EmptyError());
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();

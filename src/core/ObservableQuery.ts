@@ -1093,13 +1093,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
-      if (this.concast === concast) {
+      if (this.concast === observable) {
         this.waitForOwnResult = false;
       }
     };
 
     const variables = options.variables && { ...options.variables };
-    const { concast, fromLink } = this.fetch(options, newNetworkStatus, query);
+    const { observable, fromLink } = this.fetch(
+      options,
+      newNetworkStatus,
+      query
+    );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
       next: (result) => {
         if (equal(this.variables, variables)) {
@@ -1134,7 +1138,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     //
     // concast.addObserver(observer);
 
-    return concast.pipe(tap(observer));
+    return observable.pipe(tap(observer));
   }
 
   public reobserve(

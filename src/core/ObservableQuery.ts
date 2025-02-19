@@ -11,7 +11,7 @@ import type {
   OperatorFunction,
 } from "rxjs";
 import type { Observable } from "rxjs";
-import { BehaviorSubject, filter, tap } from "rxjs";
+import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
 import {
   cloneDeep,
   compact,
@@ -1030,7 +1030,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public reobserveAsConcast(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Concast<ApolloQueryResult<TData>> {
+  ): Observable<ApolloQueryResult<TData>> {
     this.isTornDown = false;
 
     const useDisposableConcast =
@@ -1121,20 +1121,20 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
     };
 
-    if (!useDisposableConcast && (fromLink || !this.concast)) {
-      // We use the {add,remove}Observer methods directly to avoid wrapping
-      // observer with an unnecessary SubscriptionObserver object.
-      if (this.concast && this.observer) {
-        this.concast.removeObserver(this.observer);
-      }
+    // if (!useDisposableConcast && (fromLink || !this.concast)) {
+    //   // We use the {add,remove}Observer methods directly to avoid wrapping
+    //   // observer with an unnecessary SubscriptionObserver object.
+    //   if (this.concast && this.observer) {
+    //     this.concast.removeObserver(this.observer);
+    //   }
+    //
+    //   this.concast = concast;
+    //   this.observer = observer;
+    // }
+    //
+    // concast.addObserver(observer);
 
-      this.concast = concast;
-      this.observer = observer;
-    }
-
-    concast.addObserver(observer);
-
-    return concast;
+    return concast.pipe(tap(observer));
   }
 
   public reobserve(
@@ -1142,7 +1142,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newNetworkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return preventUnhandledRejection(
-      this.reobserveAsConcast(newOptions, newNetworkStatus).promise.then(
+      lastValueFrom(this.reobserveAsConcast(newOptions, newNetworkStatus)).then(
         this.maskResult as TODO
       )
     );

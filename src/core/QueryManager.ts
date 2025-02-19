@@ -1382,7 +1382,13 @@ export class QueryManager<TStore> {
 
     // This cancel function needs to be set before the concast is created,
     // in case concast creation synchronously cancels the request.
-    const cleanupCancelFn = () => this.fetchCancelFns.delete(queryId);
+    const cleanupCancelFn = () => {
+      this.fetchCancelFns.delete(queryId);
+      // We need to call `complete` on the subject here otherwise the merged
+      // observable will never complete since it waits for all source
+      // observables to complete before itself completes.
+      subject.complete();
+    };
     this.fetchCancelFns.set(queryId, (reason) => {
       cleanupCancelFn();
       // This delay ensures the concast variable has been initialized.
@@ -1422,13 +1428,7 @@ export class QueryManager<TStore> {
 
     return {
       observable: observable.pipe(
-        tap({
-          error: cleanupCancelFn,
-          complete: () => {
-            cleanupCancelFn();
-            subject.complete();
-          },
-        }),
+        tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
         mergeWith(subject)
       ),
       fromLink: containsDataFromLink,

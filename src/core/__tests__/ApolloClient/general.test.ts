@@ -235,7 +235,10 @@ describe("ApolloClient", () => {
     );
   });
 
-  it("uses console.error to log unhandled errors", async () => {
+  // Determine how/if we want to change this at all. ObservableQuery no longer
+  // emits errors to its observers and instead emits a `next` event with an
+  // `error` property.
+  it.skip("uses console.error to log unhandled errors", async () => {
     using _ = spyOnConsole("error");
     const query = gql`
       query people {

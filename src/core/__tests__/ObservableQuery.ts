@@ -3426,7 +3426,7 @@ describe("ObservableQuery", () => {
       `;
 
       const client = new ApolloClient({
-        link: ApolloLink.empty(),
+        link: new ApolloLink(() => of({ data: {} })),
         cache: new InMemoryCache(),
       });
 

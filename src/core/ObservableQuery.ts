@@ -322,6 +322,7 @@ export class ObservableQuery<
             // from the QueryManager will continue to fire, causing an unnecessary
             // performance hit.
             if (!this.hasObservers()) {
+              // TODO: ???
               this.queryManager.removeQuery(this.queryId);
             }
 

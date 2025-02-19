@@ -2,7 +2,6 @@ import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
 import type { Subscription } from "rxjs";
 import {
-  asyncScheduler,
   catchError,
   concat,
   from,
@@ -11,7 +10,6 @@ import {
   mergeMap,
   mergeWith,
   Observable,
-  observeOn,
   of,
   share,
   shareReplay,
@@ -1675,8 +1673,7 @@ export class QueryManager<TStore> {
       };
 
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        // TODO: Determine why we need the async scheduler here.
-        return of(toResult(data)).pipe(observeOn(asyncScheduler));
+        return of(toResult(data));
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {

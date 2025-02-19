@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const defaults = {
@@ -24,6 +25,7 @@ const defaults = {
         diagnostics: {
           warnOnly: process.env.TEST_ENV !== "ci",
         },
+        tsconfig: join(import.meta.dirname, "..", "tsconfig.tests.json"),
       },
     ],
   },

@@ -593,7 +593,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
    * information to the DevTools.
    * Use at your own risk!
    */
-  public getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+  public declare getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
 }
 
 if (__DEV__) {

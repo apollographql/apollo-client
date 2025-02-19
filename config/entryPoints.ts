@@ -1,6 +1,7 @@
 import path from "path";
 // @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
 import { __dirname } from "./dirname.cts";
+import type { BuildStepOptions } from "./build.ts";
 
 type EntryPoint = {
   dirs: string[];
@@ -68,82 +69,25 @@ export const map = function map<U>(
   return entryPoints.map(callback, context);
 };
 
-export const check = function (id: string, parentId: string) {
-  const resolved = path.resolve(path.dirname(parentId), id);
-  const importedParts = partsAfterDist(resolved);
-
-  if (importedParts) {
-    const entryPointIndex = lengthOfLongestEntryPoint(importedParts);
-    if (entryPointIndex === importedParts.length) {
-      return true;
-    }
-
-    if (entryPointIndex >= 0) {
-      const parentParts = partsAfterDist(parentId);
-      const parentEntryPointIndex = lengthOfLongestEntryPoint(parentParts);
-      const sameEntryPoint =
-        entryPointIndex === parentEntryPointIndex &&
-        arraysEqualUpTo(importedParts, parentParts, entryPointIndex);
-
-      // If the imported ID and the parent ID have the same longest entry
-      // point prefix, then this import is safely confined within that
-      // entry point. Returning false lets Rollup know this import is not
-      // external, and can be bundled into the CJS bundle that we build
-      // for this shared entry point.
-      if (sameEntryPoint) {
-        return false;
-      }
-
-      console.warn(
-        `Risky cross-entry-point nested import of ${id} in ${partsAfterDist(
-          parentId
-        ).join("/")}`
-      );
-    }
-  }
-
-  return false;
-};
-
-function partsAfterDist(id: string): string[] {
-  const parts = id.split(path.sep);
-  const distIndex = parts.lastIndexOf("dist");
-  if (/^index.jsx?$/.test(parts[parts.length - 1])) {
-    parts.pop();
-  }
-  if (distIndex >= 0) {
-    return parts.slice(distIndex + 1);
-  }
-  return [];
-}
-
-function lengthOfLongestEntryPoint(parts: string[]) {
-  let node = lookupTrie;
-  let longest = -1;
-  for (let i = 0; node && i < parts.length; ++i) {
-    if (node.isEntry) longest = i;
-    node = node.dirs && node.dirs[parts[i]];
-  }
-  if (node && node.isEntry) {
-    return parts.length;
-  }
-  return longest;
-}
-
-function arraysEqualUpTo(a: unknown[], b: unknown[], end: number) {
-  for (let i = 0; i < end; ++i) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
-export const buildDocEntryPoints = () => {
-  const dist = path.resolve(__dirname, "../dist");
+export const buildDocEntryPoints = (
+  options: Pick<BuildStepOptions, "rootDir" | "targetDir" | "jsExt">
+) => {
   const entryPoints = map((entryPoint) => {
-    return `export * from "${dist}/${entryPoint.dirs.join("/")}/index.d.ts";`;
+    return `export * from "${path.join(
+      options.rootDir,
+      options.targetDir,
+      ...entryPoint.dirs,
+      `index.${options.jsExt}`
+    )}";`;
   });
   entryPoints.push(
-    `export * from "${dist}/react/types/types.documentation.ts";`
+    `export * from "${path.join(
+      options.rootDir,
+      options.targetDir,
+      "react",
+      "types",
+      `types.documentation.${options.jsExt}`
+    )}";`
   );
   return entryPoints.join("\n");
 };

@@ -25,11 +25,13 @@
 
 // @ts-ignore
 import { buildDocEntryPoints } from "./entryPoints.ts";
-// @ts-ignore
-import { Project, ts, printNode, Node } from "ts-morph";
 import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
 import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
 import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+
+import { applyRecast } from "./helpers.ts";
+import { visit } from "recast";
+import type { BuildStep, BuildStepOptions } from "./build.ts";
 
 import fs from "node:fs";
 import path from "node:path";
@@ -39,14 +41,14 @@ import {
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
 
-export function inlineInheritDoc() {
+export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(
     "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
   );
 
-  const model = loadApiModel();
-  processComments(model);
-}
+  const model = loadApiModel(options);
+  await processComments(model, options);
+};
 
 function getCommentFor(canonicalReference: string, model: ApiModel) {
   const apiItem = model.resolveDeclarationReference(
@@ -71,11 +73,11 @@ function getCommentFor(canonicalReference: string, model: ApiModel) {
   }
 }
 
-function loadApiModel() {
+function loadApiModel(options: BuildStepOptions) {
   const tempDir = fs.mkdtempSync("api-model");
   try {
     const entryPointFile = path.join(tempDir, "entry.d.ts");
-    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
+    fs.writeFileSync(entryPointFile, buildDocEntryPoints(options));
 
     // Load and parse the api-extractor.json file
     const configObjectFullPath = path.resolve(
@@ -134,45 +136,52 @@ function loadApiModel() {
   }
 }
 
-function processComments(model: ApiModel) {
+function processComments(model: ApiModel, options: BuildStepOptions) {
   const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
 
-  const project = new Project({
-    tsConfigFilePath: "tsconfig.json",
-    skipAddingFilesFromTsConfig: true,
-  });
+  return applyRecast({
+    glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
+    cwd: options.targetDir,
+    transformStep({ ast, sourceName }) {
+      return {
+        ast: visit(ast, {
+          visitNode(path) {
+            this.traverse(path);
+            const node = path.node;
 
-  const sourceFiles = project.addSourceFilesAtPaths("dist/**/*.d.ts");
-  for (const file of sourceFiles) {
-    file.forEachDescendant((node) => {
-      if (
-        Node.isPropertySignature(node) ||
-        Node.isMethodSignature(node) ||
-        Node.isMethodDeclaration(node) ||
-        Node.isCallSignatureDeclaration(node) ||
-        Node.isInterfaceDeclaration(node)
-      ) {
-        const docsNode = node.getJsDocs()[0];
-        if (!docsNode) return;
-        const oldText = docsNode.getInnerText();
-        let newText = oldText;
-        while (inheritDocRegex.test(newText)) {
-          newText = newText.replace(
-            inheritDocRegex,
-            (_, canonicalReference) => {
-              return getCommentFor(canonicalReference, model) || "";
+            if (!node.comments) {
+              return;
             }
-          );
-        }
-        if (oldText !== newText) {
-          docsNode.replaceWithText(frameComment(newText)) as any;
-        }
-      }
-    });
-    file.saveSync();
-  }
+
+            for (const comment of node.comments) {
+              if (comment.type === "CommentBlock") {
+                let newText = comment.value;
+                while (inheritDocRegex.test(newText)) {
+                  newText = newText.replace(
+                    inheritDocRegex,
+                    (_, canonicalReference) => {
+                      return getCommentFor(canonicalReference, model) || "";
+                    }
+                  );
+                }
+                if (comment.value !== newText) {
+                  comment.value = frameComment(newText);
+                }
+              }
+            }
+          },
+        }),
+      };
+    },
+  });
 }
 
 function frameComment(text: string) {
-  return `/**\n * ${text.trim().replace(/\n/g, "\n * ")}\n */`;
+  const framed = text
+    .split("\n")
+    .map((t) => t.trim())
+    .map((t) => (!t.startsWith("*") ? "* " + t : t))
+    .join("\n")
+    .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
+  return `*\n${framed}\n`;
 }

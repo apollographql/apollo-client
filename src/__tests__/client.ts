@@ -2482,9 +2482,14 @@ describe("client", () => {
 
     const stream = new ObservableStream(handle);
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("Uh oh!");
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({ networkError: new Error("Uh oh!") }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
   });
 
   // TODO: This test uses `resetLastResults` which no longer works since state

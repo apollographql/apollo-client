@@ -131,13 +131,24 @@ export class ObservableQuery<
       tap({
         subscribe: () => {
           if (!this.subject.observed) {
-            this.reobserve();
-            // TODO: See if we can rework updatePolling to better handle this.
-            // reobserve calls updatePolling but this `subscribe` callback is
-            // called before the subject is subscribed to so `updatePolling`
-            // can't accurately detect if there is an active subscription.
-            // Calling it again here ensures that it can detect if it can poll
-            setTimeout(() => this.updatePolling());
+            setTimeout(() => {
+              // We kick off the reobserve process in a setTimeout in case the
+              // values emitted from the link chain are done synchronously.
+              // Without this, its possible for the link observable to start
+              // emitting values before this.subject is fully subscribed, in
+              // which case events are dropped entirely.
+              //
+              // There is probably a better way to do this, but will explore
+              // this eventually.
+              this.reobserve();
+
+              // TODO: See if we can rework updatePolling to better handle this.
+              // reobserve calls updatePolling but this `subscribe` callback is
+              // called before the subject is subscribed to so `updatePolling`
+              // can't accurately detect if there is an active subscription.
+              // Calling it again here ensures that it can detect if it can poll
+              this.updatePolling();
+            });
           }
         },
         unsubscribe: () => {

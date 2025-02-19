@@ -32,13 +32,38 @@ import { ApolloError } from "../../../errors";
 // testing utils
 import { wait } from "../../../testing/core";
 import { ApolloClient, ApolloQueryResult } from "../../../core";
-import { mockFetchQuery } from "../ObservableQuery";
 import { addTypenameToDocument, print } from "../../../utilities";
 import {
   mockDeferStream,
   ObservableStream,
   spyOnConsole,
 } from "../../../testing/internal";
+
+const mockFetchQuery = (queryManager: QueryManager<any>) => {
+  const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
+  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
+    queryManager as any
+  ).fetchQueryByPolicy;
+
+  const mock = <
+    T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy,
+  >(
+    original: T
+  ) =>
+    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
+      // @ts-expect-error
+      return original.apply(queryManager, arguments);
+    });
+
+  const mocks = {
+    fetchConcastWithInfo: mock(fetchConcastWithInfo),
+    fetchQueryByPolicy: mock(fetchQueryByPolicy),
+  };
+
+  Object.assign(queryManager, mocks);
+
+  return mocks;
+};
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

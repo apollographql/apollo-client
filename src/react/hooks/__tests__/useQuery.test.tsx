@@ -10857,6 +10857,7 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
       error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      errors: [graphQLError],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -10881,6 +10882,7 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
       error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      errors: [graphQLError],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,

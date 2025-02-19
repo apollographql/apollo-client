@@ -2518,15 +2518,18 @@ describe("ApolloClient", () => {
       link: new ApolloLink(
         (operation) =>
           new Observable((observer) => {
-            switch (operation.operationName) {
-              case "A":
-                observer.next({ data: { info: { a: "ay" } } });
-                break;
-              case "B":
-                observer.next({ data: { info: { b: "bee" } } });
-                break;
-            }
-            observer.complete!();
+            // Deliver the results async so we can observe the loading state
+            setTimeout(() => {
+              switch (operation.operationName) {
+                case "A":
+                  observer.next({ data: { info: { a: "ay" } } });
+                  break;
+                case "B":
+                  observer.next({ data: { info: { b: "bee" } } });
+                  break;
+              }
+              observer.complete!();
+            });
           })
       ),
     });

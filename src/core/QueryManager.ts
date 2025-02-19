@@ -1329,7 +1329,7 @@ export class QueryManager<TStore> {
       // WatchQueryOptions object.
       normalized.variables = variables;
 
-      const sourcesWithInfo = this.fetchQueryByPolicy<TData, TVars>(
+      const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
         networkStatus
@@ -1347,7 +1347,7 @@ export class QueryManager<TStore> {
         );
       }
 
-      return sourcesWithInfo;
+      return observableWithInfo;
     };
 
     // This cancel function needs to be set before the concast is created,

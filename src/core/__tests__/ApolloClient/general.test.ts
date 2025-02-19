@@ -85,11 +85,18 @@ describe("ApolloClient", () => {
       },
     });
 
-    await expect(stream).toEmitError(
-      new ApolloError({
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({
         graphQLErrors: [{ message: "This is an error message." }],
-      })
-    );
+      }),
+      errors: [{ message: "This is an error message." }],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("handles GraphQL errors as data", async () => {

@@ -110,6 +110,7 @@ export class ObservableQuery<
   // When this.concast is defined, this.observer is the Observer currently
   // subscribed to that Concast.
   private concast?: Concast<ApolloQueryResult<TData>>;
+  private subscription?: Subscription;
   private observer?: Partial<Observer<ApolloQueryResult<TData>>>;
 
   private pollingInfo?: {
@@ -1124,20 +1125,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
     };
 
-    // if (!useDisposableConcast && (fromLink || !this.concast)) {
-    //   // We use the {add,remove}Observer methods directly to avoid wrapping
-    //   // observer with an unnecessary SubscriptionObserver object.
-    //   if (this.concast && this.observer) {
-    //     this.concast.removeObserver(this.observer);
-    //   }
-    //
-    //   this.concast = concast;
-    //   this.observer = observer;
-    // }
-    //
-    // concast.addObserver(observer);
+    if (!useDisposableConcast && (fromLink || !this.subscription)) {
+      if (this.subscription) {
+        this.subscription.unsubscribe();
+      }
 
-    return observable.pipe(tap(observer));
+      this.subscription = observable.subscribe(observer);
+    } else {
+      observable.subscribe(observer);
+    }
+
+    return observable;
   }
 
   public reobserve(
@@ -1236,6 +1234,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.concast.removeObserver(this.observer);
       delete this.concast;
       delete this.observer;
+    }
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+      delete this.subscription;
     }
 
     this.stopPolling();

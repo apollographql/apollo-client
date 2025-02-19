@@ -1410,7 +1410,17 @@ export class QueryManager<TStore> {
       observable: observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
         mergeWith(subject),
-        share()
+        share(),
+        // We use the asapScheduler here to allow synchronous results emitted
+        // from the link to be delivered asynchronously. Much of the client
+        // assumes this behavior from using zen-observable which delivered
+        // results async.
+        //
+        // Eventually it would be nice to be able to deliver these events sync,
+        // but we'll need to do a bit of rework from how this observable
+        // interacts with the observable used to deliver notifications in
+        // ObservableQuery for that to happen.
+        observeOn(asapScheduler)
       ),
       fromLink: containsDataFromLink,
     };
@@ -1675,16 +1685,7 @@ export class QueryManager<TStore> {
       };
 
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        // We use the asapScheduler here to allow synchronous results emitted
-        // from the link to be delivered asynchronously. Much of the client
-        // assumes this behavior from using zen-observable which delviered
-        // reuslts async.
-        //
-        // Eventually it would be nice to be able to deliver these events sync,
-        // but we'll need to do a bit of rework from how this observable
-        // interacts with the observable used to delvier notifications in
-        // ObservableQuery for that to happen.
-        return of(toResult(data)).pipe(observeOn(asapScheduler));
+        return of(toResult(data));
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {

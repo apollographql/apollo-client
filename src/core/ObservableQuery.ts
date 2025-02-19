@@ -1136,6 +1136,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return observable;
   }
 
+  // TODO: catch `EmptyError` and rethrow as network error if `complete`
+  // notification is emitted without a value.
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus

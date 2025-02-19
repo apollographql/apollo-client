@@ -14,6 +14,7 @@ import { toEmitValue } from "./toEmitValue.js";
 import { toEmitValueStrict } from "./toEmitValueStrict.js";
 import { toEqualApolloQueryResult } from "./toEqualApolloQueryResult.js";
 import { toEqualFetchResult } from "./toEqualFetchResult.js";
+import { toEqualLazyQueryResult } from "./toEqualLazyQueryResult.js";
 import { toEqualQueryResult } from "./toEqualQueryResult.js";
 
 expect.extend({
@@ -28,6 +29,7 @@ expect.extend({
   toEmitValueStrict,
   toEqualApolloQueryResult,
   toEqualFetchResult,
+  toEqualLazyQueryResult,
   toEqualQueryResult,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,

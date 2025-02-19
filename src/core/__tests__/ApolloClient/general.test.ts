@@ -2801,7 +2801,14 @@ describe("ApolloClient", () => {
     });
 
     await expect(handle.refetch()).rejects.toThrow(expectedError);
-    await expect(stream).toEmitError(expectedError);
+    await expect(stream).toEmitApolloQueryResult({
+      data: firstResult.data,
+      error: expectedError,
+      errors: [{ message: expectedError.graphQLErrors[0].message }],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
   });
 
   it("does not return incomplete data when two queries for the same item are executed", async () => {
@@ -3324,9 +3331,14 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      await expect(stream).toEmitError(
-        new ApolloError({ networkError: new Error("Network error") })
-      );
+      await expect(stream).toEmitApolloQueryResult({
+        data: data1,
+        error: new ApolloError({ networkError: new Error("Network error") }),
+        errors: [],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
       stream.unsubscribe();
 
@@ -6541,9 +6553,14 @@ describe("ApolloClient", () => {
           isRefetchErrorCaught = true;
         });
 
-      await expect(stream).toEmitError(
-        new ApolloError({ networkError: refetchError })
-      );
+      await expect(stream).toEmitApolloQueryResult({
+        data: queryData,
+        error: new ApolloError({ networkError: refetchError }),
+        errors: [],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
       expect(isRefetchErrorCaught).toBe(true);
     });
   });

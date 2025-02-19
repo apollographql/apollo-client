@@ -13,6 +13,7 @@ import {
   Observable,
   observeOn,
   of,
+  share,
   shareReplay,
   Subject,
   switchMap,
@@ -1406,7 +1407,8 @@ export class QueryManager<TStore> {
     return {
       observable: observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(subject)
+        mergeWith(subject),
+        share()
       ),
       fromLink: containsDataFromLink,
     };

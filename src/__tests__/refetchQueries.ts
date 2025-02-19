@@ -444,7 +444,7 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all active queries when options.include === "active"', async () => {
-    expect.assertions(14);
+    expect.assertions(15);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 

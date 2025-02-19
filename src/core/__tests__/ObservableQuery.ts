@@ -448,7 +448,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("if query is refetched, and an error is returned, no other observer callbacks will be called", async () => {
+    it("if query is refetched, and an error is returned, can refetch again with successful result", async () => {
       const client = new ApolloClient({
         cache: new InMemoryCache(),
         link: new MockLink([
@@ -480,11 +480,23 @@ describe("ObservableQuery", () => {
         new ApolloError({ graphQLErrors: [error] })
       );
 
-      await expect(stream).toEmitError(
-        new ApolloError({ graphQLErrors: [error] })
-      );
+      await expect(stream).toEmitApolloQueryResult({
+        data: dataOne,
+        error: new ApolloError({ graphQLErrors: [error] }),
+        errors: [error],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
       await expect(observable.refetch()).resolves.toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,

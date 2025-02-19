@@ -19,7 +19,7 @@ import type { Cache, ApolloCache } from "../cache/index.js";
 import { canonicalStringify } from "../cache/index.js";
 import { onAnyEvent } from "../utilities/internal/index.js";
 
-import type { ConcastSourcesArray, DeepPartial } from "../utilities/index.js";
+import type { DeepPartial } from "../utilities/index.js";
 import type { Subscription } from "rxjs";
 import {
   Observable,
@@ -1671,36 +1671,42 @@ export class QueryManager<TStore> {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        const result: ApolloQueryResult<TData> = {
+      const toResult = (
+        data: TData | DeepPartial<TData> | undefined
+      ): ApolloQueryResult<TData> => {
+        return {
           // TODO: Handle partial data
           data: data as TData | undefined,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
           partial: !diff.complete,
         };
+      };
 
+      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
         // TODO: Determine why we need the async scheduler here.
-        return of(result).pipe(observeOn(asyncScheduler));
+        return of(toResult(data)).pipe(observeOn(asyncScheduler));
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {
-        return this.localState
-          .runResolvers({
-            document: query,
-            // TODO: Update remoteResult to handle `null`. In v3 the `if`
-            // statement contained a check against `data`, but this value was
-            // always `{}` if nothing was in the cache, which meant the check
-            // above always succeeded when there were forced resolvers. Now that
-            // `data` is nullable, this `remoteResult` needs to be an empty
-            // object. Ideally we can pass in `null` here and the resolvers
-            // would be able to handle this the same way.
-            remoteResult: { data: data || ({} as any) },
-            context,
-            variables,
-            onlyRunForcedResolvers: true,
-          })
-          .then((resolved) => fromData(resolved.data || void 0));
+        return from(
+          this.localState
+            .runResolvers({
+              document: query,
+              // TODO: Update remoteResult to handle `null`. In v3 the `if`
+              // statement contained a check against `data`, but this value was
+              // always `{}` if nothing was in the cache, which meant the check
+              // above always succeeded when there were forced resolvers. Now that
+              // `data` is nullable, this `remoteResult` needs to be an empty
+              // object. Ideally we can pass in `null` here and the resolvers
+              // would be able to handle this the same way.
+              remoteResult: { data: data || ({} as any) },
+              context,
+              variables,
+              onlyRunForcedResolvers: true,
+            })
+            .then((resolved) => toResult(resolved.data || void 0))
+        );
       }
 
       // Resolves https://github.com/apollographql/apollo-client/issues/10317.
@@ -1836,7 +1842,7 @@ interface FetchConcastInfo {
   fromLink: boolean;
 }
 interface SourcesAndInfo<TData> extends FetchConcastInfo {
-  sources: ConcastSourcesArray<ApolloQueryResult<TData>>;
+  sources: Array<Observable<ApolloQueryResult<TData>>>;
 }
 interface ConcastAndInfo<TData> extends FetchConcastInfo {
   concast: Concast<ApolloQueryResult<TData>>;

@@ -4,6 +4,7 @@ import type { Subscription } from "rxjs";
 import {
   asyncScheduler,
   catchError,
+  concat,
   from,
   map,
   mergeMap,
@@ -11,6 +12,7 @@ import {
   observeOn,
   of,
   shareReplay,
+  switchMap,
 } from "rxjs";
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
@@ -1340,9 +1342,6 @@ export class QueryManager<TStore> {
         // If we're in standby, postpone advancing options.fetchPolicy using
         // applyNextFetchPolicy.
         normalized.fetchPolicy !== "standby" &&
-        // The "standby" policy currently returns [] from fetchQueryByPolicy, so
-        // this is another way to detect when nothing was done/fetched.
-        sourcesWithInfo.sources.length > 0 &&
         queryInfo.observableQuery
       ) {
         queryInfo.observableQuery["applyNextFetchPolicy"](
@@ -1373,16 +1372,15 @@ export class QueryManager<TStore> {
     // for backwards compatibility. TODO This code could be simpler if
     // we deprecated and removed LocalState.
     if (this.getDocumentInfo(normalized.query).hasClientExports) {
-      concast = new Concast(
-        this.localState
-          .addExportedVariables(
+      concast = new Concast([
+        from(
+          this.localState.addExportedVariables(
             normalized.query,
             normalized.variables,
             normalized.context
           )
-          .then(fromVariables)
-          .then((sourcesWithInfo) => sourcesWithInfo.sources)
-      );
+        ).pipe(switchMap((variables) => fromVariables(variables).observable)),
+      ]);
       // there is just no way we can synchronously get the *right* value here,
       // so we will assume `true`, which is the behaviour before the bug fix in
       // #10597. This means that bug is not fixed in that case, and is probably
@@ -1392,7 +1390,7 @@ export class QueryManager<TStore> {
     } else {
       const sourcesWithInfo = fromVariables(normalized.variables);
       containsDataFromLink = sourcesWithInfo.fromLink;
-      concast = new Concast(sourcesWithInfo.sources);
+      concast = new Concast([sourcesWithInfo.observable]);
     }
 
     concast.promise.then(cleanupCancelFn, cleanupCancelFn);
@@ -1628,7 +1626,7 @@ export class QueryManager<TStore> {
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus: NetworkStatus
-  ): SourcesAndInfo<TData> {
+  ): ObservableAndInfo<TData> {
     const oldNetworkStatus = queryInfo.networkStatus;
 
     queryInfo.init({
@@ -1736,18 +1734,18 @@ export class QueryManager<TStore> {
         if (diff.complete) {
           return {
             fromLink: false,
-            sources: [resultsFromCache(diff, queryInfo.markReady())],
+            observable: resultsFromCache(diff, queryInfo.markReady()),
           };
         }
 
         if (returnPartialData || shouldNotify) {
           return {
             fromLink: true,
-            sources: [resultsFromCache(diff), resultsFromLink()],
+            observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
-        return { fromLink: true, sources: [resultsFromLink()] };
+        return { fromLink: true, observable: resultsFromLink() };
       }
 
       case "cache-and-network": {
@@ -1756,28 +1754,33 @@ export class QueryManager<TStore> {
         if (diff.complete || returnPartialData || shouldNotify) {
           return {
             fromLink: true,
-            sources: [resultsFromCache(diff), resultsFromLink()],
+            observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
-        return { fromLink: true, sources: [resultsFromLink()] };
+        return { fromLink: true, observable: resultsFromLink() };
       }
 
       case "cache-only":
         return {
           fromLink: false,
-          sources: [resultsFromCache(readCache(), queryInfo.markReady())],
+          observable: concat(
+            resultsFromCache(readCache(), queryInfo.markReady())
+          ),
         };
 
       case "network-only":
         if (shouldNotify) {
           return {
             fromLink: true,
-            sources: [resultsFromCache(readCache()), resultsFromLink()],
+            observable: concat(
+              resultsFromCache(readCache()),
+              resultsFromLink()
+            ),
           };
         }
 
-        return { fromLink: true, sources: [resultsFromLink()] };
+        return { fromLink: true, observable: resultsFromLink() };
 
       case "no-cache":
         if (shouldNotify) {
@@ -1786,14 +1789,17 @@ export class QueryManager<TStore> {
             // Note that queryInfo.getDiff() for no-cache queries does not call
             // cache.diff, but instead returns a { complete: false } stub result
             // when there is no queryInfo.diff already defined.
-            sources: [resultsFromCache(queryInfo.getDiff()), resultsFromLink()],
+            observable: concat(
+              resultsFromCache(queryInfo.getDiff()),
+              resultsFromLink()
+            ),
           };
         }
 
-        return { fromLink: true, sources: [resultsFromLink()] };
+        return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":
-        return { fromLink: false, sources: [] };
+        return { fromLink: false, observable: of() };
     }
   }
 
@@ -1819,8 +1825,8 @@ interface FetchConcastInfo {
   // Metadata properties that can be returned in addition to the Concast.
   fromLink: boolean;
 }
-export interface SourcesAndInfo<TData> extends FetchConcastInfo {
-  sources: Array<Observable<ApolloQueryResult<TData>>>;
+interface ObservableAndInfo<TData> extends FetchConcastInfo {
+  observable: Observable<ApolloQueryResult<TData>>;
 }
 export interface ConcastAndInfo<TData> extends FetchConcastInfo {
   concast: Concast<ApolloQueryResult<TData>>;

@@ -13,7 +13,6 @@ import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import { ApolloError, isApolloError } from "@apollo/client/errors";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { Concast } from "@apollo/client/utilities";
 import {
   cloneDeep,
   compact,
@@ -107,12 +106,8 @@ export class ObservableQuery<
 
   private queryInfo: QueryInfo;
 
-  // When this.concast is defined, this.observer is the Observer currently
-  // subscribed to that Concast.
-  private concast?: Concast<ApolloQueryResult<TData>>;
   private subscription?: Subscription;
   private obs?: Observable<ApolloQueryResult<TData>>;
-  private observer?: Partial<Observer<ApolloQueryResult<TData>>>;
 
   private pollingInfo?: {
     interval: number;
@@ -1232,11 +1227,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    if (this.concast && this.observer) {
-      this.concast.removeObserver(this.observer);
-      delete this.concast;
-      delete this.observer;
-    }
     if (this.obs && this.subscription) {
       this.subscription.unsubscribe();
       delete this.obs;

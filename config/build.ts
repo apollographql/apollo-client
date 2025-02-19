@@ -10,6 +10,7 @@ import { prepareDist } from "./prepareDist.ts";
 import { postprocessDist } from "./postprocessDist.ts";
 import { verifySourceMaps } from "./verifySourceMaps.ts";
 import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
+import { babelTransform } from "./babel.ts";
 
 export interface BuildStepOptions {
   type: "esm" | "cjs";
@@ -31,6 +32,7 @@ $.verbose = true;
 
 const buildSteps = {
   typescript: compileTs,
+  babelTransform,
   updateVersion,
   inlineInheritDoc,
   processInvariants,

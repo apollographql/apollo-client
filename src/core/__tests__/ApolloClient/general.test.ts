@@ -2514,13 +2514,13 @@ describe("ApolloClient", () => {
       cache,
       link: new ApolloLink(
         (operation) =>
-          new Observable((observer: Observer<FetchResult>) => {
+          new Observable((observer) => {
             switch (operation.operationName) {
               case "A":
-                observer.next!({ data: { info: { a: "ay" } } });
+                observer.next({ data: { info: { a: "ay" } } });
                 break;
               case "B":
-                observer.next!({ data: { info: { b: "bee" } } });
+                observer.next({ data: { info: { b: "bee" } } });
                 break;
             }
             observer.complete!();

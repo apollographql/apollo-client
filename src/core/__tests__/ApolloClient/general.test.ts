@@ -2561,8 +2561,10 @@ describe("ApolloClient", () => {
       link: new ApolloLink(
         () =>
           new Observable((observer: Observer<FetchResult>) => {
-            observer.next!({ data: { info: { c: "see" } } });
-            observer.complete!();
+            setTimeout(() => {
+              observer.next!({ data: { info: { c: "see" } } });
+              observer.complete!();
+            });
           })
       ),
     });

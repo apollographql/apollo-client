@@ -1,5 +1,4 @@
 // externals
-import { waitFor } from "@testing-library/react";
 import { DocumentNode, GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { from } from "rxjs";
@@ -459,9 +458,78 @@ describe("ApolloClient", () => {
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });
 
-  // Demonstrate that an initial request that finishes after the changed
-  // variables request does not interfere with the result.
-  test.todo("handles race conditions when changing variables");
+  test("handles race conditions when changing variables", async () => {
+    const query = gql`
+      query GetPerson($id: ID!) {
+        person(id: $id) {
+          id
+          name
+        }
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query, variables: { id: 1 } },
+        result: {
+          data: {
+            person: {
+              __typename: "Person",
+              id: 1,
+              name: "Luke Skywalker",
+            },
+          },
+        },
+        // Ensure the first request takes longer than the 2nd to execute
+        delay: 50,
+      },
+      {
+        request: { query, variables: { id: 2 } },
+        result: {
+          data: {
+            person: {
+              __typename: "Person",
+              id: 2,
+              name: "Leia Skywalker",
+            },
+          },
+        },
+        delay: 10,
+      },
+    ];
+
+    const client = new ApolloClient({
+      link: new MockLink(mocks),
+      cache: new InMemoryCache(),
+    });
+
+    const observableQuery = client.watchQuery({
+      query,
+      variables: { id: 1 },
+      fetchPolicy: "network-only",
+    });
+
+    const stream = new ObservableStream(observableQuery);
+
+    // Kick off another request while the other is still pending
+    await wait(10);
+    void observableQuery.reobserve({ variables: { id: 2 } });
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
+        person: {
+          __typename: "Person",
+          id: 2,
+          name: "Leia Skywalker",
+        },
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
 
   // TODO: Determine if we should remove this test
   it.skip("supports interoperability with other Observable implementations like RxJS", async () => {

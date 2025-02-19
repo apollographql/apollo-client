@@ -28,8 +28,6 @@ import {
   from,
   mergeMap,
   catchError,
-  observeOn,
-  asyncScheduler,
   shareReplay,
   concat,
   switchMap,
@@ -1672,8 +1670,7 @@ export class QueryManager<TStore> {
       };
 
       const fromData = (data: TData | DeepPartial<TData> | undefined) => {
-        // TODO: Determine why we need the async scheduler here.
-        return of(toResult(data)).pipe(observeOn(asyncScheduler));
+        return of(toResult(data));
       };
 
       if (this.getDocumentInfo(query).hasForcedResolvers) {

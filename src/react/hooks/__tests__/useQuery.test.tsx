@@ -10210,6 +10210,13 @@ describe("useQuery Hook", () => {
             },
           ],
         }),
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -10398,7 +10405,7 @@ describe("useQuery Hook", () => {
         ],
         called: true,
         loading: false,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         previousData: {
           hero: {
             heroFriends: [
@@ -10802,6 +10809,7 @@ describe("useQuery Hook", () => {
           "Store reset while query was in flight (not completed in link chain)"
         ),
       }),
+      errors: [],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -11881,7 +11889,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: "Couldn't get name" }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });

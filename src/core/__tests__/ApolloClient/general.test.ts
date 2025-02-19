@@ -458,6 +458,10 @@ describe("ApolloClient", () => {
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(2);
   });
 
+  // Demonstrate that an initial request that finishes after the changed
+  // variables request does not interfere with the result.
+  test.todo("handles race conditions when changing variables");
+
   // TODO: Determine if we should remove this test
   it.skip("supports interoperability with other Observable implementations like RxJS", async () => {
     const expResult = {

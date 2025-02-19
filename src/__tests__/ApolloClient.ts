@@ -2809,8 +2809,8 @@ describe("ApolloClient", () => {
       invariantDebugSpy.mockRestore();
     });
 
-    it("should catch refetchQueries error when not caught explicitly", (done) => {
-      expect.assertions(2);
+    it("should emit error from refetchQueries when not caught explicitly", (done) => {
+      expect.assertions(3);
       const linkFn = jest
         .fn(
           () =>
@@ -2822,10 +2822,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          // TODO: This test fails without passing an argument to `of`.
-          // Investigate further to understand the impact here and if we need to
-          // do some more in the client to safeguard against this kind of thing.
-          return of({ data: null });
+          return of();
         });
 
       const client = new ApolloClient({
@@ -2846,12 +2843,7 @@ describe("ApolloClient", () => {
         fetchPolicy: "network-only",
       });
 
-      observable.subscribe({
-        // TODO: The test fails without this line which means RxJS must do some
-        // type of assertion where it throws when this is not there. Dig into
-        // this a bit further to see what's going on.
-        error: () => {},
-      });
+      observable.subscribe({});
 
       function refetchQueries() {
         const result = client.refetchQueries({
@@ -2859,7 +2851,18 @@ describe("ApolloClient", () => {
         });
 
         result.queries[0].subscribe({
-          error() {
+          next(result) {
+            // Skip checking initial result
+            if (!result.error) {
+              return;
+            }
+
+            const expectedError = new ApolloError({
+              networkError: new Error("refetch failed"),
+            });
+
+            expect(result.error).toEqual(expectedError);
+
             setTimeout(() => {
               expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
               expect(invariantDebugSpy).toHaveBeenCalledWith(

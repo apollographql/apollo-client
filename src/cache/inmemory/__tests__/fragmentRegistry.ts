@@ -63,13 +63,16 @@ describe("FragmentRegistry", () => {
               "SourceFragment",
             ]);
 
-            observer.next({
-              data: {
-                source: "link",
-              },
-            });
+            // Emit value async so we can observe the loading state
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  source: "link",
+                },
+              });
 
-            observer.complete();
+              observer.complete();
+            });
           })
       ),
     });

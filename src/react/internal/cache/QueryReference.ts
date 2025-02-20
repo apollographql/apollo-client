@@ -428,9 +428,14 @@ export class InternalQueryReference<TData = unknown> {
           result.data = this.result.data;
         }
 
-        this.result = result;
-        this.promise = createFulfilledPromise(result);
-        this.deliver(this.promise);
+        if (result.error) {
+          this.promise = createRejectedPromise(result.error);
+          this.deliver(this.promise);
+        } else {
+          this.result = result;
+          this.promise = createFulfilledPromise(result);
+          this.deliver(this.promise);
+        }
         break;
       }
     }

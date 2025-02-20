@@ -3323,9 +3323,11 @@ describe("useSuspenseQuery", () => {
     // updated value.
     await wait(0);
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated hello" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated hello" },
+      });
     });
 
     await waitFor(() => {

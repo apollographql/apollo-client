@@ -8,5 +8,6 @@
     "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["./**/*.ts"]
 }

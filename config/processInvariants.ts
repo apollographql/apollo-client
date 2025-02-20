@@ -141,6 +141,7 @@ export async function processInvariants(options: BuildStepOptions) {
     ast: recast.types.ASTNode;
     relativeSourcePath: string;
   }) {
+    let fileRequiresDevImport = false;
     if (
       relativeSourcePath !==
       osPathJoin(`utilities`, `globals`, `invariantWrappers.${options.jsExt}`)
@@ -207,40 +208,13 @@ export async function processInvariants(options: BuildStepOptions) {
             if (isDEVLogicalAnd(path.parent.node)) {
               return newNode;
             }
+            fileRequiresDevImport = true;
             return b.logicalExpression("&&", makeDEVExpr(), newNode);
           }
         },
       });
 
-    if (
-      ![
-        osPathJoin(
-          `utilities`,
-          `globals`,
-          `environment`,
-          `index.${options.jsExt}`
-        ),
-        osPathJoin(`utilities`, `globals`, `index.${options.jsExt}`),
-        osPathJoin("config", "jest", `setup.js`),
-      ].includes(relativeSourcePath)
-    )
-      recast.visit(ast, {
-        visitIdentifier(path) {
-          this.traverse(path);
-          const node = path.node;
-          if (isDEVExpr(node)) {
-            return b.binaryExpression(
-              "!==",
-              b.memberExpression(
-                b.identifier("globalThis"),
-                b.identifier("__DEV__")
-              ),
-              b.literal(false)
-            );
-          }
-          return node;
-        },
-      });
+    if (fileRequiresDevImport) addDevImport(ast, options.type);
 
     return { ast };
   }
@@ -321,5 +295,89 @@ export async function processInvariants(options: BuildStepOptions) {
 
   function capitalize(str: string) {
     return str[0].toUpperCase() + str.slice(1);
+  }
+}
+function addDevImport(ast: recast.types.ASTNode, type: "esm" | "cjs") {
+  let fileRequiresDevImport = true;
+  // check if a dev import is already present
+  recast.visit(ast, {
+    visitImportDeclaration(path) {
+      const node = path.node;
+      if (
+        node.source.value === "@apollo/client/utilities/globals/environment"
+      ) {
+        if (
+          node.specifiers.some(
+            (s) => s.type === "ImportSpecifier" && s.imported.name === "__DEV__"
+          )
+        ) {
+          fileRequiresDevImport = false;
+          return this.abort();
+        }
+      }
+      return this.traverse(path);
+    },
+    visitProgram(path) {
+      const node = path.node;
+      if (
+        node.body.some(
+          (expr) =>
+            expr.type === "VariableDeclaration" &&
+            expr.declarations.some(
+              (declaration) =>
+                declaration.type === "VariableDeclarator" &&
+                ((declaration.id.type === "ObjectPattern" &&
+                  declaration.id.properties.some(
+                    (p) =>
+                      p.type === "Property" &&
+                      p.key.type === "Identifier" &&
+                      p.key.name === "__DEV__"
+                  )) ||
+                  (declaration.id.type === "Identifier" &&
+                    declaration.id.name === "__DEV__"))
+            )
+        )
+      ) {
+        fileRequiresDevImport = false;
+        return this.abort();
+      }
+      return this.traverse(path);
+    },
+  });
+
+  if (fileRequiresDevImport) {
+    recast.visit(ast, {
+      visitProgram(path) {
+        const node = path.node;
+        if (type === "esm") {
+          node.body.unshift(
+            b.importDeclaration(
+              [b.importSpecifier(b.identifier("__DEV__"))],
+              b.literal("@apollo/client/utilities/globals/environment")
+            )
+          );
+        } else {
+          const identifier = b.identifier("__DEV__");
+          node.body.unshift(
+            b.variableDeclaration("const", [
+              b.variableDeclarator(
+                b.objectPattern([
+                  b.property.from({
+                    kind: "init",
+                    key: identifier,
+                    value: identifier,
+                    shorthand: true,
+                  }),
+                ]),
+                b.callExpression(b.identifier("require"), [
+                  b.literal("@apollo/client/utilities/globals/environment"),
+                ])
+              ),
+            ])
+          );
+        }
+        return false;
+      },
+    });
   }
 }

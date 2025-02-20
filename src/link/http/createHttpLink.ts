@@ -1,8 +1,8 @@
 import type { DefinitionNode } from "graphql";
-import { Observable } from "rxjs";
+import { Observable, throwError } from "rxjs";
 
 import { ApolloLink } from "@apollo/client/link/core";
-import { filterOperationVariables, fromError } from "@apollo/client/link/utils";
+import { filterOperationVariables } from "@apollo/client/link/utils";
 import { hasDirectives } from "@apollo/client/utilities";
 import {
   getMainDefinition,
@@ -95,10 +95,11 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       const transformedQuery = removeClientSetsFromDocument(operation.query);
 
       if (!transformedQuery) {
-        return fromError(
-          new Error(
-            "HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`."
-          )
+        return throwError(
+          () =>
+            new Error(
+              "HttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or set the `transformOptions.removeClientFields` option to `true`."
+            )
         );
       }
 
@@ -167,14 +168,14 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
     if (options.method === "GET") {
       const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
       if (parseError) {
-        return fromError(parseError);
+        return throwError(() => parseError);
       }
       chosenURI = newURI;
     } else {
       try {
         (options as any).body = serializeFetchParameter(body, "Payload");
       } catch (parseError) {
-        return fromError(parseError);
+        return throwError(() => parseError);
       }
     }
 

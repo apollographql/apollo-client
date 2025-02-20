@@ -62,7 +62,6 @@ export * from "../link/http/index.js";
 export type { ServerError } from "../link/utils/index.js";
 export {
   fromError,
-  toPromise,
   fromPromise,
   throwServerError,
 } from "../link/utils/index.js";

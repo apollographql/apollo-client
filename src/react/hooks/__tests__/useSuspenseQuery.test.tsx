@@ -1642,10 +1642,12 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "2" },
-      data: { character: { id: "2", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "2" },
+        data: { character: { id: "2", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {

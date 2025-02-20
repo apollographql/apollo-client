@@ -7047,7 +7047,8 @@ describe("ApolloClient", () => {
       await expect(query3).toEmitFetchResult(resultAfterSecondChunk);
       await expect(query4).toEmitFetchResult(resultAfterSecondChunk);
 
-      const query5 = new ObservableStream(
+      // TODO: Re-enable once below condition can be met
+      /* const query5 = */ new ObservableStream(
         client.watchQuery({ query, fetchPolicy: "network-only" })
       );
       // TODO: Re-enable once notifyOnNetworkStatusChange controls whether we

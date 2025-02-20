@@ -348,30 +348,34 @@ function useObservableSubscriptionResult<
           return () => {};
         }
 
-        const onNext = (result: ApolloQueryResult<TData>) => {
-          const previousResult = resultData.current;
-          // Make sure we're not attempting to re-render similar results
-          if (
-            previousResult &&
-            previousResult.loading === result.loading &&
-            previousResult.networkStatus === result.networkStatus &&
-            equal(previousResult.data, result.data)
-          ) {
-            return;
-          }
-
-          setResult(result, resultData, observable, client, handleStoreChange);
-        };
-
         // TODO evaluate if we keep this in
         // React Compiler cannot handle scoped `let` access, but a mutable object
         // like this is fine.
         // was:
-        // let subscription = observable.subscribe(onNext, onError);
+        // let subscription = observable.subscribe(onNext);
         const subscription = {
           current: observable
             .pipe(observeOn(asapScheduler))
-            .subscribe({ next: onNext }),
+            .subscribe((result) => {
+              const previousResult = resultData.current;
+              // Make sure we're not attempting to re-render similar results
+              if (
+                previousResult &&
+                previousResult.loading === result.loading &&
+                previousResult.networkStatus === result.networkStatus &&
+                equal(previousResult.data, result.data)
+              ) {
+                return;
+              }
+
+              setResult(
+                result,
+                resultData,
+                observable,
+                client,
+                handleStoreChange
+              );
+            }),
         };
 
         // Do the "unsubscribe" with a short delay.

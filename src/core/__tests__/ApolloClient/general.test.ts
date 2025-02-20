@@ -1618,6 +1618,9 @@ describe("ApolloClient", () => {
     expect(observable.getCurrentResult().data).toEqual(data);
   });
 
+  // TODO: Update test to show a result with data now that cache-only queries no
+  // longer emit partial data unless returnPartialData is set. This should
+  // likely be a separate test as well.
   it("supports cache-only fetchPolicy fetching only cached data", async () => {
     const primeQuery = gql`
       query primeQuery {
@@ -1661,10 +1664,8 @@ describe("ApolloClient", () => {
 
     const stream = new ObservableStream(observable);
 
-    // TODO: We should not emit a partial result for cache-only unless
-    // returnPartialData is `true`
     await expect(stream).toEmitApolloQueryResult({
-      data: { luke: { name: "Luke Skywalker" } },
+      data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -7135,7 +7136,7 @@ describe("ApolloClient", () => {
       const stream2 = new ObservableStream(observable2);
 
       await expect(stream2).toEmitApolloQueryResult({
-        data: data1,
+        data: undefined,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,

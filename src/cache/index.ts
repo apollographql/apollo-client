@@ -1,5 +1,3 @@
-import "../utilities/globals/index.js";
-
 export type {
   Transaction,
   WatchFragmentOptions,

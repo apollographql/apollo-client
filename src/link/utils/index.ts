@@ -1,5 +1,3 @@
-import "../../utilities/globals/index.js";
-
 export { fromError } from "./fromError.js";
 export { toPromise } from "./toPromise.js";
 export { fromPromise } from "./fromPromise.js";

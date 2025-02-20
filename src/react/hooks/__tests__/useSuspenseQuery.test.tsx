@@ -3965,14 +3965,16 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {

@@ -3476,6 +3476,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3535,6 +3536,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: 'Could not fetch "hello"' }],
           }),
+          errors: [{ message: 'Could not fetch "hello"' }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3714,6 +3716,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3730,6 +3733,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4032,6 +4036,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4154,6 +4159,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+          errors: [{ message: "error 1" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4185,6 +4191,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+          errors: [{ message: "error 2" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4253,6 +4260,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4286,6 +4294,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4360,6 +4369,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4419,6 +4429,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -5401,6 +5412,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5429,6 +5441,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5454,6 +5467,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5518,6 +5532,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5685,6 +5700,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5713,6 +5729,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5741,6 +5758,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5935,6 +5953,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5963,6 +5982,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5988,6 +6008,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,

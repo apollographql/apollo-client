@@ -486,6 +486,8 @@ export class ObservableQuery<
   // TODO: Consider deprecating this function
   public resetLastResults(): void {
     delete this.last;
+    // TODO: This will need to be removed when tearing down an ObservableQuery
+    // since the observable will terminate.
     this.isTornDown = false;
   }
 

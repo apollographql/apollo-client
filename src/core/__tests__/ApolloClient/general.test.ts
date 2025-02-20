@@ -40,13 +40,13 @@ import {
 // This was imported from the ObservableQuery test, but the import causes that
 // test file to run when trying to run just this file.
 const mockFetchQuery = (queryManager: QueryManager<any>) => {
-  const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
+  const fetchObservableWithInfo = queryManager["fetchObservableWithInfo"];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
     queryManager as any
   ).fetchQueryByPolicy;
 
   const mock = <
-    T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy,
+    T extends typeof fetchObservableWithInfo | typeof fetchQueryByPolicy,
   >(
     original: T
   ) =>
@@ -56,7 +56,7 @@ const mockFetchQuery = (queryManager: QueryManager<any>) => {
     });
 
   const mocks = {
-    fetchConcastWithInfo: mock(fetchConcastWithInfo),
+    fetchObservableWithInfo: mock(fetchObservableWithInfo),
     fetchQueryByPolicy: mock(fetchQueryByPolicy),
   };
 

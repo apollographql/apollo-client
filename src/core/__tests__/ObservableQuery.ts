@@ -37,7 +37,7 @@ import { QueryManager } from "../QueryManager.js";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const mocks = {
-    fetchConcastWithInfo: jest.fn<
+    fetchObservableWithInfo: jest.fn<
       ConcastAndInfo<unknown>,
       Parameters<QueryManager<any>["fetchConcastWithInfo"]>
     >(queryManager["fetchConcastWithInfo"].bind(queryManager)),
@@ -1299,7 +1299,7 @@ describe("ObservableQuery", () => {
       expect(fqbpCalls[0][1].fetchPolicy).toEqual("cache-first");
       expect(fqbpCalls[1][1].fetchPolicy).toEqual("network-only");
 
-      const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
+      const fqoCalls = mocks.fetchObservableWithInfo.mock.calls;
       expect(fqoCalls.length).toBe(2);
       expect(fqoCalls[0][1].fetchPolicy).toEqual("cache-first");
       expect(fqoCalls[1][1].fetchPolicy).toEqual("network-only");
@@ -1441,7 +1441,7 @@ describe("ObservableQuery", () => {
       // FetchPolicy does not switch to cache-first after the first
       // network request.
       expect(observable.options.fetchPolicy).toBe("no-cache");
-      const fqoCalls = mocks.fetchConcastWithInfo.mock.calls;
+      const fqoCalls = mocks.fetchObservableWithInfo.mock.calls;
       expect(fqoCalls.length).toBe(2);
       expect(fqoCalls[1][1].fetchPolicy).toBe("no-cache");
     });

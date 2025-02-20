@@ -1004,7 +1004,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newResult: ApolloQueryResult<TData>,
     variables = this.variables
   ) {
-    let error: ApolloError | undefined = this.getLastError();
+    let error = this.getLastError();
     // Preserve this.last.error unless the variables have changed.
     if (error && this.last && !equal(variables, this.last.variables)) {
       error = void 0;

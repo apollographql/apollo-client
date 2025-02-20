@@ -101,7 +101,7 @@ export class ObservableQuery<
 
   private queryInfo: QueryInfo;
 
-  private subscription?: Subscription;
+  private linkSubscription?: Subscription;
   private linkObservable?: Observable<ApolloQueryResult<TData>>;
 
   private pollingInfo?: {
@@ -1117,13 +1117,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
     };
 
-    if (!useDisposableObservable && (fromLink || !this.subscription)) {
-      if (this.subscription) {
-        this.subscription.unsubscribe();
+    if (!useDisposableObservable && (fromLink || !this.linkSubscription)) {
+      if (this.linkSubscription) {
+        this.linkSubscription.unsubscribe();
       }
 
       this.linkObservable = observable;
-      this.subscription = observable.subscribe(observer);
+      this.linkSubscription = observable.subscribe(observer);
     } else {
       observable.subscribe(observer);
     }
@@ -1189,10 +1189,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    if (this.linkObservable && this.subscription) {
-      this.subscription.unsubscribe();
+    if (this.linkObservable && this.linkSubscription) {
+      this.linkSubscription.unsubscribe();
       delete this.linkObservable;
-      delete this.subscription;
+      delete this.linkSubscription;
     }
 
     this.stopPolling();

@@ -305,20 +305,17 @@ export class QueryManager<TStore> {
 
     this.broadcastQueries();
 
-    const self = this;
-
     return new Promise((resolve, reject) => {
-      return self
-        .getObservableFromLink(
-          mutation,
-          {
-            ...context,
-            optimisticResponse: isOptimistic ? optimisticResponse : void 0,
-          },
-          variables,
-          {},
-          false
-        )
+      return this.getObservableFromLink(
+        mutation,
+        {
+          ...context,
+          optimisticResponse: isOptimistic ? optimisticResponse : void 0,
+        },
+        variables,
+        {},
+        false
+      )
         .pipe(
           mergeMap((result) => {
             if (graphQLResultHasError(result) && errorPolicy === "none") {
@@ -348,7 +345,7 @@ export class QueryManager<TStore> {
             }
 
             return from(
-              self.markMutationResult<TData, TVariables, TContext, TCache>({
+              this.markMutationResult<TData, TVariables, TContext, TCache>({
                 mutationId,
                 result: storeResult,
                 document: mutation,
@@ -368,8 +365,8 @@ export class QueryManager<TStore> {
           })
         )
         .subscribe({
-          next(storeResult) {
-            self.broadcastQueries();
+          next: (storeResult) => {
+            this.broadcastQueries();
 
             // Since mutations might receive multiple payloads from the
             // ApolloLink chain (e.g. when used with @defer),
@@ -379,7 +376,7 @@ export class QueryManager<TStore> {
             if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
               resolve({
                 ...storeResult,
-                data: self.maskOperation({
+                data: this.maskOperation({
                   document: mutation,
                   data: storeResult.data,
                   fetchPolicy,
@@ -389,17 +386,17 @@ export class QueryManager<TStore> {
             }
           },
 
-          error(err: Error) {
+          error: (err: Error) => {
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
               mutationStoreValue.error = err;
             }
 
             if (isOptimistic) {
-              self.cache.removeOptimistic(mutationId);
+              this.cache.removeOptimistic(mutationId);
             }
 
-            self.broadcastQueries();
+            this.broadcastQueries();
 
             reject(
               err instanceof ApolloError ? err : (

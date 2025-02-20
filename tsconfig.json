@@ -17,18 +17,10 @@
     "experimentalDecorators": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": [
-      "es2015",
-      "esnext.asynciterable"
-    ],
+    "lib": ["es2015", "esnext.asynciterable"],
     "jsx": "react",
     "strict": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx"
-  ],
-  "exclude": [
-    "src/**/__tests__/**/*"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["src/**/__tests__/**/*"]
 }

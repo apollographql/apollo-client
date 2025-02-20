@@ -320,7 +320,10 @@ export class ObservableQuery<
     // from the QueryManager will continue to fire, causing an unnecessary
     // performance hit.
     if (!this.hasObservers()) {
-      // TODO: ???
+      // TODO: I think this can be removed, especially when we do the work to
+      // emit a `complete` notification once this instance is torn down.
+      // This was added in https://github.com/apollographql/apollo-client/pull/1567/commits/f9219c399a86e82db709e48cef64468bfd1056fe
+      // but at this point this looks more and more like a legacy fix.
       this.queryManager.removeQuery(this.queryId);
     }
 

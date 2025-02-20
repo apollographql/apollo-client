@@ -1020,10 +1020,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     });
   }
 
-  public reobserveAsConcast(
+  // TODO: catch `EmptyError` and rethrow as network error if `complete`
+  // notification is emitted without a value.
+  public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
-  ): Observable<ApolloQueryResult<TData>> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
 
     const useDisposableConcast =
@@ -1129,19 +1131,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       observable.subscribe(observer);
     }
 
-    return observable;
-  }
-
-  // TODO: catch `EmptyError` and rethrow as network error if `complete`
-  // notification is emitted without a value.
-  public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return preventUnhandledRejection(
-      lastValueFrom(this.reobserveAsConcast(newOptions, newNetworkStatus)).then(
-        this.maskResult as TODO
-      )
+      lastValueFrom(observable).then(this.maskResult as TODO)
     );
   }
 

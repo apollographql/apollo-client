@@ -1,5 +1,5 @@
+import { firstValueFrom } from "rxjs";
 import { fromPromise } from "../fromPromise";
-import { toPromise } from "../toPromise";
 
 describe("fromPromise", () => {
   const data = {
@@ -11,12 +11,14 @@ describe("fromPromise", () => {
 
   it("return next call as Promise resolution", () => {
     const observable = fromPromise(Promise.resolve(data));
-    return toPromise(observable).then((result) => expect(data).toEqual(result));
+    return firstValueFrom(observable).then((result) =>
+      expect(data).toEqual(result)
+    );
   });
 
   it("return Promise rejection as error call", () => {
     const observable = fromPromise(Promise.reject(error));
-    return toPromise(observable)
+    return firstValueFrom(observable)
       .then(() => {
         throw "should not have thrown";
       })

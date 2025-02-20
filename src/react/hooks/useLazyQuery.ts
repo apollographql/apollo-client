@@ -4,7 +4,6 @@ import * as React from "rehackt";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   OperationVariables,
   WatchQueryOptions,
 } from "../../core/index.js";
@@ -15,7 +14,6 @@ import type {
   LazyQueryResultTuple,
   NoInfer,
   QueryHookOptions,
-  QueryResult,
 } from "../types/types.js";
 import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
 import {
@@ -219,44 +217,20 @@ function executeQuery<TData, TVariables extends OperationVariables>(
     false
   )(observable);
 
-  const concast = observable.reobserveAsConcast(
+  const promise = observable.reobserve(
     getObsQueryOptions(observable, client, options, watchQueryOptions)
   );
   onQueryExecuted(watchQueryOptions);
 
-  return new Promise<
-    Omit<QueryResult<TData, TVariables>, (typeof EAGER_METHODS)[number]>
-  >((resolve) => {
-    let result: ApolloQueryResult<TData>;
-
-    // Subscribe to the concast independently of the ObservableQuery in case
-    // the component gets unmounted before the promise resolves. This prevents
-    // the concast from terminating early and resolving with `undefined` when
-    // there are no more subscribers for the concast.
-    concast.subscribe({
-      next: (value) => {
-        result = value;
-      },
-      error: () => {
-        resolve(
-          toQueryResult(
-            observable.getCurrentResult(),
-            resultData.previousData,
-            observable,
-            client
-          )
-        );
-      },
-      complete: () => {
-        resolve(
-          toQueryResult(
-            observable["maskResult"](result),
-            resultData.previousData,
-            observable,
-            client
-          )
-        );
-      },
-    });
-  });
+  return promise.then(
+    (result) =>
+      toQueryResult(result, resultData.previousData, observable, client),
+    () =>
+      toQueryResult(
+        observable.getCurrentResult(),
+        resultData.previousData,
+        observable,
+        client
+      )
+  );
 }

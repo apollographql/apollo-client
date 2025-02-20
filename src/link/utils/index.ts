@@ -1,4 +1,3 @@
-export { fromError } from "./fromError.js";
 export type { ServerError } from "./throwServerError.js";
 export { throwServerError } from "./throwServerError.js";
 export { validateOperation } from "./validateOperation.js";

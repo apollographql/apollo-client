@@ -2519,11 +2519,7 @@ describe("client", () => {
     });
   });
 
-  // TODO: This test uses `resetLastResults` which no longer works since state
-  // is tracked inside the RxJS BehaviorSubject. We'd prefer to keep it that
-  // way. Eventually we want the behavior subject to never terminate, but this
-  // will be fixed in a future error handling PR that handles this.
-  it.skip("should be able to refetch after there was a network error", async () => {
+  it("should be able to refetch after there was a network error", async () => {
     const query: DocumentNode = gql`
       query somethingelse {
         allPeople(first: 1) {
@@ -2570,15 +2566,20 @@ describe("client", () => {
       partial: false,
     });
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("This is an error!");
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      error: new ApolloError({ networkError: new Error("This is an error!") }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
 
     stream.unsubscribe();
 
     const lastError = observable.getLastError();
     expect(lastError).toBeInstanceOf(ApolloError);
-    expect(lastError!.networkError).toEqual((error as any).networkError);
+    expect(lastError?.networkError).toEqual(new Error("This is an error!"));
 
     const lastResult = observable.getLastResult();
     expect(lastResult).toBeTruthy();

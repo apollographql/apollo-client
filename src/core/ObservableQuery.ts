@@ -38,7 +38,6 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "../cache/index.js";
 import type { MissingTree } from "../cache/core/types/common.js";
 import { equalByQuery } from "./equalByQuery.js";
-import type { TODO } from "../utilities/types/TODO.js";
 import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 const { assign, hasOwnProperty } = Object;
@@ -1132,7 +1131,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     return preventUnhandledRejection(
-      lastValueFrom(observable).then(this.maskResult as TODO)
+      // Note: lastValueFrom will create a separate subscription to the
+      // observable which means that terminating this ObservableQuery will not
+      // cancel the request from the link chain.
+      lastValueFrom(observable).then(this.maskResult)
     );
   }
 

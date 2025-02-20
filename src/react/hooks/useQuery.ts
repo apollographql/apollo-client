@@ -17,6 +17,7 @@
 /** */
 import { equal } from "@wry/equality";
 import * as React from "rehackt";
+import { asapScheduler, observeOn } from "rxjs";
 
 import type {
   ApolloClient,
@@ -364,6 +365,7 @@ function useObservableSubscriptionResult<
         };
 
         const onError = (error: Error) => {
+          console.trace("on error");
           subscription.current.unsubscribe();
           subscription.current = observable.resubscribeAfterError(
             onNext,
@@ -404,7 +406,9 @@ function useObservableSubscriptionResult<
         // was:
         // let subscription = observable.subscribe(onNext, onError);
         const subscription = {
-          current: observable.subscribe({ next: onNext, error: onError }),
+          current: observable
+            .pipe(observeOn(asapScheduler))
+            .subscribe({ next: onNext, error: onError }),
         };
 
         // Do the "unsubscribe" with a short delay.

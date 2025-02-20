@@ -36,25 +36,17 @@ import {
   spyOnConsole,
 } from "../../testing/internal/index.js";
 
+import type { SourcesAndInfo, ConcastAndInfo } from "../QueryManager.js";
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
-  const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
-  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
-    queryManager as any
-  ).fetchQueryByPolicy;
-
-  const mock = <
-    T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy,
-  >(
-    original: T
-  ) =>
-    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
-      // @ts-expect-error
-      return original.apply(queryManager, arguments);
-    });
-
   const mocks = {
-    fetchConcastWithInfo: mock(fetchConcastWithInfo),
-    fetchQueryByPolicy: mock(fetchQueryByPolicy),
+    fetchConcastWithInfo: jest.fn<
+      ConcastAndInfo<unknown>,
+      Parameters<QueryManager<any>["fetchConcastWithInfo"]>
+    >(queryManager["fetchConcastWithInfo"].bind(queryManager)),
+    fetchQueryByPolicy: jest.fn<
+      SourcesAndInfo<unknown>,
+      Parameters<QueryManager<any>["fetchQueryByPolicy"]>
+    >(queryManager["fetchQueryByPolicy"].bind(queryManager)),
   };
 
   Object.assign(queryManager, mocks);

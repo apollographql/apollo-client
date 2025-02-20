@@ -1,13 +1,13 @@
 // @ts-check
 
 import { join } from "node:path";
-import { map } from "./config/entryPoints.js";
+import { entryPoints } from "./config/entryPoints.js";
 import { readFileSync } from "node:fs";
 
 const packageJSON = JSON.parse(readFileSync("package.json", "utf-8"));
 
-const packageEntries = map(({ dirs, bundleName = "index.ts" }) =>
-  join("src", ...dirs, bundleName)
+const packageEntries = entryPoints.map(({ dirs }) =>
+  join("src", ...dirs, "index.ts")
 );
 
 const scriptEntries = Array.from(
@@ -38,6 +38,7 @@ const config = {
     "integration-tests/**/*",
     ".yalc/**/*",
     "config/schema.package.json.ts",
+    "src/config/jest/resolver.ts",
   ],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [

@@ -1823,9 +1823,9 @@ interface FetchConcastInfo {
   // Metadata properties that can be returned in addition to the Concast.
   fromLink: boolean;
 }
-interface SourcesAndInfo<TData> extends FetchConcastInfo {
+export interface SourcesAndInfo<TData> extends FetchConcastInfo {
   sources: ConcastSourcesArray<ApolloQueryResult<TData>>;
 }
-interface ConcastAndInfo<TData> extends FetchConcastInfo {
+export interface ConcastAndInfo<TData> extends FetchConcastInfo {
   concast: Concast<ApolloQueryResult<TData>>;
 }

@@ -2952,9 +2952,11 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {

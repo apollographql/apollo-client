@@ -1028,15 +1028,15 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
 
-    const useDisposableConcast =
-      // Refetching uses a disposable Concast to allow refetches using different
+    const useDisposableObservable =
+      // Refetching uses a disposable Observable to allow refetches using different
       // options/variables, without permanently altering the options of the
       // original ObservableQuery.
       newNetworkStatus === NetworkStatus.refetch ||
       // The fetchMore method does not actually call the reobserve method, but,
-      // if it did, it would definitely use a disposable Concast.
+      // if it did, it would definitely use a disposable Observable.
       newNetworkStatus === NetworkStatus.fetchMore ||
-      // Polling uses a disposable Concast so the polling options (which force
+      // Polling uses a disposable Observable so the polling options (which force
       // fetchPolicy to be "network-only" or "no-cache") won't override the original options.
       newNetworkStatus === NetworkStatus.poll;
 
@@ -1046,8 +1046,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const mergedOptions = compact(this.options, newOptions || {});
     const options =
-      useDisposableConcast ?
-        // Disposable Concast fetches receive a shallow copy of this.options
+      useDisposableObservable ?
+        // Disposable Observable fetches receive a shallow copy of this.options
         // (merged with newOptions), leaving this.options unmodified.
         mergedOptions
       : assign(this.options, mergedOptions);
@@ -1060,7 +1060,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.lastQuery = query;
 
-    if (!useDisposableConcast) {
+    if (!useDisposableObservable) {
       // We can skip calling updatePolling if we're not changing this.options.
       this.updatePolling();
 
@@ -1120,7 +1120,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
     };
 
-    if (!useDisposableConcast && (fromLink || !this.subscription)) {
+    if (!useDisposableObservable && (fromLink || !this.subscription)) {
       if (this.subscription) {
         this.subscription.unsubscribe();
       }

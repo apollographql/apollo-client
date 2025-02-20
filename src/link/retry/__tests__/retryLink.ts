@@ -2,8 +2,7 @@ import gql from "graphql-tag";
 
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
-import { Observable, of } from "rxjs";
-import { fromError } from "../../utils/fromError";
+import { Observable, of, throwError } from "rxjs";
 import { RetryLink } from "../retryLink";
 import {
   mockMultipartSubscriptionStream,
@@ -25,7 +24,7 @@ describe("RetryLink", () => {
   it("fails for unreachable endpoints", async () => {
     const max = 10;
     const retry = new RetryLink({ delay: { initial: 1 }, attempts: { max } });
-    const stub = jest.fn(() => fromError(standardError)) as any;
+    const stub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -54,7 +53,7 @@ describe("RetryLink", () => {
     });
     const data = { data: { hello: "world" } };
     const stub = jest.fn();
-    stub.mockReturnValueOnce(fromError(standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
     stub.mockReturnValueOnce(of(data));
     const link = ApolloLink.from([retry, stub]);
     const stream = new ObservableStream(execute(link, { query }));
@@ -73,7 +72,7 @@ describe("RetryLink", () => {
     const data = { data: { hello: "world" } };
     const unsubscribeStub = jest.fn();
 
-    const firstTry = fromError(standardError);
+    const firstTry = throwError(() => standardError);
     // Hold the test hostage until we're hit
     let secondTry;
     const untilSecondTry = new Promise<void>((resolve) => {
@@ -113,11 +112,11 @@ describe("RetryLink", () => {
     });
     const data = { data: { hello: "world" } };
     const stub = jest.fn();
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(fromError(standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
     stub.mockReturnValueOnce(of(data));
-    stub.mockReturnValueOnce(fromError(standardError));
-    stub.mockReturnValueOnce(fromError(standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
+    stub.mockReturnValueOnce(throwError(() => standardError));
     stub.mockReturnValueOnce(of(data));
     const link = ApolloLink.from([retry, stub]);
 
@@ -136,7 +135,7 @@ describe("RetryLink", () => {
       delay: { initial: 1 },
       attempts: { max: 5 },
     });
-    const stub = jest.fn(() => fromError(standardError)) as any;
+    const stub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, stub]);
     const stream1 = new ObservableStream(execute(link, { query }));
     const stream2 = new ObservableStream(execute(link, { query }));
@@ -152,7 +151,7 @@ describe("RetryLink", () => {
   it("supports custom delay functions", async () => {
     const delayStub = jest.fn(() => 1);
     const retry = new RetryLink({ delay: delayStub, attempts: { max: 3 } });
-    const linkStub = jest.fn(() => fromError(standardError)) as any;
+    const linkStub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, linkStub]);
     const stream = new ObservableStream(execute(link, { query }));
 
@@ -175,7 +174,7 @@ describe("RetryLink", () => {
       delay: { initial: 1 },
       attempts: attemptStub,
     });
-    const linkStub = jest.fn(() => fromError(standardError)) as any;
+    const linkStub = jest.fn(() => throwError(() => standardError)) as any;
     const link = ApolloLink.from([retry, linkStub]);
     const stream = new ObservableStream(execute(link, { query }));
 

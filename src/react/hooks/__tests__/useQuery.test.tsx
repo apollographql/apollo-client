@@ -2779,7 +2779,8 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      jest.advanceTimersByTime(100);
+      // We wait a tick longer than 100 since values are emitted on the asapScheduler
+      jest.advanceTimersByTime(101);
 
       {
         const promise = takeSnapshot();

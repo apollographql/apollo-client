@@ -6,7 +6,6 @@ Array [
   "ApolloClient",
   "ApolloError",
   "ApolloLink",
-  "Cache",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -53,7 +52,6 @@ Array [
 exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
-  "Cache",
   "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
@@ -75,7 +73,6 @@ Array [
   "ApolloClient",
   "ApolloError",
   "ApolloLink",
-  "Cache",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",

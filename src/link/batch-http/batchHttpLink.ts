@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 import {

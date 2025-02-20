@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { invariant } from "../../utilities/globals/index.js";
 import * as React from "rehackt";
 

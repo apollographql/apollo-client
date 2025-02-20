@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { invariant } from "../globals/index.js";
 
 // Provides the methods that allow QueryManager to handle the `skip` and

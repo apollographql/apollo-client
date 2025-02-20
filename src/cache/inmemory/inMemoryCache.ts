@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { invariant } from "../../utilities/globals/index.js";
 
 // Make builtins like Map and Set safe to use with non-extensible objects.

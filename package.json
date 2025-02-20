@@ -234,7 +234,6 @@
     "terser": "5.31.3",
     "ts-api-utils": "2.0.0",
     "ts-jest": "29.2.3",
-    "ts-jest-resolver": "2.0.1",
     "tsx": "4.19.2",
     "typedoc": "0.25.0",
     "typescript": "5.7.3",

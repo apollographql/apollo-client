@@ -29,7 +29,7 @@ const defaults = {
       },
     ],
   },
-  resolver: "ts-jest-resolver",
+  resolver: "<rootDir>/config/jest/resolver.ts",
 };
 
 const ignoreTSFiles = ".ts$";

@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { wrap } from "optimism";
 import type { DocumentNode, TypeNode } from "graphql";
 import { Kind, visit } from "graphql";

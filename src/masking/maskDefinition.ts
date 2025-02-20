@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { Kind } from "graphql";
 import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import {

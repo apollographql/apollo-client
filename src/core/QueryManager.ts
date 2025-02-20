@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { invariant, newInvariantError } from "../utilities/globals/index.js";
 
 import type { DocumentNode } from "graphql";

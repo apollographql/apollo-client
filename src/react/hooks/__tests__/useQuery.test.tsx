@@ -3659,7 +3659,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: 'Could not fetch "hello"' }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });

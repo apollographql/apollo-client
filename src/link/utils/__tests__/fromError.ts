@@ -1,11 +1,11 @@
-import { toPromise } from "../toPromise";
+import { firstValueFrom } from "rxjs";
 import { fromError } from "../fromError";
 
 describe("fromError", () => {
   it("acts as error call", () => {
     const error = new Error("I always error");
     const observable = fromError(error);
-    return toPromise(observable)
+    return firstValueFrom(observable)
       .then(() => {
         throw "should not have thrown";
       })

@@ -4,8 +4,8 @@ import {
 } from "../removeTypenameFromVariables";
 import { ApolloLink, Operation } from "../../core";
 import { gql } from "../../../core";
-import { of } from "rxjs";
-import { createOperation, toPromise } from "../../utils";
+import { firstValueFrom, of } from "rxjs";
+import { createOperation } from "../../utils";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &
   Pick<Operation, "query">;
@@ -20,7 +20,7 @@ async function execute(link: ApolloLink, operation: PartialOperation) {
     return of({ data: operation });
   }
 
-  const { data } = await toPromise(
+  const { data } = await firstValueFrom(
     link.request(createOperation({}, operation), forward)!
   );
 

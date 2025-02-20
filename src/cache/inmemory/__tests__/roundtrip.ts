@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { DocumentNode } from "graphql";
 import gql from "graphql-tag";
 

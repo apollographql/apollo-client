@@ -401,6 +401,7 @@ Array [
   "createFragmentMap",
   "createFulfilledPromise",
   "createRejectedPromise",
+  "defaultCacheSizes",
   "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",

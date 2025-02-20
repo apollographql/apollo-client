@@ -1519,9 +1519,6 @@ export type IsStrictlyAny<T> = UnionToIntersection_2<UnionForAny<T>> extends nev
 export function isSubscriptionOperation(document: DocumentNode): boolean;
 
 // @public (undocumented)
-export function iterateObserversSafely<E, A>(observers: Set<Partial<Observer<E>>>, method: keyof Observer<E>, argument?: A): void;
-
-// @public (undocumented)
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
 // Warning: (ae-forgotten-export) The symbol "IdGetter" needs to be exported by the entry point index.d.ts

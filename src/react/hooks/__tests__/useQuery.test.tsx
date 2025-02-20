@@ -6530,6 +6530,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             networkError: new Error("This is an error!"),
           }),
+          errors: [],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,

@@ -109,7 +109,6 @@ export * from "./common/mergeDeep.js";
 export * from "./common/cloneDeep.js";
 export { maybeDeepFreeze } from "./common/maybeDeepFreeze.js";
 export * from "./observables/iteration.js";
-export * from "./observables/Concast.js";
 export * from "./common/arrays.js";
 export * from "./common/objects.js";
 export * from "./common/errorHandling.js";

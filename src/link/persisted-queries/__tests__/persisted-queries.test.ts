@@ -5,12 +5,11 @@ import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
 import { ApolloLink, execute } from "../../core";
-import { Observable } from "rxjs";
+import { firstValueFrom, Observable } from "rxjs";
 import { createHttpLink } from "../../http/createHttpLink";
 
 import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
 import { wait } from "../../../testing";
-import { toPromise } from "../../utils";
 import { ObservableStream } from "../../../testing/internal";
 
 // Necessary configuration in order to mock multiple requests
@@ -699,11 +698,15 @@ describe("failure path", () => {
         createHttpLink({ fetch: fetcher } as any)
       );
 
-      const failingAttempt = toPromise(execute(link, { query, variables }));
+      const failingAttempt = firstValueFrom(
+        execute(link, { query, variables })
+      );
       await expect(failingAttempt).rejects.toThrow();
       expect(fetchMock.calls().length).toBe(0);
 
-      const successfullAttempt = toPromise(execute(link, { query, variables }));
+      const successfullAttempt = firstValueFrom(
+        execute(link, { query, variables })
+      );
       await expect(successfullAttempt).resolves.toEqual({ data });
       const [[, success]] = fetchMock.calls();
       expect(JSON.parse(success!.body!.toString()).query).toBeUndefined();

@@ -676,7 +676,7 @@ export class QueryManager<TStore> {
     networkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<TData>> {
     return lastValueFrom(
-      this.fetchConcastWithInfo(queryId, options, networkStatus).observable,
+      this.fetchObservableWithInfo(queryId, options, networkStatus).observable,
       { defaultValue: undefined }
     ) as TODO;
   }
@@ -1323,7 +1323,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchConcastWithInfo<TData, TVars extends OperationVariables>(
+  private fetchObservableWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
@@ -1863,10 +1863,10 @@ export class QueryManager<TStore> {
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.
-interface FetchConcastInfo {
+interface FetchObservableInfo {
   // Metadata properties that can be returned in addition to the Concast.
   fromLink: boolean;
 }
-interface ObservableAndInfo<TData> extends FetchConcastInfo {
+interface ObservableAndInfo<TData> extends FetchObservableInfo {
   observable: Observable<ApolloQueryResult<TData>>;
 }

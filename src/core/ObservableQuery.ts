@@ -1145,34 +1145,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     );
   }
 
-  // TODO: Deprecate and remove this function after observable query handles
-  // emitting errors differently to avoid terminating the observable.
-  public resubscribeAfterError(
-    onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void,
-    onError?: (error: any) => void,
-    onComplete?: () => void
-  ): Subscription;
-
-  public resubscribeAfterError(
-    observer: Observer<ApolloQueryResult<TData>>
-  ): Subscription;
-
-  public resubscribeAfterError(...args: [any, any?, any?]) {
-    // If `lastError` is set in the current when the subscription is re-created,
-    // the subscription will immediately receive the error, which will
-    // cause it to terminate again. To avoid this, we first clear
-    // the last error/result from the `observableQuery` before re-starting
-    // the subscription, and restore the last value afterwards so that the
-    // subscription has a chance to stay open.
-    const last = this.last;
-    this.resetLastResults();
-
-    const subscription = this.subscribe(...args);
-    this.last = last;
-
-    return subscription;
-  }
-
   // (Re)deliver the current result to this.observers without applying fetch
   // policies or making network requests.
   private observe() {

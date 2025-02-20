@@ -26,8 +26,6 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
   "gql",
   "isApolloError",
   "isNetworkRequestSettled",
@@ -45,7 +43,6 @@ Array [
   "setLogVerbosity",
   "split",
   "throwServerError",
-  "toPromise",
 ]
 `;
 
@@ -94,8 +91,6 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
   "gql",
   "isApolloError",
   "isNetworkRequestSettled",
@@ -113,7 +108,6 @@ Array [
   "setLogVerbosity",
   "split",
   "throwServerError",
-  "toPromise",
 ]
 `;
 
@@ -225,10 +219,7 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "fromError",
-  "fromPromise",
   "throwServerError",
-  "toPromise",
   "transformOperation",
   "validateOperation",
 ]

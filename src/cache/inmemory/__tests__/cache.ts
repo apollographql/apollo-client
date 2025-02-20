@@ -1,7 +1,7 @@
-import gql, { disableFragmentWarnings } from "graphql-tag";
+import { gql, disableFragmentWarnings } from "graphql-tag";
 import { expectTypeOf } from "expect-type";
 
-import { cloneDeep } from "../../../utilities/common/cloneDeep";
+import { cloneDeep } from "../../../utilities/common/cloneDeep.js";
 import {
   makeReference,
   Reference,
@@ -9,17 +9,17 @@ import {
   TypedDocumentNode,
   isReference,
   DocumentNode,
-} from "../../../core";
-import { Cache, MissingFieldError } from "../../../cache";
-import { InMemoryCache } from "../inMemoryCache";
-import { InMemoryCacheConfig } from "../types";
+} from "../../../core/index.js";
+import { Cache, MissingFieldError } from "../../../cache/index.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { InMemoryCacheConfig } from "../types.js";
 
-import { StoreReader } from "../readFromStore";
-import { StoreWriter } from "../writeToStore";
-import { ObjectCanon } from "../object-canon";
-import { TypePolicies } from "../policies";
-import { spyOnConsole } from "../../../testing/internal";
-import { defaultCacheSizes } from "../../../utilities";
+import { StoreReader } from "../readFromStore.js";
+import { StoreWriter } from "../writeToStore.js";
+import { ObjectCanon } from "../object-canon.js";
+import { TypePolicies } from "../policies.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { defaultCacheSizes } from "../../../utilities/index.js";
 
 disableFragmentWarnings();
 

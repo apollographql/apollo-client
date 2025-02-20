@@ -51,23 +51,23 @@ const checks = [
       "zen-observable-ts",
     ],
   }))
-  .flatMap((value) =>
-    value.path == "dist/apollo-client.min.cjs" ?
-      value
-    : [
-        value,
-        {
-          ...value,
-          name: `${value.name} (production)`,
-          modifyEsbuildConfig(config) {
-            config.define = {
-              "globalThis.__DEV__": `false`,
-            };
-            return config;
-          },
-        },
-      ]
-  )
+  .flatMap((value) => [
+    {
+      ...value,
+      modifyEsbuildConfig(config) {
+        config.conditions = ["development", "module", "browser"];
+        return config;
+      },
+    },
+    {
+      ...value,
+      name: `${value.name} (production)`,
+      modifyEsbuildConfig(config) {
+        config.conditions = ["production", "module", "browser"];
+        return config;
+      },
+    },
+  ])
   .map((value) => {
     value.limit = limits[value.name];
     return value;

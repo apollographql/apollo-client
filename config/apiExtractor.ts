@@ -7,9 +7,7 @@ import {
 } from "@microsoft/api-extractor";
 import { parseArgs } from "node:util";
 import fs from "node:fs";
-
-// @ts-ignore
-import { map, buildDocEntryPoints } from "./entryPoints.ts";
+import { entryPoints, buildDocEntryPoints } from "./entryPoints.ts";
 import { readFileSync } from "fs";
 
 const parsed = parseArgs({
@@ -67,7 +65,7 @@ try {
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
-    map((entryPoint: { dirs: string[] }) => {
+    entryPoints.map((entryPoint) => {
       const path = entryPoint.dirs.join("/");
       const mainEntryPointFilePath =
         `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");

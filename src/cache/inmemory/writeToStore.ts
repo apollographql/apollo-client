@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { invariant, newInvariantError } from "../../utilities/globals/index.js";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";

@@ -1,5 +1,5 @@
 import { print } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { disableFragmentWarnings } from "graphql-tag";
 
 // Turn off warnings for repeated fragment names
@@ -9,8 +9,8 @@ import {
   getFragmentQueryDocument,
   createFragmentMap,
   FragmentMap,
-} from "../fragments";
-import { getFragmentDefinitions } from "../getFromAST";
+} from "../fragments.js";
+import { getFragmentDefinitions } from "../getFromAST.js";
 
 describe("getFragmentQueryDocument", () => {
   it("will throw an error if there is an operation", () => {

@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { useDeepMemo } from "../useDeepMemo";
+import { useDeepMemo } from "../useDeepMemo.js";
 
 describe("useDeepMemo", () => {
   it("ensures the value is initialized", () => {

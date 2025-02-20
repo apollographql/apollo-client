@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 /* Core */
 
 export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
@@ -44,8 +45,8 @@ export type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/index.js";
+export type { Cache } from "../cache/index.js";
 export {
-  Cache,
   ApolloCache,
   InMemoryCache,
   MissingFieldError,

@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import { gql, InMemoryCache } from "../../core/index.js";
 import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";

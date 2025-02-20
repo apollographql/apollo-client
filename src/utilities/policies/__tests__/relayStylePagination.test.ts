@@ -4,8 +4,8 @@ import {
   isReference,
   makeReference,
   StoreObject,
-} from "../../../cache";
-import { relayStylePagination, TRelayPageInfo } from "../pagination";
+} from "../../../cache/index.js";
+import { relayStylePagination, TRelayPageInfo } from "../pagination.js";
 
 describe("relayStylePagination", () => {
   const policy = relayStylePagination();

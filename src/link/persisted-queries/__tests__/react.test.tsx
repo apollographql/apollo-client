@@ -1,20 +1,23 @@
 /** @jest-environment node */
 import * as React from "react";
 import * as ReactDOM from "react-dom/server";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { print } from "graphql";
 import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
-import { ApolloProvider } from "../../../react/context";
-import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache";
-import { ApolloClient } from "../../../core/ApolloClient";
-import { createHttpLink } from "../../http/createHttpLink";
-import { getDataFromTree } from "../../../react/ssr/getDataFromTree";
-import { createPersistedQueryLink as createPersistedQuery, VERSION } from "..";
-import { useQuery } from "../../../react";
-import { OperationVariables } from "../../../core";
-import { addTypenameToDocument } from "../../../utilities";
+import { ApolloProvider } from "../../../react/context/index.js";
+import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
+import { ApolloClient } from "../../../core/ApolloClient.js";
+import { createHttpLink } from "../../http/createHttpLink.js";
+import { getDataFromTree } from "../../../react/ssr/getDataFromTree.js";
+import {
+  createPersistedQueryLink as createPersistedQuery,
+  VERSION,
+} from "../index.js";
+import { useQuery } from "../../../react/index.js";
+import { OperationVariables } from "../../../core/index.js";
+import { addTypenameToDocument } from "../../../utilities/index.js";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

@@ -1,21 +1,21 @@
-import gql from "graphql-tag";
-import { EntityStore, supportsResultCaching } from "../entityStore";
-import { InMemoryCache } from "../inMemoryCache";
+import { gql } from "graphql-tag";
+import { EntityStore, supportsResultCaching } from "../entityStore.js";
+import { InMemoryCache } from "../inMemoryCache.js";
 import { DocumentNode } from "graphql";
-import { StoreObject } from "../types";
-import { ApolloCache } from "../../core/cache";
-import { Cache } from "../../core/types/Cache";
+import { StoreObject } from "../types.js";
+import { ApolloCache } from "../../core/cache.js";
+import { Cache } from "../../core/types/Cache.js";
 import {
   Reference,
   makeReference,
   isReference,
   StoreValue,
-} from "../../../utilities/graphql/storeUtils";
-import { MissingFieldError } from "../..";
+} from "../../../utilities/graphql/storeUtils.js";
+import { MissingFieldError } from "../../index.js";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { stringifyForDisplay } from "../../../utilities";
-import { InvariantError } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+import { stringifyForDisplay } from "../../../utilities/index.js";
+import { InvariantError } from "../../../utilities/globals/index.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {

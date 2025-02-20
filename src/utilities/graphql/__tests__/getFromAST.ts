@@ -1,5 +1,5 @@
 import { print } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
 
 import {
@@ -8,7 +8,7 @@ import {
   getQueryDefinition,
   getDefaultValues,
   getOperationName,
-} from "../getFromAST";
+} from "../getFromAST.js";
 
 describe("AST utility functions", () => {
   it("should correctly check a document for correctness", () => {

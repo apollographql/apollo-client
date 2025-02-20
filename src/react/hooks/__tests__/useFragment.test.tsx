@@ -6,15 +6,15 @@ import {
   renderHook,
   within,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import { act } from "@testing-library/react";
 
 import {
   UseFragmentOptions,
   UseFragmentResult,
   useFragment,
-} from "../useFragment";
-import { ApolloProvider } from "../../context";
+} from "../useFragment.js";
+import { ApolloProvider } from "../../context/index.js";
 import {
   InMemoryCache,
   gql,
@@ -26,21 +26,21 @@ import {
   StoreObject,
   DocumentNode,
   FetchResult,
-} from "../../../core";
-import { useQuery } from "../useQuery";
-import { concatPagination } from "../../../utilities";
+} from "../../../core/index.js";
+import { useQuery } from "../useQuery.js";
+import { concatPagination } from "../../../utilities/index.js";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
-import { spyOnConsole } from "../../../testing/internal";
-import { FragmentType } from "../../../masking";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { FragmentType } from "../../../masking/index.js";
 import {
   disableActEnvironment,
   createRenderStream,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react";
+import { MockedProvider } from "../../../testing/react/index.js";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

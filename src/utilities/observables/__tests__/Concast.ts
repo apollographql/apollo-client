@@ -1,6 +1,6 @@
-import { Observable, Observer } from "../Observable";
-import { Concast, ConcastSourcesIterable } from "../Concast";
-import { ObservableStream } from "../../../testing/internal";
+import { Observable, Observer } from "../Observable.js";
+import { Concast, ConcastSourcesIterable } from "../Concast.js";
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 describe("Concast Observable (similar to Behavior Subject in RxJS)", () => {
   it("can concatenate other observables", async () => {

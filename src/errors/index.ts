@@ -1,5 +1,3 @@
-import "../utilities/globals/index.js";
-
 import type {
   GraphQLError,
   GraphQLErrorExtensions,

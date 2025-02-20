@@ -1,7 +1,7 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
-import { ReactiveVar, makeVar } from "../reactiveVars";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { ReactiveVar, makeVar } from "../reactiveVars.js";
 import {
   Reference,
   StoreObject,
@@ -9,12 +9,18 @@ import {
   NetworkStatus,
   TypedDocumentNode,
   DocumentNode,
-} from "../../../core";
-import { MissingFieldError } from "../..";
-import { relayStylePagination, stringifyForDisplay } from "../../../utilities";
-import { FieldPolicy, StorageType } from "../policies";
-import { MockLink } from "../../../testing/core";
-import { ObservableStream, spyOnConsole } from "../../../testing/internal";
+} from "../../../core/index.js";
+import { MissingFieldError } from "../../index.js";
+import {
+  relayStylePagination,
+  stringifyForDisplay,
+} from "../../../utilities/index.js";
+import { FieldPolicy, StorageType } from "../policies.js";
+import { MockLink } from "../../../testing/core/index.js";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

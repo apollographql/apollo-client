@@ -1,3 +1,5 @@
+import { __DEV__ } from "@apollo/client/utilities/globals/environment";
+
 import type { OptimisticWrapperFunction } from "optimism";
 import type {
   InMemoryCache,

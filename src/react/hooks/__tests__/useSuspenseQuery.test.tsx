@@ -1073,16 +1073,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1108,16 +1104,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1150,9 +1142,7 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() =>
-        of({ data: { greeting: "hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "hello" } })),
       cache: new InMemoryCache(),
     });
 

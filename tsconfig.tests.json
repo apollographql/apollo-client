@@ -2,6 +2,7 @@
   "extends": "./src/tsconfig.json",
   "compilerOptions": {
     "target": "es5",
+    "moduleResolution": "Node",
     "module": "ES2015",
     "types": [
       "jest",

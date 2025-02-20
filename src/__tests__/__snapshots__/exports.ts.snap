@@ -381,7 +381,6 @@ Array [
   "AutoCleanedStrongCache",
   "AutoCleanedWeakCache",
   "Concast",
-  "DEV",
   "DeepMerger",
   "DocumentTransform",
   "Observable",
@@ -474,13 +473,18 @@ Array [
 
 exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
-  "DEV",
   "InvariantError",
   "__DEV__",
   "global",
   "invariant",
   "maybe",
   "newInvariantError",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/globals/environment 1`] = `
+Array [
+  "__DEV__",
 ]
 `;
 

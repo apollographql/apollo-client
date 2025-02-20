@@ -145,12 +145,6 @@ export class ObservableQuery<
             this.tearDownQuery();
           }
         },
-        error: () => {
-          // TODO: This is temporary. We don't really want to terminate the
-          // observable, but this fixes a few other things until we figure out
-          // the right behavior here.
-          this.tearDownQuery();
-        },
       }),
       // TODO: Conditionally filter when notifyOnNetworkStatusChange is true or
       // not. We want to emit the loading result if notifyOnNetworkStatusChange

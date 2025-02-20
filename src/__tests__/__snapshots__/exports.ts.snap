@@ -425,7 +425,6 @@ Array [
   "isReference",
   "isStatefulPromise",
   "isSubscriptionOperation",
-  "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",
   "maybe",

@@ -4,12 +4,10 @@
 
 ```ts
 
+import { __DEV__ as __DEV___2 } from '@apollo/client/utilities/globals/environment';
 import { InvariantError } from 'ts-invariant';
 
-// @public @deprecated (undocumented)
-const DEV: boolean;
-export { DEV }
-export { DEV as __DEV__ }
+export { __DEV___2 as __DEV__ }
 
 // @public (undocumented)
 const global_2: typeof globalThis & Window;

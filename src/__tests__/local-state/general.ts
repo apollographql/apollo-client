@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import {
   graphql,
   GraphQLInt,
@@ -12,12 +12,15 @@ import {
   GraphQLString,
 } from "graphql";
 
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { Operation } from "../../link/core";
-import { ApolloClient } from "../../core";
-import { ApolloCache, InMemoryCache } from "../../cache";
-import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { Observable } from "../../utilities/index.js";
+import { ApolloLink } from "../../link/core/index.js";
+import { Operation } from "../../link/core/index.js";
+import { ApolloClient } from "../../core/index.js";
+import { ApolloCache, InMemoryCache } from "../../cache/index.js";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {

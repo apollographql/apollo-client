@@ -1,6 +1,6 @@
 /* eslint-disable testing-library/render-result-naming-convention */
 import React, { useEffect } from "rehackt";
-import { useRenderGuard } from "../useRenderGuard";
+import { useRenderGuard } from "../useRenderGuard.js";
 import { render, waitFor } from "@testing-library/react";
 
 const UNDEF = {};

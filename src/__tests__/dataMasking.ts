@@ -13,18 +13,18 @@ import {
   Observable,
   Reference,
   TypedDocumentNode,
-} from "../core";
+} from "../core/index.js";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { invariant } from "../utilities/globals";
-import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
-import { isSubscriptionOperation } from "../utilities";
-import { MaskedDocumentNode } from "../masking";
+} from "../testing/index.js";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+import { invariant } from "../utilities/globals/index.js";
+import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
+import { isSubscriptionOperation } from "../utilities/index.js";
+import { MaskedDocumentNode } from "../masking/index.js";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';

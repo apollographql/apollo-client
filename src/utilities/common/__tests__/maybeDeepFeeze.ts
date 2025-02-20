@@ -1,4 +1,4 @@
-import { maybeDeepFreeze } from "../maybeDeepFreeze";
+import { maybeDeepFreeze } from "../maybeDeepFreeze.js";
 
 describe("maybeDeepFreeze", () => {
   it("should deep freeze", () => {

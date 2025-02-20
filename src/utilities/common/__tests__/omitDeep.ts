@@ -1,4 +1,4 @@
-import { omitDeep } from "../omitDeep";
+import { omitDeep } from "../omitDeep.js";
 
 test("omits the key from a shallow object", () => {
   expect(omitDeep({ omit: "a", keep: "b", other: "c" }, "omit")).toEqual({

@@ -11,7 +11,7 @@ import { createTestSchema } from "../createTestSchema.js";
 import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "../../../react/index.js";
 import { useMutation, useSuspenseQuery } from "../../../react/index.js";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import { screen } from "@testing-library/react";
 import { createSchemaFetch } from "../createSchemaFetch.js";
 import {

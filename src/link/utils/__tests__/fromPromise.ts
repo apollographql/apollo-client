@@ -1,5 +1,5 @@
-import { fromPromise } from "../fromPromise";
-import { toPromise } from "../toPromise";
+import { fromPromise } from "../fromPromise.js";
+import { toPromise } from "../toPromise.js";
 
 describe("fromPromise", () => {
   const data = {

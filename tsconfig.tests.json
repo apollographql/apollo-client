@@ -1,5 +1,5 @@
 {
-  "extends": "./src/tsconfig.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "target": "es5",
     "moduleResolution": "Node",

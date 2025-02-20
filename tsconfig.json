@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedParameters": false,
@@ -17,10 +18,20 @@
     "experimentalDecorators": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["es2015", "esnext.asynciterable"],
+    "lib": ["DOM", "ES2023"],
+    "types": [
+      "jest",
+      "node",
+      "./src/testing/matchers/index.d.ts",
+      "@testing-library/react-render-stream/expect"
+    ],
     "jsx": "react",
     "strict": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/__tests__/**/*"]
+  "references": [
+    {
+      "path": "./config/tsconfig.json"
+    }
+  ]
 }

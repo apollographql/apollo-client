@@ -66,7 +66,6 @@ const config = {
   typescript: {
     config: [
       "tsconfig.json",
-      "src/tsconfig.json",
       "eslint-local-rules/tsconfig.json",
       "config/tsconfig.json",
     ],

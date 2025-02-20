@@ -1,17 +1,17 @@
-import { createFragmentRegistry } from "../../../cache";
+import { createFragmentRegistry } from "../../../cache/index.js";
 import {
   ApolloClient,
   ApolloLink,
   DocumentTransform,
   InMemoryCache,
   gql,
-} from "../../../core";
-import { createPersistedQueryLink } from "../../../link/persisted-queries";
-import { removeTypenameFromVariables } from "../../../link/remove-typename";
+} from "../../../core/index.js";
+import { createPersistedQueryLink } from "../../../link/persisted-queries/index.js";
+import { removeTypenameFromVariables } from "../../../link/remove-typename/index.js";
 import crypto from "crypto";
 // importing react so the `parser` cache initializes
-import "../../../react";
-import { cacheSizes, defaultCacheSizes } from "../sizes";
+import "../../../react/index.js";
+import { cacheSizes, defaultCacheSizes } from "../sizes.js";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

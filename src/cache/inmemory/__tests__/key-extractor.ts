@@ -1,10 +1,10 @@
-import { KeySpecifier } from "../policies";
-import { canonicalStringify } from "../../../utilities";
+import { KeySpecifier } from "../policies.js";
+import { canonicalStringify } from "../../../utilities/index.js";
 import {
   getSpecifierPaths,
   collectSpecifierPaths,
   extractKeyPath,
-} from "../key-extractor";
+} from "../key-extractor.js";
 
 describe("keyFields and keyArgs extraction", () => {
   it("getSpecifierPaths should work for various specifiers", () => {

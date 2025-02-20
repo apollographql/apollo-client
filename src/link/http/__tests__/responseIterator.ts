@@ -1,10 +1,10 @@
-import gql from "graphql-tag";
-import { execute } from "../../core/execute";
-import { HttpLink } from "../HttpLink";
+import { gql } from "graphql-tag";
+import { execute } from "../../core/execute.js";
+import { HttpLink } from "../HttpLink.js";
 import { TextEncoder, TextDecoder } from "util";
 import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
-import { ObservableStream } from "../../../testing/internal";
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 var Blob = require("blob-polyfill").Blob;
 

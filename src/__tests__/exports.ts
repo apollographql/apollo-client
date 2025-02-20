@@ -3,40 +3,41 @@
 // A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524)
 // B) We're just testing imports/exports, so no reason not to use Node for slightly better performance.
 
-import * as cache from "../cache";
-import * as client from "..";
-import * as core from "../core";
-import * as dev from "../dev";
-import * as errors from "../errors";
-import * as linkBatch from "../link/batch";
-import * as linkBatchHTTP from "../link/batch-http";
-import * as linkContext from "../link/context";
-import * as linkCore from "../link/core";
-import * as linkError from "../link/error";
-import * as linkHTTP from "../link/http";
-import * as linkPersistedQueries from "../link/persisted-queries";
-import * as linkRetry from "../link/retry";
-import * as linkRemoveTypename from "../link/remove-typename";
-import * as linkSchema from "../link/schema";
-import * as linkSubscriptions from "../link/subscriptions";
-import * as linkUtils from "../link/utils";
-import * as linkWS from "../link/ws";
-import * as masking from "../masking";
-import * as react from "../react";
-import * as reactContext from "../react/context";
-import * as reactHooks from "../react/hooks";
-import * as reactInternal from "../react/internal";
-import * as reactParser from "../react/parser";
-import * as reactSSR from "../react/ssr";
-import * as testing from "../testing";
-import * as testingCore from "../testing/core";
-import * as testingExperimental from "../testing/experimental";
-import * as testingReact from "../testing/react";
-import * as utilities from "../utilities";
-import * as utilitiesGlobals from "../utilities/globals";
-import * as urqlUtilities from "../utilities/subscriptions/urql";
-import * as utilitiesGlobalsEnvironment from "../utilities/globals/environment";
+import * as cache from "../cache/index.js";
+import * as client from "../index.js";
+import * as core from "../core/index.js";
+import * as dev from "../dev/index.js";
+import * as errors from "../errors/index.js";
+import * as linkBatch from "../link/batch/index.js";
+import * as linkBatchHTTP from "../link/batch-http/index.js";
+import * as linkContext from "../link/context/index.js";
+import * as linkCore from "../link/core/index.js";
+import * as linkError from "../link/error/index.js";
+import * as linkHTTP from "../link/http/index.js";
+import * as linkPersistedQueries from "../link/persisted-queries/index.js";
+import * as linkRetry from "../link/retry/index.js";
+import * as linkRemoveTypename from "../link/remove-typename/index.js";
+import * as linkSchema from "../link/schema/index.js";
+import * as linkSubscriptions from "../link/subscriptions/index.js";
+import * as linkUtils from "../link/utils/index.js";
+import * as linkWS from "../link/ws/index.js";
+import * as masking from "../masking/index.js";
+import * as react from "../react/index.js";
+import * as reactContext from "../react/context/index.js";
+import * as reactHooks from "../react/hooks/index.js";
+import * as reactInternal from "../react/internal/index.js";
+import * as reactParser from "../react/parser/index.js";
+import * as reactSSR from "../react/ssr/index.js";
+import * as testing from "../testing/index.js";
+import * as testingCore from "../testing/core/index.js";
+import * as testingExperimental from "../testing/experimental/index.js";
+import * as testingReact from "../testing/react/index.js";
+import * as utilities from "../utilities/index.js";
+import * as utilitiesGlobals from "../utilities/globals/index.js";
+import * as urqlUtilities from "../utilities/subscriptions/urql/index.js";
+import * as utilitiesGlobalsEnvironment from "../utilities/globals/environment/index.js";
 
+// @ts-ignore
 import { entryPoints } from "../../config/entryPoints.js";
 
 type Namespace = object;

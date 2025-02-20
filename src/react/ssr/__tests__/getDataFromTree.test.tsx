@@ -1,15 +1,15 @@
-import "../../../testing/internal/messageChannelPolyfill";
+import "../../../testing/internal/messageChannelPolyfill.js";
 import React from "react";
 
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { DocumentNode } from "graphql";
 
-import { ApolloClient, TypedDocumentNode } from "../../../core";
-import { InMemoryCache as Cache } from "../../../cache";
-import { getDataFromTree } from "../getDataFromTree";
-import { mockSingleLink } from "../../../testing";
-import { useQuery } from "../../hooks";
-import { ApolloProvider, getApolloContext } from "../../context";
+import { ApolloClient, TypedDocumentNode } from "../../../core/index.js";
+import { InMemoryCache as Cache } from "../../../cache/index.js";
+import { getDataFromTree } from "../getDataFromTree.js";
+import { mockSingleLink } from "../../../testing/index.js";
+import { useQuery } from "../../hooks/index.js";
+import { ApolloProvider, getApolloContext } from "../../context/index.js";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {

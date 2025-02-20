@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -7,26 +7,34 @@ import {
   ApolloQueryResult,
   NetworkStatus,
   WatchQueryFetchPolicy,
-} from "../../core";
-import { ObservableQuery } from "../ObservableQuery";
-import { QueryManager } from "../QueryManager";
+} from "../../core/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import { QueryManager } from "../QueryManager.js";
 
 import {
   DeepPartial,
   DocumentTransform,
   Observable,
   removeDirectivesFromDocument,
-} from "../../utilities";
-import { ApolloLink, FetchResult } from "../../link/core";
-import { InMemoryCache } from "../../cache";
-import { ApolloError } from "../../errors";
+} from "../../utilities/index.js";
+import { ApolloLink, FetchResult } from "../../link/core/index.js";
+import { InMemoryCache } from "../../cache/index.js";
+import { ApolloError } from "../../errors/index.js";
 
-import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
+import {
+  MockLink,
+  MockSubscriptionLink,
+  tick,
+  wait,
+} from "../../testing/index.js";
 import { expectTypeOf } from "expect-type";
 
 import { SubscriptionObserver } from "zen-observable-ts";
 import { waitFor } from "@testing-library/react";
-import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];

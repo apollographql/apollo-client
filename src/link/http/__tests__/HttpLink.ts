@@ -1,4 +1,4 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import fetchMock from "fetch-mock";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { TextDecoder } from "util";
@@ -9,18 +9,18 @@ import {
   Observable,
   Observer,
   ObservableSubscription,
-} from "../../../utilities/observables/Observable";
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
-import { HttpLink } from "../HttpLink";
-import { createHttpLink } from "../createHttpLink";
-import { ClientParseError } from "../serializeFetchParameter";
-import { ServerParseError } from "../parseAndCheckHttpResponse";
-import { FetchResult, ServerError } from "../../..";
-import { voidFetchDuringEachTest } from "./helpers";
-import { wait } from "../../../testing";
-import { ObservableStream } from "../../../testing/internal";
+} from "../../../utilities/observables/Observable.js";
+import { ApolloLink } from "../../core/ApolloLink.js";
+import { execute } from "../../core/execute.js";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
+import { HttpLink } from "../HttpLink.js";
+import { createHttpLink } from "../createHttpLink.js";
+import { ClientParseError } from "../serializeFetchParameter.js";
+import { ServerParseError } from "../parseAndCheckHttpResponse.js";
+import { FetchResult, ServerError } from "../../../index.js";
+import { voidFetchDuringEachTest } from "./helpers.js";
+import { wait } from "../../../testing/index.js";
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 const sampleQuery = gql`
   query SampleQuery {

@@ -1,7 +1,7 @@
 import {
   useSuspenseFragment,
   UseSuspenseFragmentResult,
-} from "../useSuspenseFragment";
+} from "../useSuspenseFragment.js";
 import {
   ApolloClient,
   FragmentType,
@@ -12,22 +12,22 @@ import {
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
-} from "../../../core";
+} from "../../../core/index.js";
 import React, { Suspense } from "react";
-import { ApolloProvider } from "../../context";
+import { ApolloProvider } from "../../context/index.js";
 import {
   createRenderStream,
   disableActEnvironment,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { renderAsync, spyOnConsole } from "../../../testing/internal";
+import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { InvariantError } from "ts-invariant";
-import { MockSubscriptionLink, wait } from "../../../testing";
-import { MockedProvider } from "../../../testing/react";
+import { MockSubscriptionLink, wait } from "../../../testing/index.js";
+import { MockedProvider } from "../../../testing/react/index.js";
 import { expectTypeOf } from "expect-type";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({

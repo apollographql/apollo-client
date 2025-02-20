@@ -2,12 +2,12 @@ import {
   NormalizedCache,
   NormalizedCacheObject,
   DiffQueryAgainstStoreOptions,
-} from "../types";
-import { EntityStore } from "../entityStore";
-import { InMemoryCache } from "../inMemoryCache";
-import { StoreReader } from "../readFromStore";
-import { StoreWriter } from "../writeToStore";
-import { Cache } from "../../../core";
+} from "../types.js";
+import { EntityStore } from "../entityStore.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { StoreReader } from "../readFromStore.js";
+import { StoreWriter } from "../writeToStore.js";
+import { Cache } from "../../../core/index.js";
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject

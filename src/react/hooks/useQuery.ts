@@ -55,10 +55,6 @@ import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-const {
-  prototype: { hasOwnProperty },
-} = Object;
-
 type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
   QueryResult<TData, TVariables>,
   Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
@@ -364,42 +360,6 @@ function useObservableSubscriptionResult<
           setResult(result, resultData, observable, client, handleStoreChange);
         };
 
-        const onError = (error: Error) => {
-          console.trace("on error");
-          subscription.current.unsubscribe();
-          subscription.current = observable.resubscribeAfterError(
-            onNext,
-            onError
-          );
-
-          if (!hasOwnProperty.call(error, "graphQLErrors")) {
-            // The error is not a GraphQL error
-            throw error;
-          }
-
-          const previousResult = resultData.current;
-          if (
-            !previousResult ||
-            (previousResult && previousResult.loading) ||
-            !equal(error, previousResult.error)
-          ) {
-            setResult(
-              {
-                data: (previousResult &&
-                  previousResult.data) as MaybeMasked<TData>,
-                error: error as ApolloError,
-                loading: false,
-                networkStatus: NetworkStatus.error,
-                partial: !previousResult?.data,
-              },
-              resultData,
-              observable,
-              client,
-              handleStoreChange
-            );
-          }
-        };
-
         // TODO evaluate if we keep this in
         // React Compiler cannot handle scoped `let` access, but a mutable object
         // like this is fine.
@@ -408,7 +368,7 @@ function useObservableSubscriptionResult<
         const subscription = {
           current: observable
             .pipe(observeOn(asapScheduler))
-            .subscribe({ next: onNext, error: onError }),
+            .subscribe({ next: onNext }),
         };
 
         // Do the "unsubscribe" with a short delay.

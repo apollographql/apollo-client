@@ -1965,12 +1965,12 @@ describe("useQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "GetCounter") {
-                observer.next({
-                  data: {
-                    counter: ++count,
-                  },
-                });
                 setTimeout(() => {
+                  observer.next({
+                    data: {
+                      counter: ++count,
+                    },
+                  });
                   observer.complete();
                 }, 10);
               } else {
@@ -2186,12 +2186,15 @@ describe("useQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "Counter") {
-                observer.next({
-                  data: {
-                    linkCount: ++linkCount,
-                  },
+                // Emit the value async so we can observe the loading state
+                setTimeout(() => {
+                  observer.next({
+                    data: {
+                      linkCount: ++linkCount,
+                    },
+                  });
+                  observer.complete();
                 });
-                observer.complete();
               }
             })
         ),

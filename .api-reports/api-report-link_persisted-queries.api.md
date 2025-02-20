@@ -7,8 +7,8 @@
 import type { DocumentNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
+import type { Observable } from 'rxjs';
+import type { Subscriber } from 'rxjs';
 
 // @public (undocumented)
 class ApolloLink {
@@ -33,7 +33,7 @@ class ApolloLink {
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
+    protected onError(error: any, observer?: Subscriber<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)

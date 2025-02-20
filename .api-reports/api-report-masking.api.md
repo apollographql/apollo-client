@@ -8,7 +8,7 @@ import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
-import { Observable } from 'zen-observable-ts';
+import { Observable } from 'rxjs';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 // Warning: (ae-forgotten-export) The symbol "Modifier" needs to be exported by the entry point index.d.ts

@@ -8615,34 +8615,34 @@ describe("useQuery Hook", () => {
         link: new ApolloLink(
           (request) =>
             new Observable((observer) => {
-              switch (request.operationName) {
-                case "A": {
-                  observer.next({
-                    data: {
-                      a: (stringOfAs += "a"),
-                    },
-                  });
-                  break;
-                }
-                case "AB": {
-                  observer.next({
-                    data: {
-                      a: (stringOfAs += "a"),
-                      b: (countOfBs += 1),
-                    },
-                  });
-                  break;
-                }
-                case "B": {
-                  observer.next({
-                    data: {
-                      b: (countOfBs += 1),
-                    },
-                  });
-                  break;
-                }
-              }
               setTimeout(() => {
+                switch (request.operationName) {
+                  case "A": {
+                    observer.next({
+                      data: {
+                        a: (stringOfAs += "a"),
+                      },
+                    });
+                    break;
+                  }
+                  case "AB": {
+                    observer.next({
+                      data: {
+                        a: (stringOfAs += "a"),
+                        b: (countOfBs += 1),
+                      },
+                    });
+                    break;
+                  }
+                  case "B": {
+                    observer.next({
+                      data: {
+                        b: (countOfBs += 1),
+                      },
+                    });
+                    break;
+                  }
+                }
                 observer.complete();
               }, 10);
             })

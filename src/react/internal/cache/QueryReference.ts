@@ -488,13 +488,7 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscribeToQuery() {
     this.subscription = this.observable
-      .pipe(
-        filter(
-          // TODO: Determine if we can modify this now that cache.diff returns
-          // null for empty data
-          (result) => !equal(result.data, {}) && !equal(result, this.result)
-        )
-      )
+      .pipe(filter((result) => !equal(result, this.result)))
       .subscribe(this.handleNext);
   }
 

@@ -6996,8 +6996,11 @@ describe("useQuery Hook", () => {
             } else if (operation.variables.id === 2) {
               // Queries for this ID return immediately
               const data = mocks[2].splice(0, 1).pop();
-              observer.next({ data });
-              observer.complete();
+              // Delay execution so we can obseve the loading state
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              });
             } else {
               observer.error(new Error("Unexpected query"));
             }

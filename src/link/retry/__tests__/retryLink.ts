@@ -103,9 +103,9 @@ describe("RetryLink", () => {
 
   it("multiple subscribers will trigger multiple requests", async () => {
     const subscriber = {
-      next: jest.fn(console.log),
-      error: jest.fn(console.error),
-      complete: jest.fn(console.info),
+      next: jest.fn(),
+      error: jest.fn(),
+      complete: jest.fn(),
     };
     const retry = new RetryLink({
       delay: { initial: 1 },

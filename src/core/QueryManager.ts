@@ -1842,7 +1842,7 @@ export class QueryManager<TStore> {
 
 // Return types used by fetchQueryByPolicy and other private methods above.
 interface FetchObservableInfo {
-  // Metadata properties that can be returned in addition to the Concast.
+  // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
 }
 interface ObservableAndInfo<TData> extends FetchObservableInfo {

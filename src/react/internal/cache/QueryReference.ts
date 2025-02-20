@@ -3,7 +3,6 @@ import type { Subscription } from "rxjs";
 import { filter } from "rxjs";
 
 import type {
-  ApolloError,
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
@@ -229,7 +228,6 @@ export class InternalQueryReference<TData = unknown> {
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
-    this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
 
@@ -443,25 +441,6 @@ export class InternalQueryReference<TData = unknown> {
     }
   }
 
-  private handleError(error: ApolloError) {
-    this.subscription.unsubscribe();
-    this.subscription = this.observable.resubscribeAfterError(
-      this.handleNext,
-      this.handleError
-    );
-
-    switch (this.promise.status) {
-      case "pending": {
-        this.reject?.(error);
-        break;
-      }
-      default: {
-        this.promise = createRejectedPromise(error);
-        this.deliver(this.promise);
-      }
-    }
-  }
-
   private deliver(promise: QueryRefPromise<TData>) {
     this.listeners.forEach((listener) => listener(promise));
   }
@@ -516,7 +495,7 @@ export class InternalQueryReference<TData = unknown> {
           (result) => !equal(result.data, {}) && !equal(result, this.result)
         )
       )
-      .subscribe({ next: this.handleNext, error: this.handleError });
+      .subscribe(this.handleNext);
   }
 
   private setResult() {

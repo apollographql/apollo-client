@@ -594,9 +594,11 @@ describe("useSuspenseQuery", () => {
 
     const previousResult = result.current;
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated cache greeting" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated cache greeting" },
+      });
     });
 
     await waitFor(() => {

@@ -404,8 +404,13 @@ export class InternalQueryReference<TData = unknown> {
         if (result.data === void 0) {
           result.data = this.result.data;
         }
-        this.result = result;
-        this.resolve?.(result);
+
+        if (result.error) {
+          this.reject?.(result.error);
+        } else {
+          this.result = result;
+          this.resolve?.(result);
+        }
         break;
       }
       default: {

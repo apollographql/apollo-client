@@ -4,7 +4,7 @@ import gql from "graphql-tag";
 import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
-import { Observable, of } from "rxjs";
+import { asapScheduler, Observable, observeOn, of } from "rxjs";
 import {
   ApolloClient,
   ApolloError,
@@ -7734,9 +7734,8 @@ describe("useQuery Hook", () => {
       `;
       let linkCount = 0;
       const link = new ApolloLink(() =>
-        of({
-          data: { hello: ++linkCount },
-        })
+        // Emit the value  async so we can observe the loading state
+        of({ data: { hello: ++linkCount } }).pipe(observeOn(asapScheduler))
       );
 
       const client = new ApolloClient({

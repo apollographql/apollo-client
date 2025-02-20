@@ -61,6 +61,31 @@ function renameJsFilesToCjs(options: BuildStepOptions) {
             }
             this.traverse(path);
           },
+          visitImportDeclaration(path) {
+            const node = path.node;
+            if (
+              node.source.type === "StringLiteral" &&
+              node.source.value.startsWith(".") &&
+              node.source.value.endsWith(".js")
+            ) {
+              node.source.value = node.source.value.replace(/\.js$/, ".cjs");
+            }
+            this.traverse(path);
+          },
+          visitTSImportType(path) {
+            const node = path.node;
+            if (
+              node.argument.type === "StringLiteral" &&
+              node.argument.value.startsWith(".") &&
+              node.argument.value.endsWith(".js")
+            ) {
+              node.argument.value = node.argument.value.replace(
+                /\.js$/,
+                ".cjs"
+              );
+            }
+            this.traverse(path);
+          },
         }),
         targetFileName: sourceName
           .replace(/\.js$/, ".cjs")

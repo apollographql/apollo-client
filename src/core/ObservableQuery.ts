@@ -102,7 +102,7 @@ export class ObservableQuery<
   private queryInfo: QueryInfo;
 
   private subscription?: Subscription;
-  private obs?: Observable<ApolloQueryResult<TData>>;
+  private linkObservable?: Observable<ApolloQueryResult<TData>>;
 
   private pollingInfo?: {
     interval: number;
@@ -1080,7 +1080,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
-      if (this.obs === observable) {
+      if (this.linkObservable === observable) {
         this.waitForOwnResult = false;
       }
     };
@@ -1117,7 +1117,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         this.subscription.unsubscribe();
       }
 
-      this.obs = observable;
+      this.linkObservable = observable;
       this.subscription = observable.subscribe(observer);
     } else {
       observable.subscribe(observer);
@@ -1184,9 +1184,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
-    if (this.obs && this.subscription) {
+    if (this.linkObservable && this.subscription) {
       this.subscription.unsubscribe();
-      delete this.obs;
+      delete this.linkObservable;
       delete this.subscription;
     }
 

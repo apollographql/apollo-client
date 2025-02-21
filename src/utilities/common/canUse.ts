@@ -2,8 +2,6 @@ import { maybe } from "@apollo/client/utilities/globals";
 
 const isReactNative = maybe(() => navigator.product) == "ReactNative";
 
-export const canUseWeakSet = typeof WeakSet === "function";
-
 export const canUseSymbol =
   typeof Symbol === "function" && typeof Symbol.for === "function";
 

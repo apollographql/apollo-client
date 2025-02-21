@@ -37,8 +37,9 @@ import {
 } from "../../watchQueryOptions.js";
 
 // TODO: Remove eventually as we should not be testing internals like this.
-// This was imported from the ObservableQuery test, but the import causes that
-// test file to run when trying to run just this file.
+// This was originally imported from the ObservableQuery test, but the import
+// causes that test file to run when trying to run just this file so this is now
+// inlined.
 const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchObservableWithInfo = queryManager["fetchObservableWithInfo"];
   const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (

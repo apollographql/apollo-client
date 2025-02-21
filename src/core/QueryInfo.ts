@@ -9,11 +9,7 @@ import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
 import type { QueryListener } from "./types.js";
 import type { FetchResult } from "../link/core/index.js";
-import {
-  isNonEmptyArray,
-  graphQLResultHasError,
-  canUseWeakMap,
-} from "../utilities/index.js";
+import { isNonEmptyArray, graphQLResultHasError } from "../utilities/index.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
 import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
@@ -30,10 +26,7 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
-  ApolloCache<any>,
-  number
->();
+const destructiveMethodCounts = new WeakMap<ApolloCache<any>, number>();
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,

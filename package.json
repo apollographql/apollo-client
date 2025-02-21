@@ -103,6 +103,7 @@
     "symbol-observable": "^4.0.0",
     "ts-invariant": "^0.10.3",
     "tslib": "^2.3.0",
+    "use-sync-external-store": "^1.4.0",
     "zen-observable-ts": "^1.2.5"
   },
   "devDependencies": {

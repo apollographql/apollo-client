@@ -521,22 +521,7 @@ export const canonicalStringify: ((value: any) => string) & {
 type CanReadFunction = (value: StoreValue) => boolean;
 
 // @public (undocumented)
-export const canUseAsyncIteratorSymbol: false | typeof Symbol.asyncIterator;
-
-// @public (undocumented)
 export const canUseDOM: boolean;
-
-// @public (undocumented)
-export const canUseLayoutEffect: boolean;
-
-// @public (undocumented)
-export const canUseSymbol: boolean;
-
-// @public (undocumented)
-export const canUseWeakMap: boolean;
-
-// @public (undocumented)
-export const canUseWeakSet: boolean;
 
 // @public (undocumented)
 export function checkDocument(doc: DocumentNode): DocumentNode;

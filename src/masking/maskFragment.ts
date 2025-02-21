@@ -5,11 +5,7 @@ import type {
   DocumentNode,
   TypedDocumentNode,
 } from "../core/index.js";
-import {
-  MapImpl,
-  SetImpl,
-  warnOnImproperCacheImplementation,
-} from "./utils.js";
+import { warnOnImproperCacheImplementation } from "./utils.js";
 import { invariant } from "../utilities/globals/index.js";
 import equal from "@wry/equality";
 import { maskDefinition } from "./maskDefinition.js";
@@ -74,7 +70,7 @@ export function maskFragment<TData = unknown>(
     operationName: fragment.name.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
+    mutableTargets: new WeakMap(),
+    knownChanged: new WeakSet(),
   });
 }

@@ -1115,8 +1115,6 @@ export class QueryManager<TStore> {
   }
 
   private stopQueryNoBroadcast(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) queryInfo.stop();
     this.removeQuery(queryId);
   }
 

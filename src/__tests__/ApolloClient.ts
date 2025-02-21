@@ -2,7 +2,7 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { expectTypeOf } from "expect-type";
 import { Kind } from "graphql";
 import { gql } from "graphql-tag";
-import { Observable, of } from "rxjs";
+import { EMPTY, Observable, of } from "rxjs";
 
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
@@ -2822,7 +2822,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return of();
+          return EMPTY;
         });
 
       const client = new ApolloClient({

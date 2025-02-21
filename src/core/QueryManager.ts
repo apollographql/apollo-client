@@ -4,6 +4,7 @@ import type { Subscription } from "rxjs";
 import {
   catchError,
   concat,
+  EMPTY,
   from,
   lastValueFrom,
   map,
@@ -1816,7 +1817,7 @@ export class QueryManager<TStore> {
         return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":
-        return { fromLink: false, observable: of() };
+        return { fromLink: false, observable: EMPTY };
     }
   }
 

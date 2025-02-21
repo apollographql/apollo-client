@@ -1,5 +1,5 @@
 import type { Subscription } from "rxjs";
-import { Observable, of } from "rxjs";
+import { Observable, EMPTY } from "rxjs";
 
 import type {
   FetchResult,
@@ -171,7 +171,7 @@ export class OperationBatcher {
       completes.push(request.complete);
     });
 
-    const batchedObservable = this.batchHandler(operations, forwards) || of();
+    const batchedObservable = this.batchHandler(operations, forwards) || EMPTY;
 
     const onError = (error: Error) => {
       //each callback list in batch

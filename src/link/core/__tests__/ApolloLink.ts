@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 import { print } from "graphql";
 
-import { Observable, of, map } from "rxjs";
+import { Observable, of, map, EMPTY } from "rxjs";
 import { FetchResult, Operation, NextLink, GraphQLRequest } from "../types";
 import { ApolloLink } from "../ApolloLink";
 import { ObservableStream } from "../../../testing/internal";
@@ -279,7 +279,7 @@ describe("ApolloClient", () => {
             query: print(operation.query),
           })
         );
-        return of();
+        return EMPTY;
       });
       const stream = new ObservableStream(
         execute(link, {
@@ -343,7 +343,7 @@ describe("ApolloClient", () => {
         let context = { test: true };
         const link = new SetContextLink(() => context).split(
           (op) => op.getContext().test,
-          () => of(),
+          () => EMPTY,
           () => null
         );
 
@@ -382,7 +382,7 @@ describe("ApolloClient", () => {
           expect(op["variables"]).toBeDefined();
           expect((op as any)["context"]).toBeUndefined();
           expect(op["extensions"]).toBeDefined();
-          return of();
+          return EMPTY;
         });
 
         const stream = new ObservableStream(execute(link, operation));
@@ -1064,7 +1064,7 @@ describe("ApolloClient", () => {
       });
 
       it("should warn if attempting to concat to a terminating Link", () => {
-        const link = new ApolloLink((operation) => of());
+        const link = new ApolloLink((operation) => EMPTY);
         expect(link.concat((operation, forward) => forward(operation))).toEqual(
           link
         );
@@ -1074,7 +1074,7 @@ describe("ApolloClient", () => {
 
       it("should not warn if attempting concat a terminating Link at end", () => {
         const link = new ApolloLink((operation, forward) => forward(operation));
-        link.concat((operation) => of());
+        link.concat((operation) => EMPTY);
         expect(warningStub).not.toBeCalled();
       });
     });

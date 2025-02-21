@@ -36,6 +36,7 @@ import {
   lastValueFrom,
   mergeWith,
   share,
+  EMPTY,
 } from "rxjs";
 import {
   getDefaultValues,
@@ -1838,7 +1839,7 @@ export class QueryManager<TStore> {
         return { fromLink: true, observable: resultsFromLink() };
 
       case "standby":
-        return { fromLink: false, observable: of() };
+        return { fromLink: false, observable: EMPTY };
     }
   }
 

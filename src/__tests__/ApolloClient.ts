@@ -12,7 +12,7 @@ import {
 import { Kind } from "graphql";
 
 import { DeepPartial } from "../utilities";
-import { Observable, of } from "rxjs";
+import { EMPTY, Observable, of } from "rxjs";
 import { ApolloLink, FetchResult } from "../link/core";
 import { HttpLink } from "../link/http";
 import { createFragmentRegistry, InMemoryCache } from "../cache";
@@ -2822,7 +2822,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return of();
+          return EMPTY;
         });
 
       const client = new ApolloClient({

@@ -25,7 +25,7 @@ import {
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "../utilities";
-import { EmptyError, Observable, Subscription, of } from "rxjs";
+import { EMPTY, EmptyError, Observable, Subscription, of } from "rxjs";
 import { ApolloLink } from "../link/core";
 import {
   createFragmentRegistry,
@@ -3974,7 +3974,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return of();
+      return EMPTY;
     });
 
     const client = new ApolloClient({

@@ -5,7 +5,7 @@ import type {
   DocumentNode,
   TypedDocumentNode,
 } from "../core/index.js";
-import { SetImpl, warnOnImproperCacheImplementation } from "./utils.js";
+import { warnOnImproperCacheImplementation } from "./utils.js";
 import { invariant } from "../utilities/globals/index.js";
 import equal from "@wry/equality";
 import { maskDefinition } from "./maskDefinition.js";

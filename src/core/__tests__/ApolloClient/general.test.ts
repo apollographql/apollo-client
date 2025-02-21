@@ -1,6 +1,4 @@
 // externals
-import { from } from "rxjs";
-import { map } from "rxjs/operators";
 import gql from "graphql-tag";
 import { DocumentNode, GraphQLError } from "graphql";
 import { InvariantError, setVerbosity } from "ts-invariant";
@@ -590,60 +588,6 @@ describe("ApolloClient", () => {
     });
 
     await expect(stream).not.toEmitAnything();
-  });
-
-  // TODO: Determine if we should remove this test
-  it.skip("supports interoperability with other Observable implementations like RxJS", async () => {
-    const expResult = {
-      data: {
-        allPeople: {
-          people: [
-            {
-              name: "Luke Skywalker",
-            },
-          ],
-        },
-      },
-    };
-
-    const query = gql`
-      query people {
-        allPeople(first: 1) {
-          people {
-            name
-          }
-        }
-      }
-    `;
-
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new MockLink([{ request: { query }, result: expResult }]),
-    });
-    const handle = client.watchQuery({
-      query,
-      notifyOnNetworkStatusChange: false,
-    });
-
-    const observable = from(handle as any);
-
-    const stream = new ObservableStream(
-      observable.pipe(
-        map((result: any) => ({ fromRx: true, ...result }))
-      ) as unknown as Observable<any>
-    );
-
-    // TODO: Determine if we can find another way to test that the value went
-    // through the rxjs `map` function. Ideally we can replace this matcher with
-    // `toEmitApolloQueryResult`, but the `fromRx` value is not a valid
-    // `ApolloQueryResult` so TypeScript complains.
-    await expect(stream).toEmitValue({
-      fromRx: true,
-      loading: false,
-      networkStatus: 7,
-      partial: false,
-      ...expResult,
-    });
   });
 
   it("allows you to subscribe twice to one query", async () => {

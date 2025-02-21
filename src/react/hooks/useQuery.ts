@@ -353,43 +353,41 @@ function useObservableSubscriptionResult<
         // like this is fine.
         // was:
         // let subscription = observable.subscribe(onNext);
-        const subscription = {
-          current: observable
-            // We use the asapScheduler here to prevent issues with trying to
-            // update in the middle of a render. `reobserve` is kicked off in the
-            // middle of a render and because RxJS emits values synchronously,
-            // its possible for this `handleStoreChange` to be called in that same
-            // render. This allows the render to complete before trying to emit a
-            // new value.
-            .pipe(observeOn(asapScheduler))
-            .subscribe((result) => {
-              const previousResult = resultData.current;
-              // Make sure we're not attempting to re-render similar results
-              if (
-                previousResult &&
-                previousResult.loading === result.loading &&
-                previousResult.networkStatus === result.networkStatus &&
-                equal(previousResult.data, result.data)
-              ) {
-                return;
-              }
+        const subscription = observable
+          // We use the asapScheduler here to prevent issues with trying to
+          // update in the middle of a render. `reobserve` is kicked off in the
+          // middle of a render and because RxJS emits values synchronously,
+          // its possible for this `handleStoreChange` to be called in that same
+          // render. This allows the render to complete before trying to emit a
+          // new value.
+          .pipe(observeOn(asapScheduler))
+          .subscribe((result) => {
+            const previousResult = resultData.current;
+            // Make sure we're not attempting to re-render similar results
+            if (
+              previousResult &&
+              previousResult.loading === result.loading &&
+              previousResult.networkStatus === result.networkStatus &&
+              equal(previousResult.data, result.data)
+            ) {
+              return;
+            }
 
-              setResult(
-                result,
-                resultData,
-                observable,
-                client,
-                handleStoreChange
-              );
-            }),
-        };
+            setResult(
+              result,
+              resultData,
+              observable,
+              client,
+              handleStoreChange
+            );
+          });
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
         // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
         return () => {
-          setTimeout(() => subscription.current.unsubscribe());
+          setTimeout(() => subscription.unsubscribe());
         };
       },
 

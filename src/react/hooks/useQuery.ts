@@ -348,11 +348,6 @@ function useObservableSubscriptionResult<
           return () => {};
         }
 
-        // TODO evaluate if we keep this in
-        // React Compiler cannot handle scoped `let` access, but a mutable object
-        // like this is fine.
-        // was:
-        // let subscription = observable.subscribe(onNext);
         const subscription = observable
           // We use the asapScheduler here to prevent issues with trying to
           // update in the middle of a render. `reobserve` is kicked off in the

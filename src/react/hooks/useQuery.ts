@@ -355,6 +355,12 @@ function useObservableSubscriptionResult<
         // let subscription = observable.subscribe(onNext);
         const subscription = {
           current: observable
+            // We use the asapScheduler here to prevent issues with trying to
+            // update in the middle of a render. `reobserve` is kicked off in the
+            // middle of a render and because RxJS emits values synchronously,
+            // its possible for this `handleStoreChange` to be called in that same
+            // render. This allows the render to complete before trying to emit a
+            // new value.
             .pipe(observeOn(asapScheduler))
             .subscribe((result) => {
               const previousResult = resultData.current;

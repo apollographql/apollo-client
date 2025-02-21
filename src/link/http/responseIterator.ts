@@ -7,8 +7,6 @@ import type { Readable as NodeReadableStream } from "stream";
 
 import type { Response as NodeResponse } from "node-fetch";
 
-import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
-
 import asyncIterator from "./iterators/async.js";
 import nodeStreamIterator from "./iterators/nodeStream.js";
 import promiseIterator from "./iterators/promise.js";
@@ -25,10 +23,7 @@ function isReadableStream(value: any): value is ReadableStream<any> {
 function isAsyncIterableIterator(
   value: any
 ): value is AsyncIterableIterator<any> {
-  return !!(
-    canUseAsyncIteratorSymbol &&
-    (value as AsyncIterableIterator<any>)[Symbol.asyncIterator]
-  );
+  return !!(value as AsyncIterableIterator<any>)[Symbol.asyncIterator];
 }
 
 function isStreamableBlob(value: any): value is Blob {

@@ -298,6 +298,10 @@ export class ObservableQuery<
     return (this.observable as any).pipe(...args);
   }
 
+  get closed() {
+    return this.subject.closed;
+  }
+
   // TODO: Consider deprecating this method. If not, use firstValueFrom helper
   // instead.
   public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {

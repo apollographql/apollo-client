@@ -153,9 +153,7 @@ describe("Link interactions", () => {
     });
   });
 
-  // TODO: Determine how to handle this test since rxjs throws if error
-  // callbacks are not defined
-  it.skip("cleans up all links on the final unsubscribe from watchQuery [error]", (done) => {
+  it("cleans up all links on the final unsubscribe from watchQuery [error]", (done) => {
     const query = gql`
       query WatchedLuke {
         people_one(id: 1) {
@@ -193,7 +191,7 @@ describe("Link interactions", () => {
     observable.subscribe({
       next: () => count++,
       error: () => {
-        count = 0;
+        throw new Error("Error should not be called");
       },
     });
     // third watch (to be unsubscribed)
@@ -213,15 +211,11 @@ describe("Link interactions", () => {
       // final unsubscribe should be called now
       // since errors clean up subscriptions
       link.simulateResult({ error: new Error("dang") });
-
-      setTimeout(() => {
-        expect(count).toEqual(0);
-        done();
-      }, 10);
     }, 10);
 
     link.onUnsubscribe(() => {
-      expect(count).toEqual(4);
+      expect(count).toEqual(5);
+      done();
     });
   });
 

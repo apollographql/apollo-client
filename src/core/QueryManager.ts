@@ -221,7 +221,7 @@ export class QueryManager<TStore> {
    */
   public stop() {
     this.queries.forEach((_info, queryId) => {
-      this.stopQueryNoBroadcast(queryId);
+      this.removeQuery(queryId);
     });
 
     this.cancelPendingFetches(
@@ -1110,12 +1110,8 @@ export class QueryManager<TStore> {
   }
 
   public stopQuery(queryId: string) {
-    this.stopQueryNoBroadcast(queryId);
-    this.broadcastQueries();
-  }
-
-  private stopQueryNoBroadcast(queryId: string) {
     this.removeQuery(queryId);
+    this.broadcastQueries();
   }
 
   public removeQuery(queryId: string) {
@@ -1571,7 +1567,7 @@ export class QueryManager<TStore> {
         }
 
         if (queryId.indexOf("legacyOneTimeQuery") >= 0) {
-          this.stopQueryNoBroadcast(queryId);
+          this.removeQuery(queryId);
         }
       });
     }

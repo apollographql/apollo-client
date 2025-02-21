@@ -506,7 +506,8 @@ describe("ApolloClient", () => {
 
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
 
-    // reobserve will allow the original request to finish so we want to make
+    // reobserve will allow the original request to finish so we should not see
+    // an unsubscribe yet
     await wait(0);
     expect(onRequestUnsubscribe).toHaveBeenCalledTimes(0);
 

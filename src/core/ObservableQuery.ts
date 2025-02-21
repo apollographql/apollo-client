@@ -1227,6 +1227,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private tearDownQuery() {
     if (this.isTornDown) return;
+
+    // Ensure we cannot emit any more values even if we tried
+    this.subject.complete();
     if (this.linkObservable && this.linkSubscription) {
       this.linkSubscription.unsubscribe();
       delete this.linkObservable;

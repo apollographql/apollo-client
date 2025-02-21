@@ -1,7 +1,6 @@
 import { Trie } from "@wry/trie";
 
 import {
-  canUseWeakMap,
   canUseWeakSet,
   isNonNullObject as isObjectOrArray,
 } from "@apollo/client/utilities";
@@ -83,7 +82,7 @@ export class ObjectCanon {
     array?: any[];
     object?: Record<string, any>;
     keys?: SortedKeysInfo;
-  }>(canUseWeakMap);
+  }>();
 
   public isKnown(value: any): boolean {
     return isObjectOrArray(value) && this.known.has(value);

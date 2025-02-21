@@ -6,7 +6,7 @@ import { wrap } from "optimism";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { cacheSizes } from "../caching/index.js";
-import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
+import { canUseWeakSet } from "../common/canUse.js";
 
 import { checkDocument } from "./getFromAST.js";
 
@@ -98,7 +98,7 @@ export class DocumentTransform {
    */
   resetCache() {
     if (this.cached) {
-      const stableCacheKeys = new Trie<WeakKey>(canUseWeakMap);
+      const stableCacheKeys = new Trie<WeakKey>();
       this.performWork = wrap(
         DocumentTransform.prototype.performWork.bind(this),
         {

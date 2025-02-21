@@ -5,7 +5,6 @@ import type {
   ObservableQuery,
   WatchFragmentOptions,
 } from "@apollo/client/core";
-import { canUseWeakMap } from "@apollo/client/utilities";
 
 import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";
@@ -26,12 +25,8 @@ export interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private queryRefs = new Trie<{ current?: InternalQueryReference }>(
-    canUseWeakMap
-  );
-  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
-    canUseWeakMap
-  );
+  private queryRefs = new Trie<{ current?: InternalQueryReference }>();
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>();
 
   private options: SuspenseCacheOptions;
 

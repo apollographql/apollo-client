@@ -870,11 +870,6 @@ export class QueryManager<TStore> {
     return String(this.mutationIdCounter++);
   }
 
-  public stopQueryInStore(queryId: string) {
-    this.stopQueryInStoreNoBroadcast(queryId);
-    this.broadcastQueries();
-  }
-
   private stopQueryInStoreNoBroadcast(queryId: string) {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) queryInfo.stop();

@@ -2,10 +2,7 @@ import { maybe } from "@apollo/client/utilities/globals";
 
 const isReactNative = maybe(() => navigator.product) == "ReactNative";
 
-export const canUseSymbol =
-  typeof Symbol === "function" && typeof Symbol.for === "function";
-
-export const canUseAsyncIteratorSymbol = canUseSymbol && Symbol.asyncIterator;
+export const canUseAsyncIteratorSymbol = Symbol.asyncIterator;
 
 export const canUseDOM =
   typeof maybe(() => window.document.createElement) === "function";

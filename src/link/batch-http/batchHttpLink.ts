@@ -1,12 +1,11 @@
 import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 import {
-  Observable,
   hasDirectives,
   maybe,
   removeClientSetsFromDocument,
 } from "../../utilities/index.js";
-import { fromError } from "../utils/index.js";
+import { Observable, throwError } from "rxjs";
 import type { HttpOptions } from "../http/index.js";
 import {
   serializeFetchParameter,
@@ -17,6 +16,7 @@ import {
   defaultPrinter,
   fallbackHttpConfig,
 } from "../http/index.js";
+import type { BatchHandler } from "../batch/index.js";
 import { BatchLink } from "../batch/index.js";
 import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
@@ -75,7 +75,7 @@ export class BatchHttpLink extends ApolloLink {
     this.batchInterval = batchInterval || 10;
     this.batchMax = batchMax || 10;
 
-    const batchHandler = (operations: Operation[]) => {
+    const batchHandler: BatchHandler = (operations) => {
       const chosenURI = selectURI(operations[0], uri);
 
       const context = operations[0].getContext();
@@ -112,10 +112,11 @@ export class BatchHttpLink extends ApolloLink {
       // If we have a query that returned `null` after removing client-only
       // fields, it indicates a query that is using all client-only fields.
       if (queries.some((query) => !query)) {
-        return fromError<FetchResult[]>(
-          new Error(
-            "BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option."
-          )
+        return throwError(
+          () =>
+            new Error(
+              "BatchHttpLink: Trying to send a client-only query to the server. To send to the server, ensure a non-client field is added to the query or enable the `transformOptions.removeClientFields` option."
+            )
         );
       }
 
@@ -144,15 +145,16 @@ export class BatchHttpLink extends ApolloLink {
 
       // There's no spec for using GET with batches.
       if (options.method === "GET") {
-        return fromError<FetchResult[]>(
-          new Error("apollo-link-batch-http does not support GET requests")
+        return throwError(
+          () =>
+            new Error("apollo-link-batch-http does not support GET requests")
         );
       }
 
       try {
         (options as any).body = serializeFetchParameter(loadedBody, "Payload");
       } catch (parseError) {
-        return fromError<FetchResult[]>(parseError);
+        return throwError(() => parseError);
       }
 
       let controller: AbortController | undefined;
@@ -161,7 +163,7 @@ export class BatchHttpLink extends ApolloLink {
         options.signal = controller.signal;
       }
 
-      return new Observable<FetchResult[]>((observer) => {
+      return new Observable((observer) => {
         // Prefer BatchHttpLink.Options.fetch (preferredFetch) if provided, and
         // otherwise fall back to the *current* global window.fetch function
         // (see issue #7832), or (if all else fails) the backupFetch function we

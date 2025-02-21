@@ -7,6 +7,7 @@ import {
 } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
+import { Observable, of } from "rxjs";
 import {
   gql,
   ApolloError,
@@ -15,7 +16,6 @@ import {
   NetworkStatus,
   TypedDocumentNode,
   ApolloLink,
-  Observable,
   split,
 } from "../../../core";
 import {
@@ -805,16 +805,12 @@ it("allows the client to be overridden", async () => {
   const { query } = setupSimpleCase();
 
   const globalClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "global hello" } })
-    ),
+    link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
     cache: new InMemoryCache(),
   });
 
   const localClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "local hello" } })
-    ),
+    link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
     cache: new InMemoryCache(),
   });
 

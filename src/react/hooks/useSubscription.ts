@@ -3,6 +3,7 @@ import * as React from "rehackt";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
+import { Observable } from "rxjs";
 
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
@@ -18,7 +19,7 @@ import type {
   FetchResult,
   OperationVariables,
 } from "../../core/index.js";
-import { ApolloError, Observable } from "../../core/index.js";
+import { ApolloError } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";

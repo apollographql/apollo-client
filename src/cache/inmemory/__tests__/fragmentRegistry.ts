@@ -1,5 +1,6 @@
 import { ApolloClient, ApolloLink, gql, NetworkStatus } from "../../../core";
-import { getFragmentDefinitions, Observable } from "../../../utilities";
+import { getFragmentDefinitions } from "../../../utilities";
+import { Observable } from "rxjs";
 import { InMemoryCache, createFragmentRegistry } from "../../index";
 import { ObservableStream } from "../../../testing/internal";
 
@@ -62,13 +63,16 @@ describe("FragmentRegistry", () => {
               "SourceFragment",
             ]);
 
-            observer.next({
-              data: {
-                source: "link",
-              },
-            });
+            // Emit value async so we can observe the loading state
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  source: "link",
+                },
+              });
 
-            observer.complete();
+              observer.complete();
+            });
           })
       ),
     });

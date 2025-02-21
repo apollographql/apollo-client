@@ -1,4 +1,4 @@
-import { from, ObservableInput } from "rxjs";
+import { lastValueFrom, Observable } from "rxjs";
 import { take, toArray, map } from "rxjs/operators";
 import { assign, cloneDeep } from "lodash";
 import gql from "graphql-tag";
@@ -17,9 +17,9 @@ import { QueryManager } from "../core/QueryManager";
 
 import { Cache, InMemoryCache } from "../cache";
 
-import { Observable, addTypenameToDocument } from "../utilities";
+import { addTypenameToDocument } from "../utilities";
 
-import { MockedResponse, mockSingleLink } from "../testing";
+import { MockedResponse, MockLink, mockSingleLink } from "../testing";
 import { ObservableStream } from "../testing/internal";
 
 describe("optimistic mutation results", () => {
@@ -221,7 +221,7 @@ describe("optimistic mutation results", () => {
         });
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(true);
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(4);
           expect((dataInStore["Todo99"] as any).text).toBe(
             "Optimistically generated"
@@ -233,7 +233,7 @@ describe("optimistic mutation results", () => {
         );
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(true);
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
           expect(dataInStore).not.toHaveProperty("Todo99");
         }
@@ -1068,11 +1068,44 @@ describe("optimistic mutation results", () => {
     };
 
     it("will insert a single itemAsync to the beginning", async () => {
-      expect.assertions(8);
-      const client = await setup({
-        request: { query: mutation },
-        result: mutationResult,
+      expect.assertions(7);
+      const link = new MockLink([
+        {
+          request: { query },
+          result,
+        },
+        {
+          request: { query: mutation },
+          result: mutationResult,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            TodoList: {
+              fields: {
+                todos: {
+                  // Deliberately silence "Cache data may be lost..."
+                  // warnings by favoring the incoming data, rather than
+                  // (say) concatenating the arrays together.
+                  merge: false,
+                },
+              },
+            },
+          },
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        }),
+        // Enable client.queryManager.mutationStore tracking.
+        connectToDevTools: true,
       });
+
       const stream = new ObservableStream(client.watchQuery({ query }));
 
       await expect(stream).toEmitNext();
@@ -1344,15 +1377,13 @@ describe("optimistic mutation results", () => {
       });
 
       // wrap the QueryObservable with an rxjs observable
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
+      const promise = lastValueFrom(
+        client.watchQuery({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
         )
-        .toPromise();
+      );
 
       // Mutations will not trigger a watchQuery with the results of an optimistic response
       // if set in the same tick of the event loop.
@@ -1792,15 +1823,13 @@ describe("optimistic mutation results", () => {
         }),
       });
 
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
+      const promise = lastValueFrom(
+        client.watchQuery({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
         )
-        .toPromise();
+      );
 
       await new Promise((resolve) => setTimeout(resolve));
 

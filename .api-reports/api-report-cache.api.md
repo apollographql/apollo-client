@@ -8,7 +8,7 @@ import type { DocumentNode } from 'graphql';
 import type { FieldNode } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
-import { Observable } from 'zen-observable-ts';
+import { Observable } from 'rxjs';
 import type { SelectionSetNode } from 'graphql';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';

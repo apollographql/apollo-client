@@ -5,11 +5,7 @@ import { TextDecoder } from "util";
 import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
 
-import {
-  Observable,
-  Observer,
-  ObservableSubscription,
-} from "../../../utilities/observables/Observable";
+import { Observable, Observer, Subscription, map } from "rxjs";
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
 import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
@@ -100,7 +96,7 @@ describe("HttpLink", () => {
     const data2 = { data: { hello: "everyone" } };
     const mockError = { throws: new TypeError("mock me") };
     let subscriber: Observer<any>;
-    const subscriptions = new Set<ObservableSubscription>();
+    const subscriptions = new Set<Subscription>();
 
     beforeEach(() => {
       fetchMock.restore();
@@ -626,12 +622,14 @@ describe("HttpLink", () => {
         operation.setContext({
           headers: { authorization: "1234" },
         });
-        return forward(operation).map((result) => {
-          const { headers } = operation.getContext();
-          expect(headers).toBeDefined();
+        return forward(operation).pipe(
+          map((result) => {
+            const { headers } = operation.getContext();
+            expect(headers).toBeDefined();
 
-          return result;
-        });
+            return result;
+          })
+        );
       });
       const link = middleware.concat(createHttpLink({ uri: "data" }));
 

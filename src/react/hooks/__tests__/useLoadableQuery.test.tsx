@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
+import { Observable } from "rxjs";
 import {
   gql,
   ApolloError,
@@ -12,7 +13,6 @@ import {
   NetworkStatus,
   TypedDocumentNode,
   ApolloLink,
-  Observable,
   OperationVariables,
   RefetchWritePolicy,
   SubscribeToMoreOptions,

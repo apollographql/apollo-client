@@ -22,11 +22,10 @@ import {
 
 import {
   DocumentTransform,
-  Observable,
-  ObservableSubscription,
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "../utilities";
+import { EMPTY, EmptyError, Observable, Subscription, of } from "rxjs";
 import { ApolloLink } from "../link/core";
 import {
   createFragmentRegistry,
@@ -161,7 +160,7 @@ describe("client", () => {
 
     const variables = { first: 1 };
 
-    const link = ApolloLink.from([() => Observable.of({ data })]);
+    const link = ApolloLink.from([() => of({ data })]);
 
     const client = new ApolloClient({
       link,
@@ -689,7 +688,7 @@ describe("client", () => {
       },
     };
 
-    const link = ApolloLink.from([() => Observable.of({ data }, { data })]);
+    const link = ApolloLink.from([() => of({ data }, { data })]);
 
     const client = new ApolloClient({
       link,
@@ -951,7 +950,7 @@ describe("client", () => {
     const link = new ApolloLink((operation) => {
       result.current = operation;
 
-      return Observable.of({
+      return of({
         data: {
           author: {
             firstName: "John",
@@ -1323,7 +1322,7 @@ describe("client", () => {
     const link = ApolloLink.from([
       (request) => {
         expect(request.operationName).toBe("myQueryName");
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
@@ -1348,7 +1347,7 @@ describe("client", () => {
     const link = ApolloLink.from([
       (request) => {
         expect(request.operationName).toBe("myMutationName");
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
@@ -1562,6 +1561,11 @@ describe("client", () => {
     });
   });
 
+  // TODO: This is a bit of an odd test because its half testing that
+  // deduplication kicks in, but its also testing some of the behavior of the
+  // observable itself. With the move to RxJS, the unsubscribe cleanup function
+  // is called with `complete` which means it might be called synchronously
+  // (hence why the `complete` needs to be wrapped in setTimeout for this test).
   it("unsubscribes from deduplicated observables only once", async () => {
     const document: DocumentNode = gql`
       query test1($x: String) {
@@ -1577,7 +1581,7 @@ describe("client", () => {
     const client = new ApolloClient({
       link: new ApolloLink(() => {
         return new Observable((observer) => {
-          observer.complete();
+          setTimeout(() => observer.complete());
           return () => {
             unsubscribeCount++;
           };
@@ -1799,7 +1803,12 @@ describe("client", () => {
     });
 
     it("fails if network request fails", async () => {
-      const link = mockSingleLink(); // no queries = no replies.
+      const link = new MockLink([
+        {
+          request: { query },
+          error: new Error("Oops"),
+        },
+      ]);
       const client = new ApolloClient({
         link,
         cache: new InMemoryCache(),
@@ -1811,9 +1820,16 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: new ApolloError({ networkError: new Error("Oops") }),
+        errors: [],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
 
-      expect(error.message).toMatch(/No more mocked responses/);
+      await expect(stream).not.toEmitAnything();
     });
 
     it("fetches from cache first, then network and does not have an unhandled error", async () => {
@@ -1842,9 +1858,18 @@ describe("client", () => {
         partial: false,
       });
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitApolloQueryResult({
+        data: initialData,
+        error: new ApolloError({
+          graphQLErrors: [{ message: "network failure" }],
+        }),
+        errors: [{ message: "network failure" }],
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
-      expect(error.message).toMatch(/network failure/);
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -1869,7 +1894,10 @@ describe("client", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        obs.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Update this behavior
+      ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 
@@ -1896,7 +1924,10 @@ describe("client", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        obs.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Update this behavior
+      ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
@@ -2479,9 +2510,14 @@ describe("client", () => {
 
     const stream = new ObservableStream(handle);
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("Uh oh!");
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new ApolloError({ networkError: new Error("Uh oh!") }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
   });
 
   it("should be able to refetch after there was a network error", async () => {
@@ -2531,15 +2567,20 @@ describe("client", () => {
       partial: false,
     });
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("This is an error!");
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      error: new ApolloError({ networkError: new Error("This is an error!") }),
+      errors: [],
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
 
     stream.unsubscribe();
 
     const lastError = observable.getLastError();
     expect(lastError).toBeInstanceOf(ApolloError);
-    expect(lastError!.networkError).toEqual((error as any).networkError);
+    expect(lastError?.networkError).toEqual(new Error("This is an error!"));
 
     const lastResult = observable.getLastResult();
     expect(lastResult).toBeTruthy();
@@ -3150,7 +3191,7 @@ describe("@connection", () => {
     const bVar = makeVar("asdf");
     const aSpy = jest.spyOn(aVar, "forgetCache");
     const bSpy = jest.spyOn(bVar, "forgetCache");
-    const cache: InMemoryCache = new InMemoryCache({
+    const cache = new InMemoryCache({
       typePolicies: {
         Query: {
           fields: {
@@ -3168,7 +3209,7 @@ describe("@connection", () => {
     const client = new ApolloClient({ cache });
 
     const obsQueries = new Set<ObservableQuery<any>>();
-    const subs = new Set<ObservableSubscription>();
+    const subs = new Set<Subscription>();
     function watch(
       query: DocumentNode,
       fetchPolicy: WatchQueryFetchPolicy = "cache-first"
@@ -3211,41 +3252,41 @@ describe("@connection", () => {
 
     expect(cache["watches"].size).toBe(2);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
-    expect(aSpy).not.toBeCalled();
-    expect(bSpy).not.toBeCalled();
+    expect(aSpy).not.toHaveBeenCalled();
+    expect(bSpy).not.toHaveBeenCalled();
 
     subs.forEach((sub) => sub.unsubscribe());
 
-    expect(aSpy).toBeCalledTimes(1);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(1);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(1);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(1);
+    expect(bSpy).toHaveBeenCalledWith(cache);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
     expect(cache["watches"].size).toBe(0);
     const abResults = watch(abQuery);
-    expect(abResults).toEqual([]);
+    expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
     expect(cache["watches"].size).toBe(1);
 
     await wait();
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
     expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
 
     client.stop();
 
     await wait();
 
-    expect(aSpy).toBeCalledTimes(2);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(2);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(2);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(2);
+    expect(bSpy).toHaveBeenCalledWith(cache);
   });
 
   describe("default settings", () => {
@@ -3570,7 +3611,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           dogs: [
             {
@@ -3652,7 +3693,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           dogs: [
             {
@@ -3739,7 +3780,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -3831,7 +3872,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             id: 1,
@@ -3894,7 +3935,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             id: 1,
@@ -3933,7 +3974,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of();
+      return EMPTY;
     });
 
     const client = new ApolloClient({
@@ -3976,7 +4017,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4148,7 +4189,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4213,7 +4254,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4253,7 +4294,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           updateProfile: {
             __typename: "Profile",
@@ -4304,7 +4345,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             id: 1,
@@ -4380,7 +4421,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             id: 1,
@@ -4473,7 +4514,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             __typename: "Profile",
@@ -4540,7 +4581,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: { currentUser: { __typename: "User", id: 1, name: "John Doe" } },
       });
     });
@@ -4599,7 +4640,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             __typename: "User",
@@ -4668,7 +4709,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -4927,24 +4968,20 @@ describe("custom document transforms", () => {
     });
 
     const observable = client.watchQuery({ query, variables: { offset: 0 } });
-    const handleNext = jest.fn();
+    const stream = new ObservableStream(observable);
 
-    observable.subscribe(handleNext);
-
-    await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith({
-        data: {
-          products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
-      expect(document).toMatchDocument(enabledQuery);
-      expect(observable.options.query).toMatchDocument(query);
-      expect(observable.query).toMatchDocument(enabledQuery);
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    expect(document!).toMatchDocument(enabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(enabledQuery);
 
     enabled = false;
 
@@ -4958,7 +4995,7 @@ describe("custom document transforms", () => {
       products: [{ __typename: "Product", id: 2 }],
     });
 
-    expect(handleNext).toHaveBeenLastCalledWith({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         products: [
           { __typename: "Product", id: 1 },
@@ -4969,6 +5006,8 @@ describe("custom document transforms", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("runs custom document transforms on the passed query and original query when calling `fetchMore` with a different query", async () => {
@@ -5524,7 +5563,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5600,7 +5639,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5689,7 +5728,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5771,7 +5810,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -5856,7 +5895,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -5945,7 +5984,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -6019,7 +6058,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -6070,7 +6109,7 @@ describe("custom document transforms", () => {
   });
 });
 
-function clientRoundtrip(
+async function clientRoundtrip(
   query: DocumentNode,
   data: FormattedExecutionResult,
   variables?: any,
@@ -6088,7 +6127,6 @@ function clientRoundtrip(
     }),
   });
 
-  return client.query({ query, variables }).then((result) => {
-    expect(result.data).toEqual(data.data);
-  });
+  const result = await client.query({ query, variables });
+  expect(result.data).toEqual(data.data);
 }

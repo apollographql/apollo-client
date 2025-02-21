@@ -3,7 +3,7 @@ import { print } from "graphql";
 
 import { ApolloLink, execute } from "../../core";
 import { Operation, FetchResult, GraphQLRequest } from "../../core/types";
-import { Observable, of, map } from "rxjs";
+import { Observable, of, map, EMPTY } from "rxjs";
 import { wait } from "../../../testing";
 import {
   BatchLink,
@@ -668,7 +668,7 @@ describe("BatchLink", () => {
   `;
 
   it("does not need any constructor arguments", () => {
-    expect(() => new BatchLink({ batchHandler: () => of() })).not.toThrow();
+    expect(() => new BatchLink({ batchHandler: () => EMPTY })).not.toThrow();
   });
 
   it("passes forward on", async () => {
@@ -708,9 +708,9 @@ describe("BatchLink", () => {
         forward![0]!(operation[0]).pipe(map((r) => [r])),
     });
     const link_one_op = new BatchLink({
-      batchHandler: (operation) => of(),
+      batchHandler: (operation) => EMPTY,
     });
-    const link_no_op = new BatchLink({ batchHandler: () => of() });
+    const link_no_op = new BatchLink({ batchHandler: () => EMPTY });
     const _warn = console.warn;
     console.warn = (...args: any) => {
       calls++;

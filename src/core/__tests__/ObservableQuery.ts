@@ -3971,6 +3971,8 @@ test.each<[string, (observable: ObservableQuery) => any]>([
   ["reobserve", (observable) => observable.reobserve()],
   ["startPolling", (observable) => observable.startPolling(10)],
   ["stopPolling", (observable) => observable.stopPolling()],
+  ["subscribe", (observable) => observable.subscribe(() => {})],
+  ["pipe", (observable) => observable.pipe(map((r) => r))],
 ])(
   "throws when calling '%s' on a torn down instance",
   async (functionName, fn) => {

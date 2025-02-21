@@ -209,6 +209,10 @@ export class ObservableQuery<
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) {
+    invariant(
+      !this.isTornDown,
+      "Cannot call 'subscribe' on a torn down query."
+    );
     return this.observable.subscribe(observer);
   }
 
@@ -290,6 +294,7 @@ export class ObservableQuery<
   ): Observable<unknown>;
 
   pipe(...args: any[]) {
+    invariant(!this.isTornDown, "Cannot call 'pipe' on a torn down query.");
     return (this.observable as any).pipe(...args);
   }
 

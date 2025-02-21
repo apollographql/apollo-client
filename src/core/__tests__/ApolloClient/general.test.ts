@@ -1564,10 +1564,109 @@ describe("ApolloClient", () => {
     expect(observable.getCurrentResult().data).toEqual(data);
   });
 
-  // TODO: Update test to show a result with data now that cache-only queries no
-  // longer emit partial data unless returnPartialData is set. This should
-  // likely be a separate test as well.
   it("supports cache-only fetchPolicy fetching only cached data", async () => {
+    const query = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const data1 = {
+      luke: {
+        __typename: "Person",
+        name: "Luke Skywalker",
+      },
+      vader: {
+        __typename: "Person",
+        name: "Darth Vader",
+      },
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([{ request: { query }, result: { data: data1 } }]),
+    });
+
+    // First, prime the cache
+    await client.query({ query });
+
+    const observable = client.watchQuery({
+      query: query,
+      fetchPolicy: "cache-only",
+    });
+
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: data1,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  it("returns partial cache data when using cache-only with returnPartialData: true", async () => {
+    const primeQuery = gql`
+      query primeQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+      }
+    `;
+
+    const complexQuery = gql`
+      query complexQuery {
+        luke: people_one(id: 1) {
+          name
+        }
+        vader: people_one(id: 4) {
+          name
+        }
+      }
+    `;
+
+    const partialData = {
+      luke: {
+        name: "Luke Skywalker",
+      },
+    };
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        { request: { query: primeQuery }, result: { data: partialData } },
+      ]),
+    });
+
+    // First, prime the cache
+    await client.query({ query: primeQuery });
+
+    const observable = client.watchQuery({
+      query: complexQuery,
+      fetchPolicy: "cache-only",
+      returnPartialData: true,
+    });
+
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: partialData,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  it("does not return partial cache data for cache-only query without returnPartialData", async () => {
     const primeQuery = gql`
       query primeQuery {
         luke: people_one(id: 1) {
@@ -1616,6 +1715,8 @@ describe("ApolloClient", () => {
       networkStatus: NetworkStatus.ready,
       partial: true,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("runs a mutation", async () => {

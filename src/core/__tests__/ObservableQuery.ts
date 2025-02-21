@@ -27,6 +27,7 @@ import { expectTypeOf } from "expect-type";
 import { Observer } from "rxjs";
 import { waitFor } from "@testing-library/react";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { InvariantError } from "../../utilities/globals";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const fetchObservableWithInfo = queryManager["fetchObservableWithInfo"];
@@ -3943,3 +3944,62 @@ test("handles changing variables in rapid succession before other request is com
     partial: false,
   });
 });
+
+test.each<[string, (observable: ObservableQuery) => any]>([
+  ["refetch", (observable) => observable.refetch()],
+  [
+    "fetchMore",
+    (observable) => observable.fetchMore({ variables: { offset: 10 } }),
+  ],
+  [
+    "subscribeToMore",
+    (observable) =>
+      observable.subscribeToMore({
+        document: gql`
+          subscription {
+            foo
+          }
+        `,
+      }),
+  ],
+  [
+    "setOptions",
+    (observable) => observable.setOptions({ fetchPolicy: "no-cache" }),
+  ],
+  ["setVariables", (observable) => observable.setVariables({ a: 1 })],
+  ["updateQuery", (observable) => observable.updateQuery(() => {})],
+  ["reobserve", (observable) => observable.reobserve()],
+  ["startPolling", (observable) => observable.startPolling(10)],
+  ["stopPolling", (observable) => observable.stopPolling()],
+])(
+  "throws when calling '%s' on a torn down instance",
+  async (functionName, fn) => {
+    const query = gql`
+      query {
+        foo
+      }
+    `;
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        { request: { query }, result: { data: { foo: "bar" } } },
+      ]),
+    });
+
+    const observable = client.watchQuery({ query });
+    const stream = new ObservableStream(observable);
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: { foo: "bar" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    stream.unsubscribe();
+
+    expect(() => fn(observable)).toThrow(
+      new InvariantError(`Cannot call '${functionName}' on a torn down query.`)
+    );
+  }
+);

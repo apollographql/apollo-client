@@ -7303,15 +7303,33 @@ describe("ApolloClient", () => {
     });
 
     it.each([
-      ["query", { method: "query", option: "query" }],
-      ["mutation", { method: "mutate", option: "mutation" }],
-      // TODO: Revisit when trying to understand why this passes on release-4.0
-      // branch since client.subscribe returns an observable that isn't
-      // subscribed to in this test
-      // ["subscription", { method: "subscribe", option: "query" }],
+      [
+        "query",
+        {
+          method: "query",
+          option: "query",
+          document: gql`
+            query {
+              foo
+            }
+          `,
+        },
+      ],
+      [
+        "mutation",
+        {
+          method: "mutate",
+          option: "mutation",
+          document: gql`
+            mutation {
+              foo
+            }
+          `,
+        },
+      ],
     ] as const)(
       "`defaultContext` will be applied to the context of a %s",
-      async (_, { method, option }) => {
+      async (_, { method, option, document }) => {
         let context: any;
         const client = new ApolloClient({
           cache: new InMemoryCache(),
@@ -7328,17 +7346,40 @@ describe("ApolloClient", () => {
         });
 
         // @ts-ignore a bit too generic for TS
-        client[method]({
-          [option]: gql`
-            query {
-              foo
-            }
-          `,
-        });
+        client[method]({ [option]: document });
 
         expect(context.foo).toBe("bar");
       }
     );
+
+    it("`defaultContext` will be applied to the context of a subscription", async () => {
+      let context: any;
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new ApolloLink(
+          (operation) =>
+            new Observable((observer) => {
+              ({ cache: _, ...context } = operation.getContext());
+              observer.complete();
+            })
+        ),
+        defaultContext: {
+          foo: "bar",
+        },
+      });
+
+      client
+        .subscribe({
+          query: gql`
+            subscription {
+              foo
+            }
+          `,
+        })
+        .subscribe(() => {});
+
+      expect(context.foo).toBe("bar");
+    });
 
     it("`ApolloClient.defaultContext` can be modified and changes will show up in future queries", async () => {
       let context: any;

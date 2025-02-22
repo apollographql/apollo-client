@@ -209,7 +209,7 @@ export class ObservableQuery<
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
       | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
   ) {
-    invariant(!this.isTornDown, "Cannot call 'subscribe' on a closed query.");
+    invariant(!this.closed, "Cannot call 'subscribe' on a closed query.");
     return this.observable.subscribe(observer);
   }
 
@@ -291,7 +291,7 @@ export class ObservableQuery<
   ): Observable<unknown>;
 
   pipe(...args: any[]) {
-    invariant(!this.isTornDown, "Cannot call 'pipe' on a closed query.");
+    invariant(!this.closed, "Cannot call 'pipe' on a closed query.");
     return (this.observable as any).pipe(...args);
   }
 
@@ -503,7 +503,7 @@ export class ObservableQuery<
   public refetch(
     variables?: Partial<TVariables>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    invariant(!this.isTornDown, "Cannot call 'refetch' on a closed query.");
+    invariant(!this.closed, "Cannot call 'refetch' on a closed query.");
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -561,7 +561,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       ) => Unmasked<TData>;
     }
   ): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>> {
-    invariant(!this.isTornDown, "Cannot call 'fetchMore' on a closed query.");
+    invariant(!this.closed, "Cannot call 'fetchMore' on a closed query.");
     const combinedOptions = {
       ...(fetchMoreOptions.query ? fetchMoreOptions : (
         {
@@ -734,10 +734,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       TVariables
     >
   ): () => void {
-    invariant(
-      !this.isTornDown,
-      "Cannot call 'subscribeToMore' on a closed query."
-    );
+    invariant(!this.closed, "Cannot call 'subscribeToMore' on a closed query.");
     const subscription = this.queryManager
       .startGraphQLSubscription({
         query: options.document,
@@ -779,7 +776,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    invariant(!this.isTornDown, "Cannot call 'setOptions' on a closed query.");
+    invariant(!this.closed, "Cannot call 'setOptions' on a closed query.");
     return this.reobserve(newOptions);
   }
 
@@ -811,10 +808,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   public setVariables(
     variables: TVariables
   ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
-    invariant(
-      !this.isTornDown,
-      "Cannot call 'setVariables' on a closed query."
-    );
+    invariant(!this.closed, "Cannot call 'setVariables' on a closed query.");
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
@@ -845,7 +839,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * See [using updateQuery and updateFragment](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for additional information.
    */
   public updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void {
-    invariant(!this.isTornDown, "Cannot call 'updateQuery' on a closed query.");
+    invariant(!this.closed, "Cannot call 'updateQuery' on a closed query.");
     const { queryManager } = this;
     const { result, complete } = queryManager.cache.diff<TData>({
       query: this.options.query,
@@ -878,10 +872,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * A function that instructs the query to begin re-executing at a specified interval (in milliseconds).
    */
   public startPolling(pollInterval: number) {
-    invariant(
-      !this.isTornDown,
-      "Cannot call 'startPolling' on a closed query."
-    );
+    invariant(!this.closed, "Cannot call 'startPolling' on a closed query.");
     this.options.pollInterval = pollInterval;
     this.updatePolling();
   }
@@ -890,7 +881,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * A function that instructs the query to stop polling after a previous call to `startPolling`.
    */
   public stopPolling() {
-    invariant(!this.isTornDown, "Cannot call 'stopPolling' on a closed query.");
+    invariant(!this.closed, "Cannot call 'stopPolling' on a closed query.");
     this.options.pollInterval = 0;
     this.updatePolling();
   }
@@ -1046,7 +1037,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    invariant(!this.isTornDown, "Cannot call 'reobserve' on a closed query.");
+    invariant(!this.closed, "Cannot call 'reobserve' on a closed query.");
     this.isTornDown = false;
 
     const useDisposableObservable =

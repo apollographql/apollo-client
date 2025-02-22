@@ -3954,6 +3954,37 @@ test("handles changing variables in rapid succession before other request is com
   });
 });
 
+test("closes when unsubscribing all observers", async () => {
+  const query = gql`
+    query {
+      foo
+    }
+  `;
+  const client = new ApolloClient({
+    cache: new InMemoryCache(),
+    link: new MockLink([
+      { request: { query }, result: { data: { foo: "bar" } } },
+    ]),
+  });
+
+  const observable = client.watchQuery({ query });
+  expect(observable.closed).toBe(false);
+
+  const stream = new ObservableStream(observable);
+  expect(observable.closed).toBe(false);
+
+  await expect(stream).toEmitApolloQueryResult({
+    data: { foo: "bar" },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  stream.unsubscribe();
+
+  expect(observable.closed).toBe(true);
+});
+
 test.each<[string, (observable: ObservableQuery) => any]>([
   ["refetch", (observable) => observable.refetch()],
   [

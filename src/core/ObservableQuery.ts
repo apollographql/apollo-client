@@ -1214,14 +1214,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private tearDownQuery() {
     if (this.isTornDown) return;
 
-    // Ensure we cannot emit any more values even if we tried
-    this.subject.complete();
     if (this.linkObservable && this.linkSubscription) {
       this.linkSubscription.unsubscribe();
       delete this.linkObservable;
       delete this.linkSubscription;
     }
 
+    // Ensure we cannot emit any more values even if we tried
+    this.subject.unsubscribe();
     this.stopPolling();
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());

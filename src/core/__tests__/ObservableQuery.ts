@@ -3983,7 +3983,7 @@ test.each<[string, (observable: ObservableQuery) => any]>([
   ["subscribe", (observable) => observable.subscribe(() => {})],
   ["pipe", (observable) => observable.pipe(map((r) => r))],
 ])(
-  "throws when calling '%s' on a torn down instance",
+  "throws when calling '%s' on a closed instance",
   async (functionName, fn) => {
     const query = gql`
       query {
@@ -4010,7 +4010,7 @@ test.each<[string, (observable: ObservableQuery) => any]>([
     stream.unsubscribe();
 
     expect(() => fn(observable)).toThrow(
-      new InvariantError(`Cannot call '${functionName}' on a torn down query.`)
+      new InvariantError(`Cannot call '${functionName}' on a closed query.`)
     );
   }
 );

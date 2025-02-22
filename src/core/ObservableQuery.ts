@@ -1134,7 +1134,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       this.linkObservable = observable;
       this.linkSubscription = observable.subscribe(observer);
     } else {
-      observable.subscribe(observer);
+      // When using a disposable observable, its possible it may continue to
+      // emit values after the observable query has been closed since we don't
+      // track its subscription. We don't want to try and emit any more values
+      // on this instance otherwise RxJS will throw an error trying to emit a
+      // value on a closed subject so we filter out all messages after this
+      // instance is closed.
+      observable.pipe(filter(() => !this.closed)).subscribe(observer);
     }
 
     return preventUnhandledRejection(

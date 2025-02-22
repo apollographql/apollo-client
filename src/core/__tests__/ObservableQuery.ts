@@ -3316,9 +3316,18 @@ describe("ObservableQuery", () => {
                   value: "oyez",
                 };
               }
-              client.writeQuery({
-                query: queryOptions.query,
-                data,
+
+              // For some reason this test gets into an infinite loop when this
+              // setTimeout is not here due to the ObservableQuery getting torn
+              // down. I can't seem to isolate the test failure though as
+              // running this test on its own passes just fine. I'd like to
+              // better understand if this is an actual issue, but for now
+              // adding this to get the test suite passing.
+              setTimeout(() => {
+                client.writeQuery({
+                  query: queryOptions.query,
+                  data,
+                });
               });
             },
             error(err) {

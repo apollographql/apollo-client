@@ -91,7 +91,6 @@ export class ObservableQuery<
   private observable: Observable<ApolloQueryResult<MaybeMasked<TData>>>;
   private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
 
-  private isTornDown: boolean;
   private queryManager: QueryManager<any>;
   private subscriptions = new Set<Subscription>();
 
@@ -167,7 +166,6 @@ export class ObservableQuery<
 
     // active state
     this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
-    this.isTornDown = false;
 
     this.subscribe = this.subscribe.bind(this);
     this.subscribeToMore = this.subscribeToMore.bind(this);
@@ -483,9 +481,6 @@ export class ObservableQuery<
   // TODO: Consider deprecating this function
   public resetLastResults(): void {
     delete this.last;
-    // TODO: This will need to be removed when tearing down an ObservableQuery
-    // since the observable will terminate.
-    this.isTornDown = false;
   }
 
   // TODO: Consider deprecating this function
@@ -1038,7 +1033,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newNetworkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     invariant(!this.closed, "Cannot call 'reobserve' on a closed query.");
-    this.isTornDown = false;
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different
@@ -1203,7 +1197,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private tearDownQuery() {
-    if (this.isTornDown) return;
+    if (this.closed) return;
 
     if (this.linkObservable && this.linkSubscription) {
       this.linkSubscription.unsubscribe();
@@ -1216,7 +1210,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
     this.queryManager.stopQuery(this.queryId);
-    this.isTornDown = true;
     // Ensure we cannot emit any more values even if we tried
     this.subject.unsubscribe();
   }

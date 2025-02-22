@@ -1220,14 +1220,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       delete this.linkSubscription;
     }
 
-    // Ensure we cannot emit any more values even if we tried
-    this.subject.unsubscribe();
     this.stopPolling();
     // stop all active GraphQL subscriptions
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions.clear();
     this.queryManager.stopQuery(this.queryId);
     this.isTornDown = true;
+    // Ensure we cannot emit any more values even if we tried
+    this.subject.unsubscribe();
   }
 
   private transformDocument(document: DocumentNode) {

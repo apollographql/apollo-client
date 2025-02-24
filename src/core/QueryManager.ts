@@ -851,11 +851,6 @@ export class QueryManager<TStore> {
     return String(this.mutationIdCounter++);
   }
 
-  private stopQueryInStoreNoBroadcast(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) queryInfo.stop();
-  }
-
   public clearStore(
     options: Cache.ResetOptions = {
       discardWatches: true,
@@ -1101,7 +1096,8 @@ export class QueryManager<TStore> {
   }
 
   private stopQueryNoBroadcast(queryId: string) {
-    this.stopQueryInStoreNoBroadcast(queryId);
+    const queryInfo = this.queries.get(queryId);
+    if (queryInfo) queryInfo.stop();
     this.removeQuery(queryId);
   }
 

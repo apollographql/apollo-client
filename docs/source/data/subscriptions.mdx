@@ -492,7 +492,7 @@ function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
 
       return () => { unsubscribe(); };
     }
-  }, [result.data, params.postID]);
+  }, [result.data, params.postID, subscribeToMore]);
 
   return (
     <CommentsPage {...result} />

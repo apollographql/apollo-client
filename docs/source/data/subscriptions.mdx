@@ -472,6 +472,8 @@ function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
   );
 
   useEffect(() => {
+    // This assumes you want to wait to start the subscription
+    // after the query has loaded.
     if (result.data) {
       const unsubscribe = subscribeToMore({
         document: COMMENTS_SUBSCRIPTION,

@@ -162,6 +162,11 @@ export interface ApolloQueryResult<T> {
    * @deprecated This field will be removed in a future version of Apollo Client.
    */
   partial: boolean;
+  /**
+   * Describes whether the result originated from the cache or the network. Only
+   * present when `data` is defined.
+   */
+  source?: "cache" | "network";
 }
 
 // This is part of the public API, people write these functions in `updateQueries`.

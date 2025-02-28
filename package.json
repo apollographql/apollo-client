@@ -79,7 +79,7 @@
     "build": "node config/build.ts",
     "typecheck": "tsc --noEmit --project tsconfig.json",
     "postinstall": "patch-package",
-    "extract-api": "node config/build.ts --step=typescript --step=addExports --step=inlineInheritDoc && node config/apiExtractor.ts --generate apiReport",
+    "extract-api": "node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --generate apiReport",
     "clean": "rimraf dist coverage lib temp",
     "check:format": "prettier --check .",
     "ci:precheck": "node config/precheck.ts",

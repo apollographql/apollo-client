@@ -30,10 +30,8 @@ export const buildDocEntryPoints = (
 ) => {
   const acc = entryPoints.map((entryPoint) => {
     return `export * from "${path.join(
-      options.rootDir,
-      options.targetDir,
-      ...entryPoint.dirs,
-      `index.${options.jsExt}`
+      "@apollo/client",
+      ...entryPoint.dirs
     )}";`;
   });
   acc.push(

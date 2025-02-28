@@ -9,6 +9,7 @@ import { parseArgs } from "node:util";
 import fs from "node:fs";
 import { entryPoints, buildDocEntryPoints } from "./entryPoints.ts";
 import { readFileSync } from "fs";
+import { withPseudoNodeModules } from "./helpers.ts";
 
 const parsed = parseArgs({
   options: {
@@ -61,29 +62,29 @@ try {
       })
     );
 
-    buildReport(entryPointFile, "docModel");
+    await buildReport(entryPointFile, "docModel");
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
-    entryPoints.map((entryPoint) => {
+    for (const entryPoint of entryPoints) {
       const path = entryPoint.dirs.join("/");
       const mainEntryPointFilePath =
         `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
       console.log(
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );
-      buildReport(
+      await buildReport(
         mainEntryPointFilePath,
         "apiReport",
         `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
       );
-    });
+    }
   }
 } finally {
   fs.rmSync(tempDir, { recursive: true });
 }
 
-function buildReport(
+async function buildReport(
   mainEntryPointFilePath: string,
   mode: "apiReport" | "docModel",
   reportFileName = ""
@@ -117,10 +118,12 @@ function buildReport(
     configObjectFullPath,
   });
 
-  const extractorResult = Extractor.invoke(extractorConfig, {
-    localBuild: process.env.CI === undefined || process.env.CI === "false",
-    showVerboseMessages: true,
-  });
+  const extractorResult = await withPseudoNodeModules(() =>
+    Extractor.invoke(extractorConfig, {
+      localBuild: process.env.CI === undefined || process.env.CI === "false",
+      showVerboseMessages: true,
+    })
+  );
 
   let succeededAdditionalChecks = true;
   if (fs.existsSync(extractorConfig.reportFilePath)) {

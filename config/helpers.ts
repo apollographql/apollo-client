@@ -2,14 +2,14 @@ import * as path from "path";
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
 import * as tsParser from "recast/parsers/typescript.js";
-import glob from "glob";
-import { glob as nodeGlob } from "node:fs/promises";
+import { glob as nodeGlob, unlink } from "node:fs/promises";
 import { readFile, rm } from "node:fs/promises";
 import * as assert from "node:assert";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
 // eslint-disable-next-line import/no-unresolved
 import * as sorcery from "sorcery";
 import { relative } from "node:path";
+import { mkdir, rmdir, symlink } from "node:fs/promises";
 
 export const distDir = path.resolve(import.meta.dirname, "..", "dist");
 
@@ -98,5 +98,27 @@ export async function applyRecast({
     const chain = await sorcery.load(targetFilePath, virtualFiles);
     // save everything back to the file system, applying the source map changes of the transformation
     await chain.write();
+  }
+}
+
+/**
+ * creates a pseudo "dist/node_modules" folder with
+ * "dist/node_modules/@apollo/client" symlinked to "dist"
+ * so that tools can pick up the client package as an "external" package
+ */
+export async function withPseudoNodeModules<T>(fn: () => T) {
+  const dist = path.join(import.meta.dirname, "..", "dist");
+  const node_modules = path.join(dist, "node_modules");
+  const parent = path.join(node_modules, "@apollo");
+  const link = path.join(parent, "client");
+
+  try {
+    await mkdir(parent, { recursive: true });
+    await unlink(link).catch(() => {});
+    await symlink(dist, link);
+
+    return await fn();
+  } finally {
+    await rmdir(node_modules, { recursive: true });
   }
 }

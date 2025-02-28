@@ -1,1 +1,1 @@
-export * from "./core/index.js";
+export * from "@apollo/client/core";

@@ -1,6 +1,4 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 /* Core */
-
 export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
 export { ApolloClient, mergeOptions } from "./ApolloClient.js";
 export type { FetchMoreOptions } from "./ObservableQuery.js";
@@ -100,9 +98,7 @@ export {
 // (for anyone using the same ts-invariant package) by passing "log",
 // "warn", "error", or "silent" to setVerbosity ("log" is the default).
 // Note that all invariant.* logging is hidden in production.
-import { setVerbosity } from "ts-invariant";
-export { setVerbosity as setLogVerbosity };
-setVerbosity(__DEV__ ? "log" : "silent");
+export { setVerbosity as setLogVerbosity } from "ts-invariant";
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.

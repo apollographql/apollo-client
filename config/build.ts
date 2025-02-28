@@ -38,7 +38,7 @@ const buildSteps = {
   typescript: compileTs,
   babelTransform,
   updateVersion,
-  inlineInheritDoc,
+  //inlineInheritDoc,
   processInvariants,
   postprocessDist,
   verifyVersion,

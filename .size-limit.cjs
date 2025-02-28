@@ -2,12 +2,11 @@ const limits = require("./.size-limits.json");
 
 const checks = [
   {
-    path: "dist/__cjs/index.cjs",
-    import: "{ ApolloClient, InMemoryCache, HttpLink }",
+    import: { "@apollo/client": "{ ApolloClient, InMemoryCache, HttpLink }" },
+    conditions: ["require"],
   },
   {
-    path: "dist/index.js",
-    import: "{ ApolloClient, InMemoryCache, HttpLink }",
+    import: { "@apollo/client": "{ ApolloClient, InMemoryCache, HttpLink }" },
   },
   ...[
     "ApolloProvider",
@@ -20,17 +19,17 @@ const checks = [
     "useLoadableQuery",
     "useReadQuery",
     "useFragment",
-  ].map((name) => ({ path: "dist/react/index.js", import: `{ ${name} }` })),
+  ].map((name) => ({ import: { "@apollo/client/react": `{ ${name} }` } })),
 ]
   .map((config) => ({
     ...config,
     name:
       config.name || config.import ?
-        `import ${config.import} from "${config.path}"`
+        `import ${Object.values(config.import)[0]} from "${
+          Object.keys(config.import)[0]
+        }"`
       : config.path,
-    // newer versions of size-limit changed to brotli as a default
-    // we'll stay on gzip for now, so results are easier to compare
-    gzip: true,
+    brotli: true,
     ignore: [
       ...(config.ignore || []),
       "rehackt",
@@ -54,22 +53,29 @@ const checks = [
   .flatMap((value) => [
     {
       ...value,
-      modifyEsbuildConfig(config) {
-        config.conditions = ["development", "module", "browser"];
-        return config;
-      },
+      conditions: ["development"].concat(
+        value.conditions || ["module", "browser"]
+      ),
     },
     {
       ...value,
       name: `${value.name} (production)`,
-      modifyEsbuildConfig(config) {
-        config.conditions = ["production", "module", "browser"];
-        return config;
-      },
+      conditions: ["production"].concat(
+        value.conditions || ["module", "browser"]
+      ),
     },
   ])
   .map((value) => {
     value.limit = limits[value.name];
+    const conditions = value.conditions;
+    delete value.conditions;
+    if (conditions.includes("require")) {
+      value.name = `${value.name} (CJS)`;
+    }
+    value.modifyEsbuildConfig = (config) => {
+      config.conditions = conditions;
+      return config;
+    };
     return value;
   });
 

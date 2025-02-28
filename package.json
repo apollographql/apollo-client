@@ -33,7 +33,11 @@
   "exports": {
     ".": "./src/index.ts",
     "./cache": "./src/cache/index.ts",
-    "./core": "./src/core/index.ts",
+    "./core": {
+      "production": "./src/core/index.ts",
+      "development": "./src/core/index.development.ts",
+      "default": "./src/core/index.ts"
+    },
     "./dev": "./src/dev/index.ts",
     "./errors": "./src/errors/index.ts",
     "./link/batch": "./src/link/batch/index.ts",
@@ -228,6 +232,7 @@
     "rimraf": "5.0.9",
     "rxjs": "7.8.1",
     "size-limit": "11.1.4",
+    "size-limit-apollo-plugin": "file:config/size-limit",
     "sorcery": "^1.0.0",
     "source-map": "^0.6.1",
     "sourcemap-validator": "^2.1.0",

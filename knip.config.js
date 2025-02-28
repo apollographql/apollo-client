@@ -44,6 +44,7 @@ const config = {
   ignoreDependencies: [
     /@actions\/.*/,
     /@size-limit\/.*/,
+    "size-limit-apollo-plugin",
     /eslint-.*/,
     // used by `recast`
     "@babel/parser",

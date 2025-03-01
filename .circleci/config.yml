@@ -12,7 +12,7 @@ jobs:
 
   Lint:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm version
@@ -21,7 +21,7 @@ jobs:
 
   Formatting:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm ci
@@ -29,7 +29,7 @@ jobs:
 
   Tests:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:23.9.0
     parameters:
       project:
         type: string
@@ -50,7 +50,7 @@ jobs:
           path: reports/junit
   Attest:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm ci
@@ -58,7 +58,7 @@ jobs:
 
   BuildTarball:
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - run: npm run ci:precheck
@@ -77,7 +77,7 @@ jobs:
       react:
         type: string
     docker:
-      - image: cimg/node:23.7.0-browsers
+      - image: cimg/node:23.9.0-browsers
     steps:
       - checkout
       - attach_workspace:
@@ -115,7 +115,7 @@ jobs:
       externalPackage:
         type: string
     docker:
-      - image: cimg/node:23.7.0
+      - image: cimg/node:23.9.0
     steps:
       - checkout
       - attach_workspace:

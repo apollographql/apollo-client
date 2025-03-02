@@ -28,19 +28,15 @@ export type MandatoryKeysOf<Obj> = Omit<Obj, keyof OptionalKeysOf<Obj>>;
 export type DeepOmit<T, K> =
   T extends DeepOmitPrimitive ? T
   : {
-    [P in Exclude<keyof MandatoryKeysOf<T>, K>]: T[P] extends infer TP
-      ? TP extends DeepOmitPrimitive
-        ? TP
-        : TP extends any[]
-          ? DeepOmitArray<TP, K>
-          : DeepOmit<TP, K>
+      [P in Exclude<keyof MandatoryKeysOf<T>, K>]: T[P] extends infer TP ?
+        TP extends DeepOmitPrimitive ? TP
+        : TP extends any[] ? DeepOmitArray<TP, K>
+        : DeepOmit<TP, K>
       : never;
-  } & Partial<{
-    [P in Exclude<keyof OptionalKeysOf<T>, K>]: T[P] extends infer TP
-      ? TP extends DeepOmitPrimitive
-        ? TP
-        : TP extends any[]
-          ? DeepOmitArray<TP, K>
-          : DeepOmit<TP, K>
+    } & Partial<{
+      [P in Exclude<keyof OptionalKeysOf<T>, K>]: T[P] extends infer TP ?
+        TP extends DeepOmitPrimitive ? TP
+        : TP extends any[] ? DeepOmitArray<TP, K>
+        : DeepOmit<TP, K>
       : never;
-  }>;
+    }>;

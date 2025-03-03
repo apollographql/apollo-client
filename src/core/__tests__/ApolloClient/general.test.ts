@@ -114,7 +114,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         graphQLErrors: [{ message: "This is an error message." }],
       }),
-      errors: [{ message: "This is an error message." }],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -147,7 +146,6 @@ describe("ApolloClient", () => {
       data: undefined,
       loading: false,
       networkStatus: 8,
-      errors: [{ message: "This is an error message." }],
       partial: true,
     });
   });
@@ -180,7 +178,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         graphQLErrors: [{ message: "This is an error message." }],
       }),
-      errors: [{ message: "This is an error message." }],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -249,7 +246,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         graphQLErrors: [null as any],
       }),
-      errors: [null as any],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -277,7 +273,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         networkError: new Error("Network error"),
       }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -2374,7 +2369,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         networkError: new Error("Network error occurred."),
       }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -2996,7 +2990,6 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: firstResult.data,
       error: expectedError,
-      errors: [{ message: expectedError.graphQLErrors[0].message }],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -3526,7 +3519,6 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
         error: new ApolloError({ networkError: new Error("Network error") }),
-        errors: [],
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -6748,7 +6740,6 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
         error: new ApolloError({ networkError: refetchError }),
-        errors: [],
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,

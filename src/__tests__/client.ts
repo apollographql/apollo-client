@@ -1823,7 +1823,6 @@ describe("client", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
         error: new ApolloError({ networkError: new Error("Oops") }),
-        errors: [],
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -1863,7 +1862,6 @@ describe("client", () => {
         error: new ApolloError({
           graphQLErrors: [{ message: "network failure" }],
         }),
-        errors: [{ message: "network failure" }],
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -2513,7 +2511,6 @@ describe("client", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       error: new ApolloError({ networkError: new Error("Uh oh!") }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -2570,7 +2567,6 @@ describe("client", () => {
     await expect(stream).toEmitApolloQueryResult({
       data,
       error: new ApolloError({ networkError: new Error("This is an error!") }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -3549,7 +3545,13 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result.errors).toEqual(errors);
+      expect(result).toEqualApolloQueryResult({
+        data: undefined,
+        error: new ApolloError({ graphQLErrors: errors }),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
     });
 
     it("allows setting default options for mutation", async () => {

@@ -405,7 +405,12 @@ export class InternalQueryReference<TData = unknown> {
           result.data = this.result.data;
         }
 
-        if (result.error) {
+        if (
+          result.error &&
+          (result.error?.networkError ||
+            this.watchQueryOptions.errorPolicy === "none" ||
+            this.watchQueryOptions.errorPolicy === undefined)
+        ) {
           this.reject?.(result.error);
         } else {
           this.result = result;

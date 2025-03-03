@@ -1206,7 +1206,7 @@ export class QueryManager<TStore> {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }
             }),
-            shareReplay({ bufferSize: 1, refCount: true })
+            shareReplay({ refCount: true })
           );
         }
       } else {

@@ -466,10 +466,9 @@ Next, we modify our `CommentsPageWithData` component to call `subscribeToMore` a
 
 ```tsx {10-25}
 function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
-  const { subscribeToMore, ...result } = useQuery(
-    COMMENTS_QUERY,
-    { variables: { postID: params.postID } }
-  );
+  const { subscribeToMore, ...result } = useQuery(COMMENTS_QUERY, {
+    variables: { postID: params.postID },
+  });
 
   useEffect(() => {
     // This assumes you want to wait to start the subscription
@@ -484,28 +483,27 @@ function CommentsPageWithData({ params }: CommentsPageWithDataProps) {
 
           return Object.assign({}, prev, {
             post: {
-              comments: [newFeedItem, ...prev.post.comments]
-            }
+              comments: [newFeedItem, ...prev.post.comments],
+            },
           });
-        }
+        },
       });
 
-      return () => { unsubscribe(); };
+      return () => {
+        unsubscribe();
+      };
     }
   }, [result.data, params.postID, subscribeToMore]);
 
-  return (
-    <CommentsPage {...result} />
-  );
+  return <CommentsPage {...result} />;
 }
 ```
 
 ```jsx {10-25}
 function CommentsPageWithData({ params }) {
-  const { subscribeToMore, ...result } = useQuery(
-    COMMENTS_QUERY,
-    { variables: { postID: params.postID } }
-  );
+  const { subscribeToMore, ...result } = useQuery(COMMENTS_QUERY, {
+    variables: { postID: params.postID },
+  });
 
   useEffect(() => {
     if (result.data) {
@@ -518,19 +516,19 @@ function CommentsPageWithData({ params }) {
 
           return Object.assign({}, prev, {
             post: {
-              comments: [newFeedItem, ...prev.post.comments]
-            }
+              comments: [newFeedItem, ...prev.post.comments],
+            },
           });
-        }
+        },
       });
 
-      return () => { unsubscribe(); };
+      return () => {
+        unsubscribe();
+      };
     }
   }, [result.data, params.postID]);
 
-  return (
-    <CommentsPage {...result} />
-  );
+  return <CommentsPage {...result} />;
 }
 ```
 

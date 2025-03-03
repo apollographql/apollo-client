@@ -262,7 +262,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      errors: [new Error("defer failed")],
+      error: new ApolloError({ networkError: new Error("defer failed") }),
       partial: false,
     });
 
@@ -314,7 +314,7 @@ describe("mutiple results", () => {
         // errors should never be passed since they are ignored
         count++;
         if (count === 1) {
-          expect(result.errors).toBeUndefined();
+          expect(result.error).toBeUndefined();
         }
         if (count === 2) {
           expect(result.error).toBeDefined();
@@ -337,7 +337,6 @@ describe("mutiple results", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
       error: new ApolloError({ networkError: new Error("defer failed") }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,

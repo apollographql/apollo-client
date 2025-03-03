@@ -7,12 +7,6 @@ export type DeepOmitArray<T extends any[], K> = {
   [P in keyof T]: DeepOmit<T[P], K>;
 };
 
-export type OptionalKeysOf<Obj> = {
-  [Key in keyof Obj as Omit<Obj, Key> extends Obj ? Key : never]: Obj[Key];
-};
-
-export type MandatoryKeysOf<Obj> = Omit<Obj, keyof OptionalKeysOf<Obj>>;
-
 // Unfortunately there is one major flaw in this type: This will omit properties
 // from class instances in the return type even though our omitDeep helper
 // ignores class instances, therefore resulting in a type mismatch between
@@ -28,15 +22,9 @@ export type MandatoryKeysOf<Obj> = Omit<Obj, keyof OptionalKeysOf<Obj>>;
 export type DeepOmit<T, K> =
   T extends DeepOmitPrimitive ? T
   : {
-      [P in Exclude<keyof MandatoryKeysOf<T>, K>]: T[P] extends infer TP ?
+      [P in keyof T as P extends K ? never : P]: T[P] extends infer TP ?
         TP extends DeepOmitPrimitive ? TP
         : TP extends any[] ? DeepOmitArray<TP, K>
         : DeepOmit<TP, K>
       : never;
-    } & Partial<{
-      [P in Exclude<keyof OptionalKeysOf<T>, K>]: T[P] extends infer TP ?
-        TP extends DeepOmitPrimitive ? TP
-        : TP extends any[] ? DeepOmitArray<TP, K>
-        : DeepOmit<TP, K>
-      : never;
-    }>;
+    };

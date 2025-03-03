@@ -1276,7 +1276,6 @@ export class QueryManager<TStore> {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
-          aqr.errors = graphQLErrors;
           aqr.networkStatus = NetworkStatus.error;
         }
 

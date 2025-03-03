@@ -1287,6 +1287,7 @@ export class QueryManager<TStore> {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
+          aqr.error = new ApolloError({ graphQLErrors });
           aqr.networkStatus = NetworkStatus.error;
         }
 

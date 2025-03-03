@@ -17,7 +17,6 @@ import {
 
 import { __use, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface UseReadQueryResult<TData = unknown> {
@@ -106,7 +105,7 @@ function useReadQuery_<TData>(
     return {
       data: result.data!,
       networkStatus: result.networkStatus,
-      error: toApolloError(result),
+      error: result.error,
     };
   }, [result]);
 }

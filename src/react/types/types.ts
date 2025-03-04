@@ -20,7 +20,6 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import type { ApolloError } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
@@ -327,7 +326,7 @@ export interface BaseMutationOptions<
     clientOptions?: BaseMutationOptions
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-  onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
+  onError?: (error: Error, clientOptions?: BaseMutationOptions) => void;
 }
 
 export interface MutationFunctionOptions<
@@ -344,7 +343,7 @@ export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: MaybeMasked<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: Error;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
@@ -435,7 +434,7 @@ export interface BaseSubscriptionOptions<
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
-  onError?: (error: ApolloError) => void;
+  onError?: (error: Error) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
   /**
@@ -451,7 +450,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
   data?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: Error;
   // This was added by the legacy useSubscription type, and is tested in unit
   // tests, but probably shouldn’t be added to the result.
   /**

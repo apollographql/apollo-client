@@ -5165,14 +5165,6 @@ describe("ApolloClient", () => {
   });
 
   describe("refetchQueries", () => {
-    let consoleWarnSpy: jest.SpyInstance;
-    beforeEach(() => {
-      consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
-    });
-    afterEach(() => {
-      consoleWarnSpy.mockRestore();
-    });
-
     it("should refetch the right query when a result is successfully returned", async () => {
       const mutation = gql`
         mutation changeAuthorName {
@@ -5257,6 +5249,7 @@ describe("ApolloClient", () => {
     });
 
     it("should not warn and continue when an unknown query name is asked to refetch", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5332,13 +5325,14 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "fakeQuery"
       );
     });
 
     it("should ignore (with warning) a query named in refetchQueries that has no active subscriptions", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5407,13 +5401,14 @@ describe("ApolloClient", () => {
         refetchQueries: ["getAuthors"],
       });
 
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "getAuthors"
       );
     });
 
     it("should ignore (with warning) a document node in refetchQueries that has no active subscriptions", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5483,13 +5478,14 @@ describe("ApolloClient", () => {
         refetchQueries: [query],
       });
 
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "getAuthors"
       );
     });
 
     it("should ignore (with warning) a document node containing an anonymous query in refetchQueries that has no active subscriptions", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5559,7 +5555,7 @@ describe("ApolloClient", () => {
         refetchQueries: [query],
       });
 
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         "Unknown anonymous query requested in refetchQueries options.include array"
       );
     });

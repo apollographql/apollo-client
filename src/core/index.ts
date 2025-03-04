@@ -27,6 +27,7 @@ export type { FragmentMatcher, Resolver } from "./LocalState.js";
 export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
+  UnknownError,
 } from "../errors/index.js";
 /* Cache */
 

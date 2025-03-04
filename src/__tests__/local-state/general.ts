@@ -15,10 +15,11 @@ import {
 import { Observable, of } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { Operation } from "../../link/core";
-import { ApolloClient, ApolloError, NetworkStatus } from "../../core";
+import { ApolloClient, NetworkStatus } from "../../core";
 import { ApolloCache, InMemoryCache } from "../../cache";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
 import { GraphQLFormattedError } from "graphql-17-alpha2";
+import { CombinedGraphQLErrors } from "../../errors";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {
@@ -1181,7 +1182,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new ApolloError({ graphQLErrors: [error] }),
+      error: new CombinedGraphQLErrors([error]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,

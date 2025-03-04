@@ -77,7 +77,7 @@ export const importFromExport = ESLintUtils.RuleCreator.withoutDocs({
 });
 
 export const importFromInsideOtherExport = ESLintUtils.RuleCreator.withoutDocs({
-  create(context) {
+  create(context, options) {
     const currentFileEntrypoint = findNearestEntryPointFolder(
       context.physicalFilename
     );
@@ -90,6 +90,9 @@ export const importFromInsideOtherExport = ESLintUtils.RuleCreator.withoutDocs({
           dirname(context.physicalFilename),
           node.source.value
         );
+        if (context.options[0].ignoreFrom.includes(resolvedTarget)) {
+          return;
+        }
         const importEntrypoint = findNearestEntryPointFolder(resolvedTarget);
         if (currentFileEntrypoint !== importEntrypoint) {
           context.report({
@@ -106,7 +109,21 @@ export const importFromInsideOtherExport = ESLintUtils.RuleCreator.withoutDocs({
         "Don't use relative imports to import from internals outside the same entry point.",
     },
     type: "problem",
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          ignoreFrom: {
+            type: "array",
+            items: { type: "string" },
+          },
+        },
+      },
+    ],
   },
-  defaultOptions: [],
+  defaultOptions: [
+    {
+      ignoreFrom: [],
+    },
+  ],
 });

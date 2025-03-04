@@ -8,7 +8,10 @@ import { map, Observable, Observer, Subscription } from "rxjs";
 import { ReadableStream } from "web-streams-polyfill";
 
 import { FetchResult, ServerError } from "@apollo/client";
-import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import {
+  PROTOCOL_ERRORS_SYMBOL,
+  ServerParseError,
+} from "@apollo/client/errors";
 import { wait } from "@apollo/client/testing";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
@@ -16,7 +19,6 @@ import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { createHttpLink } from "../createHttpLink.js";
 import { HttpLink } from "../HttpLink.js";
-import { ServerParseError } from "../parseAndCheckHttpResponse.js";
 import { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
@@ -1454,7 +1456,7 @@ describe("HttpLink", () => {
       expect(error.bodyText).toBe(undefined);
     });
 
-    it("throws a ServerParse error if response is 200 with unparsable json", async () => {
+    it("throws a ServerParseError if response is 200 with unparsable json", async () => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 200, text: unparsableJson })
       );

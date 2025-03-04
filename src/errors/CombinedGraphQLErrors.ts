@@ -9,6 +9,8 @@ export class CombinedGraphQLErrors extends Error {
     super(formatMessage(errors));
     this.errors = errors;
     this.name = "CombinedGraphQLErrors";
+
+    Object.setPrototypeOf(this, CombinedGraphQLErrors.prototype);
   }
 }
 

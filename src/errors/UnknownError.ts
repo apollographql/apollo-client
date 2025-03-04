@@ -3,5 +3,7 @@ export class UnknownError extends Error {
     // @ts-expect-error Need to upgrade ts lib
     super("An error of unknown type occurred", { cause: errorType });
     this.name = "UnknownError";
+
+    Object.setPrototypeOf(this, UnknownError.prototype);
   }
 }

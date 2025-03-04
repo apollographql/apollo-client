@@ -12,6 +12,8 @@ export class CombinedProtocolErrors extends Error {
     super(formatMessage(protocolErrors));
     this.name = "CombinedProtocolErrors";
     this.errors = protocolErrors;
+
+    Object.setPrototypeOf(this, CombinedProtocolErrors.prototype);
   }
 }
 

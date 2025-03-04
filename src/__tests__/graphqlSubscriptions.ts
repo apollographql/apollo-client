@@ -3,7 +3,6 @@ import gql from "graphql-tag";
 import { ApolloClient } from "../core";
 import { InMemoryCache } from "../cache";
 import {
-  ApolloError,
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,

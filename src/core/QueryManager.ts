@@ -86,7 +86,6 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from "./QueryInfo.js";
-import type { ApolloErrorOptions } from "../errors/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
 import { print } from "../utilities/index.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";

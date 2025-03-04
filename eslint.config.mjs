@@ -152,6 +152,8 @@ export default [
       ],
 
       "local-rules/require-using-disposable": "error",
+      "local-rules/import-from-export": "error",
+      "local-rules/import-from-inside-other-export": "warn",
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({

@@ -1,7 +1,6 @@
 import "../utilities/globals/index.js";
 
-import type { ServerParseError } from "../core/index.js";
-import type { ServerError } from "../link/utils/index.js";
+import type { ServerError, ServerParseError } from "../core/index.js";
 import type { FetchResult } from "../link/core/index.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain

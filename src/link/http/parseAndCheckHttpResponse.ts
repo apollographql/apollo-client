@@ -1,7 +1,6 @@
 import { responseIterator } from "./responseIterator.js";
 import type { Operation } from "../core/index.js";
-import { throwServerError } from "../utils/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
+import { PROTOCOL_ERRORS_SYMBOL, ServerError } from "../../errors/index.js";
 import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
 import type { Observer } from "rxjs";
 import { ServerParseError } from "../../errors/ServerParseError.js";
@@ -138,10 +137,9 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
         return bodyText;
       }
     };
-    throwServerError(
-      response,
-      getResult(),
-      `Response not successful: Received status code ${response.status}`
+    throw new ServerError(
+      `Response not successful: Received status code ${response.status}`,
+      { response, result: getResult() }
     );
   }
 
@@ -203,15 +201,13 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
           !hasOwnProperty.call(result, "data") &&
           !hasOwnProperty.call(result, "errors")
         ) {
-          // Data error
-          throwServerError(
-            response,
-            result,
+          throw new ServerError(
             `Server response was missing for query '${
               Array.isArray(operations) ?
                 operations.map((op) => op.operationName)
               : operations.operationName
-            }'.`
+            }'.`,
+            { response, result }
           );
         }
         return result;

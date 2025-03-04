@@ -6104,6 +6104,62 @@ describe("custom document transforms", () => {
   });
 });
 
+describe("unconventional errors", () => {
+  test("wraps error mesage in Error type when erroring with a string", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.error("This is an error");
+          }, 10);
+        });
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    const expectedError = new Error("This is an error");
+
+    await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: expectedError,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(
+      client.mutate({
+        mutation: gql`
+          mutation {
+            foo
+          }
+        `,
+      })
+    ).rejects.toEqual(expectedError);
+
+    const subscription = client.subscribe({
+      query: gql`
+        subscription {
+          foo
+        }
+      `,
+    });
+    const subscriptionStream = new ObservableStream(subscription);
+
+    await expect(subscriptionStream).toEmitError(expectedError);
+  });
+});
+
 async function clientRoundtrip(
   query: DocumentNode,
   data: FormattedExecutionResult,

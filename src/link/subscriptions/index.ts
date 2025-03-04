@@ -32,7 +32,7 @@ import type { FormattedExecutionResult } from "graphql";
 import type { Client, Sink } from "graphql-ws";
 import { Observable } from "rxjs";
 
-import { ApolloError } from "@apollo/client/errors";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
@@ -77,9 +77,7 @@ export class GraphQLWsLink extends ApolloLink {
             }
 
             return observer.error(
-              new ApolloError({
-                graphQLErrors: Array.isArray(err) ? err : [err],
-              })
+              new CombinedGraphQLErrors(Array.isArray(err) ? err : [err])
             );
           },
           // casting around a wrong type in graphql-ws, which incorrectly expects `Sink<ExecutionResult>`

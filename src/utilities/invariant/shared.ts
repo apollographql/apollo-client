@@ -1,6 +1,6 @@
 import { invariant as originalInvariant, InvariantError } from "ts-invariant";
 import { version } from "../../version.js";
-import global from "./global.js";
+import global from "../globals/global.js";
 import type { ErrorCodes } from "../../invariantErrorCodes.js";
 import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 

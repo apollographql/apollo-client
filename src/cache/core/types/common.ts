@@ -7,7 +7,7 @@ import type {
   isReference,
   AsStoreObject,
   DeepPartial,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 import type { StorageType } from "../../inmemory/policies.js";
 

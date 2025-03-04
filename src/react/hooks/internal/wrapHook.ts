@@ -6,7 +6,7 @@ import type {
   useFragment,
   useQueryRefHandlers,
   useSuspenseFragment,
-} from "../index.js";
+} from "@apollo/client/react/hooks";
 import type { QueryManager } from "../../../core/QueryManager.js";
 import type { ApolloClient } from "../../../core/ApolloClient.js";
 import type { ObservableQuery } from "../../../core/ObservableQuery.js";

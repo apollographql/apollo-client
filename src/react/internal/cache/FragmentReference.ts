@@ -2,18 +2,18 @@ import { equal } from "@wry/equality";
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
-} from "../../../cache/index.js";
+} from "@apollo/client/cache";
 import type { ApolloClient } from "../../../core/ApolloClient.js";
-import type { MaybeMasked } from "../../../masking/index.js";
+import type { MaybeMasked } from "@apollo/client/masking";
 import {
   createFulfilledPromise,
   wrapPromiseWithState,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type {
   Observable,
   ObservableSubscription,
   PromiseWithState,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { FragmentKey } from "./types.js";
 
 type FragmentRefPromise<TData> = PromiseWithState<TData>;

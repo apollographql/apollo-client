@@ -1,6 +1,6 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
 import * as React from "rehackt";
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -10,25 +10,25 @@ import type {
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
   WatchQueryOptions,
-} from "../../core/index.js";
-import { ApolloError, NetworkStatus } from "../../core/index.js";
+} from "@apollo/client/core";
+import { ApolloError, NetworkStatus } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
-import type { DeepPartial } from "../../utilities/index.js";
-import { isNonEmptyArray } from "../../utilities/index.js";
+import type { DeepPartial } from "@apollo/client/utilities";
+import { isNonEmptyArray } from "@apollo/client/utilities";
 import { useApolloClient } from "./useApolloClient.js";
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
 } from "../types/types.js";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
-import { getSuspenseCache } from "../internal/index.js";
-import { canonicalStringify } from "../../cache/index.js";
+import { getSuspenseCache } from "@apollo/client/react/internal";
+import { canonicalStringify } from "@apollo/client/cache";
 import { skipToken } from "./constants.js";
 import type { SkipToken } from "./constants.js";
-import type { CacheKey, QueryKey } from "../internal/index.js";
-import type { MaybeMasked, Unmasked } from "../../masking/index.js";
+import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,

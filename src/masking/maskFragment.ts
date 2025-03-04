@@ -5,19 +5,19 @@ import type {
   ApolloCache,
   DocumentNode,
   TypedDocumentNode,
-} from "../core/index.js";
+} from "@apollo/client/core";
 import {
   MapImpl,
   SetImpl,
   warnOnImproperCacheImplementation,
 } from "./utils.js";
-import { invariant } from "../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 import equal from "@wry/equality";
 import { maskDefinition } from "./maskDefinition.js";
 import {
   createFragmentMap,
   getFragmentDefinitions,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 
 /** @internal */
 export function maskFragment<TData = unknown>(

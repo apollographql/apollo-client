@@ -1,10 +1,10 @@
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 import * as React from "rehackt";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type {
   NoInfer,
   SubscriptionHookOptions,
@@ -17,14 +17,14 @@ import type {
   FetchPolicy,
   FetchResult,
   OperationVariables,
-} from "../../core/index.js";
-import { ApolloError, Observable } from "../../core/index.js";
+} from "@apollo/client/core";
+import { ApolloError, Observable } from "@apollo/client/core";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { toApolloError } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
-import type { MaybeMasked } from "../../masking/index.js";
+import type { MaybeMasked } from "@apollo/client/masking";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.

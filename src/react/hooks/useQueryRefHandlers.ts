@@ -5,8 +5,8 @@ import {
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../internal/index.js";
-import type { QueryRef } from "../internal/index.js";
+} from "@apollo/client/react/internal";
+import type { QueryRef } from "@apollo/client/react/internal";
 import type { OperationVariables } from "../../core/types.js";
 import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";

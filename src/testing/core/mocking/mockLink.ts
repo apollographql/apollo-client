@@ -1,4 +1,4 @@
-import { invariant } from "../../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 
 import { equal } from "@wry/equality";
 
@@ -6,8 +6,8 @@ import type {
   Operation,
   GraphQLRequest,
   FetchResult,
-} from "../../../link/core/index.js";
-import { ApolloLink } from "../../../link/core/index.js";
+} from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 
 import {
   Observable,
@@ -20,8 +20,8 @@ import {
   getDefaultValues,
   removeDirectivesFromDocument,
   checkDocument,
-} from "../../../utilities/index.js";
-import type { Unmasked } from "../../../masking/index.js";
+} from "@apollo/client/utilities";
+import type { Unmasked } from "@apollo/client/masking";
 
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];

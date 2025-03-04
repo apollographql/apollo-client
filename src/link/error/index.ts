@@ -3,11 +3,11 @@ import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 import {
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
-} from "../../errors/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import { Observable } from "../../utilities/index.js";
-import type { Operation, FetchResult, NextLink } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
+} from "@apollo/client/errors";
+import type { NetworkError } from "@apollo/client/errors";
+import { Observable } from "@apollo/client/utilities";
+import type { Operation, FetchResult, NextLink } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 
 export interface ErrorResponse {
   /**

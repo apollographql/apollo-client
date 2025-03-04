@@ -7,8 +7,8 @@ import type {
   ApolloQueryResult,
   OperationVariables,
   WatchQueryOptions,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+} from "@apollo/client/core";
+import { mergeOptions } from "@apollo/client/utilities";
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,

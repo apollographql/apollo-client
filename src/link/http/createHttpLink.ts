@@ -1,10 +1,10 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 
 import type { DefinitionNode } from "graphql";
 
-import { ApolloLink } from "../core/index.js";
-import { Observable, hasDirectives } from "../../utilities/index.js";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Observable, hasDirectives } from "@apollo/client/utilities";
 import { serializeFetchParameter } from "./serializeFetchParameter.js";
 import { selectURI } from "./selectURI.js";
 import {
@@ -20,12 +20,12 @@ import {
   fallbackHttpConfig,
 } from "./selectHttpOptionsAndBody.js";
 import { rewriteURIForGET } from "./rewriteURIForGET.js";
-import { fromError, filterOperationVariables } from "../utils/index.js";
+import { fromError, filterOperationVariables } from "@apollo/client/link/utils";
 import {
   maybe,
   getMainDefinition,
   removeClientSetsFromDocument,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 const backupFetch = maybe(() => fetch);
 

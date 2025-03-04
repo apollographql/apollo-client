@@ -20,7 +20,7 @@ import {
   isUnionType,
 } from "graphql";
 
-import { isNonNullObject } from "../../../utilities/index.js";
+import { isNonNullObject } from "@apollo/client/utilities";
 import { MapperKind, mapSchema, getRootTypeNames } from "@graphql-tools/utils";
 
 // Taken from @graphql-tools/mock:

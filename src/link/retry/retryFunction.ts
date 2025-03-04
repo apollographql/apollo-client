@@ -1,4 +1,4 @@
-import type { Operation } from "../core/index.js";
+import type { Operation } from "@apollo/client/link/core";
 
 /**
  * Advanced mode: a function that determines both whether a particular

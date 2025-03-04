@@ -1,5 +1,5 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 
 import type {
   DocumentNode,
@@ -11,7 +11,7 @@ import {
   AutoCleanedWeakCache,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
 
 export enum DocumentType {

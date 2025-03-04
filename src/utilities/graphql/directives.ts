@@ -1,5 +1,5 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant } from "../globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 
 // Provides the methods that allow QueryManager to handle the `skip` and
 // `include` directives within GraphQL.

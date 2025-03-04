@@ -1,12 +1,12 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant, newInvariantError } from "../utilities/globals/index.js";
+import { invariant, newInvariantError } from "@apollo/client/utilities/globals";
 
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 
-import type { ApolloLink, FetchResult } from "../link/core/index.js";
-import { execute } from "../link/core/index.js";
+import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { execute } from "@apollo/client/link/core";
 import {
   addNonReactiveToNamedFragments,
   defaultCacheSizes,
@@ -15,15 +15,15 @@ import {
   isExecutionPatchResult,
   isFullyUnmaskedOperation,
   removeDirectivesFromDocument,
-} from "../utilities/index.js";
-import type { Cache, ApolloCache } from "../cache/index.js";
-import { canonicalStringify } from "../cache/index.js";
+} from "@apollo/client/utilities";
+import type { Cache, ApolloCache } from "@apollo/client/cache";
+import { canonicalStringify } from "@apollo/client/cache";
 
 import type {
   ObservableSubscription,
   ConcastSourcesArray,
   DeepPartial,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   getDefaultValues,
   getOperationDefinition,
@@ -39,13 +39,13 @@ import {
   isDocumentNode,
   isNonNullObject,
   DocumentTransform,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
 import {
   ApolloError,
   isApolloError,
   graphQLResultHasProtocolErrors,
-} from "../errors/index.js";
+} from "@apollo/client/errors";
 import type {
   QueryOptions,
   WatchQueryOptions,
@@ -76,9 +76,9 @@ import {
   shouldWriteResult,
   CacheWriteBehavior,
 } from "./QueryInfo.js";
-import type { ApolloErrorOptions } from "../errors/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
-import { print } from "../utilities/index.js";
+import type { ApolloErrorOptions } from "@apollo/client/errors";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { print } from "@apollo/client/utilities";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
@@ -108,9 +108,9 @@ interface TransformCacheEntry {
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import { Trie } from "@wry/trie";
-import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
-import { maskFragment, maskOperation } from "../masking/index.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
+import { maskFragment, maskOperation } from "@apollo/client/masking";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;

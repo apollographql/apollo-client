@@ -1,4 +1,4 @@
-import type { SuspenseCacheOptions } from "../index.js";
+import type { SuspenseCacheOptions } from "@apollo/client/react/internal";
 import { SuspenseCache } from "./SuspenseCache.js";
 import type { ApolloClient } from "../../../core/ApolloClient.js";
 

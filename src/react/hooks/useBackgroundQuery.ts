@@ -5,7 +5,7 @@ import type {
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
-} from "../../core/index.js";
+} from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import { useApolloClient } from "./useApolloClient.js";
 import {
@@ -13,14 +13,14 @@ import {
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../internal/index.js";
-import type { CacheKey, QueryRef } from "../internal/index.js";
+} from "@apollo/client/react/internal";
+import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
-import { canonicalStringify } from "../../cache/index.js";
-import type { DeepPartial } from "../../utilities/index.js";
+import { canonicalStringify } from "@apollo/client/cache";
+import type { DeepPartial } from "@apollo/client/utilities";
 import type { SkipToken } from "./constants.js";
 
 export type UseBackgroundQueryResult<

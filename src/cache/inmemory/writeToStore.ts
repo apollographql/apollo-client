@@ -1,5 +1,5 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
+import { invariant, newInvariantError } from "@apollo/client/utilities/globals";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
 import type { SelectionSetNode, FieldNode } from "graphql";
@@ -11,7 +11,7 @@ import type {
   StoreValue,
   StoreObject,
   Reference,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   getFragmentFromSelection,
   getDefaultValues,
@@ -27,7 +27,7 @@ import {
   isNonEmptyArray,
   argumentsObjectFromField,
   canonicalStringify,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 import type {
   NormalizedCache,
@@ -45,7 +45,7 @@ import {
 import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
 import type { EntityStore } from "./entityStore.js";
-import type { Cache } from "../../core/index.js";
+import type { Cache } from "@apollo/client/core";
 import { normalizeReadFieldOptions } from "./policies.js";
 import type { ReadFieldFunction } from "../core/types/common.js";
 

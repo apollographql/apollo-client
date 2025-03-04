@@ -1,16 +1,16 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant, newInvariantError } from "../utilities/globals/index.js";
+import { invariant, newInvariantError } from "@apollo/client/utilities/globals";
 
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
 
-import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
-import { ApolloLink, execute } from "../link/core/index.js";
-import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform } from "../utilities/index.js";
-import type { Observable } from "../utilities/index.js";
+import type { FetchResult, GraphQLRequest } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import type { ApolloCache, DataProxy, Reference } from "@apollo/client/cache";
+import type { DocumentTransform } from "@apollo/client/utilities";
+import type { Observable } from "@apollo/client/utilities";
 import { version } from "../version.js";
-import type { UriFunction } from "../link/http/index.js";
-import { HttpLink } from "../link/http/index.js";
+import type { UriFunction } from "@apollo/client/link/http";
+import { HttpLink } from "@apollo/client/link/http";
 
 import { QueryManager } from "./QueryManager.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
@@ -159,13 +159,13 @@ export interface ApolloClientOptions<TCacheShape> {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities/index.js";
+import { mergeOptions } from "@apollo/client/utilities";
 import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/core/cache.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 export { mergeOptions };
 
 /**

@@ -1,4 +1,4 @@
-import { newInvariantError } from "../globals/index.js";
+import { newInvariantError } from "@apollo/client/utilities/globals";
 
 import type {
   DirectiveNode,

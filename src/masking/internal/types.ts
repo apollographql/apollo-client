@@ -2,7 +2,7 @@ import type {
   Prettify,
   Primitive,
   RemoveIndexSignature,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 

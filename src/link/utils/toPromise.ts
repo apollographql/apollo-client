@@ -1,5 +1,5 @@
-import { invariant } from "../../utilities/globals/index.js";
-import type { Observable } from "../../utilities/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
+import type { Observable } from "@apollo/client/utilities";
 
 export function toPromise<R>(observable: Observable<R>): Promise<R> {
   let completed = false;

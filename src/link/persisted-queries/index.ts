@@ -1,27 +1,27 @@
 import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/globals";
 
-import { print } from "../../utilities/index.js";
+import { print } from "@apollo/client/utilities";
 import type {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
 
-import type { Operation } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
+import type { Operation } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 import type {
   Observer,
   ObservableSubscription,
-} from "../../utilities/index.js";
-import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import type { ServerError } from "../utils/index.js";
+} from "@apollo/client/utilities";
+import { Observable, compact, isNonEmptyArray } from "@apollo/client/utilities";
+import type { NetworkError } from "@apollo/client/errors";
+import type { ServerError } from "@apollo/client/link/utils";
 import {
   cacheSizes,
   AutoCleanedWeakCache,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 export const VERSION = 1;
 

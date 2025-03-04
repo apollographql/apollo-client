@@ -1,7 +1,7 @@
-import { newInvariantError, invariant } from "../../utilities/globals/index.js";
+import { newInvariantError, invariant } from "@apollo/client/utilities/globals";
 
-import type { Observer } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type { Observer } from "@apollo/client/utilities";
+import { Observable } from "@apollo/client/utilities";
 import type {
   NextLink,
   Operation,
@@ -13,7 +13,7 @@ import {
   validateOperation,
   createOperation,
   transformOperation,
-} from "../utils/index.js";
+} from "@apollo/client/link/utils";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;

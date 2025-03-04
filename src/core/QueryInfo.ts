@@ -1,23 +1,23 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { equal } from "@wry/equality";
 
-import type { Cache, ApolloCache } from "../cache/index.js";
-import { DeepMerger } from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/index.js";
+import type { Cache, ApolloCache } from "@apollo/client/cache";
+import { DeepMerger } from "@apollo/client/utilities";
+import { mergeIncrementalData } from "@apollo/client/utilities";
 import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
 import type { QueryListener } from "./types.js";
-import type { FetchResult } from "../link/core/index.js";
+import type { FetchResult } from "@apollo/client/link/core";
 import {
   isNonEmptyArray,
   graphQLResultHasError,
   canUseWeakMap,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
+import type { ApolloError } from "@apollo/client/errors";
 import type { QueryManager } from "./QueryManager.js";
-import type { Unmasked } from "../masking/index.js";
+import type { Unmasked } from "@apollo/client/masking";
 
 export type QueryStoreValue = Pick<
   QueryInfo,

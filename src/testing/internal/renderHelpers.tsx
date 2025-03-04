@@ -1,6 +1,6 @@
 import * as React from "react";
-import type { ApolloClient } from "../../core/index.js";
-import { ApolloProvider } from "../../react/index.js";
+import type { ApolloClient } from "@apollo/client/core";
+import { ApolloProvider } from "@apollo/client/react";
 import type { MockedProviderProps } from "../react/MockedProvider.js";
 import { MockedProvider } from "../react/MockedProvider.js";
 

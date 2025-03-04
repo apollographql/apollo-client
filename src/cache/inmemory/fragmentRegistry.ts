@@ -8,12 +8,12 @@ import { visit } from "graphql";
 
 import { wrap } from "optimism";
 
-import type { FragmentMap } from "../../utilities/index.js";
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   cacheSizes,
   defaultCacheSizes,
   getFragmentDefinitions,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { WeakCache } from "@wry/caches";
 
 export interface FragmentRegistryAPI {

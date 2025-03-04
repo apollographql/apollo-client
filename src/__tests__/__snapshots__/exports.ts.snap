@@ -469,20 +469,26 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
+exports[`exports of public entry points @apollo/client/utilities/environment 1`] = `
 Array [
-  "InvariantError",
   "__DEV__",
-  "global",
-  "invariant",
-  "maybe",
-  "newInvariantError",
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/utilities/globals/environment 1`] = `
+exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
-  "__DEV__",
+  "global",
+  "maybe",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/invariant 1`] = `
+Array [
+  "ApolloErrorMessageHandler",
+  "InvariantError",
+  "invariant",
+  "newInvariantError",
+  "setVerbosity",
 ]
 `;
 

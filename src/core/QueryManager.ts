@@ -22,8 +22,8 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
 import type { ApolloErrorOptions } from "@apollo/client/errors";
 import {
-  ApolloError,
   CombinedGraphQLErrors,
+  CombinedProtocolErrors,
   graphQLResultHasProtocolErrors,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
@@ -1046,13 +1046,12 @@ export class QueryManager<TStore> {
           }
 
           if (hasProtocolErrors) {
-            const errors: ApolloErrorOptions = {};
-            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
-
             // `errorPolicy` is a mechanism for handling GraphQL errors, according
             // to our documentation, so we throw protocol errors regardless of the
             // set error policy.
-            throw new ApolloError(errors);
+            throw new CombinedProtocolErrors(
+              result.extensions[PROTOCOL_ERRORS_SYMBOL]
+            );
           }
 
           if (errorPolicy === "ignore") {

@@ -27,7 +27,6 @@ import type {
 } from "../../core/index.js";
 import { mergeOptions } from "../../utilities/index.js";
 import { getApolloContext } from "../context/index.js";
-import { ApolloError } from "../../errors/index.js";
 import type {
   ApolloQueryResult,
   ObservableQuery,
@@ -45,11 +44,7 @@ import type {
 
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import {
-  compact,
-  isNonEmptyArray,
-  maybeDeepFreeze,
-} from "../../utilities/index.js";
+import { compact, maybeDeepFreeze } from "../../utilities/index.js";
 import { wrapHook } from "./internal/index.js";
 import type { RenderPromises } from "../ssr/RenderPromises.js";
 import type { MaybeMasked } from "../../masking/index.js";
@@ -601,14 +596,6 @@ export function getDefaultFetchPolicy<
     clientDefaultOptions?.watchQuery?.fetchPolicy ||
     "cache-first"
   );
-}
-
-export function toApolloError<TData>(
-  result: Pick<ApolloQueryResult<TData>, "errors" | "error">
-): ApolloError | undefined {
-  return isNonEmptyArray(result.errors) ?
-      new ApolloError({ graphQLErrors: result.errors })
-    : result.error;
 }
 
 export function toQueryResult<TData, TVariables extends OperationVariables>(

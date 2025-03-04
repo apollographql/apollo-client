@@ -11,7 +11,11 @@ export class CombinedGraphQLErrors extends Error {
 }
 
 function formatMessage(errors: Array<GraphQLFormattedError>) {
-  const messageList = errors.map((error) => `- ${error.message}`).join("\n");
+  const messageList = errors
+    // Handle non-spec-compliant servers: See #1185
+    .filter((e) => e)
+    .map((e) => `- ${e.message}`)
+    .join("\n");
 
   return `The GraphQL server returned with errors:
 ${messageList}`;

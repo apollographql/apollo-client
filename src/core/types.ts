@@ -148,7 +148,7 @@ export interface ApolloQueryResult<T> {
    * This will contain both a NetworkError field and any GraphQLErrors.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  error?: unknown;
+  error?: Error;
   loading: boolean;
   networkStatus: NetworkStatus;
   /**

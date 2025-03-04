@@ -4,7 +4,6 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloError",
   "ApolloLink",
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
@@ -68,7 +67,6 @@ exports[`exports of public entry points @apollo/client/core 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloError",
   "ApolloLink",
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
@@ -121,7 +119,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
-  "ApolloError",
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
   "PROTOCOL_ERRORS_SYMBOL",

@@ -6,7 +6,11 @@ import {
 } from "@apollo/client/errors";
 import type { NetworkError } from "@apollo/client/errors";
 import { Observable } from "@apollo/client/utilities";
-import type { Operation, FetchResult, NextLink } from "@apollo/client/link/core";
+import type {
+  Operation,
+  FetchResult,
+  NextLink,
+} from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 
 export interface ErrorResponse {

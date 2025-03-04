@@ -1,4 +1,8 @@
-import type { Operation, FetchResult, NextLink } from "@apollo/client/link/core";
+import type {
+  Operation,
+  FetchResult,
+  NextLink,
+} from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Observable } from "@apollo/client/utilities";
 import type { BatchHandler } from "./batching.js";

@@ -1,4 +1,8 @@
-import type { FetchResult, NextLink, Operation } from "@apollo/client/link/core";
+import type {
+  FetchResult,
+  NextLink,
+  Operation,
+} from "@apollo/client/link/core";
 import type { ObservableSubscription } from "@apollo/client/utilities";
 import { Observable } from "@apollo/client/utilities";
 

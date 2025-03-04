@@ -27,7 +27,7 @@ import {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { ApolloError } from "@apollo/client/errors";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
@@ -586,7 +586,7 @@ describe("client", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors(errors)
     );
   });
 
@@ -631,7 +631,7 @@ describe("client", () => {
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors(errors)
     );
   });
 
@@ -661,9 +661,7 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    await expect(client.query({ query })).rejects.toThrow(
-      new ApolloError({ networkError })
-    );
+    await expect(client.query({ query })).rejects.toThrow(networkError);
   });
 
   it("should not warn when receiving multiple results from apollo-link network interface", () => {
@@ -1821,7 +1819,7 @@ describe("client", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ networkError: new Error("Oops") }),
+        error: new Error("Oops"),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -1858,9 +1856,7 @@ describe("client", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: initialData,
-        error: new ApolloError({
-          graphQLErrors: [{ message: "network failure" }],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "network failure" }]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -2057,9 +2053,7 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    await expect(client.mutate({ mutation })).rejects.toThrow(
-      new ApolloError({ networkError })
-    );
+    await expect(client.mutate({ mutation })).rejects.toThrow(networkError);
   });
 
   it("should pass a GraphQL error correctly on a mutation", async () => {
@@ -2089,7 +2083,7 @@ describe("client", () => {
     });
 
     await expect(client.mutate({ mutation })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors(errors)
     );
   });
 
@@ -2509,7 +2503,7 @@ describe("client", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new ApolloError({ networkError: new Error("Uh oh!") }),
+      error: new Error("Uh oh!"),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -2565,7 +2559,7 @@ describe("client", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data,
-      error: new ApolloError({ networkError: new Error("This is an error!") }),
+      error: new Error("This is an error!"),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -2574,8 +2568,8 @@ describe("client", () => {
     stream.unsubscribe();
 
     const lastError = observable.getLastError();
-    expect(lastError).toBeInstanceOf(ApolloError);
-    expect(lastError?.networkError).toEqual(new Error("This is an error!"));
+    expect(lastError).toBeInstanceOf(Error);
+    expect(lastError).toEqual(new Error("This is an error!"));
 
     const lastResult = observable.getLastResult();
     expect(lastResult).toBeTruthy();
@@ -3546,7 +3540,7 @@ describe("@connection", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: errors }),
+        error: new CombinedGraphQLErrors(errors),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,

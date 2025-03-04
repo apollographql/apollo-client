@@ -27,7 +27,6 @@ Array [
   "fallbackHttpConfig",
   "from",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
   "makeReference",
@@ -92,7 +91,6 @@ Array [
   "fallbackHttpConfig",
   "from",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
   "makeReference",
@@ -126,7 +124,6 @@ Array [
   "CombinedGraphQLErrors",
   "PROTOCOL_ERRORS_SYMBOL",
   "graphQLResultHasProtocolErrors",
-  "isApolloError",
 ]
 `;
 

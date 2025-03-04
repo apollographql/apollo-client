@@ -313,14 +313,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         this.devtoolsConfig.enabled ?
           () => {
             if (this.devToolsHookCb) {
-              this.devToolsHookCb({
-                action: {},
-                state: {
-                  queries: this.queryManager.getQueryStore(),
-                  mutations: this.queryManager.mutationStore || {},
-                },
-                dataWithOptimisticResults: this.cache.extract(true),
-              });
+              this.devToolsHookCb();
             }
           }
         : void 0,

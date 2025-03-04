@@ -14,6 +14,9 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnknownError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -42,7 +45,6 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
-  "throwServerError",
 ]
 `;
 
@@ -78,6 +80,9 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnknownError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -106,7 +111,6 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
-  "throwServerError",
 ]
 `;
 
@@ -124,6 +128,8 @@ Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
   "PROTOCOL_ERRORS_SYMBOL",
+  "ServerError",
+  "ServerParseError",
   "UnknownError",
   "graphQLResultHasProtocolErrors",
 ]
@@ -219,7 +225,6 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "throwServerError",
   "transformOperation",
   "validateOperation",
 ]

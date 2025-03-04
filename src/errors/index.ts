@@ -36,10 +36,6 @@ export function graphQLResultHasProtocolErrors<T>(
   return false;
 }
 
-export function isApolloError(err: Error): err is ApolloError {
-  return err.hasOwnProperty("graphQLErrors");
-}
-
 // Sets the error message on this error according to the
 // the GraphQL and network errors that are present.
 // If the error message has already been set through the

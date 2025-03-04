@@ -38,7 +38,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { MutationTuple, QueryResult } from "../../types/types.js";
-import { invariant } from "../../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 import { MockedProvider } from "../../../testing/react/index.js";
 
 describe("useMutation Hook", () => {

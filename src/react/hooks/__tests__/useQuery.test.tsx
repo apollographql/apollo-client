@@ -39,7 +39,7 @@ import {
 } from "../../../testing/internal/index.js";
 import { useLazyQuery } from "../useLazyQuery.js";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
-import { InvariantError } from "../../../utilities/globals/index.js";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import { Unmasked } from "../../../masking/index.js";
 import {
   createRenderStream,

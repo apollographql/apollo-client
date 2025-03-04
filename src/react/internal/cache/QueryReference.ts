@@ -16,7 +16,7 @@ import {
 } from "@apollo/client/utilities";
 import type { QueryKey } from "./types.js";
 import { wrapPromiseWithState } from "@apollo/client/utilities";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import type { MaybeMasked } from "@apollo/client/masking";
 
 type QueryRefPromise<TData> = PromiseWithState<

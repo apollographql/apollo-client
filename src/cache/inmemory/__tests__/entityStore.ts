@@ -14,7 +14,7 @@ import {
 import { MissingFieldError } from "../../index.js";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { stringifyForDisplay } from "../../../utilities/index.js";
-import { InvariantError } from "../../../utilities/globals/index.js";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import { spyOnConsole } from "../../../testing/internal/index.js";
 
 describe("EntityStore", () => {

@@ -35,7 +35,8 @@ import * as testingReact from "../testing/react/index.js";
 import * as utilities from "../utilities/index.js";
 import * as utilitiesGlobals from "../utilities/globals/index.js";
 import * as urqlUtilities from "../utilities/subscriptions/urql/index.js";
-import * as utilitiesGlobalsEnvironment from "../utilities/globals/environment/index.js";
+import * as utilitiesInvariant from "../utilities/invariant/index.js";
+import * as utilitiesEnvironment from "../utilities/environment/index.js";
 
 // @ts-ignore
 import { entryPoints } from "../../config/entryPoints.js";
@@ -84,10 +85,8 @@ describe("exports of public entry points", () => {
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
   check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);
-  check(
-    "@apollo/client/utilities/globals/environment",
-    utilitiesGlobalsEnvironment
-  );
+  check("@apollo/client/utilities/invariant", utilitiesInvariant);
+  check("@apollo/client/utilities/environment", utilitiesEnvironment);
 
   it("completeness", () => {
     const { join } = require("path").posix;

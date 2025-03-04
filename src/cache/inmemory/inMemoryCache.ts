@@ -1,5 +1,5 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant } from "@apollo/client/utilities/globals";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 // Make builtins like Map and Set safe to use with non-extensible objects.
 // TODO: this needs to be removed for 4.0, so we really don't have side effects.

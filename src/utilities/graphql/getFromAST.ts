@@ -1,4 +1,7 @@
-import { invariant, newInvariantError } from "@apollo/client/utilities/globals";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import type {
   DocumentNode,

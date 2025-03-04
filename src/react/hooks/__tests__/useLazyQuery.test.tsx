@@ -23,7 +23,7 @@ import {
 } from "../../../testing/index.js";
 import { useLazyQuery } from "../useLazyQuery.js";
 import { QueryResult } from "../../types/types.js";
-import { InvariantError } from "../../../utilities/globals/index.js";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import {
   Masked,
   MaskedDocumentNode,

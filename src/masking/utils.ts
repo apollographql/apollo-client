@@ -1,5 +1,5 @@
 import { Slot } from "optimism";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import { canUseWeakMap, canUseWeakSet } from "@apollo/client/utilities";
 
 export const MapImpl = canUseWeakMap ? WeakMap : Map;

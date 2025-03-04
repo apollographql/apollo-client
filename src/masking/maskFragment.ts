@@ -1,4 +1,4 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import { Kind } from "graphql";
 import type { FragmentDefinitionNode } from "graphql";
 import type {
@@ -11,7 +11,7 @@ import {
   SetImpl,
   warnOnImproperCacheImplementation,
 } from "./utils.js";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import equal from "@wry/equality";
 import { maskDefinition } from "./maskDefinition.js";
 import {

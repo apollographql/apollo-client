@@ -1,5 +1,8 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant, newInvariantError } from "@apollo/client/utilities/globals";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)

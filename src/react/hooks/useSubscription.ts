@@ -1,4 +1,4 @@
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import * as React from "rehackt";
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";

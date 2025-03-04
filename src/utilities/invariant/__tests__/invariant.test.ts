@@ -3,7 +3,7 @@ import {
   ApolloErrorMessageHandler,
   InvariantError,
   invariant,
-} from "../invariantWrappers.js";
+} from "../index.js";
 
 function withDev(): typeof import("../../../dev/index.js") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];

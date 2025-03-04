@@ -17,7 +17,7 @@ import { HttpLink } from "../link/http/index.js";
 import { createFragmentRegistry, InMemoryCache } from "../cache/index.js";
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { invariant } from "../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 import { expectTypeOf } from "expect-type";
 import { Masked } from "../masking/index.js";
 

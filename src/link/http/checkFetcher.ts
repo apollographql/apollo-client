@@ -1,4 +1,4 @@
-import { newInvariantError } from "@apollo/client/utilities/globals";
+import { newInvariantError } from "@apollo/client/utilities/invariant";
 
 export const checkFetcher = (fetcher: typeof fetch | undefined) => {
   if (!fetcher && typeof fetch === "undefined") {

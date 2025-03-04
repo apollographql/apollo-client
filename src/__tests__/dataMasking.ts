@@ -21,7 +21,7 @@ import {
   wait,
 } from "../testing/index.js";
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
-import { invariant } from "../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
 import { isSubscriptionOperation } from "../utilities/index.js";
 import { MaskedDocumentNode } from "../masking/index.js";

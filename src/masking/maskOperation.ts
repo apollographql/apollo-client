@@ -1,10 +1,10 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   ApolloCache,
   DocumentNode,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import {
   createFragmentMap,
   getFragmentDefinitions,

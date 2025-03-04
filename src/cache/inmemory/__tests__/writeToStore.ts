@@ -25,7 +25,7 @@ import { InMemoryCache } from "../inMemoryCache.js";
 import { TypedDocumentNode } from "../../../core/index.js";
 import { extractFragmentContext } from "../helpers.js";
 import { KeyFieldsFunction } from "../policies.js";
-import { invariant } from "../../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 import { spyOnConsole } from "../../../testing/internal/index.js";
 
 const getIdField: KeyFieldsFunction = ({ id }) => {

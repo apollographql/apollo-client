@@ -1,6 +1,6 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import * as React from "rehackt";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import type {
   ApolloClient,
   ApolloQueryResult,

@@ -1,4 +1,4 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
@@ -29,7 +29,7 @@ import type {
 } from "@apollo/client/core";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 import { maskFragment } from "@apollo/client/masking";
 import type {
   FragmentType,

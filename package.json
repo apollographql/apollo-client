@@ -33,11 +33,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./cache": "./src/cache/index.ts",
-    "./core": {
-      "production": "./src/core/index.ts",
-      "development": "./src/core/index.development.ts",
-      "default": "./src/core/index.ts"
-    },
+    "./core": "./src/core/index.ts",
     "./dev": "./src/dev/index.ts",
     "./errors": "./src/errors/index.ts",
     "./link/batch": "./src/link/batch/index.ts",
@@ -68,10 +64,14 @@
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/subscriptions/urql": "./src/utilities/subscriptions/urql/index.ts",
     "./utilities/globals": "./src/utilities/globals/index.ts",
-    "./utilities/globals/environment": {
-      "production": "./src/utilities/globals/environment/index.production.ts",
-      "development": "./src/utilities/globals/environment/index.development.ts",
-      "default": "./src/utilities/globals/environment/index.ts"
+    "./utilities/invariant": {
+      "development": "./src/utilities/invariant/index.development.ts",
+      "default": "./src/utilities/invariant/index.ts"
+    },
+    "./utilities/environment": {
+      "production": "./src/utilities/environment/index.production.ts",
+      "development": "./src/utilities/environment/index.development.ts",
+      "default": "./src/utilities/environment/index.ts"
     }
   },
   "scripts": {
@@ -147,7 +147,6 @@
     "optimism": "^0.18.0",
     "rehackt": "^0.1.0",
     "symbol-observable": "^4.0.0",
-    "ts-invariant": "^0.10.3",
     "tslib": "^2.3.0",
     "zen-observable-ts": "^1.2.5"
   },

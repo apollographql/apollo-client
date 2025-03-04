@@ -1,5 +1,8 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant, newInvariantError } from "@apollo/client/utilities/globals";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";

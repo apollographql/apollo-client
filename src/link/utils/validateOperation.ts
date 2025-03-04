@@ -1,4 +1,4 @@
-import { newInvariantError } from "@apollo/client/utilities/globals";
+import { newInvariantError } from "@apollo/client/utilities/invariant";
 import type { GraphQLRequest } from "@apollo/client/link/core";
 
 export function validateOperation(operation: GraphQLRequest): GraphQLRequest {

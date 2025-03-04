@@ -28,7 +28,7 @@ import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in

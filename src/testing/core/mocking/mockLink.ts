@@ -1,4 +1,4 @@
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equal } from "@wry/equality";
 

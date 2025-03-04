@@ -1,5 +1,5 @@
 import { withCleanup } from "./withCleanup.js";
-import * as environment from "@apollo/client/utilities/globals/environment";
+import * as environment from "@apollo/client/utilities/environment";
 
 export function withProdMode() {
   const prev = { prevDEV: environment.__DEV__ };

@@ -3,7 +3,7 @@ import type * as ReactTypes from "react";
 import type { ApolloClient } from "@apollo/client/core";
 import { canUseSymbol } from "@apollo/client/utilities";
 import type { RenderPromises } from "@apollo/client/react/ssr";
-import { invariant } from "@apollo/client/utilities/globals";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export interface ApolloContextValue {
   client?: ApolloClient<object>;

@@ -1,6 +1,6 @@
 import type { ErrorCodes } from "../invariantErrorCodes.js";
 import global from "../utilities/globals/global.js";
-import { ApolloErrorMessageHandler } from "../utilities/globals/invariantWrappers.js";
+import { ApolloErrorMessageHandler } from "../utilities/invariant/index.js";
 
 /**
  * The error message handler is a function that is called when a message is

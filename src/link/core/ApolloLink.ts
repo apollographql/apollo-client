@@ -1,4 +1,7 @@
-import { newInvariantError, invariant } from "@apollo/client/utilities/globals";
+import {
+  newInvariantError,
+  invariant,
+} from "@apollo/client/utilities/invariant";
 
 import type { Observer } from "@apollo/client/utilities";
 import { Observable } from "@apollo/client/utilities";

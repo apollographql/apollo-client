@@ -1,10 +1,9 @@
+import { invariant as origInvariant } from "./index.js";
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
-import { setVerbosity } from "ts-invariant";
-
-export const __DEV__ = () => {
+export * from "./index.js";
+export const invariant = () => {
   // side effects in an IIFE
   loadDevMessages();
   loadErrorMessages();
-  setVerbosity("log");
-  return true as boolean;
+  return origInvariant;
 };

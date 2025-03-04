@@ -1,5 +1,5 @@
-import { __DEV__ } from "@apollo/client/utilities/globals/environment";
-import { invariant } from "@apollo/client/utilities/globals";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { DefinitionNode } from "graphql";
 

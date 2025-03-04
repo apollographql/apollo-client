@@ -144,7 +144,7 @@ export async function processInvariants(options: BuildStepOptions) {
     let fileRequiresDevImport = false;
     if (
       relativeSourcePath !==
-      osPathJoin(`utilities`, `globals`, `invariantWrappers.${options.jsExt}`)
+      osPathJoin(`utilities`, `invariant`, `index.${options.jsExt}`)
     )
       recast.visit(ast, {
         visitCallExpression(path) {
@@ -303,9 +303,7 @@ function addDevImport(ast: recast.types.ASTNode, type: "esm" | "cjs") {
   recast.visit(ast, {
     visitImportDeclaration(path) {
       const node = path.node;
-      if (
-        node.source.value === "@apollo/client/utilities/globals/environment"
-      ) {
+      if (node.source.value === "@apollo/client/utilities/environment") {
         if (
           node.specifiers.some(
             (s) => s.type === "ImportSpecifier" && s.imported.name === "__DEV__"
@@ -353,7 +351,7 @@ function addDevImport(ast: recast.types.ASTNode, type: "esm" | "cjs") {
           node.body.unshift(
             b.importDeclaration(
               [b.importSpecifier(b.identifier("__DEV__"))],
-              b.literal("@apollo/client/utilities/globals/environment")
+              b.literal("@apollo/client/utilities/environment")
             )
           );
         } else {
@@ -370,7 +368,7 @@ function addDevImport(ast: recast.types.ASTNode, type: "esm" | "cjs") {
                   }),
                 ]),
                 b.callExpression(b.identifier("require"), [
-                  b.literal("@apollo/client/utilities/globals/environment"),
+                  b.literal("@apollo/client/utilities/environment"),
                 ])
               ),
             ])

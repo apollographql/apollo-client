@@ -127,6 +127,7 @@ Array [
   "CombinedGraphQLErrors",
   "CombinedProtocolErrors",
   "PROTOCOL_ERRORS_SYMBOL",
+  "UnknownError",
   "graphQLResultHasProtocolErrors",
 ]
 `;

@@ -9,7 +9,6 @@ import type {
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
   WatchQueryOptions,
-  ApolloError,
 } from "../../core/index.js";
 import { NetworkStatus } from "../../core/index.js";
 import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
@@ -35,7 +34,7 @@ export interface UseSuspenseQueryResult<
 > {
   client: ApolloClient<any>;
   data: MaybeMasked<TData>;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
   refetch: RefetchFunction<TData, TVariables>;

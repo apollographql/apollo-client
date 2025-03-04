@@ -8,7 +8,6 @@ import {
 import type { QueryRef } from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloError } from "../../errors/index.js";
 import type {
   ApolloClient,
   NetworkStatus,
@@ -34,7 +33,7 @@ export interface UseReadQueryResult<TData = unknown> {
    * `errorPolicy` of `none`. The hook will throw the error instead of setting
    * this property.
    */
-  error: ApolloError | undefined;
+  error: Error | undefined;
   /**
    * A number indicating the current network state of the query's associated
    * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.

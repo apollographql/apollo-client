@@ -3,7 +3,6 @@ import * as React from "rehackt";
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DocumentNode,
   FetchMoreQueryOptions,
@@ -38,7 +37,7 @@ export interface UseSuspenseQueryResult<
 > {
   client: ApolloClient<any>;
   data: MaybeMasked<TData>;
-  error: ApolloError | undefined;
+  error: Error | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
   refetch: RefetchFunction<TData, TVariables>;

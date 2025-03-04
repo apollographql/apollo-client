@@ -1489,7 +1489,6 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
-        errors: [{ message: "error 1" }],
         variables: {},
       });
     }
@@ -1501,7 +1500,6 @@ describe("useLazyQuery Hook", () => {
       networkStatus: NetworkStatus.error,
       previousData: undefined,
       error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
-      errors: [{ message: "error 1" }],
       variables: {},
     });
 
@@ -1517,7 +1515,6 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
-        errors: [{ message: "error 1" }],
         variables: {},
       });
     }
@@ -1532,7 +1529,6 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
-        errors: [{ message: "error 2" }],
         variables: {},
       });
     }
@@ -2303,7 +2299,6 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
-        errors: [{ message: "Oops" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2333,7 +2328,6 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
-        errors: [{ message: "Oops" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2495,7 +2489,6 @@ describe("useLazyQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ networkError }),
-          errors: [],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2691,7 +2684,6 @@ describe("useLazyQuery Hook", () => {
           "Store reset while query was in flight (not completed in link chain)"
         ),
       }),
-      errors: [],
       loading: true,
       networkStatus: NetworkStatus.loading,
       called: true,
@@ -2709,7 +2701,6 @@ describe("useLazyQuery Hook", () => {
             "Store reset while query was in flight (not completed in link chain)"
           ),
         }),
-        errors: [],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,

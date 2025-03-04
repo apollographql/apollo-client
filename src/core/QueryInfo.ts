@@ -19,11 +19,6 @@ import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
 
-export type QueryStoreValue = Pick<
-  QueryInfo,
-  "variables" | "networkStatus" | "networkError" | "graphQLErrors"
->;
-
 export const enum CacheWriteBehavior {
   FORBID,
   OVERWRITE,

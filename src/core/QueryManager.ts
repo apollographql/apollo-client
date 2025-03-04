@@ -69,7 +69,6 @@ import type {
 } from "./types.js";
 import type { LocalState } from "./LocalState.js";
 
-import type { QueryStoreValue } from "./QueryInfo.js";
 import {
   QueryInfo,
   shouldWriteResult,
@@ -660,19 +659,6 @@ export class QueryManager<TStore> {
   ): Promise<ApolloQueryResult<TData>> {
     return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
       .promise as TODO;
-  }
-
-  public getQueryStore() {
-    const store: Record<string, QueryStoreValue> = Object.create(null);
-    this.queries.forEach((info, queryId) => {
-      store[queryId] = {
-        variables: info.variables,
-        networkStatus: info.networkStatus,
-        networkError: info.networkError,
-        graphQLErrors: info.graphQLErrors,
-      };
-    });
-    return store;
   }
 
   public resetErrors(queryId: string) {

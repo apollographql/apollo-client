@@ -3,8 +3,8 @@ import { Observable } from "rxjs";
 import { createQueryPreloader } from "../createQueryPreloader";
 import {
   ApolloClient,
-  ApolloError,
   ApolloLink,
+  CombinedGraphQLErrors,
   InMemoryCache,
   NetworkStatus,
   OperationVariables,
@@ -1491,7 +1491,7 @@ test("throws when error is returned", async () => {
 
     expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
     expect(snapshot.error).toEqual(
-      new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] })
+      new CombinedGraphQLErrors([{ message: "Oops" }])
     );
   }
 });
@@ -1524,7 +1524,7 @@ test("returns error when error policy is 'all'", async () => {
     expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
     expect(snapshot.result).toEqual({
       data: undefined,
-      error: new ApolloError({ graphQLErrors: [new GraphQLError("Oops")] }),
+      error: new CombinedGraphQLErrors([{ message: "Oops" }]),
       networkStatus: NetworkStatus.error,
     });
     expect(snapshot.error).toEqual(null);

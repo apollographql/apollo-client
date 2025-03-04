@@ -102,7 +102,8 @@
     "pkg-pr-new-publish": "npm run build && cd dist && pkg-pr-new publish --no-template --compact",
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
-    "knip": "knip"
+    "knip": "knip",
+    "madge": "node ./config/madge.ts"
   },
   "devEngines": {
     "runtime": {
@@ -216,6 +217,7 @@
     "jest-matcher-utils": "29.7.0",
     "knip": "^5.42.2",
     "lodash": "4.17.21",
+    "madge": "^8.0.0",
     "patch-package": "8.0.0",
     "pkg-pr-new": "0.0.24",
     "prettier": "3.1.1",

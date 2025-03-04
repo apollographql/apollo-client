@@ -10,6 +10,15 @@ jobs:
   #     - run: npm ci
   #     - run: npm run bundlesize
 
+  Circularity:
+    docker:
+      - image: cimg/node:23.7.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run madge
+
   Lint:
     docker:
       - image: cimg/node:23.7.0

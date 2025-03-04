@@ -10,7 +10,6 @@ import {
   ApolloCache,
   MutationQueryReducersMap,
   TypedDocumentNode,
-  ApolloError,
 } from "../core";
 
 import { QueryManager } from "../core/QueryManager";
@@ -229,7 +228,7 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {
@@ -455,7 +454,7 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {

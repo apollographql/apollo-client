@@ -1,4 +1,5 @@
 import { equal } from "@wry/equality";
+import { CombinedGraphQLErrors } from "../../../core/index.js";
 import type {
   ApolloQueryResult,
   ObservableQuery,
@@ -511,9 +512,11 @@ export class InternalQueryReference<TData = unknown> {
   private shouldReject(result: ApolloQueryResult<any>) {
     const { errorPolicy } = this.watchQueryOptions;
 
+    // TODO: Determine if we still want the behavior of always rejecting
+    // "network" errors (any error that isn't a CombinedGraphQLErrors).
     return (
       result.error &&
-      (result.error.networkError ||
+      (!(result.error instanceof CombinedGraphQLErrors) ||
         errorPolicy === "none" ||
         errorPolicy === undefined)
     );

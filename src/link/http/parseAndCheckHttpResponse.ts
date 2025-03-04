@@ -1,6 +1,9 @@
 import type { Observer } from "rxjs";
 
-import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import {
+  PROTOCOL_ERRORS_SYMBOL,
+  ServerParseError,
+} from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { throwServerError } from "@apollo/client/link/utils";
 import { isApolloPayloadResult } from "@apollo/client/utilities";
@@ -8,12 +11,6 @@ import { isApolloPayloadResult } from "@apollo/client/utilities";
 import { responseIterator } from "./responseIterator.js";
 
 const { hasOwnProperty } = Object.prototype;
-
-export type ServerParseError = Error & {
-  response: Response;
-  statusCode: number;
-  bodyText: string;
-};
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>,
@@ -155,12 +152,7 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
   try {
     return JSON.parse(bodyText) as T;
   } catch (err) {
-    const parseError = err as ServerParseError;
-    parseError.name = "ServerParseError";
-    parseError.response = response;
-    parseError.statusCode = response.status;
-    parseError.bodyText = bodyText;
-    throw parseError;
+    throw new ServerParseError(err, { response, bodyText });
   }
 }
 

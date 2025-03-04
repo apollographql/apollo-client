@@ -1,4 +1,3 @@
-export type { ServerParseError } from "./parseAndCheckHttpResponse.js";
 export { parseAndCheckHttpResponse } from "./parseAndCheckHttpResponse.js";
 export type { ClientParseError } from "./serializeFetchParameter.js";
 export { serializeFetchParameter } from "./serializeFetchParameter.js";

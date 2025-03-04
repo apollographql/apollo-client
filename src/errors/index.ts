@@ -1,6 +1,7 @@
 import type { FetchResult } from "@apollo/client/link/core";
-import type { ServerParseError } from "@apollo/client/link/http";
 import type { ServerError } from "@apollo/client/link/utils";
+
+import type { ServerParseError } from "./ServerParseError.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain
 // into QueryManager/client internals without risking a naming collision within
@@ -28,4 +29,5 @@ export type NetworkError = Error | ServerParseError | ServerError | null;
 
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
+export { ServerParseError } from "./ServerParseError.js";
 export { UnknownError } from "./UnknownError.js";

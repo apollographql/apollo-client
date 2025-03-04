@@ -3,7 +3,6 @@ import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
 import { MockSubscriptionLink, wait } from "../../../testing/core";
 import { GraphQLError } from "graphql";
 import { ObservableStream } from "../../../testing/internal";
-import { ApolloError } from "../../../errors";
 import { ApolloClient } from "../../ApolloClient";
 import { NetworkStatus } from "../../networkStatus";
 
@@ -260,7 +259,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      error: new ApolloError({ networkError: new Error("defer failed") }),
+      error: new Error("defer failed"),
       partial: false,
     });
 
@@ -334,7 +333,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
-      error: new ApolloError({ networkError: new Error("defer failed") }),
+      error: new Error("defer failed"),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,

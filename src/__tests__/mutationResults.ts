@@ -2,12 +2,13 @@ import { cloneDeep } from "lodash";
 import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
 
-import { ApolloClient, ApolloError, FetchResult } from "../core";
+import { ApolloClient, FetchResult } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloLink } from "../link/core";
 import { Observable, Subscription } from "rxjs";
 import { MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { CombinedGraphQLErrors } from "../errors";
 
 describe("mutation results", () => {
   const query = gql`
@@ -345,7 +346,7 @@ describe("mutation results", () => {
           throw new Error("should have thrown for default errorPolicy");
         },
         (error) => {
-          expect(error.message).toBe(expectedFakeError.message);
+          expect(error).toEqual(new CombinedGraphQLErrors([expectedFakeError]));
         }
       );
 
@@ -1006,9 +1007,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow(
-        new ApolloError({ networkError: Error(`Hello... It's me.`) })
-      );
+      ).rejects.toThrow(Error(`Hello... It's me.`));
     });
   });
 
@@ -1613,9 +1612,7 @@ describe("mutation results", () => {
             throw new Error(`Hello... It's me.`);
           },
         })
-      ).rejects.toThrow(
-        new ApolloError({ networkError: Error(`Hello... It's me.`) })
-      );
+      ).rejects.toThrow(Error(`Hello... It's me.`));
     });
 
     it("mutate<MyType>() data should never be `undefined` in case of success", async () => {

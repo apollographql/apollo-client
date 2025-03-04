@@ -122,6 +122,7 @@ Array [
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
   "ApolloError",
+  "CombinedGraphQLErrors",
   "PROTOCOL_ERRORS_SYMBOL",
   "graphQLResultHasProtocolErrors",
   "isApolloError",

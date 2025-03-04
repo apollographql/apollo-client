@@ -7,6 +7,7 @@ Array [
   "ApolloError",
   "ApolloLink",
   "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -71,6 +72,7 @@ Array [
   "ApolloError",
   "ApolloLink",
   "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -123,6 +125,7 @@ exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
   "ApolloError",
   "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "PROTOCOL_ERRORS_SYMBOL",
   "graphQLResultHasProtocolErrors",
 ]

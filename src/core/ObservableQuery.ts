@@ -378,9 +378,7 @@ export class ObservableQuery<
     this.isTornDown = false;
   }
 
-  public resetQueryStoreErrors() {
-    this.queryManager.resetErrors(this.queryId);
-  }
+  public resetQueryStoreErrors() {}
 
   /**
    * Update the variables of this observable query, and fetch the new results.

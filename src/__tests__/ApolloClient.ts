@@ -7,7 +7,6 @@ import { EMPTY, Observable, of } from "rxjs";
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DefaultOptions,
   makeReference,

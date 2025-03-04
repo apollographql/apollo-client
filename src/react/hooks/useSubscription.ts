@@ -19,7 +19,7 @@ import type {
   FetchResult,
   OperationVariables,
 } from "../../core/index.js";
-import { ApolloError } from "../../core/index.js";
+import { CombinedGraphQLErrors } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
@@ -243,7 +243,7 @@ export function useSubscription<
               data: fetchResult.data!,
               error:
                 fetchResult.errors ?
-                  new ApolloError({ graphQLErrors: fetchResult.errors })
+                  new CombinedGraphQLErrors(fetchResult.errors)
                 : undefined,
               variables,
             };
@@ -265,10 +265,6 @@ export function useSubscription<
             }
           },
           error(error) {
-            error =
-              error instanceof ApolloError ? error : (
-                new ApolloError({ protocolErrors: [error] })
-              );
             if (!subscriptionStopped) {
               observable.__.setResult({
                 loading: false,

@@ -6,7 +6,6 @@ global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
 import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";
-import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
 import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
@@ -38,7 +37,6 @@ if (!Symbol.asyncDispose) {
 
 // @ts-ignore
 expect.addEqualityTesters([
-  areApolloErrorsEqual,
   areCombinedGraphQLErrorsEqual,
   areGraphQLErrorsEqual,
   areMissingFieldErrorsEqual,

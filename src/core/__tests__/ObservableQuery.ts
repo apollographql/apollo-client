@@ -13,7 +13,7 @@ import {
   NetworkStatus,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { ApolloError, CombinedGraphQLErrors } from "@apollo/client/errors";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import {
   MockLink,
@@ -1721,9 +1721,9 @@ describe("ObservableQuery", () => {
         },
       });
 
-      const intentionalNetworkFailure = new ApolloError({
-        networkError: new Error("intentional network failure"),
-      });
+      const intentionalNetworkFailure = new Error(
+        "intentional network failure"
+      );
 
       const errorObservable: typeof linkObservable = new Observable(
         (observer) => {

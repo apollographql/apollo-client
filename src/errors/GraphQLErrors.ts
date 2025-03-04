@@ -13,6 +13,6 @@ export class GraphQLErrors extends Error {
 function formatMessage(errors: Array<GraphQLFormattedError>) {
   const messageList = errors.map((error) => `- ${error.message}`).join("\n");
 
-  return `The GraphQL server returned the following errors:
+  return `The GraphQL server returned with errors:
 ${messageList}`;
 }

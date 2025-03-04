@@ -2,10 +2,10 @@ import type { Observer } from "rxjs";
 
 import {
   PROTOCOL_ERRORS_SYMBOL,
+  ServerError,
   ServerParseError,
 } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
-import { throwServerError } from "@apollo/client/link/utils";
 import { isApolloPayloadResult } from "@apollo/client/utilities";
 
 import { responseIterator } from "./responseIterator.js";
@@ -142,10 +142,9 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
         return bodyText;
       }
     };
-    throwServerError(
-      response,
-      getResult(),
-      `Response not successful: Received status code ${response.status}`
+    throw new ServerError(
+      `Response not successful: Received status code ${response.status}`,
+      { response, result: getResult() }
     );
   }
 
@@ -207,15 +206,13 @@ export function parseAndCheckHttpResponse(operations: Operation | Operation[]) {
           !hasOwnProperty.call(result, "data") &&
           !hasOwnProperty.call(result, "errors")
         ) {
-          // Data error
-          throwServerError(
-            response,
-            result,
+          throw new ServerError(
             `Server response was missing for query '${
               Array.isArray(operations) ?
                 operations.map((op) => op.operationName)
               : operations.operationName
-            }'.`
+            }'.`,
+            { response, result }
           );
         }
         return result;

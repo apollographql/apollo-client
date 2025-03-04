@@ -1,6 +1,6 @@
 import type { FetchResult } from "@apollo/client/link/core";
-import type { ServerError } from "@apollo/client/link/utils";
 
+import type { ServerError } from "./ServerError.js";
 import type { ServerParseError } from "./ServerParseError.js";
 
 // This Symbol allows us to pass transport-specific errors from the link chain

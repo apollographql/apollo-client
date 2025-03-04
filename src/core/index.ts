@@ -65,7 +65,6 @@ export type * from "../cache/inmemory/types.js";
 
 export * from "../link/core/index.js";
 export * from "../link/http/index.js";
-export { throwServerError } from "../link/utils/index.js";
 
 /* Masking */
 export type {

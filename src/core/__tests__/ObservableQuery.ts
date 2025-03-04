@@ -19,7 +19,7 @@ import {
 } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache } from "../../cache";
-import { ApolloError } from "../../errors";
+import { ApolloError, CombinedGraphQLErrors } from "../../errors";
 
 import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
 import { expectTypeOf } from "expect-type";
@@ -83,9 +83,7 @@ describe("ObservableQuery", () => {
   const error = new GraphQLError("is offline.", undefined, null, null, [
     "people_one",
   ]);
-  const wrappedError = new ApolloError({
-    graphQLErrors: [error],
-  });
+  const wrappedError = new CombinedGraphQLErrors([error]);
 
   describe("setOptions", () => {
     describe("to change pollInterval", () => {
@@ -477,12 +475,12 @@ describe("ObservableQuery", () => {
       });
 
       await expect(observable.refetch()).rejects.toThrow(
-        new ApolloError({ graphQLErrors: [error] })
+        new CombinedGraphQLErrors([error])
       );
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -1042,14 +1040,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: true,
@@ -2318,7 +2316,7 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2326,7 +2324,7 @@ describe("ObservableQuery", () => {
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2347,7 +2345,7 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
 
       await expect(observable.result()).resolves.toMatchObject({
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
       });
 
       const currentResult = observable.getCurrentResult();
@@ -2355,7 +2353,7 @@ describe("ObservableQuery", () => {
 
       expect(currentResult).toEqualApolloQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2386,14 +2384,14 @@ describe("ObservableQuery", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: dataOne,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         loading: false,
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match

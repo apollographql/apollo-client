@@ -128,7 +128,7 @@ export interface QueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
   previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: Error;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */

@@ -509,9 +509,13 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
-        expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
+        // TODO: Unify this with errorPolicy: 'none'
+        expect(fetchResult.errors).toEqual([{ message: CREATE_TODO_ERROR }]);
         expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+        expect(onError).toHaveBeenLastCalledWith(
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          expect.anything()
+        );
         expect(onCompleted).not.toHaveBeenCalled();
       });
 

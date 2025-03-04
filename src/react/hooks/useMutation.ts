@@ -9,7 +9,7 @@ import type {
   MutationOptions,
   OperationVariables,
 } from "@apollo/client/core";
-import { ApolloError } from "@apollo/client/errors";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type {
   MutationFunctionOptions,
   MutationHookOptions,
@@ -140,7 +140,7 @@ export function useMutation<
             const { data, errors } = response;
             const error =
               errors && errors.length > 0 ?
-                new ApolloError({ graphQLErrors: errors })
+                new CombinedGraphQLErrors(errors)
               : void 0;
 
             const onError =

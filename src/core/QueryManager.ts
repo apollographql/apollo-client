@@ -1296,7 +1296,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchObservableWithInfo<TData, TVars extends OperationVariables>(
+  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often

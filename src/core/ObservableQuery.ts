@@ -55,7 +55,7 @@ export interface FetchMoreOptions<
 interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
   variables?: TVariables;
-  error?: ApolloError;
+  error?: unknown;
 }
 
 export class ObservableQuery<
@@ -401,7 +401,7 @@ export class ObservableQuery<
   }
 
   // TODO: Consider deprecating this function
-  public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
+  public getLastError(variablesMustMatch?: boolean): unknown {
     return this.getLast("error", variablesMustMatch);
   }
 

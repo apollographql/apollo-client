@@ -378,8 +378,6 @@ export class ObservableQuery<
     this.isTornDown = false;
   }
 
-  public resetQueryStoreErrors() {}
-
   /**
    * Update the variables of this observable query, and fetch the new results.
    * This method should be preferred over `setVariables` in most use cases.

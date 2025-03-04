@@ -122,3 +122,4 @@ export class ApolloError extends Error {
 
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
+export { UnknownError } from "./UnknownError.js";

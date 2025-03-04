@@ -145,6 +145,9 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
+      error: new ApolloError({
+        graphQLErrors: [{ message: "This is an error message." }],
+      }),
       networkStatus: 8,
       partial: true,
     });

@@ -53,9 +53,9 @@ import {
 } from "../utilities/index.js";
 import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
 import {
-  ApolloError,
   graphQLResultHasProtocolErrors,
   CombinedGraphQLErrors,
+  CombinedProtocolErrors,
 } from "../errors/index.js";
 import type {
   QueryOptions,
@@ -1054,13 +1054,12 @@ export class QueryManager<TStore> {
           }
 
           if (hasProtocolErrors) {
-            const errors: ApolloErrorOptions = {};
-            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
-
             // `errorPolicy` is a mechanism for handling GraphQL errors, according
             // to our documentation, so we throw protocol errors regardless of the
             // set error policy.
-            throw new ApolloError(errors);
+            throw new CombinedProtocolErrors(
+              result.extensions[PROTOCOL_ERRORS_SYMBOL]
+            );
           }
 
           if (errorPolicy === "ignore") {

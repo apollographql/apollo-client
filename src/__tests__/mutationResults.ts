@@ -4,7 +4,8 @@ import { cloneDeep } from "lodash";
 import { Observable, Subscription } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, ApolloError, FetchResult } from "@apollo/client/core";
+import { ApolloClient, FetchResult } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 
@@ -346,7 +347,7 @@ describe("mutation results", () => {
           throw new Error("should have thrown for default errorPolicy");
         },
         (error) => {
-          expect(error.message).toBe(expectedFakeError.message);
+          expect(error).toEqual(new CombinedGraphQLErrors([expectedFakeError]));
         }
       );
 
@@ -1007,9 +1008,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow(
-        new ApolloError({ networkError: Error(`Hello... It's me.`) })
-      );
+      ).rejects.toThrow(Error(`Hello... It's me.`));
     });
   });
 
@@ -1614,9 +1613,7 @@ describe("mutation results", () => {
             throw new Error(`Hello... It's me.`);
           },
         })
-      ).rejects.toThrow(
-        new ApolloError({ networkError: Error(`Hello... It's me.`) })
-      );
+      ).rejects.toThrow(Error(`Hello... It's me.`));
     });
 
     it("mutate<MyType>() data should never be `undefined` in case of success", async () => {

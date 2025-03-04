@@ -1039,12 +1039,14 @@ describe("ObservableQuery", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
+        error: new ApolloError({ graphQLErrors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: undefined,
+        error: new ApolloError({ graphQLErrors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
@@ -2382,12 +2384,14 @@ describe("ObservableQuery", () => {
       // TODO: This should include an `error` property, not just `errors`
       expect(result).toEqualApolloQueryResult({
         data: dataOne,
+        error: new ApolloError({ graphQLErrors: [error] }),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
       });
       expect(currentResult).toEqualApolloQueryResult({
         data: dataOne,
+        error: new ApolloError({ graphQLErrors: [error] }),
         loading: false,
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match

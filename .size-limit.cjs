@@ -66,12 +66,12 @@ const checks = [
     },
   ])
   .map((value) => {
-    value.limit = limits[value.name];
     const conditions = value.conditions;
     delete value.conditions;
     if (conditions.includes("require")) {
       value.name = `${value.name} (CJS)`;
     }
+    value.limit = limits[value.name];
     value.modifyEsbuildConfig = (config) => {
       config.conditions = conditions;
       return config;

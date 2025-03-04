@@ -386,7 +386,9 @@ export class QueryManager<TStore> {
             }
           },
 
-          error: (err: Error) => {
+          error: (err) => {
+            err = maybeWrapError(err);
+
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
               mutationStoreValue.error = err;
@@ -1066,6 +1068,9 @@ export class QueryManager<TStore> {
           }
 
           return result;
+        }),
+        catchError((error) => {
+          throw maybeWrapError(error);
         })
       );
 
@@ -1224,6 +1229,8 @@ export class QueryManager<TStore> {
       options.variables
     ).pipe(
       catchError((error) => {
+        error = maybeWrapError(error);
+
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
           queryInfo.markError();
@@ -1818,6 +1825,21 @@ export class QueryManager<TStore> {
       clientAwareness: this.clientAwareness,
     };
   }
+}
+
+function maybeWrapError(error: unknown) {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  if (typeof error === "string") {
+    // @ts-expect-error We need to bump es2015 lib to at least es2022 in order
+    // for this to work
+    return new Error(error, { cause: error });
+  }
+
+  // TODO: Wrap in different type
+  return error;
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

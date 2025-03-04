@@ -1,10 +1,6 @@
 import "../utilities/globals/index.js";
 
-import type {
-  GraphQLError,
-  GraphQLErrorExtensions,
-  GraphQLFormattedError,
-} from "graphql";
+import type { GraphQLErrorExtensions, GraphQLFormattedError } from "graphql";
 
 import { isNonNullObject } from "../utilities/index.js";
 import type { ServerParseError } from "../link/http/index.js";
@@ -68,15 +64,6 @@ const generateErrorMessage = (err: ApolloError) => {
   );
 };
 
-/**
- * @deprecated This type is deprecated and will be removed in the next major version of Apollo Client.
- * It mistakenly referenced `GraqhQLError` instead of `GraphQLFormattedError`.
- *
- * Use `ReadonlyArray<GraphQLFormattedError>` instead.
- */
-// eslint-disable-next-line @typescript-eslint/no-restricted-types
-export type GraphQLErrors = ReadonlyArray<GraphQLError>;
-
 export type NetworkError = Error | ServerParseError | ServerError | null;
 
 export class ApolloError extends Error {
@@ -138,3 +125,5 @@ export class ApolloError extends Error {
     (this as any).__proto__ = ApolloError.prototype;
   }
 }
+
+export { GraphQLErrors } from "./GraphQLErrors.js";

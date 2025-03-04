@@ -27,7 +27,7 @@ import {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { CombinedGraphQLErrors, UnknownError } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
@@ -6157,6 +6157,62 @@ describe("unconventional errors", () => {
     const subscriptionStream = new ObservableStream(subscription);
 
     await expect(subscriptionStream).toEmitError(expectedError);
+  });
+
+  test("wraps unconventional types in UnknownError", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
+      const client = new ApolloClient({
+        link: new ApolloLink(() => {
+          return new Observable((observer) => {
+            setTimeout(() => {
+              observer.error(type);
+            }, 10);
+          });
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      const expectedError = new UnknownError(type);
+
+      await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: expectedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      await expect(
+        client.mutate({
+          mutation: gql`
+            mutation {
+              foo
+            }
+          `,
+        })
+      ).rejects.toEqual(expectedError);
+
+      const subscription = client.subscribe({
+        query: gql`
+          subscription {
+            foo
+          }
+        `,
+      });
+      const subscriptionStream = new ObservableStream(subscription);
+
+      await expect(subscriptionStream).toEmitError(expectedError);
+    }
   });
 });
 

@@ -665,7 +665,6 @@ export class QueryManager<TStore> {
     const queryInfo = this.queries.get(queryId);
     if (queryInfo) {
       queryInfo.networkError = undefined;
-      queryInfo.graphQLErrors = [];
     }
   }
 

@@ -6,11 +6,9 @@ import type { QueryResult } from "@apollo/client/react";
 const CHECKED_KEYS = [
   "loading",
   "error",
-  "errors",
   "data",
   "variables",
   "networkStatus",
-  "errors",
   "called",
   "previousData",
 ] as const;

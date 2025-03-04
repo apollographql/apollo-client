@@ -323,9 +323,9 @@ export class QueryManager<TStore> {
         .pipe(
           mergeMap((result) => {
             if (graphQLResultHasError(result) && errorPolicy === "none") {
-              throw new ApolloError({
-                graphQLErrors: getGraphQLErrorsFromResult(result),
-              });
+              throw new CombinedGraphQLErrors(
+                getGraphQLErrorsFromResult(result)
+              );
             }
 
             if (mutationStoreValue) {
@@ -402,13 +402,7 @@ export class QueryManager<TStore> {
 
             this.broadcastQueries();
 
-            reject(
-              err instanceof ApolloError ? err : (
-                new ApolloError({
-                  networkError: err,
-                })
-              )
-            );
+            reject(err);
           },
         });
     });

@@ -3,7 +3,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
+import type { ApolloClient } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
 import {
   createFulfilledPromise,

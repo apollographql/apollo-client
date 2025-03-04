@@ -6,7 +6,7 @@ import type {
   TypedDocumentNode,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
+import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import { useApolloClient } from "./useApolloClient.js";
 import {
   getSuspenseCache,
@@ -15,7 +15,7 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
-import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
+import type { BackgroundQueryHookOptions, NoInfer } from "@apollo/client/react";
 import { wrapHook } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";

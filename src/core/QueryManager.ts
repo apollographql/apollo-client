@@ -40,7 +40,7 @@ import {
   isNonNullObject,
   DocumentTransform,
 } from "@apollo/client/utilities";
-import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
+import { mergeIncrementalData } from "@apollo/client/utilities";
 import {
   ApolloError,
   isApolloError,

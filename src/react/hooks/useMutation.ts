@@ -7,7 +7,7 @@ import type {
   MutationResult,
   MutationTuple,
   NoInfer,
-} from "../types/types.js";
+} from "@apollo/client/react";
 
 import type {
   ApolloCache,

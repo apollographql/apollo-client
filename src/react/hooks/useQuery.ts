@@ -41,7 +41,7 @@ import type {
   QueryResult,
   ObservableQueryFields,
   NoInfer,
-} from "../types/types.js";
+} from "@apollo/client/react";
 
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { useApolloClient } from "./useApolloClient.js";
@@ -51,7 +51,7 @@ import {
   maybeDeepFreeze,
 } from "@apollo/client/utilities";
 import { wrapHook } from "./internal/index.js";
-import type { RenderPromises } from "../ssr/RenderPromises.js";
+import type { RenderPromises } from "@apollo/client/react/ssr";
 import type { MaybeMasked } from "@apollo/client/masking";
 
 const {

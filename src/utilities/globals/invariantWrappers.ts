@@ -2,7 +2,7 @@ import { invariant as originalInvariant, InvariantError } from "ts-invariant";
 import { version } from "../../version.js";
 import global from "./global.js";
 import type { ErrorCodes } from "../../invariantErrorCodes.js";
-import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
+import { stringifyForDisplay } from "@apollo/client/utilities";
 
 function wrap(fn: (msg?: string, ...args: any[]) => void) {
   return function (message?: string | number, ...args: any[]) {

@@ -24,12 +24,12 @@ import type {
   FetchMoreQueryOptions,
   ErrorPolicy,
   RefetchWritePolicy,
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
 } from "@apollo/client/core";
 import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
-  SubscribeToMoreFunction,
-  UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 

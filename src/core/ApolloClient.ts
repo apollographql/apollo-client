@@ -164,7 +164,7 @@ import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryIn
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
-} from "../cache/core/cache.js";
+} from "@apollo/client/cache";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 export { mergeOptions };
 

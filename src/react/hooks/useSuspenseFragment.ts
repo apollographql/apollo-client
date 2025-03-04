@@ -14,7 +14,7 @@ import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer, VariablesOption } from "../types/types.js";
+import type { NoInfer, VariablesOption } from "@apollo/client/react";
 
 type From<TData> =
   | StoreObject

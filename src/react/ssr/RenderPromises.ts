@@ -1,7 +1,7 @@
 import type * as ReactTypes from "react";
 
 import type { ObservableQuery, OperationVariables } from "@apollo/client/core";
-import type { QueryDataOptions } from "../types/types.js";
+import type { QueryDataOptions } from "@apollo/client/react";
 import { Trie } from "@wry/trie";
 import { canonicalStringify } from "@apollo/client/cache";
 

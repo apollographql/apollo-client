@@ -192,6 +192,7 @@ export default [
       "local-rules/require-using-disposable": "error",
       "local-rules/require-disable-act-environment": "error",
       "local-rules/forbid-act-in-disabled-act-environment": "error",
+      "local-rules/import-from-inside-other-export": "off",
       "@typescript-eslint/no-floating-promises": "warn",
       "import/extensions": [
         "error",

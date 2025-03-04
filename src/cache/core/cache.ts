@@ -26,7 +26,7 @@ import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemory
 import type {
   OperationVariables,
   TypedDocumentNode,
-} from "../../core/types.js";
+} from "@apollo/client/core";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
 import { invariant } from "@apollo/client/utilities/globals";

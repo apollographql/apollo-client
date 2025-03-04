@@ -12,7 +12,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import { ApolloError, NetworkStatus } from "@apollo/client/core";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
+import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { isNonEmptyArray } from "@apollo/client/utilities";
 import { useApolloClient } from "./useApolloClient.js";
@@ -21,7 +21,7 @@ import type {
   SuspenseQueryHookOptions,
   ObservableQueryFields,
   NoInfer,
-} from "../types/types.js";
+} from "@apollo/client/react";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { canonicalStringify } from "@apollo/client/cache";

@@ -9,7 +9,7 @@ import type {
 import type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
-} from "../../core/watchQueryOptions.js";
+} from "@apollo/client/core";
 import { useApolloClient } from "./useApolloClient.js";
 import {
   assertWrappedQueryRef,
@@ -19,7 +19,7 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
-import type { LoadableQueryHookOptions } from "../types/types.js";
+import type { LoadableQueryHookOptions } from "@apollo/client/react";
 import { __use, useRenderGuard } from "./internal/index.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";

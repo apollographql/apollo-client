@@ -37,7 +37,7 @@ import type {
 } from "./watchQueryOptions.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { MissingFieldError } from "@apollo/client/cache";
-import type { MissingTree } from "../cache/core/types/common.js";
+import type { MissingTree } from "@apollo/client/cache";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";

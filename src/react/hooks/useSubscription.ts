@@ -9,7 +9,7 @@ import type {
   NoInfer,
   SubscriptionHookOptions,
   SubscriptionResult,
-} from "../types/types.js";
+} from "@apollo/client/react";
 import type {
   ApolloClient,
   DefaultContext,

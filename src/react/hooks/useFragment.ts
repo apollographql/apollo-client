@@ -10,7 +10,7 @@ import type {
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloClient, OperationVariables } from "@apollo/client/core";
-import type { NoInfer } from "../types/types.js";
+import type { NoInfer } from "@apollo/client/react";
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import equal from "@wry/equality";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";

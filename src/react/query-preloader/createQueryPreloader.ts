@@ -13,7 +13,10 @@ import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
-import { InternalQueryReference, wrapQueryRef } from "@apollo/client/react/internal";
+import {
+  InternalQueryReference,
+  wrapQueryRef,
+} from "@apollo/client/react/internal";
 import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import type { NoInfer, VariablesOption } from "@apollo/client/react";
 import { wrapHook } from "../hooks/internal/index.js";

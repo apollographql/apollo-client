@@ -16,7 +16,7 @@ import type {
   NoInfer,
   QueryHookOptions,
   QueryResult,
-} from "../types/types.js";
+} from "@apollo/client/react";
 import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,

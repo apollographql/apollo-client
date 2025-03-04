@@ -24,7 +24,7 @@ export type {
 export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
 export type * from "./types.js";
 export type { Resolver, FragmentMatcher } from "./LocalState.js";
-export { isApolloError, ApolloError } from "../errors/index.js";
+export { ApolloError } from "../errors/index.js";
 /* Cache */
 
 export type {

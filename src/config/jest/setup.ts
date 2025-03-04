@@ -7,6 +7,7 @@ import "@testing-library/jest-dom";
 import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";
 import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
+import { areApolloGraphQLErrorsEqual } from "./areApolloGraphQLErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 
@@ -38,6 +39,7 @@ if (!Symbol.asyncDispose) {
 // @ts-ignore
 expect.addEqualityTesters([
   areApolloErrorsEqual,
+  areApolloGraphQLErrorsEqual,
   areGraphQLErrorsEqual,
   areMissingFieldErrorsEqual,
 ]);

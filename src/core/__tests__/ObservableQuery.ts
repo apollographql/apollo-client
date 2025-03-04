@@ -19,7 +19,7 @@ import {
 } from "../../utilities";
 import { ApolloLink, FetchResult } from "../../link/core";
 import { InMemoryCache } from "../../cache";
-import { ApolloError, CombinedGraphQLErrors } from "../../errors";
+import { CombinedGraphQLErrors } from "../../errors";
 
 import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
 import { expectTypeOf } from "expect-type";
@@ -1724,9 +1724,9 @@ describe("ObservableQuery", () => {
         },
       });
 
-      const intentionalNetworkFailure = new ApolloError({
-        networkError: new Error("intentional network failure"),
-      });
+      const intentionalNetworkFailure = new Error(
+        "intentional network failure"
+      );
 
       const errorObservable: typeof linkObservable = new Observable(
         (observer) => {

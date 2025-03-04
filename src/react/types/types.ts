@@ -129,11 +129,6 @@ export interface QueryResult<
   previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
-  /**
-   * @deprecated This property will be removed in a future version of Apollo Client.
-   * Please use `error.graphQLErrors` instead.
-   */
-  errors?: ReadonlyArray<GraphQLFormattedError>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */

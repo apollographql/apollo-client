@@ -1040,21 +1040,19 @@ export class QueryManager<TStore> {
 
           const hasErrors = graphQLResultHasError(result);
           const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
-          if (hasErrors || hasProtocolErrors) {
+
+          if (hasErrors && errorPolicy === "none") {
+            throw new CombinedGraphQLErrors(result.errors!);
+          }
+
+          if (hasProtocolErrors) {
             const errors: ApolloErrorOptions = {};
-            if (hasErrors) {
-              errors.graphQLErrors = result.errors;
-            }
-            if (hasProtocolErrors) {
-              errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
-            }
+            errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
 
             // `errorPolicy` is a mechanism for handling GraphQL errors, according
             // to our documentation, so we throw protocol errors regardless of the
             // set error policy.
-            if (errorPolicy === "none" || hasProtocolErrors) {
-              throw new ApolloError(errors);
-            }
+            throw new ApolloError(errors);
           }
 
           if (errorPolicy === "ignore") {

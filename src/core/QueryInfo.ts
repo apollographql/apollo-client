@@ -77,7 +77,6 @@ export class QueryInfo {
   lastRequestId = 1;
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
-  networkError?: Error | null;
   stopped = false;
 
   private cache: ApolloCache<any>;
@@ -494,7 +493,6 @@ export class QueryInfo {
   }
 
   public markReady() {
-    this.networkError = null;
     return (this.networkStatus = NetworkStatus.ready);
   }
 
@@ -503,10 +501,6 @@ export class QueryInfo {
     this.lastWrite = void 0;
 
     this.reset();
-
-    if (error.networkError) {
-      this.networkError = error.networkError;
-    }
 
     return error;
   }

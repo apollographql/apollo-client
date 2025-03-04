@@ -3293,35 +3293,6 @@ describe("ObservableQuery", () => {
     });
   });
 
-  // TODO: Determine if this API is useful. This clears out internal state not
-  // accessible to the end user.
-  describe("resetQueryStoreErrors", () => {
-    it("should remove network error's stored in the query store", async () => {
-      const networkError = new Error("oh no!");
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-        ]),
-      });
-      const observable = client.watchQuery({ query, variables });
-
-      const stream = new ObservableStream(observable);
-
-      await stream.takeNext();
-
-      const { queryManager } = observable as any;
-      const queryInfo = queryManager["queries"].get(observable.queryId);
-      queryInfo.networkError = networkError;
-      observable.resetQueryStoreErrors();
-      expect(queryInfo.networkError).toBeUndefined();
-    });
-  });
-
   describe(".query computed property", () => {
     it("is equal to transformed query when instantiating via `watchQuery`", () => {
       const query = gql`

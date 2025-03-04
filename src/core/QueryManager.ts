@@ -661,12 +661,7 @@ export class QueryManager<TStore> {
       .promise as TODO;
   }
 
-  public resetErrors(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.networkError = undefined;
-    }
-  }
+  public resetErrors(queryId: string) {}
 
   public transform(document: DocumentNode) {
     return this.documentTransform.transformDocument(document);

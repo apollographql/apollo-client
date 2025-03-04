@@ -1223,12 +1223,9 @@ export class QueryManager<TStore> {
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
+            queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw queryInfo.markError(
-              new ApolloError({
-                graphQLErrors,
-              })
-            );
+            throw new ApolloError({ graphQLErrors });
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1273,7 +1270,7 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError(error);
+          queryInfo.markError();
         }
 
         throw error;

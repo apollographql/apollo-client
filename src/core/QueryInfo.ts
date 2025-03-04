@@ -15,7 +15,6 @@ import {
   canUseWeakMap,
 } from "../utilities/index.js";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
 
@@ -496,13 +495,10 @@ export class QueryInfo {
     return (this.networkStatus = NetworkStatus.ready);
   }
 
-  public markError(error: ApolloError) {
+  public markError() {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
-
     this.reset();
-
-    return error;
   }
 }
 

@@ -24,8 +24,8 @@ import { canonicalStringify } from "@apollo/client/cache";
 import type { ApolloErrorOptions } from "@apollo/client/errors";
 import {
   ApolloError,
+  CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
-  isApolloError,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
@@ -1236,12 +1236,7 @@ export class QueryManager<TStore> {
       options.context,
       options.variables
     ).pipe(
-      catchError((networkError) => {
-        const error =
-          isApolloError(networkError) ? networkError : (
-            new ApolloError({ networkError })
-          );
-
+      catchError((error) => {
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
           queryInfo.markError();
@@ -1260,7 +1255,7 @@ export class QueryManager<TStore> {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw new ApolloError({ graphQLErrors });
+            throw new CombinedGraphQLErrors(graphQLErrors);
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1290,7 +1285,7 @@ export class QueryManager<TStore> {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
-          aqr.error = new ApolloError({ graphQLErrors });
+          aqr.error = new CombinedGraphQLErrors(graphQLErrors);
           aqr.networkStatus = NetworkStatus.error;
         }
 

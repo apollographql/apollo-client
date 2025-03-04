@@ -56,6 +56,7 @@ import {
   graphQLResultHasProtocolErrors,
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
+  UnknownError,
 } from "../errors/index.js";
 import type {
   QueryOptions,
@@ -1838,8 +1839,7 @@ function maybeWrapError(error: unknown) {
     return new Error(error, { cause: error });
   }
 
-  // TODO: Wrap in different type
-  return error;
+  return new UnknownError(error);
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

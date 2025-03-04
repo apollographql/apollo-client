@@ -33,7 +33,7 @@ import {
   makeVar,
   PossibleTypesMap,
 } from "../cache";
-import { CombinedGraphQLErrors } from "../errors";
+import { CombinedGraphQLErrors, UnknownError } from "../errors";
 
 import { mockSingleLink, MockLink, wait } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
@@ -6158,6 +6158,62 @@ describe("unconventional errors", () => {
     const subscriptionStream = new ObservableStream(subscription);
 
     await expect(subscriptionStream).toEmitError(expectedError);
+  });
+
+  test("wraps unconventional types in UnknownError", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
+      const client = new ApolloClient({
+        link: new ApolloLink(() => {
+          return new Observable((observer) => {
+            setTimeout(() => {
+              observer.error(type);
+            }, 10);
+          });
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      const expectedError = new UnknownError(type);
+
+      await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: expectedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      await expect(
+        client.mutate({
+          mutation: gql`
+            mutation {
+              foo
+            }
+          `,
+        })
+      ).rejects.toEqual(expectedError);
+
+      const subscription = client.subscribe({
+        query: gql`
+          subscription {
+            foo
+          }
+        `,
+      });
+      const subscriptionStream = new ObservableStream(subscription);
+
+      await expect(subscriptionStream).toEmitError(expectedError);
+    }
   });
 });
 

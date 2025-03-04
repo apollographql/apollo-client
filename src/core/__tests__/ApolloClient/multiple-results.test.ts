@@ -1,7 +1,6 @@
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 
-import { ApolloError } from "@apollo/client/errors";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing/core";
 
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
@@ -262,7 +261,7 @@ describe("mutiple results", () => {
       data: initialData,
       loading: false,
       networkStatus: 7,
-      error: new ApolloError({ networkError: new Error("defer failed") }),
+      error: new Error("defer failed"),
       partial: false,
     });
 
@@ -336,7 +335,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
-      error: new ApolloError({ networkError: new Error("defer failed") }),
+      error: new Error("defer failed"),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,

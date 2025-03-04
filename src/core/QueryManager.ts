@@ -54,8 +54,8 @@ import {
 import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
 import {
   ApolloError,
-  isApolloError,
   graphQLResultHasProtocolErrors,
+  CombinedGraphQLErrors,
 } from "../errors/index.js";
 import type {
   QueryOptions,
@@ -1233,12 +1233,7 @@ export class QueryManager<TStore> {
       options.context,
       options.variables
     ).pipe(
-      catchError((networkError) => {
-        const error =
-          isApolloError(networkError) ? networkError : (
-            new ApolloError({ networkError })
-          );
-
+      catchError((error) => {
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
           queryInfo.markError();
@@ -1257,7 +1252,7 @@ export class QueryManager<TStore> {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw new ApolloError({ graphQLErrors });
+            throw new CombinedGraphQLErrors(graphQLErrors);
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1287,7 +1282,7 @@ export class QueryManager<TStore> {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
-          aqr.error = new ApolloError({ graphQLErrors });
+          aqr.error = new CombinedGraphQLErrors(graphQLErrors);
           aqr.networkStatus = NetworkStatus.error;
         }
 

@@ -54,7 +54,7 @@ export interface FetchMoreOptions<
 interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
   variables?: TVariables;
-  error?: unknown;
+  error?: Error;
 }
 
 export class ObservableQuery<
@@ -400,7 +400,7 @@ export class ObservableQuery<
   }
 
   // TODO: Consider deprecating this function
-  public getLastError(variablesMustMatch?: boolean): unknown {
+  public getLastError(variablesMustMatch?: boolean): Error | undefined {
     return this.getLast("error", variablesMustMatch);
   }
 
@@ -1105,7 +1105,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  private reportError(error: unknown, variables: TVariables | undefined) {
+  private reportError(error: Error, variables: TVariables | undefined) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {

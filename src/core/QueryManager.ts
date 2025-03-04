@@ -1817,8 +1817,6 @@ function maybeWrapError(error: unknown) {
   }
 
   if (typeof error === "string") {
-    // @ts-expect-error We need to bump es2015 lib to at least es2022 in order
-    // for this to work
     return new Error(error, { cause: error });
   }
 

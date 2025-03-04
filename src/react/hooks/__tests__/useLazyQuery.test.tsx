@@ -11,8 +11,8 @@ import { Observable } from "rxjs";
 
 import {
   ApolloClient,
-  ApolloError,
   ApolloLink,
+  CombinedGraphQLErrors,
   ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
@@ -1489,7 +1489,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        error: new CombinedGraphQLErrors([{ message: "error 1" }]),
         variables: {},
       });
     }
@@ -1500,7 +1500,7 @@ describe("useLazyQuery Hook", () => {
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
-      error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+      error: new CombinedGraphQLErrors([{ message: "error 1" }]),
       variables: {},
     });
 
@@ -1515,7 +1515,7 @@ describe("useLazyQuery Hook", () => {
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        error: new CombinedGraphQLErrors([{ message: "error 1" }]),
         variables: {},
       });
     }
@@ -1529,7 +1529,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+        error: new CombinedGraphQLErrors([{ message: "error 2" }]),
         variables: {},
       });
     }
@@ -2299,7 +2299,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        error: new CombinedGraphQLErrors([{ message: "Oops" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2328,7 +2328,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        error: new CombinedGraphQLErrors([{ message: "Oops" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2489,7 +2489,7 @@ describe("useLazyQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ networkError }),
+          error: networkError,
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2680,11 +2680,9 @@ describe("useLazyQuery Hook", () => {
 
     await expect(promise).resolves.toEqualQueryResult({
       data: undefined,
-      error: new ApolloError({
-        networkError: new InvariantError(
-          "Store reset while query was in flight (not completed in link chain)"
-        ),
-      }),
+      error: new InvariantError(
+        "Store reset while query was in flight (not completed in link chain)"
+      ),
       loading: true,
       networkStatus: NetworkStatus.loading,
       called: true,
@@ -2697,11 +2695,9 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          networkError: new InvariantError(
-            "Store reset while query was in flight (not completed in link chain)"
-          ),
-        }),
+        error: new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        ),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,

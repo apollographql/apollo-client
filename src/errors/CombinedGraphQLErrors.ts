@@ -1,12 +1,12 @@
 import type { GraphQLFormattedError } from "graphql";
 
-export class GraphQLErrors extends Error {
+export class CombinedGraphQLErrors extends Error {
   errors: Array<GraphQLFormattedError>;
 
   constructor(errors: Array<GraphQLFormattedError>) {
     super(formatMessage(errors));
     this.errors = errors;
-    this.name = "GraphQLErrors";
+    this.name = "CombinedGraphQLErrors";
   }
 }
 

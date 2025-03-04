@@ -124,4 +124,4 @@ export class ApolloError extends Error {
   }
 }
 
-export { GraphQLErrors } from "./GraphQLErrors.js";
+export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";

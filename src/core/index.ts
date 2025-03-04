@@ -27,6 +27,7 @@ export type { FragmentMatcher, Resolver } from "./LocalState.js";
 export {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
+  ServerError,
   ServerParseError,
   UnknownError,
 } from "../errors/index.js";
@@ -64,7 +65,6 @@ export type * from "../cache/inmemory/types.js";
 
 export * from "../link/core/index.js";
 export * from "../link/http/index.js";
-export type { ServerError } from "../link/utils/index.js";
 export { throwServerError } from "../link/utils/index.js";
 
 /* Masking */

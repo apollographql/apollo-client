@@ -3,7 +3,7 @@ import { gql } from "graphql-tag";
 import { Client } from "graphql-ws";
 import { Observable } from "rxjs";
 
-import { ApolloError } from "@apollo/client/errors";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { execute } from "@apollo/client/link/core";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 
@@ -143,7 +143,7 @@ describe("GraphQLWSlink", () => {
       );
     });
 
-    it("with ApolloError on subscription error via Event (network disconnected)", async () => {
+    it("with Error on subscription error via Event (network disconnected)", async () => {
       const subscribe: Client["subscribe"] = (_, sink) => {
         // A WebSocket error event receives a generic Event
         // See: https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/error_event
@@ -159,7 +159,7 @@ describe("GraphQLWSlink", () => {
       );
     });
 
-    it("with ApolloError on subscription error via GraphQLError[]", async () => {
+    it("with CombinedGraphQLErrors on subscription error via GraphQLError[]", async () => {
       const subscribe: Client["subscribe"] = (_, sink) => {
         sink.error([new GraphQLError("Foo bar.")]);
         return () => {};
@@ -169,9 +169,7 @@ describe("GraphQLWSlink", () => {
 
       const obs = execute(link, { query: subscription });
       await expect(observableToArray(obs)).rejects.toEqual(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError("Foo bar.")],
-        })
+        new CombinedGraphQLErrors([{ message: "Foo bar." }])
       );
     });
   });

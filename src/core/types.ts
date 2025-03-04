@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "../cache/index.js";
 import type { FetchResult } from "../link/core/index.js";

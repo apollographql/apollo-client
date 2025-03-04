@@ -1,5 +1,5 @@
 import type * as ReactTypes from "react";
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type { OnlyRequiredProperties } from "../../utilities/index.js";

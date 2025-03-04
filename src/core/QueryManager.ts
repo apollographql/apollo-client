@@ -20,7 +20,6 @@ import {
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
-import type { ApolloErrorOptions } from "@apollo/client/errors";
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,

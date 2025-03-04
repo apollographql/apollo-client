@@ -2,7 +2,6 @@ import gql from "graphql-tag";
 
 import {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DefaultOptions,
   ObservableQuery,

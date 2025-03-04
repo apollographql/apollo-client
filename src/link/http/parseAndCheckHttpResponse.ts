@@ -4,14 +4,9 @@ import { throwServerError } from "../utils/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
 import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
 import type { Observer } from "rxjs";
+import { ServerParseError } from "../../errors/ServerParseError.js";
 
 const { hasOwnProperty } = Object.prototype;
-
-export type ServerParseError = Error & {
-  response: Response;
-  statusCode: number;
-  bodyText: string;
-};
 
 export async function readMultipartBody<
   T extends object = Record<string, unknown>,
@@ -153,12 +148,7 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
   try {
     return JSON.parse(bodyText) as T;
   } catch (err) {
-    const parseError = err as ServerParseError;
-    parseError.name = "ServerParseError";
-    parseError.response = response;
-    parseError.statusCode = response.status;
-    parseError.bodyText = bodyText;
-    throw parseError;
+    throw new ServerParseError(err, { response, bodyText });
   }
 }
 

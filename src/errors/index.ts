@@ -1,6 +1,6 @@
 import "../utilities/globals/index.js";
 
-import type { ServerParseError } from "../link/http/index.js";
+import type { ServerParseError } from "../core/index.js";
 import type { ServerError } from "../link/utils/index.js";
 import type { FetchResult } from "../link/core/index.js";
 
@@ -30,4 +30,5 @@ export type NetworkError = Error | ServerParseError | ServerError | null;
 
 export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
+export { ServerParseError } from "./ServerParseError.js";
 export { UnknownError } from "./UnknownError.js";

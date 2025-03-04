@@ -12,7 +12,7 @@ import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
 import { HttpLink } from "../HttpLink";
 import { createHttpLink } from "../createHttpLink";
 import { ClientParseError } from "../serializeFetchParameter";
-import { ServerParseError } from "../parseAndCheckHttpResponse";
+import { ServerParseError } from "../../../core";
 import { FetchResult, ServerError } from "../../..";
 import { voidFetchDuringEachTest } from "./helpers";
 import { wait } from "../../../testing";
@@ -1451,7 +1451,7 @@ describe("HttpLink", () => {
       expect(error.bodyText).toBe(undefined);
     });
 
-    it("throws a ServerParse error if response is 200 with unparsable json", async () => {
+    it("throws a ServerParseError if response is 200 with unparsable json", async () => {
       fetch.mockReturnValueOnce(
         Promise.resolve({ status: 200, text: unparsableJson })
       );

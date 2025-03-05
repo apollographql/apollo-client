@@ -304,6 +304,6 @@ export function stringifyForDebugging(value: any, space = 0): string {
     },
     space
   )
-    .replace(new RegExp(JSON.stringify(undefId)), "<undefined>")
-    .replace(new RegExp(JSON.stringify(nanId)), "NaN");
+    .replace(new RegExp(JSON.stringify(undefId), "g"), "<undefined>")
+    .replace(new RegExp(JSON.stringify(nanId), "g"), "NaN");
 }

@@ -182,7 +182,7 @@ workflows:
                 - wrapping-library
                 # -browser-esm would need a package publish to npm/CDNs
               react:
-                - 18
+                - "18.3.1"
                 - latest
                 - next
             exclude:

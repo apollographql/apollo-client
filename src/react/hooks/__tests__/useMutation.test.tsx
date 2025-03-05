@@ -341,6 +341,8 @@ describe("useMutation Hook", () => {
         expect(fetchResult.data).toBe(undefined);
         // TODO: This should either be an `error` property or it should be the
         // raw error array. This value is a lie against the TypeScript type.
+        // This will be fixed by https://github.com/apollographql/apollo-client/issues/7167
+        // when we address the issue with onError.
         expect(fetchResult.errors).toEqual(
           new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
         );

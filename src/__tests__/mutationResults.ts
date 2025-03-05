@@ -941,7 +941,8 @@ describe("mutation results", () => {
       const { client, obsQuery } = setupObsQuery(
         {
           request: { query: mutation },
-          result: { errors: [new Error("mock error")] },
+          result: { errors: [{ message: "mock error" }] },
+          maxUsageCount: 2,
         },
         {
           request: { query: queryWithTypename },
@@ -967,7 +968,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
 
       await expect(() =>
         client.mutate({
@@ -981,7 +982,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
       await obsQuery.refetch();
     });
 
@@ -1511,7 +1512,8 @@ describe("mutation results", () => {
       const { client, obsQuery } = setupObsQuery(
         {
           request: { query: mutation },
-          result: { errors: [new Error("mock error")] },
+          result: { errors: [{ message: "mock error" }] },
+          maxUsageCount: 2,
         },
         {
           request: { query: queryWithTypename },
@@ -1555,7 +1557,7 @@ describe("mutation results", () => {
             });
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
       await expect(
         client.mutate({
           mutation,
@@ -1589,7 +1591,7 @@ describe("mutation results", () => {
             });
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
       await obsQuery.refetch();
     });
 

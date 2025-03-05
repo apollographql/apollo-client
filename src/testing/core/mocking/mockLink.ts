@@ -70,7 +70,7 @@ export class MockLink extends ApolloLink {
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
-    options: MockLinkOptions = Object.create(null)
+    options: MockLinkOptions = {}
   ) {
     super();
     this.showWarnings = options.showWarnings ?? true;

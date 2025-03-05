@@ -23,7 +23,7 @@ export interface RemoveTypenameFromVariablesOptions {
 }
 
 export function removeTypenameFromVariables(
-  options: RemoveTypenameFromVariablesOptions = Object.create(null)
+  options: RemoveTypenameFromVariablesOptions = {}
 ) {
   return Object.assign(
     new ApolloLink((operation, forward) => {

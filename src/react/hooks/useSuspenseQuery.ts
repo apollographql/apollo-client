@@ -171,7 +171,7 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+    | SuspenseQueryHookOptions<TData, TVariables> = {}
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",

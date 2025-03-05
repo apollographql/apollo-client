@@ -168,7 +168,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions = Object.create(null)
+  options: LoadableQueryHookOptions = {}
 ): UseLoadableQueryResult<TData, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

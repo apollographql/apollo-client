@@ -7,7 +7,7 @@ import type { TupleToIntersection } from "./mergeDeep.js";
 export function compact<TArgs extends any[]>(
   ...objects: TArgs
 ): TupleToIntersection<TArgs> {
-  const result = Object.create(null);
+  const result = {} as TupleToIntersection<TArgs>;
 
   objects.forEach((obj) => {
     if (!obj) return;

@@ -2815,7 +2815,7 @@ describe("writing to the store", () => {
       },
     });
 
-    const mergeCounts: Record<string, number> = Object.create(null);
+    const mergeCounts: Record<string, number> = {};
 
     const query = gql`
       query {

@@ -180,7 +180,7 @@ export function useBackgroundQuery<
   options:
     | (SkipToken &
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
-    | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
+    | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = {}
 ): [
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,

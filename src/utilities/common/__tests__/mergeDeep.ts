@@ -8,7 +8,7 @@ describe("mergeDeep", function () {
   });
 
   it("should preserve identity for single arguments", function () {
-    const arg = Object.create(null);
+    const arg = {};
     expect(mergeDeep(arg)).toBe(arg);
   });
 

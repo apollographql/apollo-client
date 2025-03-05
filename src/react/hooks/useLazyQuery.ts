@@ -124,7 +124,7 @@ export function useLazyQuery<
       const method = obsQueryFields[key];
       eagerMethods[key] = function () {
         if (!execOptionsRef.current) {
-          execOptionsRef.current = Object.create(null);
+          execOptionsRef.current = {};
           // Only the first time populating execOptionsRef.current matters here.
           forceUpdateState();
         }

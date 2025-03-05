@@ -464,7 +464,6 @@ In order to properly test local state using `MockedProvider`, you'll need to pas
 ```jsx
 const {
   mocks,
-  addTypename,
   defaultOptions,
   cache,
   resolvers,
@@ -472,9 +471,9 @@ const {
   showWarnings,
 } = this.props;
 const client = new ApolloClient({
-  cache: cache || new Cache({ addTypename }),
+  cache: cache || new Cache(),
   defaultOptions,
-  link: link || new MockLink(mocks || [], addTypename, { showWarnings }),
+  link: link || new MockLink(mocks || [], { showWarnings }),
   resolvers,
 });
 ```

@@ -18,7 +18,7 @@ import {
   FallbackProps,
   ErrorBoundary as ReactErrorBoundary,
 } from "react-error-boundary";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import {
   RenderStream,
   createRenderStream,

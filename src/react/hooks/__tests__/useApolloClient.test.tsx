@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { ApolloClient } from "../../../core/index.js";
 import { ApolloLink } from "../../../link/core/index.js";

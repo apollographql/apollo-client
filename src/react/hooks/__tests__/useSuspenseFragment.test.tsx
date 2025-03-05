@@ -23,7 +23,7 @@ import {
 } from "@testing-library/react-render-stream";
 import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import { MockSubscriptionLink, wait } from "../../../testing/index.js";
 import { MockedProvider } from "../../../testing/react/index.js";
 import { expectTypeOf } from "expect-type";

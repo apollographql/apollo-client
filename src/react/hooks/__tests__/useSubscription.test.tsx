@@ -19,7 +19,7 @@ import { SubscriptionHookOptions } from "../../types/types.js";
 import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import { Masked, MaskedDocumentNode } from "../../../masking/index.js";
 import { expectTypeOf } from "expect-type";
 import {

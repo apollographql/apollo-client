@@ -3,7 +3,10 @@ import { from } from "rxjs";
 import { map } from "rxjs/operators";
 import { gql } from "graphql-tag";
 import { DocumentNode, GraphQLError } from "graphql";
-import { InvariantError, setVerbosity } from "ts-invariant";
+import {
+  InvariantError,
+  setVerbosity,
+} from "@apollo/client/utilities/invariant";
 
 import {
   Observable,

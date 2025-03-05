@@ -39,7 +39,7 @@ import { InMemoryCache } from "../../../cache/index.js";
 import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
 import { QueryRef } from "../../../react/index.js";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
-import invariant, { InvariantError } from "ts-invariant";
+import invariant, { InvariantError } from "@apollo/client/utilities/invariant";
 import {
   SimpleCaseData,
   setupPaginatedCase,

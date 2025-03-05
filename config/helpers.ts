@@ -35,7 +35,13 @@ export async function applyRecast({
     relativeSourcePath: string;
   }) => MaybePromise<{ ast: recast.types.ASTNode; targetFileName?: string }>;
 }) {
-  for await (let sourceFile of nodeGlob(glob, { withFileTypes: true, cwd })) {
+  for await (let sourceFile of nodeGlob(glob, {
+    withFileTypes: true,
+    cwd,
+    exclude(fileName) {
+      return fileName.parentPath.indexOf("legacyEntryPoints") !== -1;
+    },
+  })) {
     const baseDir = sourceFile.parentPath;
     const sourceFileName = sourceFile.name;
     const sourcePath = path.join(baseDir, sourceFile.name);

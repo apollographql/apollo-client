@@ -104,7 +104,7 @@
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
     "knip": "knip",
     "madge": "node ./config/madge.ts",
-    "publint": "publint run dist"
+    "publint": "publint run --strict dist"
   },
   "devEngines": {
     "runtime": {

@@ -511,7 +511,6 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
-        // TODO: Unify this with errorPolicy: 'none'
         expect(fetchResult.errors).toEqual([{ message: CREATE_TODO_ERROR }]);
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError).toHaveBeenLastCalledWith(

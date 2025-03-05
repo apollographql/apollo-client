@@ -1,50 +1,75 @@
-// TODO This entire file doesn't work yet without appending `/index.js` to all imports manually!
-
 import assert from "node:assert";
-import path from "path";
-import { importMetaResolve } from "resolve-esm";
+import path from "node:path";
+import { findPackageJSON } from "node:module";
+import { fileURLToPath } from "node:url";
+import test from "node:test";
 
-import { ApolloClient } from "@apollo/client/index.js";
-import { useQuery } from "@apollo/client/react/index.js";
-import { HttpLink } from "@apollo/client/link/http/index.js";
+test.suite("Node with ESM imports", () => {
+  test("import from `.../index.js`", async () => {
+    const { ApolloClient } = await import("@apollo/client/index.js");
+    const { useQuery } = await import("@apollo/client/react/index.js");
+    const { HttpLink } = await import("@apollo/client/link/http/index.js");
+    assert.equal(ApolloClient.name, "ApolloClient");
+    assert.equal(useQuery.name, "useQuery");
+    assert.equal(HttpLink.name, "HttpLink");
+  });
 
-console.log(
-  "Testing Node with ESM imports...  (user-side workaround with `/index.js)"
-);
+  test("import from entry point", async () => {
+    const { ApolloClient } = await import("@apollo/client");
+    const { useQuery } = await import("@apollo/client/react");
+    const { HttpLink } = await import("@apollo/client/link/http");
+    assert.equal(ApolloClient.name, "ApolloClient");
+    assert.equal(useQuery.name, "useQuery");
+    assert.equal(HttpLink.name, "HttpLink");
+  });
 
-function checkFunctionName(fn, name, category) {
-  console.log(`Checking ${category} '${name}' === '${fn.name}'`);
-  assert(
-    fn.name === name,
-    `${category} \`${name}\` did not import correctly (name: '${fn.name}')`
-  );
-}
+  test("equality between `.../index.js` and entry point", async () => {
+    assert.equal(
+      await import("@apollo/client/index.js").ApolloClient,
+      await import("@apollo/client").ApolloClient
+    );
+    assert.equal(
+      await import("@apollo/client/react/index.js").useQuery,
+      await import("@apollo/client/react").useQuery
+    );
+    assert.equal(
+      await import("@apollo/client/link/http/index.js").HttpLink,
+      await import("@apollo/client/link/http").HttpLink
+    );
+  });
 
-const entries = [
-  [ApolloClient, "ApolloClient", "Barrel Import"],
-  [useQuery, "useQuery", "Apollo React"],
-  [HttpLink, "HttpLink", "Link"],
-];
+  const basedir = path
+    .dirname(findPackageJSON("@apollo/client", import.meta.url))
+    .split(path.sep)
+    .join(path.posix.sep);
 
-for (let [fn, name, category] of entries) {
-  try {
-    checkFunctionName(fn, name, category);
-  } catch (error) {
-    console.error(error);
-  }
-}
+  test("module resolution (direct import)", () => {
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/index.js")),
+      path.posix.join(basedir, "/legacyEntryPoints/index.js")
+    );
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/react/index.js")),
+      path.posix.join(basedir, "/legacyEntryPoints/react/index.js")
+    );
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/link/http/index.js")),
+      path.posix.join(basedir, "/legacyEntryPoints/link/http/index.js")
+    );
+  });
 
-const moduleNames = [
-  ["@apollo/client/index.js", "/index.js"],
-  ["@apollo/client/react/index.js", "/react/index.js"],
-  ["@apollo/client/link/http/index.js", "/link/http/index.js"],
-];
-
-(async () => {
-  for (let [moduleName, expectedFilename] of moduleNames) {
-    const modulePath = await importMetaResolve(moduleName);
-    const posixPath = modulePath.split(path.sep).join(path.posix.sep);
-    console.log(`Module: ${moduleName}, path: ${posixPath}`);
-    assert(posixPath.endsWith(expectedFilename));
-  }
-})();
+  test("module resolution", () => {
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client")),
+      path.posix.join(basedir, "/index.js")
+    );
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/react")),
+      path.posix.join(basedir, "/react/index.js")
+    );
+    assert.equal(
+      fileURLToPath(import.meta.resolve("@apollo/client/link/http")),
+      path.posix.join(basedir, "/link/http/index.js")
+    );
+  });
+});

@@ -1,16 +1,15 @@
 const assert = require("node:assert");
 const path = require("node:path");
 const { findPackageJSON } = require("node:module");
-
 const test = require("node:test");
 
 const { ApolloClient } = require("@apollo/client");
 const { useQuery } = require("@apollo/client/react");
 const { HttpLink } = require("@apollo/client/link/http");
 
-assert(process.features.require_module === false);
+assert(process.features.require_module === true);
 
-test.suite("Node with CJS require", () => {
+test.suite("Node with ESM require", () => {
   test("import from entry point", async () => {
     assert.equal(ApolloClient.name, "ApolloClient");
     assert.equal(useQuery.name, "useQuery");
@@ -25,15 +24,15 @@ test.suite("Node with CJS require", () => {
 
     assert.equal(
       require.resolve("@apollo/client"),
-      path.posix.join(basedir, "/__cjs/index.cjs")
+      path.posix.join(basedir, "/index.js")
     );
     assert.equal(
       require.resolve("@apollo/client/react"),
-      path.posix.join(basedir, "/__cjs/react/index.cjs")
+      path.posix.join(basedir, "/react/index.js")
     );
     assert.equal(
       require.resolve("@apollo/client/link/http"),
-      path.posix.join(basedir, "/__cjs/link/http/index.cjs")
+      path.posix.join(basedir, "/link/http/index.js")
     );
   });
 });

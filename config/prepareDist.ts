@@ -45,10 +45,10 @@ export const prepareDist: BuildStep = async (options) => {
 
   packageJson.exports = {
     "./package.json": "./package.json",
-    "./*.js/": "./legacyEntryPoints/*.js",
-    "./*.cjs/": "./legacyEntryPoints/*.cjs",
-    "./*.d.ts/": "./legacyEntryPoints/*.d.ts",
-    "./*.d.cts/": "./legacyEntryPoints/*.d.cts",
+    "./*.js": "./legacyEntryPoints/*.js",
+    "./*.cjs": "./legacyEntryPoints/*.cjs",
+    "./*.d.ts": "./legacyEntryPoints/*.d.ts",
+    "./*.d.cts": "./legacyEntryPoints/*.d.cts",
   };
 
   // The root package.json points to the CJS/ESM source in "dist", to support

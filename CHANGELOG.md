@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.13.2
+
+### Patch Changes
+
+- [#12392](https://github.com/apollographql/apollo-client/pull/12392) [`644bb26`](https://github.com/apollographql/apollo-client/commit/644bb2662168a9bac0519be6979f0db38b0febc4) Thanks [@Joja81](https://github.com/Joja81)! - Fixes an issue where the DeepOmit type would turn optional properties into required properties. This should only affect you if you were using the omitDeep or stripTypename utilities exported by Apollo Client.
+
 ## 3.13.1
 
 ### Patch Changes

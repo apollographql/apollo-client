@@ -14,12 +14,12 @@ import {
   addTypenameToDocument,
   removeClientSetsFromDocument,
   cloneDeep,
-  stringifyForDisplay,
   print,
   getOperationDefinition,
   getDefaultValues,
   removeDirectivesFromDocument,
   checkDocument,
+  makeUniqueId,
 } from "../../../utilities/index.js";
 import type { Unmasked } from "../../../masking/index.js";
 
@@ -136,14 +136,14 @@ export class MockLink extends ApolloLink {
     if (!response) {
       configError = new Error(
         `No more mocked responses for the query: ${print(operation.query)}
-Expected variables: ${stringifyForDisplay(operation.variables)}
+Expected variables: ${stringifyForDebugging(operation.variables)}
 ${
   unmatchedVars.length > 0 ?
     `
 Failed to match ${unmatchedVars.length} mock${
       unmatchedVars.length === 1 ? "" : "s"
     } for this query. The mocked response had the following variables:
-${unmatchedVars.map((d) => `  ${stringifyForDisplay(d)}`).join("\n")}
+${unmatchedVars.map((d) => `  ${stringifyForDebugging(d)}`).join("\n")}
 `
   : ""
 }`
@@ -279,4 +279,31 @@ export function mockSingleLink(...mockedResponses: Array<any>): MockApolloLink {
   }
 
   return new MockLink(mocks, maybeTypename);
+}
+
+// This is similiar to the stringifyForDisplay utility we ship, but includes
+// support for NaN in addition to undefined. More values may be handled in the
+// future. This is not added to the primary stringifyForDisplay helper since it
+// is used for the cache and other purposes. We need this for debuggging only.
+export function stringifyForDebugging(value: any, space = 0): string {
+  const undefId = makeUniqueId("undefined");
+  const nanId = makeUniqueId("NaN");
+
+  return JSON.stringify(
+    value,
+    (_, value) => {
+      if (value === void 0) {
+        return undefId;
+      }
+
+      if (Number.isNaN(value)) {
+        return nanId;
+      }
+
+      return value;
+    },
+    space
+  )
+    .replace(new RegExp(JSON.stringify(undefId)), "<undefined>")
+    .replace(new RegExp(JSON.stringify(nanId)), "NaN");
 }

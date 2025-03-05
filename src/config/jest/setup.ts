@@ -1,3 +1,6 @@
+//@ts-ignore
+globalThis.__DEV__ = true;
+
 import gql from "graphql-tag";
 import { TextEncoder, TextDecoder } from "util";
 global.TextEncoder ??= TextEncoder;

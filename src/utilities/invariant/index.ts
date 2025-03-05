@@ -4,10 +4,13 @@ import { global } from "@apollo/client/utilities/globals";
 import { stringifyForDisplay } from "../common/stringifyForDisplay.js";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
+const genericMessage = "Invariant Violation";
 export class InvariantError extends Error {
-  constructor(message: string | undefined) {
+  constructor(message = genericMessage) {
     super(message);
-    this.name = "InvariantError";
+    this.name = genericMessage;
+
+    Object.setPrototypeOf(this, InvariantError.prototype);
   }
 }
 
@@ -32,11 +35,13 @@ function wrapConsoleMethod<M extends ConsoleMethodName>(name: M) {
       // all the console.* methods we need.
       const method = console[name] || console.log;
 
-      const arg0 = message;
-      message = getHandledErrorMsg(arg0);
-      if (!message) {
-        message = getFallbackErrorMsg(arg0, args);
-        args = [];
+      if (typeof message === "number") {
+        const arg0 = message;
+        message = getHandledErrorMsg(arg0);
+        if (!message) {
+          message = getFallbackErrorMsg(arg0, args);
+          args = [];
+        }
       }
 
       method(message, ...args);

@@ -19,6 +19,16 @@ jobs:
       - run: npm ci
       - run: npm run madge
 
+  Publint:
+    docker:
+      - image: cimg/node:23.7.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run build
+      - run: npm run publint
+
   Lint:
     docker:
       - image: cimg/node:23.7.0

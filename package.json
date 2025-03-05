@@ -103,7 +103,8 @@
     "changeset-version": "changeset version && npm i",
     "update-size-limits": "size-limit --json | jq '. | map(select(.sizeLimit) | { key: .name, value: .size}) | from_entries' | tee .new-size-limits.json; mv .new-size-limits.json .size-limits.json",
     "knip": "knip",
-    "madge": "node ./config/madge.ts"
+    "madge": "node ./config/madge.ts",
+    "publint": "publint run dist"
   },
   "devEngines": {
     "runtime": {
@@ -220,6 +221,7 @@
     "patch-package": "8.0.0",
     "pkg-pr-new": "0.0.24",
     "prettier": "3.1.1",
+    "publint": "^0.3.8",
     "react": "19.0.0",
     "react-17": "npm:react@^17",
     "react-18": "npm:react@^18",

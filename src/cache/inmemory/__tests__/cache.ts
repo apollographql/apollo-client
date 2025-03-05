@@ -2328,7 +2328,7 @@ describe("InMemoryCache#broadcastWatches", function () {
         name: string;
       };
     }>;
-    const diffs: Record<string, Diff[]> = Object.create(null);
+    const diffs: Record<string, Diff[]> = {};
     function addDiff(name: string, diff: Diff) {
       (diffs[name] || (diffs[name] = [])).push(diff);
     }
@@ -3844,8 +3844,8 @@ describe("ReactiveVar and makeVar", () => {
 
   it("should remove all watchers when cache.reset() called", () => {
     const { cache, query, nameVar } = makeCacheAndVar(false);
-    const unwatchers: Record<string, Array<() => void>> = Object.create(null);
-    const diffCounts: Record<string, number> = Object.create(null);
+    const unwatchers: Record<string, Array<() => void>> = {};
+    const diffCounts: Record<string, number> = {};
 
     function watch(id: string) {
       const fns = unwatchers[id] || (unwatchers[id] = []);

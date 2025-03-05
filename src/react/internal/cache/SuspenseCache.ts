@@ -33,7 +33,7 @@ export class SuspenseCache {
 
   private options: SuspenseCacheOptions;
 
-  constructor(options: SuspenseCacheOptions = Object.create(null)) {
+  constructor(options: SuspenseCacheOptions = {}) {
     this.options = options;
   }
 

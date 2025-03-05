@@ -175,8 +175,7 @@ workflows:
                 - cra4
                 - cra5
                 - next
-                - dual-module-test-esm
-                - dual-module-test-standard
+                - node
                 - vite
                 - vite-swc
                 - wrapping-library

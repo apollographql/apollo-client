@@ -13,8 +13,7 @@
     "next",
     "vite",
     "vite-swc",
-    "node-standard",
-    "node-esm",
+    "node",
     "wrapping-library",
     "shared"
   ],

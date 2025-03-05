@@ -1,4 +1,4 @@
-import { GraphQLError } from "graphql";
+import { GraphQLError, GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 import { Observable, Subscription } from "rxjs";
@@ -299,7 +299,9 @@ describe("mutation results", () => {
   });
 
   it("should write results to cache according to errorPolicy", async () => {
-    const expectedFakeError = new GraphQLError("expected/fake error");
+    const expectedFakeError: GraphQLFormattedError = {
+      message: "expected/fake error",
+    };
 
     const client = new ApolloClient({
       cache: new InMemoryCache({
@@ -335,21 +337,14 @@ describe("mutation results", () => {
       }
     `;
 
-    await client
-      .mutate({
+    await expect(
+      client.mutate({
         mutation,
         variables: {
           newName: "Hugh Willson",
         },
       })
-      .then(
-        () => {
-          throw new Error("should have thrown for default errorPolicy");
-        },
-        (error) => {
-          expect(error).toEqual(new CombinedGraphQLErrors([expectedFakeError]));
-        }
-      );
+    ).rejects.toThrow(new CombinedGraphQLErrors([expectedFakeError]));
 
     expect(client.cache.extract()).toMatchSnapshot();
 

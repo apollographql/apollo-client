@@ -9,7 +9,7 @@ import {
 import { userEvent } from "@testing-library/user-event";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
 

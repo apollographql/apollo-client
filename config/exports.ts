@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import type { BuildStep } from "./build.ts";
 import { entryPoints } from "./entryPoints.ts";
-import path, { join } from "node:path";
+import { join } from "node:path";
 import assert from "node:assert";
 
 type ConditionRoot = {
@@ -19,6 +19,9 @@ type ConditionRoot = {
 export const addExports: BuildStep = async (options) => {
   const pkgFileName = join(options.packageRoot, "package.json");
   const pkg = JSON.parse(await readFile(pkgFileName, "utf-8"));
+  // normal entry points a la `@apollo/client` and `@apollo/client/core`.
+  // these entry points will be used in most cases and point to the right file depending
+  // on how the user is consuming the package.
   for (const entryPoint of entryPoints) {
     if (typeof entryPoint.value === "string") {
       pkg.exports[entryPoint.key] = processEntryPoint(
@@ -40,8 +43,38 @@ export const addExports: BuildStep = async (options) => {
         );
       }
     }
-    await writeFile(pkgFileName, JSON.stringify(pkg, null, 2));
   }
+  for (const entryPoint of entryPoints) {
+    // add legacy-style exports for `@apollo/client/index.js`, `@apollo/client/core/index.js`, etc.
+    // although it would be shorter, we're not doing something like `"./*/index.js": "./*/index.js"`
+    // here as that would also allow acces to internal `index.js` files we don't explicilty specify
+    // as entry points.
+    if (options.type === "esm") {
+      pkg.exports[`${entryPoint.key}/index.${options.jsExt}`] = {
+        types: `${entryPoint.key}/index.d.${options.tsExt}`,
+        default: `${entryPoint.key}/index.${options.jsExt}`,
+      };
+    } else {
+      // add legacy-style exports for `@apollo/client/main.cjs`, `@apollo/client/core/core.cjs`, etc.
+      let entry = pkg.exports[entryPoint.key];
+      while (typeof entry.default === "object") {
+        entry = entry.default;
+      }
+      pkg.exports[
+        `${entryPoint.key}/${entryPoint.dirs.at(-1) || "main"}.${options.jsExt}`
+      ] = {
+        types: entry.types.require,
+        default: entry.require,
+      };
+    }
+  }
+  if (options.type === "cjs") {
+    // Legacy entry point for `@apollo/client/apollo-client.cjs`.
+    // This was a rolled-up build in the past, while now it's one of many compiled files.
+    // It's probably still better to have this available in case someone ever used it with bundlers.
+    pkg.exports["./apollo-client.cjs"] = pkg.exports["./main.cjs"];
+  }
+  await writeFile(pkgFileName, JSON.stringify(pkg, null, 2));
 
   function processEntryPoint(
     value: string,

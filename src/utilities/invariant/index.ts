@@ -75,6 +75,7 @@ export function newInvariantError(
   );
 }
 
+// This is duplicated between `@apollo/client/dev` and `@apollo/client/utilities/invariant` to prevent circular references.
 export const ApolloErrorMessageHandler = Symbol.for(
   "ApolloErrorMessageHandler_" + version
 );

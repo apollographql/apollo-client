@@ -206,18 +206,44 @@ type Path = ReadonlyArray<string | number>;
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
 // @public (undocumented)
-type ServerError = Error & {
+class ServerError extends Error {
+    // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
+    constructor(message: string, options: ServerErrorOptions);
+    // (undocumented)
     response: Response;
+    // (undocumented)
     result: Record<string, any> | string;
+    // (undocumented)
     statusCode: number;
-};
+}
 
 // @public (undocumented)
-type ServerParseError = Error & {
+interface ServerErrorOptions {
+    // (undocumented)
     response: Response;
-    statusCode: number;
+    // (undocumented)
+    result: Record<string, any> | string;
+}
+
+// @public (undocumented)
+class ServerParseError extends Error {
+    // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
+    constructor(originalParseError: unknown, options: ServerParseErrorOptions);
+    // (undocumented)
     bodyText: string;
-};
+    // (undocumented)
+    response: Response;
+    // (undocumented)
+    statusCode: number;
+}
+
+// @public (undocumented)
+interface ServerParseErrorOptions {
+    // (undocumented)
+    bodyText: string;
+    // (undocumented)
+    response: Response;
+}
 
 // @public (undocumented)
 interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {

@@ -161,6 +161,8 @@ workflows:
             parameters:
               project:
                 ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
+      - Circularity
+      - Publint
       - Attest
       - Formatting
       - Lint

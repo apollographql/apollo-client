@@ -104,18 +104,22 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - run:
-          command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          # due to a bug with overrides that will be fixed in npm 11.2.0 (to be released) we need to install these everywhere manually
+          #command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          command: npm exec --workspaces -c 'jq -e ".dependencies[\"@apollo/client\"]" package.json && npm pkg set "dependencies[@apollo/client]=/tmp/workspace/apollo-client.tgz" || true'
           working_directory: integration-tests
       - run:
           command: |
             export VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r)
-            npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+            # due to a bug with overrides that will be fixed in npm 11.2.0 (to be released) we need to install these everywhere manually
+            # npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+            npm exec --workspaces -c 'jq -e ".dependencies.react" package.json && npm pkg set "dependencies[react]=${VERSION}" "dependencies[react-dom]=${VERSION}" || true'
           working_directory: integration-tests
       - run:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install
+          command: npm install --force
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps

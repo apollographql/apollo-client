@@ -14,7 +14,7 @@ import {
   graphQLResultHasError,
   canUseWeakMap,
 } from "../utilities/index.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import { isNetworkRequestInFlight } from "./networkStatus.js";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "../masking/index.js";
 
@@ -75,7 +75,6 @@ export class QueryInfo {
   document: DocumentNode | null = null;
   lastRequestId = 1;
   variables?: Record<string, any>;
-  networkStatus?: NetworkStatus;
   stopped = false;
 
   private cache: ApolloCache<any>;
@@ -102,22 +101,9 @@ export class QueryInfo {
   public init(query: {
     document: DocumentNode;
     variables: Record<string, any> | undefined;
-    // The initial networkStatus for this fetch, most often
-    // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
-    // or setVariables.
-    networkStatus?: NetworkStatus;
     observableQuery?: ObservableQuery<any, any>;
     lastRequestId?: number;
   }): this {
-    let networkStatus = query.networkStatus || NetworkStatus.loading;
-    if (
-      this.variables &&
-      this.networkStatus !== NetworkStatus.loading &&
-      !equal(this.variables, query.variables)
-    ) {
-      networkStatus = NetworkStatus.setVariables;
-    }
-
     if (!equal(query.variables, this.variables)) {
       this.lastDiff = void 0;
     }
@@ -126,7 +112,6 @@ export class QueryInfo {
       document: query.document,
       variables: query.variables,
       networkError: null,
-      networkStatus,
     });
 
     if (query.observableQuery) {
@@ -494,12 +479,9 @@ export class QueryInfo {
     }
   }
 
-  public markReady() {
-    return (this.networkStatus = NetworkStatus.ready);
-  }
+  public markReady() {}
 
   public markError() {
-    this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
     this.reset();
   }

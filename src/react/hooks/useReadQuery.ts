@@ -7,7 +7,6 @@ import {
 } from "../internal/index.js";
 import type { QueryRef } from "../internal/index.js";
 import { __use, wrapHook } from "./internal/index.js";
-import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import type { ApolloError } from "../../errors/index.js";
 import type {
@@ -104,7 +103,7 @@ function useReadQuery_<TData>(
     return {
       data: result.data!,
       networkStatus: result.networkStatus,
-      error: toApolloError(result),
+      error: result.error,
     };
   }, [result]);
 }

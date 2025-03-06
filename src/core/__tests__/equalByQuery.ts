@@ -1,5 +1,5 @@
 import { GraphQLError } from "graphql";
-import { TypedDocumentNode, gql } from "../index";
+import { ApolloError, TypedDocumentNode, gql } from "../index";
 import { equalByQuery } from "../equalByQuery";
 
 describe("equalByQuery", () => {
@@ -282,14 +282,20 @@ describe("equalByQuery", () => {
       equalByQuery(
         query,
         { data: data123 },
-        { data: data123, errors: [oopsError] }
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        }
       )
     ).toBe(false);
 
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [oopsError] },
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        },
         { data: data123 }
       )
     ).toBe(false);
@@ -297,48 +303,75 @@ describe("equalByQuery", () => {
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [oopsError] },
-        { data: data123, errors: [oopsError] }
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        },
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        }
       )
     ).toBe(true);
 
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [oopsError] },
-        { data: data123, errors: [differentError] }
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        },
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [differentError] }),
+        }
       )
     ).toBe(false);
 
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [oopsError] },
-        { data: data123, errors: [oopsError] }
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        },
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        }
       )
     ).toBe(true);
 
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [oopsError] },
-        { data: { ...data123, b: 100 }, errors: [oopsError] }
+        {
+          data: data123,
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        },
+        {
+          data: { ...data123, b: 100 },
+          error: new ApolloError({ graphQLErrors: [oopsError] }),
+        }
       )
     ).toBe(true);
 
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [] },
-        { data: data123, errors: [] }
+        { data: data123, error: new ApolloError({ graphQLErrors: [] }) },
+        { data: data123, error: new ApolloError({ graphQLErrors: [] }) }
       )
     ).toBe(true);
 
     expect(
       equalByQuery(
         query,
-        { data: data123, errors: [] },
-        { data: { ...data123, b: 100 }, errors: [] }
+        { data: data123, error: new ApolloError({ graphQLErrors: [] }) },
+        {
+          data: { ...data123, b: 100 },
+          error: new ApolloError({ graphQLErrors: [] }),
+        }
       )
     ).toBe(true);
   });

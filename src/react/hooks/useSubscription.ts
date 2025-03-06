@@ -23,7 +23,6 @@ import { ApolloError } from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import { toApolloError } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import type { MaybeMasked } from "../../masking/index.js";
 
@@ -242,7 +241,10 @@ export function useSubscription<
               // TODO: fetchResult.data can be null but SubscriptionResult.data
               // expects TData | undefined only
               data: fetchResult.data!,
-              error: toApolloError(fetchResult),
+              error:
+                fetchResult.errors ?
+                  new ApolloError({ graphQLErrors: fetchResult.errors })
+                : undefined,
               variables,
             };
             observable.__.setResult(result);

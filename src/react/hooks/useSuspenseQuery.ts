@@ -9,11 +9,11 @@ import type {
   WatchQueryFetchPolicy,
   FetchMoreQueryOptions,
   WatchQueryOptions,
+  ApolloError,
 } from "../../core/index.js";
-import { ApolloError, NetworkStatus } from "../../core/index.js";
+import { NetworkStatus } from "../../core/index.js";
 import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
 import type { DeepPartial } from "../../utilities/index.js";
-import { isNonEmptyArray } from "../../utilities/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
 import type {
@@ -239,7 +239,7 @@ function useSuspenseQuery_<
   }, [queryRef]);
 
   const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
-    const error = toApolloError(queryRef.result);
+    const error = queryRef.result.error;
     const complete = !!queryRef.result.data;
 
     return {
@@ -286,7 +286,7 @@ function useSuspenseQuery_<
     return {
       client,
       data: result.data,
-      error: toApolloError(result),
+      error: result.error,
       networkStatus: result.networkStatus,
       fetchMore,
       refetch,
@@ -329,12 +329,6 @@ function validatePartialDataReturn(
       "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
   }
-}
-
-export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors) ?
-      new ApolloError({ graphQLErrors: result.errors })
-    : result.error;
 }
 
 interface UseWatchQueryOptionsHookOptions<

@@ -401,7 +401,7 @@ export class InternalQueryReference<TData = unknown> {
           result.data = this.result.data;
         }
 
-        if (result.error) {
+        if (this.shouldReject(result)) {
           this.reject?.(result.error);
         } else {
           this.result = result;
@@ -426,7 +426,7 @@ export class InternalQueryReference<TData = unknown> {
           result.data = this.result.data;
         }
 
-        if (result.error) {
+        if (this.shouldReject(result)) {
           this.promise = createRejectedPromise(result.error);
           this.deliver(this.promise);
         } else {
@@ -506,6 +506,17 @@ export class InternalQueryReference<TData = unknown> {
       result.data ?
         createFulfilledPromise(result)
       : this.createPendingPromise();
+  }
+
+  private shouldReject(result: ApolloQueryResult<any>) {
+    const { errorPolicy } = this.watchQueryOptions;
+
+    return (
+      result.error &&
+      (result.error.networkError ||
+        errorPolicy === "none" ||
+        errorPolicy === undefined)
+    );
   }
 
   private createPendingPromise() {

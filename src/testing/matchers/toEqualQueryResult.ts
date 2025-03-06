@@ -5,11 +5,9 @@ import type { QueryResult } from "../../react/index.js";
 const CHECKED_KEYS = [
   "loading",
   "error",
-  "errors",
   "data",
   "variables",
   "networkStatus",
-  "errors",
   "called",
   "previousData",
 ] as const;

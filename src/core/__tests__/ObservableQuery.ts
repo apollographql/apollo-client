@@ -2393,8 +2393,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         error: new ApolloError({ graphQLErrors: [error] }),
         loading: false,
-        // TODO: The networkStatus returned here is different than the one
-        // returned from `observable.result()`. These should match
         networkStatus: NetworkStatus.error,
         partial: false,
       });

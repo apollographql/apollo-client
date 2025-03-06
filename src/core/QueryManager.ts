@@ -69,7 +69,6 @@ import type {
 } from "./types.js";
 import type { LocalState } from "./LocalState.js";
 
-import type { QueryStoreValue } from "./QueryInfo.js";
 import {
   QueryInfo,
   shouldWriteResult,
@@ -662,27 +661,6 @@ export class QueryManager<TStore> {
       .promise as TODO;
   }
 
-  public getQueryStore() {
-    const store: Record<string, QueryStoreValue> = Object.create(null);
-    this.queries.forEach((info, queryId) => {
-      store[queryId] = {
-        variables: info.variables,
-        networkStatus: info.networkStatus,
-        networkError: info.networkError,
-        graphQLErrors: info.graphQLErrors,
-      };
-    });
-    return store;
-  }
-
-  public resetErrors(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.networkError = undefined;
-      queryInfo.graphQLErrors = [];
-    }
-  }
-
   public transform(document: DocumentNode) {
     return this.documentTransform.transformDocument(document);
   }
@@ -1245,12 +1223,9 @@ export class QueryManager<TStore> {
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
+            queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw queryInfo.markError(
-              new ApolloError({
-                graphQLErrors,
-              })
-            );
+            throw new ApolloError({ graphQLErrors });
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1295,7 +1270,7 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError(error);
+          queryInfo.markError();
         }
 
         throw error;

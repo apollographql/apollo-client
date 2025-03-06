@@ -3649,7 +3649,6 @@ describe("ApolloClient", () => {
       expect(client.cache.extract()).toEqual({});
       // TODO: Determine if we can drop this check against internal state and
       // replace it with something user-facing.
-      expect(client["queryManager"].getQueryStore()).toEqual({});
       expect(client["queryManager"].mutationStore).toEqual({});
     });
 

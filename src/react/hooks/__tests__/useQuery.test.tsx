@@ -30,7 +30,7 @@ import { QueryResult } from "../../types/types";
 import { useQuery } from "../useQuery";
 import { useMutation } from "../useMutation";
 import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
-import { useLazyQuery } from "../useLazyQuery";
+import { LazyQueryResult, useLazyQuery } from "../useLazyQuery";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
 import { InvariantError } from "../../../utilities/globals";
 import { Unmasked } from "../../../masking";
@@ -5307,7 +5307,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
-        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+        useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
 
@@ -5341,14 +5341,16 @@ describe("useQuery Hook", () => {
       });
 
       const [execute, useLazyQueryResult] = useLazyQuery(query2, {
-        variables: { id: 1 },
+        notifyOnNetworkStatusChange: true,
       });
 
       renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return (
         <>
-          <button onClick={() => execute()}>Run 2nd query</button>
+          <button onClick={() => execute({ variables: { id: 1 } })}>
+            Run 2nd query
+          </button>
           <button
             onClick={() => {
               // Intentionally use reobserve here as opposed to refetch to
@@ -5381,14 +5383,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -5407,14 +5409,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -5435,7 +5437,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
         called: true,
         loading: true,
@@ -5475,7 +5477,7 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5499,7 +5501,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5539,7 +5541,7 @@ describe("useQuery Hook", () => {
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -5599,7 +5601,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
-        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+        useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
 
@@ -5639,12 +5641,16 @@ describe("useQuery Hook", () => {
       });
 
       const [execute, useLazyQueryResult] = useLazyQuery(query2, {
-        variables: { id: 1 },
+        notifyOnNetworkStatusChange: true,
       });
 
       renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
-      return <button onClick={() => execute()}>Run 2nd query</button>;
+      return (
+        <button onClick={() => execute({ variables: { id: 1 } })}>
+          Run 2nd query
+        </button>
+      );
     }
 
     await renderStream.render(<App />, {
@@ -5665,14 +5671,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -5691,14 +5697,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -5719,7 +5725,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
         called: true,
         loading: true,
@@ -5747,7 +5753,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -5782,7 +5788,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -5849,7 +5855,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
-        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+        useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
 
@@ -5889,12 +5895,16 @@ describe("useQuery Hook", () => {
       });
 
       const [execute, useLazyQueryResult] = useLazyQuery(query2, {
-        variables: { id: 1 },
+        notifyOnNetworkStatusChange: true,
       });
 
       renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
-      return <button onClick={() => execute()}>Run 2nd query</button>;
+      return (
+        <button onClick={() => execute({ variables: { id: 1 } })}>
+          Run 2nd query
+        </button>
+      );
     }
 
     await renderStream.render(<App />, {
@@ -5915,14 +5925,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -5941,14 +5951,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -5969,7 +5979,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
         called: true,
         loading: true,
@@ -5994,7 +6004,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: {
           person: {
             __typename: "Person",

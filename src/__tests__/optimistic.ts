@@ -1313,7 +1313,6 @@ describe("optimistic mutation results", () => {
     });
 
     it("will handle dependent updates", async () => {
-      expect.assertions(1);
       const link = mockSingleLink(
         {
           request: { query },

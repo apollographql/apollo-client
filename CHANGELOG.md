@@ -1,5 +1,15 @@
 # @apollo/client
 
+## 3.13.2
+
+### Patch Changes
+
+- [#12409](https://github.com/apollographql/apollo-client/pull/12409) [`6aa2f3e`](https://github.com/apollographql/apollo-client/commit/6aa2f3e81ee0ae59da7ae0b12000bb5a55ec5c6d) Thanks [@phryneas](https://github.com/phryneas)! - To mitigate problems when Apollo Client ends up more than once in the bundle, some unique symbols were converted into `Symbol.for` calls.
+
+- [#12392](https://github.com/apollographql/apollo-client/pull/12392) [`644bb26`](https://github.com/apollographql/apollo-client/commit/644bb2662168a9bac0519be6979f0db38b0febc4) Thanks [@Joja81](https://github.com/Joja81)! - Fixes an issue where the DeepOmit type would turn optional properties into required properties. This should only affect you if you were using the omitDeep or stripTypename utilities exported by Apollo Client.
+
+- [#12404](https://github.com/apollographql/apollo-client/pull/12404) [`4332b88`](https://github.com/apollographql/apollo-client/commit/4332b886f0409145af57f26d334f86e5a1b465c5) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Show `NaN` rather than converting to `null` in debug messages from `MockLink` for unmatched `variables` values.
+
 ## 3.13.1
 
 ### Patch Changes

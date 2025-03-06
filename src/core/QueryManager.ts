@@ -1636,7 +1636,7 @@ export class QueryManager<TStore> {
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
-      networkStatus = queryInfo.networkStatus || NetworkStatus.loading
+      networkStatus: NetworkStatus
     ) => {
       const data = diff.result;
 
@@ -1738,14 +1738,17 @@ export class QueryManager<TStore> {
         if (diff.complete) {
           return {
             fromLink: false,
-            observable: resultsFromCache(diff, queryInfo.markReady()),
+            observable: resultsFromCache(diff, NetworkStatus.ready),
           };
         }
 
         if (returnPartialData || shouldNotify) {
           return {
             fromLink: true,
-            observable: concat(resultsFromCache(diff), resultsFromLink()),
+            observable: concat(
+              resultsFromCache(diff, networkStatus),
+              resultsFromLink()
+            ),
           };
         }
 
@@ -1758,7 +1761,10 @@ export class QueryManager<TStore> {
         if (diff.complete || returnPartialData || shouldNotify) {
           return {
             fromLink: true,
-            observable: concat(resultsFromCache(diff), resultsFromLink()),
+            observable: concat(
+              resultsFromCache(diff, networkStatus),
+              resultsFromLink()
+            ),
           };
         }
 
@@ -1769,7 +1775,7 @@ export class QueryManager<TStore> {
         return {
           fromLink: false,
           observable: concat(
-            resultsFromCache(readCache(), queryInfo.markReady())
+            resultsFromCache(readCache(), NetworkStatus.ready)
           ),
         };
 
@@ -1778,7 +1784,7 @@ export class QueryManager<TStore> {
           return {
             fromLink: true,
             observable: concat(
-              resultsFromCache(readCache()),
+              resultsFromCache(readCache(), networkStatus),
               resultsFromLink()
             ),
           };
@@ -1794,7 +1800,7 @@ export class QueryManager<TStore> {
             // cache.diff, but instead returns a { complete: false } stub result
             // when there is no queryInfo.diff already defined.
             observable: concat(
-              resultsFromCache(queryInfo.getDiff()),
+              resultsFromCache(queryInfo.getDiff(), networkStatus),
               resultsFromLink()
             ),
           };

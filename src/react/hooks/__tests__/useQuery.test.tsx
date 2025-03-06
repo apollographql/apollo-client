@@ -6443,7 +6443,7 @@ describe("useQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          networkStatus: NetworkStatus.setVariables,
+          networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
           variables: { id: 2 },
         });
@@ -6718,7 +6718,7 @@ describe("useQuery Hook", () => {
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
-            networkStatus: NetworkStatus.setVariables,
+            networkStatus: NetworkStatus.refetch,
             previousData: { primes: [2, 3, 5, 7, 11] },
             variables: { min: 12, max: 30 },
           });
@@ -6829,7 +6829,7 @@ describe("useQuery Hook", () => {
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
-            networkStatus: NetworkStatus.setVariables,
+            networkStatus: NetworkStatus.refetch,
             previousData: { primes: [2, 3, 5, 7, 11] },
             variables: { min: 12, max: 30 },
           });
@@ -6940,7 +6940,7 @@ describe("useQuery Hook", () => {
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
-            networkStatus: NetworkStatus.setVariables,
+            networkStatus: NetworkStatus.refetch,
             previousData: { primes: [2, 3, 5, 7, 11] },
             variables: { min: 12, max: 30 },
           });
@@ -7919,6 +7919,7 @@ describe("useQuery Hook", () => {
           nth,
           expect.anything(),
           expect.objectContaining({ fetchPolicy }),
+          expect.any(Number),
           expect.any(Number)
         );
       };
@@ -8587,7 +8588,7 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         previousData: data2,
         variables: { vin: "ABCDEFG0123456789" },
       });

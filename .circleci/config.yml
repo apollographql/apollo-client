@@ -115,7 +115,7 @@ jobs:
           command: pnpm run --if-present --filter << parameters.framework >> ci-preparations
           working_directory: integration-tests
       - run:
-          command: pnpm install
+          command: pnpm install --no-frozen-lockfile
           working_directory: integration-tests
       - run:
           command: cat pnpm-lock.yaml

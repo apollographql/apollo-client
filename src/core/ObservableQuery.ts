@@ -842,7 +842,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
     oldNetworkStatus: NetworkStatus,
-    newNetworkStatus?: NetworkStatus,
+    newNetworkStatus: NetworkStatus,
     query?: DocumentNode
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
@@ -1031,7 +1031,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { observable, fromLink } = this.fetch(
       options,
       oldNetworkStatus,
-      newNetworkStatus,
+      newNetworkStatus ?? NetworkStatus.loading,
       query
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {

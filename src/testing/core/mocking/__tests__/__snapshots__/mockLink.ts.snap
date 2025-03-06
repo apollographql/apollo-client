@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`shows undefined and NaN in debug messages 1`] = `
+"No more mocked responses for the query: query ($id: ID!, $filter: Boolean) {
+  usersByTestId(id: $id, filter: $filter) {
+    id
+  }
+}
+Expected variables: {\\"id\\":NaN,\\"filter\\":<undefined>}
+
+Failed to match 1 mock for this query. The mocked response had the following variables:
+  {\\"id\\":1,\\"filter\\":true}
+"
+`;

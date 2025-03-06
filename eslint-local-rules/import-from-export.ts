@@ -1,5 +1,4 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
-import type { TSESTree as AST } from "@typescript-eslint/types";
 
 import pkgJson from "../package.json" with { type: "json" };
 import { dirname, resolve, sep } from "node:path";

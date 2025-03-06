@@ -82,7 +82,8 @@ export const addExports: BuildStep = async (options) => {
       const target = value.replace(/\.ts$/, `.${options.jsExt}`);
       existing.module = target;
       existing["module-sync"] = target;
-      //existing.import = target;
+      // this will be handled by `default`, which directly follows, so we can omit it
+      // existing.import = target;
       existing.default = target;
     } else {
       existing.types.require = value.replace(/\.ts$/, `.d.${options.tsExt}`);

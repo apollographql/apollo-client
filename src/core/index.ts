@@ -1,4 +1,5 @@
 /* Core */
+
 export type { ApolloClientOptions, DefaultOptions } from "./ApolloClient.js";
 export { ApolloClient, mergeOptions } from "./ApolloClient.js";
 export type { FetchMoreOptions } from "./ObservableQuery.js";

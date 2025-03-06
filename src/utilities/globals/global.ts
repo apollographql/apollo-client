@@ -1,11 +1,5 @@
 import { maybe } from "./maybe.js";
 
-declare global {
-  interface Window {
-    __DEV__?: boolean;
-  }
-}
-
 export default (maybe(() => globalThis) ||
   maybe(() => window) ||
   maybe(() => self) ||

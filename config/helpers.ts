@@ -2,7 +2,7 @@ import * as path from "path";
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
 import * as tsParser from "recast/parsers/typescript.js";
-import { glob as nodeGlob, unlink } from "node:fs/promises";
+import { glob, unlink } from "node:fs/promises";
 import { readFile, rm, mkdir, symlink } from "node:fs/promises";
 import * as assert from "node:assert";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
@@ -23,7 +23,7 @@ export function reprint(ast: ReturnType<typeof reparse>) {
 type MaybePromise<T> = T | Promise<T>;
 
 export async function applyRecast({
-  glob,
+  glob: globString,
   cwd,
   transformStep,
 }: {
@@ -35,7 +35,7 @@ export async function applyRecast({
     relativeSourcePath: string;
   }) => MaybePromise<{ ast: recast.types.ASTNode; targetFileName?: string }>;
 }) {
-  for await (let sourceFile of nodeGlob(glob, {
+  for await (let sourceFile of glob(globString, {
     withFileTypes: true,
     cwd,
     exclude(fileName) {

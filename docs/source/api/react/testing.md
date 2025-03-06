@@ -44,23 +44,6 @@ An array containing GraphQL operation definitions and their corresponding mocked
 <tr>
 <td>
 
-###### `addTypename`
-
-`Boolean`
-</td>
-<td>
-
-If `true`, the `MockedProvider` automatically adds the `__typename` field to every object type included in every executed query. Set this to `false` if the responses in your `mocks` array do _not_ include `__typename` fields. See [Setting `addTypename`](../../development-testing/testing/#setting-addtypename).
-
-The default value is `true`.
-
-</td>
-</tr>
-
-
-<tr>
-<td>
-
 ###### `defaultOptions`
 
 `DefaultOptions`

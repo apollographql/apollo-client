@@ -841,6 +841,12 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
     variables?: Partial<TVariables>;
 }
 
+// @public (undocumented)
+interface FetchObservableInfo {
+    // (undocumented)
+    fromLink: boolean;
+}
+
 // @public
 export type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache" | "standby";
 
@@ -1638,6 +1644,14 @@ export interface NormalizedCacheObject {
     };
 }
 
+// Warning: (ae-forgotten-export) The symbol "FetchObservableInfo" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+interface ObservableAndInfo<TData> extends FetchObservableInfo {
+    // (undocumented)
+    observable: Observable<ApolloQueryResult<TData>>;
+}
+
 // @public (undocumented)
 export class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>> {
     constructor({ queryManager, queryInfo, options, }: {
@@ -1834,7 +1848,6 @@ class QueryInfo {
     init(query: {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
-        networkStatus?: NetworkStatus;
         observableQuery?: ObservableQuery<any, any>;
         lastRequestId?: number;
     }): this;
@@ -1842,16 +1855,10 @@ class QueryInfo {
     lastRequestId: number;
     // (undocumented)
     listeners: Set<QueryListener>;
-    // (undocumented)
-    markError(): void;
-    // (undocumented)
-    markReady(): NetworkStatus;
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
-    // (undocumented)
-    networkStatus?: NetworkStatus;
     // (undocumented)
     notify(): void;
     // (undocumented)
@@ -1901,6 +1908,10 @@ class QueryManager<TStore> {
     readonly documentTransform: DocumentTransform;
     // (undocumented)
     protected fetchCancelFns: Map<string, (error: any) => any>;
+    // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    fetchObservableWithInfo<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus, query?: DocumentNode | TypedDocumentNode<TData, TVars>, oldNetworkStatus?: NetworkStatus): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
@@ -2490,10 +2501,10 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:171:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:429:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:170:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:428:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

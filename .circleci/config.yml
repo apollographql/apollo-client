@@ -200,12 +200,12 @@ workflows:
               - framework: next
                 react: next
               - framework: next
-                react: 18
+                react: "18.3.0"
               # node doesn't use React in the tests
               - framework: node
                 react: next
               - framework: node
-                react: 18
+                react: "18.3.0"
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:

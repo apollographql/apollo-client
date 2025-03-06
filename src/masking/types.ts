@@ -1,4 +1,5 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+
 import type {
   ContainsFragmentsRefs,
   IsAny,
@@ -6,6 +7,7 @@ import type {
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
 } from "./internal/types.js";
+
 import type { Prettify } from "@apollo/client/utilities";
 
 export interface DataMasking {}

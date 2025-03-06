@@ -1,25 +1,11 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
-import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
 
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type {
-  Concast,
-  Observer,
-  ObservableSubscription,
-} from "@apollo/client/utilities";
-import {
-  cloneDeep,
-  compact,
-  getOperationDefinition,
-  Observable,
-  iterateObserversSafely,
-  fixObservableSubclass,
-  getQueryDefinition,
-  preventUnhandledRejection,
-} from "@apollo/client/utilities";
-import { ApolloError, isApolloError } from "@apollo/client/errors";
+import type { TODO } from "../utilities/types/TODO.js";
+
+import { equalByQuery } from "./equalByQuery.js";
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -27,20 +13,36 @@ import type {
   TypedDocumentNode,
 } from "./types.js";
 import type {
-  WatchQueryOptions,
   FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
   NextFetchPolicyContext,
-  WatchQueryFetchPolicy,
+  SubscribeToMoreOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from "./watchQueryOptions.js";
-import type { QueryInfo } from "./QueryInfo.js";
+
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
-import { equalByQuery } from "./equalByQuery.js";
-import type { TODO } from "../utilities/types/TODO.js";
+import { ApolloError, isApolloError } from "@apollo/client/errors";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type {
+  Concast,
+  ObservableSubscription,
+  Observer,
+} from "@apollo/client/utilities";
+import {
+  cloneDeep,
+  compact,
+  fixObservableSubclass,
+  getOperationDefinition,
+  getQueryDefinition,
+  iterateObserversSafely,
+  Observable,
+  preventUnhandledRejection,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const { assign, hasOwnProperty } = Object;
 

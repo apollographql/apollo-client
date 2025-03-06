@@ -1,31 +1,32 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { DefinitionNode } from "graphql";
 
-import { ApolloLink } from "@apollo/client/link/core";
-import { Observable, hasDirectives } from "@apollo/client/utilities";
-import { serializeFetchParameter } from "./serializeFetchParameter.js";
-import { selectURI } from "./selectURI.js";
+import { checkFetcher } from "./checkFetcher.js";
 import {
   handleError,
-  readMultipartBody,
   parseAndCheckHttpResponse,
+  readMultipartBody,
 } from "./parseAndCheckHttpResponse.js";
-import { checkFetcher } from "./checkFetcher.js";
+import { rewriteURIForGET } from "./rewriteURIForGET.js";
 import type { HttpOptions } from "./selectHttpOptionsAndBody.js";
 import {
-  selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
+  selectHttpOptionsAndBodyInternal,
 } from "./selectHttpOptionsAndBody.js";
-import { rewriteURIForGET } from "./rewriteURIForGET.js";
-import { fromError, filterOperationVariables } from "@apollo/client/link/utils";
+import { selectURI } from "./selectURI.js";
+import { serializeFetchParameter } from "./serializeFetchParameter.js";
+
+import { ApolloLink } from "@apollo/client/link/core";
+import { filterOperationVariables, fromError } from "@apollo/client/link/utils";
+import { hasDirectives, Observable } from "@apollo/client/utilities";
 import {
-  maybe,
   getMainDefinition,
+  maybe,
   removeClientSetsFromDocument,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const backupFetch = maybe(() => fetch);
 

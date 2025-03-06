@@ -1,55 +1,57 @@
 // externals
+import { waitFor } from "@testing-library/react";
+import { DocumentNode, GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
-import { gql } from "graphql-tag";
-import { DocumentNode, GraphQLError } from "graphql";
-import {
-  InvariantError,
-  setVerbosity,
-} from "@apollo/client/utilities/invariant";
 
+import {
+  MockApolloLink,
+  MockLink,
+} from "../../../testing/core/mocking/mockLink.js";
+import {
+  mockDeferStream,
+  ObservableStream,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
 import {
   Observable,
   Observer,
 } from "../../../utilities/observables/Observable.js";
+import { NetworkStatus } from "../../networkStatus.js";
+import { QueryManager } from "../../QueryManager.js";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../../watchQueryOptions.js";
+import { mockFetchQuery } from "../ObservableQuery.js";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
 import {
   ApolloLink,
   FetchResult,
   type RequestHandler,
 } from "@apollo/client/link/core";
-import { InMemoryCache } from "@apollo/client/cache";
+
 
 // mocks
-import {
-  MockApolloLink,
-  MockLink,
-} from "../../../testing/core/mocking/mockLink.js";
 
 // core
-import { NetworkStatus } from "../../networkStatus.js";
-import {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../../watchQueryOptions.js";
-import { QueryManager } from "../../QueryManager.js";
 
-import { ApolloError } from "@apollo/client/errors";
 
 // testing utils
-import { waitFor } from "@testing-library/react";
 import { wait } from "@apollo/client/testing/core";
-import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
-import { mockFetchQuery } from "../ObservableQuery.js";
 import {
   addTypenameToDocument,
   Concast,
   print,
 } from "@apollo/client/utilities";
 import {
-  mockDeferStream,
-  ObservableStream,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
+  InvariantError,
+  setVerbosity,
+} from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

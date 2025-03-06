@@ -1,11 +1,12 @@
-import { SubscriptionClient } from "subscriptions-transport-ws";
 import { ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-import { Observable } from "@apollo/client/utilities";
+import { ObservableStream } from "../../../testing/internal/index.js";
+
 import { execute } from "@apollo/client/link/core";
 import { WebSocketLink } from "@apollo/client/link/ws";
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { Observable } from "@apollo/client/utilities";
 
 const query = gql`
   query SampleQuery {

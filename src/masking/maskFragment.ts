@@ -1,23 +1,25 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { Kind } from "graphql";
+import equal from "@wry/equality";
 import type { FragmentDefinitionNode } from "graphql";
+import { Kind } from "graphql";
+
+import { maskDefinition } from "./maskDefinition.js";
+import {
+  MapImpl,
+  SetImpl,
+  warnOnImproperCacheImplementation,
+} from "./utils.js";
+
 import type {
   ApolloCache,
   DocumentNode,
   TypedDocumentNode,
 } from "@apollo/client/core";
 import {
-  MapImpl,
-  SetImpl,
-  warnOnImproperCacheImplementation,
-} from "./utils.js";
-import { invariant } from "@apollo/client/utilities/invariant";
-import equal from "@wry/equality";
-import { maskDefinition } from "./maskDefinition.js";
-import {
   createFragmentMap,
   getFragmentDefinitions,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */
 export function maskFragment<TData = unknown>(

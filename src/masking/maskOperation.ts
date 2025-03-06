@@ -1,21 +1,22 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import type {
-  ApolloCache,
-  DocumentNode,
-  TypedDocumentNode,
-} from "@apollo/client/core";
-import { invariant } from "@apollo/client/utilities/invariant";
-import {
-  createFragmentMap,
-  getFragmentDefinitions,
-  getOperationDefinition,
-} from "@apollo/client/utilities";
 import { maskDefinition } from "./maskDefinition.js";
 import {
   MapImpl,
   SetImpl,
   warnOnImproperCacheImplementation,
 } from "./utils.js";
+
+import type {
+  ApolloCache,
+  DocumentNode,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import {
+  createFragmentMap,
+  getFragmentDefinitions,
+  getOperationDefinition,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */
 export function maskOperation<TData = unknown>(

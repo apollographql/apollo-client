@@ -1,10 +1,11 @@
-import { invariant } from "@apollo/client/utilities/invariant";
 
-import * as React from "rehackt";
 import type * as ReactTypes from "react";
+import * as React from "rehackt";
+
+import { getApolloContext } from "./ApolloContext.js";
 
 import type { ApolloClient } from "@apollo/client/core";
-import { getApolloContext } from "./ApolloContext.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export interface ApolloProviderProps<TCache> {
   client: ApolloClient<TCache>;

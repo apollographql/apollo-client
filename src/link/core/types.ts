@@ -1,5 +1,6 @@
 import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
+
 import type { DefaultContext } from "@apollo/client/core";
 export type { DocumentNode };
 

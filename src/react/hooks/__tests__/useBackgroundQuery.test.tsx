@@ -1,75 +1,77 @@
-import React, { Suspense } from "react";
-import { act, screen, renderHook } from "@testing-library/react";
+import { act, renderHook, screen } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
+import equal from "@wry/equality";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import React, { Suspense } from "react";
 import {
   ErrorBoundary as ReactErrorBoundary,
   FallbackProps,
 } from "react-error-boundary";
-import { expectTypeOf } from "expect-type";
-import { GraphQLError } from "graphql";
-import {
-  gql,
-  ApolloError,
-  ApolloClient,
-  ErrorPolicy,
-  NetworkStatus,
-  TypedDocumentNode,
-  ApolloLink,
-  Observable,
-  split,
-} from "@apollo/client/core";
-import {
-  MockedResponse,
-  MockLink,
-  MockSubscriptionLink,
-  mockSingleLink,
-  wait,
-} from "@apollo/client/testing";
-import {
-  concatPagination,
-  offsetLimitPagination,
-  DeepPartial,
-  getMainDefinition,
-} from "@apollo/client/utilities";
-import { useBackgroundQuery } from "../useBackgroundQuery.js";
-import { UseReadQueryResult, useReadQuery } from "../useReadQuery.js";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { QueryRef, QueryReference } from "@apollo/client/react/internal";
-import { InMemoryCache } from "@apollo/client/cache";
-import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
-import equal from "@wry/equality";
+
 import {
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
   SubscribeToMoreFunction,
+  SubscribeToMoreOptions,
 } from "../../../core/watchQueryOptions.js";
-import { skipToken } from "../constants.js";
 import {
-  PaginatedCaseData,
-  SimpleCaseData,
-  VariablesCaseData,
-  VariablesCaseVariables,
-  createMockWrapper,
+  addDelayToMocks,
   createClientWrapper,
+  createMockWrapper,
+  PaginatedCaseData,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
+  SimpleCaseData,
   spyOnConsole,
-  addDelayToMocks,
+  VariablesCaseData,
+  VariablesCaseVariables,
 } from "../../../testing/internal/index.js";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
-import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
+import { skipToken } from "../constants.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-} from "@testing-library/react-render-stream";
+  ApolloClient,
+  ApolloError,
+  ApolloLink,
+  ErrorPolicy,
+  gql,
+  NetworkStatus,
+  Observable,
+  split,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { QueryRef, QueryReference } from "@apollo/client/react/internal";
+import {
+  MockedResponse,
+  MockLink,
+  mockSingleLink,
+  MockSubscriptionLink,
+  wait,
+} from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
+import {
+  concatPagination,
+  DeepPartial,
+  getMainDefinition,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
 
 afterEach(() => {
   jest.useRealTimers();

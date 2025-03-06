@@ -1,20 +1,22 @@
-import { gql } from "graphql-tag";
-import { print } from "graphql";
-import { times } from "lodash";
-import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
-import { ApolloLink, execute } from "@apollo/client/link/core";
-import { Observable } from "@apollo/client/utilities";
+import fetchMock from "fetch-mock";
+import { print } from "graphql";
+import { gql } from "graphql-tag";
+import { times } from "lodash";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
 import { createHttpLink } from "../../http/createHttpLink.js";
 
+import { ApolloLink, execute } from "@apollo/client/link/core";
 import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
-import { wait } from "@apollo/client/testing";
 import { toPromise } from "@apollo/client/link/utils";
-import { ObservableStream } from "../../../testing/internal/index.js";
+import { wait } from "@apollo/client/testing";
+import { Observable } from "@apollo/client/utilities";
+
 
 // Necessary configuration in order to mock multiple requests
 // to a single (/graphql) endpoint

@@ -1,8 +1,9 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
 import * as React from "rehackt";
 
 import { canUseLayoutEffect } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 
 let didWarnUncachedGetSnapshot = false;
 

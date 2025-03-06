@@ -1,29 +1,31 @@
+import { screen } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { buildSchema } from "graphql";
 import * as React from "react";
+import {
+  ErrorBoundary as ReactErrorBoundary,
+  FallbackProps,
+} from "react-error-boundary";
+
+import { createClientWrapper, spyOnConsole } from "../../internal/index.js";
+import { createSchemaFetch } from "../createSchemaFetch.js";
+import { createTestSchema } from "../createTestSchema.js";
+
+import type { TypedDocumentNode } from "@apollo/client/core";
 import {
   ApolloClient,
   ApolloError,
-  InMemoryCache,
   gql,
+  InMemoryCache,
 } from "@apollo/client/core";
-import type { TypedDocumentNode } from "@apollo/client/core";
-import { spyOnConsole, createClientWrapper } from "../../internal/index.js";
-import { createTestSchema } from "../createTestSchema.js";
-import { buildSchema } from "graphql";
 import type { UseSuspenseQueryResult } from "@apollo/client/react";
 import { useMutation, useSuspenseQuery } from "@apollo/client/react";
-import { userEvent } from "@testing-library/user-event";
-import { screen } from "@testing-library/react";
-import { createSchemaFetch } from "../createSchemaFetch.js";
-import {
-  FallbackProps,
-  ErrorBoundary as ReactErrorBoundary,
-} from "react-error-boundary";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-} from "@testing-library/react-render-stream";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

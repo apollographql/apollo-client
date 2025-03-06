@@ -1,62 +1,62 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
-
 import type {
-  InlineFragmentNode,
-  FragmentDefinitionNode,
-  SelectionSetNode,
   FieldNode,
+  FragmentDefinitionNode,
+  InlineFragmentNode,
+  SelectionSetNode,
 } from "graphql";
 
 import type {
-  FragmentMap,
-  StoreValue,
-  StoreObject,
-  Reference,
-} from "@apollo/client/utilities";
+  CanReadFunction,
+  FieldSpecifier,
+  ReadFieldFunction,
+  ReadFieldOptions,
+  SafeReadonly,
+  ToReferenceFunction,
+} from "../core/types/common.js";
+
 import {
-  storeKeyNameFromField,
-  argumentsObjectFromField,
-  isReference,
-  getStoreKeyName,
-  isNonNullObject,
-  stringifyForDisplay,
-} from "@apollo/client/utilities";
+  defaultDataIdFromObject,
+  fieldNameFromStoreName,
+  hasOwn,
+  isArray,
+  selectionSetMatchesResult,
+  storeValueIsStoreObject,
+  TypeOrFieldNameRegExp,
+} from "./helpers.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
+import {
+  keyArgsFnFromSpecifier,
+  keyFieldsFnFromSpecifier,
+} from "./key-extractor.js";
+import { cacheSlot } from "./reactiveVars.js";
 import type {
   IdGetter,
   MergeInfo,
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-import {
-  hasOwn,
-  fieldNameFromStoreName,
-  storeValueIsStoreObject,
-  selectionSetMatchesResult,
-  TypeOrFieldNameRegExp,
-  defaultDataIdFromObject,
-  isArray,
-} from "./helpers.js";
-import { cacheSlot } from "./reactiveVars.js";
-import type { InMemoryCache } from "./inMemoryCache.js";
-import type {
-  SafeReadonly,
-  FieldSpecifier,
-  ToReferenceFunction,
-  ReadFieldFunction,
-  ReadFieldOptions,
-  CanReadFunction,
-} from "../core/types/common.js";
 import type { WriteContext } from "./writeToStore.js";
 
-import {
-  keyArgsFnFromSpecifier,
-  keyFieldsFnFromSpecifier,
-} from "./key-extractor.js";
 import { disableWarningsSlot } from "@apollo/client/masking";
+import type {
+  FragmentMap,
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+import {
+  argumentsObjectFromField,
+  getStoreKeyName,
+  isNonNullObject,
+  isReference,
+  storeKeyNameFromField,
+  stringifyForDisplay,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

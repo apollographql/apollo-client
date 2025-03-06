@@ -1,44 +1,45 @@
-import type * as ReactTypes from "react";
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type * as ReactTypes from "react";
 
+import type {
+  MutationSharedOptions,
+  SharedWatchQueryOptions,
+} from "../../core/watchQueryOptions.js";
+
+import type {
+  ApolloCache,
+  ApolloClient,
+  ApolloQueryResult,
+  DefaultContext,
+  ErrorPolicy,
+  FetchMoreQueryOptions,
+  FetchPolicy,
+  InternalRefetchQueriesInclude,
+  NetworkStatus,
+  ObservableQuery,
+  OperationVariables,
+  RefetchWritePolicy,
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "@apollo/client/core";
+import type { ApolloError } from "@apollo/client/errors";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
   Observable,
   ObservableSubscription,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
-import type { FetchResult } from "@apollo/client/link/core";
-import type { ApolloError } from "@apollo/client/errors";
-import type {
-  ApolloCache,
-  ApolloClient,
-  DefaultContext,
-  FetchPolicy,
-  NetworkStatus,
-  ObservableQuery,
-  OperationVariables,
-  InternalRefetchQueriesInclude,
-  WatchQueryOptions,
-  WatchQueryFetchPolicy,
-  ApolloQueryResult,
-  FetchMoreQueryOptions,
-  ErrorPolicy,
-  RefetchWritePolicy,
-  SubscribeToMoreFunction,
-  UpdateQueryMapFn,
-} from "@apollo/client/core";
-import type {
-  MutationSharedOptions,
-  SharedWatchQueryOptions,
-} from "../../core/watchQueryOptions.js";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 
 /* QueryReference type */
 
 export type {
-  QueryReference,
-  QueryRef,
   PreloadedQueryRef,
+  QueryRef,
+  QueryReference,
 } from "../internal/index.js";
 
 /* Common types */

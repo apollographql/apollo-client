@@ -1,13 +1,14 @@
-import { Observable } from "@apollo/client/utilities";
 import {
   handleError,
   readMultipartBody,
 } from "../../../link/http/parseAndCheckHttpResponse.js";
-import { maybe } from "@apollo/client/utilities";
-import { serializeFetchParameter } from "@apollo/client/core";
 import type { Body } from "../../../link/http/selectHttpOptionsAndBody.js";
-import { generateOptionsForMultipartSubscription } from "../shared.js";
 import type { CreateMultipartSubscriptionOptions } from "../shared.js";
+import { generateOptionsForMultipartSubscription } from "../shared.js";
+
+import { serializeFetchParameter } from "@apollo/client/core";
+import { maybe } from "@apollo/client/utilities";
+import { Observable } from "@apollo/client/utilities";
 
 const backupFetch = maybe(() => fetch);
 

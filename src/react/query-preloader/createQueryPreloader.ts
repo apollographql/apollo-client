@@ -1,3 +1,5 @@
+import { wrapHook } from "../hooks/internal/index.js";
+
 import type {
   ApolloClient,
   DefaultContext,
@@ -9,17 +11,16 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import type {
-  DeepPartial,
-  OnlyRequiredProperties,
-} from "@apollo/client/utilities";
+import type { NoInfer, VariablesOption } from "@apollo/client/react";
+import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
   InternalQueryReference,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { PreloadedQueryRef } from "@apollo/client/react/internal";
-import type { NoInfer, VariablesOption } from "@apollo/client/react";
-import { wrapHook } from "../hooks/internal/index.js";
+import type {
+  DeepPartial,
+  OnlyRequiredProperties,
+} from "@apollo/client/utilities";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,

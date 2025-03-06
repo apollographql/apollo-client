@@ -1,7 +1,20 @@
-import React from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { SubscriptionHookOptions } from "../../types/types.js";
+import { useSubscription } from "../useSubscription.js";
+
+import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloError,
@@ -10,22 +23,10 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
-import { useSubscription } from "../useSubscription.js";
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import { SubscriptionHookOptions } from "../../types/types.js";
-import { ErrorBoundary } from "react-error-boundary";
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import { GraphQLError } from "graphql";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
-import { expectTypeOf } from "expect-type";
-import {
-  disableActEnvironment,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
 
 const IS_REACT_17 = React.version.startsWith("17");
 

@@ -1,26 +1,27 @@
 import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache.js";
-import { ReactiveVar, makeVar } from "../reactiveVars.js";
-import {
-  Reference,
-  StoreObject,
-  ApolloClient,
-  NetworkStatus,
-  TypedDocumentNode,
-  DocumentNode,
-} from "@apollo/client/core";
-import { MissingFieldError } from "@apollo/client/cache";
-import {
-  relayStylePagination,
-  stringifyForDisplay,
-} from "@apollo/client/utilities";
-import { FieldPolicy, StorageType } from "../policies.js";
-import { MockLink } from "@apollo/client/testing/core";
 import {
   ObservableStream,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { FieldPolicy, StorageType } from "../policies.js";
+import { makeVar, ReactiveVar } from "../reactiveVars.js";
+
+import { MissingFieldError } from "@apollo/client/cache";
+import {
+  ApolloClient,
+  DocumentNode,
+  NetworkStatus,
+  Reference,
+  StoreObject,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { MockLink } from "@apollo/client/testing/core";
+import {
+  relayStylePagination,
+  stringifyForDisplay,
+} from "@apollo/client/utilities";
 
 function reverse(s: string) {
   return s.split("").reverse().join("");

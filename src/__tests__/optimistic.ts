@@ -1,26 +1,24 @@
-import { from, ObservableInput } from "rxjs";
-import { take, toArray, map } from "rxjs/operators";
-import { assign, cloneDeep } from "lodash";
 import { gql } from "graphql-tag";
-
-import {
-  ApolloClient,
-  makeReference,
-  ApolloLink,
-  ApolloCache,
-  MutationQueryReducersMap,
-  TypedDocumentNode,
-  ApolloError,
-} from "@apollo/client/core";
+import { assign, cloneDeep } from "lodash";
+import { from, ObservableInput } from "rxjs";
+import { map, take, toArray } from "rxjs/operators";
 
 import { QueryManager } from "../core/QueryManager.js";
+import { ObservableStream } from "../testing/internal/index.js";
 
 import { Cache, InMemoryCache } from "@apollo/client/cache";
-
-import { Observable, addTypenameToDocument } from "@apollo/client/utilities";
-
+import {
+  ApolloCache,
+  ApolloClient,
+  ApolloError,
+  ApolloLink,
+  makeReference,
+  MutationQueryReducersMap,
+  TypedDocumentNode,
+} from "@apollo/client/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
-import { ObservableStream } from "../testing/internal/index.js";
+import { addTypenameToDocument, Observable } from "@apollo/client/utilities";
+
 
 describe("optimistic mutation results", () => {
   const query = gql`

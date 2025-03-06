@@ -1,4 +1,8 @@
 import { FragmentSpreadNode, Kind, visit } from "graphql";
+
+import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+
 import {
   ApolloCache,
   ApolloClient,
@@ -14,17 +18,15 @@ import {
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { MaskedDocumentNode } from "@apollo/client/masking";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
 } from "@apollo/client/testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
-import { invariant } from "@apollo/client/utilities/invariant";
-import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
 import { isSubscriptionOperation } from "@apollo/client/utilities";
-import { MaskedDocumentNode } from "@apollo/client/masking";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';

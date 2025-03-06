@@ -1,13 +1,13 @@
 import { print } from "graphql";
-import { gql } from "graphql-tag";
 import { FragmentDefinitionNode, OperationDefinitionNode } from "graphql";
+import { gql } from "graphql-tag";
 
 import {
   checkDocument,
-  getFragmentDefinitions,
-  getQueryDefinition,
   getDefaultValues,
+  getFragmentDefinitions,
   getOperationName,
+  getQueryDefinition,
 } from "../getFromAST.js";
 
 describe("AST utility functions", () => {

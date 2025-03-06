@@ -1,10 +1,11 @@
 import type { MatcherFunction } from "expect";
 import type { DocumentNode } from "graphql";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type { OperationVariables } from "@apollo/client/core";
 import { ApolloClient } from "@apollo/client/core";
-import { canonicalStringify } from "@apollo/client/cache";
-import { getSuspenseCache } from "@apollo/client/react/internal";
 import type { CacheKey } from "@apollo/client/react/internal";
+import { getSuspenseCache } from "@apollo/client/react/internal";
 
 export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
   [

@@ -2,8 +2,9 @@ import {
   KEEP,
   removeTypenameFromVariables,
 } from "../removeTypenameFromVariables.js";
+
+import { gql, Observable } from "@apollo/client/core";
 import { ApolloLink, Operation } from "@apollo/client/link/core";
-import { Observable, gql } from "@apollo/client/core";
 import { createOperation, toPromise } from "@apollo/client/link/utils";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &

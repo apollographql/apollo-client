@@ -1,25 +1,26 @@
+
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { expectTypeOf } from "expect-type";
+import { Kind } from "graphql";
 import { gql } from "graphql-tag";
 
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloError,
   ApolloQueryResult,
   DefaultOptions,
+  makeReference,
   ObservableQuery,
   QueryOptions,
-  makeReference,
 } from "@apollo/client/core";
-import { Kind } from "graphql";
-
-import { DeepPartial, Observable } from "@apollo/client/utilities";
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
-import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { invariant } from "@apollo/client/utilities/invariant";
-import { expectTypeOf } from "expect-type";
 import { Masked } from "@apollo/client/masking";
+import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {

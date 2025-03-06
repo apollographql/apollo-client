@@ -1,25 +1,26 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import type { Operation, FetchResult } from "@apollo/client/link/core";
+import { filterOperationVariables } from "../utils/filterOperationVariables.js";
+
+import { BatchLink } from "@apollo/client/link/batch";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import {
-  Observable,
-  hasDirectives,
-  maybe,
-  removeClientSetsFromDocument,
-} from "@apollo/client/utilities";
-import { fromError } from "@apollo/client/link/utils";
 import type { HttpOptions } from "@apollo/client/link/http";
 import {
-  serializeFetchParameter,
-  selectURI,
-  parseAndCheckHttpResponse,
   checkFetcher,
-  selectHttpOptionsAndBodyInternal,
   defaultPrinter,
   fallbackHttpConfig,
+  parseAndCheckHttpResponse,
+  selectHttpOptionsAndBodyInternal,
+  selectURI,
+  serializeFetchParameter,
 } from "@apollo/client/link/http";
-import { BatchLink } from "@apollo/client/link/batch";
-import { filterOperationVariables } from "../utils/filterOperationVariables.js";
+import { fromError } from "@apollo/client/link/utils";
+import {
+  hasDirectives,
+  maybe,
+  Observable,
+  removeClientSetsFromDocument,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 
 export namespace BatchHttpLink {
   export type Options = Pick<

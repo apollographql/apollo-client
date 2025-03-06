@@ -1,39 +1,41 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
-import type { OptimisticDependencyFunction } from "optimism";
-import { dep } from "optimism";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
+import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
+import type { OptimisticDependencyFunction } from "optimism";
+import { dep } from "optimism";
 
-import type {
-  StoreValue,
-  StoreObject,
-  Reference,
-} from "@apollo/client/utilities";
-import {
-  isReference,
-  makeReference,
-  DeepMerger,
-  maybeDeepFreeze,
-  canUseWeakMap,
-  isNonNullObject,
-} from "@apollo/client/utilities";
-import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
-import { hasOwn, fieldNameFromStoreName } from "./helpers.js";
-import type { Policies, StorageType } from "./policies.js";
 import type { Cache } from "../core/types/Cache.js";
 import type {
-  SafeReadonly,
+  CanReadFunction,
+  DeleteModifier,
+  InvalidateModifier,
   Modifier,
+  ModifierDetails,
   Modifiers,
   ReadFieldOptions,
+  SafeReadonly,
   ToReferenceFunction,
-  CanReadFunction,
-  InvalidateModifier,
-  DeleteModifier,
-  ModifierDetails,
 } from "../core/types/common.js";
-import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
+
+import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
+import type { Policies, StorageType } from "./policies.js";
+import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
+
+import type {
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+import {
+  canUseWeakMap,
+  DeepMerger,
+  isNonNullObject,
+  isReference,
+  makeReference,
+  maybeDeepFreeze,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const DELETE: DeleteModifier = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;

@@ -1,10 +1,11 @@
+import type { DocumentNode } from "graphql";
+
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 
@@ -19,68 +20,69 @@ import {
   isFullyUnmaskedOperation,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
-import type { Cache, ApolloCache } from "@apollo/client/cache";
+import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
-
 import type {
-  ObservableSubscription,
   ConcastSourcesArray,
   DeepPartial,
+  ObservableSubscription,
 } from "@apollo/client/utilities";
 import {
+  asyncMap,
+  Concast,
+  DocumentTransform,
   getDefaultValues,
+  getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
-  hasClientExports,
   graphQLResultHasError,
-  getGraphQLErrorsFromResult,
-  Observable,
-  asyncMap,
-  isNonEmptyArray,
-  Concast,
-  makeUniqueId,
+  hasClientExports,
   isDocumentNode,
+  isNonEmptyArray,
   isNonNullObject,
-  DocumentTransform,
+  makeUniqueId,
+  Observable,
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import {
   ApolloError,
-  isApolloError,
   graphQLResultHasProtocolErrors,
+  isApolloError,
 } from "@apollo/client/errors";
+
 import type {
-  QueryOptions,
-  WatchQueryOptions,
-  SubscriptionOptions,
-  MutationOptions,
   ErrorPolicy,
   MutationFetchPolicy,
+  MutationOptions,
+  QueryOptions,
+  SubscriptionOptions,
   WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from "./watchQueryOptions.js";
-import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type {
   ApolloQueryResult,
-  OperationVariables,
-  MutationUpdaterFunction,
-  OnQueryUpdated,
+  DefaultContext,
   InternalRefetchQueriesInclude,
+  InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
-  InternalRefetchQueriesMap,
-  DefaultContext,
+  MutationUpdaterFunction,
+  OnQueryUpdated,
+  OperationVariables,
 } from "./types.js";
 import type { LocalState } from "./LocalState.js";
-
 import {
+  CacheWriteBehavior,
   QueryInfo,
   shouldWriteResult,
-  CacheWriteBehavior,
 } from "./QueryInfo.js";
+
 import type { ApolloErrorOptions } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { print } from "@apollo/client/utilities";
+
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
@@ -109,7 +111,9 @@ interface TransformCacheEntry {
 }
 
 import type { DefaultOptions } from "./ApolloClient.js";
+
 import { Trie } from "@wry/trie";
+
 import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import { maskFragment, maskOperation } from "@apollo/client/masking";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";

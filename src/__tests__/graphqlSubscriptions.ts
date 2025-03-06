@@ -1,11 +1,12 @@
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 
-import { ApolloClient } from "@apollo/client/core";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+
 import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
 import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { mockObservableLink } from "@apollo/client/testing";
-import { GraphQLError } from "graphql";
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("GraphQL Subscriptions", () => {
   const results = [

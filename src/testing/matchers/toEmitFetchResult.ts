@@ -1,7 +1,9 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
+
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
+
 import type { FetchResult } from "@apollo/client/core";
 
 export const toEmitFetchResult: MatcherFunction<

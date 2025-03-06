@@ -10,8 +10,8 @@ export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export type { UseBackgroundQueryResult } from "./useBackgroundQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
 export type {
-  UseSuspenseFragmentResult,
   UseSuspenseFragmentOptions,
+  UseSuspenseFragmentResult,
 } from "./useSuspenseFragment.js";
 export { useSuspenseFragment } from "./useSuspenseFragment.js";
 export type {

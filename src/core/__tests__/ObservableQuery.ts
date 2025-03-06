@@ -1,42 +1,41 @@
-import { gql } from "graphql-tag";
-import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { waitFor } from "@testing-library/react";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import { SubscriptionObserver } from "zen-observable-ts";
 
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
+import { QueryManager } from "../QueryManager.js";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { ObservableQuery } from "../ObservableQuery.js";
-import { QueryManager } from "../QueryManager.js";
-
-import {
-  DeepPartial,
-  DocumentTransform,
-  Observable,
-  removeDirectivesFromDocument,
-} from "@apollo/client/utilities";
-import { ApolloLink, FetchResult } from "@apollo/client/link/core";
-import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloError } from "@apollo/client/errors";
-
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import {
   MockLink,
   MockSubscriptionLink,
   tick,
   wait,
 } from "@apollo/client/testing";
-import { expectTypeOf } from "expect-type";
-
-import { SubscriptionObserver } from "zen-observable-ts";
-import { waitFor } from "@testing-library/react";
 import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../testing/internal/index.js";
+  DeepPartial,
+  DocumentTransform,
+  Observable,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
 
-import type { SourcesAndInfo, ConcastAndInfo } from "../QueryManager.js";
+
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const mocks = {
     fetchConcastWithInfo: jest.fn<

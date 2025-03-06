@@ -1,16 +1,17 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { wrap } from "optimism";
+import { WeakCache } from "@wry/caches";
 import type { DocumentNode, TypeNode } from "graphql";
 import { Kind, visit } from "graphql";
+import { wrap } from "optimism";
+
+import type { OperationVariables } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import {
-  stripTypename,
-  isPlainObject,
   cacheSizes,
   defaultCacheSizes,
+  isPlainObject,
+  stripTypename,
 } from "@apollo/client/utilities";
-import type { OperationVariables } from "@apollo/client/core";
-import { WeakCache } from "@wry/caches";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 
 export const KEEP = "__KEEP";
 

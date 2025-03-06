@@ -1,8 +1,9 @@
+import { DocumentNode, Kind, visit } from "graphql";
+import { gql } from "graphql-tag";
+
 import { DocumentTransform } from "../DocumentTransform.js";
 import { isMutationOperation, isQueryOperation } from "../operations.js";
 import { removeDirectivesFromDocument } from "../transform.js";
-import { gql } from "graphql-tag";
-import { DocumentNode, visit, Kind } from "graphql";
 
 function stripDirective(directive: string) {
   return (document: DocumentNode) => {

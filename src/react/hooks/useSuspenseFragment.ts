@@ -1,3 +1,12 @@
+import React, { useMemo } from "rehackt";
+
+import type { FragmentKey } from "../internal/cache/types.js";
+
+import { __use } from "./internal/__use.js";
+import { wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   DocumentNode,
@@ -6,15 +15,9 @@ import type {
   StoreObject,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { canonicalStringify } from "@apollo/client/cache";
-import { useApolloClient } from "./useApolloClient.js";
-import { getSuspenseCache } from "@apollo/client/react/internal";
-import React, { useMemo } from "rehackt";
-import type { FragmentKey } from "../internal/cache/types.js";
-import { __use } from "./internal/__use.js";
-import { wrapHook } from "./internal/index.js";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import type { NoInfer, VariablesOption } from "@apollo/client/react";
+import { getSuspenseCache } from "@apollo/client/react/internal";
 
 type From<TData> =
   | StoreObject

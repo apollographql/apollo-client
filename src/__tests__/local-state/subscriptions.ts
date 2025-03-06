@@ -1,10 +1,11 @@
 import { gql } from "graphql-tag";
 
-import { Observable } from "@apollo/client/utilities";
-import { ApolloLink } from "@apollo/client/link/core";
-import { ApolloClient } from "@apollo/client/core";
-import { InMemoryCache } from "@apollo/client/cache";
 import { ObservableStream } from "../../testing/internal/index.js";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Observable } from "@apollo/client/utilities";
 
 describe("Basic functionality", () => {
   it("should not break subscriptions", async () => {

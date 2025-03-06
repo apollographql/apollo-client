@@ -1,4 +1,9 @@
-import { invariant } from "@apollo/client/utilities/invariant";
+import { hasOwn, isArray } from "./helpers.js";
+import type {
+  KeyArgsFunction,
+  KeyFieldsFunction,
+  KeySpecifier,
+} from "./policies.js";
 
 import {
   argumentsObjectFromField,
@@ -6,13 +11,9 @@ import {
   isNonEmptyArray,
   isNonNullObject,
 } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
-import { hasOwn, isArray } from "./helpers.js";
-import type {
-  KeySpecifier,
-  KeyFieldsFunction,
-  KeyArgsFunction,
-} from "./policies.js";
+
 
 // Mapping from JSON-encoded KeySpecifier strings to associated information.
 const specifierInfoCache: Record<

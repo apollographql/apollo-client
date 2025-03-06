@@ -1,11 +1,11 @@
-import { gql } from "graphql-tag";
 import { print } from "graphql";
+import { gql } from "graphql-tag";
 
-import { Observable } from "../../../utilities/observables/Observable.js";
-import { FetchResult, Operation, NextLink, GraphQLRequest } from "../types.js";
-import { ApolloLink } from "../ApolloLink.js";
 import { ObservableStream } from "../../../testing/internal/index.js";
+import { Observable } from "../../../utilities/observables/Observable.js";
+import { ApolloLink } from "../ApolloLink.js";
 import { execute } from "../execute.js";
+import { FetchResult, GraphQLRequest, NextLink, Operation } from "../types.js";
 
 class SetContextLink extends ApolloLink {
   constructor(

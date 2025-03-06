@@ -1,4 +1,5 @@
 import { expectTypeOf } from "expect-type";
+
 import type { CacheSizes, defaultCacheSizes } from "../sizes.js";
 
 test.skip("type tests", () => {

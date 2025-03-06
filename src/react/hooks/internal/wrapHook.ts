@@ -1,16 +1,17 @@
-import type {
-  useQuery,
-  useSuspenseQuery,
-  useBackgroundQuery,
-  useReadQuery,
-  useFragment,
-  useQueryRefHandlers,
-  useSuspenseFragment,
-} from "@apollo/client/react/hooks";
 import type { QueryManager } from "../../../core/QueryManager.js";
+
 import type { ApolloClient } from "@apollo/client/core";
 import type { ObservableQuery } from "@apollo/client/core";
 import type { createQueryPreloader } from "@apollo/client/react";
+import type {
+  useBackgroundQuery,
+  useFragment,
+  useQuery,
+  useQueryRefHandlers,
+  useReadQuery,
+  useSuspenseFragment,
+  useSuspenseQuery,
+} from "@apollo/client/react/hooks";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 

@@ -1,5 +1,5 @@
-import { toPromise } from "../toPromise.js";
 import { fromError } from "../fromError.js";
+import { toPromise } from "../toPromise.js";
 
 describe("fromError", () => {
   it("acts as error call", () => {

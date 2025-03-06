@@ -1,22 +1,24 @@
 /** @jest-environment node */
-import * as React from "react";
-import * as ReactDOM from "react-dom/server";
-import { gql } from "graphql-tag";
-import { print } from "graphql";
-import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
-import { ApolloProvider } from "@apollo/client/react/context";
+import fetchMock from "fetch-mock";
+import { print } from "graphql";
+import { gql } from "graphql-tag";
+import * as React from "react";
+import * as ReactDOM from "react-dom/server";
+
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
-import { createHttpLink } from "../../http/createHttpLink.js";
 import { getDataFromTree } from "../../../react/ssr/getDataFromTree.js";
+import { createHttpLink } from "../../http/createHttpLink.js";
+
+import { OperationVariables } from "@apollo/client/core";
 import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import { useQuery } from "@apollo/client/react";
-import { OperationVariables } from "@apollo/client/core";
+import { ApolloProvider } from "@apollo/client/react/context";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 
 function sha256(data: string) {

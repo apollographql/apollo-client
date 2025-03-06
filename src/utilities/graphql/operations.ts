@@ -1,5 +1,6 @@
-import type { DocumentNode } from "@apollo/client/core";
 import { getOperationDefinition } from "./getFromAST.js";
+
+import type { DocumentNode } from "@apollo/client/core";
 
 function isOperation(
   document: DocumentNode,

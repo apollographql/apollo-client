@@ -1,15 +1,16 @@
 import { Subscription } from "zen-observable-ts";
 
+import { ObservableStream } from "../testing/internal/index.js";
+
 import {
   ApolloClient,
   ApolloLink,
-  InMemoryCache,
   gql,
+  InMemoryCache,
   Observable,
-  TypedDocumentNode,
   ObservableQuery,
+  TypedDocumentNode,
 } from "@apollo/client/core";
-import { ObservableStream } from "../testing/internal/index.js";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {

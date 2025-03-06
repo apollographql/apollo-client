@@ -1,7 +1,9 @@
-import type { GraphQLSchema } from "graphql";
-import { addResolversToSchema } from "@graphql-tools/schema";
 import { mergeResolvers } from "@graphql-tools/merge";
+import { addResolversToSchema } from "@graphql-tools/schema";
+import type { GraphQLSchema } from "graphql";
+
 import { createMockSchema } from "./graphql-tools/utils.js";
+
 import type { Resolvers } from "@apollo/client/core";
 
 type ProxiedSchema = GraphQLSchema & TestSchemaFns;

@@ -1,11 +1,11 @@
+import { WeakCache } from "@wry/caches";
 import type {
-  DocumentNode,
   ASTNode,
+  DocumentNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
 } from "graphql";
 import { visit } from "graphql";
-
 import { wrap } from "optimism";
 
 import type { FragmentMap } from "@apollo/client/utilities";
@@ -14,7 +14,6 @@ import {
   defaultCacheSizes,
   getFragmentDefinitions,
 } from "@apollo/client/utilities";
-import { WeakCache } from "@wry/caches";
 
 export interface FragmentRegistryAPI {
   register(...fragments: DocumentNode[]): this;

@@ -1,15 +1,17 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-
 import type { OptimisticWrapperFunction } from "optimism";
-import type {
-  InMemoryCache,
-  DocumentTransform,
-  ApolloLink,
-  ApolloCache,
-} from "@apollo/client/core";
-import type { ApolloClient } from "@apollo/client/core";
+
 import type { CacheSizes } from "./sizes.js";
 import { cacheSizes, defaultCacheSizes } from "./sizes.js";
+
+
+import type {
+  ApolloCache,
+  ApolloLink,
+  DocumentTransform,
+  InMemoryCache,
+} from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client/core";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 
 const globalCaches: {
   print?: () => number;

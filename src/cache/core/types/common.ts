@@ -1,15 +1,16 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
+import type { StorageType } from "../../inmemory/policies.js";
+
 import type {
+  AsStoreObject,
+  DeepPartial,
+  isReference,
   Reference,
   StoreObject,
   StoreValue,
-  isReference,
-  AsStoreObject,
-  DeepPartial,
 } from "@apollo/client/utilities";
 
-import type { StorageType } from "../../inmemory/policies.js";
 
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when

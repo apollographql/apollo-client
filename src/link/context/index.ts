@@ -1,12 +1,12 @@
+import type { DefaultContext } from "@apollo/client/core";
 import type {
-  Operation,
   GraphQLRequest,
   NextLink,
+  Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { ObservableSubscription } from "@apollo/client/utilities";
 import { Observable } from "@apollo/client/utilities";
-import type { DefaultContext } from "@apollo/client/core";
 
 export type ContextSetter = (
   operation: GraphQLRequest,

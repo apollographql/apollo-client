@@ -3,8 +3,10 @@
 // A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524)
 // B) We're just testing imports/exports, so no reason not to use Node for slightly better performance.
 
-import * as cache from "@apollo/client/cache";
+import { entryPoints } from "../../config/entryPoints.js";
+
 import * as client from "@apollo/client";
+import * as cache from "@apollo/client/cache";
 import * as core from "@apollo/client/core";
 import * as dev from "@apollo/client/dev";
 import * as errors from "@apollo/client/errors";
@@ -15,8 +17,8 @@ import * as linkCore from "@apollo/client/link/core";
 import * as linkError from "@apollo/client/link/error";
 import * as linkHTTP from "@apollo/client/link/http";
 import * as linkPersistedQueries from "@apollo/client/link/persisted-queries";
-import * as linkRetry from "@apollo/client/link/retry";
 import * as linkRemoveTypename from "@apollo/client/link/remove-typename";
+import * as linkRetry from "@apollo/client/link/retry";
 import * as linkSchema from "@apollo/client/link/schema";
 import * as linkSubscriptions from "@apollo/client/link/subscriptions";
 import * as linkUtils from "@apollo/client/link/utils";
@@ -33,13 +35,12 @@ import * as testingCore from "@apollo/client/testing/core";
 import * as testingExperimental from "@apollo/client/testing/experimental";
 import * as testingReact from "@apollo/client/testing/react";
 import * as utilities from "@apollo/client/utilities";
-import * as utilitiesGlobals from "@apollo/client/utilities/globals";
-import * as urqlUtilities from "@apollo/client/utilities/subscriptions/urql";
-import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
 import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
+import * as utilitiesGlobals from "@apollo/client/utilities/globals";
+import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
+import * as urqlUtilities from "@apollo/client/utilities/subscriptions/urql";
 
 // @ts-ignore
-import { entryPoints } from "../../config/entryPoints.js";
 
 type Namespace = object;
 

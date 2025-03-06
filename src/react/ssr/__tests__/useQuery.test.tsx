@@ -1,14 +1,15 @@
 /** @jest-environment node */
-import React from "react";
+import type { Trie } from "@wry/trie";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
-import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
-import { ApolloClient } from "@apollo/client/core";
+import React from "react";
+
 import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
 import { renderToStringWithData } from "@apollo/client/react/ssr";
-import type { Trie } from "@wry/trie";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 
 describe("useQuery Hook SSR", () => {

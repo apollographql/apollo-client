@@ -1,5 +1,6 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
+
 import type { FetchResult } from "@apollo/client/core";
 
 export const toEqualFetchResult: MatcherFunction<[result: FetchResult]> =

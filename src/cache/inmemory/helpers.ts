@@ -4,29 +4,29 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
-import type { NormalizedCache, InMemoryCacheConfig } from "./types.js";
-
-import type { KeyFieldsContext } from "./policies.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { KeyFieldsContext } from "./policies.js";
+import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
+
 
 import type {
-  Reference,
-  StoreValue,
-  StoreObject,
   FragmentMap,
   FragmentMapFunction,
+  Reference,
+  StoreObject,
+  StoreValue,
 } from "@apollo/client/utilities";
 import {
-  isReference,
-  isField,
-  DeepMerger,
-  resultKeyNameFromField,
-  shouldInclude,
-  isNonNullObject,
   compact,
   createFragmentMap,
+  DeepMerger,
   getFragmentDefinitions,
   isArray,
+  isField,
+  isNonNullObject,
+  isReference,
+  resultKeyNameFromField,
+  shouldInclude,
 } from "@apollo/client/utilities";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;

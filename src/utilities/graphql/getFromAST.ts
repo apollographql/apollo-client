@@ -1,16 +1,17 @@
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
 
 import type {
   DocumentNode,
-  OperationDefinitionNode,
   FragmentDefinitionNode,
+  OperationDefinitionNode,
   ValueNode,
 } from "graphql";
 
 import { valueToObjectRepresentation } from "./storeUtils.js";
+
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
   name: NonNullable<OperationDefinitionNode["name"]>;

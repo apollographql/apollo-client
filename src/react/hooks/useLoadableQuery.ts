@@ -1,4 +1,11 @@
 import * as React from "rehackt";
+
+import { __use, useRenderGuard } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   DocumentNode,
   FetchMoreQueryOptions,
@@ -10,7 +17,8 @@ import type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
 } from "@apollo/client/core";
-import { useApolloClient } from "./useApolloClient.js";
+import type { LoadableQueryHookOptions } from "@apollo/client/react";
+import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getSuspenseCache,
@@ -18,12 +26,6 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
-import type { LoadableQueryHookOptions } from "@apollo/client/react";
-import { __use, useRenderGuard } from "./internal/index.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
-import { canonicalStringify } from "@apollo/client/cache";
 import type {
   DeepPartial,
   OnlyRequiredProperties,

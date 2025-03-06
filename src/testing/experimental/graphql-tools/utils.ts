@@ -1,16 +1,16 @@
+import { getRootTypeNames, MapperKind, mapSchema } from "@graphql-tools/utils";
 import type {
   GraphQLFieldResolver,
   GraphQLObjectType,
   GraphQLOutputType,
   GraphQLSchema,
 } from "graphql";
-
 import {
+  defaultFieldResolver,
+  getNullableType,
   GraphQLInterfaceType,
   GraphQLString,
   GraphQLUnionType,
-  defaultFieldResolver,
-  getNullableType,
   isAbstractType,
   isEnumType,
   isInterfaceType,
@@ -21,7 +21,6 @@ import {
 } from "graphql";
 
 import { isNonNullObject } from "@apollo/client/utilities";
-import { MapperKind, mapSchema, getRootTypeNames } from "@graphql-tools/utils";
 
 // Taken from @graphql-tools/mock:
 // https://github.com/ardatan/graphql-tools/blob/4b56b04d69b02919f6c5fa4f97d33da63f36e8c8/packages/mock/src/utils.ts#L20

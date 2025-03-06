@@ -1,6 +1,6 @@
-import { Observable } from "../Observable.js";
-import { asyncMap } from "../asyncMap.js";
 import { ObservableStream } from "../../../testing/internal/index.js";
+import { asyncMap } from "../asyncMap.js";
+import { Observable } from "../Observable.js";
 const wait = (delayMs: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, delayMs));
 

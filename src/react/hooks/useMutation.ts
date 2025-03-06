@@ -1,13 +1,11 @@
-import * as React from "rehackt";
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import type {
-  MutationFunctionOptions,
-  MutationHookOptions,
-  MutationResult,
-  MutationTuple,
-  NoInfer,
-} from "@apollo/client/react";
+import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
+import * as React from "rehackt";
+
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useApolloClient } from "./useApolloClient.js";
+
 
 import type {
   ApolloCache,
@@ -15,12 +13,16 @@ import type {
   MutationOptions,
   OperationVariables,
 } from "@apollo/client/core";
-import { mergeOptions } from "@apollo/client/utilities";
-import { equal } from "@wry/equality";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { ApolloError } from "@apollo/client/errors";
-import { useApolloClient } from "./useApolloClient.js";
-import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import type {
+  MutationFunctionOptions,
+  MutationHookOptions,
+  MutationResult,
+  MutationTuple,
+  NoInfer,
+} from "@apollo/client/react";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { mergeOptions } from "@apollo/client/utilities";
 
 /**
  *

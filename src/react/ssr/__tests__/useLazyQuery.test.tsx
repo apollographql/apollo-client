@@ -1,13 +1,14 @@
 /** @jest-environment node */
-import React from "react";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
-import { mockSingleLink } from "@apollo/client/testing";
-import { ApolloClient } from "@apollo/client/core";
+import React from "react";
+
 import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { useLazyQuery } from "@apollo/client/react/hooks";
 import { renderToStringWithData } from "@apollo/client/react/ssr";
+import { mockSingleLink } from "@apollo/client/testing";
 
 describe("useLazyQuery Hook SSR", () => {
   const CAR_QUERY: DocumentNode = gql`

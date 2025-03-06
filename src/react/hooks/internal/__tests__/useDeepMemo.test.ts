@@ -1,4 +1,5 @@
 import { renderHook } from "@testing-library/react";
+
 import { useDeepMemo } from "../useDeepMemo.js";
 
 describe("useDeepMemo", () => {

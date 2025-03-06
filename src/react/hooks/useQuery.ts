@@ -15,9 +15,12 @@
  * isSyncSSR
  */
 /** */
-import * as React from "rehackt";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
+import * as React from "rehackt";
+
+import { wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 import type {
   ApolloClient,
@@ -25,34 +28,31 @@ import type {
   OperationVariables,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { mergeOptions } from "@apollo/client/utilities";
-import { getApolloContext } from "@apollo/client/react/context";
-import { ApolloError } from "@apollo/client/errors";
 import type {
   ApolloQueryResult,
-  ObservableQuery,
   DocumentNode,
+  ObservableQuery,
   TypedDocumentNode,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type {
+  NoInfer,
+  ObservableQueryFields,
   QueryHookOptions,
   QueryResult,
-  ObservableQueryFields,
-  NoInfer,
 } from "@apollo/client/react";
-
+import { getApolloContext } from "@apollo/client/react/context";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
-import { useApolloClient } from "./useApolloClient.js";
+import type { RenderPromises } from "@apollo/client/react/ssr";
 import {
   compact,
   isNonEmptyArray,
   maybeDeepFreeze,
 } from "@apollo/client/utilities";
-import { wrapHook } from "./internal/index.js";
-import type { RenderPromises } from "@apollo/client/react/ssr";
-import type { MaybeMasked } from "@apollo/client/masking";
+import { mergeOptions } from "@apollo/client/utilities";
 
 const {
   prototype: { hasOwnProperty },

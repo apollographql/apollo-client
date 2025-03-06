@@ -1,6 +1,7 @@
-import type { SuspenseCacheOptions } from "@apollo/client/react/internal";
 import { SuspenseCache } from "./SuspenseCache.js";
+
 import type { ApolloClient } from "@apollo/client/core";
+import type { SuspenseCacheOptions } from "@apollo/client/react/internal";
 
 declare module "@apollo/client/core" {
   interface DefaultOptions {

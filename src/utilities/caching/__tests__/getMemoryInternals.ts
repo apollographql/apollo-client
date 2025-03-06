@@ -1,14 +1,16 @@
+import crypto from "crypto";
+
 import { createFragmentRegistry } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloLink,
   DocumentTransform,
-  InMemoryCache,
   gql,
+  InMemoryCache,
 } from "@apollo/client/core";
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
-import crypto from "crypto";
+
 // importing react so the `parser` cache initializes
 import "@apollo/client/react";
 import { cacheSizes, defaultCacheSizes } from "../sizes.js";

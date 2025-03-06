@@ -1,10 +1,10 @@
 import { gql } from "graphql-tag";
 import { print } from "graphql";
 
-import { ApolloLink, execute } from "../../core/index.js";
+import { ApolloLink, execute } from "@apollo/client/link/core";
 import { Operation, FetchResult, GraphQLRequest } from "../../core/types.js";
-import { Observable } from "../../../utilities/index.js";
-import { wait } from "../../../testing/index.js";
+import { Observable } from "@apollo/client/utilities";
+import { wait } from "@apollo/client/testing";
 import {
   BatchLink,
   OperationBatcher,

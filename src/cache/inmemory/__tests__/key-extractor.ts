@@ -1,5 +1,5 @@
 import { KeySpecifier } from "../policies.js";
-import { canonicalStringify } from "../../../utilities/index.js";
+import { canonicalStringify } from "@apollo/client/utilities";
 import {
   getSpecifierPaths,
   collectSpecifierPaths,

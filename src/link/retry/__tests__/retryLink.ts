@@ -9,7 +9,7 @@ import {
   mockMultipartSubscriptionStream,
   ObservableStream,
 } from "../../../testing/internal/index.js";
-import { ApolloError } from "../../../core/index.js";
+import { ApolloError } from "@apollo/client/core";
 
 const query = gql`
   {

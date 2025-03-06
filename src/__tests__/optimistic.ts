@@ -11,15 +11,15 @@ import {
   MutationQueryReducersMap,
   TypedDocumentNode,
   ApolloError,
-} from "../core/index.js";
+} from "@apollo/client/core";
 
 import { QueryManager } from "../core/QueryManager.js";
 
-import { Cache, InMemoryCache } from "../cache/index.js";
+import { Cache, InMemoryCache } from "@apollo/client/cache";
 
-import { Observable, addTypenameToDocument } from "../utilities/index.js";
+import { Observable, addTypenameToDocument } from "@apollo/client/utilities";
 
-import { MockedResponse, mockSingleLink } from "../testing/index.js";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { ObservableStream } from "../testing/internal/index.js";
 
 describe("optimistic mutation results", () => {

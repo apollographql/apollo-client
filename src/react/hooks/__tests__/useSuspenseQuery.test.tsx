@@ -29,24 +29,24 @@ import {
   NetworkStatus,
   ApolloQueryResult,
   ErrorPolicy,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import {
   DeepPartial,
   compact,
   concatPagination,
   getMainDefinition,
   offsetLimitPagination,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   MockedResponse,
   MockSubscriptionLink,
   MockLink,
-} from "../../../testing/index.js";
-import { ApolloProvider } from "../../context/index.js";
+} from "@apollo/client/testing";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
   SuspenseQueryHookFetchPolicy,
   skipToken,
-} from "../../../react/index.js";
+} from "@apollo/client/react";
 import {
   UseSuspenseQueryResult,
   useSuspenseQuery,
@@ -68,14 +68,14 @@ import {
   Masked,
   MaskedDocumentNode,
   Unmasked,
-} from "../../../masking/index.js";
+} from "@apollo/client/masking";
 
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

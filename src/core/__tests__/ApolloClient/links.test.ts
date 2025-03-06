@@ -4,15 +4,15 @@ import {
   Observable,
   ObservableSubscription,
 } from "../../../utilities/observables/Observable.js";
-import { ApolloLink } from "../../../link/core/index.js";
+import { ApolloLink } from "@apollo/client/link/core";
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
-import { MockSubscriptionLink } from "../../../testing/core/index.js";
+import { MockSubscriptionLink } from "@apollo/client/testing/core";
 import {
   ApolloClient,
   NextLink,
   Operation,
   Reference,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {

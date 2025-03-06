@@ -8,11 +8,11 @@ import {
   ApolloLink,
   concat,
   TypedDocumentNode,
-} from "../../../core/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
-import { InMemoryCache as Cache } from "../../../cache/index.js";
-import { ApolloProvider } from "../../context/index.js";
-import { MockSubscriptionLink, wait } from "../../../testing/index.js";
+} from "@apollo/client/core";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { useSubscription } from "../useSubscription.js";
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import { SubscriptionHookOptions } from "../../types/types.js";
@@ -20,7 +20,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 import { GraphQLError } from "graphql";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import { Masked, MaskedDocumentNode } from "../../../masking/index.js";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,

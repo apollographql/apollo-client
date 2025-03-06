@@ -4,16 +4,16 @@ import { times } from "lodash";
 import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
-import { ApolloLink, execute } from "../../core/index.js";
-import { Observable } from "../../../utilities/index.js";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { Observable } from "@apollo/client/utilities";
 import { createHttpLink } from "../../http/createHttpLink.js";
 
 import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
-} from "../index.js";
-import { wait } from "../../../testing/index.js";
-import { toPromise } from "../../utils/index.js";
+} from "@apollo/client/link/persisted-queries";
+import { wait } from "@apollo/client/testing";
+import { toPromise } from "@apollo/client/link/utils";
 import { ObservableStream } from "../../../testing/internal/index.js";
 
 // Necessary configuration in order to mock multiple requests

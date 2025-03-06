@@ -9,14 +9,14 @@ import {
   NetworkStatus,
   TypedDocumentNode,
   DocumentNode,
-} from "../../../core/index.js";
-import { MissingFieldError } from "../../index.js";
+} from "@apollo/client/core";
+import { MissingFieldError } from "@apollo/client/cache";
 import {
   relayStylePagination,
   stringifyForDisplay,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { FieldPolicy, StorageType } from "../policies.js";
-import { MockLink } from "../../../testing/core/index.js";
+import { MockLink } from "@apollo/client/testing/core";
 import {
   ObservableStream,
   spyOnConsole,

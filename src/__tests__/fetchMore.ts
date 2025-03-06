@@ -6,22 +6,22 @@ import {
   ApolloLink,
   NetworkStatus,
   TypedDocumentNode,
-} from "../core/index.js";
+} from "@apollo/client/core";
 
 import {
   Observable,
   offsetLimitPagination,
   concatPagination,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 
 import {
   ApolloCache,
   InMemoryCache,
   InMemoryCacheConfig,
   FieldMergeFunction,
-} from "../cache/index.js";
+} from "@apollo/client/cache";
 
-import { MockedResponse, mockSingleLink } from "../testing/index.js";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import {
   ObservableStream,
   setupPaginatedCase,

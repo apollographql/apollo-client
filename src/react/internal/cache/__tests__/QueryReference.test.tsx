@@ -3,7 +3,7 @@ import {
   ApolloLink,
   InMemoryCache,
   Observable,
-} from "../../../../core/index.js";
+} from "@apollo/client/core";
 import { setupSimpleCase } from "../../../../testing/internal/index.js";
 import {
   InternalQueryReference,

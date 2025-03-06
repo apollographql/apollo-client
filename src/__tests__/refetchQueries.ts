@@ -8,7 +8,7 @@ import {
   Observable,
   TypedDocumentNode,
   ObservableQuery,
-} from "../core/index.js";
+} from "@apollo/client/core";
 import { ObservableStream } from "../testing/internal/index.js";
 
 describe("client.refetchQueries", () => {

@@ -9,20 +9,20 @@ import {
   OperationVariables,
   TypedDocumentNode,
   gql,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import {
   MockLink,
   MockSubscriptionLink,
   MockedResponse,
   wait,
-} from "../../../testing/index.js";
+} from "@apollo/client/testing";
 import { expectTypeOf } from "expect-type";
 import {
   PreloadedQueryRef,
   QueryRef,
   unwrapQueryRef,
-} from "../../internal/index.js";
-import { DeepPartial, Observable } from "../../../utilities/index.js";
+} from "@apollo/client/react/internal";
+import { DeepPartial, Observable } from "@apollo/client/utilities";
 import {
   createClientWrapper,
   SimpleCaseData,
@@ -32,9 +32,9 @@ import {
   VariablesCaseData,
   renderHookAsync,
 } from "../../../testing/internal/index.js";
-import { ApolloProvider } from "../../context/index.js";
+import { ApolloProvider } from "@apollo/client/react/context";
 import { act, screen } from "@testing-library/react";
-import { UseReadQueryResult, useReadQuery } from "../../hooks/index.js";
+import { UseReadQueryResult, useReadQuery } from "@apollo/client/react/hooks";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
 import { userEvent } from "@testing-library/user-event";
@@ -42,7 +42,7 @@ import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
 } from "../../../testing/internal/scenarios/index.js";
-import { Masked } from "../../../masking/index.js";
+import { Masked } from "@apollo/client/masking";
 import {
   createRenderStream,
   disableActEnvironment,

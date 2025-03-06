@@ -3,12 +3,12 @@ import {
   ApolloLink,
   gql,
   NetworkStatus,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import {
   getFragmentDefinitions,
   Observable,
-} from "../../../utilities/index.js";
-import { InMemoryCache, createFragmentRegistry } from "../../index.js";
+} from "@apollo/client/utilities";
+import { InMemoryCache, createFragmentRegistry } from "@apollo/client/cache";
 import { ObservableStream } from "../../../testing/internal/index.js";
 
 describe("FragmentRegistry", () => {

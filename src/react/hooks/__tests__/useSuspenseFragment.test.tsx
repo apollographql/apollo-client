@@ -12,9 +12,9 @@ import {
   MaybeMasked,
   OperationVariables,
   TypedDocumentNode,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import React, { Suspense } from "react";
-import { ApolloProvider } from "../../context/index.js";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
   createRenderStream,
   disableActEnvironment,
@@ -24,8 +24,8 @@ import {
 import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
 import { act, renderHook, screen, waitFor } from "@testing-library/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import { MockSubscriptionLink, wait } from "../../../testing/index.js";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { expectTypeOf } from "expect-type";
 import { userEvent } from "@testing-library/user-event";
 

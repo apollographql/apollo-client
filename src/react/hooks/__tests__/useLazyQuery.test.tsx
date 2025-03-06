@@ -11,16 +11,16 @@ import {
   InMemoryCache,
   NetworkStatus,
   TypedDocumentNode,
-} from "../../../core/index.js";
-import { DeepPartial, Observable } from "../../../utilities/index.js";
-import { ApolloProvider } from "../../../react/index.js";
+} from "@apollo/client/core";
+import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { ApolloProvider } from "@apollo/client/react";
 import {
   mockSingleLink,
   wait,
   tick,
   MockSubscriptionLink,
   MockLink,
-} from "../../../testing/index.js";
+} from "@apollo/client/testing";
 import { useLazyQuery } from "../useLazyQuery.js";
 import { QueryResult } from "../../types/types.js";
 import { InvariantError } from "@apollo/client/utilities/invariant";
@@ -28,13 +28,13 @@ import {
   Masked,
   MaskedDocumentNode,
   Unmasked,
-} from "../../../masking/index.js";
+} from "@apollo/client/masking";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

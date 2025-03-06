@@ -10,7 +10,7 @@ import {
   Observer,
 } from "../../../utilities/observables/Observable.js";
 import { BatchHttpLink } from "../batchHttpLink.js";
-import { FetchResult } from "../../core/index.js";
+import { FetchResult } from "@apollo/client/link/core";
 import { ObservableStream } from "../../../testing/internal/index.js";
 
 const sampleQuery = gql`

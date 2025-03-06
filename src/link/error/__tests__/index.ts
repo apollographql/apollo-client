@@ -4,13 +4,13 @@ import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { ServerError, throwServerError } from "../../utils/throwServerError.js";
 import { Observable } from "../../../utilities/observables/Observable.js";
-import { onError, ErrorLink } from "../index.js";
+import { onError, ErrorLink } from "@apollo/client/link/error";
 import {
   ObservableStream,
   mockDeferStream,
   mockMultipartSubscriptionStream,
 } from "../../../testing/internal/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {

@@ -7,7 +7,7 @@ import {
   TypedDocumentNode,
   gql,
   split,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import {
   SubscribeToMoreFunction,
   SubscribeToMoreUpdateQueryFn,
@@ -16,7 +16,7 @@ import {
   MockLink,
   MockSubscriptionLink,
   MockedResponse,
-} from "../../../testing/index.js";
+} from "@apollo/client/testing";
 import {
   createClientWrapper,
   PaginatedCaseData,
@@ -29,13 +29,13 @@ import { UseReadQueryResult, useReadQuery } from "../useReadQuery.js";
 import { Suspense } from "react";
 import { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
 import { userEvent } from "@testing-library/user-event";
-import { QueryRef } from "../../internal/index.js";
+import { QueryRef } from "@apollo/client/react/internal";
 import { useBackgroundQuery } from "../useBackgroundQuery.js";
 import { useLoadableQuery } from "../useLoadableQuery.js";
 import {
   concatPagination,
   getMainDefinition,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   createRenderStream,
   disableActEnvironment,

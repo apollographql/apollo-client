@@ -17,25 +17,25 @@ import {
   ApolloLink,
   Observable,
   split,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
   wait,
-} from "../../../testing/index.js";
+} from "@apollo/client/testing";
 import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { useBackgroundQuery } from "../useBackgroundQuery.js";
 import { UseReadQueryResult, useReadQuery } from "../useReadQuery.js";
-import { ApolloProvider } from "../../context/index.js";
-import { QueryRef, QueryReference } from "../../internal/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { QueryRef, QueryReference } from "@apollo/client/react/internal";
+import { InMemoryCache } from "@apollo/client/cache";
 import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
 import equal from "@wry/equality";
 import {
@@ -62,14 +62,14 @@ import {
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
-import { Masked, MaskedDocumentNode } from "../../../masking/index.js";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import {
   RenderStream,
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 afterEach(() => {
   jest.useRealTimers();

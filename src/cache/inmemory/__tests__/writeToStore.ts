@@ -18,11 +18,11 @@ import {
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { StoreWriter } from "../writeToStore.js";
 import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
 import { InMemoryCache } from "../inMemoryCache.js";
-import { TypedDocumentNode } from "../../../core/index.js";
+import { TypedDocumentNode } from "@apollo/client/core";
 import { extractFragmentContext } from "../helpers.js";
 import { KeyFieldsFunction } from "../policies.js";
 import { invariant } from "@apollo/client/utilities/invariant";

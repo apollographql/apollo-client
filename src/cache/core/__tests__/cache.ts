@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 import { ApolloCache } from "../cache.js";
-import { Cache, DataProxy } from "../../index.js";
+import { Cache, DataProxy } from "@apollo/client/cache";
 import { Reference } from "../../../utilities/graphql/storeUtils.js";
 import { expectTypeOf } from "expect-type";
 

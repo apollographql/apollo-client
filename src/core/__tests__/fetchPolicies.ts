@@ -1,10 +1,10 @@
 import { gql } from "graphql-tag";
 
-import { ApolloClient, NetworkStatus } from "../../core/index.js";
-import { ApolloLink } from "../../link/core/index.js";
-import { InMemoryCache } from "../../cache/index.js";
-import { Observable } from "../../utilities/index.js";
-import { mockSingleLink } from "../../testing/index.js";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { InMemoryCache } from "@apollo/client/cache";
+import { Observable } from "@apollo/client/utilities";
+import { mockSingleLink } from "@apollo/client/testing";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import {
   WatchQueryFetchPolicy,

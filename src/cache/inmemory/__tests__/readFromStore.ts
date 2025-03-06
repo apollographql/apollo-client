@@ -16,8 +16,8 @@ import {
   Reference,
   isReference,
   TypedDocumentNode,
-} from "../../../core/index.js";
-import { defaultCacheSizes } from "../../../utilities/index.js";
+} from "@apollo/client/core";
+import { defaultCacheSizes } from "@apollo/client/utilities";
 
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();

@@ -18,7 +18,7 @@ import {
   Operation,
   TypedDocumentNode,
   NetworkStatus,
-} from "../core/index.js";
+} from "@apollo/client/core";
 
 import {
   DocumentTransform,
@@ -26,17 +26,17 @@ import {
   ObservableSubscription,
   offsetLimitPagination,
   removeDirectivesFromDocument,
-} from "../utilities/index.js";
-import { ApolloLink } from "../link/core/index.js";
+} from "@apollo/client/utilities";
+import { ApolloLink } from "@apollo/client/link/core";
 import {
   createFragmentRegistry,
   InMemoryCache,
   makeVar,
   PossibleTypesMap,
-} from "../cache/index.js";
-import { ApolloError } from "../errors/index.js";
+} from "@apollo/client/cache";
+import { ApolloError } from "@apollo/client/errors";
 
-import { mockSingleLink, MockLink, wait } from "../testing/index.js";
+import { mockSingleLink, MockLink, wait } from "@apollo/client/testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 import { waitFor } from "@testing-library/react";
 

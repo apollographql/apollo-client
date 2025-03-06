@@ -6,7 +6,7 @@ import { print } from "graphql";
 import fetchMock from "fetch-mock";
 import crypto from "crypto";
 
-import { ApolloProvider } from "../../../react/context/index.js";
+import { ApolloProvider } from "@apollo/client/react/context";
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
 import { createHttpLink } from "../../http/createHttpLink.js";
@@ -14,10 +14,10 @@ import { getDataFromTree } from "../../../react/ssr/getDataFromTree.js";
 import {
   createPersistedQueryLink as createPersistedQuery,
   VERSION,
-} from "../index.js";
-import { useQuery } from "../../../react/index.js";
-import { OperationVariables } from "../../../core/index.js";
-import { addTypenameToDocument } from "../../../utilities/index.js";
+} from "@apollo/client/link/persisted-queries";
+import { useQuery } from "@apollo/client/react";
+import { OperationVariables } from "@apollo/client/core";
+import { addTypenameToDocument } from "@apollo/client/utilities";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

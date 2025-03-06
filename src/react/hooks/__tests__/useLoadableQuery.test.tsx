@@ -17,27 +17,27 @@ import {
   RefetchWritePolicy,
   SubscribeToMoreOptions,
   split,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../../../testing/index.js";
+} from "@apollo/client/testing";
 import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { useLoadableQuery } from "../useLoadableQuery.js";
 import type { UseReadQueryResult } from "../useReadQuery.js";
 import { useReadQuery } from "../useReadQuery.js";
-import { ApolloProvider } from "../../context/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { InMemoryCache } from "@apollo/client/cache";
 import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
-import { QueryRef } from "../../../react/index.js";
+import { QueryRef } from "@apollo/client/react";
 import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 import {
@@ -58,7 +58,7 @@ import {
 import {
   MockedProvider,
   MockedProviderProps,
-} from "../../../testing/react/index.js";
+} from "@apollo/client/testing/react";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

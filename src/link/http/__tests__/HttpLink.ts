@@ -12,14 +12,14 @@ import {
 } from "../../../utilities/observables/Observable.js";
 import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { HttpLink } from "../HttpLink.js";
 import { createHttpLink } from "../createHttpLink.js";
 import { ClientParseError } from "../serializeFetchParameter.js";
 import { ServerParseError } from "../parseAndCheckHttpResponse.js";
-import { FetchResult, ServerError } from "../../../index.js";
+import { FetchResult, ServerError } from "@apollo/client";
 import { voidFetchDuringEachTest } from "./helpers.js";
-import { wait } from "../../../testing/index.js";
+import { wait } from "@apollo/client/testing";
 import { ObservableStream } from "../../../testing/internal/index.js";
 
 const sampleQuery = gql`

@@ -13,18 +13,18 @@ import {
   Observable,
   Reference,
   TypedDocumentNode,
-} from "../core/index.js";
+} from "@apollo/client/core";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../testing/index.js";
+} from "@apollo/client/testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 import { invariant } from "@apollo/client/utilities/invariant";
 import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
-import { isSubscriptionOperation } from "../utilities/index.js";
-import { MaskedDocumentNode } from "../masking/index.js";
+import { isSubscriptionOperation } from "@apollo/client/utilities";
+import { MaskedDocumentNode } from "@apollo/client/masking";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';

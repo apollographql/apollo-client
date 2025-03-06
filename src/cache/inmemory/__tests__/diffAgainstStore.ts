@@ -10,7 +10,7 @@ import {
   writeQueryToStore,
   withError,
 } from "./helpers.js";
-import { MissingFieldError } from "../../../core/index.js";
+import { MissingFieldError } from "@apollo/client/core";
 
 disableFragmentWarnings();
 

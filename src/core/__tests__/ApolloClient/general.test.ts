@@ -16,8 +16,8 @@ import {
   ApolloLink,
   FetchResult,
   type RequestHandler,
-} from "../../../link/core/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
+} from "@apollo/client/link/core";
+import { InMemoryCache } from "@apollo/client/cache";
 
 // mocks
 import {
@@ -33,18 +33,18 @@ import {
 } from "../../watchQueryOptions.js";
 import { QueryManager } from "../../QueryManager.js";
 
-import { ApolloError } from "../../../errors/index.js";
+import { ApolloError } from "@apollo/client/errors";
 
 // testing utils
 import { waitFor } from "@testing-library/react";
-import { wait } from "../../../testing/core/index.js";
-import { ApolloClient, ApolloQueryResult } from "../../../core/index.js";
+import { wait } from "@apollo/client/testing/core";
+import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
 import { mockFetchQuery } from "../ObservableQuery.js";
 import {
   addTypenameToDocument,
   Concast,
   print,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   mockDeferStream,
   ObservableStream,

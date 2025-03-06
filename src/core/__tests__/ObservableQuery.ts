@@ -7,7 +7,7 @@ import {
   ApolloQueryResult,
   NetworkStatus,
   WatchQueryFetchPolicy,
-} from "../../core/index.js";
+} from "@apollo/client/core";
 import { ObservableQuery } from "../ObservableQuery.js";
 import { QueryManager } from "../QueryManager.js";
 
@@ -16,17 +16,17 @@ import {
   DocumentTransform,
   Observable,
   removeDirectivesFromDocument,
-} from "../../utilities/index.js";
-import { ApolloLink, FetchResult } from "../../link/core/index.js";
-import { InMemoryCache } from "../../cache/index.js";
-import { ApolloError } from "../../errors/index.js";
+} from "@apollo/client/utilities";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloError } from "@apollo/client/errors";
 
 import {
   MockLink,
   MockSubscriptionLink,
   tick,
   wait,
-} from "../../testing/index.js";
+} from "@apollo/client/testing";
 import { expectTypeOf } from "expect-type";
 
 import { SubscriptionObserver } from "zen-observable-ts";

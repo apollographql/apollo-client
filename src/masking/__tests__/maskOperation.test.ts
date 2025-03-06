@@ -1,5 +1,5 @@
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { gql, InMemoryCache } from "../../core/index.js";
+import { gql, InMemoryCache } from "@apollo/client/core";
 import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { InvariantError } from "@apollo/client/utilities/invariant";

@@ -14,7 +14,7 @@ import {
   UseFragmentResult,
   useFragment,
 } from "../useFragment.js";
-import { ApolloProvider } from "../../context/index.js";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
   InMemoryCache,
   gql,
@@ -26,21 +26,21 @@ import {
   StoreObject,
   DocumentNode,
   FetchResult,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
 import { useQuery } from "../useQuery.js";
-import { concatPagination } from "../../../utilities/index.js";
+import { concatPagination } from "@apollo/client/utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
 import { SubscriptionObserver } from "zen-observable-ts";
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { FragmentType } from "../../../masking/index.js";
+import { FragmentType } from "@apollo/client/masking";
 import {
   disableActEnvironment,
   createRenderStream,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

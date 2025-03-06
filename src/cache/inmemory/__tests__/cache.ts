@@ -9,8 +9,8 @@ import {
   TypedDocumentNode,
   isReference,
   DocumentNode,
-} from "../../../core/index.js";
-import { Cache, MissingFieldError } from "../../../cache/index.js";
+} from "@apollo/client/core";
+import { Cache, MissingFieldError } from "@apollo/client/cache";
 import { InMemoryCache } from "../inMemoryCache.js";
 import { InMemoryCacheConfig } from "../types.js";
 
@@ -19,7 +19,7 @@ import { StoreWriter } from "../writeToStore.js";
 import { ObjectCanon } from "../object-canon.js";
 import { TypePolicies } from "../policies.js";
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { defaultCacheSizes } from "../../../utilities/index.js";
+import { defaultCacheSizes } from "@apollo/client/utilities";
 
 disableFragmentWarnings();
 

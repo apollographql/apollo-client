@@ -1,9 +1,9 @@
 import { gql } from "graphql-tag";
 
-import { ApolloClient } from "../core/index.js";
-import { InMemoryCache } from "../cache/index.js";
-import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
-import { mockObservableLink } from "../testing/index.js";
+import { ApolloClient } from "@apollo/client/core";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { mockObservableLink } from "@apollo/client/testing";
 import { GraphQLError } from "graphql";
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 

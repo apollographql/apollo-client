@@ -3,14 +3,14 @@ import { DocumentNode } from "graphql";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { gql } from "graphql-tag";
 
-import { MockedResponse, MockLink } from "../../core/index.js";
+import { MockedResponse, MockLink } from "@apollo/client/testing/core";
 import { MockedProvider } from "../MockedProvider.js";
-import { useQuery } from "../../../react/hooks/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
+import { useQuery } from "@apollo/client/react/hooks";
+import { InMemoryCache } from "@apollo/client/cache";
 import { QueryResult } from "../../../react/types/types.js";
-import { ApolloLink, FetchResult } from "../../../link/core/index.js";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { Observable } from "zen-observable-ts";
-import { ApolloError } from "../../../errors/index.js";
+import { ApolloError } from "@apollo/client/errors";
 
 const variables = {
   username: "mock_username",

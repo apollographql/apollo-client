@@ -4,13 +4,13 @@ import {
   ApolloError,
   InMemoryCache,
   gql,
-} from "../../../core/index.js";
-import type { TypedDocumentNode } from "../../../core/index.js";
+} from "@apollo/client/core";
+import type { TypedDocumentNode } from "@apollo/client/core";
 import { spyOnConsole, createClientWrapper } from "../../internal/index.js";
 import { createTestSchema } from "../createTestSchema.js";
 import { buildSchema } from "graphql";
-import type { UseSuspenseQueryResult } from "../../../react/index.js";
-import { useMutation, useSuspenseQuery } from "../../../react/index.js";
+import type { UseSuspenseQueryResult } from "@apollo/client/react";
+import { useMutation, useSuspenseQuery } from "@apollo/client/react";
 import { userEvent } from "@testing-library/user-event";
 import { screen } from "@testing-library/react";
 import { createSchemaFetch } from "../createSchemaFetch.js";

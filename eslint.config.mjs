@@ -67,6 +67,18 @@ export default [
 
     rules: {
       "import/no-unresolved": "error",
+      "local-rules/import-from-export": "error",
+      "local-rules/import-from-inside-other-export": [
+        "warn",
+        {
+          ignoreFrom: [
+            "src/version.js",
+            "src/invariantErrorCodes.js",
+            "src/utilities/caching/getMemoryInternals.js",
+            "src/utilities/types/TODO.js",
+          ].map((file) => path.resolve(__dirname, file)),
+        },
+      ],
     },
   },
   ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
@@ -152,18 +164,6 @@ export default [
       ],
 
       "local-rules/require-using-disposable": "error",
-      "local-rules/import-from-export": "error",
-      "local-rules/import-from-inside-other-export": [
-        "warn",
-        {
-          ignoreFrom: [
-            "src/version.js",
-            "src/invariantErrorCodes.js",
-            "src/utilities/caching/getMemoryInternals.js",
-            "src/utilities/types/TODO.js",
-          ].map((file) => path.resolve(__dirname, file)),
-        },
-      ],
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({

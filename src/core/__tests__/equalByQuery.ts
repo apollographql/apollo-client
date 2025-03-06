@@ -1,5 +1,5 @@
 import { GraphQLError } from "graphql";
-import { TypedDocumentNode, gql } from "../index.js";
+import { TypedDocumentNode, gql } from "@apollo/client/core";
 import { equalByQuery } from "../equalByQuery.js";
 
 describe("equalByQuery", () => {

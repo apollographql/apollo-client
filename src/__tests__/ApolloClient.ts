@@ -8,18 +8,18 @@ import {
   ObservableQuery,
   QueryOptions,
   makeReference,
-} from "../core/index.js";
+} from "@apollo/client/core";
 import { Kind } from "graphql";
 
-import { DeepPartial, Observable } from "../utilities/index.js";
-import { ApolloLink, FetchResult } from "../link/core/index.js";
-import { HttpLink } from "../link/http/index.js";
-import { createFragmentRegistry, InMemoryCache } from "../cache/index.js";
+import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { HttpLink } from "@apollo/client/link/http";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { invariant } from "@apollo/client/utilities/invariant";
 import { expectTypeOf } from "expect-type";
-import { Masked } from "../masking/index.js";
+import { Masked } from "@apollo/client/masking";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {

@@ -13,15 +13,15 @@ import {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "../../../core/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
-import { ApolloProvider } from "../../context/index.js";
+} from "@apollo/client/core";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
   Observable,
   Reference,
   concatPagination,
-} from "../../../utilities/index.js";
-import { ApolloLink } from "../../../link/core/index.js";
+} from "@apollo/client/utilities";
+import { ApolloLink } from "@apollo/client/link/core";
 import {
   MockLink,
   MockSubscriptionLink,
@@ -29,7 +29,7 @@ import {
   tick,
   wait,
   MockedResponse,
-} from "../../../testing/index.js";
+} from "@apollo/client/testing";
 import { QueryResult } from "../../types/types.js";
 import { useQuery } from "../useQuery.js";
 import { useMutation } from "../useMutation.js";
@@ -40,13 +40,13 @@ import {
 import { useLazyQuery } from "../useLazyQuery.js";
 import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import { Unmasked } from "../../../masking/index.js";
+import { Unmasked } from "@apollo/client/masking";
 import {
   createRenderStream,
   renderHookToSnapshotStream,
   disableActEnvironment,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

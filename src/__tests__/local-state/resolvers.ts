@@ -8,13 +8,13 @@ import {
   ApolloQueryResult,
   NetworkStatus,
   Resolvers,
-} from "../../core/index.js";
+} from "@apollo/client/core";
 
-import { InMemoryCache, isReference } from "../../cache/index.js";
-import { Observable } from "../../utilities/index.js";
-import { ApolloLink } from "../../link/core/index.js";
+import { InMemoryCache, isReference } from "@apollo/client/cache";
+import { Observable } from "@apollo/client/utilities";
+import { ApolloLink } from "@apollo/client/link/core";
 import { ObservableStream } from "../../testing/internal/index.js";
-import { MockLink } from "../../testing/index.js";
+import { MockLink } from "@apollo/client/testing";
 
 const setupTestWithResolvers = ({
   resolvers,

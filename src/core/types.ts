@@ -2,7 +2,6 @@ import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "../cache/index.js";
 import type { FetchResult } from "../link/core/index.js";
-import type { ApolloError } from "../errors/index.js";
 import type { QueryInfo } from "./QueryInfo.js";
 import type { NetworkStatus } from "./networkStatus.js";
 import type { Resolver } from "./LocalState.js";
@@ -147,7 +146,7 @@ export interface ApolloQueryResult<T> {
    * This will contain both a NetworkError field and any GraphQLErrors.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  error?: ApolloError;
+  error?: Error;
   loading: boolean;
   networkStatus: NetworkStatus;
   /**

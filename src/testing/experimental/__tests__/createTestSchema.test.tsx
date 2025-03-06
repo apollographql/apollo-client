@@ -1,7 +1,7 @@
 import * as React from "react";
 import {
   ApolloClient,
-  ApolloError,
+  CombinedGraphQLErrors,
   InMemoryCache,
   gql,
 } from "../../../core/index.js";
@@ -741,11 +741,9 @@ describe("schema proxy", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [
-            { message: "Could not resolve type", path: ["viewer", "book"] },
-          ],
-        })
+        new CombinedGraphQLErrors([
+          { message: "Could not resolve type", path: ["viewer", "book"] },
+        ])
       );
     }
   });
@@ -818,11 +816,9 @@ describe("schema proxy", () => {
       const { snapshot } = await renderStream.takeRender();
 
       expect(snapshot.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [
-            { message: 'Expected { foo: "bar" } to be a GraphQL schema.' },
-          ],
-        })
+        new CombinedGraphQLErrors([
+          { message: 'Expected { foo: "bar" } to be a GraphQL schema.' },
+        ])
       );
     }
   });

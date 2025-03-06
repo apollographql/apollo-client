@@ -2,7 +2,6 @@ import gql from "graphql-tag";
 
 import {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DefaultOptions,
   ObservableQuery,
@@ -2857,9 +2856,7 @@ describe("ApolloClient", () => {
               return;
             }
 
-            const expectedError = new ApolloError({
-              networkError: new Error("refetch failed"),
-            });
+            const expectedError = new Error("refetch failed");
 
             expect(result.error).toEqual(expectedError);
 
@@ -2867,9 +2864,7 @@ describe("ApolloClient", () => {
               expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
               expect(invariantDebugSpy).toHaveBeenCalledWith(
                 "In client.refetchQueries, Promise.all promise rejected with error %o",
-                new ApolloError({
-                  networkError: new Error("refetch failed"),
-                })
+                new Error("refetch failed")
               );
               done();
             });

@@ -18,7 +18,7 @@ import type {
 import { mergeOptions } from "../../utilities/index.js";
 import { equal } from "@wry/equality";
 import { DocumentType, verifyDocumentType } from "../parser/index.js";
-import { ApolloError } from "../../errors/index.js";
+import { CombinedGraphQLErrors } from "../../errors/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
@@ -139,7 +139,7 @@ export function useMutation<
             const { data, errors } = response;
             const error =
               errors && errors.length > 0 ?
-                new ApolloError({ graphQLErrors: errors })
+                new CombinedGraphQLErrors(errors)
               : void 0;
 
             const onError =

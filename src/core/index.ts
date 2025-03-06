@@ -24,7 +24,13 @@ export type {
 export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
 export type * from "./types.js";
 export type { Resolver, FragmentMatcher } from "./LocalState.js";
-export { isApolloError, ApolloError } from "../errors/index.js";
+export {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+  ServerError,
+  ServerParseError,
+  UnknownError,
+} from "../errors/index.js";
 /* Cache */
 
 export type {
@@ -59,8 +65,6 @@ export type * from "../cache/inmemory/types.js";
 
 export * from "../link/core/index.js";
 export * from "../link/http/index.js";
-export type { ServerError } from "../link/utils/index.js";
-export { throwServerError } from "../link/utils/index.js";
 
 /* Masking */
 export type {

@@ -2,7 +2,11 @@ import gql from "graphql-tag";
 
 import { ApolloClient } from "../core";
 import { InMemoryCache } from "../cache";
-import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "../errors";
+import {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+} from "../errors";
 import { mockObservableLink } from "../testing";
 import { GraphQLError } from "graphql";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
@@ -163,20 +167,18 @@ describe("GraphQL Subscriptions", () => {
     });
 
     await expect(stream).toEmitError(
-      new ApolloError({
-        graphQLErrors: [
-          {
-            message: "This is an error",
-            locations: [
-              {
-                column: 3,
-                line: 2,
-              },
-            ],
-            path: ["result"],
-          },
-        ],
-      })
+      new CombinedGraphQLErrors([
+        {
+          message: "This is an error",
+          locations: [
+            {
+              column: 3,
+              line: 2,
+            },
+          ],
+          path: ["result"],
+        },
+      ])
     );
   });
 
@@ -263,16 +265,14 @@ describe("GraphQL Subscriptions", () => {
     );
 
     await expect(stream).toEmitError(
-      new ApolloError({
-        protocolErrors: [
-          {
-            message: "cannot read message from websocket",
-            extensions: {
-              code: "WEBSOCKET_MESSAGE_ERROR",
-            },
+      new CombinedProtocolErrors([
+        {
+          message: "cannot read message from websocket",
+          extensions: {
+            code: "WEBSOCKET_MESSAGE_ERROR",
           },
-        ],
-      })
+        },
+      ])
     );
   });
 
@@ -355,16 +355,14 @@ describe("GraphQL Subscriptions", () => {
     );
 
     await expect(stream).toEmitError(
-      new ApolloError({
-        protocolErrors: [
-          {
-            message: "cannot read message from websocket",
-            extensions: {
-              code: "WEBSOCKET_MESSAGE_ERROR",
-            },
+      new CombinedProtocolErrors([
+        {
+          message: "cannot read message from websocket",
+          extensions: {
+            code: "WEBSOCKET_MESSAGE_ERROR",
           },
-        ],
-      })
+        },
+      ])
     );
   });
 
@@ -430,16 +428,14 @@ describe("GraphQL Subscriptions", () => {
     });
 
     await expect(stream).toEmitError(
-      new ApolloError({
-        protocolErrors: [
-          {
-            message: "cannot read message from websocket",
-            extensions: {
-              code: "WEBSOCKET_MESSAGE_ERROR",
-            },
+      new CombinedProtocolErrors([
+        {
+          message: "cannot read message from websocket",
+          extensions: {
+            code: "WEBSOCKET_MESSAGE_ERROR",
           },
-        ],
-      })
+        },
+      ])
     );
   });
 });

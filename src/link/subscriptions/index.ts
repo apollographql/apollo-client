@@ -35,7 +35,7 @@ import type { Operation, FetchResult } from "../core/index.js";
 import { ApolloLink } from "../core/index.js";
 import { isNonNullObject } from "../../utilities/index.js";
 import { Observable } from "rxjs";
-import { ApolloError } from "../../errors/index.js";
+import { CombinedGraphQLErrors } from "../../errors/index.js";
 import type { FormattedExecutionResult } from "graphql";
 
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSocket/close_event
@@ -77,9 +77,7 @@ export class GraphQLWsLink extends ApolloLink {
             }
 
             return observer.error(
-              new ApolloError({
-                graphQLErrors: Array.isArray(err) ? err : [err],
-              })
+              new CombinedGraphQLErrors(Array.isArray(err) ? err : [err])
             );
           },
           // casting around a wrong type in graphql-ws, which incorrectly expects `Sink<ExecutionResult>`

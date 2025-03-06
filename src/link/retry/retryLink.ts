@@ -8,7 +8,7 @@ import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
 import { buildRetryFunction } from "./retryFunction.js";
 import type { Observer } from "rxjs";
 import {
-  ApolloError,
+  CombinedProtocolErrors,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "../../errors/index.js";
@@ -62,9 +62,9 @@ class RetryableOperation {
       next: (result) => {
         if (graphQLResultHasProtocolErrors(result)) {
           this.onError(
-            new ApolloError({
-              protocolErrors: result.extensions[PROTOCOL_ERRORS_SYMBOL],
-            })
+            new CombinedProtocolErrors(
+              result.extensions[PROTOCOL_ERRORS_SYMBOL]
+            )
           );
           // Unsubscribe from the current subscription to prevent the `complete`
           // handler to be called as a result of the stream closing.

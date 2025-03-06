@@ -12,8 +12,7 @@ import { ApolloLink } from "../core/index.js";
 import type { Observer, Subscription } from "rxjs";
 import { compact, isNonEmptyArray } from "../../utilities/index.js";
 import { Observable } from "rxjs";
-import type { NetworkError } from "../../errors/index.js";
-import type { ServerError } from "../utils/index.js";
+import type { NetworkError, ServerError } from "../../errors/index.js";
 import {
   cacheSizes,
   AutoCleanedWeakCache,

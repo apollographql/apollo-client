@@ -4,12 +4,15 @@ import gql from "graphql-tag";
 
 import {
   ApolloClient,
-  ApolloError,
   ApolloLink,
   concat,
   TypedDocumentNode,
 } from "../../../core";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
+import {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+} from "../../../errors";
 import { InMemoryCache as Cache } from "../../../cache";
 import { ApolloProvider } from "../../context";
 import { MockSubscriptionLink, wait } from "../../../testing";
@@ -106,7 +109,7 @@ describe("useSubscription Hook", () => {
     }));
 
     const errorResult = {
-      error: new ApolloError({ errorMessage: "test" }),
+      error: new Error("test"),
       result: { data: { car: { make: null } } },
     };
 
@@ -1120,12 +1123,14 @@ describe("useSubscription Hook", () => {
       expect(renderCount).toBe(1);
       await waitFor(
         () => {
-          expect(result.current.error).toBeInstanceOf(ApolloError);
+          expect(result.current.error).toBeInstanceOf(Error);
         },
         { interval: 1 }
       );
-      expect(result.current.error!.protocolErrors[0].message).toBe(
-        "cannot read message from websocket"
+      expect(result.current.error).toEqual(
+        new CombinedProtocolErrors([
+          { message: "cannot read message from websocket" },
+        ])
       );
     });
   });
@@ -1236,7 +1241,7 @@ followed by new in-flight setup", async () => {
       const graphQlErrorResult: MockedSubscriptionResult = {
         result: {
           data: { totalLikes: 42 },
-          errors: [{ message: "test" } as any],
+          errors: [{ message: "test" }],
         },
       };
       const protocolErrorResult: MockedSubscriptionResult = {
@@ -1271,22 +1276,18 @@ followed by new in-flight setup", async () => {
             const snapshot = await takeSnapshot();
             expect(snapshot).toStrictEqual({
               loading: false,
-              error: new ApolloError({
-                graphQLErrors: graphQlErrorResult.result!.errors as any,
-              }),
+              error: new CombinedGraphQLErrors(
+                graphQlErrorResult.result!.errors as any
+              ),
               data: undefined,
               restart: expect.any(Function),
               variables: undefined,
             });
-            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(
-            new ApolloError({
-              graphQLErrors: graphQlErrorResult.result!.errors as any,
-            })
+            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors as any)
           );
-          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
@@ -1304,25 +1305,19 @@ followed by new in-flight setup", async () => {
           const snapshot = await takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
-            error: new ApolloError({
-              errorMessage: "test",
-              graphQLErrors: graphQlErrorResult.result!.errors as any,
-            }),
+            error: new CombinedGraphQLErrors(
+              graphQlErrorResult.result!.errors!
+            ),
             data: { totalLikes: 42 },
             restart: expect.any(Function),
             variables: undefined,
           });
-          expect(snapshot.error).toBeInstanceOf(ApolloError);
         }
 
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError).toHaveBeenCalledWith(
-          new ApolloError({
-            errorMessage: "test",
-            graphQLErrors: graphQlErrorResult.result!.errors as any,
-          })
+          new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
         );
-        expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
         expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
@@ -1365,6 +1360,8 @@ followed by new in-flight setup", async () => {
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
     });
+    // TODO: Need to rewrite this to actually simulate a protocol error, not
+    // just a plain error. The underlying setup does not use the PROTOCOL_ERRORS_SYMBOL.
     describe("protocol error", () => {
       it.each([undefined, "none", "all", "ignore"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
@@ -1385,23 +1382,15 @@ followed by new in-flight setup", async () => {
             const snapshot = await takeSnapshot();
             expect(snapshot).toStrictEqual({
               loading: false,
-              error: new ApolloError({
-                protocolErrors: [protocolErrorResult.error!],
-              }),
+              error: protocolErrorResult.error,
               data: undefined,
               restart: expect.any(Function),
               variables: undefined,
             });
-            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
 
           expect(onError).toHaveBeenCalledTimes(1);
-          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
-          expect(onError).toHaveBeenCalledWith(
-            new ApolloError({
-              protocolErrors: [protocolErrorResult.error!],
-            })
-          );
+          expect(onError).toHaveBeenCalledWith(protocolErrorResult.error);
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
@@ -1715,7 +1704,7 @@ describe("`restart` callback", () => {
       expect(snapshot).toStrictEqual({
         loading: false,
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         restart: expect.any(Function),
         variables: { id: "1" },
       });
@@ -1927,9 +1916,7 @@ describe("ignoreResults", () => {
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(
-        new ApolloError({ protocolErrors: [error] })
-      );
+      expect(onError).toHaveBeenLastCalledWith(error);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 

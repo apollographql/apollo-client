@@ -8,7 +8,7 @@ import {
   mockMultipartSubscriptionStream,
   ObservableStream,
 } from "../../../testing/internal";
-import { ApolloError } from "../../../core";
+import { CombinedProtocolErrors } from "../../../core";
 
 const query = gql`
   {
@@ -263,14 +263,12 @@ describe("RetryLink", () => {
         operationName: "MySubscription",
         query: subscription,
       }),
-      new ApolloError({
-        protocolErrors: [
-          {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ],
-      })
+      new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ])
     );
   });
 });

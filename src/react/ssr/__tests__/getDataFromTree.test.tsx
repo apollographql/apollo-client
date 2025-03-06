@@ -4,7 +4,11 @@ import React from "react";
 import gql from "graphql-tag";
 import { DocumentNode } from "graphql";
 
-import { ApolloClient, TypedDocumentNode } from "../../../core";
+import {
+  ApolloClient,
+  CombinedGraphQLErrors,
+  TypedDocumentNode,
+} from "../../../core";
 import { InMemoryCache as Cache } from "../../../cache";
 import { getDataFromTree } from "../getDataFromTree";
 import { mockSingleLink } from "../../../testing";
@@ -97,7 +101,7 @@ describe("SSR", () => {
               people: null,
             },
           },
-          errors: [new Error("this is an error")],
+          errors: [{ message: "this is an error" }],
         },
       });
 
@@ -114,7 +118,9 @@ describe("SSR", () => {
         if (!loading) {
           expect(data).toMatchObject({ allPeople: { people: null } });
           expect(error).toBeDefined();
-          expect(error?.graphQLErrors[0].message).toEqual("this is an error");
+          expect(error).toEqual(
+            new CombinedGraphQLErrors([{ message: "this is an error" }])
+          );
         }
 
         return null;

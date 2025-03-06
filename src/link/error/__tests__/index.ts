@@ -2,7 +2,6 @@ import gql from "graphql-tag";
 
 import { ApolloLink } from "../../core/ApolloLink";
 import { execute } from "../../core/execute";
-import { ServerError, throwServerError } from "../../utils/throwServerError";
 import { Observable, of } from "rxjs";
 import { onError, ErrorLink } from "../";
 import {
@@ -10,7 +9,7 @@ import {
   mockDeferStream,
   mockMultipartSubscriptionStream,
 } from "../../../testing/internal";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
+import { PROTOCOL_ERRORS_SYMBOL, ServerError } from "../../../errors";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {
@@ -253,7 +252,10 @@ describe("error handling", () => {
     const mockLink = new ApolloLink((operation) => {
       return new Observable((obs) => {
         const response = { status: 500, ok: false } as Response;
-        throwServerError(response, "ServerError", "app is crashing");
+        throw new ServerError("app is crashing", {
+          response,
+          result: "ServerError",
+        });
       });
     });
 
@@ -284,7 +286,7 @@ describe("error handling", () => {
     const mockLink = new ApolloLink((operation) => {
       return new Observable((obs) => {
         const response = { status: 500, ok: false } as Response;
-        throwServerError(response, "", "app is crashing");
+        throw new ServerError("app is crashing", { response, result: "" });
       });
     });
 

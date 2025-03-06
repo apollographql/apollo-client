@@ -1,13 +1,14 @@
 import { cloneDeep } from "lodash";
 import gql from "graphql-tag";
-import { GraphQLError } from "graphql";
+import { GraphQLError, GraphQLFormattedError } from "graphql";
 
-import { ApolloClient, ApolloError, FetchResult } from "../core";
+import { ApolloClient, FetchResult } from "../core";
 import { InMemoryCache } from "../cache";
 import { ApolloLink } from "../link/core";
 import { Observable, Subscription } from "rxjs";
 import { MockedResponse, mockSingleLink } from "../testing";
 import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { CombinedGraphQLErrors } from "../errors";
 
 describe("mutation results", () => {
   const query = gql`
@@ -297,7 +298,9 @@ describe("mutation results", () => {
   });
 
   it("should write results to cache according to errorPolicy", async () => {
-    const expectedFakeError = new GraphQLError("expected/fake error");
+    const expectedFakeError: GraphQLFormattedError = {
+      message: "expected/fake error",
+    };
 
     const client = new ApolloClient({
       cache: new InMemoryCache({
@@ -333,21 +336,14 @@ describe("mutation results", () => {
       }
     `;
 
-    await client
-      .mutate({
+    await expect(
+      client.mutate({
         mutation,
         variables: {
           newName: "Hugh Willson",
         },
       })
-      .then(
-        () => {
-          throw new Error("should have thrown for default errorPolicy");
-        },
-        (error) => {
-          expect(error.message).toBe(expectedFakeError.message);
-        }
-      );
+    ).rejects.toThrow(new CombinedGraphQLErrors([expectedFakeError]));
 
     expect(client.cache.extract()).toMatchSnapshot();
 
@@ -939,7 +935,8 @@ describe("mutation results", () => {
       const { client, obsQuery } = setupObsQuery(
         {
           request: { query: mutation },
-          result: { errors: [new Error("mock error")] },
+          result: { errors: [{ message: "mock error" }] },
+          maxUsageCount: 2,
         },
         {
           request: { query: queryWithTypename },
@@ -965,7 +962,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
 
       await expect(() =>
         client.mutate({
@@ -979,7 +976,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
       await obsQuery.refetch();
     });
 
@@ -1006,9 +1003,7 @@ describe("mutation results", () => {
             },
           },
         })
-      ).rejects.toThrow(
-        new ApolloError({ networkError: Error(`Hello... It's me.`) })
-      );
+      ).rejects.toThrow(Error(`Hello... It's me.`));
     });
   });
 
@@ -1511,7 +1506,8 @@ describe("mutation results", () => {
       const { client, obsQuery } = setupObsQuery(
         {
           request: { query: mutation },
-          result: { errors: [new Error("mock error")] },
+          result: { errors: [{ message: "mock error" }] },
+          maxUsageCount: 2,
         },
         {
           request: { query: queryWithTypename },
@@ -1555,7 +1551,7 @@ describe("mutation results", () => {
             });
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
       await expect(
         client.mutate({
           mutation,
@@ -1589,7 +1585,7 @@ describe("mutation results", () => {
             });
           },
         })
-      ).rejects.toThrow();
+      ).rejects.toThrow(new CombinedGraphQLErrors([{ message: "mock error" }]));
       await obsQuery.refetch();
     });
 
@@ -1613,9 +1609,7 @@ describe("mutation results", () => {
             throw new Error(`Hello... It's me.`);
           },
         })
-      ).rejects.toThrow(
-        new ApolloError({ networkError: Error(`Hello... It's me.`) })
-      );
+      ).rejects.toThrow(Error(`Hello... It's me.`));
     });
 
     it("mutate<MyType>() data should never be `undefined` in case of success", async () => {

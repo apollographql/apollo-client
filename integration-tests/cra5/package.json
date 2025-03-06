@@ -18,12 +18,6 @@
     "serve-app": "yarn serve -s build",
     "test": "playwright test"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "browserslist": {
     "production": [
       ">0.2%",
@@ -40,6 +34,6 @@
     "@playwright/test": "*",
     "playwright": "*",
     "serve": "*",
-    "shared": "*"
+    "shared": "workspace:^"
   }
 }

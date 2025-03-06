@@ -5,7 +5,7 @@
     "test": "playwright test"
   },
   "devDependencies": {
-    "shared": "*",
+    "shared": "workspace:^",
     "playwright": "*",
     "@playwright/test": "*",
     "serve": "*"

@@ -1526,7 +1526,7 @@ class QueryManager<TStore> {
     // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    fetchObservableWithInfo<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus, query?: DocumentNode | TypedDocumentNode<TData, TVars>, oldNetworkStatus?: NetworkStatus): ObservableAndInfo<TData>;
+    fetchObservableWithInfo<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus, query?: DocumentNode | TypedDocumentNode<TData, TVars>, emitLoadingState?: boolean): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus): Promise<ApolloQueryResult<TData>>;
     // (undocumented)

@@ -1296,14 +1296,15 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchObservableWithInfo<TData, TVars extends OperationVariables>(
+  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    query = options.query
+    query = options.query,
+    oldNetworkStatus = networkStatus
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
@@ -1336,7 +1337,8 @@ export class QueryManager<TStore> {
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
-        networkStatus
+        networkStatus,
+        oldNetworkStatus
       );
 
       if (
@@ -1633,10 +1635,9 @@ export class QueryManager<TStore> {
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus: NetworkStatus
+    networkStatus: NetworkStatus,
+    oldNetworkStatus: NetworkStatus
   ): ObservableAndInfo<TData> {
-    const oldNetworkStatus = queryInfo.networkStatus;
-
     queryInfo.init({
       document: query,
       variables,

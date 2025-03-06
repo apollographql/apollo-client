@@ -1642,7 +1642,6 @@ export class QueryManager<TStore> {
     queryInfo.init({
       document: query,
       variables,
-      networkStatus,
     });
 
     const readCache = () => queryInfo.getDiff();

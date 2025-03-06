@@ -5,7 +5,7 @@ import {
   ApolloNextAppProvider,
   NextSSRInMemoryCache,
   NextSSRApolloClient,
-} from "@apollo/experimental-nextjs-app-support/ssr";
+} from "@apollo/client-integration-nextjs/ssr";
 
 import { loadErrorMessages, loadDevMessages } from "@apollo/client/dev";
 import { setVerbosity } from "ts-invariant";

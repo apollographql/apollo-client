@@ -119,7 +119,10 @@ jobs:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install --force
+          command: npm install
+          working_directory: integration-tests
+      - run:
+          command: npm dedupe react react-dom
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps

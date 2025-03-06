@@ -7,12 +7,12 @@
     "build": "next build",
     "start": "next start",
     "serve-app": "npm run start",
-    "ci-preparations": "npm install --legacy-peer-deps @apollo/experimental-nextjs-app-support",
+    "ci-preparations": "npm install --legacy-peer-deps @apollo/client-integration-nextjs",
     "test": "playwright test"
   },
   "dependencies": {
-    "@apollo/client": "^3.10.1",
-    "@apollo/experimental-nextjs-app-support": "^0.10.0",
+    "@apollo/client": "^3.13.1",
+    "@apollo/client-integration-nextjs": "^0.12.0-alpha.1",
     "@graphql-tools/schema": "^10.0.0",
     "@types/node": "20.3.1",
     "@types/react": "18.2.14",
@@ -20,7 +20,7 @@
     "deepmerge": "^4.3.1",
     "graphql": "^16.8.1",
     "lodash": "^4.17.21",
-    "next": "^14.2.3",
+    "next": "^15.2.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "typescript": "5.1.3"

@@ -1230,7 +1230,8 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError();
+          queryInfo.resetLastWrite();
+          queryInfo.reset();
         }
 
         throw error;
@@ -1244,7 +1245,8 @@ export class QueryManager<TStore> {
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
-            queryInfo.markError();
+            queryInfo.resetLastWrite();
+            queryInfo.reset();
             // Throwing here effectively calls observer.error.
             throw new ApolloError({ graphQLErrors });
           }

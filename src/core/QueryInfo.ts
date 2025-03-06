@@ -479,11 +479,6 @@ export class QueryInfo {
       }
     }
   }
-
-  public markError() {
-    this.lastWrite = void 0;
-    this.reset();
-  }
 }
 
 export function shouldWriteResult<T>(

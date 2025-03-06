@@ -45,11 +45,11 @@ const entryPoints = [
   { dirs: ["utilities", "globals"], sideEffects: true },
 ] satisfies EntryPoint[];
 
-const lookupTrie = Object.create(null);
+const lookupTrie: Record<string, any> = {};
 entryPoints.forEach((info) => {
   let node = lookupTrie;
   info.dirs.forEach((dir) => {
-    const dirs = node.dirs || (node.dirs = Object.create(null));
+    const dirs = node.dirs || (node.dirs = {});
     node = dirs[dir] || (dirs[dir] = { isEntry: false });
   });
   node.isEntry = true;

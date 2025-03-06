@@ -123,10 +123,7 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
 ): QueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",

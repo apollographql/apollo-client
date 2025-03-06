@@ -83,7 +83,7 @@ import type { TODO } from "../utilities/types/TODO.js";
 
 const { hasOwnProperty } = Object.prototype;
 
-const IGNORE: IgnoreModifier = Object.create(null);
+const IGNORE = {} as IgnoreModifier;
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -196,10 +196,10 @@ export class QueryManager<TStore> {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
-    this.defaultContext = options.defaultContext || Object.create(null);
+    this.defaultContext = options.defaultContext || {};
 
     if ((this.onBroadcast = options.onBroadcast)) {
-      this.mutationStore = Object.create(null);
+      this.mutationStore = {};
     }
   }
 
@@ -663,7 +663,7 @@ export class QueryManager<TStore> {
   }
 
   public getQueryStore() {
-    const store: Record<string, QueryStoreValue> = Object.create(null);
+    const store: Record<string, QueryStoreValue> = {};
     this.queries.forEach((info, queryId) => {
       store[queryId] = {
         variables: info.variables,
@@ -888,7 +888,7 @@ export class QueryManager<TStore> {
     });
 
     if (this.mutationStore) {
-      this.mutationStore = Object.create(null);
+      this.mutationStore = {};
     }
 
     // begin removing data from the store

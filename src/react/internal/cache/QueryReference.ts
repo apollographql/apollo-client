@@ -29,8 +29,10 @@ type FetchMoreOptions<TData> = Parameters<
   ObservableQuery<TData>["fetchMore"]
 >[0];
 
-const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol();
-const PROMISE_SYMBOL: unique symbol = Symbol();
+const QUERY_REFERENCE_SYMBOL: unique symbol = Symbol.for(
+  "apollo.internal.queryRef"
+);
+const PROMISE_SYMBOL: unique symbol = Symbol.for("apollo.internal.refPromise");
 declare const QUERY_REF_BRAND: unique symbol;
 /**
  * A `QueryReference` is an opaque object returned by `useBackgroundQuery`.

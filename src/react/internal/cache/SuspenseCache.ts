@@ -4,7 +4,6 @@ import type {
   ObservableQuery,
   WatchFragmentOptions,
 } from "../../../core/index.js";
-import { canUseWeakMap } from "../../../utilities/index.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
 import { FragmentReference } from "./FragmentReference.js";
@@ -24,12 +23,8 @@ export interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private queryRefs = new Trie<{ current?: InternalQueryReference }>(
-    canUseWeakMap
-  );
-  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
-    canUseWeakMap
-  );
+  private queryRefs = new Trie<{ current?: InternalQueryReference }>();
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>();
 
   private options: SuspenseCacheOptions;
 

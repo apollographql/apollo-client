@@ -14,7 +14,6 @@ import {
   makeReference,
   DeepMerger,
   maybeDeepFreeze,
-  canUseWeakMap,
   isNonNullObject,
 } from "../../utilities/index.js";
 import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
@@ -626,7 +625,7 @@ class CacheGroup {
 
   public resetCaching() {
     this.d = this.caching ? dep<string>() : null;
-    this.keyMaker = new Trie(canUseWeakMap);
+    this.keyMaker = new Trie();
   }
 
   public depend(dataId: string, storeFieldName: string) {
@@ -721,7 +720,7 @@ export namespace EntityStore {
       return this;
     }
 
-    public readonly storageTrie = new Trie<StorageType>(canUseWeakMap);
+    public readonly storageTrie = new Trie<StorageType>();
     public getStorage(): StorageType {
       return this.storageTrie.lookupArray(arguments);
     }

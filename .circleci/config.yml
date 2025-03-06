@@ -122,6 +122,9 @@ jobs:
           command: npm install
           working_directory: integration-tests
       - run:
+          command: cat package-lock.json
+          working_directory: integration-tests
+      - run:
           command: npx playwright install-deps
           working_directory: integration-tests
       - run:
@@ -129,9 +132,6 @@ jobs:
           working_directory: integration-tests
       - run:
           command: npm run build --workspace=<< parameters.framework >> --if-present
-          working_directory: integration-tests
-      - run:
-          command: cat package-lock.json
           working_directory: integration-tests
       - run:
           command: npm run test --workspace=<< parameters.framework >>

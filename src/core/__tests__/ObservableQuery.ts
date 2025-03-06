@@ -1052,7 +1052,7 @@ describe("ObservableQuery", () => {
         data: undefined,
         errors: [error],
         loading: false,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         partial: true,
       });
 
@@ -2400,9 +2400,7 @@ describe("ObservableQuery", () => {
         data: dataOne,
         errors: [error],
         loading: false,
-        // TODO: The networkStatus returned here is different than the one
-        // returned from `observable.result()`. These should match
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         partial: false,
       });
     });

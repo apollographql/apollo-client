@@ -1,4 +1,4 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
 import type { Cache, ApolloCache } from "@apollo/client/cache";
@@ -15,14 +15,8 @@ import {
   canUseWeakMap,
 } from "@apollo/client/utilities";
 import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "@apollo/client/errors";
 import type { QueryManager } from "./QueryManager.js";
 import type { Unmasked } from "@apollo/client/masking";
-
-export type QueryStoreValue = Pick<
-  QueryInfo,
-  "variables" | "networkStatus" | "networkError" | "graphQLErrors"
->;
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -82,8 +76,6 @@ export class QueryInfo {
   lastRequestId = 1;
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
-  networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   stopped = false;
 
   private cache: ApolloCache<any>;
@@ -134,7 +126,6 @@ export class QueryInfo {
       document: query.document,
       variables: query.variables,
       networkError: null,
-      graphQLErrors: this.graphQLErrors || [],
       networkStatus,
     });
 
@@ -382,8 +373,6 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior
   ) {
     const merger = new DeepMerger();
-    const graphQLErrors =
-      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -402,8 +391,6 @@ export class QueryInfo {
       const diff = this.getDiff();
       result.data = merger.merge(diff.result, result.data);
     }
-
-    this.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === "no-cache") {
       this.updateLastDiff(
@@ -505,25 +492,13 @@ export class QueryInfo {
   }
 
   public markReady() {
-    this.networkError = null;
     return (this.networkStatus = NetworkStatus.ready);
   }
 
-  public markError(error: ApolloError) {
+  public markError() {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
-
     this.reset();
-
-    if (error.graphQLErrors) {
-      this.graphQLErrors = error.graphQLErrors;
-    }
-
-    if (error.networkError) {
-      this.networkError = error.networkError;
-    }
-
-    return error;
   }
 }
 

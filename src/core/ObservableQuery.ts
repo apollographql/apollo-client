@@ -1011,6 +1011,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     const oldNetworkStatus = this.networkStatus;
+
+    if (oldNetworkStatus !== NetworkStatus.loading && !newNetworkStatus) {
+      newNetworkStatus =
+        newOptions?.variables && !equal(newOptions.variables, oldVariables) ?
+          NetworkStatus.setVariables
+        : NetworkStatus.loading;
+    }
+
     this.networkStatus = newNetworkStatus ?? NetworkStatus.loading;
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {

@@ -1,6 +1,5 @@
 packages:
   - browser-esm
-  - cra4
   - cra5
   - next
   - vite

@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@playwright/test': 1.43.1
+  playwright: 1.43.1
+  serve: ^14.2.0
+
 importers:
 
   .:
@@ -15,13 +20,13 @@ importers:
   browser-esm:
     devDependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       playwright:
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       serve:
-        specifier: '*'
+        specifier: ^14.2.0
         version: 14.2.4
       shared:
         specifier: workspace:^
@@ -46,8 +51,8 @@ importers:
         version: 4.0.3(@types/webpack@4.41.40)(eslint@8.57.1)(react@18.3.1)(sockjs-client@1.6.1)(typescript@4.9.5)
     devDependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       '@types/react':
         specifier: ^18.0.26
         version: 18.2.14
@@ -55,10 +60,10 @@ importers:
         specifier: ^18.0.10
         version: 18.2.6
       playwright:
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       serve:
-        specifier: '*'
+        specifier: ^14.2.0
         version: 14.2.4
       shared:
         specifier: workspace:^
@@ -95,13 +100,13 @@ importers:
         version: 4.9.5
     devDependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       playwright:
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       serve:
-        specifier: '*'
+        specifier: ^14.2.0
         version: 14.2.4
       shared:
         specifier: workspace:^
@@ -114,7 +119,7 @@ importers:
         version: 3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@apollo/client-integration-nextjs':
         specifier: ^0.12.0-alpha.1
-        version: 0.12.0-alpha.1(@apollo/client@3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.2.14)(graphql@16.10.0)(next@15.2.1(@playwright/test@1.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 0.12.0-alpha.1(@apollo/client@3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.2.14)(graphql@16.10.0)(next@15.2.1(@playwright/test@1.43.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@graphql-tools/schema':
         specifier: ^10.0.0
         version: 10.0.21(graphql@16.10.0)
@@ -138,7 +143,7 @@ importers:
         version: 4.17.21
       next:
         specifier: ^15.2.1
-        version: 15.2.1(@playwright/test@1.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 15.2.1(@playwright/test@1.43.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react:
         specifier: ^18.3.0
         version: 18.3.1
@@ -150,14 +155,14 @@ importers:
         version: 5.1.3
     devDependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       '@types/lodash':
         specifier: ^4.14.195
         version: 4.17.16
       playwright:
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       shared:
         specifier: workspace:^
         version: link:../shared
@@ -181,8 +186,8 @@ importers:
   shared:
     dependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
 
   vite:
     dependencies:
@@ -200,8 +205,8 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       '@types/react':
         specifier: ^18.0.37
         version: 18.2.14
@@ -227,8 +232,8 @@ importers:
         specifier: ^0.3.4
         version: 0.3.5(eslint@8.57.1)
       playwright:
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       shared:
         specifier: workspace:^
         version: link:../shared
@@ -252,8 +257,8 @@ importers:
         version: 18.3.1(react@18.3.1)
     devDependencies:
       '@playwright/test':
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       '@types/react':
         specifier: ^18.0.37
         version: 18.2.14
@@ -279,8 +284,8 @@ importers:
         specifier: ^0.3.4
         version: 0.3.5(eslint@8.57.1)
       playwright:
-        specifier: '*'
-        version: 1.50.1
+        specifier: 1.43.1
+        version: 1.43.1
       shared:
         specifier: workspace:^
         version: link:../shared
@@ -1873,9 +1878,10 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.50.1':
-    resolution: {integrity: sha512-Jii3aBg+CEDpgnuDxEp/h7BimHcUTDlpEtce89xEumlJ5ef2hqepZ+PWp1DDpYC/VO9fmWVI1IlEaoI5fK9FXQ==}
-    engines: {node: '>=18'}
+  '@playwright/test@1.43.1':
+    resolution: {integrity: sha512-HgtQzFgNEEo4TE22K/X7sYTYNqEMMTZmFS8kTq6m8hXj+m1D8TgwgIbumHddJa9h4yl4GkKb8/bgAl2+g7eDgA==}
+    engines: {node: '>=16'}
+    deprecated: Please update to the latest version of Playwright to test up-to-date browsers.
     hasBin: true
 
   '@pmmmwh/react-refresh-webpack-plugin@0.4.3':
@@ -6367,7 +6373,7 @@ packages:
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
-      '@playwright/test': ^1.41.2
+      '@playwright/test': 1.43.1
       babel-plugin-react-compiler: '*'
       react: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
       react-dom: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
@@ -6752,14 +6758,14 @@ packages:
     resolution: {integrity: sha512-nDywThFk1i4BQK4twPQ6TA4RT8bDY96yeuCVBWL3ePARCiEKDRSrNGbFIgUJpLp+XeIR65v8ra7WuJOFUBtkMA==}
     engines: {node: '>=8'}
 
-  playwright-core@1.50.1:
-    resolution: {integrity: sha512-ra9fsNWayuYumt+NiM069M6OkcRb1FZSK8bgi66AtpFoWkg2+y0bJSNmkFrWhMbEBbVKC/EruAHH3g0zmtwGmQ==}
-    engines: {node: '>=18'}
+  playwright-core@1.43.1:
+    resolution: {integrity: sha512-EI36Mto2Vrx6VF7rm708qSnesVQKbxEWvPrfA1IPY6HgczBplDx7ENtx+K2n4kJ41sLLkuGfmb0ZLSSXlDhqPg==}
+    engines: {node: '>=16'}
     hasBin: true
 
-  playwright@1.50.1:
-    resolution: {integrity: sha512-G8rwsOQJ63XG6BbKj2w5rHeavFjy5zynBA9zsJMMtBoe/Uf757oG12NXz6e6OirF7RCrTVAKFXbLmn1RbL7Qaw==}
-    engines: {node: '>=18'}
+  playwright@1.43.1:
+    resolution: {integrity: sha512-V7SoH0ai2kNt1Md9E3Gwas5B9m8KR2GVvwZnAI6Pg0m3sh7UvgiYhRrhsziCmqMJNouPckiOhk8T+9bSAK0VIA==}
+    engines: {node: '>=16'}
     hasBin: true
 
   pnp-webpack-plugin@1.6.4:
@@ -9543,11 +9549,11 @@ snapshots:
       jsonpointer: 5.0.1
       leven: 3.1.0
 
-  '@apollo/client-integration-nextjs@0.12.0-alpha.1(@apollo/client@3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.2.14)(graphql@16.10.0)(next@15.2.1(@playwright/test@1.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+  '@apollo/client-integration-nextjs@0.12.0-alpha.1(@apollo/client@3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.2.14)(graphql@16.10.0)(next@15.2.1(@playwright/test@1.43.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
     dependencies:
       '@apollo/client': 3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@apollo/client-react-streaming': 0.12.0-alpha.1(@apollo/client@3.13.0(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.2.14)(graphql@16.10.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      next: 15.2.1(@playwright/test@1.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      next: 15.2.1(@playwright/test@1.43.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
     transitivePeerDependencies:
       - '@types/react'
@@ -11804,11 +11810,7 @@ snapshots:
       jest-runner: 26.6.3
       jest-runtime: 26.6.3
     transitivePeerDependencies:
-      - bufferutil
-      - canvas
       - supports-color
-      - ts-node
-      - utf-8-validate
 
   '@jest/test-sequencer@27.5.1':
     dependencies:
@@ -11963,9 +11965,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.50.1':
+  '@playwright/test@1.43.1':
     dependencies:
-      playwright: 1.50.1
+      playwright: 1.43.1
 
   '@pmmmwh/react-refresh-webpack-plugin@0.4.3(@types/webpack@4.41.40)(react-refresh@0.8.3)(sockjs-client@1.6.1)(webpack-dev-server@3.11.1(webpack@4.44.2))(webpack@4.44.2)':
     dependencies:
@@ -16560,11 +16562,7 @@ snapshots:
       stack-utils: 2.0.6
       throat: 5.0.0
     transitivePeerDependencies:
-      - bufferutil
-      - canvas
       - supports-color
-      - ts-node
-      - utf-8-validate
 
   jest-circus@27.5.1:
     dependencies:
@@ -17826,7 +17824,7 @@ snapshots:
 
   next-tick@1.1.0: {}
 
-  next@15.2.1(@playwright/test@1.50.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  next@15.2.1(@playwright/test@1.43.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@next/env': 15.2.1
       '@swc/counter': 0.1.3
@@ -17846,7 +17844,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 15.2.1
       '@next/swc-win32-arm64-msvc': 15.2.1
       '@next/swc-win32-x64-msvc': 15.2.1
-      '@playwright/test': 1.50.1
+      '@playwright/test': 1.43.1
       sharp: 0.33.5
     transitivePeerDependencies:
       - '@babel/core'
@@ -18254,11 +18252,11 @@ snapshots:
     dependencies:
       find-up: 3.0.0
 
-  playwright-core@1.50.1: {}
+  playwright-core@1.43.1: {}
 
-  playwright@1.50.1:
+  playwright@1.43.1:
     dependencies:
-      playwright-core: 1.50.1
+      playwright-core: 1.43.1
     optionalDependencies:
       fsevents: 2.3.2
 

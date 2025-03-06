@@ -1257,7 +1257,6 @@ export class QueryManager<TStore> {
             options,
             cacheWriteBehavior
           );
-          queryInfo.markReady();
         }
 
         const aqr: ApolloQueryResult<TData> = {

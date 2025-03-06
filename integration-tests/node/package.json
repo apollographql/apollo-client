@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "echo Done",
-    "test": "npm-run-all test:*",
     "test:cjs": "node --no-experimental-require-module --trace-require-module=all --test test-cjs.cjs",
     "test:require-esm": "node --test test-require-esm.cjs",
     "test:esm": "node --test test-esm.mjs"
@@ -16,7 +15,6 @@
     "react-dom": "^18.3.0"
   },
   "devDependencies": {
-    "npm-run-all": "^4.1.5",
     "resolve-esm": "^1.4.0"
   }
 }

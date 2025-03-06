@@ -112,7 +112,7 @@ jobs:
             pnpm pkg set "pnpm.overrides[react]=${VERSION}" "pnpm.overrides[react-dom]=${VERSION}"
           working_directory: integration-tests
       - run:
-          command: pnpm run ci-preparations --workspace=<< parameters.framework >> --if-present
+          command: pnpm run --if-present --filter << parameters.framework >> ci-preparations
           working_directory: integration-tests
       - run:
           command: pnpm install
@@ -127,10 +127,10 @@ jobs:
           command: pnpx playwright install
           working_directory: integration-tests
       - run:
-          command: pnpm run build --workspace=<< parameters.framework >> --if-present
+          command: pnpm run --if-present --filter << parameters.framework >> build
           working_directory: integration-tests
       - run:
-          command: pnpm run test --workspace=<< parameters.framework >>
+          command: pnpm run --if-present --filter << parameters.framework >> "/test(:.*|$)/"
           working_directory: integration-tests
 
   TestPeerDepTypes:

@@ -909,11 +909,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
-    oldNetworkStatus: NetworkStatus,
     newNetworkStatus: NetworkStatus,
+    emitLoadingState: boolean,
     query?: DocumentNode
   ) {
-    const { notifyOnNetworkStatusChange = false } = options;
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
@@ -922,9 +921,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options,
       newNetworkStatus,
       query,
-      notifyOnNetworkStatusChange &&
-        oldNetworkStatus !== newNetworkStatus &&
-        isNetworkRequestInFlight(newNetworkStatus)
+      emitLoadingState
     );
   }
 
@@ -1104,10 +1101,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     const variables = options.variables && { ...options.variables };
+    const { notifyOnNetworkStatusChange = false } = options;
     const { observable, fromLink } = this.fetch(
       options,
-      oldNetworkStatus,
       newNetworkStatus,
+      notifyOnNetworkStatusChange &&
+        oldNetworkStatus !== newNetworkStatus &&
+        isNetworkRequestInFlight(newNetworkStatus),
       query
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {

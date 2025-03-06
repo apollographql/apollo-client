@@ -122,9 +122,6 @@ jobs:
           command: npm install
           working_directory: integration-tests
       - run:
-          command: npm dedupe react react-dom
-          working_directory: integration-tests
-      - run:
           command: npx playwright install-deps
           working_directory: integration-tests
       - run:
@@ -190,6 +187,7 @@ workflows:
                 - latest
                 - next
             exclude:
+              # CRA only works with React 18
               - framework: cra4
                 react: next
               - framework: cra4
@@ -198,10 +196,15 @@ workflows:
                 react: next
               - framework: cra5
                 react: latest
-              # next ships it's own React version anyways, no need to run this test twice
+              # next ships it's own React version anyways
               - framework: next
                 react: next
               - framework: next
+                react: 18
+              # node doesn't use React in the tests
+              - framework: node
+                react: next
+              - framework: node
                 react: 18
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>

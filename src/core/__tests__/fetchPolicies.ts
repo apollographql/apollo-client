@@ -502,7 +502,7 @@ describe("no-cache", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: true,
       });
       expect(client.cache.extract(true)).toEqual({});
@@ -795,7 +795,7 @@ describe("cache-and-network", function () {
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: true,
-      networkStatus: NetworkStatus.setVariables,
+      networkStatus: NetworkStatus.refetch,
       partial: true,
     });
 

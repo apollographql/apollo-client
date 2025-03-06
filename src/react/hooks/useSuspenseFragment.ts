@@ -5,16 +5,16 @@ import type {
   Reference,
   StoreObject,
   TypedDocumentNode,
-} from "../../core/index.js";
-import { canonicalStringify } from "../../cache/index.js";
+} from "@apollo/client/core";
+import { canonicalStringify } from "@apollo/client/cache";
 import { useApolloClient } from "./useApolloClient.js";
-import { getSuspenseCache } from "../internal/index.js";
+import { getSuspenseCache } from "@apollo/client/react/internal";
 import React, { useMemo } from "rehackt";
 import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
-import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import type { NoInfer, VariablesOption } from "../types/types.js";
+import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { NoInfer, VariablesOption } from "@apollo/client/react";
 
 type From<TData> =
   | StoreObject

@@ -1,4 +1,4 @@
-import { ApolloLink } from "../core/index.js";
+import { ApolloLink } from "@apollo/client/link/core";
 import type { HttpOptions } from "./selectHttpOptionsAndBody.js";
 import { createHttpLink } from "./createHttpLink.js";
 

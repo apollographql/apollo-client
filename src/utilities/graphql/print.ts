@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
 import {

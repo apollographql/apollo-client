@@ -1,6 +1,6 @@
 import React from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
 import {
   ApolloClient,
@@ -8,19 +8,19 @@ import {
   ApolloLink,
   concat,
   TypedDocumentNode,
-} from "../../../core";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
-import { InMemoryCache as Cache } from "../../../cache";
-import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink, wait } from "../../../testing";
-import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
-import { SubscriptionHookOptions } from "../../types/types";
+} from "../../../core/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
+import { InMemoryCache as Cache } from "../../../cache/index.js";
+import { ApolloProvider } from "../../context/index.js";
+import { MockSubscriptionLink, wait } from "../../../testing/index.js";
+import { useSubscription } from "../useSubscription.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { SubscriptionHookOptions } from "../../types/types.js";
 import { ErrorBoundary } from "react-error-boundary";
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
-import { Masked, MaskedDocumentNode } from "../../../masking";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+import { Masked, MaskedDocumentNode } from "../../../masking/index.js";
 import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,

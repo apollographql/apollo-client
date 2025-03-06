@@ -1,7 +1,8 @@
-import { invariant } from "../../utilities/globals/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 import * as React from "rehackt";
 
-import { canUseLayoutEffect } from "../../utilities/index.js";
+import { canUseLayoutEffect } from "@apollo/client/utilities";
 
 let didWarnUncachedGetSnapshot = false;
 

@@ -7,18 +7,18 @@ import type {
   MutationResult,
   MutationTuple,
   NoInfer,
-} from "../types/types.js";
+} from "@apollo/client/react";
 
 import type {
   ApolloCache,
   DefaultContext,
   MutationOptions,
   OperationVariables,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+} from "@apollo/client/core";
+import { mergeOptions } from "@apollo/client/utilities";
 import { equal } from "@wry/equality";
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
-import { ApolloError } from "../../errors/index.js";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { ApolloError } from "@apollo/client/errors";
 import { useApolloClient } from "./useApolloClient.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 

@@ -1,4 +1,8 @@
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
@@ -10,7 +14,7 @@ import type {
   StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   isField,
   resultKeyNameFromField,
@@ -31,7 +35,7 @@ import {
   canonicalStringify,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { Cache } from "../core/types/Cache.js";
 import type {
   DiffQueryAgainstStoreOptions,

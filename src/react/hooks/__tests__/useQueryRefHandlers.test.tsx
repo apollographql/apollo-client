@@ -7,32 +7,35 @@ import {
   TypedDocumentNode,
   gql,
   split,
-} from "../../../core";
+} from "../../../core/index.js";
 import {
   SubscribeToMoreFunction,
   SubscribeToMoreUpdateQueryFn,
-} from "../../../core/watchQueryOptions";
+} from "../../../core/watchQueryOptions.js";
 import {
   MockLink,
   MockSubscriptionLink,
   MockedResponse,
-} from "../../../testing";
+} from "../../../testing/index.js";
 import {
   createClientWrapper,
   PaginatedCaseData,
   SimpleCaseData,
   setupPaginatedCase,
   setupSimpleCase,
-} from "../../../testing/internal";
-import { useQueryRefHandlers } from "../useQueryRefHandlers";
-import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
+} from "../../../testing/internal/index.js";
+import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
+import { UseReadQueryResult, useReadQuery } from "../useReadQuery.js";
 import { Suspense } from "react";
-import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
-import userEvent from "@testing-library/user-event";
-import { QueryRef } from "../../internal";
-import { useBackgroundQuery } from "../useBackgroundQuery";
-import { useLoadableQuery } from "../useLoadableQuery";
-import { concatPagination, getMainDefinition } from "../../../utilities";
+import { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
+import { userEvent } from "@testing-library/user-event";
+import { QueryRef } from "../../internal/index.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import {
+  concatPagination,
+  getMainDefinition,
+} from "../../../utilities/index.js";
 import {
   createRenderStream,
   disableActEnvironment,

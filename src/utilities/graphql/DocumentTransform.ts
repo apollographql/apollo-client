@@ -1,7 +1,7 @@
 import { Trie } from "@wry/trie";
 import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
 import { checkDocument } from "./getFromAST.js";
-import { invariant } from "../globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 import type { DocumentNode } from "graphql";
 import { WeakCache } from "@wry/caches";
 import { wrap } from "optimism";

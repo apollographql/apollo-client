@@ -6,11 +6,11 @@ import type {
   useFragment,
   useQueryRefHandlers,
   useSuspenseFragment,
-} from "../index.js";
+} from "@apollo/client/react/hooks";
 import type { QueryManager } from "../../../core/QueryManager.js";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
-import type { ObservableQuery } from "../../../core/ObservableQuery.js";
-import type { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
+import type { ApolloClient } from "@apollo/client/core";
+import type { ObservableQuery } from "@apollo/client/core";
+import type { createQueryPreloader } from "@apollo/client/react";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 

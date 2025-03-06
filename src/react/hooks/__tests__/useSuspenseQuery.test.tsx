@@ -6,10 +6,10 @@ import {
   RenderHookOptions,
   renderHook,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
 
@@ -29,26 +29,32 @@ import {
   NetworkStatus,
   ApolloQueryResult,
   ErrorPolicy,
-} from "../../../core";
+} from "../../../core/index.js";
 import {
   DeepPartial,
   compact,
   concatPagination,
   getMainDefinition,
   offsetLimitPagination,
-} from "../../../utilities";
+} from "../../../utilities/index.js";
 import {
   MockedResponse,
   MockSubscriptionLink,
   MockLink,
-} from "../../../testing";
-import { ApolloProvider } from "../../context";
-import { SuspenseQueryHookFetchPolicy, skipToken } from "../../../react";
-import { UseSuspenseQueryResult, useSuspenseQuery } from "../useSuspenseQuery";
+} from "../../../testing/index.js";
+import { ApolloProvider } from "../../context/index.js";
+import {
+  SuspenseQueryHookFetchPolicy,
+  skipToken,
+} from "../../../react/index.js";
+import {
+  UseSuspenseQueryResult,
+  useSuspenseQuery,
+} from "../useSuspenseQuery.js";
 import {
   RefetchWritePolicy,
   WatchQueryFetchPolicy,
-} from "../../../core/watchQueryOptions";
+} from "../../../core/watchQueryOptions.js";
 import {
   PaginatedCaseData,
   PaginatedCaseVariables,
@@ -57,15 +63,19 @@ import {
   actAsync,
   renderAsync,
   renderHookAsync,
-} from "../../../testing/internal";
-import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
+} from "../../../testing/internal/index.js";
+import {
+  Masked,
+  MaskedDocumentNode,
+  Unmasked,
+} from "../../../masking/index.js";
 
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react";
+import { MockedProvider } from "../../../testing/react/index.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

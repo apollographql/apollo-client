@@ -4,7 +4,7 @@ import type {
   ExecutionPatchResult,
   ApolloPayloadResult,
   FetchResult,
-} from "../../link/core/index.js";
+} from "@apollo/client/link/core";
 import { isNonNullObject } from "./objects.js";
 import { isNonEmptyArray } from "./arrays.js";
 import { DeepMerger } from "./mergeDeep.js";

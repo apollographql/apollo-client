@@ -1,21 +1,21 @@
-import { spyOnConsole } from "../../../testing/internal";
+import { spyOnConsole } from "../../../testing/internal/index.js";
 import {
   ApolloErrorMessageHandler,
   InvariantError,
   invariant,
-} from "../invariantWrappers";
+} from "../index.js";
 
-function withDev(): typeof import("../../../dev") & AsyncDisposable {
+function withDev(): typeof import("../../../dev/index.js") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];
   window[ApolloErrorMessageHandler] = undefined;
-  let dev: typeof import("../../../dev");
+  let dev: typeof import("../../../dev/index.js");
   let restore = () => {};
   // we're running the test inside of `jest.isolateModulesAsync` to avoid
   // the test overriding the module-level state of the `dev` module
   const cleanupFinished = jest.isolateModulesAsync(
     () =>
       new Promise<void>((resolve) => {
-        dev = require("../../../dev");
+        dev = require("../../../dev/index.js");
         restore = resolve;
       })
   );

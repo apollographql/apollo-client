@@ -7,7 +7,7 @@ import {
   ASTNode,
   DocumentNode,
 } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
 import {
   storeKeyNameFromField,
@@ -18,15 +18,15 @@ import {
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from "../../../utilities";
-import { StoreWriter } from "../writeToStore";
-import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
-import { InMemoryCache } from "../inMemoryCache";
-import { TypedDocumentNode } from "../../../core";
-import { extractFragmentContext } from "../helpers";
-import { KeyFieldsFunction } from "../policies";
-import { invariant } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+} from "../../../utilities/index.js";
+import { StoreWriter } from "../writeToStore.js";
+import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { TypedDocumentNode } from "../../../core/index.js";
+import { extractFragmentContext } from "../helpers.js";
+import { KeyFieldsFunction } from "../policies.js";
+import { invariant } from "@apollo/client/utilities/invariant";
+import { spyOnConsole } from "../../../testing/internal/index.js";
 
 const getIdField: KeyFieldsFunction = ({ id }) => {
   invariant(typeof id === "string", "id is not a string");

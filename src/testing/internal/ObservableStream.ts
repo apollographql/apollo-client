@@ -5,7 +5,7 @@ import * as matcherUtils from "jest-matcher-utils";
 import type {
   Observable,
   ObservableSubscription,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { ReadableStream } from "node:stream/web";
 
 export interface TakeOptions {

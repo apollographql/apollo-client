@@ -4,10 +4,10 @@ import {
   handleError,
   readMultipartBody,
 } from "../../../link/http/parseAndCheckHttpResponse.js";
-import { maybe } from "../../index.js";
-import { serializeFetchParameter } from "../../../core/index.js";
+import { maybe } from "@apollo/client/utilities";
+import { serializeFetchParameter } from "@apollo/client/core";
 
-import type { OperationVariables } from "../../../core/index.js";
+import type { OperationVariables } from "@apollo/client/core";
 import type { Body } from "../../../link/http/selectHttpOptionsAndBody.js";
 import { generateOptionsForMultipartSubscription } from "../shared.js";
 import type { CreateMultipartSubscriptionOptions } from "../shared.js";

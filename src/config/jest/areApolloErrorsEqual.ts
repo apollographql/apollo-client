@@ -1,4 +1,4 @@
-import type { ApolloError } from "../../errors/index.js";
+import type { ApolloError } from "@apollo/client/errors";
 import type { Tester } from "@jest/expect-utils";
 function isApolloError(e: any): e is ApolloError {
   return e instanceof Error && e.name == "ApolloError";

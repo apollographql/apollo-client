@@ -3,8 +3,8 @@ import type {
   ApolloClient,
   ObservableQuery,
   WatchFragmentOptions,
-} from "../../../core/index.js";
-import { canUseWeakMap } from "../../../utilities/index.js";
+} from "@apollo/client/core";
+import { canUseWeakMap } from "@apollo/client/utilities";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
 import { FragmentReference } from "./FragmentReference.js";

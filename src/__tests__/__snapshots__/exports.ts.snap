@@ -6,7 +6,6 @@ Array [
   "ApolloClient",
   "ApolloError",
   "ApolloLink",
-  "Cache",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -53,7 +52,6 @@ Array [
 exports[`exports of public entry points @apollo/client/cache 1`] = `
 Array [
   "ApolloCache",
-  "Cache",
   "EntityStore",
   "InMemoryCache",
   "MissingFieldError",
@@ -75,7 +73,6 @@ Array [
   "ApolloClient",
   "ApolloError",
   "ApolloLink",
-  "Cache",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -381,7 +378,6 @@ Array [
   "AutoCleanedStrongCache",
   "AutoCleanedWeakCache",
   "Concast",
-  "DEV",
   "DeepMerger",
   "DocumentTransform",
   "Observable",
@@ -405,6 +401,7 @@ Array [
   "createFragmentMap",
   "createFulfilledPromise",
   "createRejectedPromise",
+  "defaultCacheSizes",
   "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
@@ -472,15 +469,26 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/utilities/environment 1`] = `
+Array [
+  "__DEV__",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities/globals 1`] = `
 Array [
-  "DEV",
-  "InvariantError",
-  "__DEV__",
   "global",
-  "invariant",
   "maybe",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/utilities/invariant 1`] = `
+Array [
+  "ApolloErrorMessageHandler",
+  "InvariantError",
+  "invariant",
   "newInvariantError",
+  "setVerbosity",
 ]
 `;
 

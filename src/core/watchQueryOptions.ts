@@ -1,7 +1,7 @@
 import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
-import type { FetchResult } from "../link/core/index.js";
+import type { FetchResult } from "@apollo/client/link/core";
 import type {
   DefaultContext,
   MutationQueryReducersMap,
@@ -10,11 +10,11 @@ import type {
   OnQueryUpdated,
   InternalRefetchQueriesInclude,
 } from "./types.js";
-import type { ApolloCache } from "../cache/index.js";
+import type { ApolloCache } from "@apollo/client/cache";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { Unmasked } from "../masking/index.js";
-import type { DeepPartial, NoInfer } from "../utilities/index.js";
+import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:

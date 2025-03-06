@@ -1,6 +1,6 @@
-import { Operation } from "../../core/types";
+import { Operation } from "../../core/types.js";
 
-import { buildRetryFunction } from "../retryFunction";
+import { buildRetryFunction } from "../retryFunction.js";
 
 describe("buildRetryFunction", () => {
   const operation = { operationName: "foo" } as Operation;

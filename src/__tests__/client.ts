@@ -7,7 +7,7 @@ import {
   visit,
   FormattedExecutionResult,
 } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
 import {
   ApolloClient,
@@ -18,7 +18,7 @@ import {
   Operation,
   TypedDocumentNode,
   NetworkStatus,
-} from "../core";
+} from "../core/index.js";
 
 import {
   DocumentTransform,
@@ -26,24 +26,24 @@ import {
   ObservableSubscription,
   offsetLimitPagination,
   removeDirectivesFromDocument,
-} from "../utilities";
-import { ApolloLink } from "../link/core";
+} from "../utilities/index.js";
+import { ApolloLink } from "../link/core/index.js";
 import {
   createFragmentRegistry,
   InMemoryCache,
   makeVar,
   PossibleTypesMap,
-} from "../cache";
-import { ApolloError } from "../errors";
+} from "../cache/index.js";
+import { ApolloError } from "../errors/index.js";
 
-import { mockSingleLink, MockLink, wait } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
+import { mockSingleLink, MockLink, wait } from "../testing/index.js";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 import { waitFor } from "@testing-library/react";
 
 describe("client", () => {
   it("can be loaded via require", () => {
     /* tslint:disable */
-    const ApolloClientRequire = require("../").ApolloClient;
+    const ApolloClientRequire = require("../index.js").ApolloClient;
     /* tslint:enable */
 
     const client = new ApolloClientRequire({

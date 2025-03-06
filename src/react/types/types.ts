@@ -6,9 +6,9 @@ import type {
   Observable,
   ObservableSubscription,
   OnlyRequiredProperties,
-} from "../../utilities/index.js";
-import type { FetchResult } from "../../link/core/index.js";
-import type { ApolloError } from "../../errors/index.js";
+} from "@apollo/client/utilities";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { ApolloError } from "@apollo/client/errors";
 import type {
   ApolloCache,
   ApolloClient,
@@ -24,14 +24,14 @@ import type {
   FetchMoreQueryOptions,
   ErrorPolicy,
   RefetchWritePolicy,
-} from "../../core/index.js";
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
+} from "@apollo/client/core";
 import type {
   MutationSharedOptions,
   SharedWatchQueryOptions,
-  SubscribeToMoreFunction,
-  UpdateQueryMapFn,
 } from "../../core/watchQueryOptions.js";
-import type { MaybeMasked, Unmasked } from "../../masking/index.js";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 
 /* QueryReference type */
 

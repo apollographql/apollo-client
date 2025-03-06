@@ -3,7 +3,7 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/promise.ts
  */
 
-import { canUseAsyncIteratorSymbol } from "../../../utilities/index.js";
+import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
 
 interface PromiseIterator<T> {
   next(): Promise<IteratorResult<T, ArrayBuffer | undefined>>;

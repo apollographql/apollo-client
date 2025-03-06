@@ -1,13 +1,18 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { print } from "graphql";
 import {
   Observable,
   ObservableSubscription,
-} from "../../../utilities/observables/Observable";
-import { ApolloLink } from "../../../link/core";
-import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache";
-import { MockSubscriptionLink } from "../../../testing/core";
-import { ApolloClient, NextLink, Operation, Reference } from "../../../core";
+} from "../../../utilities/observables/Observable.js";
+import { ApolloLink } from "../../../link/core/index.js";
+import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
+import { MockSubscriptionLink } from "../../../testing/core/index.js";
+import {
+  ApolloClient,
+  NextLink,
+  Operation,
+  Reference,
+} from "../../../core/index.js";
 
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {

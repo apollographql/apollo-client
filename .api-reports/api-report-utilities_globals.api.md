@@ -6,10 +6,9 @@
 
 import { InvariantError } from 'ts-invariant';
 
-// @public @deprecated (undocumented)
-const DEV: boolean;
-export { DEV }
-export { DEV as __DEV__ }
+// @public (undocumented)
+const __DEV___2: boolean;
+export { __DEV___2 as __DEV__ }
 
 // @public (undocumented)
 const global_2: typeof globalThis & Window;

@@ -1,4 +1,4 @@
-import { cloneDeep } from "../cloneDeep";
+import { cloneDeep } from "../cloneDeep.js";
 
 describe("cloneDeep", () => {
   it("will clone primitive values", () => {

@@ -15,7 +15,7 @@ import type {
   StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   isReference,
   isField,
@@ -27,7 +27,7 @@ import {
   createFragmentMap,
   getFragmentDefinitions,
   isArray,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 

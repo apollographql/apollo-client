@@ -1,4 +1,4 @@
-import { HttpLink } from "../../link/http/index.js";
+import { HttpLink } from "@apollo/client/link/http";
 import type {
   GraphQLFormattedError,
   InitialIncrementalExecutionResult,
@@ -10,7 +10,7 @@ import {
   TextEncoderStream,
   TransformStream,
 } from "node:stream/web";
-import type { ApolloPayloadResult } from "../../core/index.js";
+import type { ApolloPayloadResult } from "@apollo/client/core";
 
 const hasNextSymbol = Symbol("hasNext");
 

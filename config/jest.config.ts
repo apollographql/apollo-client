@@ -8,9 +8,6 @@ const defaults = {
     import.meta.resolve("./FixJSDOMEnvironment.js")
   ),
   setupFilesAfterEnv: ["<rootDir>/config/jest/setup.ts"],
-  globals: {
-    __DEV__: true,
-  },
   testEnvironmentOptions: {
     url: "http://localhost",
   },
@@ -22,14 +19,13 @@ const defaults = {
     "^.+\\.tsx?$": [
       "ts-jest",
       {
-        diagnostics: {
-          warnOnly: process.env.TEST_ENV !== "ci",
-        },
+        // just transpile, no type checking. We type-check in CI by running `tsc` directly.
+        isolatedModules: true,
         tsconfig: join(import.meta.dirname, "..", "tsconfig.tests.json"),
       },
     ],
   },
-  resolver: "ts-jest-resolver",
+  resolver: "<rootDir>/config/jest/resolver.ts",
 };
 
 const ignoreTSFiles = ".ts$";

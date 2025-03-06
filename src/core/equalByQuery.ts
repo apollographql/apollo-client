@@ -13,7 +13,7 @@ import type {
 
 import type { ApolloQueryResult, OperationVariables } from "./types.js";
 
-import type { FragmentMap } from "../utilities/index.js";
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   createFragmentMap,
   getFragmentDefinitions,
@@ -22,7 +22,7 @@ import {
   isField,
   resultKeyNameFromField,
   shouldInclude,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 
 // Returns true if aResult and bResult are deeply equal according to the fields
 // selected by the given query, ignoring any fields marked as @nonreactive.

@@ -10,6 +10,25 @@ jobs:
   #     - run: npm ci
   #     - run: npm run bundlesize
 
+  Circularity:
+    docker:
+      - image: cimg/node:23.7.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run madge
+
+  Publint:
+    docker:
+      - image: cimg/node:23.7.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run build
+      - run: npm run publint
+
   Lint:
     docker:
       - image: cimg/node:23.7.0
@@ -38,6 +57,7 @@ jobs:
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
+      - run: npm run typecheck
       - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
       - run:
           name: Jest suite with coverage
@@ -84,18 +104,22 @@ jobs:
           at: /tmp/workspace
       - run: npm version
       - run:
-          command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          # due to a bug with overrides that will be fixed in npm 11.2.0 (to be released) we need to install these everywhere manually
+          #command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          command: npm exec --workspaces -c 'jq -e ".dependencies[\"@apollo/client\"]" package.json && npm pkg set "dependencies[@apollo/client]=/tmp/workspace/apollo-client.tgz" || true'
           working_directory: integration-tests
       - run:
           command: |
-            export VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r)
-            npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+            export VERSION=$(npm view react@<< parameters.react >> version)
+            # due to a bug with overrides that will be fixed in npm 11.2.0 (to be released) we need to install these everywhere manually
+            # npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+            npm exec --workspaces -c 'jq -e ".dependencies.react" package.json && npm pkg set "dependencies[react]=${VERSION}" "dependencies[react-dom]=${VERSION}" || true'
           working_directory: integration-tests
       - run:
           command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install
+          command: npm install --force
           working_directory: integration-tests
       - run:
           command: npx playwright install-deps
@@ -137,6 +161,8 @@ workflows:
             parameters:
               project:
                 ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
+      - Circularity
+      - Publint
       - Attest
       - Formatting
       - Lint
@@ -151,21 +177,29 @@ workflows:
                 - cra4
                 - cra5
                 - next
-                - dual-module-test-esm
-                - dual-module-test-standard
+                - node
                 - vite
                 - vite-swc
                 - wrapping-library
                 # -browser-esm would need a package publish to npm/CDNs
               react:
+                - "18.3.0"
                 - latest
                 - next
             exclude:
               - framework: cra4
                 react: next
+              - framework: cra4
+                react: latest
+              - framework: cra5
+                react: next
+              - framework: cra5
+                react: latest
               # next ships it's own React version anyways, no need to run this test twice
               - framework: next
                 react: next
+              - framework: next
+                react: 18
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:

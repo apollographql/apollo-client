@@ -1,4 +1,4 @@
-import { ObjectCanon } from "../object-canon";
+import { ObjectCanon } from "../object-canon.js";
 
 describe("ObjectCanon", () => {
   it("can canonicalize objects and arrays", () => {

@@ -1,4 +1,4 @@
-import { Observable } from "../../utilities/index.js";
+import { Observable } from "@apollo/client/utilities";
 
 export function fromPromise<T>(promise: Promise<T>): Observable<T> {
   return new Observable<T>((observer) => {

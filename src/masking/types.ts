@@ -6,7 +6,7 @@ import type {
   RemoveMaskedMarker,
   UnwrapFragmentRefs,
 } from "./internal/types.js";
-import type { Prettify } from "../utilities/index.js";
+import type { Prettify } from "@apollo/client/utilities";
 
 export interface DataMasking {}
 

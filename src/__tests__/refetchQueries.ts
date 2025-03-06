@@ -8,8 +8,8 @@ import {
   Observable,
   TypedDocumentNode,
   ObservableQuery,
-} from "../core";
-import { ObservableStream } from "../testing/internal";
+} from "../core/index.js";
+import { ObservableStream } from "../testing/internal/index.js";
 
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {

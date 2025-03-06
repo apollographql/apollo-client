@@ -1,4 +1,8 @@
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import type {
   InlineFragmentNode,
@@ -12,7 +16,7 @@ import type {
   StoreValue,
   StoreObject,
   Reference,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   storeKeyNameFromField,
   argumentsObjectFromField,
@@ -20,7 +24,7 @@ import {
   getStoreKeyName,
   isNonNullObject,
   stringifyForDisplay,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type {
   IdGetter,
   MergeInfo,
@@ -52,7 +56,7 @@ import {
   keyArgsFnFromSpecifier,
   keyFieldsFnFromSpecifier,
 } from "./key-extractor.js";
-import { disableWarningsSlot } from "../../masking/index.js";
+import { disableWarningsSlot } from "@apollo/client/masking";
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

@@ -1,4 +1,4 @@
-import { Observable, Subscriber } from "../Observable";
+import { Observable, Subscriber } from "../Observable.js";
 
 describe("Observable", () => {
   describe("subclassing by non-class constructor functions", () => {

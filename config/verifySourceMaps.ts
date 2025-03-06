@@ -10,6 +10,9 @@ export const verifySourceMaps: BuildStep = async (options) => {
   // as we won't ship declaration maps in the end
   for await (const file of glob(`${options.targetDir}/**/*.{js,cjs}`, {
     withFileTypes: true,
+    exclude(fileName) {
+      return fileName.parentPath.indexOf("legacyEntryPoints") !== -1;
+    },
   })) {
     const filePath = join(file.parentPath, file.name);
     const distFileContents = await readFile(filePath, "utf-8");

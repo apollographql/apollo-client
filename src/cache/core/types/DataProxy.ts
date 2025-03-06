@@ -2,8 +2,8 @@ import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-li
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type { MissingFieldError } from "./common.js";
-import type { DeepPartial, Reference } from "../../../utilities/index.js";
-import type { Unmasked } from "../../../masking/index.js";
+import type { DeepPartial, Reference } from "@apollo/client/utilities";
+import type { Unmasked } from "@apollo/client/masking";
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {

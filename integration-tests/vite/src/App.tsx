@@ -1,15 +1,15 @@
 import type { TypedDocumentNode } from "@apollo/client";
 
 import {
-  useQuery,
   gql,
   InMemoryCache,
   ApolloClient,
-  ApolloProvider,
   ApolloLink,
   Observable,
   HttpLink,
 } from "@apollo/client";
+
+import { useQuery, ApolloProvider } from "@apollo/client/react";
 
 const delayLink = new ApolloLink((operation, forward) => {
   return new Observable((observer) => {

@@ -4,19 +4,19 @@ import {
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
-} from "../internal/index.js";
-import type { QueryRef } from "../internal/index.js";
+} from "@apollo/client/react/internal";
+import type { QueryRef } from "@apollo/client/react/internal";
 import { __use, wrapHook } from "./internal/index.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloError } from "../../errors/index.js";
+import type { ApolloError } from "@apollo/client/errors";
 import type {
   ApolloClient,
   NetworkStatus,
   ObservableQuery,
-} from "../../core/index.js";
+} from "@apollo/client/core";
 import { useApolloClient } from "./useApolloClient.js";
-import type { MaybeMasked } from "../../masking/index.js";
+import type { MaybeMasked } from "@apollo/client/masking";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**

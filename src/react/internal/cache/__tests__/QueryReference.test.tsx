@@ -3,14 +3,14 @@ import {
   ApolloLink,
   InMemoryCache,
   Observable,
-} from "../../../../core";
-import { setupSimpleCase } from "../../../../testing/internal";
+} from "../../../../core/index.js";
+import { setupSimpleCase } from "../../../../testing/internal/index.js";
 import {
   InternalQueryReference,
   PreloadedQueryRef,
   QueryRef,
   QueryReference,
-} from "../QueryReference";
+} from "../QueryReference.js";
 import React from "react";
 
 test("kicks off request immediately when created", async () => {

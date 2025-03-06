@@ -1,12 +1,10 @@
-import "../utilities/globals/index.js";
-
 export type {
   Transaction,
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "./core/cache.js";
 export { ApolloCache } from "./core/cache.js";
-export { Cache } from "./core/types/Cache.js";
+export type { Cache } from "./core/types/Cache.js";
 export type { DataProxy } from "./core/types/DataProxy.js";
 export type {
   MissingTree,

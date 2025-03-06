@@ -5,7 +5,7 @@ import type {
   StoreObject,
   StoreValue,
   Reference,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { FieldValueGetter } from "./entityStore.js";
 import type {
   TypePolicies,

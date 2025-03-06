@@ -16,6 +16,9 @@ importers:
       '@types/lodash':
         specifier: ^4.14.195
         version: 4.17.16
+      playwright:
+        specifier: 1.43.1
+        version: 1.43.1
 
   browser-esm:
     devDependencies:

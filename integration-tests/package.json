@@ -20,6 +20,7 @@
     "shared"
   ],
   "devDependencies": {
-    "@types/lodash": "^4.14.195"
+    "@types/lodash": "^4.14.195",
+    "playwright": "1.43.1"
   }
 }

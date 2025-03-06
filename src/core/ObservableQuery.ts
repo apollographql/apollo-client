@@ -841,17 +841,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
+    oldNetworkStatus: NetworkStatus,
     newNetworkStatus?: NetworkStatus,
     query?: DocumentNode
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
-    return this.queryManager["fetchObservableWithInfo"](
+    return this.queryManager.fetchObservableWithInfo(
       this.queryId,
       options,
       newNetworkStatus,
-      query
+      query,
+      oldNetworkStatus
     );
   }
 
@@ -1008,6 +1010,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
+    const oldNetworkStatus = this.networkStatus;
     this.networkStatus = newNetworkStatus ?? NetworkStatus.loading;
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
@@ -1019,6 +1022,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const variables = options.variables && { ...options.variables };
     const { observable, fromLink } = this.fetch(
       options,
+      oldNetworkStatus,
       newNetworkStatus,
       query
     );

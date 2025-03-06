@@ -1294,7 +1294,7 @@ export class QueryManager<TStore> {
     // or setVariables.
     networkStatus = NetworkStatus.loading,
     query = options.query,
-    oldNetworkStatus = networkStatus
+    emitLoadingState = false
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
@@ -1328,7 +1328,7 @@ export class QueryManager<TStore> {
         queryInfo,
         normalized,
         networkStatus,
-        oldNetworkStatus
+        emitLoadingState
       );
 
       if (
@@ -1620,13 +1620,12 @@ export class QueryManager<TStore> {
       errorPolicy,
       returnPartialData,
       context,
-      notifyOnNetworkStatusChange,
     }: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     newNetworkStatus: NetworkStatus,
-    oldNetworkStatus: NetworkStatus
+    emitLoadingState: boolean
   ): ObservableAndInfo<TData> {
     queryInfo.init({
       document: query,
@@ -1725,12 +1724,6 @@ export class QueryManager<TStore> {
         errorPolicy,
       });
 
-    const shouldNotify =
-      notifyOnNetworkStatusChange &&
-      typeof oldNetworkStatus === "number" &&
-      oldNetworkStatus !== newNetworkStatus &&
-      isNetworkRequestInFlight(newNetworkStatus);
-
     switch (fetchPolicy) {
       default:
       case "cache-first": {
@@ -1743,7 +1736,7 @@ export class QueryManager<TStore> {
           };
         }
 
-        if (returnPartialData || shouldNotify) {
+        if (returnPartialData || emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
@@ -1756,7 +1749,7 @@ export class QueryManager<TStore> {
       case "cache-and-network": {
         const diff = readCache();
 
-        if (diff.complete || returnPartialData || shouldNotify) {
+        if (diff.complete || returnPartialData || emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
@@ -1775,7 +1768,7 @@ export class QueryManager<TStore> {
         };
 
       case "network-only":
-        if (shouldNotify) {
+        if (emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(
@@ -1788,7 +1781,7 @@ export class QueryManager<TStore> {
         return { fromLink: true, observable: resultsFromLink() };
 
       case "no-cache":
-        if (shouldNotify) {
+        if (emitLoadingState) {
           return {
             fromLink: true,
             // Note that queryInfo.getDiff() for no-cache queries does not call

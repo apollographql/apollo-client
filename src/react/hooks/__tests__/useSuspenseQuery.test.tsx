@@ -12,6 +12,7 @@ import { GraphQLError } from "graphql";
 import { InvariantError } from "ts-invariant";
 import { equal } from "@wry/equality";
 import { expectTypeOf } from "expect-type";
+import { Observable, of } from "rxjs";
 
 import {
   gql,
@@ -21,7 +22,6 @@ import {
   ApolloLink,
   DocumentNode,
   InMemoryCache,
-  Observable,
   OperationVariables,
   SubscribeToMoreOptions,
   TypedDocumentNode,
@@ -593,9 +593,11 @@ describe("useSuspenseQuery", () => {
 
     const previousResult = result.current;
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated cache greeting" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated cache greeting" },
+      });
     });
 
     await waitFor(() => {
@@ -716,7 +718,7 @@ describe("useSuspenseQuery", () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of(mocks[0].result)),
+      link: new ApolloLink(() => of(mocks[0].result)),
       cache: new InMemoryCache(),
     });
 
@@ -1073,16 +1075,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1108,16 +1106,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1150,9 +1144,7 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1649,10 +1641,12 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "2" },
-      data: { character: { id: "2", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "2" },
+        data: { character: { id: "2", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {
@@ -2116,10 +2110,12 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "1" },
-      data: { character: { id: "1", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "1" },
+        data: { character: { id: "1", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {
@@ -2955,9 +2951,11 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {
@@ -3279,9 +3277,11 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {
@@ -3322,9 +3322,11 @@ describe("useSuspenseQuery", () => {
     // updated value.
     await wait(0);
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated hello" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated hello" },
+      });
     });
 
     await waitFor(() => {
@@ -3962,14 +3964,16 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {
@@ -4086,14 +4090,16 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {
@@ -6212,7 +6218,7 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
           context: operation.getContext(),
         },

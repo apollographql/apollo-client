@@ -4,6 +4,7 @@ import gql from "graphql-tag";
 import { act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { render, screen, waitFor, renderHook } from "@testing-library/react";
+import { asapScheduler, Observable, observeOn, of } from "rxjs";
 import {
   ApolloClient,
   ApolloError,
@@ -16,7 +17,7 @@ import {
 } from "../../../core";
 import { InMemoryCache } from "../../../cache";
 import { ApolloProvider } from "../../context";
-import { Observable, Reference, concatPagination } from "../../../utilities";
+import { Reference, concatPagination } from "../../../utilities";
 import { ApolloLink } from "../../../link/core";
 import {
   MockLink,
@@ -1088,7 +1089,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -1959,12 +1960,12 @@ describe("useQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "GetCounter") {
-                observer.next({
-                  data: {
-                    counter: ++count,
-                  },
-                });
                 setTimeout(() => {
+                  observer.next({
+                    data: {
+                      counter: ++count,
+                    },
+                  });
                   observer.complete();
                 }, 10);
               } else {
@@ -2180,12 +2181,15 @@ describe("useQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "Counter") {
-                observer.next({
-                  data: {
-                    linkCount: ++linkCount,
-                  },
+                // Emit the value async so we can observe the loading state
+                setTimeout(() => {
+                  observer.next({
+                    data: {
+                      linkCount: ++linkCount,
+                    },
+                  });
+                  observer.complete();
                 });
-                observer.complete();
               }
             })
         ),
@@ -2770,7 +2774,8 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      jest.advanceTimersByTime(100);
+      // We wait a tick longer than 100 since values are emitted on the asapScheduler
+      jest.advanceTimersByTime(101);
 
       {
         const promise = takeSnapshot();
@@ -3475,6 +3480,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3534,6 +3540,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: 'Could not fetch "hello"' }],
           }),
+          errors: [{ message: 'Could not fetch "hello"' }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3656,7 +3663,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: 'Could not fetch "hello"' }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });
@@ -3713,6 +3720,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3729,6 +3737,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4031,6 +4040,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          errors: [{ message: "error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4153,6 +4163,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+          errors: [{ message: "error 1" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4184,6 +4195,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+          errors: [{ message: "error 2" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4252,6 +4264,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4285,6 +4298,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4359,6 +4373,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4418,6 +4433,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             graphQLErrors: [{ message: "same error" }],
           }),
+          errors: [{ message: "same error" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -5400,6 +5416,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5428,6 +5445,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5453,6 +5471,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5517,6 +5536,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5684,6 +5704,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5712,6 +5733,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5740,6 +5762,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5934,6 +5957,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5962,6 +5986,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -5987,6 +6012,7 @@ describe("useQuery Hook", () => {
         error: new ApolloError({
           graphQLErrors: [new GraphQLError("Intentional error")],
         }),
+        errors: [{ message: "Intentional error" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6529,6 +6555,7 @@ describe("useQuery Hook", () => {
           error: new ApolloError({
             networkError: new Error("This is an error!"),
           }),
+          errors: [],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -6990,8 +7017,11 @@ describe("useQuery Hook", () => {
             } else if (operation.variables.id === 2) {
               // Queries for this ID return immediately
               const data = mocks[2].splice(0, 1).pop();
-              observer.next({ data });
-              observer.complete();
+              // Delay execution so we can obseve the loading state
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              });
             } else {
               observer.error(new Error("Unexpected query"));
             }
@@ -7350,7 +7380,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(() => Observable.of({ data: {} })),
+        link: new ApolloLink(() => of({ data: {} })),
         resolvers: {
           ClientData: {
             titleLength(data) {
@@ -7595,7 +7625,7 @@ describe("useQuery Hook", () => {
 
     it("should tear down the query if `skip` is `true`", async () => {
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -7678,7 +7708,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: { hello: "world" },
         })
       );
@@ -7733,9 +7763,8 @@ describe("useQuery Hook", () => {
       `;
       let linkCount = 0;
       const link = new ApolloLink(() =>
-        Observable.of({
-          data: { hello: ++linkCount },
-        })
+        // Emit the value  async so we can observe the loading state
+        of({ data: { hello: ++linkCount } }).pipe(observeOn(asapScheduler))
       );
 
       const client = new ApolloClient({
@@ -8609,34 +8638,34 @@ describe("useQuery Hook", () => {
         link: new ApolloLink(
           (request) =>
             new Observable((observer) => {
-              switch (request.operationName) {
-                case "A": {
-                  observer.next({
-                    data: {
-                      a: (stringOfAs += "a"),
-                    },
-                  });
-                  break;
-                }
-                case "AB": {
-                  observer.next({
-                    data: {
-                      a: (stringOfAs += "a"),
-                      b: (countOfBs += 1),
-                    },
-                  });
-                  break;
-                }
-                case "B": {
-                  observer.next({
-                    data: {
-                      b: (countOfBs += 1),
-                    },
-                  });
-                  break;
-                }
-              }
               setTimeout(() => {
+                switch (request.operationName) {
+                  case "A": {
+                    observer.next({
+                      data: {
+                        a: (stringOfAs += "a"),
+                      },
+                    });
+                    break;
+                  }
+                  case "AB": {
+                    observer.next({
+                      data: {
+                        a: (stringOfAs += "a"),
+                        b: (countOfBs += 1),
+                      },
+                    });
+                    break;
+                  }
+                  case "B": {
+                    observer.next({
+                      data: {
+                        b: (countOfBs += 1),
+                      },
+                    });
+                    break;
+                  }
+                }
                 observer.complete();
               }, 10);
             })
@@ -10204,6 +10233,13 @@ describe("useQuery Hook", () => {
             },
           ],
         }),
+        errors: [
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -10392,7 +10428,7 @@ describe("useQuery Hook", () => {
         ],
         called: true,
         loading: false,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         previousData: {
           hero: {
             heroFriends: [
@@ -10796,6 +10832,7 @@ describe("useQuery Hook", () => {
           "Store reset while query was in flight (not completed in link chain)"
         ),
       }),
+      errors: [],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -10856,6 +10893,7 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
       error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      errors: [graphQLError],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -10880,6 +10918,7 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
       error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      errors: [graphQLError],
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -11873,7 +11912,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: "Couldn't get name" }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });

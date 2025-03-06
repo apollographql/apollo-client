@@ -10,10 +10,10 @@ import {
   FetchPolicy,
   gql,
   InMemoryCache,
-  Observable,
   Reference,
   TypedDocumentNode,
 } from "../core";
+import { of } from "rxjs";
 import {
   MockedResponse,
   MockLink,
@@ -1478,7 +1478,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache({ fragments }),
       link: new ApolloLink(() => {
-        return Observable.of({
+        return of({
           data: {
             currentUser: {
               __typename: "User",

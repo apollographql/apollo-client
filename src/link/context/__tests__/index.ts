@@ -1,7 +1,7 @@
 import gql from "graphql-tag";
 
 import { ApolloLink } from "../../core";
-import { Observable } from "../../../utilities/observables/Observable";
+import { Observable, of } from "rxjs";
 import { execute } from "../../core/execute";
 import { setContext } from "../index";
 import { wait } from "../../../testing";
@@ -24,7 +24,7 @@ it("can be used to set the context with a simple function", async () => {
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -40,7 +40,7 @@ it("can be used to set the context with a function returning a promise", async (
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -56,7 +56,7 @@ it("can be used to set the context with a function returning a promise that is d
 
   const mockLink = new ApolloLink((operation) => {
     expect(operation.getContext().dynamicallySet).toBe(true);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -73,7 +73,7 @@ it("handles errors in the lookup correclty", async () => {
   );
 
   const mockLink = new ApolloLink((operation) => {
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -89,7 +89,7 @@ it("handles errors in the lookup correctly with a normal function", async () => 
   });
 
   const mockLink = new ApolloLink((operation) => {
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -114,7 +114,7 @@ it("has access to the request information", async () => {
     expect(variables).toBe(true);
     expect(operation).toBe(true);
     expect(operationName).toBe("TEST");
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -133,7 +133,7 @@ it("has access to the context at execution time", async () => {
   const mockLink = new ApolloLink((operation) => {
     const { count } = operation.getContext();
     expect(count).toEqual(2);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);
@@ -152,7 +152,7 @@ it("unsubscribes correctly", async () => {
   const mockLink = new ApolloLink((operation) => {
     const { count } = operation.getContext();
     expect(count).toEqual(2);
-    return Observable.of({ data });
+    return of({ data });
   });
 
   const link = withContext.concat(mockLink);

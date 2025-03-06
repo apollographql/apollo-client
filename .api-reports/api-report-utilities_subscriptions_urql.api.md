@@ -4,7 +4,7 @@
 
 ```ts
 
-import { Observable } from 'zen-observable-ts';
+import { Observable } from 'rxjs';
 
 // Warning: (ae-forgotten-export) The symbol "CreateMultipartSubscriptionOptions" needs to be exported by the entry point index.d.ts
 //

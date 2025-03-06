@@ -1,4 +1,5 @@
 import React, { Suspense } from "react";
+import { Observable } from "rxjs";
 import { createQueryPreloader } from "../createQueryPreloader";
 import {
   ApolloClient,
@@ -18,7 +19,7 @@ import {
 } from "../../../testing";
 import { expectTypeOf } from "expect-type";
 import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
-import { DeepPartial, Observable } from "../../../utilities";
+import { DeepPartial } from "../../../utilities";
 import {
   createClientWrapper,
   SimpleCaseData,

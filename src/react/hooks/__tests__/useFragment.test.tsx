@@ -8,6 +8,7 @@ import {
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { act } from "@testing-library/react";
+import { Observable } from "rxjs";
 
 import {
   UseFragmentOptions,
@@ -21,7 +22,6 @@ import {
   TypedDocumentNode,
   Reference,
   ApolloClient,
-  Observable,
   ApolloLink,
   StoreObject,
   DocumentNode,
@@ -31,7 +31,7 @@ import { useQuery } from "../useQuery";
 import { concatPagination } from "../../../utilities";
 import assert from "assert";
 import { expectTypeOf } from "expect-type";
-import { SubscriptionObserver } from "zen-observable-ts";
+import { Observer } from "rxjs";
 import { spyOnConsole } from "../../../testing/internal";
 import { FragmentType } from "../../../masking";
 import {
@@ -2182,7 +2182,7 @@ describe("has the same timing as `useQuery`", () => {
       }
       ${itemFragment}
     `;
-    let observer: SubscriptionObserver<FetchResult>;
+    let observer: Observer<FetchResult>;
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,

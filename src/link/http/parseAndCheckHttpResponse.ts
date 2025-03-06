@@ -3,7 +3,7 @@ import type { Operation } from "../core/index.js";
 import { throwServerError } from "../utils/index.js";
 import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
 import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
-import type { SubscriptionObserver } from "zen-observable-ts";
+import type { Observer } from "rxjs";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -162,7 +162,7 @@ function parseJsonBody<T>(response: Response, bodyText: string): T {
   }
 }
 
-export function handleError(err: any, observer: SubscriptionObserver<any>) {
+export function handleError(err: any, observer: Observer<any>) {
   // if it is a network error, BUT there is graphql result info fire
   // the next observer before calling error this gives apollo-client
   // (and react-apollo) the `graphqlErrors` and `networkErrors` to

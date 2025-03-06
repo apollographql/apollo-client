@@ -23,7 +23,6 @@ import {
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
-  MockedProvider,
   wait,
 } from "../../../testing";
 import {
@@ -70,6 +69,7 @@ import {
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -8273,7 +8273,7 @@ describe.skip("type tests", () => {
       const result = await refetch();
 
       expectTypeOf(result.data).toEqualTypeOf<
-        Masked<MaskedVariablesCaseData>
+        Masked<MaskedVariablesCaseData> | undefined
       >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
@@ -8283,7 +8283,9 @@ describe.skip("type tests", () => {
 
       const result = await refetch();
 
-      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+      expectTypeOf(result.data).toEqualTypeOf<
+        MaskedVariablesCaseData | undefined
+      >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
@@ -8311,7 +8313,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(result.data).toEqualTypeOf<
-        Masked<MaskedVariablesCaseData>
+        Masked<MaskedVariablesCaseData> | undefined
       >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
@@ -8335,7 +8337,9 @@ describe.skip("type tests", () => {
         },
       });
 
-      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+      expectTypeOf(result.data).toEqualTypeOf<
+        MaskedVariablesCaseData | undefined
+      >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });

@@ -14,7 +14,7 @@ import type { ApolloPayloadResult } from "../../core/index.js";
 
 const hasNextSymbol = Symbol("hasNext");
 
-export function mockIncrementalStream<Chunks>({
+function mockIncrementalStream<Chunks>({
   responseHeaders,
 }: {
   responseHeaders: Headers;

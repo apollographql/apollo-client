@@ -2,10 +2,7 @@ const limits = require("./.size-limits.json");
 
 const checks = [
   {
-    path: "dist/apollo-client.min.cjs",
-  },
-  {
-    path: "dist/main.cjs",
+    path: "dist/__cjs/index.cjs",
     import: "{ ApolloClient, InMemoryCache, HttpLink }",
   },
   {
@@ -45,7 +42,6 @@ const checks = [
       "@wry/equality",
       "@wry/trie",
       "graphql-tag",
-      "hoist-non-react-statics",
       "optimism",
       "prop-types",
       "response-iterator",

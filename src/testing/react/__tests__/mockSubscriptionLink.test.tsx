@@ -21,7 +21,7 @@ describe("mockSubscriptionLink", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     let renderCountA = 0;

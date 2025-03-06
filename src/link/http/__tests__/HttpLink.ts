@@ -644,7 +644,7 @@ describe("HttpLink", () => {
 
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("*/*");
+      expect(headers.accept).toBe("application/graphql-response+json");
     });
 
     it("adds headers to the request from the setup", async () => {
@@ -662,7 +662,7 @@ describe("HttpLink", () => {
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("*/*");
+      expect(headers.accept).toBe("application/graphql-response+json");
     });
 
     it("prioritizes context headers over setup headers", async () => {
@@ -685,7 +685,7 @@ describe("HttpLink", () => {
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("*/*");
+      expect(headers.accept).toBe("application/graphql-response+json");
     });
 
     it("adds headers to the request from the context on an operation", async () => {
@@ -707,7 +707,7 @@ describe("HttpLink", () => {
       const headers = fetchMock.lastCall()![1]!.headers as any;
       expect(headers.authorization).toBe("1234");
       expect(headers["content-type"]).toBe("application/json");
-      expect(headers.accept).toBe("*/*");
+      expect(headers.accept).toBe("application/graphql-response+json");
     });
 
     it("adds creds to the request from the context", async () => {
@@ -1766,7 +1766,7 @@ describe("HttpLink", () => {
           "/graphql",
           expect.objectContaining({
             headers: {
-              accept: "*/*",
+              accept: "application/graphql-response+json",
               "content-type": "application/json",
             },
           })

@@ -623,7 +623,7 @@ describe("reading from the store", () => {
     expect(reader["executeSubSelectedArray"].size).toBe(1);
   });
 
-  it("throws on a missing field", () => {
+  it("returns null on a missing field", () => {
     const result = {
       id: "abcd",
       stringField: "This is a string!",
@@ -633,17 +633,17 @@ describe("reading from the store", () => {
 
     const store = defaultNormalizedCacheFactory({ ROOT_QUERY: result });
 
-    expect(() => {
-      readQueryFromStore(reader, {
-        store,
-        query: gql`
-          {
-            stringField
-            missingField
-          }
-        `,
-      });
-    }).toThrowError(/Can't find field 'missingField' on ROOT_QUERY object/);
+    const cacheResult = readQueryFromStore(reader, {
+      store,
+      query: gql`
+        {
+          stringField
+          missingField
+        }
+      `,
+    });
+
+    expect(cacheResult).toBeNull();
   });
 
   it("readQuery supports returnPartialData", () => {
@@ -678,7 +678,7 @@ describe("reading from the store", () => {
         query: bQuery,
         returnPartialData: true,
       })
-    ).toEqual({});
+    ).toEqual(null);
 
     expect(
       cache.readQuery({
@@ -809,7 +809,7 @@ describe("reading from the store", () => {
       },
     });
 
-    expect(missing).toEqual([
+    expect(missing).toEqual(
       new MissingFieldError(
         `Can't find field 'missing' on object ${JSON.stringify(
           {
@@ -836,8 +836,8 @@ describe("reading from the store", () => {
         },
         query,
         {} // variables
-      ),
-    ]);
+      )
+    );
   });
 
   it("runs a nested query where the reference is null", () => {
@@ -1409,21 +1409,20 @@ describe("reading from the store", () => {
 
     expect(diffChickens()).toEqual({
       complete: false,
-      missing: [
-        new MissingFieldError(
-          "Can't find field 'id' on object {}",
-          {
-            chickens: {
-              1: {
-                id: "Can't find field 'id' on object {}",
-                inCoop: "Can't find field 'inCoop' on object {}",
-              },
+      missing: new MissingFieldError(
+        "Can't find field 'id' on object {}",
+        {
+          chickens: {
+            1: {
+              id: "Can't find field 'id' on object {}",
+              inCoop: "Can't find field 'inCoop' on object {}",
             },
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
+
       result: {
         chickens: [
           { __typename: "Chicken", id: 1, inCoop: true },

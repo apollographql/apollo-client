@@ -575,7 +575,7 @@ describe("General use", () => {
 
     const link = ApolloLink.from([
       errorLink,
-      new MockLink([], true, { showWarnings: false }),
+      new MockLink([], { showWarnings: false }),
     ]);
 
     render(
@@ -637,7 +637,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -688,7 +688,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -746,7 +746,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -811,7 +811,7 @@ describe("General use", () => {
       },
     ];
 
-    const mockLink = new MockLink(mocks, true, { showWarnings: false });
+    const mockLink = new MockLink(mocks, { showWarnings: false });
     const link = ApolloLink.from([errorLink, mockLink]);
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
       <MockedProvider link={link}>{children}</MockedProvider>
@@ -982,7 +982,7 @@ describe("General use", () => {
       },
     ];
 
-    const link = new MockLink(mocksDifferentQuery, false, {
+    const link = new MockLink(mocksDifferentQuery, {
       showWarnings: false,
     });
 
@@ -1008,7 +1008,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mockLink = new MockLink([], true, { showWarnings: false });
+    const mockLink = new MockLink([], { showWarnings: false });
     mockLink.setOnError((error) => {
       expect(error).toMatchSnapshot();
       finished = true;
@@ -1039,7 +1039,7 @@ describe("General use", () => {
       return null;
     }
 
-    const mockLink = new MockLink([], true, { showWarnings: false });
+    const mockLink = new MockLink([], { showWarnings: false });
     mockLink.setOnError(() => {
       throw new Error("oh no!");
     });

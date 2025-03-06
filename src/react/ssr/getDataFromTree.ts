@@ -17,7 +17,7 @@ export function getDataFromTree(
   });
 }
 
-export type GetMarkupFromTreeOptions = {
+type GetMarkupFromTreeOptions = {
   tree: ReactTypes.ReactNode;
   context?: { [key: string]: any };
   renderFunction?: (

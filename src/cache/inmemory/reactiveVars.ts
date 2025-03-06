@@ -10,7 +10,7 @@ export interface ReactiveVar<T> {
   forgetCache(cache: ApolloCache<any>): boolean;
 }
 
-export type ReactiveListener<T> = (value: T) => any;
+type ReactiveListener<T> = (value: T) => any;
 
 // Contextual Slot that acquires its value when custom read functions are
 // called in Policies#readField.

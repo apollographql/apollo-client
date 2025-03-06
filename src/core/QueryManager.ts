@@ -3,7 +3,6 @@ import { invariant, newInvariantError } from "../utilities/globals/index.js";
 import type { DocumentNode } from "graphql";
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
-import { equal } from "@wry/equality";
 
 import type { ApolloLink, FetchResult } from "../link/core/index.js";
 import { execute } from "../link/core/index.js";
@@ -22,6 +21,7 @@ import { canonicalStringify } from "../cache/index.js";
 import type {
   ObservableSubscription,
   ConcastSourcesArray,
+  DeepPartial,
 } from "../utilities/index.js";
 import {
   getDefaultValues,
@@ -69,7 +69,6 @@ import type {
 } from "./types.js";
 import type { LocalState } from "./LocalState.js";
 
-import type { QueryStoreValue } from "./QueryInfo.js";
 import {
   QueryInfo,
   shouldWriteResult,
@@ -124,7 +123,7 @@ interface MaskOperationOptions<TData> {
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-export interface QueryManagerOptions<TStore> {
+interface QueryManagerOptions<TStore> {
   cache: ApolloCache<TStore>;
   link: ApolloLink;
   defaultOptions: DefaultOptions;
@@ -660,27 +659,6 @@ export class QueryManager<TStore> {
   ): Promise<ApolloQueryResult<TData>> {
     return this.fetchConcastWithInfo(queryId, options, networkStatus).concast
       .promise as TODO;
-  }
-
-  public getQueryStore() {
-    const store: Record<string, QueryStoreValue> = Object.create(null);
-    this.queries.forEach((info, queryId) => {
-      store[queryId] = {
-        variables: info.variables,
-        networkStatus: info.networkStatus,
-        networkError: info.networkError,
-        graphQLErrors: info.graphQLErrors,
-      };
-    });
-    return store;
-  }
-
-  public resetErrors(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.networkError = undefined;
-      queryInfo.graphQLErrors = [];
-    }
   }
 
   public transform(document: DocumentNode) {
@@ -1245,12 +1223,9 @@ export class QueryManager<TStore> {
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
+            queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw queryInfo.markError(
-              new ApolloError({
-                graphQLErrors,
-              })
-            );
+            throw new ApolloError({ graphQLErrors });
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1268,6 +1243,7 @@ export class QueryManager<TStore> {
           data: result.data,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: !result.data,
         };
 
         // In the case we start multiple network requests simulatenously, we
@@ -1294,7 +1270,7 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError(error);
+          queryInfo.markError();
         }
 
         throw error;
@@ -1654,23 +1630,34 @@ export class QueryManager<TStore> {
     ) => {
       const data = diff.result;
 
-      if (__DEV__ && !returnPartialData && !equal(data, {})) {
+      if (__DEV__ && !returnPartialData && data !== null) {
         logMissingFieldErrors(diff.missing);
       }
 
-      const fromData = (data: TData | undefined) =>
-        Observable.of({
-          data,
+      const fromData = (data: TData | DeepPartial<TData> | undefined) => {
+        const result: ApolloQueryResult<TData> = {
+          // TODO: Handle partial data
+          data: data as TData | undefined,
           loading: isNetworkRequestInFlight(networkStatus),
           networkStatus,
-          ...(diff.complete ? null : { partial: true }),
-        } as ApolloQueryResult<TData>);
+          partial: !diff.complete,
+        };
 
-      if (data && this.getDocumentInfo(query).hasForcedResolvers) {
+        return Observable.of(result);
+      };
+
+      if (this.getDocumentInfo(query).hasForcedResolvers) {
         return this.localState
           .runResolvers({
             document: query,
-            remoteResult: { data },
+            // TODO: Update remoteResult to handle `null`. In v3 the `if`
+            // statement contained a check against `data`, but this value was
+            // always `{}` if nothing was in the cache, which meant the check
+            // above always succeeded when there were forced resolvers. Now that
+            // `data` is nullable, this `remoteResult` needs to be an empty
+            // object. Ideally we can pass in `null` here and the resolvers
+            // would be able to handle this the same way.
+            remoteResult: { data: data || ({} as any) },
             context,
             variables,
             onlyRunForcedResolvers: true,
@@ -1685,12 +1672,12 @@ export class QueryManager<TStore> {
       if (
         errorPolicy === "none" &&
         networkStatus === NetworkStatus.refetch &&
-        Array.isArray(diff.missing)
+        diff.missing
       ) {
         return fromData(void 0);
       }
 
-      return fromData(data);
+      return fromData(data || undefined);
     };
 
     const cacheWriteBehavior =

@@ -1321,21 +1321,19 @@ describe("EntityStore", () => {
       result: {
         authorOfBook: tedWithoutHobby,
       },
-      missing: [
-        new MissingFieldError(
-          'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-          {
-            publisherOfBook:
-              "Can't find field 'publisherOfBook' on ROOT_QUERY object",
-            authorOfBook: {
-              hobby:
-                'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-            },
+      missing: new MissingFieldError(
+        'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
+        {
+          publisherOfBook:
+            "Can't find field 'publisherOfBook' on ROOT_QUERY object",
+          authorOfBook: {
+            hobby:
+              'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
     });
 
     cache.evict({ id: "ROOT_QUERY", fieldName: "authorOfBook" });
@@ -1862,9 +1860,18 @@ describe("EntityStore", () => {
       })
     ).toBe(null);
 
-    expect(() => diff(queryWithAliases)).toThrow(
-      /Dangling reference to missing ABCs:.* object/
-    );
+    expect(diff(queryWithAliases)).toEqual({
+      result: null,
+      complete: false,
+      missing: new MissingFieldError(
+        'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        {
+          abcs: 'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        },
+        queryWithAliases,
+        {}
+      ),
+    });
 
     expect(
       cache.readQuery({
@@ -1872,9 +1879,18 @@ describe("EntityStore", () => {
       })
     ).toBe(null);
 
-    expect(() => diff(queryWithoutAliases)).toThrow(
-      /Dangling reference to missing ABCs:.* object/
-    );
+    expect(diff(queryWithoutAliases)).toEqual({
+      result: null,
+      complete: false,
+      missing: new MissingFieldError(
+        'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        {
+          abcs: 'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        },
+        queryWithoutAliases,
+        {}
+      ),
+    });
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {
@@ -1952,18 +1968,16 @@ describe("EntityStore", () => {
 
     expect(cache.evict({ id: authorId })).toBe(false);
 
-    const missing = [
-      new MissingFieldError(
-        "Dangling reference to missing Author:2 object",
-        {
-          book: {
-            author: "Dangling reference to missing Author:2 object",
-          },
+    const missing = new MissingFieldError(
+      "Dangling reference to missing Author:2 object",
+      {
+        book: {
+          author: "Dangling reference to missing Author:2 object",
         },
-        expect.anything(), // query
-        expect.anything() // variables
-      ),
-    ];
+      },
+      expect.anything(), // query
+      expect.anything() // variables
+    );
 
     expect(
       cache.diff({
@@ -2241,19 +2255,17 @@ describe("EntityStore", () => {
           isbn: "031648637X",
         },
       },
-      missing: [
-        new MissingFieldError(
-          'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-          {
-            book: {
-              title:
-                'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-            },
+      missing: new MissingFieldError(
+        'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
+        {
+          book: {
+            title:
+              'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
     });
 
     expect(cache.extract()).toEqual({

@@ -42,7 +42,7 @@ export interface DefaultOptions {
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
-export interface DevtoolsOptions {
+interface DevtoolsOptions {
   /**
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
    *
@@ -313,14 +313,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         this.devtoolsConfig.enabled ?
           () => {
             if (this.devToolsHookCb) {
-              this.devToolsHookCb({
-                action: {},
-                state: {
-                  queries: this.queryManager.getQueryStore(),
-                  mutations: this.queryManager.mutationStore || {},
-                },
-                dataWithOptimisticResults: this.cache.extract(true),
-              });
+              this.devToolsHookCb();
             }
           }
         : void 0,

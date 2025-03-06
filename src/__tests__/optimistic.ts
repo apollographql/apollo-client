@@ -1945,8 +1945,8 @@ describe("optimistic mutation results", () => {
       expect(realisticDiffs).toEqual([
         {
           complete: false,
-          missing: [expect.anything()],
-          result: {},
+          missing: expect.anything(),
+          result: null,
         },
       ]);
 
@@ -2136,8 +2136,8 @@ describe("optimistic mutation results", () => {
       expect(realisticDiffs).toEqual([
         {
           complete: false,
-          missing: [expect.anything()],
-          result: {},
+          missing: expect.anything(),
+          result: null,
         },
         {
           complete: true,

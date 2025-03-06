@@ -38,7 +38,6 @@ import {
   offsetLimitPagination,
 } from "../../../utilities";
 import {
-  MockedProvider,
   MockedResponse,
   MockSubscriptionLink,
   MockLink,
@@ -66,6 +65,7 @@ import {
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { MockedProvider } from "../../../testing/react";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -7888,7 +7888,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -7901,7 +7901,7 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      partial: false,
     });
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -8269,7 +8269,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(fetchMorePromise!).resolves.toEqual({
+    await expect(fetchMorePromise!).resolves.toEqualApolloQueryResult({
       data: {
         greetings: [
           {
@@ -8284,7 +8284,7 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      partial: false,
     });
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -9442,7 +9442,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
       data: {
         hero: {
           heroFriends: [
@@ -9454,7 +9454,7 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      partial: false,
     });
 
     cache.updateQuery({ query }, (data) => ({
@@ -12785,7 +12785,7 @@ describe("useSuspenseQuery", () => {
         const result = await refetch();
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12797,7 +12797,9 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
@@ -12829,7 +12831,7 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12857,7 +12859,9 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();

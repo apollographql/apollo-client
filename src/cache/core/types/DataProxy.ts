@@ -2,7 +2,7 @@ import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-li
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
 import type { MissingFieldError } from "./common.js";
-import type { Reference } from "../../../utilities/index.js";
+import type { DeepPartial, Reference } from "../../../utilities/index.js";
 import type { Unmasked } from "../../../masking/index.js";
 
 export namespace DataProxy {
@@ -128,12 +128,19 @@ export namespace DataProxy {
       "data"
     > {}
 
-  export type DiffResult<T> = {
-    result?: T;
-    complete?: boolean;
-    missing?: MissingFieldError[];
-    fromOptimisticTransaction?: boolean;
-  };
+  export type DiffResult<T> =
+    | {
+        result: T;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DeepPartial<T> | null;
+        complete: false;
+        missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+      };
 }
 
 /**

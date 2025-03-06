@@ -11,14 +11,10 @@
  * makeWatchQueryOptions
  * isSSRAllowed
  * disableNetworkFetches
- * partialRefetch
  * renderPromises
  * isSyncSSR
- * callbacks
  */
 /** */
-import { invariant } from "../../utilities/globals/index.js";
-
 import * as React from "rehackt";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 import { equal } from "@wry/equality";
@@ -67,8 +63,7 @@ type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
   Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
 >;
 
-function noop() {}
-export const lastWatchOptions = Symbol();
+const lastWatchOptions = Symbol();
 
 export interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
@@ -87,19 +82,6 @@ interface InternalState<TData, TVariables extends OperationVariables> {
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   observable: ObsQueryWithMeta<TData, TVariables>;
   resultData: InternalResult<TData, TVariables>;
-}
-
-export type UpdateInternalState<
-  TData,
-  TVariables extends OperationVariables,
-> = (state: InternalState<TData, TVariables>) => void;
-
-interface Callbacks<TData> {
-  // Defining these methods as no-ops on the prototype allows us to call
-  // state.onCompleted and/or state.onError without worrying about whether a
-  // callback was provided.
-  onCompleted(data: MaybeMasked<TData>): void;
-  onError(error: ApolloError): void;
 }
 
 /**
@@ -261,7 +243,6 @@ export function useQueryInternals<
   const isSyncSSR = !!renderPromises;
   const disableNetworkFetches = client.disableNetworkFetches;
   const ssrAllowed = options.ssr !== false && !options.skip;
-  const partialRefetch = options.partialRefetch;
 
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
     client,
@@ -303,12 +284,7 @@ export function useQueryInternals<
     options,
     watchQueryOptions,
     disableNetworkFetches,
-    partialRefetch,
-    isSyncSSR,
-    {
-      onCompleted: options.onCompleted || noop,
-      onError: options.onError || noop,
-    }
+    isSyncSSR
   );
 
   return {
@@ -331,25 +307,8 @@ function useObservableSubscriptionResult<
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   disableNetworkFetches: boolean,
-  partialRefetch: boolean | undefined,
-  isSyncSSR: boolean,
-  callbacks: {
-    onCompleted: (data: MaybeMasked<TData>) => void;
-    onError: (error: ApolloError) => void;
-  }
+  isSyncSSR: boolean
 ) {
-  const callbackRef = React.useRef<Callbacks<TData>>(callbacks);
-  React.useEffect(() => {
-    // Make sure state.onCompleted and state.onError always reflect the latest
-    // options.onCompleted and options.onError callbacks provided to useQuery,
-    // since those functions are often recreated every time useQuery is called.
-    // Like the forceUpdate method, the versions of these methods inherited from
-    // InternalState.prototype are empty no-ops, but we can override them on the
-    // base state object (without modifying the prototype).
-    // eslint-disable-next-line react-compiler/react-compiler
-    callbackRef.current = callbacks;
-  });
-
   const resultOverride =
     (
       (isSyncSSR || disableNetworkFetches) &&
@@ -408,15 +367,7 @@ function useObservableSubscriptionResult<
             return;
           }
 
-          setResult(
-            result,
-            resultData,
-            observable,
-            client,
-            partialRefetch,
-            handleStoreChange,
-            callbackRef.current
-          );
+          setResult(result, resultData, observable, client, handleStoreChange);
         };
 
         const onError = (error: Error) => {
@@ -444,13 +395,12 @@ function useObservableSubscriptionResult<
                 error: error as ApolloError,
                 loading: false,
                 networkStatus: NetworkStatus.error,
+                partial: !previousResult?.data,
               },
               resultData,
               observable,
               client,
-              partialRefetch,
-              handleStoreChange,
-              callbackRef.current
+              handleStoreChange
             );
           }
         };
@@ -471,33 +421,12 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [
-        disableNetworkFetches,
-        isSyncSSR,
-        observable,
-        resultData,
-        partialRefetch,
-        client,
-      ]
+      [disableNetworkFetches, isSyncSSR, observable, resultData, client]
     ),
     () =>
-      currentResultOverride ||
-      getCurrentResult(
-        resultData,
-        observable,
-        callbackRef.current,
-        partialRefetch,
-        client
-      ),
+      currentResultOverride || getCurrentResult(resultData, observable, client),
     () =>
-      currentResultOverride ||
-      getCurrentResult(
-        resultData,
-        observable,
-        callbackRef.current,
-        partialRefetch,
-        client
-      )
+      currentResultOverride || getCurrentResult(resultData, observable, client)
   );
 }
 
@@ -570,8 +499,6 @@ export function createMakeWatchQueryOptions<
   {
     skip,
     ssr,
-    onCompleted,
-    onError,
     defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
@@ -659,9 +586,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>,
-  partialRefetch: boolean | undefined,
-  forceUpdate: () => void,
-  callbacks: Callbacks<TData>
+  forceUpdate: () => void
 ) {
   const previousResult = resultData.current;
   if (previousResult && previousResult.data) {
@@ -677,7 +602,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   }
 
   resultData.current = toQueryResult(
-    unsafeHandlePartialRefetch(nextResult, observable, partialRefetch),
+    nextResult,
     resultData.previousData,
     observable,
     client
@@ -685,57 +610,23 @@ function setResult<TData, TVariables extends OperationVariables>(
   // Calling state.setResult always triggers an update, though some call sites
   // perform additional equality checks before committing to an update.
   forceUpdate();
-  handleErrorOrCompleted(nextResult, previousResult?.networkStatus, callbacks);
-}
-
-function handleErrorOrCompleted<TData>(
-  result: ApolloQueryResult<MaybeMasked<TData>>,
-  previousNetworkStatus: NetworkStatus | undefined,
-  callbacks: Callbacks<TData>
-) {
-  if (!result.loading) {
-    const error = toApolloError(result);
-
-    // wait a tick in case we are in the middle of rendering a component
-    Promise.resolve()
-      .then(() => {
-        if (error) {
-          callbacks.onError(error);
-        } else if (
-          result.data &&
-          previousNetworkStatus !== result.networkStatus &&
-          result.networkStatus === NetworkStatus.ready
-        ) {
-          callbacks.onCompleted(result.data);
-        }
-      })
-      .catch((error) => {
-        invariant.warn(error);
-      });
-  }
 }
 
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  callbacks: Callbacks<TData>,
-  partialRefetch: boolean | undefined,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
   // we're doing server rendering and therefore override the result below.
   if (!resultData.current) {
-    // WARNING: SIDE-EFFECTS IN THE RENDER FUNCTION
-    // this could call unsafeHandlePartialRefetch
     setResult(
       observable.getCurrentResult(),
       resultData,
       observable,
       client,
-      partialRefetch,
-      () => {},
-      callbacks
+      () => {}
     );
   }
   return resultData.current!;
@@ -782,39 +673,12 @@ export function toQueryResult<TData, TVariables extends OperationVariables>(
   return queryResult;
 }
 
-function unsafeHandlePartialRefetch<
-  TData,
-  TVariables extends OperationVariables,
->(
-  result: ApolloQueryResult<MaybeMasked<TData>>,
-  observable: ObservableQuery<TData, TVariables>,
-  partialRefetch: boolean | undefined
-): ApolloQueryResult<MaybeMasked<TData>> {
-  // TODO: This code should be removed when the partialRefetch option is
-  // removed. I was unable to get this hook to behave reasonably in certain
-  // edge cases when this block was put in an effect.
-  if (
-    result.partial &&
-    partialRefetch &&
-    !result.loading &&
-    (!result.data || Object.keys(result.data).length === 0) &&
-    observable.options.fetchPolicy !== "cache-only"
-  ) {
-    observable.refetch();
-    return {
-      ...result,
-      loading: true,
-      networkStatus: NetworkStatus.refetch,
-    };
-  }
-  return result;
-}
-
 const ssrDisabledResult = maybeDeepFreeze({
   loading: true,
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.loading,
+  partial: true,
 });
 
 const skipStandbyResult = maybeDeepFreeze({
@@ -822,6 +686,7 @@ const skipStandbyResult = maybeDeepFreeze({
   data: void 0 as any,
   error: void 0,
   networkStatus: NetworkStatus.ready,
+  partial: true,
 });
 
 function bindObservableMethods<TData, TVariables extends OperationVariables>(

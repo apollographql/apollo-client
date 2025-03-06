@@ -12,7 +12,7 @@ export const ruleTester = new RuleTester({
     parser: tsParser,
     parserOptions: {
       project: "./tsconfig.json",
-      tsconfigRootDir: __dirname + "/fixtures",
+      tsconfigRootDir: import.meta.dirname + "/fixtures",
     },
   },
 });

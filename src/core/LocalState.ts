@@ -47,7 +47,7 @@ export type Resolver = (
   }
 ) => any;
 
-export type VariableMap = { [name: string]: any };
+type VariableMap = { [name: string]: any };
 
 export type FragmentMatcher = (
   rootValue: any,
@@ -55,7 +55,7 @@ export type FragmentMatcher = (
   context: any
 ) => boolean;
 
-export type ExecContext = {
+type ExecContext = {
   fragmentMap: FragmentMap;
   context: any;
   variables: VariableMap;
@@ -66,7 +66,7 @@ export type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
 };
 
-export type LocalStateOptions<TCacheShape> = {
+type LocalStateOptions<TCacheShape> = {
   cache: ApolloCache<TCacheShape>;
   client?: ApolloClient<TCacheShape>;
   resolvers?: Resolvers | Resolvers[];

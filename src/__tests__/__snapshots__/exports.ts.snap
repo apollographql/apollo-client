@@ -4,13 +4,10 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloConsumer",
   "ApolloError",
   "ApolloLink",
-  "ApolloProvider",
   "Cache",
   "DocumentTransform",
-  "DocumentType",
   "HttpLink",
   "InMemoryCache",
   "MissingFieldError",
@@ -20,7 +17,6 @@ Array [
   "checkFetcher",
   "concat",
   "createHttpLink",
-  "createQueryPreloader",
   "createSignalIfSupported",
   "defaultDataIdFromObject",
   "defaultPrinter",
@@ -33,7 +29,6 @@ Array [
   "from",
   "fromError",
   "fromPromise",
-  "getApolloContext",
   "gql",
   "isApolloError",
   "isNetworkRequestSettled",
@@ -41,10 +36,7 @@ Array [
   "makeReference",
   "makeVar",
   "mergeOptions",
-  "operationName",
   "parseAndCheckHttpResponse",
-  "parser",
-  "resetApolloContext",
   "resetCaches",
   "rewriteURIForGET",
   "selectHttpOptionsAndBody",
@@ -52,23 +44,9 @@ Array [
   "selectURI",
   "serializeFetchParameter",
   "setLogVerbosity",
-  "skipToken",
   "split",
   "throwServerError",
   "toPromise",
-  "useApolloClient",
-  "useBackgroundQuery",
-  "useFragment",
-  "useLazyQuery",
-  "useLoadableQuery",
-  "useMutation",
-  "useQuery",
-  "useQueryRefHandlers",
-  "useReactiveVar",
-  "useReadQuery",
-  "useSubscription",
-  "useSuspenseFragment",
-  "useSuspenseQuery",
 ]
 `;
 
@@ -281,7 +259,6 @@ Array [
   "getApolloContext",
   "operationName",
   "parser",
-  "resetApolloContext",
   "skipToken",
   "useApolloClient",
   "useBackgroundQuery",
@@ -299,30 +276,11 @@ Array [
 ]
 `;
 
-exports[`exports of public entry points @apollo/client/react/components 1`] = `
-Array [
-  "Mutation",
-  "Query",
-  "Subscription",
-]
-`;
-
 exports[`exports of public entry points @apollo/client/react/context 1`] = `
 Array [
   "ApolloConsumer",
   "ApolloProvider",
   "getApolloContext",
-  "resetApolloContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hoc 1`] = `
-Array [
-  "graphql",
-  "withApollo",
-  "withMutation",
-  "withQuery",
-  "withSubscription",
 ]
 `;
 
@@ -379,12 +337,9 @@ exports[`exports of public entry points @apollo/client/testing 1`] = `
 Array [
   "MockLink",
   "MockSubscriptionLink",
-  "MockedProvider",
   "createMockClient",
-  "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "subscribeAndCount",
   "tick",
   "wait",
   "withErrorSpy",
@@ -398,10 +353,8 @@ Array [
   "MockLink",
   "MockSubscriptionLink",
   "createMockClient",
-  "itAsync",
   "mockObservableLink",
   "mockSingleLink",
-  "subscribeAndCount",
   "tick",
   "wait",
   "withErrorSpy",
@@ -414,6 +367,12 @@ exports[`exports of public entry points @apollo/client/testing/experimental 1`] 
 Array [
   "createSchemaFetch",
   "createTestSchema",
+]
+`;
+
+exports[`exports of public entry points @apollo/client/testing/react 1`] = `
+Array [
+  "MockedProvider",
 ]
 `;
 

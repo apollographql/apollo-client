@@ -69,21 +69,6 @@ export interface QueryFunctionOptions<
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
-   *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
-   */
-  onCompleted?: (data: MaybeMasked<TData>) => void;
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
-   *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
-   */
-  onError?: (error: ApolloError) => void;
-
   // Default WatchQueryOptions for this useQuery, providing initial values for
   // unspecified options, superseding client.defaultOptions.watchQuery (option
   // by option, not whole), but never overriding options previously passed to
@@ -178,21 +163,6 @@ export interface LazyQueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onCompleted:member}
-   *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
-   */
-  onCompleted?: (data: MaybeMasked<TData>) => void;
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#onError:member}
-   *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * For more context, please see the [related issue](https://github.com/apollographql/apollo-client/issues/12352) on GitHub.
-   */
-  onError?: (error: ApolloError) => void;
-
   /** @internal */
   defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
@@ -366,13 +336,6 @@ export interface BaseMutationOptions<
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
   onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
-  /**
-   * {@inheritDoc @apollo/client!MutationOptionsDocumentation#ignoreResults:member}
-   *
-   * @deprecated This option will be removed in the next major version of Apollo Client.
-   * If you don't want to synchronize your component state with the mutation, please use `useApolloClient` to get your ApolloClient instance and call `client.mutate` directly.
-   */
-  ignoreResults?: boolean;
 }
 
 export interface MutationFunctionOptions<

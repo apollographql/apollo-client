@@ -37,7 +37,7 @@ import { waitFor } from "@testing-library/react";
 import { wait } from "../../../testing/core";
 import { ApolloClient, ApolloQueryResult } from "../../../core";
 import { mockFetchQuery } from "../ObservableQuery";
-import { Concast, print } from "../../../utilities";
+import { addTypenameToDocument, Concast, print } from "../../../utilities";
 import {
   mockDeferStream,
   ObservableStream,
@@ -61,7 +61,7 @@ describe("ApolloClient", () => {
     delay?: number;
   }) => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request: { query, variables }, result, error, delay },
       ]),
@@ -121,6 +121,7 @@ describe("ApolloClient", () => {
       loading: false,
       networkStatus: 8,
       errors: [{ message: "This is an error message." }],
+      partial: true,
     });
   });
 
@@ -187,6 +188,7 @@ describe("ApolloClient", () => {
       },
       networkStatus: NetworkStatus.ready,
       loading: false,
+      partial: false,
     });
   });
 
@@ -251,7 +253,7 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       link: new MockLink([{ request: { query }, error }]),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const observable = client.watchQuery({ query });
@@ -345,7 +347,7 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       link: mockedSingleLink,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const observableQuery = client.watchQuery({
@@ -418,12 +420,11 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       link: mockedSingleLink,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       defaultOptions: {
         watchQuery: {
           fetchPolicy: "cache-and-network",
           returnPartialData: false,
-          partialRefetch: true,
           notifyOnNetworkStatusChange: true,
         },
         query: {
@@ -486,7 +487,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([{ request: { query }, result: expResult }]),
     });
     const handle = client.watchQuery({
@@ -510,6 +511,7 @@ describe("ApolloClient", () => {
       fromRx: true,
       loading: false,
       networkStatus: 7,
+      partial: false,
       ...expResult,
     });
   });
@@ -546,7 +548,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request,
@@ -578,11 +580,13 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     void observable.refetch();
@@ -591,11 +595,13 @@ describe("ApolloClient", () => {
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     stream1.unsubscribe();
@@ -605,6 +611,7 @@ describe("ApolloClient", () => {
       data: data3,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -666,7 +673,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request,
@@ -699,16 +706,19 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream3).toEmitApolloQueryResult({
       data: data3,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -739,7 +749,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: { data: data1 } },
         { request, result: { data: data2 } },
@@ -753,12 +763,14 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     void observable.refetch();
     await expect(stream).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -801,7 +813,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: { data: data1 } },
         { request, result: { data: data2 } },
@@ -863,7 +875,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([{ request, result: { data: data1 } }]),
     });
 
@@ -904,6 +916,7 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
         [
@@ -911,6 +924,7 @@ describe("ApolloClient", () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
       ],
@@ -922,6 +936,7 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
         [
@@ -929,6 +944,7 @@ describe("ApolloClient", () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
       ],
@@ -940,6 +956,7 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
         [
@@ -953,6 +970,7 @@ describe("ApolloClient", () => {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
       ],
@@ -964,6 +982,7 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
         [
@@ -971,11 +990,13 @@ describe("ApolloClient", () => {
             data: data1,
             loading: true,
             networkStatus: NetworkStatus.refetch,
+            partial: false,
           },
           {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
       ],
@@ -987,6 +1008,7 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
         [
@@ -994,11 +1016,13 @@ describe("ApolloClient", () => {
             data: data1,
             loading: true,
             networkStatus: NetworkStatus.refetch,
+            partial: false,
           },
           {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
       ],
@@ -1010,6 +1034,7 @@ describe("ApolloClient", () => {
             data: data1,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
         [
@@ -1017,11 +1042,13 @@ describe("ApolloClient", () => {
             data: data1,
             loading: true,
             networkStatus: NetworkStatus.refetch,
+            partial: false,
           },
           {
             data: data2,
             loading: false,
             networkStatus: NetworkStatus.ready,
+            partial: false,
           },
         ],
       ],
@@ -1049,7 +1076,7 @@ describe("ApolloClient", () => {
         };
 
         const client = new ApolloClient({
-          cache: new InMemoryCache({ addTypename: false }),
+          cache: new InMemoryCache(),
           link: new MockLink([
             { request, result: { data: data1 } },
             { request, result: { data: data2 } },
@@ -1093,7 +1120,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: { data: data1 } },
         { request, result: { data: data2 } },
@@ -1107,6 +1134,7 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     const result = await observable.refetch();
@@ -1115,6 +1143,7 @@ describe("ApolloClient", () => {
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1160,7 +1189,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query },
@@ -1191,6 +1220,7 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     void observable.refetch();
@@ -1199,6 +1229,7 @@ describe("ApolloClient", () => {
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     void observable.refetch(variables1);
@@ -1207,6 +1238,7 @@ describe("ApolloClient", () => {
       data: data3,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     void observable.refetch(variables2);
@@ -1215,6 +1247,7 @@ describe("ApolloClient", () => {
       data: data4,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1240,7 +1273,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query },
@@ -1264,6 +1297,7 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     void observable.refetch();
@@ -1272,6 +1306,7 @@ describe("ApolloClient", () => {
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     const updatedOptions = { ...observable.options };
@@ -1308,7 +1343,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -1336,6 +1371,7 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     void observable.refetch();
@@ -1344,6 +1380,7 @@ describe("ApolloClient", () => {
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).toEmitApolloQueryResult(
@@ -1351,6 +1388,7 @@ describe("ApolloClient", () => {
         data: data3,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       },
       { timeout: 250 }
     );
@@ -1386,7 +1424,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -1414,12 +1452,14 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).toEmitApolloQueryResult({
       data: data1,
       loading: true,
       networkStatus: NetworkStatus.poll,
+      partial: false,
     });
 
     stream.unsubscribe();
@@ -1435,7 +1475,7 @@ describe("ApolloClient", () => {
     `;
     const data = { list: [null, { value: 1 }] };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([{ request: { query }, result: { data } }]),
     });
     const observable = client.watchQuery({ query });
@@ -1445,6 +1485,7 @@ describe("ApolloClient", () => {
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.getCurrentResult().data).toEqual(data);
   });
@@ -1476,7 +1517,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request: { query: primeQuery }, result: { data: data1 } },
       ]),
@@ -1492,8 +1533,8 @@ describe("ApolloClient", () => {
 
     const stream = new ObservableStream(observable);
 
-    // TODO: We should only return partial data when returnPartialData is true
-    // for cache-only queries, otherwise return `undefined`. Update for v4.
+    // TODO: We should not emit a partial result for cache-only unless
+    // returnPartialData is `true`
     await expect(stream).toEmitApolloQueryResult({
       data: { luke: { name: "Luke Skywalker" } },
       loading: false,
@@ -1510,7 +1551,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1532,7 +1573,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1558,7 +1599,7 @@ describe("ApolloClient", () => {
     const errors = [new GraphQLError("foo")];
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1580,7 +1621,7 @@ describe("ApolloClient", () => {
     `;
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: mutation, variables: { listId: "1" } },
@@ -1618,7 +1659,6 @@ describe("ApolloClient", () => {
     const client = new ApolloClient({
       cache: new InMemoryCache({
         dataIdFromObject: getIdField,
-        addTypename: false,
       }),
       link: new MockLink([
         {
@@ -1656,7 +1696,6 @@ describe("ApolloClient", () => {
     };
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         dataIdFromObject: getIdField,
       }),
       link: new MockLink([
@@ -1697,7 +1736,6 @@ describe("ApolloClient", () => {
 
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         dataIdFromObject: getIdField,
       }),
       link: new MockLink([
@@ -1749,7 +1787,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query1 },
@@ -1773,11 +1811,13 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1825,7 +1865,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query1 },
@@ -1846,6 +1886,7 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await client.query({ query: query2 });
@@ -1861,6 +1902,7 @@ describe("ApolloClient", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -1868,7 +1910,7 @@ describe("ApolloClient", () => {
 
   it("warns if you forget the template literal tag", async () => {
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
     expect(() => {
       void client.query({
@@ -1935,6 +1977,7 @@ describe("ApolloClient", () => {
       data: transformedQueryResult,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1991,7 +2034,7 @@ describe("ApolloClient", () => {
 
     await expect(
       new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([{ request: { query }, error: networkError }]),
       }).query({ query })
     ).rejects.toEqual(new ApolloError({ networkError }));
@@ -2009,7 +2052,7 @@ describe("ApolloClient", () => {
     const graphQLErrors = [new GraphQLError("GraphQL error")];
     await expect(
       new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -2036,7 +2079,7 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2054,6 +2097,7 @@ describe("ApolloClient", () => {
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(
@@ -2080,7 +2124,7 @@ describe("ApolloClient", () => {
     };
 
     const observable = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2100,6 +2144,7 @@ describe("ApolloClient", () => {
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     stream.unsubscribe();
@@ -2124,7 +2169,7 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2147,6 +2192,7 @@ describe("ApolloClient", () => {
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
 
@@ -2173,7 +2219,7 @@ describe("ApolloClient", () => {
       },
     };
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query },
@@ -2190,12 +2236,14 @@ describe("ApolloClient", () => {
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
       data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -2248,7 +2296,6 @@ describe("ApolloClient", () => {
     };
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         dataIdFromObject: (object) => {
           if (object.__typename && object.id) {
             return object.__typename + "__" + object.id;
@@ -2282,11 +2329,13 @@ describe("ApolloClient", () => {
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -2337,7 +2386,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         {
           request: { query: query1 },
@@ -2360,7 +2409,7 @@ describe("ApolloClient", () => {
     const stream2 = new ObservableStream(observable2);
 
     await expect(stream1).toEmitApolloQueryResult({
-      data: {},
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -2369,11 +2418,13 @@ describe("ApolloClient", () => {
       data: data2,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream1).toEmitApolloQueryResult({
       data: data1,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -2439,14 +2490,14 @@ describe("ApolloClient", () => {
     await expect(aStream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
     await expect(bStream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2458,6 +2509,7 @@ describe("ApolloClient", () => {
           a: "ay",
         },
       },
+      partial: false,
     });
 
     await expect(bStream).toEmitApolloQueryResult({
@@ -2468,6 +2520,7 @@ describe("ApolloClient", () => {
           b: "bee",
         },
       },
+      partial: false,
     });
 
     await expect(aStream).toEmitApolloQueryResult({
@@ -2487,6 +2540,7 @@ describe("ApolloClient", () => {
           a: "ay",
         },
       },
+      partial: false,
     });
 
     await expect(aStream).not.toEmitAnything();
@@ -2535,7 +2589,7 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2547,6 +2601,7 @@ describe("ApolloClient", () => {
           c: "see",
         },
       },
+      partial: false,
     });
 
     cache.evict({ fieldName: "info" });
@@ -2554,7 +2609,7 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2566,6 +2621,7 @@ describe("ApolloClient", () => {
           c: "see",
         },
       },
+      partial: false,
     });
 
     cache.modify({
@@ -2579,7 +2635,7 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
-      data: {},
+      data: undefined,
       partial: true,
     });
 
@@ -2591,6 +2647,7 @@ describe("ApolloClient", () => {
           c: "see",
         },
       },
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -2646,7 +2703,6 @@ describe("ApolloClient", () => {
     let mergeCount = 0;
     const client = new ApolloClient({
       cache: new InMemoryCache({
-        addTypename: false,
         typePolicies: {
           Query: {
             fields: {
@@ -2698,11 +2754,13 @@ describe("ApolloClient", () => {
       data: dataWithoutId,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     await expect(stream2).toEmitApolloQueryResult({
       data: dataWithId,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -2728,7 +2786,7 @@ describe("ApolloClient", () => {
     };
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink([
         { request, result: firstResult },
         { request, result: secondResult },
@@ -2742,6 +2800,7 @@ describe("ApolloClient", () => {
       data: firstResult.data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     const expectedError = new ApolloError({
@@ -2808,11 +2867,10 @@ describe("ApolloClient", () => {
       data: dataA,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
-    // @ts-ignore ApolloQueryResult expects `data` key to be available, but the
-    // runtime behavior does not provide it. This test fails by including a
-    // check for the data key.
     expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -2823,11 +2881,13 @@ describe("ApolloClient", () => {
       data: dataA,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observableB.getCurrentResult()).toEqualApolloQueryResult({
       data: dataB,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -2856,7 +2916,7 @@ describe("ApolloClient", () => {
     ];
 
     const client = new ApolloClient({
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       link: new MockLink(mockedResponses),
     });
     const queryManager = client["queryManager"];
@@ -2925,7 +2985,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -2949,11 +3009,13 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -2984,7 +3046,7 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         ssrMode: true,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3013,6 +3075,7 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream).not.toEmitAnything();
     });
@@ -3068,7 +3131,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },
@@ -3160,7 +3223,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3190,11 +3253,13 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       stream.unsubscribe();
@@ -3229,7 +3294,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3264,6 +3329,7 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream).toEmitError(
         new ApolloError({ networkError: new Error("Network error") })
@@ -3301,7 +3367,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3326,11 +3392,13 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -3360,7 +3428,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3383,6 +3451,7 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       observable.stopPolling();
@@ -3416,7 +3485,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -3440,6 +3509,7 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const result = await client.query({
@@ -3452,11 +3522,13 @@ describe("ApolloClient", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
   });
@@ -3510,7 +3582,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -3541,11 +3613,13 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream2).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.resetStore();
@@ -3554,17 +3628,19 @@ describe("ApolloClient", () => {
         data: dataChanged,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
         data: data2Changed,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
     it("should change the store state to an empty state", () => {
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -3573,7 +3649,6 @@ describe("ApolloClient", () => {
       expect(client.cache.extract()).toEqual({});
       // TODO: Determine if we can drop this check against internal state and
       // replace it with something user-facing.
-      expect(client["queryManager"].getQueryStore()).toEqual({});
       expect(client["queryManager"].mutationStore).toEqual({});
     });
 
@@ -3615,7 +3690,7 @@ describe("ApolloClient", () => {
           })
       );
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -3625,6 +3700,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -3636,6 +3712,7 @@ describe("ApolloClient", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(2);
 
@@ -3668,7 +3745,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -3678,6 +3755,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       stream.unsubscribe();
@@ -3720,7 +3798,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -3734,6 +3812,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -3743,6 +3822,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(2);
     });
@@ -3772,7 +3852,7 @@ describe("ApolloClient", () => {
       );
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -3804,7 +3884,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -3846,7 +3926,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -3876,7 +3956,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -3912,7 +3992,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -3948,7 +4028,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4056,7 +4136,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4087,11 +4167,13 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream2).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.reFetchObservableQueries();
@@ -4100,11 +4182,13 @@ describe("ApolloClient", () => {
         data: dataChanged,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
         data: data2Changed,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -4146,7 +4230,7 @@ describe("ApolloClient", () => {
           })
       );
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -4156,6 +4240,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -4166,6 +4251,7 @@ describe("ApolloClient", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(2);
     });
@@ -4197,7 +4283,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
       const observable = client.watchQuery({ query });
@@ -4207,6 +4293,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -4245,7 +4332,7 @@ describe("ApolloClient", () => {
       ]);
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -4259,6 +4346,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(1);
 
@@ -4268,6 +4356,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(timesFired).toBe(2);
 
@@ -4290,7 +4379,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4324,7 +4413,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4355,7 +4444,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4391,7 +4480,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4427,7 +4516,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4464,7 +4553,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([]),
       });
 
@@ -4514,7 +4603,7 @@ describe("ApolloClient", () => {
       );
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
       });
 
@@ -4571,7 +4660,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4602,11 +4691,13 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       await expect(stream2).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.refetchQueries({
@@ -4617,11 +4708,13 @@ describe("ApolloClient", () => {
         data: dataChanged,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable2.getCurrentResult()).toEqualApolloQueryResult({
         data: data2Changed,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
   });
@@ -4637,7 +4730,7 @@ describe("ApolloClient", () => {
         fortuneCookie: "Buy it",
       };
       const result = await new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4650,6 +4743,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -4675,7 +4769,7 @@ describe("ApolloClient", () => {
       const fullData = { fortuneCookie, author };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -4707,6 +4801,7 @@ describe("ApolloClient", () => {
         data: fullData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -4734,6 +4829,7 @@ describe("ApolloClient", () => {
         data: { author: { firstName: "John", lastName: "Smith" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -4759,7 +4855,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: testQuery },
@@ -4779,19 +4875,21 @@ describe("ApolloClient", () => {
         })
       );
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await wait(0);
       void client.resetStore();
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -4829,7 +4927,7 @@ describe("ApolloClient", () => {
         b: { x2: 3, y2: 2, z2: 1 },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },
@@ -4848,6 +4946,7 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const observable = client.watchQuery({
@@ -4866,6 +4965,7 @@ describe("ApolloClient", () => {
         data: data2,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -4918,7 +5018,7 @@ describe("ApolloClient", () => {
       };
       const variables = { id: "1234" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -4945,6 +5045,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client.mutate({ mutation, refetchQueries: ["getAuthors"] });
@@ -4953,11 +5054,13 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -4997,7 +5100,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5023,6 +5126,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client.mutate({
@@ -5034,6 +5138,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(consoleWarnSpy).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
@@ -5077,7 +5182,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5101,6 +5206,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       stream.unsubscribe();
@@ -5151,7 +5257,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5175,6 +5281,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       stream.unsubscribe();
 
@@ -5226,7 +5333,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5250,6 +5357,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       stream.unsubscribe();
 
@@ -5303,7 +5411,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5329,6 +5437,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.mutate({
@@ -5342,6 +5451,7 @@ describe("ApolloClient", () => {
           data: secondReqData,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         },
         { timeout: 150 }
       );
@@ -5349,6 +5459,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -5393,7 +5504,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5419,6 +5530,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.mutate({
@@ -5432,6 +5544,7 @@ describe("ApolloClient", () => {
           data: secondReqData,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         },
         { timeout: 150 }
       );
@@ -5439,6 +5552,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -5483,7 +5597,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
       const mutationVariables = { id: "2345" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5509,6 +5623,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.mutate({
@@ -5523,6 +5638,7 @@ describe("ApolloClient", () => {
           data: secondReqData,
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         },
         { timeout: 150 }
       );
@@ -5530,6 +5646,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(stream).not.toEmitAnything();
@@ -5571,7 +5688,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5594,6 +5711,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const conditional = jest.fn(() => []);
@@ -5641,7 +5759,7 @@ describe("ApolloClient", () => {
         },
       };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -5664,6 +5782,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const conditional = jest.fn(() => [{ query }]);
@@ -5678,6 +5797,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -5718,7 +5838,7 @@ describe("ApolloClient", () => {
       };
       const variables = { id: "1234" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5799,7 +5919,7 @@ describe("ApolloClient", () => {
       };
       const variables = { id: "1234" };
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5894,7 +6014,7 @@ describe("ApolloClient", () => {
 
     function makeClient() {
       return new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -5928,6 +6048,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await client.mutate({
@@ -5960,11 +6081,13 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
 
@@ -5989,6 +6112,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client.mutate({
@@ -6014,6 +6138,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const context = (client.link as MockApolloLink).operation!.getContext();
@@ -6039,6 +6164,7 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client.mutate({
@@ -6064,6 +6190,7 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       const context = (client.link as MockApolloLink).operation!.getContext();
@@ -6116,7 +6243,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6145,6 +6272,7 @@ describe("ApolloClient", () => {
         data: queryData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client
@@ -6161,11 +6289,13 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(mutationComplete).toBe(true);
     });
@@ -6213,7 +6343,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6242,6 +6372,7 @@ describe("ApolloClient", () => {
         data: queryData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client
@@ -6254,11 +6385,13 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(mutationComplete).toBe(true);
     });
@@ -6306,7 +6439,7 @@ describe("ApolloClient", () => {
       const variables = { id: "1234" };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6335,6 +6468,7 @@ describe("ApolloClient", () => {
         data: queryData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client
@@ -6351,11 +6485,13 @@ describe("ApolloClient", () => {
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: secondReqData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(mutationComplete).toBe(false);
     });
@@ -6404,7 +6540,7 @@ describe("ApolloClient", () => {
       const refetchError = new Error("Refetch failed");
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query, variables },
@@ -6434,6 +6570,7 @@ describe("ApolloClient", () => {
         data: queryData,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       void client
@@ -6516,7 +6653,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -6535,12 +6672,14 @@ describe("ApolloClient", () => {
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
   });
@@ -6576,7 +6715,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link,
         ...clientAwareness,
       });
@@ -6605,13 +6744,13 @@ describe("ApolloClient", () => {
         }
       `;
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
             result: {
               data: {
-                author: { firstName: "John" },
+                author: { __typename: "Author", firstName: "John" },
               },
             },
           },
@@ -6624,7 +6763,7 @@ describe("ApolloClient", () => {
       // without reaching into internal state
       expect(
         client["queryManager"]["inFlightLinkObservables"].peek(
-          print(query),
+          print(addTypenameToDocument(query)),
           "{}"
         )
       ).toEqual({
@@ -6642,7 +6781,7 @@ describe("ApolloClient", () => {
       `;
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query },
@@ -6662,7 +6801,7 @@ describe("ApolloClient", () => {
       // without checking internal state
       expect(
         client["queryManager"]["inFlightLinkObservables"].peek(
-          print(query),
+          print(addTypenameToDocument(query)),
           "{}"
         )
       ).toBeUndefined();
@@ -6721,6 +6860,7 @@ describe("ApolloClient", () => {
         data: initialData,
         loading: false,
         networkStatus: 7,
+        partial: false,
       };
 
       defer.enqueueInitialChunk({
@@ -6805,10 +6945,7 @@ describe("ApolloClient", () => {
       spy.mockRestore();
     });
 
-    async function validateWarnings(
-      returnPartialData: boolean,
-      expectedWarnCount: number
-    ) {
+    it("should show missing cache result fields warning when returnPartialData is false", async () => {
       const query1 = gql`
         query {
           car {
@@ -6842,7 +6979,7 @@ describe("ApolloClient", () => {
       };
 
       const client = new ApolloClient({
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         link: new MockLink([
           {
             request: { query: query1 },
@@ -6855,7 +6992,7 @@ describe("ApolloClient", () => {
       const observable2 = client.watchQuery({
         query: query2,
         fetchPolicy: "cache-only",
-        returnPartialData,
+        returnPartialData: false,
       });
 
       const stream1 = new ObservableStream(observable1);
@@ -6864,6 +7001,7 @@ describe("ApolloClient", () => {
         data: data1,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       stream1.unsubscribe();
@@ -6876,15 +7014,79 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: true,
       });
-      expect(spy).toHaveBeenCalledTimes(expectedWarnCount);
-    }
-
-    it("should show missing cache result fields warning when returnPartialData is false", async () => {
-      await validateWarnings(false, 1);
+      expect(spy).toHaveBeenCalledTimes(1);
     });
 
     it("should not show missing cache result fields warning when returnPartialData is true", async () => {
-      await validateWarnings(true, 0);
+      const query1 = gql`
+        query {
+          car {
+            make
+            model
+            id
+            __typename
+          }
+        }
+      `;
+
+      const query2 = gql`
+        query {
+          car {
+            make
+            model
+            vin
+            id
+            __typename
+          }
+        }
+      `;
+
+      const data1 = {
+        car: {
+          make: "Ford",
+          model: "Pinto",
+          id: 123,
+          __typename: "Car",
+        },
+      };
+
+      const client = new ApolloClient({
+        cache: new InMemoryCache(),
+        link: new MockLink([
+          {
+            request: { query: query1 },
+            result: { data: data1 },
+          },
+        ]),
+      });
+
+      const observable1 = client.watchQuery({ query: query1 });
+      const observable2 = client.watchQuery({
+        query: query2,
+        fetchPolicy: "cache-only",
+        returnPartialData: true,
+      });
+
+      const stream1 = new ObservableStream(observable1);
+
+      await expect(stream1).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+
+      stream1.unsubscribe();
+
+      const stream2 = new ObservableStream(observable2);
+
+      await expect(stream2).toEmitApolloQueryResult({
+        data: data1,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
+      expect(spy).toHaveBeenCalledTimes(0);
     });
   });
 

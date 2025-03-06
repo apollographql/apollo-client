@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "serve-app": "npm run start",
-    "ci-preparations": "npm install --legacy-peer-deps @apollo/client-integration-nextjs",
+    "ci-preparations": "pnpm install @apollo/client-integration-nextjs",
     "test": "playwright test"
   },
   "dependencies": {

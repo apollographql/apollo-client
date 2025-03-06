@@ -2,6 +2,7 @@ const assert = require("node:assert");
 const path = require("node:path");
 const { findPackageJSON } = require("node:module");
 const test = require("node:test");
+const { realpathSync } = require("node:fs");
 
 const { ApolloClient } = require("@apollo/client");
 const { useQuery } = require("@apollo/client/react");
@@ -18,7 +19,7 @@ test.suite("Node with ESM require", () => {
 
   test("module resolution", () => {
     const basedir = path
-      .dirname(findPackageJSON("@apollo/client", __filename))
+      .dirname(realpathSync(findPackageJSON("@apollo/client", __filename)))
       .split(path.sep)
       .join(path.posix.sep);
 

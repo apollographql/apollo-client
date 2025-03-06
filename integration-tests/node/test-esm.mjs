@@ -3,6 +3,7 @@ import path from "node:path";
 import { findPackageJSON } from "node:module";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { realpathSync } from "node:fs";
 
 test.suite("Node with ESM imports", () => {
   test("import from `.../index.js`", async () => {
@@ -39,7 +40,7 @@ test.suite("Node with ESM imports", () => {
   });
 
   const basedir = path
-    .dirname(findPackageJSON("@apollo/client", import.meta.url))
+    .dirname(realpathSync(findPackageJSON("@apollo/client", import.meta.url)))
     .split(path.sep)
     .join(path.posix.sep);
 

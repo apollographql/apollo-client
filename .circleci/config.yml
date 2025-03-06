@@ -102,39 +102,35 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: npm version
+      - run: pnpm version
       - run:
-          # due to a bug with overrides that will be fixed in npm 11.2.0 (to be released) we need to install these everywhere manually
-          #command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
-          command: npm exec --workspaces -c 'jq -e ".dependencies[\"@apollo/client\"]" package.json && npm pkg set "dependencies[@apollo/client]=/tmp/workspace/apollo-client.tgz" || true'
+          command: pnpm pkg set "pnpm.overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
           working_directory: integration-tests
       - run:
           command: |
-            export VERSION=$(npm view react@<< parameters.react >> version)
-            # due to a bug with overrides that will be fixed in npm 11.2.0 (to be released) we need to install these everywhere manually
-            # npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
-            npm exec --workspaces -c 'jq -e ".dependencies.react" package.json && npm pkg set "dependencies[react]=${VERSION}" "dependencies[react-dom]=${VERSION}" || true'
+            export VERSION=$(pnpm view react@<< parameters.react >> version)
+            pnpm pkg set "pnpm.overrides[react]=${VERSION}" "pnpm.overrides[react-dom]=${VERSION}"
           working_directory: integration-tests
       - run:
-          command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
+          command: pnpm run ci-preparations --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm install
+          command: pnpm install
           working_directory: integration-tests
       - run:
-          command: cat package-lock.json
+          command: cat pnpm-lock.yaml
           working_directory: integration-tests
       - run:
-          command: npx playwright install-deps
+          command: pnpx playwright install-deps
           working_directory: integration-tests
       - run:
-          command: npx playwright install
+          command: pnpx playwright install
           working_directory: integration-tests
       - run:
-          command: npm run build --workspace=<< parameters.framework >> --if-present
+          command: pnpm run build --workspace=<< parameters.framework >> --if-present
           working_directory: integration-tests
       - run:
-          command: npm run test --workspace=<< parameters.framework >>
+          command: pnpm run test --workspace=<< parameters.framework >>
           working_directory: integration-tests
 
   TestPeerDepTypes:

@@ -1,6 +1,7 @@
 const assert = require("node:assert");
 const path = require("node:path");
 const { findPackageJSON } = require("node:module");
+const { realpathSync } = require("node:fs");
 
 const test = require("node:test");
 
@@ -19,7 +20,7 @@ test.suite("Node with CJS require", () => {
 
   test("module resolution", () => {
     const basedir = path
-      .dirname(findPackageJSON("@apollo/client", __filename))
+      .dirname(realpathSync(findPackageJSON("@apollo/client", __filename)))
       .split(path.sep)
       .join(path.posix.sep);
 

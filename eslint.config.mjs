@@ -57,7 +57,7 @@ export default [
       "import/parsers": {
         "@typescript-eslint/parser": [".ts", ".tsx"],
       },
-
+      "import/internal-regex": "^@apollo/client",
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
@@ -67,6 +67,18 @@ export default [
 
     rules: {
       "import/no-unresolved": "error",
+      "import/order": [
+        "warn",
+        {
+          "newlines-between": "always",
+          alphabetize: {
+            order: "asc",
+            orderImportKind: "asc",
+            caseInsensitive: true,
+          },
+          named: true,
+        },
+      ],
       "local-rules/import-from-export": "error",
       "local-rules/import-from-inside-other-export": [
         "warn",

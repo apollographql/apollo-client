@@ -199,7 +199,7 @@
     "bytes": "3.1.2",
     "eslint": "9.18.0",
     "eslint-import-resolver-typescript": "3.7.0",
-    "eslint-plugin-import": "npm:@phryneas/eslint-plugin-import@2.27.5-pr.2813.2817.199971c",
+    "eslint-plugin-import": "2.31.0",
     "eslint-plugin-local-rules": "3.0.2",
     "eslint-plugin-react-compiler": "19.0.0-beta-decd7b8-20250118",
     "eslint-plugin-react-hooks": "5.1.0",

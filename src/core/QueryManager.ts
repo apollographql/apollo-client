@@ -870,7 +870,7 @@ export class QueryManager<TStore> {
       if (queryInfo.observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        queryInfo.networkStatus = NetworkStatus.loading;
+        queryInfo.observableQuery["networkStatus"] = NetworkStatus.loading;
       } else {
         queryInfo.stop();
       }

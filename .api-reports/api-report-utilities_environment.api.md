@@ -5,11 +5,7 @@
 ```ts
 
 // @public (undocumented)
-const global_2: typeof globalThis & Window;
-export { global_2 as global }
-
-// @public (undocumented)
-export function maybe<T>(thunk: () => T): T | undefined;
+export const __DEV__: boolean;
 
 // (No @packageDocumentation comment for this package)
 

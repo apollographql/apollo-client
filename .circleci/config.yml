@@ -121,10 +121,10 @@ jobs:
           command: cat pnpm-lock.yaml
           working_directory: integration-tests
       - run:
-          command: pnpx playwright install-deps
+          command: pnpm exec playwright install-deps
           working_directory: integration-tests
       - run:
-          command: pnpx playwright install
+          command: pnpm exec playwright install
           working_directory: integration-tests
       - run:
           command: pnpm run --if-present --filter << parameters.framework >> build
@@ -173,7 +173,6 @@ workflows:
           matrix:
             parameters:
               framework:
-                - cra4
                 - cra5
                 - next
                 - node
@@ -187,10 +186,6 @@ workflows:
                 - next
             exclude:
               # CRA only works with React 18
-              - framework: cra4
-                react: next
-              - framework: cra4
-                react: latest
               - framework: cra5
                 react: next
               - framework: cra5

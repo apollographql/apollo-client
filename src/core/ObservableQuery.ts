@@ -1012,14 +1012,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const oldNetworkStatus = this.networkStatus;
 
-    if (oldNetworkStatus !== NetworkStatus.loading && !newNetworkStatus) {
-      newNetworkStatus =
-        newOptions?.variables && !equal(newOptions.variables, oldVariables) ?
-          NetworkStatus.setVariables
-        : NetworkStatus.loading;
+    if (!newNetworkStatus) {
+      newNetworkStatus = NetworkStatus.loading;
+
+      if (
+        oldNetworkStatus !== NetworkStatus.loading &&
+        newOptions?.variables &&
+        !equal(newOptions.variables, oldVariables)
+      ) {
+        newNetworkStatus = NetworkStatus.setVariables;
+      }
     }
 
-    this.networkStatus = newNetworkStatus ?? NetworkStatus.loading;
+    this.networkStatus = newNetworkStatus;
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
       if (this.linkObservable === observable) {
@@ -1031,7 +1036,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const { observable, fromLink } = this.fetch(
       options,
       oldNetworkStatus,
-      newNetworkStatus ?? NetworkStatus.loading,
+      newNetworkStatus,
       query
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {

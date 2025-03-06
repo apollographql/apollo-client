@@ -284,7 +284,10 @@ export class QueryInfo {
       return false;
     }
 
-    if (isNetworkRequestInFlight(this.networkStatus) && this.observableQuery) {
+    if (
+      this.observableQuery &&
+      isNetworkRequestInFlight(this.observableQuery["networkStatus"])
+    ) {
       const { fetchPolicy } = this.observableQuery.options;
       if (fetchPolicy !== "cache-only" && fetchPolicy !== "cache-and-network") {
         return false;

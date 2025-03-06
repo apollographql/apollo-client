@@ -913,6 +913,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     newNetworkStatus: NetworkStatus,
     query?: DocumentNode
   ) {
+    const { notifyOnNetworkStatusChange = false } = options;
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
@@ -921,7 +922,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       options,
       newNetworkStatus,
       query,
-      oldNetworkStatus
+      notifyOnNetworkStatusChange &&
+        oldNetworkStatus !== newNetworkStatus &&
+        isNetworkRequestInFlight(newNetworkStatus)
     );
   }
 

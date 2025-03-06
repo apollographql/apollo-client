@@ -479,8 +479,6 @@ export class QueryInfo {
     }
   }
 
-  public markReady() {}
-
   public markError() {
     this.lastWrite = void 0;
     this.reset();

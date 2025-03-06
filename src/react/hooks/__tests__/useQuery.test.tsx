@@ -7920,7 +7920,7 @@ describe("useQuery Hook", () => {
           expect.anything(),
           expect.objectContaining({ fetchPolicy }),
           expect.any(Number),
-          expect.any(Number)
+          expect.any(Boolean)
         );
       };
       const nextFetchPolicy: WatchQueryOptions<

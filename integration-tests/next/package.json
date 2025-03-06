@@ -11,7 +11,7 @@
     "test": "playwright test"
   },
   "dependencies": {
-    "@apollo/client": "^3.13.1",
+    "@apollo/client": "3.13.0",
     "@apollo/client-integration-nextjs": "^0.12.0-alpha.1",
     "@graphql-tools/schema": "^10.0.0",
     "@types/node": "20.3.1",

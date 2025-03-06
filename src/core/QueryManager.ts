@@ -1625,7 +1625,7 @@ export class QueryManager<TStore> {
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus: NetworkStatus,
+    newNetworkStatus: NetworkStatus,
     oldNetworkStatus: NetworkStatus
   ): ObservableAndInfo<TData> {
     queryInfo.init({
@@ -1637,7 +1637,7 @@ export class QueryManager<TStore> {
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
-      networkStatus: NetworkStatus
+      networkStatus = newNetworkStatus
     ) => {
       const data = diff.result;
 
@@ -1710,7 +1710,7 @@ export class QueryManager<TStore> {
         // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
       : (
-        networkStatus === NetworkStatus.refetch &&
+        newNetworkStatus === NetworkStatus.refetch &&
         refetchWritePolicy !== "merge"
       ) ?
         CacheWriteBehavior.OVERWRITE
@@ -1728,8 +1728,8 @@ export class QueryManager<TStore> {
     const shouldNotify =
       notifyOnNetworkStatusChange &&
       typeof oldNetworkStatus === "number" &&
-      oldNetworkStatus !== networkStatus &&
-      isNetworkRequestInFlight(networkStatus);
+      oldNetworkStatus !== newNetworkStatus &&
+      isNetworkRequestInFlight(newNetworkStatus);
 
     switch (fetchPolicy) {
       default:
@@ -1746,10 +1746,7 @@ export class QueryManager<TStore> {
         if (returnPartialData || shouldNotify) {
           return {
             fromLink: true,
-            observable: concat(
-              resultsFromCache(diff, networkStatus),
-              resultsFromLink()
-            ),
+            observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
@@ -1762,10 +1759,7 @@ export class QueryManager<TStore> {
         if (diff.complete || returnPartialData || shouldNotify) {
           return {
             fromLink: true,
-            observable: concat(
-              resultsFromCache(diff, networkStatus),
-              resultsFromLink()
-            ),
+            observable: concat(resultsFromCache(diff), resultsFromLink()),
           };
         }
 
@@ -1785,7 +1779,7 @@ export class QueryManager<TStore> {
           return {
             fromLink: true,
             observable: concat(
-              resultsFromCache(readCache(), networkStatus),
+              resultsFromCache(readCache()),
               resultsFromLink()
             ),
           };
@@ -1801,7 +1795,7 @@ export class QueryManager<TStore> {
             // cache.diff, but instead returns a { complete: false } stub result
             // when there is no queryInfo.diff already defined.
             observable: concat(
-              resultsFromCache(queryInfo.getDiff(), networkStatus),
+              resultsFromCache(queryInfo.getDiff()),
               resultsFromLink()
             ),
           };

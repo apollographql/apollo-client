@@ -20,7 +20,7 @@ export default async function Home() {
   const { data } = await getClient().query({ query: QUERY });
   return (
     <ul>
-      {data.products.map(({ id, title }) => (
+      {data?.products.map(({ id, title }) => (
         <li key={id}>{title}</li>
       ))}
     </ul>

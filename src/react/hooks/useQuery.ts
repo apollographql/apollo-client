@@ -68,9 +68,9 @@ type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
 >;
 
 function noop() {}
-export const lastWatchOptions = Symbol();
+const lastWatchOptions = Symbol();
 
-export interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
+interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   extends ObservableQuery<TData, TVariables> {
   [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
 }

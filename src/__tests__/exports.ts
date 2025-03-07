@@ -40,8 +40,6 @@ import * as urqlUtilities from "@apollo/client/utilities/subscriptions/urql";
 
 import { entryPoints } from "../../config/entryPoints.js";
 
-// @ts-ignore
-
 type Namespace = object;
 
 describe("exports of public entry points", () => {

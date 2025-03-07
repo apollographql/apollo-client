@@ -52,7 +52,7 @@ export type UseFragmentResult<TData> =
       missing?: MissingTree;
     };
 
-export function useFragment<TData = any, TVars = OperationVariables>(
+export function useFragment<TData = unknown, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   return wrapHook(
@@ -63,7 +63,7 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   )(options);
 }
 
-function useFragment_<TData = any, TVars = OperationVariables>(
+function useFragment_<TData = unknown, TVars = OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const client = useApolloClient(options.client);

@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import path from "path";
 
-// @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
+// @ts-ignore An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
 import type { BuildStepOptions } from "./build.ts";
 import { __dirname } from "./dirname.cts";
 

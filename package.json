@@ -77,7 +77,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "node config/build.ts",
-    "typecheck": "tsc --noEmit --project tsconfig.json",
+    "typecheck": "tsc --project config/tsconfig.json; tsc --noEmit --project tsconfig.json",
     "postinstall": "patch-package",
     "extract-api": "node config/build.ts --step=prepareDist --step=addExports --step=typescript --step=inlineInheritDoc && node config/apiExtractor.ts --generate apiReport",
     "clean": "rimraf dist coverage lib temp",

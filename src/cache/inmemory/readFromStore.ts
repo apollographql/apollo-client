@@ -45,15 +45,15 @@ import {
   getDefaultValues,
   getFragmentFromSelection,
   getMainDefinition,
+  getQueryDefinition,
   isField,
-  resultKeyNameFromField,
+  isNonNullObject,
   isReference,
   makeReference,
-  shouldInclude,
-  getQueryDefinition,
   maybeDeepFreeze,
   mergeDeepArray,
-  isNonNullObject,
+  resultKeyNameFromField,
+  shouldInclude,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {

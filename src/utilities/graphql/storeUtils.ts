@@ -14,10 +14,10 @@ import type {
   NullValueNode,
   ObjectValueNode,
   SelectionNode,
+  SelectionSetNode,
   StringValueNode,
   ValueNode,
   VariableNode,
-  SelectionSetNode,
 } from "graphql";
 
 import { canonicalStringify } from "../common/canonicalStringify.js";

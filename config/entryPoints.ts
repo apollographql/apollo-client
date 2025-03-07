@@ -3,7 +3,7 @@ import path from "path";
 
 // @ts-ignore An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
 import type { BuildStepOptions } from "./build.ts";
-import { __dirname } from "./dirname.cts";
+import { __dirname } from "./dirname.cjs";
 
 const pkg = JSON.parse(
   readFileSync(path.resolve(__dirname, "../package.json"), {

@@ -17,23 +17,6 @@ import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
-import {
-  RefetchWritePolicy,
-  WatchQueryFetchPolicy,
-} from "../../../core/watchQueryOptions.js";
-import {
-  actAsync,
-  PaginatedCaseData,
-  PaginatedCaseVariables,
-  renderAsync,
-  renderHookAsync,
-  setupPaginatedCase,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
-import {
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-} from "../useSuspenseQuery.js";
 
 
 import {
@@ -77,6 +60,24 @@ import {
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import {
+  RefetchWritePolicy,
+  WatchQueryFetchPolicy,
+} from "../../../core/watchQueryOptions.js";
+import {
+  actAsync,
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+  renderAsync,
+  renderHookAsync,
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import {
+  useSuspenseQuery,
+  UseSuspenseQueryResult,
+} from "../useSuspenseQuery.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

@@ -1,5 +1,7 @@
 import { gql } from "graphql-tag";
 
+import { ApolloError } from "@apollo/client/core";
+
 import {
   mockMultipartSubscriptionStream,
   ObservableStream,
@@ -10,7 +12,6 @@ import { execute } from "../../core/execute.js";
 import { fromError } from "../../utils/fromError.js";
 import { RetryLink } from "../retryLink.js";
 
-import { ApolloError } from "@apollo/client/core";
 
 const query = gql`
   {

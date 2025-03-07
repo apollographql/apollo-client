@@ -2,16 +2,6 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql";
 import * as React from "rehackt";
 
-import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
-import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
-import {
-  createMakeWatchQueryOptions,
-  getDefaultFetchPolicy,
-  getObsQueryOptions,
-  toQueryResult,
-  useQueryInternals,
-} from "./useQuery.js";
-
 import type {
   ApolloClient,
   ApolloQueryResult,
@@ -27,6 +17,17 @@ import type {
   QueryResult,
 } from "@apollo/client/react";
 import { mergeOptions } from "@apollo/client/utilities";
+
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
+import {
+  createMakeWatchQueryOptions,
+  getDefaultFetchPolicy,
+  getObsQueryOptions,
+  toQueryResult,
+  useQueryInternals,
+} from "./useQuery.js";
+
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.

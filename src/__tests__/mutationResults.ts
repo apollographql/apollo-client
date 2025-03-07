@@ -2,7 +2,6 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, ApolloError, FetchResult } from "@apollo/client/core";
@@ -12,6 +11,8 @@ import {
   Observable,
   ObservableSubscription as Subscription,
 } from "@apollo/client/utilities";
+
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("mutation results", () => {
   const query = gql`

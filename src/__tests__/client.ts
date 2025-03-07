@@ -11,7 +11,6 @@ import {
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 
 import {
@@ -40,6 +39,8 @@ import {
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("client", () => {
   it("can be loaded via require", () => {

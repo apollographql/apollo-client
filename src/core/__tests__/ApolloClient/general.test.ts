@@ -5,6 +5,25 @@ import { gql } from "graphql-tag";
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
 
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
+import {
+  ApolloLink,
+  FetchResult,
+  type RequestHandler,
+} from "@apollo/client/link/core";
+import { wait } from "@apollo/client/testing/core";
+import {
+  addTypenameToDocument,
+  Concast,
+  print,
+} from "@apollo/client/utilities";
+import {
+  InvariantError,
+  setVerbosity,
+} from "@apollo/client/utilities/invariant";
+
 import {
   MockApolloLink,
   MockLink,
@@ -26,14 +45,6 @@ import {
 } from "../../watchQueryOptions.js";
 import { mockFetchQuery } from "../ObservableQuery.js";
 
-import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
-import { ApolloError } from "@apollo/client/errors";
-import {
-  ApolloLink,
-  FetchResult,
-  type RequestHandler,
-} from "@apollo/client/link/core";
 
 
 // mocks
@@ -42,16 +53,6 @@ import {
 
 
 // testing utils
-import { wait } from "@apollo/client/testing/core";
-import {
-  addTypenameToDocument,
-  Concast,
-  print,
-} from "@apollo/client/utilities";
-import {
-  InvariantError,
-  setVerbosity,
-} from "@apollo/client/utilities/invariant";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

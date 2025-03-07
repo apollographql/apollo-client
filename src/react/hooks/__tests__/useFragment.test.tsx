@@ -19,13 +19,6 @@ import { expectTypeOf } from "expect-type";
 import * as React from "react";
 import { SubscriptionObserver } from "zen-observable-ts";
 
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import {
-  useFragment,
-  UseFragmentOptions,
-  UseFragmentResult,
-} from "../useFragment.js";
-import { useQuery } from "../useQuery.js";
 
 import {
   ApolloClient,
@@ -43,6 +36,14 @@ import { FragmentType } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import {
+  useFragment,
+  UseFragmentOptions,
+  UseFragmentResult,
+} from "../useFragment.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

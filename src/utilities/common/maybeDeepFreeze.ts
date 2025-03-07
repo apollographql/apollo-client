@@ -1,6 +1,7 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
 import { isNonNullObject } from "./objects.js";
 
-import { __DEV__ } from "@apollo/client/utilities/environment";
 
 export function deepFreeze(value: any) {
   const workSet = new Set([value]);

@@ -4,30 +4,6 @@ import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
-import type { Cache } from "../core/types/Cache.js";
-import type { MissingTree } from "../core/types/common.js";
-import { MissingFieldError } from "../core/types/common.js";
-
-import {
-  maybeDependOnExistenceOfEntity,
-  supportsResultCaching,
-} from "./entityStore.js";
-import {
-  extractFragmentContext,
-  getTypenameFromStoreObject,
-  isArray,
-  shouldCanonizeResults,
-} from "./helpers.js";
-import type { InMemoryCache } from "./inMemoryCache.js";
-import { ObjectCanon } from "./object-canon.js";
-import type { Policies } from "./policies.js";
-import type {
-  DiffQueryAgainstStoreOptions,
-  InMemoryCacheConfig,
-  NormalizedCache,
-  ReadMergeModifyContext,
-} from "./types.js";
-
 import type {
   FragmentMap,
   FragmentMapFunction,
@@ -60,6 +36,31 @@ import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
+
+import type { Cache } from "../core/types/Cache.js";
+import type { MissingTree } from "../core/types/common.js";
+import { MissingFieldError } from "../core/types/common.js";
+
+import {
+  maybeDependOnExistenceOfEntity,
+  supportsResultCaching,
+} from "./entityStore.js";
+import {
+  extractFragmentContext,
+  getTypenameFromStoreObject,
+  isArray,
+  shouldCanonizeResults,
+} from "./helpers.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
+import { ObjectCanon } from "./object-canon.js";
+import type { Policies } from "./policies.js";
+import type {
+  DiffQueryAgainstStoreOptions,
+  InMemoryCacheConfig,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types.js";
+
 
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;

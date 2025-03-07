@@ -1,6 +1,5 @@
 import { equal } from "@wry/equality";
 
-import type { FragmentKey } from "./types.js";
 
 import type {
   WatchFragmentOptions,
@@ -17,6 +16,8 @@ import {
   createFulfilledPromise,
   wrapPromiseWithState,
 } from "@apollo/client/utilities";
+
+import type { FragmentKey } from "./types.js";
 
 type FragmentRefPromise<TData> = PromiseWithState<TData>;
 type Listener<TData> = (promise: FragmentRefPromise<TData>) => void;

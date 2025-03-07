@@ -1,10 +1,3 @@
-import { hasOwn, isArray } from "./helpers.js";
-import type {
-  KeyArgsFunction,
-  KeyFieldsFunction,
-  KeySpecifier,
-} from "./policies.js";
-
 import {
   argumentsObjectFromField,
   DeepMerger,
@@ -12,6 +5,14 @@ import {
   isNonNullObject,
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { hasOwn, isArray } from "./helpers.js";
+import type {
+  KeyArgsFunction,
+  KeyFieldsFunction,
+  KeySpecifier,
+} from "./policies.js";
+
 
 
 

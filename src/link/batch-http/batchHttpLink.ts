@@ -1,4 +1,3 @@
-import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
 import { BatchLink } from "@apollo/client/link/batch";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
@@ -21,6 +20,8 @@ import {
   removeClientSetsFromDocument,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+
+import { filterOperationVariables } from "../utils/filterOperationVariables.js";
 
 export namespace BatchHttpLink {
   export type Options = Pick<

@@ -1,26 +1,7 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
-import type { TODO } from "../utilities/types/TODO.js";
 
-import { equalByQuery } from "./equalByQuery.js";
-import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import type { QueryInfo } from "./QueryInfo.js";
-import type { QueryManager } from "./QueryManager.js";
-import type {
-  ApolloQueryResult,
-  OperationVariables,
-  TypedDocumentNode,
-} from "./types.js";
-import type {
-  FetchMoreQueryOptions,
-  NextFetchPolicyContext,
-  SubscribeToMoreOptions,
-  UpdateQueryMapFn,
-  UpdateQueryOptions,
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "./watchQueryOptions.js";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
@@ -43,6 +24,27 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { TODO } from "../utilities/types/TODO.js";
+
+import { equalByQuery } from "./equalByQuery.js";
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import type { QueryInfo } from "./QueryInfo.js";
+import type { QueryManager } from "./QueryManager.js";
+import type {
+  ApolloQueryResult,
+  OperationVariables,
+  TypedDocumentNode,
+} from "./types.js";
+import type {
+  FetchMoreQueryOptions,
+  NextFetchPolicyContext,
+  SubscribeToMoreOptions,
+  UpdateQueryMapFn,
+  UpdateQueryOptions,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "./watchQueryOptions.js";
 
 const { assign, hasOwnProperty } = Object;
 

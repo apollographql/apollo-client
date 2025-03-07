@@ -1,8 +1,9 @@
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import assert from "node:assert";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import type { BuildStep } from "./build.ts";
 import { entryPoints } from "./entryPoints.ts";
-import { join } from "node:path";
-import assert from "node:assert";
 
 type ConditionRoot = {
   types: {

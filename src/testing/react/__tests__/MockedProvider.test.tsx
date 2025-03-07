@@ -4,14 +4,15 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { Observable } from "zen-observable-ts";
 
-import { QueryResult } from "../../../react/types/types.js";
-import { MockedProvider } from "../MockedProvider.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloError } from "@apollo/client/errors";
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { useQuery } from "@apollo/client/react/hooks";
 import { MockedResponse, MockLink } from "@apollo/client/testing/core";
+
+import { QueryResult } from "../../../react/types/types.js";
+import { MockedProvider } from "../MockedProvider.js";
 
 const variables = {
   username: "mock_username",

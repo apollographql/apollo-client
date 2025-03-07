@@ -1,8 +1,6 @@
 import { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 
-import { LocalState } from "../../core/LocalState.js";
-import { ObservableStream } from "../../testing/internal/index.js";
 
 
 import { InMemoryCache, isReference } from "@apollo/client/cache";
@@ -15,6 +13,9 @@ import {
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink } from "@apollo/client/testing";
 import { Observable } from "@apollo/client/utilities";
+
+import { LocalState } from "../../core/LocalState.js";
+import { ObservableStream } from "../../testing/internal/index.js";
 
 const setupTestWithResolvers = ({
   resolvers,

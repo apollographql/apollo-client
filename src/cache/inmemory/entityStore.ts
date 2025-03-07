@@ -4,6 +4,22 @@ import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import type { OptimisticDependencyFunction } from "optimism";
 import { dep } from "optimism";
 
+import type {
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+import {
+  canUseWeakMap,
+  DeepMerger,
+  isNonNullObject,
+  isReference,
+  makeReference,
+  maybeDeepFreeze,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { Cache } from "../core/types/Cache.js";
 import type {
   CanReadFunction,
@@ -21,21 +37,6 @@ import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
 import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
 
-import type {
-  Reference,
-  StoreObject,
-  StoreValue,
-} from "@apollo/client/utilities";
-import {
-  canUseWeakMap,
-  DeepMerger,
-  isNonNullObject,
-  isReference,
-  makeReference,
-  maybeDeepFreeze,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 const DELETE: DeleteModifier = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;

@@ -1,9 +1,6 @@
 import equal from "@wry/equality";
 import * as React from "rehackt";
 
-import { useDeepMemo, wrapHook } from "./internal/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 import type {
   Cache,
@@ -15,6 +12,10 @@ import type { ApolloClient, OperationVariables } from "@apollo/client/core";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import type { NoInfer } from "@apollo/client/react";
 import type { DeepPartial } from "@apollo/client/utilities";
+
+import { useDeepMemo, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<

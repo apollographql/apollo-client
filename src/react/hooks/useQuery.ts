@@ -18,9 +18,6 @@
 import { equal } from "@wry/equality";
 import * as React from "rehackt";
 
-import { wrapHook } from "./internal/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 import type {
   ApolloClient,
@@ -53,6 +50,10 @@ import {
   maybeDeepFreeze,
 } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
+
+import { wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 const {
   prototype: { hasOwnProperty },

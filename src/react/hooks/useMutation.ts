@@ -3,8 +3,6 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import * as React from "rehackt";
 
-import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
-import { useApolloClient } from "./useApolloClient.js";
 
 
 import type {
@@ -23,6 +21,9 @@ import type {
 } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { mergeOptions } from "@apollo/client/utilities";
+
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 /**
  *

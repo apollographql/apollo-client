@@ -2,10 +2,6 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type * as ReactTypes from "react";
 
-import type {
-  MutationSharedOptions,
-  SharedWatchQueryOptions,
-} from "../../core/watchQueryOptions.js";
 
 import type {
   ApolloCache,
@@ -33,6 +29,11 @@ import type {
   ObservableSubscription,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
+
+import type {
+  MutationSharedOptions,
+  SharedWatchQueryOptions,
+} from "../../core/watchQueryOptions.js";
 
 /* QueryReference type */
 

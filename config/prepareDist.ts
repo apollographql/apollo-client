@@ -12,14 +12,15 @@
 //   store it in the appropriate dist sub-directory.
 
 import fs from "node:fs";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 /* @apollo/client */
 
 import pkg from "../package.json" with { type: "json" };
-import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
+
 import type { BuildStep } from "./build.ts";
-import { mkdir } from "node:fs/promises";
+import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
 
 // the generated `Person` type is a bit weird - `author` as a string is valid
 const packageJson: Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {

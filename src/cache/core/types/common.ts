@@ -1,7 +1,5 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
-import type { StorageType } from "../../inmemory/policies.js";
-
 import type {
   AsStoreObject,
   DeepPartial,
@@ -10,6 +8,9 @@ import type {
   StoreObject,
   StoreValue,
 } from "@apollo/client/utilities";
+
+import type { StorageType } from "../../inmemory/policies.js";
+
 
 
 // The Readonly<T> type only really works for object types, since it marks

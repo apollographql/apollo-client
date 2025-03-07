@@ -1,7 +1,5 @@
 import type { OptimisticWrapperFunction } from "optimism";
 
-import type { CacheSizes } from "./sizes.js";
-import { cacheSizes, defaultCacheSizes } from "./sizes.js";
 
 
 import type {
@@ -12,6 +10,9 @@ import type {
 } from "@apollo/client/core";
 import type { ApolloClient } from "@apollo/client/core";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+
+import type { CacheSizes } from "./sizes.js";
+import { cacheSizes, defaultCacheSizes } from "./sizes.js";
 
 const globalCaches: {
   print?: () => number;

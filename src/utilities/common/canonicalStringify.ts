@@ -1,3 +1,5 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
 import {
   AutoCleanedStrongCache,
   cacheSizes,
@@ -5,7 +7,6 @@ import {
 } from "../../utilities/caching/index.js";
 import { registerGlobalCache } from "../caching/getMemoryInternals.js";
 
-import { __DEV__ } from "@apollo/client/utilities/environment";
 
 /**
  * Like JSON.stringify, but with object keys always sorted in the same order.

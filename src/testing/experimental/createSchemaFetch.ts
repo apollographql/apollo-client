@@ -1,10 +1,11 @@
 import type { GraphQLFormattedError, GraphQLSchema } from "graphql";
 import { execute, GraphQLError, validate } from "graphql";
 
-import { withCleanup } from "../internal/index.js";
 
 import { gql } from "@apollo/client/core";
 import { wait } from "@apollo/client/testing";
+
+import { withCleanup } from "../internal/index.js";
 
 /**
  * A function that accepts a static `schema` and a `mockFetchOpts` object and

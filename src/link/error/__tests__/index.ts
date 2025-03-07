@@ -1,5 +1,8 @@
 import { gql } from "graphql-tag";
 
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { ErrorLink, onError } from "@apollo/client/link/error";
+
 import {
   mockDeferStream,
   mockMultipartSubscriptionStream,
@@ -10,8 +13,6 @@ import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { ServerError, throwServerError } from "../../utils/throwServerError.js";
 
-import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import { ErrorLink, onError } from "@apollo/client/link/error";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {

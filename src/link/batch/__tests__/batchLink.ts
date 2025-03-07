@@ -1,6 +1,10 @@
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import { wait } from "@apollo/client/testing";
+import { Observable } from "@apollo/client/utilities";
+
 import { ObservableStream } from "../../../testing/internal/index.js";
 import { FetchResult, GraphQLRequest, Operation } from "../../core/types.js";
 import {
@@ -10,9 +14,6 @@ import {
   OperationBatcher,
 } from "../batchLink.js";
 
-import { ApolloLink, execute } from "@apollo/client/link/core";
-import { wait } from "@apollo/client/testing";
-import { Observable } from "@apollo/client/utilities";
 
 interface MockedResponse {
   request: GraphQLRequest;

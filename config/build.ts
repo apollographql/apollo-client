@@ -1,17 +1,18 @@
-import { $ } from "zx";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import { compileTs } from "./compileTs.ts";
-import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-import { updateVersion, verifyVersion } from "./version.ts";
-import { processInvariants } from "./processInvariants.ts";
-import { prepareDist } from "./prepareDist.ts";
-import { postprocessDist } from "./postprocessDist.ts";
-import { verifySourceMaps } from "./verifySourceMaps.ts";
-import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
+import { $ } from "zx";
+
 import { babelTransform } from "./babel.ts";
+import { compileTs } from "./compileTs.ts";
 import { addExports } from "./exports.ts";
+import { inlineInheritDoc } from "./inlineInheritDoc.ts";
+import { postprocessDist } from "./postprocessDist.ts";
+import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
+import { prepareDist } from "./prepareDist.ts";
+import { processInvariants } from "./processInvariants.ts";
+import { verifySourceMaps } from "./verifySourceMaps.ts";
+import { updateVersion, verifyVersion } from "./version.ts";
 
 export interface BuildStepOptions {
   type: "esm" | "cjs";

@@ -12,19 +12,6 @@ import { GraphQLError } from "graphql";
 import React, { Suspense, useState } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
-import {
-  renderAsync,
-  setupPaginatedCase,
-  setupSimpleCase,
-  SimpleCaseData,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
-import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
-import { useLoadableQuery } from "../useLoadableQuery.js";
-import type { UseReadQueryResult } from "../useReadQuery.js";
-import { useReadQuery } from "../useReadQuery.js";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -60,6 +47,20 @@ import {
   offsetLimitPagination,
 } from "@apollo/client/utilities";
 import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
+import {
+  renderAsync,
+  setupPaginatedCase,
+  setupSimpleCase,
+  SimpleCaseData,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import type { UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

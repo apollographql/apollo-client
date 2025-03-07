@@ -7,12 +7,13 @@ import type { Readable as NodeReadableStream } from "stream";
 
 import type { Response as NodeResponse } from "node-fetch";
 
+import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
+
 import asyncIterator from "./iterators/async.js";
 import nodeStreamIterator from "./iterators/nodeStream.js";
 import promiseIterator from "./iterators/promise.js";
 import readerIterator from "./iterators/reader.js";
 
-import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
 
 function isNodeResponse(value: any): value is NodeResponse {
   return !!(value as NodeResponse).body;

@@ -12,16 +12,17 @@ import {
 } from "graphql";
 import { gql } from "graphql-tag";
 
-import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../testing/internal/index.js";
 
 import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { Operation } from "@apollo/client/link/core";
 import { Observable } from "@apollo/client/utilities";
+
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {

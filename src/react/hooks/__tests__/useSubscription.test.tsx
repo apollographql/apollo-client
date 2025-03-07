@@ -9,10 +9,6 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import { SubscriptionHookOptions } from "../../types/types.js";
-import { useSubscription } from "../useSubscription.js";
 
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
@@ -27,6 +23,11 @@ import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { SubscriptionHookOptions } from "../../types/types.js";
+import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 

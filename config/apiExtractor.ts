@@ -1,14 +1,16 @@
+import { readFileSync } from "fs";
+import fs from "node:fs";
+import { parseArgs } from "node:util";
 import * as path from "path";
+
 import type { IConfigFile } from "@microsoft/api-extractor";
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
-import { parseArgs } from "node:util";
-import fs from "node:fs";
-import { entryPoints, buildDocEntryPoints } from "./entryPoints.ts";
-import { readFileSync } from "fs";
+
+import { buildDocEntryPoints, entryPoints } from "./entryPoints.ts";
 import { withPseudoNodeModules } from "./helpers.ts";
 
 const parsed = parseArgs({

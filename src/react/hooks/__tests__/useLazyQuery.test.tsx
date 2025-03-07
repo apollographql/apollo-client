@@ -8,8 +8,6 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 
-import { QueryResult } from "../../types/types.js";
-import { useLazyQuery } from "../useLazyQuery.js";
 
 import {
   ApolloClient,
@@ -36,6 +34,9 @@ import {
 import { MockedProvider } from "@apollo/client/testing/react";
 import { DeepPartial, Observable } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { QueryResult } from "../../types/types.js";
+import { useLazyQuery } from "../useLazyQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

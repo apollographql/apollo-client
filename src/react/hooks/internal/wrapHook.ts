@@ -1,4 +1,3 @@
-import type { QueryManager } from "../../../core/QueryManager.js";
 
 import type { ApolloClient } from "@apollo/client/core";
 import type { ObservableQuery } from "@apollo/client/core";
@@ -12,6 +11,8 @@ import type {
   useSuspenseFragment,
   useSuspenseQuery,
 } from "@apollo/client/react/hooks";
+
+import type { QueryManager } from "../../../core/QueryManager.js";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 

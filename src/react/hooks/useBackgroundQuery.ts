@@ -1,10 +1,5 @@
 import * as React from "rehackt";
 
-import type { SkipToken } from "./constants.js";
-import { wrapHook } from "./internal/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
@@ -24,6 +19,12 @@ import {
   wrapQueryRef,
 } from "@apollo/client/react/internal";
 import type { DeepPartial } from "@apollo/client/utilities";
+
+import type { SkipToken } from "./constants.js";
+import { wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,

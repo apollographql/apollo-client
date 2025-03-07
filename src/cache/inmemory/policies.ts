@@ -5,6 +5,27 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
+import { disableWarningsSlot } from "@apollo/client/masking";
+import type {
+  FragmentMap,
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+import {
+  argumentsObjectFromField,
+  getStoreKeyName,
+  isNonNullObject,
+  isReference,
+  storeKeyNameFromField,
+  stringifyForDisplay,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import type {
   CanReadFunction,
   FieldSpecifier,
@@ -37,26 +58,6 @@ import type {
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
-import { disableWarningsSlot } from "@apollo/client/masking";
-import type {
-  FragmentMap,
-  Reference,
-  StoreObject,
-  StoreValue,
-} from "@apollo/client/utilities";
-import {
-  argumentsObjectFromField,
-  getStoreKeyName,
-  isNonNullObject,
-  isReference,
-  storeKeyNameFromField,
-  stringifyForDisplay,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
 
 export type TypePolicies = {
   [__typename: string]: TypePolicy;

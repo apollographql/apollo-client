@@ -1,11 +1,3 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
-
-// Make builtins like Map and Set safe to use with non-extensible objects.
-// TODO: this needs to be removed for 4.0, so we really don't have side effects.
-// that means we have to find an alternative means for the React Native fixes in there.
-import "./fixPolyfills.js";
-
 import { equal } from "@wry/equality";
 import type {
   DocumentNode,
@@ -14,18 +6,6 @@ import type {
 } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
-
-import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
-import { ApolloCache } from "../core/cache.js";
-import type { Cache } from "../core/types/Cache.js";
-
-import { EntityStore, supportsResultCaching } from "./entityStore.js";
-import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
-import { Policies } from "./policies.js";
-import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
-import { StoreReader } from "./readFromStore.js";
-import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
-import { StoreWriter } from "./writeToStore.js";
 
 import type { OperationVariables } from "@apollo/client/core";
 import type {
@@ -42,6 +22,25 @@ import {
   isReference,
   print,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+import { ApolloCache } from "../core/cache.js";
+import type { Cache } from "../core/types/Cache.js";
+
+import { EntityStore, supportsResultCaching } from "./entityStore.js";
+import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
+import { Policies } from "./policies.js";
+import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
+import { StoreReader } from "./readFromStore.js";
+import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
+import { StoreWriter } from "./writeToStore.js";
+
+// Make builtins like Map and Set safe to use with non-extensible objects.
+// TODO: this needs to be removed for 4.0, so we really don't have side effects.
+// that means we have to find an alternative means for the React Native fixes in there.
+import "./fixPolyfills.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,

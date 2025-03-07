@@ -10,15 +10,6 @@ import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import React, { Fragment, ReactNode, useEffect, useState } from "react";
 
-import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
-import {
-  setupPaginatedCase,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
-import { QueryResult } from "../../types/types.js";
-import { useLazyQuery } from "../useLazyQuery.js";
-import { useMutation } from "../useMutation.js";
-import { useQuery } from "../useQuery.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -49,6 +40,16 @@ import {
   Reference,
 } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
+import {
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import { QueryResult } from "../../types/types.js";
+import { useLazyQuery } from "../useLazyQuery.js";
+import { useMutation } from "../useMutation.js";
+import { useQuery } from "../useQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

@@ -1,7 +1,8 @@
-import { $ } from "zx";
-import { applyRecast } from "./helpers.ts";
 import { visit } from "recast";
+import { $ } from "zx";
+
 import type { BuildStep, BuildStepOptions } from "./build.ts";
+import { applyRecast } from "./helpers.ts";
 
 export const compileTs: BuildStep = async (options) => {
   if (options.type === "esm") {

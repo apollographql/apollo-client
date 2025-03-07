@@ -4,13 +4,14 @@ import { gql } from "graphql-tag";
 import React from "react";
 
 
-import { getDataFromTree } from "../getDataFromTree.js";
 
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
 import { mockSingleLink } from "@apollo/client/testing";
+
+import { getDataFromTree } from "../getDataFromTree.js";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {

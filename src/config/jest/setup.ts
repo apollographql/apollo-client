@@ -10,12 +10,13 @@ global.TextEncoder ??= TextEncoder;
 global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
 import "../../testing/matchers/index.js";
+import { setLogVerbosity } from "@apollo/client";
+import { loadErrorMessageHandler } from "@apollo/client/dev";
+
 import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 
-import { setLogVerbosity } from "@apollo/client";
-import { loadErrorMessageHandler } from "@apollo/client/dev";
 
 setLogVerbosity("log");
 

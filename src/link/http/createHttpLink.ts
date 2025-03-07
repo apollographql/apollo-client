@@ -1,6 +1,17 @@
 
 import type { DefinitionNode } from "graphql";
 
+import { ApolloLink } from "@apollo/client/link/core";
+import { filterOperationVariables, fromError } from "@apollo/client/link/utils";
+import { hasDirectives, Observable } from "@apollo/client/utilities";
+import {
+  getMainDefinition,
+  maybe,
+  removeClientSetsFromDocument,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { checkFetcher } from "./checkFetcher.js";
 import {
   handleError,
@@ -17,16 +28,6 @@ import {
 import { selectURI } from "./selectURI.js";
 import { serializeFetchParameter } from "./serializeFetchParameter.js";
 
-import { ApolloLink } from "@apollo/client/link/core";
-import { filterOperationVariables, fromError } from "@apollo/client/link/utils";
-import { hasDirectives, Observable } from "@apollo/client/utilities";
-import {
-  getMainDefinition,
-  maybe,
-  removeClientSetsFromDocument,
-} from "@apollo/client/utilities";
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
 
 const backupFetch = maybe(() => fetch);
 

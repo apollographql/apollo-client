@@ -15,33 +15,6 @@ import {
   FallbackProps,
 } from "react-error-boundary";
 
-import {
-  RefetchWritePolicy,
-  SubscribeToMoreFunction,
-  SubscribeToMoreOptions,
-} from "../../../core/watchQueryOptions.js";
-import {
-  addDelayToMocks,
-  createClientWrapper,
-  createMockWrapper,
-  PaginatedCaseData,
-  setupPaginatedCase,
-  setupSimpleCase,
-  setupVariablesCase,
-  SimpleCaseData,
-  spyOnConsole,
-  VariablesCaseData,
-  VariablesCaseVariables,
-} from "../../../testing/internal/index.js";
-import {
-  MaskedVariablesCaseData,
-  setupMaskedVariablesCase,
-  UnmaskedVariablesCaseData,
-} from "../../../testing/internal/scenarios/index.js";
-import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
-import { skipToken } from "../constants.js";
-import { useBackgroundQuery } from "../useBackgroundQuery.js";
-import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -72,6 +45,34 @@ import {
   getMainDefinition,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
+
+import {
+  RefetchWritePolicy,
+  SubscribeToMoreFunction,
+  SubscribeToMoreOptions,
+} from "../../../core/watchQueryOptions.js";
+import {
+  addDelayToMocks,
+  createClientWrapper,
+  createMockWrapper,
+  PaginatedCaseData,
+  setupPaginatedCase,
+  setupSimpleCase,
+  setupVariablesCase,
+  SimpleCaseData,
+  spyOnConsole,
+  VariablesCaseData,
+  VariablesCaseVariables,
+} from "../../../testing/internal/index.js";
+import {
+  MaskedVariablesCaseData,
+  setupMaskedVariablesCase,
+  UnmaskedVariablesCaseData,
+} from "../../../testing/internal/scenarios/index.js";
+import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
+import { skipToken } from "../constants.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
 
 afterEach(() => {
   jest.useRealTimers();

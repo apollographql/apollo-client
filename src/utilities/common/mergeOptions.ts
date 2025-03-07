@@ -1,11 +1,12 @@
-import { compact } from "./compact.js";
-
 import type {
   MutationOptions,
   OperationVariables,
   QueryOptions,
   WatchQueryOptions,
 } from "@apollo/client/core";
+
+import { compact } from "./compact.js";
+
 
 
 type OptionsUnion<TData, TVariables extends OperationVariables, TContext> =

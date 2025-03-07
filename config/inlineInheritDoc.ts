@@ -24,22 +24,24 @@
 /** End file docs */
 
 // @ts-ignore
-import { buildDocEntryPoints } from "./entryPoints.ts";
-import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
-import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
-import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
 
-import { applyRecast, withPseudoNodeModules } from "./helpers.ts";
-import { visit } from "recast";
-import type { BuildStep, BuildStepOptions } from "./build.ts";
 
 import fs, { mkdirSync, symlinkSync } from "node:fs";
 import path from "node:path";
+
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
+import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
+import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
+import { visit } from "recast";
+
+import type { BuildStep, BuildStepOptions } from "./build.ts";
+import { buildDocEntryPoints } from "./entryPoints.ts";
+import { applyRecast, withPseudoNodeModules } from "./helpers.ts";
 
 export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(

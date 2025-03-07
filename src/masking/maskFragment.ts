@@ -2,12 +2,6 @@ import equal from "@wry/equality";
 import type { FragmentDefinitionNode } from "graphql";
 import { Kind } from "graphql";
 
-import { maskDefinition } from "./maskDefinition.js";
-import {
-  MapImpl,
-  SetImpl,
-  warnOnImproperCacheImplementation,
-} from "./utils.js";
 
 import type {
   ApolloCache,
@@ -20,6 +14,13 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { maskDefinition } from "./maskDefinition.js";
+import {
+  MapImpl,
+  SetImpl,
+  warnOnImproperCacheImplementation,
+} from "./utils.js";
 
 /** @internal */
 export function maskFragment<TData = unknown>(

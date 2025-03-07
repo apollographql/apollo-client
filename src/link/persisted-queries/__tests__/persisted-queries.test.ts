@@ -5,8 +5,6 @@ import { print } from "graphql";
 import { gql } from "graphql-tag";
 import { times } from "lodash";
 
-import { ObservableStream } from "../../../testing/internal/index.js";
-import { createHttpLink } from "../../http/createHttpLink.js";
 
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import {
@@ -16,6 +14,9 @@ import {
 import { toPromise } from "@apollo/client/link/utils";
 import { wait } from "@apollo/client/testing";
 import { Observable } from "@apollo/client/utilities";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
+import { createHttpLink } from "../../http/createHttpLink.js";
 
 
 // Necessary configuration in order to mock multiple requests

@@ -3,8 +3,6 @@ import { assign, cloneDeep } from "lodash";
 import { from, ObservableInput } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
-import { QueryManager } from "../core/QueryManager.js";
-import { ObservableStream } from "../testing/internal/index.js";
 
 import { Cache, InMemoryCache } from "@apollo/client/cache";
 import {
@@ -18,6 +16,9 @@ import {
 } from "@apollo/client/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { addTypenameToDocument, Observable } from "@apollo/client/utilities";
+
+import { QueryManager } from "../core/QueryManager.js";
+import { ObservableStream } from "../testing/internal/index.js";
 
 
 describe("optimistic mutation results", () => {

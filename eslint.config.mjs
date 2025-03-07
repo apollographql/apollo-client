@@ -12,17 +12,19 @@ if (!process.features.typescript) {
   );
 }
 
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import _import from "eslint-plugin-import";
-import localRules from "./eslint-local-rules/index.mjs";
-import { fixupPluginRules, fixupConfigRules } from "@eslint/compat";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import reactCompiler from "eslint-plugin-react-compiler";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
+
+import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
 import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
+import _import from "eslint-plugin-import";
+import reactCompiler from "eslint-plugin-react-compiler";
+import globals from "globals";
+
+import localRules from "./eslint-local-rules/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,6 +73,14 @@ export default [
         "warn",
         {
           "newlines-between": "always",
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+          ],
           alphabetize: {
             order: "asc",
             orderImportKind: "asc",

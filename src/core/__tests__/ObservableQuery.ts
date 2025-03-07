@@ -5,13 +5,6 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { SubscriptionObserver } from "zen-observable-ts";
 
-import {
-  ObservableStream,
-  spyOnConsole,
-} from "../../testing/internal/index.js";
-import { ObservableQuery } from "../ObservableQuery.js";
-import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
-import { QueryManager } from "../QueryManager.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -34,6 +27,14 @@ import {
   Observable,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
+import { QueryManager } from "../QueryManager.js";
 
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {

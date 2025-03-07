@@ -1,5 +1,6 @@
-import * as madgePkg from "madge";
 import { join } from "node:path";
+
+import * as madgePkg from "madge";
 const madge = madgePkg.default;
 process.env.DEBUG = "*";
 

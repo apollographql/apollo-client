@@ -10,20 +10,6 @@ import { GraphQLError } from "graphql";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-import {
-  createClientWrapper,
-  renderHookAsync,
-  setupSimpleCase,
-  setupVariablesCase,
-  SimpleCaseData,
-  spyOnConsole,
-  VariablesCaseData,
-} from "../../../testing/internal/index.js";
-import {
-  MaskedVariablesCaseData,
-  setupMaskedVariablesCase,
-} from "../../../testing/internal/scenarios/index.js";
-import { createQueryPreloader } from "../createQueryPreloader.js";
 
 import {
   ApolloClient,
@@ -50,6 +36,21 @@ import {
   wait,
 } from "@apollo/client/testing";
 import { DeepPartial, Observable } from "@apollo/client/utilities";
+
+import {
+  createClientWrapper,
+  renderHookAsync,
+  setupSimpleCase,
+  setupVariablesCase,
+  SimpleCaseData,
+  spyOnConsole,
+  VariablesCaseData,
+} from "../../../testing/internal/index.js";
+import {
+  MaskedVariablesCaseData,
+  setupMaskedVariablesCase,
+} from "../../../testing/internal/scenarios/index.js";
+import { createQueryPreloader } from "../createQueryPreloader.js";
 
 function createDefaultClient(mocks: MockedResponse[]) {
   return new ApolloClient({

@@ -1,10 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 
-import {
-  ObservableStream,
-  setupPaginatedCase,
-} from "../testing/internal/index.js";
 
 import {
   ApolloCache,
@@ -24,6 +20,11 @@ import {
   Observable,
   offsetLimitPagination,
 } from "@apollo/client/utilities";
+
+import {
+  ObservableStream,
+  setupPaginatedCase,
+} from "../testing/internal/index.js";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`

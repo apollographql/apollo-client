@@ -1,5 +1,3 @@
-import type { BatchHandler } from "./batching.js";
-import { OperationBatcher } from "./batching.js";
 
 import type {
   FetchResult,
@@ -8,6 +6,9 @@ import type {
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { Observable } from "@apollo/client/utilities";
+
+import type { BatchHandler } from "./batching.js";
+import { OperationBatcher } from "./batching.js";
 export type { BatchableRequest, BatchHandler } from "./batching.js";
 export { OperationBatcher } from "./batching.js";
 

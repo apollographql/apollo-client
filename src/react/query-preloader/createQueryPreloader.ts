@@ -1,4 +1,3 @@
-import { wrapHook } from "../hooks/internal/index.js";
 
 import type {
   ApolloClient,
@@ -21,6 +20,8 @@ import type {
   DeepPartial,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
+
+import { wrapHook } from "../hooks/internal/index.js";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,

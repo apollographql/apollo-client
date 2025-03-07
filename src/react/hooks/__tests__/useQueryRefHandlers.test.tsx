@@ -9,23 +9,6 @@ import React from "react";
 import { Suspense } from "react";
 
 import {
-  SubscribeToMoreFunction,
-  SubscribeToMoreUpdateQueryFn,
-} from "../../../core/watchQueryOptions.js";
-import {
-  createClientWrapper,
-  PaginatedCaseData,
-  setupPaginatedCase,
-  setupSimpleCase,
-  SimpleCaseData,
-} from "../../../testing/internal/index.js";
-import { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
-import { useBackgroundQuery } from "../useBackgroundQuery.js";
-import { useLoadableQuery } from "../useLoadableQuery.js";
-import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
-import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
-
-import {
   ApolloClient,
   gql,
   InMemoryCache,
@@ -43,6 +26,24 @@ import {
   concatPagination,
   getMainDefinition,
 } from "@apollo/client/utilities";
+
+import {
+  SubscribeToMoreFunction,
+  SubscribeToMoreUpdateQueryFn,
+} from "../../../core/watchQueryOptions.js";
+import {
+  createClientWrapper,
+  PaginatedCaseData,
+  setupPaginatedCase,
+  setupSimpleCase,
+  SimpleCaseData,
+} from "../../../testing/internal/index.js";
+import { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
+import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
+
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

@@ -6,12 +6,7 @@ import type {
 } from "graphql";
 import { wrap } from "optimism";
 
-import { equalByQuery } from "../../core/equalByQuery.js";
-import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
-import type { Cache } from "./types/Cache.js";
-import type { MissingTree } from "./types/common.js";
-import type { DataProxy } from "./types/DataProxy.js";
 
 import type {
   OperationVariables,
@@ -38,6 +33,13 @@ import {
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { equalByQuery } from "../../core/equalByQuery.js";
+import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+
+import type { Cache } from "./types/Cache.js";
+import type { MissingTree } from "./types/common.js";
+import type { DataProxy } from "./types/DataProxy.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

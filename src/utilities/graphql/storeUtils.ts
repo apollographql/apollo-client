@@ -20,13 +20,14 @@ import type {
   VariableNode,
 } from "graphql";
 
+import { newInvariantError } from "@apollo/client/utilities/invariant";
+
 import { canonicalStringify } from "../common/canonicalStringify.js";
 import { isNonNullObject } from "../common/objects.js";
 
 import type { FragmentMap } from "./fragments.js";
 import { getFragmentFromSelection } from "./fragments.js";
 
-import { newInvariantError } from "@apollo/client/utilities/invariant";
 
 export interface Reference {
   readonly __ref: string;

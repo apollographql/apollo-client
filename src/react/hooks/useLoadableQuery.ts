@@ -1,9 +1,5 @@
 import * as React from "rehackt";
 
-import { __use, useRenderGuard } from "./internal/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
@@ -31,6 +27,11 @@ import type {
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { __use, useRenderGuard } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in

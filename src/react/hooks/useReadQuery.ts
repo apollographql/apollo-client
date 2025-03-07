@@ -1,9 +1,5 @@
 import * as React from "rehackt";
 
-import { __use, wrapHook } from "./internal/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { toApolloError } from "./useSuspenseQuery.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 import type {
   ApolloClient,
@@ -19,6 +15,11 @@ import {
   unwrapQueryRef,
   updateWrappedQueryRef,
 } from "@apollo/client/react/internal";
+
+import { __use, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { toApolloError } from "./useSuspenseQuery.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**

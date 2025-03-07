@@ -1,6 +1,8 @@
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import { EntityStore } from "../entityStore.js";
 import { InMemoryCache } from "../inMemoryCache.js";
@@ -9,7 +11,6 @@ import { StoreWriter } from "../writeToStore.js";
 
 import { readQueryFromStore, withError, writeQueryToStore } from "./helpers.js";
 
-import { __DEV__ } from "@apollo/client/utilities/environment";
 
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === "object" && stack.indexOf(value) < 0) {

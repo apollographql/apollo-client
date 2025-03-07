@@ -1,13 +1,6 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
-import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryManager } from "./QueryManager.js";
-import type { QueryListener } from "./types.js";
-import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
-
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
@@ -18,6 +11,14 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { DeepMerger } from "@apollo/client/utilities";
+
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import { reobserveCacheFirst } from "./ObservableQuery.js";
+import type { QueryManager } from "./QueryManager.js";
+import type { QueryListener } from "./types.js";
+import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
+
 
 export const enum CacheWriteBehavior {
   FORBID,

@@ -1,9 +1,10 @@
+import type { Unmasked } from "@apollo/client/masking";
+
 import type { ApolloCache } from "../cache.js";
 
 import type { AllFieldsModifier, Modifiers } from "./common.js";
 import { DataProxy } from "./DataProxy.js";
 
-import type { Unmasked } from "@apollo/client/masking";
 
 export namespace Cache {
   export type WatchCallback<TData = any> = (

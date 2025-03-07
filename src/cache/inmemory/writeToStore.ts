@@ -3,26 +3,6 @@ import { Trie } from "@wry/trie";
 import type { FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 
-import type { ReadFieldFunction } from "../core/types/common.js";
-
-import type { EntityStore } from "./entityStore.js";
-import {
-  extractFragmentContext,
-  fieldNameFromStoreName,
-  isArray,
-  makeProcessedFieldsMerger,
-  storeValueIsStoreObject,
-} from "./helpers.js";
-import type { InMemoryCache } from "./inMemoryCache.js";
-import { normalizeReadFieldOptions } from "./policies.js";
-import type { StoreReader } from "./readFromStore.js";
-import type {
-  InMemoryCacheConfig,
-  MergeTree,
-  NormalizedCache,
-  ReadMergeModifyContext,
-} from "./types.js";
-
 import type { Cache } from "@apollo/client/core";
 import type {
   FragmentMap,
@@ -52,6 +32,27 @@ import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
+
+import type { ReadFieldFunction } from "../core/types/common.js";
+
+import type { EntityStore } from "./entityStore.js";
+import {
+  extractFragmentContext,
+  fieldNameFromStoreName,
+  isArray,
+  makeProcessedFieldsMerger,
+  storeValueIsStoreObject,
+} from "./helpers.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
+import { normalizeReadFieldOptions } from "./policies.js";
+import type { StoreReader } from "./readFromStore.js";
+import type {
+  InMemoryCacheConfig,
+  MergeTree,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types.js";
+
 
 
 

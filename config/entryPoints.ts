@@ -1,8 +1,9 @@
-import path from "path";
-// @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
-import { __dirname } from "./dirname.cts";
-import type { BuildStepOptions } from "./build.ts";
 import { readFileSync } from "fs";
+import path from "path";
+
+// @ts-expect-error An import path can only end with a '.cts' extension when 'allowImportingTsExtensions' is enabled.
+import type { BuildStepOptions } from "./build.ts";
+import { __dirname } from "./dirname.cts";
 
 const pkg = JSON.parse(
   readFileSync(path.resolve(__dirname, "../package.json"), {

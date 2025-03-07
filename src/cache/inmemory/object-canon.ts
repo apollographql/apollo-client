@@ -1,6 +1,5 @@
 import { Trie } from "@wry/trie";
 
-import { isArray } from "./helpers.js";
 
 import {
   canUseWeakMap,
@@ -8,6 +7,8 @@ import {
   isNonNullObject as isObjectOrArray,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+
+import { isArray } from "./helpers.js";
 
 function shallowCopy<T>(value: T): T {
   if (isObjectOrArray(value)) {

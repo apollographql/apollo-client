@@ -1,9 +1,5 @@
 import * as React from "rehackt";
 
-import type { SkipToken } from "./constants.js";
-import { skipToken } from "./constants.js";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
-import { useApolloClient } from "./useApolloClient.js";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
@@ -31,6 +27,11 @@ import type { DeepPartial } from "@apollo/client/utilities";
 import { isNonEmptyArray } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { SkipToken } from "./constants.js";
+import { skipToken } from "./constants.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,

@@ -13,8 +13,6 @@ import type {
 } from "graphql";
 import { BREAK, isSelectionNode, visit } from "graphql";
 
-import type { ApolloClient } from "./ApolloClient.js";
-import type { OperationVariables, Resolvers } from "./types.js";
 
 
 
@@ -38,6 +36,9 @@ import {
   shouldInclude,
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { ApolloClient } from "./ApolloClient.js";
+import type { OperationVariables, Resolvers } from "./types.js";
 
 export type Resolver = (
   rootValue?: any,

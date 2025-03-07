@@ -12,10 +12,6 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React, { useEffect } from "react";
 
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import { MutationTuple, QueryResult } from "../../types/types.js";
-import { useMutation } from "../useMutation.js";
-import { useQuery } from "../useQuery.js";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -41,6 +37,11 @@ import {
 } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { MutationTuple, QueryResult } from "../../types/types.js";
+import { useMutation } from "../useMutation.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useMutation Hook", () => {
   interface Todo {

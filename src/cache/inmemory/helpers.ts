@@ -4,11 +4,6 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
-import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
-import type { KeyFieldsContext } from "./policies.js";
-import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
-
-
 import type {
   FragmentMap,
   FragmentMapFunction,
@@ -28,6 +23,12 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities";
+
+import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { KeyFieldsContext } from "./policies.js";
+import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
+
+
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 

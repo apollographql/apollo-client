@@ -1,10 +1,3 @@
-import type {
-  FetchResult,
-  GraphQLRequest,
-  NextLink,
-  Operation,
-  RequestHandler,
-} from "./types.js";
 
 import {
   createOperation,
@@ -17,6 +10,14 @@ import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
+
+import type {
+  FetchResult,
+  GraphQLRequest,
+  NextLink,
+  Operation,
+  RequestHandler,
+} from "./types.js";
 
 
 function passthrough(op: Operation, forward: NextLink) {

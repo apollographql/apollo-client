@@ -6,6 +6,10 @@ import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
 
+import { FetchResult, ServerError } from "@apollo/client";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { wait } from "@apollo/client/testing";
+
 import { ObservableStream } from "../../../testing/internal/index.js";
 import {
   Observable,
@@ -21,9 +25,6 @@ import { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
 
-import { FetchResult, ServerError } from "@apollo/client";
-import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
-import { wait } from "@apollo/client/testing";
 
 const sampleQuery = gql`
   query SampleQuery {

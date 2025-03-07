@@ -4,7 +4,6 @@ import { expectTypeOf } from "expect-type";
 import { Kind } from "graphql";
 import { gql } from "graphql-tag";
 
-import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
@@ -21,6 +20,8 @@ import { HttpLink } from "@apollo/client/link/http";
 import { Masked } from "@apollo/client/masking";
 import { DeepPartial, Observable } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {

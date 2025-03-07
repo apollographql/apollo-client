@@ -1,5 +1,11 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
+import type {
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+
 import type { Transaction } from "../core/cache.js";
 import type {
   AllFieldsModifier,
@@ -18,11 +24,6 @@ import type {
   TypePolicies,
 } from "./policies.js";
 
-import type {
-  Reference,
-  StoreObject,
-  StoreValue,
-} from "@apollo/client/utilities";
 
 export type { Reference, StoreObject, StoreValue };
 

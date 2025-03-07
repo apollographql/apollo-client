@@ -1,6 +1,5 @@
 import { equal } from "@wry/equality";
 
-import type { QueryKey } from "./types.js";
 
 import type {
   ApolloError,
@@ -20,6 +19,8 @@ import {
 } from "@apollo/client/utilities";
 import { wrapPromiseWithState } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { QueryKey } from "./types.js";
 
 type QueryRefPromise<TData> = PromiseWithState<
   ApolloQueryResult<MaybeMasked<TData>>

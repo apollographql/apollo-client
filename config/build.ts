@@ -88,8 +88,8 @@ const buildStepOptions = [
   "first" | "last" | "rootDir" | "packageRoot"
 >[];
 for (const options of buildStepOptions) {
-  const first = options == buildStepOptions.at(0);
-  const last = options == buildStepOptions.at(-1);
+  const first = options === buildStepOptions.at(0);
+  const last = options === buildStepOptions.at(-1);
   const rootDir = resolve(import.meta.dirname, "..");
   const packageRoot = resolve(rootDir, "dist");
 

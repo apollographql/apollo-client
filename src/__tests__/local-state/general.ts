@@ -12,7 +12,7 @@ import {
 } from "graphql";
 import { GraphQLFormattedError } from "graphql-17-alpha2";
 import { gql } from "graphql-tag";
-import { Observable, of } from "rxjs";
+import { defer, Observable, of } from "rxjs";
 
 import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, ApolloError, NetworkStatus } from "@apollo/client/core";
@@ -864,22 +864,15 @@ describe("Combining client and server state/operations", () => {
     const schema = new GraphQLSchema({ query: QueryType });
 
     const link = new ApolloLink((operation) => {
-      // @ts-ignore
-      return new Observable((observer) => {
+      return defer(() => {
         const { query, operationName, variables } = operation;
-        graphql({
+
+        return graphql({
           schema,
           source: print(query),
           variableValues: variables,
           operationName,
-        })
-          .then((result) => {
-            observer.next(result);
-            observer.complete();
-          })
-          .catch((err) => {
-            observer.error(err);
-          });
+        });
       });
     });
 

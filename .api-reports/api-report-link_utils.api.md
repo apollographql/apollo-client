@@ -5,7 +5,6 @@
 ```ts
 
 import type { DocumentNode } from 'graphql';
-import { Observable } from 'zen-observable-ts';
 
 // Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
@@ -21,12 +20,6 @@ interface DefaultContext extends Record<string, any> {
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {
     [x: string]: any;
 };
-
-// @public (undocumented)
-export function fromError<T>(errorValue: any): Observable<T>;
-
-// @public (undocumented)
-export function fromPromise<T>(promise: Promise<T>): Observable<T>;
 
 // @public (undocumented)
 interface GraphQLRequest<TVariables = Record<string, any>> {
@@ -72,9 +65,6 @@ export type ServerError = Error & {
 
 // @public (undocumented)
 export const throwServerError: (response: Response, result: any, message: string) => never;
-
-// @public (undocumented)
-export function toPromise<R>(observable: Observable<R>): Promise<R>;
 
 // @public (undocumented)
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest;

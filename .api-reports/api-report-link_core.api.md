@@ -6,8 +6,8 @@
 
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
+import type { Observable } from 'rxjs';
+import type { Subscriber } from 'rxjs';
 
 // @public (undocumented)
 export class ApolloLink {
@@ -27,7 +27,7 @@ export class ApolloLink {
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
+    protected onError(error: any, observer?: Subscriber<FetchResult>): false | void;
     // (undocumented)
     request(operation: Operation, forward?: NextLink): Observable<FetchResult> | null;
     // @internal

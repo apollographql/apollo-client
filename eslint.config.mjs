@@ -217,14 +217,6 @@ export default [
       "local-rules/forbid-act-in-disabled-act-environment": "error",
       "local-rules/import-from-inside-other-export": "off",
       "@typescript-eslint/no-floating-promises": "warn",
-      "import/extensions": [
-        "error",
-        "always",
-        {
-          ignorePackages: true,
-          checkTypeImports: true,
-        },
-      ],
     },
   },
 ];

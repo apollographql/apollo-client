@@ -75,7 +75,7 @@ const EAGER_METHODS = [
  * @returns A tuple in the form of `[execute, result]`
  */
 export function useLazyQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

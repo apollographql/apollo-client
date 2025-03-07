@@ -10,7 +10,7 @@ import {
   GraphQLString,
   print,
 } from "graphql";
-import { GraphQLFormattedError } from "graphql-17-alpha2";
+import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { defer, Observable, of } from "rxjs";
 

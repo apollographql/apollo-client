@@ -298,11 +298,11 @@ export class Policies {
         };
       };
     };
-  } = Object.create(null);
+  } = {};
 
   private toBeAdded: {
     [__typename: string]: TypePolicy[];
-  } = Object.create(null);
+  } = {};
 
   // Map from subtype names to sets of supertype names. Note that this
   // representation inverts the structure of possibleTypes (whose keys are
@@ -318,10 +318,8 @@ export class Policies {
 
   public readonly cache: InMemoryCache;
 
-  public readonly rootIdsByTypename: Record<string, string> =
-    Object.create(null);
-  public readonly rootTypenamesById: Record<string, string> =
-    Object.create(null);
+  public readonly rootIdsByTypename: Record<string, string> = {};
+  public readonly rootTypenamesById: Record<string, string> = {};
 
   public readonly usingPossibleTypes = false;
 
@@ -564,8 +562,8 @@ export class Policies {
     if (!hasOwn.call(this.typePolicies, typename)) {
       const policy: Policies["typePolicies"][string] = (this.typePolicies[
         typename
-      ] = Object.create(null));
-      policy.fields = Object.create(null);
+      ] = {} as any);
+      policy.fields = {};
 
       // When the TypePolicy for typename is first accessed, instead of
       // starting with an empty policy object, inherit any properties or
@@ -649,7 +647,7 @@ export class Policies {
       const fieldPolicies = this.getTypePolicy(typename).fields;
       return (
         fieldPolicies[fieldName] ||
-        (createIfMissing && (fieldPolicies[fieldName] = Object.create(null)))
+        (createIfMissing && (fieldPolicies[fieldName] = {}))
       );
     }
   }
@@ -945,7 +943,7 @@ export class Policies {
           variables: context.variables,
         },
         context,
-        storage || Object.create(null)
+        storage || {}
       )
     );
   }

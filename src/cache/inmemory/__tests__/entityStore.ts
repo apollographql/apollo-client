@@ -1005,7 +1005,7 @@ describe("EntityStore", () => {
     // Hacky way of injecting a stray __ref field into the Will Smith Person
     // object, clearing store.refs (which was populated by the previous GC).
     storeRootData[willId]!.__ref = willId;
-    store["refs"] = Object.create(null);
+    store["refs"] = {};
 
     expect(cache.extract()).toEqual({
       'Person:{"name":"Jaden Smith"}': {

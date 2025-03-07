@@ -35,12 +35,12 @@ import type {
 } from "../core/types/common.js";
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 
-const DELETE: DeleteModifier = Object.create(null);
+const DELETE = {} as DeleteModifier;
 const delModifier: Modifier<any> = () => DELETE;
-const INVALIDATE: InvalidateModifier = Object.create(null);
+const INVALIDATE = {} as InvalidateModifier;
 
 export abstract class EntityStore implements NormalizedCache {
-  protected data: NormalizedCacheObject = Object.create(null);
+  protected data: NormalizedCacheObject = {};
 
   constructor(
     public readonly policies: Policies,
@@ -105,7 +105,7 @@ export abstract class EntityStore implements NormalizedCache {
     }
 
     if (this.policies.rootTypenamesById[dataId]) {
-      return Object.create(null);
+      return {};
     }
   }
 
@@ -140,7 +140,7 @@ export abstract class EntityStore implements NormalizedCache {
     if (merged !== existing) {
       delete this.refs[dataId];
       if (this.group.caching) {
-        const fieldsToDirty: Record<string, 1> = Object.create(null);
+        const fieldsToDirty: Record<string, 1> = {};
 
         // If we added a new StoreObject where there was previously none, dirty
         // anything that depended on the existence of this dataId, such as the
@@ -208,7 +208,7 @@ export abstract class EntityStore implements NormalizedCache {
     const storeObject = this.lookup(dataId);
 
     if (storeObject) {
-      const changedFields: Record<string, any> = Object.create(null);
+      const changedFields: Record<string, any> = {};
       let needToMerge = false;
       let allDeleted = true;
 
@@ -426,7 +426,7 @@ export abstract class EntityStore implements NormalizedCache {
   // entities they reference (even indirectly) from being garbage collected.
   private rootIds: {
     [rootId: string]: number;
-  } = Object.create(null);
+  } = {};
 
   public retain(rootId: string): number {
     return (this.rootIds[rootId] = (this.rootIds[rootId] || 0) + 1);
@@ -486,11 +486,11 @@ export abstract class EntityStore implements NormalizedCache {
   // Lazily tracks { __ref: <dataId> } strings contained by this.data[dataId].
   private refs: {
     [dataId: string]: Record<string, true>;
-  } = Object.create(null);
+  } = {};
 
   public findChildRefIds(dataId: string): Record<string, true> {
     if (!hasOwn.call(this.refs, dataId)) {
-      const found = (this.refs[dataId] = Object.create(null));
+      const found = (this.refs[dataId] = {} as Record<string, true>);
       const root = this.data[dataId];
       if (!root) return found;
 

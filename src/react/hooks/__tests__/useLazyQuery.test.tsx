@@ -1533,6 +1533,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("the promise should not cause an unhandled rejection", async () => {

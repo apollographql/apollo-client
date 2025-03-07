@@ -3971,7 +3971,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: "error" }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });
@@ -4039,7 +4039,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: 'Could not fetch "hello"' }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });
@@ -4103,7 +4103,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: 'Could not fetch "hello"' }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });
@@ -12025,7 +12025,7 @@ describe("useQuery Hook", () => {
         ],
         called: true,
         loading: false,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         previousData: {
           hero: {
             heroFriends: [
@@ -13506,7 +13506,7 @@ describe("useQuery Hook", () => {
           errors: [{ message: "Couldn't get name" }],
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.ready,
+          networkStatus: NetworkStatus.error,
           previousData: undefined,
           variables: {},
         });

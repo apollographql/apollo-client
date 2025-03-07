@@ -1839,10 +1839,8 @@ export class QueryManager<TStore> {
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.
-interface FetchObservableInfo {
+export interface ObservableAndInfo<TData> {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
-}
-export interface ObservableAndInfo<TData> extends FetchObservableInfo {
   observable: Observable<ApolloQueryResult<TData>>;
 }

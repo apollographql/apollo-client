@@ -13,7 +13,7 @@ used by the bundler/runtime, Apollo Client will fall back to `globalThis.__DEV__
 to determine if it should run in production or development mode.
 
 Unlike Apollo Client 3 though, if `globalThis.__DEV__` is not set to `true`,
-Apollo Client will default to `production`, not to `development`, behaviour.
+Apollo Client will now default to `production`, not to `development`, behaviour.
 
 This switch to *explicilty* requiring `true` also resolves a situation where
 an HTML element with `id="__DEV__"` would create a global `__DEV__` variable

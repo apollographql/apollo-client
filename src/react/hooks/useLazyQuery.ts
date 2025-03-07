@@ -7,8 +7,8 @@ import type {
   ApolloQueryResult,
   OperationVariables,
   WatchQueryOptions,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+} from "@apollo/client/core";
+import { mergeOptions } from "@apollo/client/utilities";
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
@@ -16,7 +16,7 @@ import type {
   NoInfer,
   QueryHookOptions,
   QueryResult,
-} from "../types/types.js";
+} from "@apollo/client/react";
 import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,

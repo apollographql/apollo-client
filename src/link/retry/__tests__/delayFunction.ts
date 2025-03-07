@@ -1,4 +1,4 @@
-import { buildDelayFunction } from "../delayFunction";
+import { buildDelayFunction } from "../delayFunction.js";
 
 describe("buildDelayFunction", () => {
   // For easy testing of just the delay component, which is all we care about in

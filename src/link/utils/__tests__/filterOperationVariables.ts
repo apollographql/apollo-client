@@ -1,5 +1,5 @@
-import gql from "graphql-tag";
-import { filterOperationVariables } from "../filterOperationVariables";
+import { gql } from "graphql-tag";
+import { filterOperationVariables } from "../filterOperationVariables.js";
 
 const sampleQueryWithVariables = gql`
   query MyQuery($a: Int!) {

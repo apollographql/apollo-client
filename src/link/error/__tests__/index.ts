@@ -1,16 +1,16 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
-import { ServerError, throwServerError } from "../../utils/throwServerError";
-import { Observable } from "../../../utilities/observables/Observable";
-import { onError, ErrorLink } from "../";
+import { ApolloLink } from "../../core/ApolloLink.js";
+import { execute } from "../../core/execute.js";
+import { ServerError, throwServerError } from "../../utils/throwServerError.js";
+import { Observable } from "../../../utilities/observables/Observable.js";
+import { onError, ErrorLink } from "../index.js";
 import {
   ObservableStream,
   mockDeferStream,
   mockMultipartSubscriptionStream,
-} from "../../../testing/internal";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
+} from "../../../testing/internal/index.js";
+import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {

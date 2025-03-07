@@ -1,4 +1,5 @@
-import { invariant } from "../../utilities/globals/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 import type { OptimisticDependencyFunction } from "optimism";
 import { dep } from "optimism";
 import { equal } from "@wry/equality";
@@ -8,7 +9,7 @@ import type {
   StoreValue,
   StoreObject,
   Reference,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   isReference,
   makeReference,
@@ -16,7 +17,7 @@ import {
   maybeDeepFreeze,
   canUseWeakMap,
   isNonNullObject,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
 import { hasOwn, fieldNameFromStoreName } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";

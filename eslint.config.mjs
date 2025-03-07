@@ -152,6 +152,18 @@ export default [
       ],
 
       "local-rules/require-using-disposable": "error",
+      "local-rules/import-from-export": "error",
+      "local-rules/import-from-inside-other-export": [
+        "warn",
+        {
+          ignoreFrom: [
+            "src/version.js",
+            "src/invariantErrorCodes.js",
+            "src/utilities/caching/getMemoryInternals.js",
+            "src/utilities/types/TODO.js",
+          ].map((file) => path.resolve(__dirname, file)),
+        },
+      ],
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({
@@ -190,7 +202,16 @@ export default [
       "local-rules/require-using-disposable": "error",
       "local-rules/require-disable-act-environment": "error",
       "local-rules/forbid-act-in-disabled-act-environment": "error",
+      "local-rules/import-from-inside-other-export": "off",
       "@typescript-eslint/no-floating-promises": "warn",
+      "import/extensions": [
+        "error",
+        "always",
+        {
+          ignorePackages: true,
+          checkTypeImports: true,
+        },
+      ],
     },
   },
 ];

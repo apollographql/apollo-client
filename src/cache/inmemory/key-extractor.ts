@@ -1,11 +1,11 @@
-import { invariant } from "../../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import {
   argumentsObjectFromField,
   DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 
 import { hasOwn, isArray } from "./helpers.js";
 import type {

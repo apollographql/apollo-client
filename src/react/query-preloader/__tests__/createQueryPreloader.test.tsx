@@ -1,5 +1,5 @@
 import React, { Suspense } from "react";
-import { createQueryPreloader } from "../createQueryPreloader";
+import { createQueryPreloader } from "../createQueryPreloader.js";
 import {
   ApolloClient,
   ApolloError,
@@ -9,16 +9,20 @@ import {
   OperationVariables,
   TypedDocumentNode,
   gql,
-} from "../../../core";
+} from "../../../core/index.js";
 import {
   MockLink,
   MockSubscriptionLink,
   MockedResponse,
   wait,
-} from "../../../testing";
+} from "../../../testing/index.js";
 import { expectTypeOf } from "expect-type";
-import { PreloadedQueryRef, QueryRef, unwrapQueryRef } from "../../internal";
-import { DeepPartial, Observable } from "../../../utilities";
+import {
+  PreloadedQueryRef,
+  QueryRef,
+  unwrapQueryRef,
+} from "../../internal/index.js";
+import { DeepPartial, Observable } from "../../../utilities/index.js";
 import {
   createClientWrapper,
   SimpleCaseData,
@@ -27,18 +31,18 @@ import {
   setupVariablesCase,
   VariablesCaseData,
   renderHookAsync,
-} from "../../../testing/internal";
-import { ApolloProvider } from "../../context";
+} from "../../../testing/internal/index.js";
+import { ApolloProvider } from "../../context/index.js";
 import { act, screen } from "@testing-library/react";
-import { UseReadQueryResult, useReadQuery } from "../../hooks";
+import { UseReadQueryResult, useReadQuery } from "../../hooks/index.js";
 import { GraphQLError } from "graphql";
 import { ErrorBoundary } from "react-error-boundary";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
-} from "../../../testing/internal/scenarios";
-import { Masked } from "../../../masking";
+} from "../../../testing/internal/scenarios/index.js";
+import { Masked } from "../../../masking/index.js";
 import {
   createRenderStream,
   disableActEnvironment,

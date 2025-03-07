@@ -1,6 +1,6 @@
 import React, { Suspense, useState } from "react";
 import { act, screen, renderHook, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
@@ -17,36 +17,36 @@ import {
   RefetchWritePolicy,
   SubscribeToMoreOptions,
   split,
-} from "../../../core";
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
+} from "../../../core/index.js";
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../../../testing";
+} from "../../../testing/index.js";
 import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities";
-import { useLoadableQuery } from "../useLoadableQuery";
-import type { UseReadQueryResult } from "../useReadQuery";
-import { useReadQuery } from "../useReadQuery";
-import { ApolloProvider } from "../../context";
-import { InMemoryCache } from "../../../cache";
-import { LoadableQueryHookFetchPolicy } from "../../types/types";
-import { QueryRef } from "../../../react";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
-import invariant, { InvariantError } from "ts-invariant";
+} from "../../../utilities/index.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import type { UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
+import { ApolloProvider } from "../../context/index.js";
+import { InMemoryCache } from "../../../cache/index.js";
+import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
+import { QueryRef } from "../../../react/index.js";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
 import {
   SimpleCaseData,
   setupPaginatedCase,
   setupSimpleCase,
   spyOnConsole,
   renderAsync,
-} from "../../../testing/internal";
+} from "../../../testing/internal/index.js";
 
 import {
   RenderStream,
@@ -55,7 +55,10 @@ import {
   useTrackRenders,
   AsyncRenderFn,
 } from "@testing-library/react-render-stream";
-import { MockedProvider, MockedProviderProps } from "../../../testing/react";
+import {
+  MockedProvider,
+  MockedProviderProps,
+} from "../../../testing/react/index.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

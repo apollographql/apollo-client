@@ -1,12 +1,12 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 
-import { createOperation } from "../../utils/createOperation";
+import { createOperation } from "../../utils/createOperation.js";
 import {
   selectHttpOptionsAndBody,
   selectHttpOptionsAndBodyInternal,
   fallbackHttpConfig,
-} from "../selectHttpOptionsAndBody";
+} from "../selectHttpOptionsAndBody.js";
 
 const query = gql`
   query SampleQuery {

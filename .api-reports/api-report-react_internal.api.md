@@ -2520,18 +2520,18 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:158:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:413:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:162:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:417:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:207:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:201:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:33:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:35:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:70:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:36:3 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:40:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:39:3 - (ae-forgotten-export) The symbol "PreloadQueryFetchPolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:43:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

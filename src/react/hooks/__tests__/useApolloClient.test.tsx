@@ -1,12 +1,12 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { InvariantError } from "ts-invariant";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
-import { ApolloClient } from "../../../core";
-import { ApolloLink } from "../../../link/core";
-import { ApolloProvider } from "../../context";
-import { InMemoryCache } from "../../../cache";
-import { useApolloClient } from "../useApolloClient";
+import { ApolloClient } from "../../../core/index.js";
+import { ApolloLink } from "../../../link/core/index.js";
+import { ApolloProvider } from "../../context/index.js";
+import { InMemoryCache } from "../../../cache/index.js";
+import { useApolloClient } from "../useApolloClient.js";
 
 describe("useApolloClient Hook", () => {
   it("should return a client instance from the context if available", () => {

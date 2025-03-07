@@ -1,48 +1,55 @@
 // externals
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { DocumentNode, GraphQLError } from "graphql";
-import { InvariantError, setVerbosity } from "ts-invariant";
+import {
+  InvariantError,
+  setVerbosity,
+} from "@apollo/client/utilities/invariant";
 
 import {
   Observable,
   Observer,
-} from "../../../utilities/observables/Observable";
+} from "../../../utilities/observables/Observable.js";
 import {
   ApolloLink,
   FetchResult,
   type RequestHandler,
-} from "../../../link/core";
-import { InMemoryCache } from "../../../cache";
+} from "../../../link/core/index.js";
+import { InMemoryCache } from "../../../cache/index.js";
 
 // mocks
 import {
   MockApolloLink,
   MockLink,
-} from "../../../testing/core/mocking/mockLink";
+} from "../../../testing/core/mocking/mockLink.js";
 
 // core
-import { NetworkStatus } from "../../networkStatus";
+import { NetworkStatus } from "../../networkStatus.js";
 import {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "../../watchQueryOptions";
-import { QueryManager } from "../../QueryManager";
+} from "../../watchQueryOptions.js";
+import { QueryManager } from "../../QueryManager.js";
 
-import { ApolloError } from "../../../errors";
+import { ApolloError } from "../../../errors/index.js";
 
 // testing utils
 import { waitFor } from "@testing-library/react";
-import { wait } from "../../../testing/core";
-import { ApolloClient, ApolloQueryResult } from "../../../core";
-import { mockFetchQuery } from "../ObservableQuery";
-import { addTypenameToDocument, Concast, print } from "../../../utilities";
+import { wait } from "../../../testing/core/index.js";
+import { ApolloClient, ApolloQueryResult } from "../../../core/index.js";
+import { mockFetchQuery } from "../ObservableQuery.js";
+import {
+  addTypenameToDocument,
+  Concast,
+  print,
+} from "../../../utilities/index.js";
 import {
   mockDeferStream,
   ObservableStream,
   spyOnConsole,
-} from "../../../testing/internal";
+} from "../../../testing/internal/index.js";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

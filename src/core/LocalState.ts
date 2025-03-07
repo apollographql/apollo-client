@@ -1,4 +1,4 @@
-import { invariant } from "../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import type {
   DocumentNode,
@@ -15,8 +15,8 @@ import type {
 } from "graphql";
 import { visit, BREAK, isSelectionNode } from "graphql";
 
-import type { ApolloCache } from "../cache/index.js";
-import type { FragmentMap, StoreObject } from "../utilities/index.js";
+import type { ApolloCache } from "@apollo/client/cache";
+import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
   buildQueryFromSelectionSet,
@@ -31,11 +31,11 @@ import {
   removeClientSetsFromDocument,
   resultKeyNameFromField,
   shouldInclude,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { ApolloClient } from "./ApolloClient.js";
 import type { Resolvers, OperationVariables } from "./types.js";
-import type { FetchResult } from "../link/core/index.js";
-import { cacheSlot } from "../cache/index.js";
+import type { FetchResult } from "@apollo/client/link/core";
+import { cacheSlot } from "@apollo/client/cache";
 
 export type Resolver = (
   rootValue?: any,

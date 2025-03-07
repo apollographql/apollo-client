@@ -1,5 +1,3 @@
-import "../../utilities/globals/index.js";
-
 export * from "./useApolloClient.js";
 export * from "./useLazyQuery.js";
 export * from "./useMutation.js";

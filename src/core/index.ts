@@ -44,8 +44,8 @@ export type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/index.js";
+export type { Cache } from "../cache/index.js";
 export {
-  Cache,
   ApolloCache,
   InMemoryCache,
   MissingFieldError,
@@ -96,12 +96,9 @@ export {
 /* Supporting */
 
 // The verbosity of invariant.{log,warn,error} can be controlled globally
-// (for anyone using the same ts-invariant package) by passing "log",
-// "warn", "error", or "silent" to setVerbosity ("log" is the default).
+// by passing "log", "warn", "error", or "silent" to setVerbosity ("log" is the default).
 // Note that all invariant.* logging is hidden in production.
-import { setVerbosity } from "ts-invariant";
-export { setVerbosity as setLogVerbosity };
-setVerbosity(__DEV__ ? "log" : "silent");
+export { setVerbosity as setLogVerbosity } from "@apollo/client/utilities/invariant";
 
 // Note that importing `gql` by itself, then destructuring
 // additional properties separately before exporting, is intentional.

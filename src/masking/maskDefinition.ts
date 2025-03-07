@@ -1,14 +1,15 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import { Kind } from "graphql";
 import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import {
   getFragmentMaskMode,
   maybeDeepFreeze,
   resultKeyNameFromField,
-} from "../utilities/index.js";
-import type { FragmentMap } from "../utilities/index.js";
-import type { ApolloCache } from "../cache/index.js";
+} from "@apollo/client/utilities";
+import type { FragmentMap } from "@apollo/client/utilities";
+import type { ApolloCache } from "@apollo/client/cache";
 import { disableWarningsSlot } from "./utils.js";
-import { invariant } from "../utilities/globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";

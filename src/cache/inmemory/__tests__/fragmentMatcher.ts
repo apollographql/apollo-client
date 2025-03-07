@@ -1,8 +1,8 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCache } from "../inMemoryCache.js";
 import { visit, FragmentDefinitionNode } from "graphql";
-import { hasOwn } from "../helpers";
+import { hasOwn } from "../helpers.js";
 
 describe("fragment matching", () => {
   it("can match exact types with or without possibleTypes", () => {

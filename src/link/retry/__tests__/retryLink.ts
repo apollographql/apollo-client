@@ -1,15 +1,15 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
-import { Observable } from "../../../utilities/observables/Observable";
-import { fromError } from "../../utils/fromError";
-import { RetryLink } from "../retryLink";
+import { ApolloLink } from "../../core/ApolloLink.js";
+import { execute } from "../../core/execute.js";
+import { Observable } from "../../../utilities/observables/Observable.js";
+import { fromError } from "../../utils/fromError.js";
+import { RetryLink } from "../retryLink.js";
 import {
   mockMultipartSubscriptionStream,
   ObservableStream,
-} from "../../../testing/internal";
-import { ApolloError } from "../../../core";
+} from "../../../testing/internal/index.js";
+import { ApolloError } from "../../../core/index.js";
 
 const query = gql`
   {

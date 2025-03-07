@@ -1,5 +1,3 @@
-import "../utilities/globals/index.js";
-
 export type { ApolloContextValue } from "./context/index.js";
 export {
   ApolloProvider,

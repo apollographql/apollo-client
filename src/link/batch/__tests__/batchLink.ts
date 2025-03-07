@@ -1,17 +1,17 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { print } from "graphql";
 
-import { ApolloLink, execute } from "../../core";
-import { Operation, FetchResult, GraphQLRequest } from "../../core/types";
-import { Observable } from "../../../utilities";
-import { wait } from "../../../testing";
+import { ApolloLink, execute } from "../../core/index.js";
+import { Operation, FetchResult, GraphQLRequest } from "../../core/types.js";
+import { Observable } from "../../../utilities/index.js";
+import { wait } from "../../../testing/index.js";
 import {
   BatchLink,
   OperationBatcher,
   BatchHandler,
   BatchableRequest,
-} from "../batchLink";
-import { ObservableStream } from "../../../testing/internal";
+} from "../batchLink.js";
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 interface MockedResponse {
   request: GraphQLRequest;

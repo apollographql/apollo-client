@@ -1,4 +1,5 @@
-import { invariant } from "../utilities/globals/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
 
@@ -7,7 +8,7 @@ import type {
   Concast,
   Observer,
   ObservableSubscription,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   cloneDeep,
   compact,
@@ -17,8 +18,8 @@ import {
   fixObservableSubclass,
   getQueryDefinition,
   preventUnhandledRejection,
-} from "../utilities/index.js";
-import { ApolloError, isApolloError } from "../errors/index.js";
+} from "@apollo/client/utilities";
+import { ApolloError, isApolloError } from "@apollo/client/errors";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -35,11 +36,11 @@ import type {
   UpdateQueryOptions,
 } from "./watchQueryOptions.js";
 import type { QueryInfo } from "./QueryInfo.js";
-import type { MissingFieldError } from "../cache/index.js";
-import type { MissingTree } from "../cache/core/types/common.js";
+import type { MissingFieldError } from "@apollo/client/cache";
+import type { MissingTree } from "@apollo/client/cache";
 import { equalByQuery } from "./equalByQuery.js";
 import type { TODO } from "../utilities/types/TODO.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 
 const { assign, hasOwnProperty } = Object;
 

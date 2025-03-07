@@ -1,6 +1,9 @@
-import { invariant } from "../../utilities/globals/index.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 // Make builtins like Map and Set safe to use with non-extensible objects.
+// TODO: this needs to be removed for 4.0, so we really don't have side effects.
+// that means we have to find an alternative means for the React Native fixes in there.
 import "./fixPolyfills.js";
 
 import type {
@@ -18,7 +21,7 @@ import type {
   StoreObject,
   Reference,
   DeepPartial,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   addTypenameToDocument,
   isReference,
@@ -27,7 +30,7 @@ import {
   print,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreReader } from "./readFromStore.js";
 import { StoreWriter } from "./writeToStore.js";
@@ -35,7 +38,7 @@ import { EntityStore, supportsResultCaching } from "./entityStore.js";
 import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
 import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
-import type { OperationVariables } from "../../core/index.js";
+import type { OperationVariables } from "@apollo/client/core";
 import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 type BroadcastOptions = Pick<

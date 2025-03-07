@@ -1,5 +1,5 @@
-import { Observable } from "../../../utilities";
-import { ObservableStream } from "../ObservableStream";
+import { Observable } from "../../../utilities/index.js";
+import { ObservableStream } from "../ObservableStream.js";
 
 it("allows to step through an observable until completion", async () => {
   const stream = new ObservableStream(

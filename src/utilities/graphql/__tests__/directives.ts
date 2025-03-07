@@ -1,15 +1,15 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 
-import { getQueryDefinition } from "../getFromAST";
+import { getQueryDefinition } from "../getFromAST.js";
 import {
   shouldInclude,
   hasDirectives,
   hasAnyDirectives,
   hasAllDirectives,
   getFragmentMaskMode,
-} from "../directives";
-import { spyOnConsole } from "../../../testing/internal";
+} from "../directives.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
 import { BREAK, visit } from "graphql";
 import type { DocumentNode, FragmentSpreadNode } from "graphql";
 

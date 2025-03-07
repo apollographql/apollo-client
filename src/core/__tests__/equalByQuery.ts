@@ -1,6 +1,6 @@
 import { GraphQLError } from "graphql";
-import { TypedDocumentNode, gql } from "../index";
-import { equalByQuery } from "../equalByQuery";
+import { TypedDocumentNode, gql } from "../index.js";
+import { equalByQuery } from "../equalByQuery.js";
 
 describe("equalByQuery", () => {
   it("is importable and a function", () => {

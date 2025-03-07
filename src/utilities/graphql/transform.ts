@@ -1,4 +1,4 @@
-import { invariant } from "../globals/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import type {
   DocumentNode,

@@ -1,4 +1,4 @@
-import { wrapPromiseWithState } from "../../../utilities/index.js";
+import { wrapPromiseWithState } from "@apollo/client/utilities";
 import * as React from "rehackt";
 
 type Use = <T>(promise: Promise<T>) => T;

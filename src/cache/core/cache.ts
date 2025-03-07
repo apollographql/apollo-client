@@ -1,3 +1,4 @@
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
@@ -10,14 +11,14 @@ import type {
   Reference,
   DeepPartial,
   NoInfer,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   Observable,
   cacheSizes,
   defaultCacheSizes,
   getFragmentDefinition,
   getFragmentQueryDocument,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import type { DataProxy } from "./types/DataProxy.js";
 import type { Cache } from "./types/Cache.js";
 import { WeakCache } from "@wry/caches";
@@ -25,16 +26,16 @@ import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemory
 import type {
   OperationVariables,
   TypedDocumentNode,
-} from "../../core/types.js";
+} from "@apollo/client/core";
 import type { MissingTree } from "./types/common.js";
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { invariant } from "../../utilities/globals/index.js";
-import { maskFragment } from "../../masking/index.js";
+import { invariant } from "@apollo/client/utilities/invariant";
+import { maskFragment } from "@apollo/client/masking";
 import type {
   FragmentType,
   MaybeMasked,
   Unmasked,
-} from "../../masking/index.js";
+} from "@apollo/client/masking";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 

@@ -1,6 +1,6 @@
 import React, { Suspense } from "react";
 import { act, screen, renderHook } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { userEvent } from "@testing-library/user-event";
 import {
   ErrorBoundary as ReactErrorBoundary,
   FallbackProps,
@@ -17,33 +17,33 @@ import {
   ApolloLink,
   Observable,
   split,
-} from "../../../core";
+} from "../../../core/index.js";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   mockSingleLink,
   wait,
-} from "../../../testing";
+} from "../../../testing/index.js";
 import {
   concatPagination,
   offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities";
-import { useBackgroundQuery } from "../useBackgroundQuery";
-import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
-import { ApolloProvider } from "../../context";
-import { QueryRef, QueryReference } from "../../internal";
-import { InMemoryCache } from "../../../cache";
-import { SuspenseQueryHookFetchPolicy } from "../../types/types";
+} from "../../../utilities/index.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { UseReadQueryResult, useReadQuery } from "../useReadQuery.js";
+import { ApolloProvider } from "../../context/index.js";
+import { QueryRef, QueryReference } from "../../internal/index.js";
+import { InMemoryCache } from "../../../cache/index.js";
+import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
 import equal from "@wry/equality";
 import {
   RefetchWritePolicy,
   SubscribeToMoreOptions,
   SubscribeToMoreFunction,
-} from "../../../core/watchQueryOptions";
-import { skipToken } from "../constants";
+} from "../../../core/watchQueryOptions.js";
+import { skipToken } from "../constants.js";
 import {
   PaginatedCaseData,
   SimpleCaseData,
@@ -56,20 +56,20 @@ import {
   setupVariablesCase,
   spyOnConsole,
   addDelayToMocks,
-} from "../../../testing/internal";
+} from "../../../testing/internal/index.js";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
-} from "../../../testing/internal/scenarios";
-import { Masked, MaskedDocumentNode } from "../../../masking";
+} from "../../../testing/internal/scenarios/index.js";
+import { Masked, MaskedDocumentNode } from "../../../masking/index.js";
 import {
   RenderStream,
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react";
+import { MockedProvider } from "../../../testing/react/index.js";
 
 afterEach(() => {
   jest.useRealTimers();

@@ -3,7 +3,7 @@ import type {
   WatchQueryOptions,
   MutationOptions,
   OperationVariables,
-} from "../../core/index.js";
+} from "@apollo/client/core";
 
 import { compact } from "./compact.js";
 

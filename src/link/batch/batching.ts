@@ -1,6 +1,10 @@
-import type { FetchResult, NextLink, Operation } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type {
+  FetchResult,
+  NextLink,
+  Operation,
+} from "@apollo/client/link/core";
+import type { ObservableSubscription } from "@apollo/client/utilities";
+import { Observable } from "@apollo/client/utilities";
 
 export type BatchHandler = (
   operations: Operation[],

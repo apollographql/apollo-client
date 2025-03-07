@@ -24,35 +24,35 @@ import type {
   DefaultOptions,
   OperationVariables,
   WatchQueryFetchPolicy,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
-import { getApolloContext } from "../context/index.js";
-import { ApolloError } from "../../errors/index.js";
+} from "@apollo/client/core";
+import { mergeOptions } from "@apollo/client/utilities";
+import { getApolloContext } from "@apollo/client/react/context";
+import { ApolloError } from "@apollo/client/errors";
 import type {
   ApolloQueryResult,
   ObservableQuery,
   DocumentNode,
   TypedDocumentNode,
   WatchQueryOptions,
-} from "../../core/index.js";
-import { NetworkStatus } from "../../core/index.js";
+} from "@apollo/client/core";
+import { NetworkStatus } from "@apollo/client/core";
 import type {
   QueryHookOptions,
   QueryResult,
   ObservableQueryFields,
   NoInfer,
-} from "../types/types.js";
+} from "@apollo/client/react";
 
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { useApolloClient } from "./useApolloClient.js";
 import {
   compact,
   isNonEmptyArray,
   maybeDeepFreeze,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
 import { wrapHook } from "./internal/index.js";
-import type { RenderPromises } from "../ssr/RenderPromises.js";
-import type { MaybeMasked } from "../../masking/index.js";
+import type { RenderPromises } from "@apollo/client/react/ssr";
+import type { MaybeMasked } from "@apollo/client/masking";
 
 const {
   prototype: { hasOwnProperty },

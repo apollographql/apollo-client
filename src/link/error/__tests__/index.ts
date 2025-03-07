@@ -1,4 +1,5 @@
 import { gql } from "graphql-tag";
+import { Observable, of } from "rxjs";
 
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import { ErrorLink, onError } from "@apollo/client/link/error";
@@ -8,7 +9,6 @@ import {
   mockMultipartSubscriptionStream,
   ObservableStream,
 } from "../../../testing/internal/index.js";
-import { Observable } from "../../../utilities/observables/Observable.js";
 import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { ServerError, throwServerError } from "../../utils/throwServerError.js";
@@ -30,7 +30,7 @@ describe("error handling", () => {
     });
 
     const mockLink = new ApolloLink((operation) =>
-      Observable.of({
+      of({
         errors: [
           {
             message: "resolver blew up",
@@ -310,7 +310,7 @@ describe("error handling", () => {
     });
 
     const mockLink = new ApolloLink((operation) => {
-      return Observable.of({ data: { foo: { id: 1 } } });
+      return of({ data: { foo: { id: 1 } } });
     });
 
     const link = errorLink.concat(mockLink);
@@ -336,7 +336,7 @@ describe("error handling", () => {
     });
 
     const mockLink = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: { foo: { id: 1 } },
         errors: [{ message: "ignore" } as any],
       });
@@ -401,7 +401,7 @@ describe("error handling", () => {
     });
 
     const mockLink = new ApolloLink((operation) =>
-      Observable.of({
+      of({
         data: { foo: true },
         errors: [
           {
@@ -440,7 +440,7 @@ describe("error handling with class", () => {
     });
 
     const mockLink = new ApolloLink((operation) =>
-      Observable.of({
+      of({
         errors: [
           {
             message: "resolver blew up",
@@ -586,7 +586,7 @@ describe("error handling with class", () => {
     });
 
     const mockLink = new ApolloLink((operation) => {
-      return Observable.of({ data: { foo: { id: 1 } } });
+      return of({ data: { foo: { id: 1 } } });
     });
 
     const link = errorLink.concat(mockLink);

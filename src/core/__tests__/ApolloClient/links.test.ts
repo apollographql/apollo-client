@@ -1,5 +1,6 @@
 import { print } from "graphql";
 import { gql } from "graphql-tag";
+import { map, of, Subscription } from "rxjs";
 
 import {
   ApolloClient,
@@ -11,10 +12,6 @@ import { ApolloLink } from "@apollo/client/link/core";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
-import {
-  Observable,
-  ObservableSubscription,
-} from "../../../utilities/observables/Observable.js";
 
 describe("Link interactions", () => {
   it("includes the cache on the context for eviction links", (done) => {
@@ -40,17 +37,19 @@ describe("Link interactions", () => {
     const evictionLink = (operation: Operation, forward: NextLink) => {
       const { cache } = operation.getContext();
       expect(cache).toBeDefined();
-      return forward(operation).map((result) => {
-        setTimeout(() => {
-          const cacheResult = cache.read({ query });
-          expect(cacheResult).toEqual(initialData);
-          expect(cacheResult).toEqual(result.data);
-          if (count === 1) {
-            done();
-          }
-        }, 10);
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          setTimeout(() => {
+            const cacheResult = cache.read({ query });
+            expect(cacheResult).toEqual(initialData);
+            expect(cacheResult).toEqual(result.data);
+            if (count === 1) {
+              done();
+            }
+          }, 10);
+          return result;
+        })
+      );
     };
 
     const mockLink = new MockSubscriptionLink();
@@ -110,7 +109,7 @@ describe("Link interactions", () => {
     });
 
     let count = 0;
-    let four: ObservableSubscription;
+    let four: Subscription;
     // first watch
     const one = observable.subscribe((result) => count++);
     // second watch
@@ -128,16 +127,19 @@ describe("Link interactions", () => {
     setTimeout(() => {
       one.unsubscribe();
 
-      link.simulateResult({
-        result: {
-          data: {
-            people_one: {
-              name: "Luke Skywalker",
-              friends: [{ name: "R2D2" }],
+      link.simulateResult(
+        {
+          result: {
+            data: {
+              people_one: {
+                name: "Luke Skywalker",
+                friends: [{ name: "R2D2" }],
+              },
             },
           },
         },
-      });
+        true
+      );
       setTimeout(() => {
         four.unsubscribe();
         // final unsubscribe should be called now
@@ -182,14 +184,14 @@ describe("Link interactions", () => {
     });
 
     let count = 0;
-    let four: ObservableSubscription;
+    let four: Subscription;
     // first watch
     const one = observable.subscribe((result) => count++);
     // second watch
     observable.subscribe({
       next: () => count++,
       error: () => {
-        count = 0;
+        throw new Error("Error should not be called");
       },
     });
     // third watch (to be unsubscribed)
@@ -209,15 +211,11 @@ describe("Link interactions", () => {
       // final unsubscribe should be called now
       // since errors clean up subscriptions
       link.simulateResult({ error: new Error("dang") });
-
-      setTimeout(() => {
-        expect(count).toEqual(0);
-        done();
-      }, 10);
     }, 10);
 
     link.onUnsubscribe(() => {
-      expect(count).toEqual(4);
+      expect(count).toEqual(5);
+      done();
     });
   });
 
@@ -308,7 +306,7 @@ describe("Link interactions", () => {
       const { getCacheKey } = operation.getContext();
       expect(getCacheKey).toBeDefined();
       expect(getCacheKey({ id: 1, __typename: "Book" })).toEqual("Book:1");
-      return Observable.of({ data: bookData });
+      return of({ data: bookData });
     });
 
     const client = new ApolloClient({
@@ -376,7 +374,7 @@ describe("Link interactions", () => {
     const link = new ApolloLink((operation) => {
       result.current = operation;
 
-      return Observable.of({
+      return of({
         data: {
           books: [
             { id: 1, title: "Woo", __typename: "Book" },

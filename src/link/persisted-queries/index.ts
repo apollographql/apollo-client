@@ -3,17 +3,15 @@ import type {
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
+import type { Observer, Subscription } from "rxjs";
+import { Observable } from "rxjs";
 
 import type { NetworkError } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import type { ServerError } from "@apollo/client/link/utils";
-import type {
-  ObservableSubscription,
-  Observer,
-} from "@apollo/client/utilities";
 import { print } from "@apollo/client/utilities";
-import { compact, isNonEmptyArray, Observable } from "@apollo/client/utilities";
+import { compact, isNonEmptyArray } from "@apollo/client/utilities";
 import {
   AutoCleanedWeakCache,
   cacheSizes,
@@ -173,7 +171,7 @@ export const createPersistedQueryLink = (
       const { query } = operation;
 
       return new Observable((observer: Observer<FormattedExecutionResult>) => {
-        let subscription: ObservableSubscription;
+        let subscription: Subscription;
         let retried = false;
         let originalFetchOptions: any;
         let setFetchOptions = false;

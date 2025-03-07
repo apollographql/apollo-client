@@ -1,4 +1,4 @@
-import { Observable } from "@apollo/client/utilities";
+import { Observable } from "rxjs";
 
 import { ObservableStream } from "../ObservableStream.js";
 

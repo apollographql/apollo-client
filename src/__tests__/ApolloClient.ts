@@ -2,6 +2,7 @@ import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { expectTypeOf } from "expect-type";
 import { Kind } from "graphql";
 import { gql } from "graphql-tag";
+import { EMPTY, Observable, of } from "rxjs";
 
 import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
@@ -16,7 +17,7 @@ import {
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { Masked } from "@apollo/client/masking";
-import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
@@ -1155,7 +1156,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return Observable.of({ data });
+        return of({ data });
       });
       function newClient() {
         return new ApolloClient({
@@ -2808,8 +2809,8 @@ describe("ApolloClient", () => {
       invariantDebugSpy.mockRestore();
     });
 
-    it("should catch refetchQueries error when not caught explicitly", (done) => {
-      expect.assertions(2);
+    it("should emit error from refetchQueries when not caught explicitly", (done) => {
+      expect.assertions(3);
       const linkFn = jest
         .fn(
           () =>
@@ -2821,7 +2822,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return Observable.of();
+          return EMPTY;
         });
 
       const client = new ApolloClient({
@@ -2850,7 +2851,18 @@ describe("ApolloClient", () => {
         });
 
         result.queries[0].subscribe({
-          error() {
+          next(result) {
+            // Skip checking initial result
+            if (!result.error) {
+              return;
+            }
+
+            const expectedError = new ApolloError({
+              networkError: new Error("refetch failed"),
+            });
+
+            expect(result.error).toEqual(expectedError);
+
             setTimeout(() => {
               expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
               expect(invariantDebugSpy).toHaveBeenCalledWith(

@@ -1,4 +1,5 @@
 import { equal } from "@wry/equality";
+import type { Observable, Subscription } from "rxjs";
 
 import type {
   WatchFragmentOptions,
@@ -6,11 +7,7 @@ import type {
 } from "@apollo/client/cache";
 import type { ApolloClient } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type {
-  Observable,
-  ObservableSubscription,
-  PromiseWithState,
-} from "@apollo/client/utilities";
+import type { PromiseWithState } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   wrapPromiseWithState,
@@ -37,7 +34,7 @@ export class FragmentReference<
   private resolve: ((result: MaybeMasked<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<MaybeMasked<TData>>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 

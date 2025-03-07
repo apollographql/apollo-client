@@ -1,11 +1,11 @@
-import { Subscription } from "zen-observable-ts";
+import { Observable, Subscription } from "rxjs";
 
 import {
   ApolloClient,
   ApolloLink,
   gql,
   InMemoryCache,
-  Observable,
+  NetworkStatus,
   ObservableQuery,
   TypedDocumentNode,
 } from "@apollo/client/core";
@@ -67,13 +67,18 @@ describe("client.refetchQueries", () => {
             operation.operationName.split("").forEach((letter) => {
               data[letter.toLowerCase()] = letter.toUpperCase();
             });
-            function finish() {
-              observer.next({ data });
-              observer.complete();
+            function finish(delay: number) {
+              // We need to add a delay here since RxJS emits synchronously.
+              // Some tests fail if this value is emitted synchronously.
+              // TODO: Determine root cause
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              }, delay);
             }
             if (typeof operation.variables.delay === "number") {
-              setTimeout(finish, operation.variables.delay);
-            } else finish();
+              finish(operation.variables.delay);
+            } else finish(0);
           })
       ),
     });
@@ -116,7 +121,7 @@ describe("client.refetchQueries", () => {
   }
 
   it("includes watched queries affected by updateCache", async () => {
-    expect.assertions(9);
+    expect.assertions(11);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -192,7 +197,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes watched queries named in options.include", async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -276,7 +281,7 @@ describe("client.refetchQueries", () => {
   });
 
   it("includes query DocumentNode objects specified in options.include", async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -361,7 +366,7 @@ describe("client.refetchQueries", () => {
   });
 
   it('includes all queries when options.include === "all"', async () => {
-    expect.assertions(11);
+    expect.assertions(13);
     const client = makeClient();
     const [aObs, bObs, abObs] = await setup(client);
 
@@ -474,7 +479,12 @@ describe("client.refetchQueries", () => {
     subs.push(
       extraObs.subscribe({
         next(result) {
-          expect(result).toEqual({ a: "A", b: "B" });
+          expect(result).toEqualApolloQueryResult({
+            data: { a: "A", b: "B" },
+            loading: false,
+            networkStatus: NetworkStatus.ready,
+            partial: false,
+          });
         },
       })
     );

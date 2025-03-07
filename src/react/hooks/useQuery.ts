@@ -17,6 +17,7 @@
 /** */
 import { equal } from "@wry/equality";
 import * as React from "rehackt";
+import { asapScheduler, observeOn } from "rxjs";
 
 import type {
   ApolloClient,
@@ -53,10 +54,6 @@ import { mergeOptions } from "@apollo/client/utilities";
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-
-const {
-  prototype: { hasOwnProperty },
-} = Object;
 
 type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
   QueryResult<TData, TVariables>,
@@ -348,73 +345,44 @@ function useObservableSubscriptionResult<
           return () => {};
         }
 
-        const onNext = () => {
-          const previousResult = resultData.current;
-          // We use `getCurrentResult()` instead of the onNext argument because
-          // the values differ slightly. Specifically, loading results will have
-          // an empty object for data instead of `undefined` for some reason.
-          const result = observable.getCurrentResult();
-          // Make sure we're not attempting to re-render similar results
-          if (
-            previousResult &&
-            previousResult.loading === result.loading &&
-            previousResult.networkStatus === result.networkStatus &&
-            equal(previousResult.data, result.data)
-          ) {
-            return;
-          }
+        const subscription = observable
+          // We use the asapScheduler here to prevent issues with trying to
+          // update in the middle of a render. `reobserve` is kicked off in the
+          // middle of a render and because RxJS emits values synchronously,
+          // its possible for this `handleStoreChange` to be called in that same
+          // render. This allows the render to complete before trying to emit a
+          // new value.
+          .pipe(observeOn(asapScheduler))
+          .subscribe((result) => {
+            const previousResult = resultData.current;
+            // Make sure we're not attempting to re-render similar results
+            // TODO: Eventually move this check inside ObservableQuery. We should
+            // probably not emit a new result if the result is the same.
+            if (
+              previousResult &&
+              previousResult.loading === result.loading &&
+              previousResult.networkStatus === result.networkStatus &&
+              equal(previousResult.data, result.data) &&
+              equal(previousResult.error, result.error)
+            ) {
+              return;
+            }
 
-          setResult(result, resultData, observable, client, handleStoreChange);
-        };
-
-        const onError = (error: Error) => {
-          subscription.current.unsubscribe();
-          subscription.current = observable.resubscribeAfterError(
-            onNext,
-            onError
-          );
-
-          if (!hasOwnProperty.call(error, "graphQLErrors")) {
-            // The error is not a GraphQL error
-            throw error;
-          }
-
-          const previousResult = resultData.current;
-          if (
-            !previousResult ||
-            (previousResult && previousResult.loading) ||
-            !equal(error, previousResult.error)
-          ) {
             setResult(
-              {
-                data: (previousResult &&
-                  previousResult.data) as MaybeMasked<TData>,
-                error: error as ApolloError,
-                loading: false,
-                networkStatus: NetworkStatus.error,
-                partial: !previousResult?.data,
-              },
+              result,
               resultData,
               observable,
               client,
               handleStoreChange
             );
-          }
-        };
-
-        // TODO evaluate if we keep this in
-        // React Compiler cannot handle scoped `let` access, but a mutable object
-        // like this is fine.
-        // was:
-        // let subscription = observable.subscribe(onNext, onError);
-        const subscription = { current: observable.subscribe(onNext, onError) };
+          });
 
         // Do the "unsubscribe" with a short delay.
         // This way, an existing subscription can be reused without an additional
         // request if "unsubscribe"  and "resubscribe" to the same ObservableQuery
         // happen in very fast succession.
         return () => {
-          setTimeout(() => subscription.current.unsubscribe());
+          setTimeout(() => subscription.unsubscribe());
         };
       },
 

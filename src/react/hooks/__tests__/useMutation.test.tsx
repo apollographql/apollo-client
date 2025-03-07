@@ -11,6 +11,7 @@ import fetchMock from "fetch-mock";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React, { useEffect } from "react";
+import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -20,7 +21,6 @@ import {
   ApolloQueryResult,
   Cache,
   NetworkStatus,
-  Observable,
   ObservableQuery,
   TypedDocumentNode,
 } from "@apollo/client/core";

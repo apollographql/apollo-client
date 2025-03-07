@@ -217,7 +217,9 @@ describe("garbage collection", () => {
             assert.notStrictEqual(dataAfterFullReset, result.data);
             assert.deepStrictEqual(dataAfterFullReset, result.data);
 
-            sub.unsubscribe();
+            setTimeout(() => {
+              sub.unsubscribe();
+            });
           },
         });
       })();
@@ -273,7 +275,9 @@ describe("garbage collection", () => {
             assert.deepStrictEqual(result.data, {
               local: 123,
             });
-            sub.unsubscribe();
+            setTimeout(() => {
+              sub.unsubscribe();
+            });
           },
         });
       })();

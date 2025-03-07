@@ -1,15 +1,12 @@
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
+import { Observable, Subscription } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, ApolloError, FetchResult } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
-import {
-  Observable,
-  ObservableSubscription as Subscription,
-} from "@apollo/client/utilities";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 

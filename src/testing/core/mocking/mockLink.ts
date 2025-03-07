@@ -1,4 +1,5 @@
 import { equal } from "@wry/equality";
+import { Observable } from "rxjs";
 
 import type {
   FetchResult,
@@ -13,7 +14,6 @@ import {
   cloneDeep,
   getDefaultValues,
   getOperationDefinition,
-  Observable,
   print,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,

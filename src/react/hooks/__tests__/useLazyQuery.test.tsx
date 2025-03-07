@@ -7,6 +7,7 @@ import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
+import { Observable } from "rxjs";
 
 import {
   ApolloClient,
@@ -27,7 +28,7 @@ import {
   wait,
 } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
-import { DeepPartial, Observable } from "@apollo/client/utilities";
+import { DeepPartial } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { QueryResult } from "../../types/types.js";
@@ -1489,6 +1490,7 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        errors: [{ message: "error 1" }],
         variables: {},
       });
     }
@@ -1516,7 +1518,6 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
-        // TODO: Why is this only populated when in loading state?
         errors: [{ message: "error 1" }],
         variables: {},
       });
@@ -1532,6 +1533,7 @@ describe("useLazyQuery Hook", () => {
         networkStatus: NetworkStatus.error,
         previousData: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+        errors: [{ message: "error 2" }],
         variables: {},
       });
     }
@@ -2302,6 +2304,7 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        errors: [{ message: "Oops" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2331,6 +2334,7 @@ describe("useLazyQuery Hook", () => {
       expect(result).toEqualQueryResult({
         data: undefined,
         error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        errors: [{ message: "Oops" }],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2492,6 +2496,7 @@ describe("useLazyQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ networkError }),
+          errors: [],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2705,6 +2710,7 @@ describe("useLazyQuery Hook", () => {
             "Store reset while query was in flight (not completed in link chain)"
           ),
         }),
+        errors: [],
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,

@@ -1,15 +1,11 @@
 import fetchMock from "fetch-mock";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
 import { gql } from "graphql-tag";
+import { map, Observable, Observer, Subscription } from "rxjs";
 
 import { FetchResult } from "@apollo/client/link/core";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
-import {
-  Observable,
-  ObservableSubscription,
-  Observer,
-} from "../../../utilities/observables/Observable.js";
 import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { BatchHttpLink } from "../batchHttpLink.js";
@@ -239,7 +235,7 @@ const createHttpLink = (httpArgs?: any) => {
   return new BatchHttpLink(args);
 };
 
-const subscriptions = new Set<ObservableSubscription>();
+const subscriptions = new Set<Subscription>();
 
 describe("SharedHttpTest", () => {
   const data = { data: { hello: "world" } };
@@ -504,11 +500,13 @@ describe("SharedHttpTest", () => {
       operation.setContext({
         headers: { authorization: "1234" },
       });
-      return forward(operation).map((result) => {
-        const { headers } = operation.getContext();
-        expect(headers).toBeDefined();
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          const { headers } = operation.getContext();
+          expect(headers).toBeDefined();
+          return result;
+        })
+      );
     });
     const link = middleware.concat(createHttpLink({ uri: "/data" }));
     const stream = new ObservableStream(

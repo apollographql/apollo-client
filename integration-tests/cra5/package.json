@@ -10,6 +10,7 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-scripts": "5.0.1",
+    "rxjs": "^7.8.2",
     "typescript": "^4.9.5"
   },
   "scripts": {

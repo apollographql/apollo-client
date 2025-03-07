@@ -2,7 +2,7 @@ import { act, render, screen, waitFor } from "@testing-library/react";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
-import { Observable } from "zen-observable-ts";
+import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloError } from "@apollo/client/errors";

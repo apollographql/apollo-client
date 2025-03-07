@@ -1,6 +1,7 @@
+import { Observable } from "rxjs";
+
 import { serializeFetchParameter } from "@apollo/client/core";
 import { maybe } from "@apollo/client/utilities";
-import { Observable } from "@apollo/client/utilities";
 
 import {
   handleError,

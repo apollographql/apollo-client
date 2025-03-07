@@ -11,7 +11,6 @@ Array [
   "InMemoryCache",
   "MissingFieldError",
   "NetworkStatus",
-  "Observable",
   "ObservableQuery",
   "checkFetcher",
   "concat",
@@ -26,8 +25,6 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
   "gql",
   "isApolloError",
   "isNetworkRequestSettled",
@@ -45,7 +42,6 @@ Array [
   "setLogVerbosity",
   "split",
   "throwServerError",
-  "toPromise",
 ]
 `;
 
@@ -78,7 +74,6 @@ Array [
   "InMemoryCache",
   "MissingFieldError",
   "NetworkStatus",
-  "Observable",
   "ObservableQuery",
   "checkFetcher",
   "concat",
@@ -93,8 +88,6 @@ Array [
   "execute",
   "fallbackHttpConfig",
   "from",
-  "fromError",
-  "fromPromise",
   "gql",
   "isApolloError",
   "isNetworkRequestSettled",
@@ -112,7 +105,6 @@ Array [
   "setLogVerbosity",
   "split",
   "throwServerError",
-  "toPromise",
 ]
 `;
 
@@ -224,10 +216,7 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "fromError",
-  "fromPromise",
   "throwServerError",
-  "toPromise",
   "transformOperation",
   "validateOperation",
 ]
@@ -377,14 +366,11 @@ exports[`exports of public entry points @apollo/client/utilities 1`] = `
 Array [
   "AutoCleanedStrongCache",
   "AutoCleanedWeakCache",
-  "Concast",
   "DeepMerger",
   "DocumentTransform",
-  "Observable",
   "addNonReactiveToNamedFragments",
   "addTypenameToDocument",
   "argumentsObjectFromField",
-  "asyncMap",
   "buildQueryFromSelectionSet",
   "cacheSizes",
   "canUseAsyncIteratorSymbol",
@@ -402,7 +388,6 @@ Array [
   "createFulfilledPromise",
   "createRejectedPromise",
   "defaultCacheSizes",
-  "fixObservableSubclass",
   "getDefaultValues",
   "getDirectiveNames",
   "getFragmentDefinition",
@@ -440,7 +425,6 @@ Array [
   "isReference",
   "isStatefulPromise",
   "isSubscriptionOperation",
-  "iterateObserversSafely",
   "makeReference",
   "makeUniqueId",
   "maybe",

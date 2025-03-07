@@ -1,11 +1,7 @@
 import React from "react";
+import { of } from "rxjs";
 
-import {
-  ApolloClient,
-  ApolloLink,
-  InMemoryCache,
-  Observable,
-} from "@apollo/client/core";
+import { ApolloClient, ApolloLink, InMemoryCache } from "@apollo/client/core";
 
 import { setupSimpleCase } from "../../../../testing/internal/index.js";
 import {
@@ -23,7 +19,7 @@ test("kicks off request immediately when created", async () => {
     cache: new InMemoryCache(),
     link: new ApolloLink((operation) => {
       fetchCount++;
-      return Observable.of({ data: { greeting: "Hello" } });
+      return of({ data: { greeting: "Hello" } });
     }),
   });
 

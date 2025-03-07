@@ -5,6 +5,7 @@ import type {
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
+import { Observable } from "rxjs";
 
 import type {
   OperationVariables,
@@ -27,7 +28,6 @@ import {
   defaultCacheSizes,
   getFragmentDefinition,
   getFragmentQueryDocument,
-  Observable,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";

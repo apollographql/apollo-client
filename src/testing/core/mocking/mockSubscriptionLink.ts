@@ -1,6 +1,7 @@
+import { Observable } from "rxjs";
+
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { Observable } from "@apollo/client/utilities";
 
 export interface MockedSubscriptionResult {
   result?: FetchResult;

@@ -2,6 +2,7 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import * as React from "rehackt";
+import { Observable } from "rxjs";
 
 import type {
   ApolloClient,
@@ -11,7 +12,7 @@ import type {
   FetchResult,
   OperationVariables,
 } from "@apollo/client/core";
-import { ApolloError, Observable } from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   NoInfer,

@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 3.13.3
+
+### Patch Changes
+
+- [#12362](https://github.com/apollographql/apollo-client/pull/12362) [`f6d387c`](https://github.com/apollographql/apollo-client/commit/f6d387c166cc76f08135966fb6d74fd8fe808c21) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fixes an issue where calling `observableQuery.getCurrentResult()` when the `errorPolicy` was set to `all` would return the `networkStatus` as `NetworkStatus.ready` when there were errors returned in the result. This has been corrected to report `NetworkStatus.error`.
+
+  This bug also affected the `useQuery` and `useLazyQuery` hooks and may affect you if you check for `networkStatus` in your component.
+
 ## 3.13.2
 
 ### Patch Changes

@@ -166,15 +166,6 @@ export default [
 
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
 
-      "import/extensions": [
-        "error",
-        "always",
-        {
-          ignorePackages: true,
-          checkTypeImports: true,
-        },
-      ],
-
       "local-rules/require-using-disposable": "error",
     },
   },

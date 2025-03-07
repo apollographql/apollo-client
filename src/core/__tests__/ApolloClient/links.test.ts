@@ -1,7 +1,6 @@
 import { print } from "graphql";
 import { gql } from "graphql-tag";
 
-
 import {
   ApolloClient,
   NextLink,

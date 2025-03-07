@@ -3,7 +3,6 @@ import type { FetchResult } from "@apollo/client/link/core";
 import { isNonEmptyArray } from "./arrays.js";
 import { isExecutionPatchIncrementalResult } from "./incrementalResult.js";
 
-
 export function graphQLResultHasError<T>(result: FetchResult<T>): boolean {
   const errors = getGraphQLErrorsFromResult(result);
   return isNonEmptyArray(errors);

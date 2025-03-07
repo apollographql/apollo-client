@@ -13,9 +13,6 @@ import type {
   KeySpecifier,
 } from "./policies.js";
 
-
-
-
 // Mapping from JSON-encoded KeySpecifier strings to associated information.
 const specifierInfoCache: Record<
   string,

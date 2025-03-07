@@ -6,7 +6,6 @@ import type { FetchResult } from "@apollo/client/core";
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
 
-
 export const toEmitFetchResult: MatcherFunction<
   [queryResult: FetchResult<any>, options?: TakeOptions]
 > = async function (actual, expected, options) {

@@ -1,4 +1,3 @@
-
 import type {
   BooleanValueNode,
   DirectiveNode,
@@ -27,7 +26,6 @@ import { isNonNullObject } from "../common/objects.js";
 
 import type { FragmentMap } from "./fragments.js";
 import { getFragmentFromSelection } from "./fragments.js";
-
 
 export interface Reference {
   readonly __ref: string;

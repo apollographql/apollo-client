@@ -2,7 +2,6 @@ import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import type * as ReactTypes from "react";
 
-
 import type {
   ApolloCache,
   ApolloClient,

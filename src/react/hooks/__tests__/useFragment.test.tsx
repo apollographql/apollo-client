@@ -19,7 +19,6 @@ import { expectTypeOf } from "expect-type";
 import * as React from "react";
 import { SubscriptionObserver } from "zen-observable-ts";
 
-
 import {
   ApolloClient,
   ApolloLink,

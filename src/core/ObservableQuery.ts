@@ -1,8 +1,6 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 
-
-
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
 import { ApolloError, isApolloError } from "@apollo/client/errors";

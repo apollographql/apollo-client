@@ -2,7 +2,6 @@ import { attest, bench } from "@ark/attest";
 import { setup } from "@ark/attest";
 import { expectTypeOf } from "expect-type";
 
-
 import type { TypedDocumentNode } from "@apollo/client";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DeepPartial } from "@apollo/client/utilities";

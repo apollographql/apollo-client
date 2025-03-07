@@ -2,7 +2,6 @@ import { ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 import { SubscriptionClient } from "subscriptions-transport-ws";
 
-
 import { execute } from "@apollo/client/link/core";
 import { WebSocketLink } from "@apollo/client/link/ws";
 import { Observable } from "@apollo/client/utilities";

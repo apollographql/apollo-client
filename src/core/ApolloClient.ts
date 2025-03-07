@@ -44,7 +44,6 @@ import type {
   WatchQueryOptions,
 } from "./watchQueryOptions.js";
 
-
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
   query?: Partial<QueryOptions<any, any>>;

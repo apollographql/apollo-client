@@ -2,7 +2,6 @@ import * as environment from "@apollo/client/utilities/environment";
 
 import { withCleanup } from "./withCleanup.js";
 
-
 export function withProdMode() {
   const prev = { prevDEV: environment.__DEV__ };
   Object.defineProperty(environment, "__DEV__", {

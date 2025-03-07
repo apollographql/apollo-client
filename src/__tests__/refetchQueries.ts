@@ -12,7 +12,6 @@ import {
 
 import { ObservableStream } from "../testing/internal/index.js";
 
-
 describe("client.refetchQueries", () => {
   it("is public and callable", async () => {
     expect.assertions(6);

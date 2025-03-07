@@ -3,7 +3,6 @@ import type { ASTNode } from "graphql";
 import type { Operation } from "@apollo/client/link/core";
 import { print } from "@apollo/client/utilities";
 
-
 interface Printer {
   (node: ASTNode, originalPrint: typeof print): string;
 }

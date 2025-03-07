@@ -15,7 +15,6 @@ import {
   FallbackProps,
 } from "react-error-boundary";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,

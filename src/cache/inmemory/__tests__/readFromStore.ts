@@ -21,7 +21,6 @@ import {
   withError,
 } from "./helpers.js";
 
-
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();
 

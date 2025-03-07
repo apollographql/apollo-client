@@ -28,8 +28,6 @@ import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
 import type { KeyFieldsContext } from "./policies.js";
 import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
 
-
-
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 
 export { isArray };

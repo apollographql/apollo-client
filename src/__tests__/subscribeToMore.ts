@@ -1,11 +1,14 @@
 import { DocumentNode, OperationDefinitionNode } from "graphql";
 import { gql } from "graphql-tag";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink, Operation } from "@apollo/client/link/core";
-import { mockObservableLink, mockSingleLink, wait } from "@apollo/client/testing";
+import {
+  mockObservableLink,
+  mockSingleLink,
+  wait,
+} from "@apollo/client/testing";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 

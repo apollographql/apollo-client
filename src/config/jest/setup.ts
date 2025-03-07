@@ -17,7 +17,6 @@ import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 
-
 setLogVerbosity("log");
 
 // Turn off warnings for repeated fragment names

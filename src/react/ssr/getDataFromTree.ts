@@ -6,7 +6,6 @@ import { getApolloContext } from "@apollo/client/react/context";
 
 import { RenderPromises } from "./RenderPromises.js";
 
-
 export function getDataFromTree(
   tree: ReactTypes.ReactNode,
   context: { [key: string]: any } = {}

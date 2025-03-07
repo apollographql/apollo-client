@@ -5,7 +5,6 @@ import { makeVar } from "@apollo/client/core";
 
 import { useReactiveVar } from "../useReactiveVar.js";
 
-
 const IS_REACT_18 = React.version.startsWith("18");
 const IS_REACT_19 = React.version.startsWith("19");
 

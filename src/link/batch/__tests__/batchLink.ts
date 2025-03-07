@@ -14,7 +14,6 @@ import {
   OperationBatcher,
 } from "../batchLink.js";
 
-
 interface MockedResponse {
   request: GraphQLRequest;
   result?: FetchResult;

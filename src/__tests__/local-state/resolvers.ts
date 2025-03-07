@@ -1,8 +1,6 @@
 import { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
 
-
-
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import {
   ApolloClient,

@@ -6,7 +6,6 @@ import {
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
 
-
 function withDev(): typeof import("../../../dev/index.js") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];
   window[ApolloErrorMessageHandler] = undefined;

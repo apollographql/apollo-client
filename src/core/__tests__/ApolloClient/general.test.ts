@@ -45,12 +45,9 @@ import {
 } from "../../watchQueryOptions.js";
 import { mockFetchQuery } from "../ObservableQuery.js";
 
-
-
 // mocks
 
 // core
-
 
 // testing utils
 

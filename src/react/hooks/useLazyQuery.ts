@@ -28,7 +28,6 @@ import {
   useQueryInternals,
 } from "./useQuery.js";
 
-
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
 const EAGER_METHODS = [

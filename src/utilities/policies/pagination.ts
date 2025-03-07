@@ -4,7 +4,6 @@ import type { FieldPolicy, Reference } from "@apollo/client/cache";
 
 import { mergeDeep } from "../common/mergeDeep.js";
 
-
 type KeyArgs = FieldPolicy<any>["keyArgs"];
 
 // A very basic pagination field policy that always concatenates new

@@ -12,7 +12,6 @@ import { execute } from "../../core/execute.js";
 import { fromError } from "../../utils/fromError.js";
 import { RetryLink } from "../retryLink.js";
 
-
 const query = gql`
   {
     sample {

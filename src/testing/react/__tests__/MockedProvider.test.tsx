@@ -4,7 +4,6 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { Observable } from "zen-observable-ts";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloError } from "@apollo/client/errors";
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";

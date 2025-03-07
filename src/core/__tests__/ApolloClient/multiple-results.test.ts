@@ -8,7 +8,6 @@ import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
 import { ObservableStream } from "../../../testing/internal/index.js";
 import { ApolloClient } from "../../ApolloClient.js";
 
-
 describe("mutiple results", () => {
   it("allows multiple query results from link", async () => {
     const query = gql`

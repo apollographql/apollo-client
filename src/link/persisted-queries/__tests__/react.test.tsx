@@ -7,7 +7,6 @@ import { gql } from "graphql-tag";
 import * as React from "react";
 import * as ReactDOM from "react-dom/server";
 
-
 import { OperationVariables } from "@apollo/client/core";
 import {
   createPersistedQueryLink as createPersistedQuery,

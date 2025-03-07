@@ -14,7 +14,6 @@ import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { BatchHttpLink } from "../batchHttpLink.js";
 
-
 const sampleQuery = gql`
   query SampleQuery {
     stub {

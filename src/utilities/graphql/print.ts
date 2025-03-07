@@ -10,7 +10,6 @@ import {
   defaultCacheSizes,
 } from "../caching/index.js";
 
-
 let printCache!: AutoCleanedWeakCache<ASTNode, string>;
 export const print = Object.assign(
   (ast: ASTNode) => {

@@ -1,6 +1,5 @@
 import * as React from "rehackt";
 
-
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,

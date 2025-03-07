@@ -11,7 +11,6 @@ import { StoreWriter } from "../writeToStore.js";
 
 import { readQueryFromStore, withError, writeQueryToStore } from "./helpers.js";
 
-
 function assertDeeplyFrozen(value: any, stack: any[] = []) {
   if (value !== null && typeof value === "object" && stack.indexOf(value) < 0) {
     expect(Object.isExtensible(value)).toBe(false);

@@ -22,10 +22,7 @@ import {
   MockLink,
   MockSubscriptionLink,
 } from "@apollo/client/testing";
-import {
-  concatPagination,
-  getMainDefinition,
-} from "@apollo/client/utilities";
+import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
 
 import {
   SubscribeToMoreFunction,
@@ -43,7 +40,6 @@ import { useBackgroundQuery } from "../useBackgroundQuery.js";
 import { useLoadableQuery } from "../useLoadableQuery.js";
 import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
 import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
-
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

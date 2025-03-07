@@ -1,7 +1,5 @@
 import React, { useMemo } from "rehackt";
 
-
-
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,

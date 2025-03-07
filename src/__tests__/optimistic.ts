@@ -3,7 +3,6 @@ import { assign, cloneDeep } from "lodash";
 import { from, ObservableInput } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
-
 import { Cache, InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloCache,
@@ -19,7 +18,6 @@ import { addTypenameToDocument, Observable } from "@apollo/client/utilities";
 
 import { QueryManager } from "../core/QueryManager.js";
 import { ObservableStream } from "../testing/internal/index.js";
-
 
 describe("optimistic mutation results", () => {
   const query = gql`

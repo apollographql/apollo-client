@@ -19,7 +19,6 @@ import type { QueryManager } from "./QueryManager.js";
 import type { QueryListener } from "./types.js";
 import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
 
-
 export const enum CacheWriteBehavior {
   FORBID,
   OVERWRITE,

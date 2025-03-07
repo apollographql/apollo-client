@@ -5,7 +5,6 @@ import { spyOnConsole } from "../../testing/internal/index.js";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { maskFragment } from "../maskFragment.js";
 
-
 test("returns null when data is null", () => {
   const fragment = gql`
     fragment Foo on Query {

@@ -8,7 +8,6 @@ import { ObservableStream } from "../../../testing/internal/index.js";
 import { Observable } from "../../../utilities/observables/Observable.js";
 import { execute } from "../../core/execute.js";
 
-
 const sleep = (ms: number) => new Promise((s) => setTimeout(s, ms));
 const query = gql`
   query Test {

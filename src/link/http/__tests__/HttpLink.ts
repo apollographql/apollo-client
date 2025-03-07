@@ -25,7 +25,6 @@ import { ClientParseError } from "../serializeFetchParameter.js";
 
 import { voidFetchDuringEachTest } from "./helpers.js";
 
-
 const sampleQuery = gql`
   query SampleQuery {
     stub {

@@ -1,7 +1,6 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 
-
 import type { Unmasked } from "@apollo/client/masking";
 import type { DeepPartial, Reference } from "@apollo/client/utilities";
 

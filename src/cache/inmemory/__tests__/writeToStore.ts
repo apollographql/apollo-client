@@ -30,7 +30,6 @@ import { StoreWriter } from "../writeToStore.js";
 
 import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
 
-
 const getIdField: KeyFieldsFunction = ({ id }) => {
   invariant(typeof id === "string", "id is not a string");
   return id;

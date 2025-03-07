@@ -6,7 +6,6 @@ import { Cache, DataProxy } from "@apollo/client/cache";
 import { Reference } from "../../../utilities/graphql/storeUtils.js";
 import { ApolloCache } from "../cache.js";
 
-
 class TestCache extends ApolloCache<unknown> {
   constructor() {
     super();

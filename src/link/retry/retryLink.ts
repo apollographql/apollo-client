@@ -1,6 +1,5 @@
 import type { SubscriptionObserver } from "zen-observable-ts";
 
-
 import {
   ApolloError,
   graphQLResultHasProtocolErrors,

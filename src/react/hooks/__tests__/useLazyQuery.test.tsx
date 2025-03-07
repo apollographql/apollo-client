@@ -8,7 +8,6 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 
-
 import {
   ApolloClient,
   ApolloError,
@@ -18,11 +17,7 @@ import {
   NetworkStatus,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "@apollo/client/masking";
+import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react";
 import {
   MockLink,

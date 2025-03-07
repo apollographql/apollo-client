@@ -14,7 +14,6 @@ import {
   writeQueryToStore,
 } from "./helpers.js";
 
-
 disableFragmentWarnings();
 
 describe("diffing queries against the store", () => {

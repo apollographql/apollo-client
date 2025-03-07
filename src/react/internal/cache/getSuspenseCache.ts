@@ -1,4 +1,3 @@
-
 import type { ApolloClient } from "@apollo/client/core";
 import type { SuspenseCacheOptions } from "@apollo/client/react/internal";
 

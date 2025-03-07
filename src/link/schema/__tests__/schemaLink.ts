@@ -6,7 +6,6 @@ import { SchemaLink } from "@apollo/client/link/schema";
 import { ObservableStream } from "../../../testing/internal/index.js";
 import { execute } from "../../core/execute.js";
 
-
 const sampleQuery = gql`
   query SampleQuery {
     sampleQuery {

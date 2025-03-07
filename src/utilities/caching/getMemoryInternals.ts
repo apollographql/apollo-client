@@ -1,7 +1,5 @@
 import type { OptimisticWrapperFunction } from "optimism";
 
-
-
 import type {
   ApolloCache,
   ApolloLink,

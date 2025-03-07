@@ -10,7 +10,6 @@ import type { Body } from "../../../link/http/selectHttpOptionsAndBody.js";
 import type { CreateMultipartSubscriptionOptions } from "../shared.js";
 import { generateOptionsForMultipartSubscription } from "../shared.js";
 
-
 const backupFetch = maybe(() => fetch);
 
 export function createFetchMultipartSubscription(

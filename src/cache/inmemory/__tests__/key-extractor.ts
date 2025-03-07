@@ -7,7 +7,6 @@ import {
 } from "../key-extractor.js";
 import { KeySpecifier } from "../policies.js";
 
-
 describe("keyFields and keyArgs extraction", () => {
   it("getSpecifierPaths should work for various specifiers", () => {
     function check(specifier: KeySpecifier, expected: string[][]) {

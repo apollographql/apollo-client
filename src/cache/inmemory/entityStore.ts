@@ -37,7 +37,6 @@ import { fieldNameFromStoreName, hasOwn } from "./helpers.js";
 import type { Policies, StorageType } from "./policies.js";
 import type { NormalizedCache, NormalizedCacheObject } from "./types.js";
 
-
 const DELETE: DeleteModifier = Object.create(null);
 const delModifier: Modifier<any> = () => DELETE;
 const INVALIDATE: InvalidateModifier = Object.create(null);

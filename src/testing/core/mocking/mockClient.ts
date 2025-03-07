@@ -1,6 +1,5 @@
 import type { DocumentNode } from "graphql";
 
-
 import type { NormalizedCacheObject } from "@apollo/client/cache";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";

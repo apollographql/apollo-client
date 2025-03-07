@@ -1,4 +1,3 @@
-
 import type { DefinitionNode } from "graphql";
 
 import { ApolloLink } from "@apollo/client/link/core";
@@ -27,7 +26,6 @@ import {
 } from "./selectHttpOptionsAndBody.js";
 import { selectURI } from "./selectURI.js";
 import { serializeFetchParameter } from "./serializeFetchParameter.js";
-
 
 const backupFetch = maybe(() => fetch);
 

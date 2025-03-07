@@ -8,7 +8,6 @@ import {
 
 import { relayStylePagination, TRelayPageInfo } from "../pagination.js";
 
-
 describe("relayStylePagination", () => {
   const policy = relayStylePagination();
 

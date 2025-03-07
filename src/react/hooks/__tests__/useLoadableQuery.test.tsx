@@ -12,7 +12,6 @@ import { GraphQLError } from "graphql";
 import React, { Suspense, useState } from "react";
 import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,

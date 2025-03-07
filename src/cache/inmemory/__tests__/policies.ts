@@ -23,7 +23,6 @@ import { InMemoryCache } from "../inMemoryCache.js";
 import { FieldPolicy, StorageType } from "../policies.js";
 import { makeVar, ReactiveVar } from "../reactiveVars.js";
 
-
 function reverse(s: string) {
   return s.split("").reverse().join("");
 }

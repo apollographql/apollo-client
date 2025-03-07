@@ -12,7 +12,6 @@ import {
   FallbackProps,
 } from "react-error-boundary";
 
-
 import type { TypedDocumentNode } from "@apollo/client/core";
 import {
   ApolloClient,

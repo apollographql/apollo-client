@@ -1,7 +1,6 @@
 import type { GraphQLFormattedError, GraphQLSchema } from "graphql";
 import { execute, GraphQLError, validate } from "graphql";
 
-
 import { gql } from "@apollo/client/core";
 import { wait } from "@apollo/client/testing";
 

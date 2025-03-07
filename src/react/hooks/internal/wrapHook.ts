@@ -1,4 +1,3 @@
-
 import type { ApolloClient } from "@apollo/client/core";
 import type { ObservableQuery } from "@apollo/client/core";
 import type { createQueryPreloader } from "@apollo/client/react";

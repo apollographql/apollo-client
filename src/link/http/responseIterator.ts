@@ -14,7 +14,6 @@ import nodeStreamIterator from "./iterators/nodeStream.js";
 import promiseIterator from "./iterators/promise.js";
 import readerIterator from "./iterators/reader.js";
 
-
 function isNodeResponse(value: any): value is NodeResponse {
   return !!(value as NodeResponse).body;
 }

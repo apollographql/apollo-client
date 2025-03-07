@@ -53,9 +53,6 @@ import type {
   ReadMergeModifyContext,
 } from "./types.js";
 
-
-
-
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
     [dataId: string]: SelectionSetNode[];

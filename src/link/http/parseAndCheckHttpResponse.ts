@@ -1,6 +1,5 @@
 import type { SubscriptionObserver } from "zen-observable-ts";
 
-
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { throwServerError } from "@apollo/client/link/utils";

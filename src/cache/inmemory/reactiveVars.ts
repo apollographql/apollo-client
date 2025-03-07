@@ -5,7 +5,6 @@ import type { ApolloCache } from "@apollo/client/core";
 
 import type { InMemoryCache } from "./inMemoryCache.js";
 
-
 export interface ReactiveVar<T> {
   (newValue?: T): T;
   onNextChange(listener: ReactiveListener<T>): () => void;

@@ -58,7 +58,6 @@ import type {
 } from "./types.js";
 import type { WriteContext } from "./writeToStore.js";
 
-
 export type TypePolicies = {
   [__typename: string]: TypePolicy;
 };

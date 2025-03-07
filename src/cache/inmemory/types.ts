@@ -24,7 +24,6 @@ import type {
   TypePolicies,
 } from "./policies.js";
 
-
 export type { Reference, StoreObject, StoreValue };
 
 export interface IdGetterObj extends Object {

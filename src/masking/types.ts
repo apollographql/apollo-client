@@ -10,7 +10,6 @@ import type {
   UnwrapFragmentRefs,
 } from "./internal/types.js";
 
-
 export interface DataMasking {}
 
 /**

@@ -9,7 +9,6 @@ import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloClient,

@@ -17,8 +17,6 @@ import { GraphQLError } from "graphql";
 import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
-
-
 import {
   ApolloCache,
   ApolloClient,
@@ -36,15 +34,8 @@ import {
   SubscribeToMoreOptions,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "@apollo/client/masking";
-import {
-  skipToken,
-  SuspenseQueryHookFetchPolicy,
-} from "@apollo/client/react";
+import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import { skipToken, SuspenseQueryHookFetchPolicy } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import {
   MockedResponse,

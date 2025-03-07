@@ -1,6 +1,5 @@
 import * as React from "rehackt";
 
-
 import type {
   ApolloClient,
   NetworkStatus,

@@ -1,7 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 
-
 import {
   ApolloCache,
   FieldMergeFunction,

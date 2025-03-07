@@ -1,4 +1,3 @@
-
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
@@ -60,7 +59,6 @@ import type {
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-
 
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;

@@ -10,7 +10,6 @@ import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
 
 import { checkDocument } from "./getFromAST.js";
 
-
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
 type TransformFn = (document: DocumentNode) => DocumentNode;

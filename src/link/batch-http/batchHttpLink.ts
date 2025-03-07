@@ -1,4 +1,3 @@
-
 import { BatchLink } from "@apollo/client/link/batch";
 import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";

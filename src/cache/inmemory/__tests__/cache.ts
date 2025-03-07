@@ -21,7 +21,6 @@ import { StoreReader } from "../readFromStore.js";
 import { InMemoryCacheConfig } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";
 
-
 disableFragmentWarnings();
 
 describe("Cache", () => {

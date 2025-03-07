@@ -1,6 +1,5 @@
 import type { DocumentNode, GraphQLFormattedError } from "graphql";
 
-
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
 import type { ApolloError } from "@apollo/client/errors";

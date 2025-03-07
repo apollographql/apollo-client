@@ -7,8 +7,6 @@ import type {
 
 import { compact } from "./compact.js";
 
-
-
 type OptionsUnion<TData, TVariables extends OperationVariables, TContext> =
   | WatchQueryOptions<TVariables, TData>
   | QueryOptions<TVariables, TData>

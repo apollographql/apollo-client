@@ -5,7 +5,6 @@ import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 import { SubscriptionObserver } from "zen-observable-ts";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
@@ -35,7 +34,6 @@ import {
 import { ObservableQuery } from "../ObservableQuery.js";
 import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
 import { QueryManager } from "../QueryManager.js";
-
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const mocks = {

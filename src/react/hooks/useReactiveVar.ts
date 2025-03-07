@@ -4,7 +4,6 @@ import type { ReactiveVar } from "@apollo/client/core";
 
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-
 /**
  * Reads the value of a [reactive variable](https://www.apollographql.com/docs/react/local-state/reactive-variables/) and re-renders the containing component whenever that variable's value changes. This enables a reactive variable to trigger changes _without_ relying on the `useQuery` hook.
  *

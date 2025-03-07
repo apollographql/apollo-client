@@ -1,7 +1,5 @@
 import { equal } from "@wry/equality";
 
-
-
 import type {
   FetchResult,
   GraphQLRequest,

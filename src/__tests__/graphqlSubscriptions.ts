@@ -1,7 +1,6 @@
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
 
-
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloError, PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";

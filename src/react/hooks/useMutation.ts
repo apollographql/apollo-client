@@ -3,8 +3,6 @@ import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
 import * as React from "rehackt";
 
-
-
 import type {
   ApolloCache,
   DefaultContext,

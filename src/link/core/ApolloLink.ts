@@ -1,4 +1,3 @@
-
 import {
   createOperation,
   transformOperation,
@@ -18,7 +17,6 @@ import type {
   Operation,
   RequestHandler,
 } from "./types.js";
-
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;

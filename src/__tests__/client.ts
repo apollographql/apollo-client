@@ -1,4 +1,3 @@
-
 import { waitFor } from "@testing-library/react";
 import {
   DocumentNode,
@@ -10,8 +9,6 @@ import {
 } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-
-
 
 import {
   createFragmentRegistry,

@@ -11,8 +11,6 @@ import type {
 
 import type { StorageType } from "../../inmemory/policies.js";
 
-
-
 // The Readonly<T> type only really works for object types, since it marks
 // all of the object's properties as readonly, but there are many cases when
 // a generic type parameter like TExisting might be a string or some other

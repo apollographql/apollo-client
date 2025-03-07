@@ -3,7 +3,6 @@ import { BREAK, visit } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 
-
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import {
   getFragmentMaskMode,

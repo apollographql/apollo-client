@@ -1,7 +1,6 @@
 import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 
-
 import type { ApolloCache } from "@apollo/client/cache";
 import type { FragmentMap } from "@apollo/client/utilities";
 import {

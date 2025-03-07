@@ -1,4 +1,3 @@
-
 import type {
   DocumentNode,
   FragmentDefinitionNode,
@@ -12,7 +11,6 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import { valueToObjectRepresentation } from "./storeUtils.js";
-
 
 type OperationDefinitionWithName = OperationDefinitionNode & {
   name: NonNullable<OperationDefinitionNode["name"]>;

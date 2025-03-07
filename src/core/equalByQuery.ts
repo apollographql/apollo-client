@@ -10,7 +10,6 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
-
 import type { FragmentMap } from "@apollo/client/utilities";
 import {
   createFragmentMap,

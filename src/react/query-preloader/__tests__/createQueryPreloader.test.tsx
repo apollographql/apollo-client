@@ -10,7 +10,6 @@ import { GraphQLError } from "graphql";
 import React, { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
-
 import {
   ApolloClient,
   ApolloError,

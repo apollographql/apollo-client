@@ -1,6 +1,5 @@
 import { Trie } from "@wry/trie";
 
-
 import {
   canUseWeakMap,
   canUseWeakSet,

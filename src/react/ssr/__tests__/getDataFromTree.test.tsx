@@ -3,8 +3,6 @@ import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 
-
-
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";

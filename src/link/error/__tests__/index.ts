@@ -13,7 +13,6 @@ import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
 import { ServerError, throwServerError } from "../../utils/throwServerError.js";
 
-
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {
     const query = gql`

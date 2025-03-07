@@ -6,7 +6,6 @@ import type { Resolvers } from "@apollo/client/core";
 
 import { createMockSchema } from "./graphql-tools/utils.js";
 
-
 type ProxiedSchema = GraphQLSchema & TestSchemaFns;
 
 interface TestSchemaFns {

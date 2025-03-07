@@ -2,7 +2,6 @@ import equal from "@wry/equality";
 import type { FragmentDefinitionNode } from "graphql";
 import { Kind } from "graphql";
 
-
 import type {
   ApolloCache,
   DocumentNode,

@@ -19,7 +19,6 @@ import { EntityStore, supportsResultCaching } from "../entityStore.js";
 import { InMemoryCache } from "../inMemoryCache.js";
 import { StoreObject } from "../types.js";
 
-
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {
     const cache = new InMemoryCache();

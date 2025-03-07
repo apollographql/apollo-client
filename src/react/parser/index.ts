@@ -5,7 +5,6 @@ import type {
   VariableDefinitionNode,
 } from "graphql";
 
-
 import {
   AutoCleanedWeakCache,
   cacheSizes,
@@ -15,7 +14,6 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
-
 
 export enum DocumentType {
   Query,

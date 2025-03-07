@@ -1,7 +1,6 @@
 import equal from "@wry/equality";
 import * as React from "rehackt";
 
-
 import type {
   Cache,
   MissingTree,

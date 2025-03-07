@@ -4,7 +4,6 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-
 import type { NetworkError } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";

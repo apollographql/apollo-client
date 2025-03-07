@@ -1,6 +1,5 @@
 import { FragmentSpreadNode, Kind, visit } from "graphql";
 
-
 import {
   ApolloCache,
   ApolloClient,

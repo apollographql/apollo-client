@@ -9,7 +9,6 @@ import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import React, { Suspense } from "react";
 
-
 import {
   ApolloClient,
   FragmentType,

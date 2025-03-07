@@ -1,6 +1,5 @@
 import * as React from "rehackt";
 
-
 import type { OperationVariables } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import type { FetchMoreQueryOptions } from "@apollo/client/core";

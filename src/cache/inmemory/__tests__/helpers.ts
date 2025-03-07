@@ -10,7 +10,6 @@ import {
 } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";
 
-
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject
 ): NormalizedCache {

@@ -2,7 +2,6 @@ import { Observable } from "@apollo/client/utilities";
 
 import { ObservableStream } from "../ObservableStream.js";
 
-
 it("allows to step through an observable until completion", async () => {
   const stream = new ObservableStream(
     new Observable<number>((observer) => {

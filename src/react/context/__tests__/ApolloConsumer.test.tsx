@@ -9,7 +9,6 @@ import { ApolloConsumer } from "../ApolloConsumer.js";
 import { getApolloContext } from "../ApolloContext.js";
 import { ApolloProvider } from "../ApolloProvider.js";
 
-
 const client = new ApolloClient({
   cache: new Cache(),
   link: new ApolloLink((o, f) => (f ? f(o) : null)),

@@ -15,7 +15,6 @@ import {
   QueryReference,
 } from "../QueryReference.js";
 
-
 test("kicks off request immediately when created", async () => {
   const { query } = setupSimpleCase();
   let fetchCount = 0;

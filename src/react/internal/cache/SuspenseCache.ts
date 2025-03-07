@@ -11,7 +11,6 @@ import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
 
-
 export interface SuspenseCacheOptions {
   /**
    * Specifies the amount of time, in milliseconds, the suspense cache will wait

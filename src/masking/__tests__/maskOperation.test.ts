@@ -6,7 +6,6 @@ import { spyOnConsole, withProdMode } from "../../testing/internal/index.js";
 import { deepFreeze } from "../../utilities/common/maybeDeepFreeze.js";
 import { maskOperation } from "../maskOperation.js";
 
-
 test("throws when passing document with no operation to maskOperation", () => {
   const document = gql`
     fragment Foo on Bar {

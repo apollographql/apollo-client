@@ -6,8 +6,6 @@ import type {
 } from "graphql";
 import { wrap } from "optimism";
 
-
-
 import type {
   OperationVariables,
   TypedDocumentNode,

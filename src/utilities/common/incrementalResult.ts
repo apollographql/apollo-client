@@ -10,7 +10,6 @@ import { isNonEmptyArray } from "./arrays.js";
 import { DeepMerger } from "./mergeDeep.js";
 import { isNonNullObject } from "./objects.js";
 
-
 export function isExecutionPatchIncrementalResult<T>(
   value: FetchResult<T>
 ): value is ExecutionPatchIncrementalResult {

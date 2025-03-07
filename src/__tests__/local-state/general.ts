@@ -12,7 +12,7 @@ import {
   GraphQLString,
 } from "graphql";
 
-import { Observable, of } from "rxjs";
+import { defer, Observable, of } from "rxjs";
 import { ApolloLink } from "../../link/core";
 import { Operation } from "../../link/core";
 import { ApolloClient, ApolloError, NetworkStatus } from "../../core";
@@ -860,22 +860,15 @@ describe("Combining client and server state/operations", () => {
     const schema = new GraphQLSchema({ query: QueryType });
 
     const link = new ApolloLink((operation) => {
-      // @ts-ignore
-      return new Observable((observer) => {
+      return defer(() => {
         const { query, operationName, variables } = operation;
-        graphql({
+
+        return graphql({
           schema,
           source: print(query),
           variableValues: variables,
           operationName,
-        })
-          .then((result) => {
-            observer.next(result);
-            observer.complete();
-          })
-          .catch((err) => {
-            observer.error(err);
-          });
+        });
       });
     });
 

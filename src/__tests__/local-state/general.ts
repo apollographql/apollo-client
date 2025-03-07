@@ -18,7 +18,7 @@ import { Operation } from "../../link/core";
 import { ApolloClient, ApolloError, NetworkStatus } from "../../core";
 import { ApolloCache, InMemoryCache } from "../../cache";
 import { ObservableStream, spyOnConsole } from "../../testing/internal";
-import { GraphQLFormattedError } from "graphql-17-alpha2";
+import { GraphQLFormattedError } from "graphql";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {

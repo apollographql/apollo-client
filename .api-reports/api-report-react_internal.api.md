@@ -764,6 +764,12 @@ interface FetchMoreQueryOptions<TVariables, TData = any> {
     variables?: Partial<TVariables>;
 }
 
+// @public (undocumented)
+interface FetchObservableInfo {
+    // (undocumented)
+    fromLink: boolean;
+}
+
 // @public
 type FetchPolicy = "cache-first" | "network-only" | "cache-only" | "no-cache" | "standby";
 
@@ -1331,6 +1337,14 @@ type NextLink = (operation: Operation) => Observable<FetchResult>;
 // @public
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 
+// Warning: (ae-forgotten-export) The symbol "FetchObservableInfo" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+interface ObservableAndInfo<TData> extends FetchObservableInfo {
+    // (undocumented)
+    observable: Observable<ApolloQueryResult<TData>>;
+}
+
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>> {
     constructor({ queryManager, queryInfo, options, }: {
@@ -1574,7 +1588,6 @@ class QueryInfo {
     init(query: {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
-        networkStatus?: NetworkStatus;
         observableQuery?: ObservableQuery<any, any>;
         lastRequestId?: number;
     }): this;
@@ -1584,16 +1597,10 @@ class QueryInfo {
     //
     // (undocumented)
     listeners: Set<QueryListener>;
-    // (undocumented)
-    markError(): void;
-    // (undocumented)
-    markReady(): NetworkStatus;
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
-    // (undocumented)
-    networkStatus?: NetworkStatus;
     // (undocumented)
     notify(): void;
     // (undocumented)
@@ -1651,6 +1658,10 @@ class QueryManager<TStore> {
     readonly documentTransform: DocumentTransform;
     // (undocumented)
     protected fetchCancelFns: Map<string, (error: any) => any>;
+    // Warning: (ae-forgotten-export) The symbol "ObservableAndInfo" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    fetchObservableWithInfo<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus, query?: DocumentNode | TypedDocumentNode<TData, TVars>, emitLoadingState?: boolean): ObservableAndInfo<TData>;
     // (undocumented)
     fetchQuery<TData, TVars extends OperationVariables>(queryId: string, options: WatchQueryOptions<TVars, TData>, networkStatus?: NetworkStatus): Promise<ApolloQueryResult<TData>>;
     // (undocumented)
@@ -2505,8 +2516,8 @@ export function wrapQueryRef<TData, TVariables extends OperationVariables>(inter
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:120:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:170:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:428:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

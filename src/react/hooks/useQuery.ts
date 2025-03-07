@@ -363,7 +363,8 @@ function useObservableSubscriptionResult<
               previousResult &&
               previousResult.loading === result.loading &&
               previousResult.networkStatus === result.networkStatus &&
-              equal(previousResult.data, result.data)
+              equal(previousResult.data, result.data) &&
+              equal(previousResult.error, result.error)
             ) {
               return;
             }

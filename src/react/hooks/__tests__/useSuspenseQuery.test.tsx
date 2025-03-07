@@ -97,7 +97,7 @@ interface SimpleQueryData {
 
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
-  options: RenderSuspenseHookOptions<Props> = Object.create(null)
+  options: RenderSuspenseHookOptions<Props> = {}
 ) {
   function SuspenseFallback() {
     renders.suspenseCount++;
@@ -232,17 +232,15 @@ interface ErrorCaseData {
   };
 }
 
-function useErrorCase<TData extends ErrorCaseData>(
-  {
-    data,
-    networkError,
-    graphQLErrors,
-  }: {
-    data?: Unmasked<TData>;
-    networkError?: Error;
-    graphQLErrors?: GraphQLError[];
-  } = Object.create(null)
-) {
+function useErrorCase<TData extends ErrorCaseData>({
+  data,
+  networkError,
+  graphQLErrors,
+}: {
+  data?: Unmasked<TData>;
+  networkError?: Error;
+  graphQLErrors?: GraphQLError[];
+} = {}) {
   const query: TypedDocumentNode<TData, never> = gql`
     query MyQuery {
       currentUser {

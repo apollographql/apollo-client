@@ -81,10 +81,7 @@ export class DocumentTransform {
     );
   }
 
-  constructor(
-    transform: TransformFn,
-    options: DocumentTransformOptions = Object.create(null)
-  ) {
+  constructor(transform: TransformFn, options: DocumentTransformOptions = {}) {
     this.transform = transform;
 
     if (options.getCacheKey) {

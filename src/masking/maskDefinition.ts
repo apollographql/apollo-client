@@ -45,7 +45,7 @@ function getMutableTarget(
     return mutableTargets.get(data);
   }
 
-  const mutableTarget = Array.isArray(data) ? [] : Object.create(null);
+  const mutableTarget = Array.isArray(data) ? [] : {};
   mutableTargets.set(data, mutableTarget);
   return mutableTarget;
 }

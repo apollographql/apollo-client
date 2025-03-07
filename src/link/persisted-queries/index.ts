@@ -68,8 +68,8 @@ function processErrors(
     | ReadonlyArray<GraphQLFormattedError>
     | undefined
 ): ErrorMeta {
-  const byMessage = Object.create(null),
-    byCode = Object.create(null);
+  const byMessage: Record<string, GraphQLFormattedError> = {},
+    byCode: Record<string, GraphQLFormattedError> = {};
 
   if (isNonEmptyArray(graphQLErrors)) {
     graphQLErrors.forEach((error) => {

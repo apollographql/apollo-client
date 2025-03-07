@@ -652,7 +652,7 @@ describe("useSubscription Hook", () => {
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 
@@ -720,17 +720,17 @@ describe("useSubscription Hook", () => {
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 

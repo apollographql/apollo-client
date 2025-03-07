@@ -113,10 +113,7 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SubscriptionHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  options: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);

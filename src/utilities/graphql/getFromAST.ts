@@ -153,7 +153,7 @@ export function getMainDefinition(
 export function getDefaultValues(
   definition: OperationDefinitionNode | undefined
 ): Record<string, any> {
-  const defaultValues = Object.create(null);
+  const defaultValues = {};
   const defs = definition && definition.variableDefinitions;
   if (defs && defs.length) {
     defs.forEach((def) => {

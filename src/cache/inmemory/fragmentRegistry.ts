@@ -35,7 +35,7 @@ export function createFragmentRegistry(
 }
 
 class FragmentRegistry implements FragmentRegistryAPI {
-  private registry: FragmentMap = Object.create(null);
+  private registry: FragmentMap = {};
 
   // Call `createFragmentRegistry` instead of invoking the
   // FragmentRegistry constructor directly. This reserves the constructor for
@@ -118,7 +118,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
     enqueueChildSpreads(document);
 
     const missing: string[] = [];
-    const map: FragmentMap = Object.create(null);
+    const map: FragmentMap = {};
 
     // This Set forEach loop can be extended during iteration by adding
     // additional strings to the unbound set.
@@ -156,7 +156,7 @@ class FragmentRegistry implements FragmentRegistryAPI {
   }
 
   public findFragmentSpreads(root: ASTNode): FragmentSpreadMap {
-    const spreads: FragmentSpreadMap = Object.create(null);
+    const spreads: FragmentSpreadMap = {};
 
     visit(root, {
       FragmentSpread(node) {

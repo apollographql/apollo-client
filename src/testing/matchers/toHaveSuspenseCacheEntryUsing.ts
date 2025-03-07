@@ -15,11 +15,7 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
       queryKey?: string | number | any[];
     },
   ]
-> = function (
-  client,
-  query,
-  { variables, queryKey = [] } = Object.create(null)
-) {
+> = function (client, query, { variables, queryKey = [] } = {}) {
   if (!(client instanceof ApolloClient)) {
     throw new Error("Actual must be an instance of `ApolloClient`");
   }

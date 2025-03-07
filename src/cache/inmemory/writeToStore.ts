@@ -141,7 +141,7 @@ export class StoreWriter {
 
     const context: WriteContext = {
       store,
-      written: Object.create(null),
+      written: {},
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
@@ -156,7 +156,7 @@ export class StoreWriter {
     };
 
     const ref = this.processSelectionSet({
-      result: result || Object.create(null),
+      result: result || {},
       dataId,
       selectionSet: operationDefinition.selectionSet,
       mergeTree: { map: new Map() },
@@ -192,8 +192,7 @@ export class StoreWriter {
         }
 
         if (__DEV__ && !context.overwrite) {
-          const fieldsWithSelectionSets: Record<string, true> =
-            Object.create(null);
+          const fieldsWithSelectionSets: Record<string, true> = {};
           fieldNodeSet.forEach((field) => {
             if (field.selectionSet) {
               fieldsWithSelectionSets[field.name.value] = true;
@@ -255,7 +254,7 @@ export class StoreWriter {
 
     // This variable will be repeatedly updated using context.merge to
     // accumulate all fields that need to be written into the store.
-    let incoming: StoreObject = Object.create(null);
+    let incoming: StoreObject = {};
 
     // If typename was not passed in, infer it. Note that typename is
     // always passed in for tricky-to-infer cases such as "Query" for

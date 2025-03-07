@@ -171,7 +171,7 @@ const _createQueryPreloader: typeof createQueryPreloader = (client) => {
   >(
     query: DocumentNode | TypedDocumentNode<TData, TVariables>,
     options: PreloadQueryOptions<NoInfer<TVariables>> &
-      VariablesOption<TVariables> = Object.create(null)
+      VariablesOption<TVariables> = {} as any
   ): PreloadedQueryRef<TData, TVariables> {
     const queryRef = new InternalQueryReference(
       client.watchQuery({

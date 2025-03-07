@@ -261,7 +261,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.cache = cache;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || Object.create(null);
+    this.defaultOptions = defaultOptions || {};
     this.typeDefs = typeDefs;
     this.devtoolsConfig = {
       ...devtools,

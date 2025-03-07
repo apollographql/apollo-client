@@ -91,7 +91,7 @@ const { hasOwnProperty } = Object.prototype;
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type OperationTypeNode = any;
 
-const IGNORE: IgnoreModifier = Object.create(null);
+const IGNORE = {} as IgnoreModifier;
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -198,10 +198,10 @@ export class QueryManager<TStore> {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
-    this.defaultContext = options.defaultContext || Object.create(null);
+    this.defaultContext = options.defaultContext || {};
 
     if ((this.onBroadcast = options.onBroadcast)) {
-      this.mutationStore = Object.create(null);
+      this.mutationStore = {};
     }
   }
 
@@ -869,7 +869,7 @@ export class QueryManager<TStore> {
     });
 
     if (this.mutationStore) {
-      this.mutationStore = Object.create(null);
+      this.mutationStore = {};
     }
 
     // begin removing data from the store

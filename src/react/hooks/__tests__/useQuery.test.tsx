@@ -4113,7 +4113,7 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it("should render multiple errors when refetching", async () => {
+    it("should render multiple errors when refetching with notifyOnNetworkStatusChange: true", async () => {
       const query = gql`
         {
           hello
@@ -4193,6 +4193,92 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+          errors: [{ message: "error 2" }],
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("should render multiple errors when refetching with notifyOnNetworkStatusChange: false", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError("error 1")],
+          },
+        },
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError("error 2")],
+          },
+          delay: 10,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { notifyOnNetworkStatusChange: false }),
+          { wrapper }
+        );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+          errors: [{ message: "error 1" }],
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
+        new ApolloError({ graphQLErrors: [{ message: "error 2" }] })
+      );
 
       {
         const result = await takeSnapshot();

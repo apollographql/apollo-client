@@ -165,21 +165,16 @@ export const createHttpLink = (linkOptions: HttpOptions = {}) => {
       options.headers.accept = acceptHeader;
     }
 
-    if (options.method === "GET") {
-      const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
-      if (parseError) {
-        return throwError(() => parseError);
-      }
-      chosenURI = newURI;
-    } else {
-      try {
-        (options as any).body = serializeFetchParameter(body, "Payload");
-      } catch (parseError) {
-        return throwError(() => parseError);
-      }
-    }
-
     return new Observable((observer) => {
+      if (options.method === "GET") {
+        const { newURI, parseError } = rewriteURIForGET(chosenURI, body);
+        if (parseError) {
+          throw parseError;
+        }
+        chosenURI = newURI;
+      } else {
+        options.body = serializeFetchParameter(body, "Payload");
+      }
       // Prefer linkOptions.fetch (preferredFetch) if provided, and otherwise
       // fall back to the *current* global window.fetch function (see issue
       // #7832), or (if all else fails) the backupFetch function we saved when

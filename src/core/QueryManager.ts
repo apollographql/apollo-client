@@ -1843,6 +1843,6 @@ interface FetchObservableInfo {
   // Metadata properties that can be returned in addition to the Observable.
   fromLink: boolean;
 }
-interface ObservableAndInfo<TData> extends FetchObservableInfo {
+export interface ObservableAndInfo<TData> extends FetchObservableInfo {
   observable: Observable<ApolloQueryResult<TData>>;
 }

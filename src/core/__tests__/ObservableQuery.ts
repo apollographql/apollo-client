@@ -32,17 +32,17 @@ import {
   spyOnConsole,
 } from "../../testing/internal/index.js";
 import { ObservableQuery } from "../ObservableQuery.js";
-import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
+import type { ObservableAndInfo } from "../QueryManager.js";
 import { QueryManager } from "../QueryManager.js";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const mocks = {
     fetchObservableWithInfo: jest.fn<
-      ConcastAndInfo<unknown>,
-      Parameters<QueryManager<any>["fetchConcastWithInfo"]>
-    >(queryManager["fetchConcastWithInfo"].bind(queryManager)),
+      ObservableAndInfo<unknown>,
+      Parameters<QueryManager<any>["fetchObservableWithInfo"]>
+    >(queryManager["fetchObservableWithInfo"].bind(queryManager)),
     fetchQueryByPolicy: jest.fn<
-      SourcesAndInfo<unknown>,
+      ObservableAndInfo<unknown>,
       Parameters<QueryManager<any>["fetchQueryByPolicy"]>
     >(queryManager["fetchQueryByPolicy"].bind(queryManager)),
   };

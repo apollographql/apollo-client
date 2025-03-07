@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "serve-app": "npm run start",
-    "ci-preparations": "pnpm install @apollo/client-integration-nextjs",
+    "ci-preparations": "pnpm install @apollo/client-integration-nextjs@$(pnpm show @apollo/client-integration-nextjs version)",
     "test": "playwright test"
   },
   "dependencies": {

@@ -1,27 +1,25 @@
-import { invariant } from "@apollo/client/utilities/invariant";
-
 import { equal } from "@wry/equality";
 
 import type {
-  Operation,
-  GraphQLRequest,
   FetchResult,
+  GraphQLRequest,
+  Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-
-import {
-  Observable,
-  addTypenameToDocument,
-  removeClientSetsFromDocument,
-  cloneDeep,
-  stringifyForDisplay,
-  print,
-  getOperationDefinition,
-  getDefaultValues,
-  removeDirectivesFromDocument,
-  checkDocument,
-} from "@apollo/client/utilities";
 import type { Unmasked } from "@apollo/client/masking";
+import {
+  addTypenameToDocument,
+  checkDocument,
+  cloneDeep,
+  getDefaultValues,
+  getOperationDefinition,
+  Observable,
+  print,
+  removeClientSetsFromDocument,
+  removeDirectivesFromDocument,
+  stringifyForDisplay,
+} from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];

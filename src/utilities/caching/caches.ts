@@ -1,4 +1,4 @@
-import { WeakCache, StrongCache } from "@wry/caches";
+import { StrongCache, WeakCache } from "@wry/caches";
 
 interface CleanableCache {
   size: number;

@@ -1,21 +1,21 @@
-import { invariant } from "@apollo/client/utilities/invariant";
-
 import type {
-  DocumentNode,
-  OperationDefinitionNode,
-  SelectionSetNode,
-  SelectionNode,
-  InlineFragmentNode,
-  FragmentDefinitionNode,
-  FieldNode,
   ASTNode,
   DirectiveNode,
-  FragmentSpreadNode,
+  DocumentNode,
   ExecutableDefinitionNode,
+  FieldNode,
+  FragmentDefinitionNode,
+  FragmentSpreadNode,
+  InlineFragmentNode,
+  OperationDefinitionNode,
+  SelectionNode,
+  SelectionSetNode,
 } from "graphql";
-import { visit, BREAK, isSelectionNode } from "graphql";
+import { BREAK, isSelectionNode, visit } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
+import { cacheSlot } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
 import type { FragmentMap, StoreObject } from "@apollo/client/utilities";
 import {
   argumentsObjectFromField,
@@ -32,10 +32,10 @@ import {
   resultKeyNameFromField,
   shouldInclude,
 } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { ApolloClient } from "./ApolloClient.js";
-import type { Resolvers, OperationVariables } from "./types.js";
-import type { FetchResult } from "@apollo/client/link/core";
-import { cacheSlot } from "@apollo/client/cache";
+import type { OperationVariables, Resolvers } from "./types.js";
 
 export type Resolver = (
   rootValue?: any,

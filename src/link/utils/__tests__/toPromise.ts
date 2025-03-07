@@ -1,6 +1,6 @@
 import { Observable } from "../../../utilities/observables/Observable.js";
-import { toPromise } from "../toPromise.js";
 import { fromError } from "../fromError.js";
+import { toPromise } from "../toPromise.js";
 
 describe("toPromise", () => {
   const data = {

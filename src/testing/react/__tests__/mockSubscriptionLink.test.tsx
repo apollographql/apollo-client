@@ -1,12 +1,12 @@
-import React from "react";
 import { render, waitFor } from "@testing-library/react";
 import { gql } from "graphql-tag";
+import React from "react";
 
-import { MockSubscriptionLink } from "../../core/index.js";
-import { ApolloClient } from "../../../core/index.js";
-import { InMemoryCache as Cache } from "../../../cache/index.js";
-import { ApolloProvider } from "../../../react/context/index.js";
-import { useSubscription } from "../../../react/hooks/index.js";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { useSubscription } from "@apollo/client/react/hooks";
+import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 describe("mockSubscriptionLink", () => {
   it("should work with multiple subscribers to the same mock websocket", async () => {

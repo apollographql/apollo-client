@@ -1,25 +1,25 @@
-import { gql, disableFragmentWarnings } from "graphql-tag";
 import { expectTypeOf } from "expect-type";
+import { disableFragmentWarnings, gql } from "graphql-tag";
 
-import { cloneDeep } from "../../../utilities/common/cloneDeep.js";
+import { Cache, MissingFieldError } from "@apollo/client/cache";
 import {
-  makeReference,
-  Reference,
-  makeVar,
-  TypedDocumentNode,
-  isReference,
   DocumentNode,
-} from "../../../core/index.js";
-import { Cache, MissingFieldError } from "../../../cache/index.js";
-import { InMemoryCache } from "../inMemoryCache.js";
-import { InMemoryCacheConfig } from "../types.js";
+  isReference,
+  makeReference,
+  makeVar,
+  Reference,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { defaultCacheSizes } from "@apollo/client/utilities";
 
-import { StoreReader } from "../readFromStore.js";
-import { StoreWriter } from "../writeToStore.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { cloneDeep } from "../../../utilities/common/cloneDeep.js";
+import { InMemoryCache } from "../inMemoryCache.js";
 import { ObjectCanon } from "../object-canon.js";
 import { TypePolicies } from "../policies.js";
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import { defaultCacheSizes } from "../../../utilities/index.js";
+import { StoreReader } from "../readFromStore.js";
+import { InMemoryCacheConfig } from "../types.js";
+import { StoreWriter } from "../writeToStore.js";
 
 disableFragmentWarnings();
 

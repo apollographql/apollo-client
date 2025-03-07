@@ -1,55 +1,49 @@
 // externals
+import { waitFor } from "@testing-library/react";
+import { DocumentNode, GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
-import { gql } from "graphql-tag";
-import { DocumentNode, GraphQLError } from "graphql";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
+import {
+  ApolloLink,
+  FetchResult,
+  type RequestHandler,
+} from "@apollo/client/link/core";
+import { wait } from "@apollo/client/testing/core";
+import {
+  addTypenameToDocument,
+  Concast,
+  print,
+} from "@apollo/client/utilities";
 import {
   InvariantError,
   setVerbosity,
 } from "@apollo/client/utilities/invariant";
 
 import {
-  Observable,
-  Observer,
-} from "../../../utilities/observables/Observable.js";
-import {
-  ApolloLink,
-  FetchResult,
-  type RequestHandler,
-} from "../../../link/core/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
-
-// mocks
-import {
   MockApolloLink,
   MockLink,
 } from "../../../testing/core/mocking/mockLink.js";
-
-// core
-import { NetworkStatus } from "../../networkStatus.js";
-import {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../../watchQueryOptions.js";
-import { QueryManager } from "../../QueryManager.js";
-
-import { ApolloError } from "../../../errors/index.js";
-
-// testing utils
-import { waitFor } from "@testing-library/react";
-import { wait } from "../../../testing/core/index.js";
-import { ApolloClient, ApolloQueryResult } from "../../../core/index.js";
-import { mockFetchQuery } from "../ObservableQuery.js";
-import {
-  addTypenameToDocument,
-  Concast,
-  print,
-} from "../../../utilities/index.js";
 import {
   mockDeferStream,
   ObservableStream,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
+import {
+  Observable,
+  Observer,
+} from "../../../utilities/observables/Observable.js";
+import { NetworkStatus } from "../../networkStatus.js";
+import { QueryManager } from "../../QueryManager.js";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../../watchQueryOptions.js";
+import { mockFetchQuery } from "../ObservableQuery.js";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({

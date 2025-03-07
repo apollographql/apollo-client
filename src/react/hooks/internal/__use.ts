@@ -1,5 +1,6 @@
-import { wrapPromiseWithState } from "@apollo/client/utilities";
 import * as React from "rehackt";
+
+import { wrapPromiseWithState } from "@apollo/client/utilities";
 
 type Use = <T>(promise: Promise<T>) => T;
 // Prevent webpack from complaining about our feature detection of the

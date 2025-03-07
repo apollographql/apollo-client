@@ -1,5 +1,6 @@
-import type { BuildStep } from "./build.ts";
 import { transformFromAstAsync } from "@babel/core";
+
+import type { BuildStep } from "./build.ts";
 import { applyRecast } from "./helpers.ts";
 
 export const babelTransform: BuildStep = async (options) => {

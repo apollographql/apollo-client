@@ -4,10 +4,10 @@ import type {
   GraphQLFormattedError,
 } from "graphql";
 
-import { isNonNullObject } from "@apollo/client/utilities";
+import type { FetchResult } from "@apollo/client/link/core";
 import type { ServerParseError } from "@apollo/client/link/http";
 import type { ServerError } from "@apollo/client/link/utils";
-import type { FetchResult } from "@apollo/client/link/core";
+import { isNonNullObject } from "@apollo/client/utilities";
 
 // This Symbol allows us to pass transport-specific errors from the link chain
 // into QueryManager/client internals without risking a naming collision within

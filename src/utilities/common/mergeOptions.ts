@@ -1,8 +1,8 @@
 import type {
-  QueryOptions,
-  WatchQueryOptions,
   MutationOptions,
   OperationVariables,
+  QueryOptions,
+  WatchQueryOptions,
 } from "@apollo/client/core";
 
 import { compact } from "./compact.js";

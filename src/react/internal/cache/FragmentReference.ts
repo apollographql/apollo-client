@@ -1,19 +1,21 @@
 import { equal } from "@wry/equality";
+
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
 import type { ApolloClient } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
-import {
-  createFulfilledPromise,
-  wrapPromiseWithState,
-} from "@apollo/client/utilities";
 import type {
   Observable,
   ObservableSubscription,
   PromiseWithState,
 } from "@apollo/client/utilities";
+import {
+  createFulfilledPromise,
+  wrapPromiseWithState,
+} from "@apollo/client/utilities";
+
 import type { FragmentKey } from "./types.js";
 
 type FragmentRefPromise<TData> = PromiseWithState<TData>;

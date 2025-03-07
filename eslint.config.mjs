@@ -12,17 +12,19 @@ if (!process.features.typescript) {
   );
 }
 
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import _import from "eslint-plugin-import";
-import localRules from "./eslint-local-rules/index.mjs";
-import { fixupPluginRules, fixupConfigRules } from "@eslint/compat";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import reactCompiler from "eslint-plugin-react-compiler";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
+
+import { fixupConfigRules, fixupPluginRules } from "@eslint/compat";
 import { FlatCompat } from "@eslint/eslintrc";
+import js from "@eslint/js";
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
+import tsParser from "@typescript-eslint/parser";
+import _import from "eslint-plugin-import";
+import reactCompiler from "eslint-plugin-react-compiler";
+import globals from "globals";
+
+import localRules from "./eslint-local-rules/index.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,7 +59,7 @@ export default [
       "import/parsers": {
         "@typescript-eslint/parser": [".ts", ".tsx"],
       },
-
+      "import/internal-regex": "^@apollo/client",
       "import/resolver": {
         typescript: {
           alwaysTryTypes: true,
@@ -67,6 +69,38 @@ export default [
 
     rules: {
       "import/no-unresolved": "error",
+      "import/order": [
+        "warn",
+        {
+          "newlines-between": "always",
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            "parent",
+            "sibling",
+            "index",
+          ],
+          alphabetize: {
+            order: "asc",
+            orderImportKind: "asc",
+            caseInsensitive: true,
+          },
+          named: true,
+        },
+      ],
+      "local-rules/import-from-export": "error",
+      "local-rules/import-from-inside-other-export": [
+        "warn",
+        {
+          ignoreFrom: [
+            "src/version.js",
+            "src/invariantErrorCodes.js",
+            "src/utilities/caching/getMemoryInternals.js",
+            "src/utilities/types/TODO.js",
+          ].map((file) => path.resolve(__dirname, file)),
+        },
+      ],
     },
   },
   ...fixupConfigRules(compat.extends("plugin:react-hooks/recommended")).map(
@@ -142,28 +176,7 @@ export default [
 
       "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
 
-      "import/extensions": [
-        "error",
-        "always",
-        {
-          ignorePackages: true,
-          checkTypeImports: true,
-        },
-      ],
-
       "local-rules/require-using-disposable": "error",
-      "local-rules/import-from-export": "error",
-      "local-rules/import-from-inside-other-export": [
-        "warn",
-        {
-          ignoreFrom: [
-            "src/version.js",
-            "src/invariantErrorCodes.js",
-            "src/utilities/caching/getMemoryInternals.js",
-            "src/utilities/types/TODO.js",
-          ].map((file) => path.resolve(__dirname, file)),
-        },
-      ],
     },
   },
   ...compat.extends("plugin:testing-library/react").map((config) => ({
@@ -204,14 +217,6 @@ export default [
       "local-rules/forbid-act-in-disabled-act-environment": "error",
       "local-rules/import-from-inside-other-export": "off",
       "@typescript-eslint/no-floating-promises": "warn",
-      "import/extensions": [
-        "error",
-        "always",
-        {
-          ignorePackages: true,
-          checkTypeImports: true,
-        },
-      ],
     },
   },
 ];

@@ -1,10 +1,11 @@
 import * as fs from "fs";
-import { posix, join as osPathJoin } from "path";
-import { applyRecast, reprint } from "./helpers.ts";
-import type { ExpressionKind } from "ast-types/lib/gen/kinds";
+import { join as osPathJoin, posix } from "path";
 
+import type { ExpressionKind } from "ast-types/lib/gen/kinds";
 import * as recast from "recast";
+
 import type { BuildStepOptions } from "./build.ts";
+import { applyRecast, reprint } from "./helpers.ts";
 const b = recast.types.builders;
 const n = recast.types.namedTypes;
 type Node = recast.types.namedTypes.Node;

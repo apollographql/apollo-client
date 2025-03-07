@@ -6,9 +6,9 @@ import { disableFragmentWarnings } from "graphql-tag";
 disableFragmentWarnings();
 
 import {
-  getFragmentQueryDocument,
   createFragmentMap,
   FragmentMap,
+  getFragmentQueryDocument,
 } from "../fragments.js";
 import { getFragmentDefinitions } from "../getFromAST.js";
 

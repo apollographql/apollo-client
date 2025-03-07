@@ -1,4 +1,11 @@
 import * as React from "rehackt";
+
+import type { OperationVariables } from "@apollo/client/core";
+import type { SubscribeToMoreFunction } from "@apollo/client/core";
+import type { FetchMoreQueryOptions } from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client/core";
+import type { ObservableQuery } from "@apollo/client/core";
+import type { QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,
@@ -6,15 +13,10 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { QueryRef } from "@apollo/client/react/internal";
-import type { OperationVariables } from "@apollo/client/core";
-import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import type { RefetchFunction, FetchMoreFunction } from "./useSuspenseQuery.js";
-import type { FetchMoreQueryOptions } from "@apollo/client/core";
-import { useApolloClient } from "./useApolloClient.js";
+
 import { wrapHook } from "./internal/index.js";
-import type { ApolloClient } from "@apollo/client/core";
-import type { ObservableQuery } from "@apollo/client/core";
+import { useApolloClient } from "./useApolloClient.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 
 export interface UseQueryRefHandlersResult<
   TData = unknown,

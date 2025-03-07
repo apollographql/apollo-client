@@ -1,14 +1,15 @@
+import * as assert from "node:assert";
+import { glob, unlink } from "node:fs/promises";
+import { mkdir, readFile, rm, symlink } from "node:fs/promises";
+import { relative } from "node:path";
 import * as path from "path";
+
 import * as recast from "recast";
 import * as parser from "recast/parsers/babel.js";
 import * as tsParser from "recast/parsers/typescript.js";
-import { glob, unlink } from "node:fs/promises";
-import { readFile, rm, mkdir, symlink } from "node:fs/promises";
-import * as assert from "node:assert";
 // @ts-ignore unfortunately we don't have types for this as it's JS with JSDoc
 // eslint-disable-next-line import/no-unresolved
 import * as sorcery from "sorcery";
-import { relative } from "node:path";
 
 export const distDir = path.resolve(import.meta.dirname, "..", "dist");
 

@@ -1,46 +1,48 @@
-import * as React from "react";
-import {
-  render,
-  waitFor,
-  screen,
-  renderHook,
-  within,
-} from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-import { act } from "@testing-library/react";
+import assert from "assert";
 
 import {
-  UseFragmentOptions,
-  UseFragmentResult,
-  useFragment,
-} from "../useFragment.js";
-import { ApolloProvider } from "../../context/index.js";
+  render,
+  renderHook,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { act } from "@testing-library/react";
 import {
-  InMemoryCache,
-  gql,
-  TypedDocumentNode,
-  Reference,
-  ApolloClient,
-  Observable,
-  ApolloLink,
-  StoreObject,
-  DocumentNode,
-  FetchResult,
-} from "../../../core/index.js";
-import { useQuery } from "../useQuery.js";
-import { concatPagination } from "../../../utilities/index.js";
-import assert from "assert";
-import { expectTypeOf } from "expect-type";
-import { SubscriptionObserver } from "zen-observable-ts";
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import { FragmentType } from "../../../masking/index.js";
-import {
-  disableActEnvironment,
   createRenderStream,
+  disableActEnvironment,
   renderHookToSnapshotStream,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { userEvent } from "@testing-library/user-event";
+import { expectTypeOf } from "expect-type";
+import * as React from "react";
+import { SubscriptionObserver } from "zen-observable-ts";
+
+import {
+  ApolloClient,
+  ApolloLink,
+  DocumentNode,
+  FetchResult,
+  gql,
+  InMemoryCache,
+  Observable,
+  Reference,
+  StoreObject,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { FragmentType } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { concatPagination } from "@apollo/client/utilities";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import {
+  useFragment,
+  UseFragmentOptions,
+  UseFragmentResult,
+} from "../useFragment.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useFragment", () => {
   it("is importable and callable", () => {

@@ -1,64 +1,65 @@
-import React, { Suspense, useState } from "react";
-import { act, screen, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  AsyncRenderFn,
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
 import { userEvent } from "@testing-library/user-event";
-import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
+import React, { Suspense, useState } from "react";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
-  gql,
-  ApolloError,
   ApolloClient,
-  ErrorPolicy,
-  NetworkStatus,
-  TypedDocumentNode,
+  ApolloError,
   ApolloLink,
+  ErrorPolicy,
+  gql,
+  NetworkStatus,
   Observable,
   OperationVariables,
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
   split,
-} from "../../../core/index.js";
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { QueryRef } from "@apollo/client/react";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../../../testing/index.js";
-import {
-  concatPagination,
-  offsetLimitPagination,
-  DeepPartial,
-  getMainDefinition,
-} from "../../../utilities/index.js";
-import { useLoadableQuery } from "../useLoadableQuery.js";
-import type { UseReadQueryResult } from "../useReadQuery.js";
-import { useReadQuery } from "../useReadQuery.js";
-import { ApolloProvider } from "../../context/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
-import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
-import { QueryRef } from "../../../react/index.js";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
-import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
-import {
-  SimpleCaseData,
-  setupPaginatedCase,
-  setupSimpleCase,
-  spyOnConsole,
-  renderAsync,
-} from "../../../testing/internal/index.js";
-
-import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-  AsyncRenderFn,
-} from "@testing-library/react-render-stream";
+} from "@apollo/client/testing";
 import {
   MockedProvider,
   MockedProviderProps,
-} from "../../../testing/react/index.js";
+} from "@apollo/client/testing/react";
+import {
+  concatPagination,
+  DeepPartial,
+  getMainDefinition,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
+import {
+  renderAsync,
+  setupPaginatedCase,
+  setupSimpleCase,
+  SimpleCaseData,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import type { UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

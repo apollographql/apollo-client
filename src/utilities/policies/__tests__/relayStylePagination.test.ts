@@ -4,7 +4,8 @@ import {
   isReference,
   makeReference,
   StoreObject,
-} from "../../../cache/index.js";
+} from "@apollo/client/cache";
+
 import { relayStylePagination, TRelayPageInfo } from "../pagination.js";
 
 describe("relayStylePagination", () => {

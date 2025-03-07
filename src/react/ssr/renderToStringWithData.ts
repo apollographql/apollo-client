@@ -1,6 +1,7 @@
 import type * as ReactTypes from "react";
-import { getMarkupFromTree } from "./getDataFromTree.js";
 import { renderToString } from "react-dom/server";
+
+import { getMarkupFromTree } from "./getDataFromTree.js";
 
 export function renderToStringWithData(
   component: ReactTypes.ReactElement<any>

@@ -1,4 +1,5 @@
 import type { Tester } from "@jest/expect-utils";
+
 import { MissingFieldError } from "@apollo/client/cache";
 
 export const areMissingFieldErrorsEqual: Tester = function (

@@ -5,52 +5,52 @@ export { ApolloClient, mergeOptions } from "./ApolloClient.js";
 export type { FetchMoreOptions } from "./ObservableQuery.js";
 export { ObservableQuery } from "./ObservableQuery.js";
 export type {
-  QueryOptions,
-  WatchQueryOptions,
-  MutationOptions,
-  SubscriptionOptions,
-  FetchPolicy,
-  WatchQueryFetchPolicy,
-  MutationFetchPolicy,
-  RefetchWritePolicy,
   ErrorPolicy,
   FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
+  FetchPolicy,
+  MutationFetchPolicy,
+  MutationOptions,
+  QueryOptions,
+  RefetchWritePolicy,
   SubscribeToMoreFunction,
+  SubscribeToMoreOptions,
+  SubscribeToMoreUpdateQueryFn,
+  SubscriptionOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
-  SubscribeToMoreUpdateQueryFn,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from "./watchQueryOptions.js";
-export { NetworkStatus, isNetworkRequestSettled } from "./networkStatus.js";
+export { isNetworkRequestSettled, NetworkStatus } from "./networkStatus.js";
 export type * from "./types.js";
-export type { Resolver, FragmentMatcher } from "./LocalState.js";
-export { isApolloError, ApolloError } from "../errors/index.js";
+export type { FragmentMatcher, Resolver } from "./LocalState.js";
+export { ApolloError, isApolloError } from "../errors/index.js";
 /* Cache */
 
 export type {
+  DataProxy,
+  FieldFunctionOptions,
+  FieldMergeFunction,
+  FieldPolicy,
+  FieldReadFunction,
+  InMemoryCacheConfig,
+  PossibleTypesMap,
+  ReactiveVar,
   // All the exports (types) from ../cache, minus cacheSlot,
   // which we want to keep semi-private.
   Transaction,
-  DataProxy,
-  InMemoryCacheConfig,
-  ReactiveVar,
   TypePolicies,
   TypePolicy,
-  FieldPolicy,
-  FieldReadFunction,
-  FieldMergeFunction,
-  FieldFunctionOptions,
-  PossibleTypesMap,
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "../cache/index.js";
 export type { Cache } from "../cache/index.js";
 export {
   ApolloCache,
-  InMemoryCache,
-  MissingFieldError,
   defaultDataIdFromObject,
+  InMemoryCache,
   makeVar,
+  MissingFieldError,
 } from "../cache/index.js";
 
 export type * from "../cache/inmemory/types.js";
@@ -62,9 +62,9 @@ export * from "../link/http/index.js";
 export type { ServerError } from "../link/utils/index.js";
 export {
   fromError,
-  toPromise,
   fromPromise,
   throwServerError,
+  toPromise,
 } from "../link/utils/index.js";
 
 /* Masking */
@@ -81,16 +81,16 @@ export type {
 
 export type {
   DocumentTransformCacheKey,
-  Observer,
   ObservableSubscription,
+  Observer,
   Reference,
   StoreObject,
 } from "../utilities/index.js";
 export {
   DocumentTransform,
-  Observable,
   isReference,
   makeReference,
+  Observable,
 } from "../utilities/index.js";
 
 /* Supporting */
@@ -113,9 +113,9 @@ export { setVerbosity as setLogVerbosity } from "@apollo/client/utilities/invari
 // then re-exporting them separately, helps keeps bundlers happy without any
 // additional config changes.
 export {
-  gql,
-  resetCaches,
+  disableExperimentalFragmentVariables,
   disableFragmentWarnings,
   enableExperimentalFragmentVariables,
-  disableExperimentalFragmentVariables,
+  gql,
+  resetCaches,
 } from "graphql-tag";

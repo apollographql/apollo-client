@@ -1,10 +1,12 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
 import { Trie } from "@wry/trie";
+
 import {
   canUseWeakMap,
   canUseWeakSet,
   isNonNullObject as isObjectOrArray,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
 import { isArray } from "./helpers.js";
 
 function shallowCopy<T>(value: T): T {

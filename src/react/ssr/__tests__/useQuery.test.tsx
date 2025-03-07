@@ -1,15 +1,16 @@
 /** @jest-environment node */
-import React from "react";
+import type { Trie } from "@wry/trie";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
-import { MockedResponse, mockSingleLink } from "../../../testing/index.js";
-import { ApolloClient } from "../../../core/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
-import { ApolloProvider, getApolloContext } from "../../context/index.js";
-import { useApolloClient, useQuery } from "../../hooks/index.js";
-import { renderToStringWithData } from "../index.js";
-import type { Trie } from "@wry/trie";
-import { MockedProvider } from "../../../testing/react/index.js";
+import React from "react";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
+import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
+import { renderToStringWithData } from "@apollo/client/react/ssr";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 
 describe("useQuery Hook SSR", () => {
   const CAR_QUERY: DocumentNode = gql`

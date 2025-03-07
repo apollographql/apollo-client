@@ -1,10 +1,11 @@
-import { gql } from "graphql-tag";
 import { print } from "graphql";
+import { gql } from "graphql-tag";
 
-import { Observable } from "../../utilities/index.js";
-import { ApolloLink } from "../../link/core/index.js";
-import { ApolloClient } from "../../core/index.js";
-import { InMemoryCache } from "../../cache/index.js";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Observable } from "@apollo/client/utilities";
+
 import {
   ObservableStream,
   spyOnConsole,

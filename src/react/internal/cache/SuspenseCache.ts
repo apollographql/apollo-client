@@ -1,13 +1,15 @@
 import { Trie } from "@wry/trie";
+
 import type {
   ApolloClient,
   ObservableQuery,
   WatchFragmentOptions,
 } from "@apollo/client/core";
 import { canUseWeakMap } from "@apollo/client/utilities";
+
+import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
-import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
   /**

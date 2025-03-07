@@ -2,8 +2,8 @@ import { gql } from "graphql-tag";
 
 import { createOperation } from "../../utils/createOperation.js";
 import {
-  selectHttpOptionsAndBody,
   fallbackHttpConfig,
+  selectHttpOptionsAndBody,
 } from "../selectHttpOptionsAndBody.js";
 
 const query = gql`

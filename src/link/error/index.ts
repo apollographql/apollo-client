@@ -1,17 +1,17 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 
+import type { NetworkError } from "@apollo/client/errors";
 import {
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
-import type { NetworkError } from "@apollo/client/errors";
-import { Observable } from "@apollo/client/utilities";
 import type {
-  Operation,
   FetchResult,
   NextLink,
+  Operation,
 } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
+import { Observable } from "@apollo/client/utilities";
 
 export interface ErrorResponse {
   /**

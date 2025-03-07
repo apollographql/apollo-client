@@ -1,5 +1,6 @@
-import type { ResolverOptions } from "jest-resolve";
 import { fileURLToPath } from "node:url";
+
+import type { ResolverOptions } from "jest-resolve";
 
 const possibleExtensions = [".ts", ".tsx", ".js", ".jsx"];
 

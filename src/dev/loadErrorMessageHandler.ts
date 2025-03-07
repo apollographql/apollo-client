@@ -1,8 +1,9 @@
 import type { ErrorCodes } from "../invariantErrorCodes.js";
 import global from "../utilities/globals/global.js";
-import { ApolloErrorMessageHandler } from "./symbol.js";
+
 import type { ErrorMessageHandler } from "./setErrorMessageHandler.js";
 import { setErrorMessageHandler } from "./setErrorMessageHandler.js";
+import { ApolloErrorMessageHandler } from "./symbol.js";
 
 /**
  * Injects Apollo Client's default error message handler into the application and

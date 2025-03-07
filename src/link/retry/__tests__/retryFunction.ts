@@ -1,5 +1,4 @@
 import { Operation } from "../../core/types.js";
-
 import { buildRetryFunction } from "../retryFunction.js";
 
 describe("buildRetryFunction", () => {

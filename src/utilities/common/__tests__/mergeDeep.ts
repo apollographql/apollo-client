@@ -1,4 +1,4 @@
-import { mergeDeep, mergeDeepArray, DeepMerger } from "../mergeDeep.js";
+import { DeepMerger, mergeDeep, mergeDeepArray } from "../mergeDeep.js";
 
 describe("mergeDeep", function () {
   it("should return an object if first argument falsy", function () {

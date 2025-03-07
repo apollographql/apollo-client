@@ -1,8 +1,8 @@
 import { makeExecutableSchema } from "@graphql-tools/schema";
 
-import { ApolloClient, Resolvers, gql } from "../core/index.js";
-import { InMemoryCache, NormalizedCacheObject } from "../cache/index.js";
-import { SchemaLink } from "../link/schema/index.js";
+import { InMemoryCache, NormalizedCacheObject } from "@apollo/client/cache";
+import { ApolloClient, gql, Resolvers } from "@apollo/client/core";
+import { SchemaLink } from "@apollo/client/link/schema";
 
 describe("resultCache cleaning", () => {
   const fragments = gql`

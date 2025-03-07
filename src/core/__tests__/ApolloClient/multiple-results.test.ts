@@ -1,9 +1,11 @@
-import { gql } from "graphql-tag";
-import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
-import { MockSubscriptionLink, wait } from "../../../testing/core/index.js";
 import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+
+import { ApolloError } from "@apollo/client/errors";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing/core";
+
+import { InMemoryCache } from "../../../cache/inmemory/inMemoryCache.js";
 import { ObservableStream } from "../../../testing/internal/index.js";
-import { ApolloError } from "../../../errors/index.js";
 import { ApolloClient } from "../../ApolloClient.js";
 
 describe("mutiple results", () => {

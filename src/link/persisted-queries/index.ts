@@ -1,27 +1,26 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import { invariant } from "@apollo/client/utilities/invariant";
-
-import { print } from "@apollo/client/utilities";
 import type {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
 
+import type { NetworkError } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type {
-  Observer,
-  ObservableSubscription,
-} from "@apollo/client/utilities";
-import { Observable, compact, isNonEmptyArray } from "@apollo/client/utilities";
-import type { NetworkError } from "@apollo/client/errors";
 import type { ServerError } from "@apollo/client/link/utils";
+import type {
+  ObservableSubscription,
+  Observer,
+} from "@apollo/client/utilities";
+import { print } from "@apollo/client/utilities";
+import { compact, isNonEmptyArray, Observable } from "@apollo/client/utilities";
 import {
-  cacheSizes,
   AutoCleanedWeakCache,
+  cacheSizes,
   defaultCacheSizes,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export const VERSION = 1;
 

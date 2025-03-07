@@ -3,8 +3,10 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/index.ts
  */
 
-import type { Response as NodeResponse } from "node-fetch";
 import type { Readable as NodeReadableStream } from "stream";
+
+import type { Response as NodeResponse } from "node-fetch";
+
 import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
 
 import asyncIterator from "./iterators/async.js";

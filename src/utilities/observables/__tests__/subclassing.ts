@@ -1,5 +1,5 @@
-import { Observable } from "../Observable.js";
 import { Concast } from "../Concast.js";
+import { Observable } from "../Observable.js";
 
 function toArrayPromise<T>(observable: Observable<T>): Promise<T[]> {
   return new Promise<T[]>((resolve, reject) => {

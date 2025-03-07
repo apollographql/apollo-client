@@ -1,63 +1,64 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
-
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
 import type {
-  Reference,
-  StoreObject,
   FragmentMap,
   FragmentMapFunction,
+  Reference,
+  StoreObject,
 } from "@apollo/client/utilities";
 import {
-  isField,
-  resultKeyNameFromField,
-  isReference,
-  makeReference,
-  shouldInclude,
   addTypenameToDocument,
-  getDefaultValues,
-  getMainDefinition,
-  getQueryDefinition,
-  getFragmentFromSelection,
-  maybeDeepFreeze,
-  mergeDeepArray,
-  DeepMerger,
-  isNonNullObject,
+  cacheSizes,
+  canonicalStringify,
   canUseWeakMap,
   compact,
-  canonicalStringify,
-  cacheSizes,
+  DeepMerger,
   defaultCacheSizes,
+  getDefaultValues,
+  getFragmentFromSelection,
+  getMainDefinition,
+  getQueryDefinition,
+  isField,
+  isNonNullObject,
+  isReference,
+  makeReference,
+  maybeDeepFreeze,
+  mergeDeepArray,
+  resultKeyNameFromField,
+  shouldInclude,
 } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import type { Cache } from "../core/types/Cache.js";
+import type { MissingTree } from "../core/types/common.js";
+import { MissingFieldError } from "../core/types/common.js";
+
+import {
+  maybeDependOnExistenceOfEntity,
+  supportsResultCaching,
+} from "./entityStore.js";
+import {
+  extractFragmentContext,
+  getTypenameFromStoreObject,
+  isArray,
+  shouldCanonizeResults,
+} from "./helpers.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
+import { ObjectCanon } from "./object-canon.js";
+import type { Policies } from "./policies.js";
 import type {
   DiffQueryAgainstStoreOptions,
   InMemoryCacheConfig,
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-import {
-  maybeDependOnExistenceOfEntity,
-  supportsResultCaching,
-} from "./entityStore.js";
-import {
-  isArray,
-  extractFragmentContext,
-  getTypenameFromStoreObject,
-  shouldCanonizeResults,
-} from "./helpers.js";
-import type { Policies } from "./policies.js";
-import type { InMemoryCache } from "./inMemoryCache.js";
-import type { MissingTree } from "../core/types/common.js";
-import { MissingFieldError } from "../core/types/common.js";
-import { ObjectCanon } from "./object-canon.js";
 
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;

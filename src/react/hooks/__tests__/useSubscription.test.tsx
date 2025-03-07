@@ -1,31 +1,32 @@
-import React from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
+import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloError,
   ApolloLink,
   concat,
   TypedDocumentNode,
-} from "../../../core/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors/index.js";
-import { InMemoryCache as Cache } from "../../../cache/index.js";
-import { ApolloProvider } from "../../context/index.js";
-import { MockSubscriptionLink, wait } from "../../../testing/index.js";
-import { useSubscription } from "../useSubscription.js";
+} from "@apollo/client/core";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import { SubscriptionHookOptions } from "../../types/types.js";
-import { ErrorBoundary } from "react-error-boundary";
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "@apollo/client/utilities/invariant";
-import { Masked, MaskedDocumentNode } from "../../../masking/index.js";
-import { expectTypeOf } from "expect-type";
-import {
-  disableActEnvironment,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
+import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 

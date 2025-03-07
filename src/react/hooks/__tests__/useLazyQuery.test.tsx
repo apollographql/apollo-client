@@ -1,7 +1,12 @@
-import React from "react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import React from "react";
 
 import {
   ApolloClient,
@@ -11,30 +16,22 @@ import {
   InMemoryCache,
   NetworkStatus,
   TypedDocumentNode,
-} from "../../../core/index.js";
-import { DeepPartial, Observable } from "../../../utilities/index.js";
-import { ApolloProvider } from "../../../react/index.js";
+} from "@apollo/client/core";
+import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react";
 import {
-  mockSingleLink,
-  wait,
-  tick,
-  MockSubscriptionLink,
   MockLink,
-} from "../../../testing/index.js";
-import { useLazyQuery } from "../useLazyQuery.js";
-import { QueryResult } from "../../types/types.js";
+  mockSingleLink,
+  MockSubscriptionLink,
+  tick,
+  wait,
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { DeepPartial, Observable } from "@apollo/client/utilities";
 import { InvariantError } from "@apollo/client/utilities/invariant";
-import {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "../../../masking/index.js";
-import { expectTypeOf } from "expect-type";
-import {
-  disableActEnvironment,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+
+import { QueryResult } from "../../types/types.js";
+import { useLazyQuery } from "../useLazyQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

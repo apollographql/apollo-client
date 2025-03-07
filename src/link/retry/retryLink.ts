@@ -1,21 +1,23 @@
-import type {
-  Operation,
-  FetchResult,
-  NextLink,
-} from "@apollo/client/link/core";
-import { ApolloLink } from "@apollo/client/link/core";
-import type { ObservableSubscription } from "@apollo/client/utilities";
-import { Observable } from "@apollo/client/utilities";
-import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
-import { buildDelayFunction } from "./delayFunction.js";
-import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
-import { buildRetryFunction } from "./retryFunction.js";
 import type { SubscriptionObserver } from "zen-observable-ts";
+
 import {
   ApolloError,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
+import type {
+  FetchResult,
+  NextLink,
+  Operation,
+} from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import type { ObservableSubscription } from "@apollo/client/utilities";
+import { Observable } from "@apollo/client/utilities";
+
+import type { DelayFunction, DelayFunctionOptions } from "./delayFunction.js";
+import { buildDelayFunction } from "./delayFunction.js";
+import type { RetryFunction, RetryFunctionOptions } from "./retryFunction.js";
+import { buildRetryFunction } from "./retryFunction.js";
 
 export namespace RetryLink {
   export interface Options {

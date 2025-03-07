@@ -1,14 +1,14 @@
+import type {
+  DocumentNode,
+  FragmentDefinitionNode,
+  OperationDefinitionNode,
+  ValueNode,
+} from "graphql";
+
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
-
-import type {
-  DocumentNode,
-  OperationDefinitionNode,
-  FragmentDefinitionNode,
-  ValueNode,
-} from "graphql";
 
 import { valueToObjectRepresentation } from "./storeUtils.js";
 

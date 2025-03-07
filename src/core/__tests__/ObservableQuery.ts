@@ -1,42 +1,40 @@
-import { gql } from "graphql-tag";
-import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { waitFor } from "@testing-library/react";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import { SubscriptionObserver } from "zen-observable-ts";
 
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   WatchQueryFetchPolicy,
-} from "../../core/index.js";
-import { ObservableQuery } from "../ObservableQuery.js";
-import { QueryManager } from "../QueryManager.js";
-
-import {
-  DeepPartial,
-  DocumentTransform,
-  Observable,
-  removeDirectivesFromDocument,
-} from "../../utilities/index.js";
-import { ApolloLink, FetchResult } from "../../link/core/index.js";
-import { InMemoryCache } from "../../cache/index.js";
-import { ApolloError } from "../../errors/index.js";
-
+} from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import {
   MockLink,
   MockSubscriptionLink,
   tick,
   wait,
-} from "../../testing/index.js";
-import { expectTypeOf } from "expect-type";
+} from "@apollo/client/testing";
+import {
+  DeepPartial,
+  DocumentTransform,
+  Observable,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
 
-import { SubscriptionObserver } from "zen-observable-ts";
-import { waitFor } from "@testing-library/react";
 import {
   ObservableStream,
   spyOnConsole,
 } from "../../testing/internal/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
+import { QueryManager } from "../QueryManager.js";
 
-import type { SourcesAndInfo, ConcastAndInfo } from "../QueryManager.js";
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
   const mocks = {
     fetchConcastWithInfo: jest.fn<

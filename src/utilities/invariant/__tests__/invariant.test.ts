@@ -1,9 +1,10 @@
-import { spyOnConsole } from "../../../testing/internal/index.js";
 import {
   ApolloErrorMessageHandler,
-  InvariantError,
   invariant,
-} from "../index.js";
+  InvariantError,
+} from "@apollo/client/utilities/invariant";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
 
 function withDev(): typeof import("../../../dev/index.js") & AsyncDisposable {
   const originalErrorMessageHandler = window[ApolloErrorMessageHandler];

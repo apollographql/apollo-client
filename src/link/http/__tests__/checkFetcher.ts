@@ -1,4 +1,5 @@
 import { checkFetcher } from "../checkFetcher.js";
+
 import { voidFetchDuringEachTest } from "./helpers.js";
 
 describe("checkFetcher", () => {

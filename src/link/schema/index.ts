@@ -1,7 +1,7 @@
 import type { GraphQLSchema } from "graphql";
-import { validate, execute } from "graphql";
+import { execute, validate } from "graphql";
 
-import type { Operation, FetchResult } from "@apollo/client/link/core";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { Observable } from "@apollo/client/utilities";
 

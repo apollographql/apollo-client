@@ -1,34 +1,36 @@
-import { __DEV__ } from "@apollo/client/utilities/environment";
 import * as React from "rehackt";
-import { invariant } from "@apollo/client/utilities/invariant";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   ApolloQueryResult,
   DocumentNode,
+  FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  FetchMoreQueryOptions,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import { ApolloError, NetworkStatus } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
+import { ApolloError, NetworkStatus } from "@apollo/client/core";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type {
+  NoInfer,
+  ObservableQueryFields,
+  SuspenseQueryHookOptions,
+} from "@apollo/client/react";
+import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
+import { getSuspenseCache } from "@apollo/client/react/internal";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { isNonEmptyArray } from "@apollo/client/utilities";
-import { useApolloClient } from "./useApolloClient.js";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
-import type {
-  SuspenseQueryHookOptions,
-  ObservableQueryFields,
-  NoInfer,
-} from "@apollo/client/react";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
-import { getSuspenseCache } from "@apollo/client/react/internal";
-import { canonicalStringify } from "@apollo/client/cache";
-import { skipToken } from "./constants.js";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { SkipToken } from "./constants.js";
-import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import { skipToken } from "./constants.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,

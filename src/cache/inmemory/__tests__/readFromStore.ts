@@ -1,23 +1,25 @@
-import { assign, omit } from "lodash";
 import { gql } from "graphql-tag";
+import { assign, omit } from "lodash";
 
-import { InMemoryCache } from "../inMemoryCache.js";
-import { StoreObject } from "../types.js";
-import { StoreReader } from "../readFromStore.js";
+import {
+  isReference,
+  makeReference,
+  Reference,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { defaultCacheSizes } from "@apollo/client/utilities";
+
 import { Cache } from "../../core/types/Cache.js";
 import { MissingFieldError } from "../../core/types/common.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { StoreReader } from "../readFromStore.js";
+import { StoreObject } from "../types.js";
+
 import {
   defaultNormalizedCacheFactory,
   readQueryFromStore,
   withError,
 } from "./helpers.js";
-import {
-  makeReference,
-  Reference,
-  isReference,
-  TypedDocumentNode,
-} from "../../../core/index.js";
-import { defaultCacheSizes } from "../../../utilities/index.js";
 
 describe("resultCacheMaxSize", () => {
   const cache = new InMemoryCache();

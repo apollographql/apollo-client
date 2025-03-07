@@ -1,9 +1,12 @@
+import React from "react";
+
 import {
   ApolloClient,
   ApolloLink,
   InMemoryCache,
   Observable,
-} from "../../../../core/index.js";
+} from "@apollo/client/core";
+
 import { setupSimpleCase } from "../../../../testing/internal/index.js";
 import {
   InternalQueryReference,
@@ -11,7 +14,6 @@ import {
   QueryRef,
   QueryReference,
 } from "../QueryReference.js";
-import React from "react";
 
 test("kicks off request immediately when created", async () => {
   const { query } = setupSimpleCase();

@@ -1,4 +1,4 @@
-import { ApolloError } from "../index.js";
+import { ApolloError } from "@apollo/client/errors";
 
 describe("ApolloError", () => {
   it("should construct itself correctly", () => {

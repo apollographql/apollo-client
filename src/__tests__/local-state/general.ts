@@ -1,22 +1,23 @@
-import { gql } from "graphql-tag";
 import {
-  graphql,
-  GraphQLInt,
-  print,
   DocumentNode,
-  GraphQLError,
   getIntrospectionQuery,
-  GraphQLSchema,
-  GraphQLObjectType,
+  graphql,
+  GraphQLError,
   GraphQLID,
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLSchema,
   GraphQLString,
+  print,
 } from "graphql";
+import { gql } from "graphql-tag";
 
-import { Observable } from "../../utilities/index.js";
-import { ApolloLink } from "../../link/core/index.js";
-import { Operation } from "../../link/core/index.js";
-import { ApolloClient } from "../../core/index.js";
-import { ApolloCache, InMemoryCache } from "../../cache/index.js";
+import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Operation } from "@apollo/client/link/core";
+import { Observable } from "@apollo/client/utilities";
+
 import {
   ObservableStream,
   spyOnConsole,

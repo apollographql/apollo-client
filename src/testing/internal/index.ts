@@ -2,19 +2,19 @@ export * from "./disposables/index.js";
 export { ObservableStream } from "./ObservableStream.js";
 
 export type {
-  SimpleCaseData,
   PaginatedCaseData,
   PaginatedCaseVariables,
+  SimpleCaseData,
   VariablesCaseData,
   VariablesCaseVariables,
 } from "./scenarios/index.js";
 export {
+  addDelayToMocks,
+  setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
-  setupPaginatedCase,
-  addDelayToMocks,
 } from "./scenarios/index.js";
-export { createMockWrapper, createClientWrapper } from "./renderHelpers.js";
+export { createClientWrapper, createMockWrapper } from "./renderHelpers.js";
 export { actAsync } from "./rtl/actAsync.js";
 export { renderAsync } from "./rtl/renderAsync.js";
 export { renderHookAsync } from "./rtl/renderHookAsync.js";

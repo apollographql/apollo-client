@@ -1,32 +1,34 @@
-import { assign, omit } from "lodash";
 import {
-  SelectionNode,
-  FieldNode,
-  DefinitionNode,
-  OperationDefinitionNode,
   ASTNode,
+  DefinitionNode,
   DocumentNode,
+  FieldNode,
+  OperationDefinitionNode,
+  SelectionNode,
 } from "graphql";
 import { gql } from "graphql-tag";
+import { assign, omit } from "lodash";
 
+import { TypedDocumentNode } from "@apollo/client/core";
 import {
-  storeKeyNameFromField,
-  makeReference,
-  isReference,
-  Reference,
-  StoreObject,
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from "../../../utilities/index.js";
-import { StoreWriter } from "../writeToStore.js";
-import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
-import { InMemoryCache } from "../inMemoryCache.js";
-import { TypedDocumentNode } from "../../../core/index.js";
-import { extractFragmentContext } from "../helpers.js";
-import { KeyFieldsFunction } from "../policies.js";
+  isReference,
+  makeReference,
+  Reference,
+  storeKeyNameFromField,
+  StoreObject,
+} from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
+
 import { spyOnConsole } from "../../../testing/internal/index.js";
+import { extractFragmentContext } from "../helpers.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { KeyFieldsFunction } from "../policies.js";
+import { StoreWriter } from "../writeToStore.js";
+
+import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
 
 const getIdField: KeyFieldsFunction = ({ id }) => {
   invariant(typeof id === "string", "id is not a string");

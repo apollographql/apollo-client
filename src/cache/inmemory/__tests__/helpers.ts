@@ -1,13 +1,14 @@
-import {
-  NormalizedCache,
-  NormalizedCacheObject,
-  DiffQueryAgainstStoreOptions,
-} from "../types.js";
+import { Cache } from "@apollo/client/core";
+
 import { EntityStore } from "../entityStore.js";
 import { InMemoryCache } from "../inMemoryCache.js";
 import { StoreReader } from "../readFromStore.js";
+import {
+  DiffQueryAgainstStoreOptions,
+  NormalizedCache,
+  NormalizedCacheObject,
+} from "../types.js";
 import { StoreWriter } from "../writeToStore.js";
-import { Cache } from "../../../core/index.js";
 
 export function defaultNormalizedCacheFactory(
   seed?: NormalizedCacheObject

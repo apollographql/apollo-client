@@ -1,9 +1,9 @@
+import { Trie } from "@wry/trie";
 import type * as ReactTypes from "react";
 
+import { canonicalStringify } from "@apollo/client/cache";
 import type { ObservableQuery, OperationVariables } from "@apollo/client/core";
 import type { QueryDataOptions } from "@apollo/client/react";
-import { Trie } from "@wry/trie";
-import { canonicalStringify } from "@apollo/client/cache";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.

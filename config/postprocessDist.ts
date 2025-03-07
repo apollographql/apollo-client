@@ -1,7 +1,8 @@
+import { visit } from "recast";
+
+import type { BuildStep } from "./build.ts";
 import { distDir } from "./helpers.ts";
 import { applyRecast } from "./helpers.ts";
-import { visit } from "recast";
-import type { BuildStep } from "./build.ts";
 
 export const postprocessDist: BuildStep = async (options) => {
   return applyRecast({

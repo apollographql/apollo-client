@@ -4,6 +4,7 @@
  */
 
 import type { Readable as NodeReadableStream } from "stream";
+
 import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
 
 interface NodeStreamIterator<T> {

@@ -1,8 +1,10 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
+
+import type { ApolloQueryResult } from "@apollo/client/core";
+
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
-import type { ApolloQueryResult } from "@apollo/client/core";
 
 export const toEmitApolloQueryResult: MatcherFunction<
   [queryResult: ApolloQueryResult<any>, options?: TakeOptions]

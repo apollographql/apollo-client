@@ -1,21 +1,22 @@
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { gql } from "graphql-tag";
 
-import { ApolloClient, NetworkStatus } from "../../core/index.js";
-import { ApolloLink } from "../../link/core/index.js";
-import { InMemoryCache } from "../../cache/index.js";
-import { Observable } from "../../utilities/index.js";
-import { mockSingleLink } from "../../testing/index.js";
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../watchQueryOptions.js";
-import { ApolloQueryResult } from "../types.js";
-import { ObservableQuery } from "../ObservableQuery.js";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { mockSingleLink } from "@apollo/client/testing";
+import { Observable } from "@apollo/client/utilities";
+
 import {
   ObservableStream,
   spyOnConsole,
 } from "../../testing/internal/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import { ApolloQueryResult } from "../types.js";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../watchQueryOptions.js";
 
 const query = gql`
   query {

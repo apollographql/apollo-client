@@ -3,12 +3,13 @@ import { Subscription } from "zen-observable-ts";
 import {
   ApolloClient,
   ApolloLink,
-  InMemoryCache,
   gql,
+  InMemoryCache,
   Observable,
-  TypedDocumentNode,
   ObservableQuery,
-} from "../core/index.js";
+  TypedDocumentNode,
+} from "@apollo/client/core";
+
 import { ObservableStream } from "../testing/internal/index.js";
 
 describe("client.refetchQueries", () => {

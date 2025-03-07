@@ -1,56 +1,57 @@
+import { equal } from "@wry/equality";
+import { Trie } from "@wry/trie";
+import type { FieldNode, SelectionSetNode } from "graphql";
+import { Kind } from "graphql";
+
+import type { Cache } from "@apollo/client/core";
+import type {
+  FragmentMap,
+  FragmentMapFunction,
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
+import {
+  addTypenameToDocument,
+  argumentsObjectFromField,
+  canonicalStringify,
+  cloneDeep,
+  getDefaultValues,
+  getFragmentFromSelection,
+  getOperationDefinition,
+  getTypenameFromResult,
+  isField,
+  isNonEmptyArray,
+  isReference,
+  makeReference,
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
-import { equal } from "@wry/equality";
-import { Trie } from "@wry/trie";
-import type { SelectionSetNode, FieldNode } from "graphql";
-import { Kind } from "graphql";
 
-import type {
-  FragmentMap,
-  FragmentMapFunction,
-  StoreValue,
-  StoreObject,
-  Reference,
-} from "@apollo/client/utilities";
-import {
-  getFragmentFromSelection,
-  getDefaultValues,
-  getOperationDefinition,
-  getTypenameFromResult,
-  makeReference,
-  isField,
-  resultKeyNameFromField,
-  isReference,
-  shouldInclude,
-  cloneDeep,
-  addTypenameToDocument,
-  isNonEmptyArray,
-  argumentsObjectFromField,
-  canonicalStringify,
-} from "@apollo/client/utilities";
+import type { ReadFieldFunction } from "../core/types/common.js";
 
-import type {
-  NormalizedCache,
-  ReadMergeModifyContext,
-  MergeTree,
-  InMemoryCacheConfig,
-} from "./types.js";
+import type { EntityStore } from "./entityStore.js";
 import {
+  extractFragmentContext,
+  fieldNameFromStoreName,
   isArray,
   makeProcessedFieldsMerger,
-  fieldNameFromStoreName,
   storeValueIsStoreObject,
-  extractFragmentContext,
 } from "./helpers.js";
-import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import type { EntityStore } from "./entityStore.js";
-import type { Cache } from "@apollo/client/core";
 import { normalizeReadFieldOptions } from "./policies.js";
-import type { ReadFieldFunction } from "../core/types/common.js";
+import type { StoreReader } from "./readFromStore.js";
+import type {
+  InMemoryCacheConfig,
+  MergeTree,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types.js";
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {

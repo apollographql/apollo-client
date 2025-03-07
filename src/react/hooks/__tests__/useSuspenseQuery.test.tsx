@@ -1,81 +1,74 @@
-import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import {
   act,
+  renderHook,
+  RenderHookOptions,
   screen,
   waitFor,
-  RenderHookOptions,
-  renderHook,
 } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "@apollo/client/utilities/invariant";
-import { equal } from "@wry/equality";
-import { expectTypeOf } from "expect-type";
-
-import {
-  gql,
-  ApolloCache,
-  ApolloClient,
-  ApolloError,
-  ApolloLink,
-  DocumentNode,
-  InMemoryCache,
-  Observable,
-  OperationVariables,
-  SubscribeToMoreOptions,
-  TypedDocumentNode,
-  split,
-  NetworkStatus,
-  ApolloQueryResult,
-  ErrorPolicy,
-} from "../../../core/index.js";
-import {
-  DeepPartial,
-  compact,
-  concatPagination,
-  getMainDefinition,
-  offsetLimitPagination,
-} from "../../../utilities/index.js";
-import {
-  MockedResponse,
-  MockSubscriptionLink,
-  MockLink,
-} from "../../../testing/index.js";
-import { ApolloProvider } from "../../context/index.js";
-import {
-  SuspenseQueryHookFetchPolicy,
-  skipToken,
-} from "../../../react/index.js";
-import {
-  UseSuspenseQueryResult,
-  useSuspenseQuery,
-} from "../useSuspenseQuery.js";
-import {
-  RefetchWritePolicy,
-  WatchQueryFetchPolicy,
-} from "../../../core/watchQueryOptions.js";
-import {
-  PaginatedCaseData,
-  PaginatedCaseVariables,
-  setupPaginatedCase,
-  spyOnConsole,
-  actAsync,
-  renderAsync,
-  renderHookAsync,
-} from "../../../testing/internal/index.js";
-import {
-  Masked,
-  MaskedDocumentNode,
-  Unmasked,
-} from "../../../masking/index.js";
-
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react/index.js";
+import { userEvent } from "@testing-library/user-event";
+import { equal } from "@wry/equality";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+
+import {
+  ApolloCache,
+  ApolloClient,
+  ApolloError,
+  ApolloLink,
+  ApolloQueryResult,
+  DocumentNode,
+  ErrorPolicy,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  Observable,
+  OperationVariables,
+  split,
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import { skipToken, SuspenseQueryHookFetchPolicy } from "@apollo/client/react";
+import { ApolloProvider } from "@apollo/client/react/context";
+import {
+  MockedResponse,
+  MockLink,
+  MockSubscriptionLink,
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
+import {
+  compact,
+  concatPagination,
+  DeepPartial,
+  getMainDefinition,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import {
+  RefetchWritePolicy,
+  WatchQueryFetchPolicy,
+} from "../../../core/watchQueryOptions.js";
+import {
+  actAsync,
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+  renderAsync,
+  renderHookAsync,
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import {
+  useSuspenseQuery,
+  UseSuspenseQueryResult,
+} from "../useSuspenseQuery.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

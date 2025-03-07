@@ -650,8 +650,8 @@ type WatchFragmentResult<TData> = {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:139:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
-// src/cache/core/types/DataProxy.ts:141:9 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:140:9 - (ae-forgotten-export) The symbol "DeepPartial" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:142:9 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:101:3 - (ae-forgotten-export) The symbol "ReadFieldFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:102:3 - (ae-forgotten-export) The symbol "CanReadFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:103:3 - (ae-forgotten-export) The symbol "isReference" needs to be exported by the entry point index.d.ts

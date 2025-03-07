@@ -1,11 +1,18 @@
-import React, { useEffect } from "react";
+import { act } from "@testing-library/react";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { expectTypeOf } from "expect-type";
+import fetchMock from "fetch-mock";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { act } from "@testing-library/react";
-import { render, waitFor, screen, renderHook } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-import fetchMock from "fetch-mock";
+import React, { useEffect } from "react";
 
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloError,
@@ -16,30 +23,24 @@ import {
   Observable,
   ObservableQuery,
   TypedDocumentNode,
-} from "../../../core/index.js";
-import { InMemoryCache } from "../../../cache/index.js";
+} from "@apollo/client/core";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
+import { FetchResult } from "@apollo/client/link/core";
+import { Masked } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
-  MockSubscriptionLink,
-  mockSingleLink,
   MockedResponse,
   MockLink,
-} from "../../../testing/index.js";
-import { ApolloProvider } from "../../context/index.js";
-import { useQuery } from "../useQuery.js";
-import { useMutation } from "../useMutation.js";
-import { BatchHttpLink } from "../../../link/batch-http/index.js";
-import { FetchResult } from "../../../link/core/index.js";
-import { spyOnConsole } from "../../../testing/internal/index.js";
-import { expectTypeOf } from "expect-type";
-import { Masked } from "../../../masking/index.js";
-import {
-  disableActEnvironment,
-  createRenderStream,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
-import { MutationTuple, QueryResult } from "../../types/types.js";
+  mockSingleLink,
+  MockSubscriptionLink,
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
-import { MockedProvider } from "../../../testing/react/index.js";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { MutationTuple, QueryResult } from "../../types/types.js";
+import { useMutation } from "../useMutation.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useMutation Hook", () => {
   interface Todo {

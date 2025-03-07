@@ -1,22 +1,22 @@
 import {
-  newInvariantError,
-  invariant,
-} from "@apollo/client/utilities/invariant";
-
+  createOperation,
+  transformOperation,
+  validateOperation,
+} from "@apollo/client/link/utils";
 import type { Observer } from "@apollo/client/utilities";
 import { Observable } from "@apollo/client/utilities";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import type {
+  FetchResult,
+  GraphQLRequest,
   NextLink,
   Operation,
   RequestHandler,
-  FetchResult,
-  GraphQLRequest,
 } from "./types.js";
-import {
-  validateOperation,
-  createOperation,
-  transformOperation,
-} from "@apollo/client/link/utils";
 
 function passthrough(op: Operation, forward: NextLink) {
   return (forward ? forward(op) : Observable.of()) as Observable<FetchResult>;

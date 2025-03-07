@@ -4,8 +4,8 @@ export type { ClientParseError } from "./serializeFetchParameter.js";
 export { serializeFetchParameter } from "./serializeFetchParameter.js";
 export type { HttpOptions, UriFunction } from "./selectHttpOptionsAndBody.js";
 export {
-  fallbackHttpConfig,
   defaultPrinter,
+  fallbackHttpConfig,
   selectHttpOptionsAndBody,
   selectHttpOptionsAndBodyInternal, // needed by ../batch-http but not public
 } from "./selectHttpOptionsAndBody.js";

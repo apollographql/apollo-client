@@ -1,15 +1,15 @@
-import {
-  invariant,
-  newInvariantError,
-} from "@apollo/client/utilities/invariant";
-
-import { BREAK, visit } from "graphql";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
   SelectionNode,
 } from "graphql";
+import { BREAK, visit } from "graphql";
+
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 // TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
 type Kind = any;

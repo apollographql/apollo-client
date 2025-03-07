@@ -1,20 +1,19 @@
-import { gql } from "graphql-tag";
 import { DocumentNode, ExecutionResult } from "graphql";
+import { gql } from "graphql-tag";
 
-import { LocalState } from "../../core/LocalState.js";
-
+import { InMemoryCache, isReference } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   Resolvers,
-} from "../../core/index.js";
+} from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockLink } from "@apollo/client/testing";
+import { Observable } from "@apollo/client/utilities";
 
-import { InMemoryCache, isReference } from "../../cache/index.js";
-import { Observable } from "../../utilities/index.js";
-import { ApolloLink } from "../../link/core/index.js";
+import { LocalState } from "../../core/LocalState.js";
 import { ObservableStream } from "../../testing/internal/index.js";
-import { MockLink } from "../../testing/index.js";
 
 const setupTestWithResolvers = ({
   resolvers,

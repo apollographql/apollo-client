@@ -1,9 +1,11 @@
-import type { BuildStep } from "./build.ts";
-import { glob, readFile } from "node:fs/promises";
-import validate from "sourcemap-validator";
-import { SourceMapConsumer } from "source-map";
 import * as assert from "node:assert";
+import { glob, readFile } from "node:fs/promises";
 import { join } from "node:path";
+
+import { SourceMapConsumer } from "source-map";
+import validate from "sourcemap-validator";
+
+import type { BuildStep } from "./build.ts";
 
 export const verifySourceMaps: BuildStep = async (options) => {
   // this only checks source maps for JavaScript files, not TypeScript declarations

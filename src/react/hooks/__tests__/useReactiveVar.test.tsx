@@ -1,7 +1,8 @@
+import { act, render, screen, waitFor } from "@testing-library/react";
 import React, { StrictMode, useEffect } from "react";
-import { screen, render, waitFor, act } from "@testing-library/react";
 
-import { makeVar } from "../../../core/index.js";
+import { makeVar } from "@apollo/client/core";
+
 import { useReactiveVar } from "../useReactiveVar.js";
 
 const IS_REACT_18 = React.version.startsWith("18");

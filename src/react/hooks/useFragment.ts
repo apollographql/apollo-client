@@ -1,19 +1,20 @@
+import equal from "@wry/equality";
 import * as React from "rehackt";
-import type { DeepPartial } from "@apollo/client/utilities";
+
 import type {
   Cache,
+  MissingTree,
   Reference,
   StoreObject,
-  MissingTree,
 } from "@apollo/client/cache";
+import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { NoInfer } from "@apollo/client/react";
+import type { DeepPartial } from "@apollo/client/utilities";
 
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
-import type { NoInfer } from "@apollo/client/react";
-import { useDeepMemo, wrapHook } from "./internal/index.js";
-import equal from "@wry/equality";
-import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<

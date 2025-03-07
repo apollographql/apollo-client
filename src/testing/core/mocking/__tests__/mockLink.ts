@@ -1,7 +1,8 @@
 import { gql } from "graphql-tag";
-import { MockLink, MockedResponse } from "../mockLink.js";
+
 import { execute } from "../../../../link/core/execute.js";
-import { ObservableStream, enableFakeTimers } from "../../../internal/index.js";
+import { enableFakeTimers, ObservableStream } from "../../../internal/index.js";
+import { MockedResponse, MockLink } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {

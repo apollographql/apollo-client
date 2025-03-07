@@ -1,17 +1,16 @@
-import { invariant } from "@apollo/client/utilities/invariant";
-
 import {
   argumentsObjectFromField,
   DeepMerger,
   isNonEmptyArray,
   isNonNullObject,
 } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { hasOwn, isArray } from "./helpers.js";
 import type {
-  KeySpecifier,
-  KeyFieldsFunction,
   KeyArgsFunction,
+  KeyFieldsFunction,
+  KeySpecifier,
 } from "./policies.js";
 
 // Mapping from JSON-encoded KeySpecifier strings to associated information.

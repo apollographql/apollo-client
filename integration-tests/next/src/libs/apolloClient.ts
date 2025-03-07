@@ -6,12 +6,12 @@ import {
   InMemoryCache,
   from,
   ApolloLink,
-  Observable,
 } from "@apollo/client";
 import { onError } from "@apollo/client/link/error";
 import merge from "deepmerge";
 import isEqual from "lodash/isEqual";
 import type { GetServerSidePropsResult } from "next";
+import { Observable } from "rxjs";
 import { schemaLink } from "./schemaLink.ts";
 
 export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__";

@@ -4259,7 +4259,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
-          errors: [{ message: "error 1" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4278,7 +4277,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
-          errors: [{ message: "error 2" }],
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,

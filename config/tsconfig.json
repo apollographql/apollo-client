@@ -10,5 +10,5 @@
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true
   },
-  "include": ["./**/*.ts", "./**/*.cts"]
+  "include": ["./**/*.ts", "./**/*.cts", "./**/*.cjs"]
 }

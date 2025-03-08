@@ -1170,7 +1170,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       partial: true,
       ...this.getLastResult(),
       error,
-      errors: error.graphQLErrors,
       networkStatus: NetworkStatus.error,
       loading: false,
     };

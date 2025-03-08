@@ -262,7 +262,6 @@ export interface ApolloQueryResult<T> {
     // (undocumented)
     data: T | undefined;
     error?: ApolloError;
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     loading: boolean;
     // (undocumented)

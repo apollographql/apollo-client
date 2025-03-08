@@ -1472,7 +1472,11 @@ test("throws when error is returned", async () => {
   using _consoleSpy = spyOnConsole("error");
   const { query } = setupSimpleCase();
   const mocks = [
-    { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
+    {
+      request: { query },
+      result: { errors: [new GraphQLError("Oops")] },
+      delay: 20,
+    },
   ];
   const client = createDefaultClient(mocks);
 

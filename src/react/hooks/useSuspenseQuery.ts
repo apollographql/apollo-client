@@ -3,6 +3,7 @@ import * as React from "rehackt";
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
+  ApolloError,
   ApolloQueryResult,
   DocumentNode,
   FetchMoreQueryOptions,
@@ -12,7 +13,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import { ApolloError, NetworkStatus } from "@apollo/client/core";
+import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
   NoInfer,
@@ -23,7 +24,6 @@ import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { DeepPartial } from "@apollo/client/utilities";
-import { isNonEmptyArray } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -242,7 +242,7 @@ function useSuspenseQuery_<
   }, [queryRef]);
 
   const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
-    const error = toApolloError(queryRef.result);
+    const error = queryRef.result.error;
     const complete = !!queryRef.result.data;
 
     return {
@@ -289,7 +289,7 @@ function useSuspenseQuery_<
     return {
       client,
       data: result.data,
-      error: toApolloError(result),
+      error: result.error,
       networkStatus: result.networkStatus,
       fetchMore,
       refetch,
@@ -332,12 +332,6 @@ function validatePartialDataReturn(
       "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
   }
-}
-
-export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors) ?
-      new ApolloError({ graphQLErrors: result.errors })
-    : result.error;
 }
 
 interface UseWatchQueryOptionsHookOptions<

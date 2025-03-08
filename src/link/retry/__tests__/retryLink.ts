@@ -1,7 +1,7 @@
 import { gql } from "graphql-tag";
 import { Observable, of, throwError } from "rxjs";
 
-import { ApolloError } from "@apollo/client/core";
+import { CombinedProtocolErrors } from "@apollo/client/core";
 
 import {
   mockMultipartSubscriptionStream,
@@ -264,14 +264,12 @@ describe("RetryLink", () => {
         operationName: "MySubscription",
         query: subscription,
       }),
-      new ApolloError({
-        protocolErrors: [
-          {
-            message: "Error field",
-            extensions: { code: "INTERNAL_SERVER_ERROR" },
-          },
-        ],
-      })
+      new CombinedProtocolErrors([
+        {
+          message: "Error field",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ])
     );
   });
 });

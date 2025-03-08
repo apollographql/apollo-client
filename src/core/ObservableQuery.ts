@@ -11,7 +11,6 @@ import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
 
 import type { MissingFieldError } from "@apollo/client/cache";
 import type { MissingTree } from "@apollo/client/cache";
-import { ApolloError, isApolloError } from "@apollo/client/errors";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import {
   cloneDeep,
@@ -60,7 +59,7 @@ export interface FetchMoreOptions<
 interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
   variables?: TVariables;
-  error?: ApolloError;
+  error?: Error;
 }
 
 export class ObservableQuery<
@@ -472,7 +471,7 @@ export class ObservableQuery<
   }
 
   // TODO: Consider deprecating this function
-  public getLastError(variablesMustMatch?: boolean): ApolloError | undefined {
+  public getLastError(variablesMustMatch?: boolean): Error | undefined {
     return this.getLast("error", variablesMustMatch);
   }
 
@@ -919,7 +918,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
-    return this.queryManager["fetchObservableWithInfo"](
+    return this.queryManager.fetchObservableWithInfo(
       this.queryId,
       options,
       newNetworkStatus,
@@ -1102,12 +1101,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       },
       error: (error) => {
         if (equal(this.variables, variables)) {
-          // Coming from `getResultsFromLink`, `error` here should always be an `ApolloError`.
-          // However, calling `concast.cancel` can inject another type of error, so we have to
-          // wrap it again here.
-          if (!isApolloError(error)) {
-            error = new ApolloError({ networkError: error });
-          }
           finishWaitingForOwnResult();
           this.reportError(error, variables);
         }
@@ -1162,7 +1155,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
   }
 
-  private reportError(error: ApolloError, variables: TVariables | undefined) {
+  private reportError(error: Error, variables: TVariables | undefined) {
     // Since we don't get the current result on errors, only the error, we
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {

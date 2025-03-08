@@ -15,7 +15,8 @@ import { gql } from "graphql-tag";
 import { defer, Observable, of } from "rxjs";
 
 import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
-import { ApolloClient, ApolloError, NetworkStatus } from "@apollo/client/core";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { Operation } from "@apollo/client/link/core";
 
@@ -1178,7 +1179,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
-      error: new ApolloError({ graphQLErrors: [error] }),
+      error: new CombinedGraphQLErrors([error]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,

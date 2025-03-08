@@ -1291,7 +1291,7 @@ describe("fetchMore on an observable query", () => {
         })
         .catch((error) => error);
 
-      expect(error.networkError).toBe(fetchMoreError);
+      expect(error).toBe(fetchMoreError);
     });
 
     it("field policy", async () => {
@@ -1351,7 +1351,7 @@ describe("fetchMore on an observable query", () => {
         })
         .catch((error) => error);
 
-      expect(error.networkError).toBe(fetchMoreError);
+      expect(error).toBe(fetchMoreError);
     });
   });
 

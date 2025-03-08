@@ -6,10 +6,9 @@ import type {
 import type { Observer, Subscription } from "rxjs";
 import { Observable } from "rxjs";
 
-import type { NetworkError } from "@apollo/client/errors";
+import type { NetworkError, ServerError } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import type { ServerError } from "@apollo/client/link/utils";
 import { print } from "@apollo/client/utilities";
 import { compact, isNonEmptyArray } from "@apollo/client/utilities";
 import {

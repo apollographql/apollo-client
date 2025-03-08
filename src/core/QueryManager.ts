@@ -21,11 +21,11 @@ import {
 
 import type { ApolloCache, Cache } from "@apollo/client/cache";
 import { canonicalStringify } from "@apollo/client/cache";
-import type { ApolloErrorOptions } from "@apollo/client/errors";
 import {
-  ApolloError,
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
   graphQLResultHasProtocolErrors,
-  isApolloError,
+  UnknownError,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
@@ -323,9 +323,9 @@ export class QueryManager<TStore> {
         .pipe(
           mergeMap((result) => {
             if (graphQLResultHasError(result) && errorPolicy === "none") {
-              throw new ApolloError({
-                graphQLErrors: getGraphQLErrorsFromResult(result),
-              });
+              throw new CombinedGraphQLErrors(
+                getGraphQLErrorsFromResult(result)
+              );
             }
 
             if (mutationStoreValue) {
@@ -390,7 +390,9 @@ export class QueryManager<TStore> {
             }
           },
 
-          error: (err: Error) => {
+          error: (err) => {
+            err = maybeWrapError(err);
+
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
               mutationStoreValue.error = err;
@@ -402,13 +404,7 @@ export class QueryManager<TStore> {
 
             this.broadcastQueries();
 
-            reject(
-              err instanceof ApolloError ? err : (
-                new ApolloError({
-                  networkError: err,
-                })
-              )
-            );
+            reject(err);
           },
         });
     });
@@ -1057,21 +1053,18 @@ export class QueryManager<TStore> {
 
           const hasErrors = graphQLResultHasError(result);
           const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
-          if (hasErrors || hasProtocolErrors) {
-            const errors: ApolloErrorOptions = {};
-            if (hasErrors) {
-              errors.graphQLErrors = result.errors;
-            }
-            if (hasProtocolErrors) {
-              errors.protocolErrors = result.extensions[PROTOCOL_ERRORS_SYMBOL];
-            }
 
+          if (hasErrors && errorPolicy === "none") {
+            throw new CombinedGraphQLErrors(result.errors!);
+          }
+
+          if (hasProtocolErrors) {
             // `errorPolicy` is a mechanism for handling GraphQL errors, according
             // to our documentation, so we throw protocol errors regardless of the
             // set error policy.
-            if (errorPolicy === "none" || hasProtocolErrors) {
-              throw new ApolloError(errors);
-            }
+            throw new CombinedProtocolErrors(
+              result.extensions[PROTOCOL_ERRORS_SYMBOL]
+            );
           }
 
           if (errorPolicy === "ignore") {
@@ -1079,6 +1072,9 @@ export class QueryManager<TStore> {
           }
 
           return result;
+        }),
+        catchError((error) => {
+          throw maybeWrapError(error);
         })
       );
 
@@ -1236,11 +1232,8 @@ export class QueryManager<TStore> {
       options.context,
       options.variables
     ).pipe(
-      catchError((networkError) => {
-        const error =
-          isApolloError(networkError) ? networkError : (
-            new ApolloError({ networkError })
-          );
+      catchError((error) => {
+        error = maybeWrapError(error);
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
@@ -1260,7 +1253,7 @@ export class QueryManager<TStore> {
           if (hasErrors && errorPolicy === "none") {
             queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw new ApolloError({ graphQLErrors });
+            throw new CombinedGraphQLErrors(graphQLErrors);
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1290,7 +1283,7 @@ export class QueryManager<TStore> {
         }
 
         if (hasErrors && errorPolicy !== "ignore") {
-          aqr.error = new ApolloError({ graphQLErrors });
+          aqr.error = new CombinedGraphQLErrors(graphQLErrors);
           aqr.networkStatus = NetworkStatus.error;
         }
 
@@ -1299,7 +1292,7 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchObservableWithInfo<TData, TVars extends OperationVariables>(
+  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
@@ -1836,6 +1829,18 @@ export class QueryManager<TStore> {
       clientAwareness: this.clientAwareness,
     };
   }
+}
+
+function maybeWrapError(error: unknown) {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  if (typeof error === "string") {
+    return new Error(error, { cause: error });
+  }
+
+  return new UnknownError(error);
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

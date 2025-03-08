@@ -5,7 +5,6 @@ import React from "react";
 import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
-import { ApolloError } from "@apollo/client/errors";
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { useQuery } from "@apollo/client/react/hooks";
 import { MockedResponse, MockLink } from "@apollo/client/testing/core";
@@ -403,9 +402,7 @@ describe("General use", () => {
         variables,
       });
       if (!loading) {
-        expect(error).toEqual(
-          new ApolloError({ networkError: new Error("something went wrong") })
-        );
+        expect(error).toEqual(new Error("something went wrong"));
         finished = true;
       }
       return null;

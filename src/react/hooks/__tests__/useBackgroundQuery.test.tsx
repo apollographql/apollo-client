@@ -19,8 +19,8 @@ import { Observable, of } from "rxjs";
 import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
-  ApolloError,
   ApolloLink,
+  CombinedGraphQLErrors,
   ErrorPolicy,
   gql,
   NetworkStatus,
@@ -2689,7 +2689,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
       error: null,
       result: {
         data: { greeting: "Hello" },
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors([{ message: "oops" }]),
         networkStatus: NetworkStatus.error,
       },
     });
@@ -3434,7 +3434,7 @@ it("properly handles changing options along with changing `variables`", async ()
             name: "Doctor Strangecache",
           },
         },
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors([{ message: "oops" }]),
         networkStatus: NetworkStatus.error,
       },
     });
@@ -5054,9 +5054,7 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
           name: null,
         },
       },
-      error: new ApolloError({
-        graphQLErrors: [new GraphQLError("Couldn't get name")],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
       networkStatus: NetworkStatus.error,
     });
   }
@@ -5445,9 +5443,7 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
       expect(snapshot.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError("Something went wrong")],
-        })
+        new CombinedGraphQLErrors([{ message: "Something went wrong" }])
       );
     }
 
@@ -5641,9 +5637,9 @@ describe("refetch", () => {
               name: "Spider-Man",
             },
           },
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Something went wrong")],
-          }),
+          error: new CombinedGraphQLErrors([
+            { message: "Something went wrong" },
+          ]),
           networkStatus: NetworkStatus.error,
         },
       });
@@ -5742,9 +5738,9 @@ describe("refetch", () => {
               name: null,
             },
           },
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Something went wrong")],
-          }),
+          error: new CombinedGraphQLErrors([
+            { message: "Something went wrong" },
+          ]),
           networkStatus: NetworkStatus.error,
         },
       });
@@ -5849,9 +5845,7 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
         result: null,
       });
     }
@@ -5872,9 +5866,7 @@ describe("refetch", () => {
         // TODO: We should reset the snapshot between renders to better capture
         // the actual result. This makes it seem like the error is rendered, but
         // in this is just leftover from the previous snapshot.
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
         result: {
           data: { todo: { id: "1", name: "Clean room", completed: true } },
           error: undefined,
@@ -5980,9 +5972,7 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
         result: null,
       });
     }
@@ -6000,9 +5990,9 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch again")],
-        }),
+        error: new CombinedGraphQLErrors([
+          { message: "Oops couldn't fetch again" },
+        ]),
         result: null,
       });
     }

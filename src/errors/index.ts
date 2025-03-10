@@ -32,4 +32,4 @@ export { CombinedGraphQLErrors } from "./CombinedGraphQLErrors.js";
 export { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 export { ServerError } from "./ServerError.js";
 export { ServerParseError } from "./ServerParseError.js";
-export { UnknownError } from "./UnknownError.js";
+export { UnconventionalError } from "./UnconventionalError.js";

@@ -27,7 +27,10 @@ import {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors, UnknownError } from "@apollo/client/errors";
+import {
+  CombinedGraphQLErrors,
+  UnconventionalError,
+} from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
@@ -6159,7 +6162,7 @@ describe("unconventional errors", () => {
     await expect(subscriptionStream).toEmitError(expectedError);
   });
 
-  test("wraps unconventional types in UnknownError", async () => {
+  test("wraps unconventional types in UnconventionalError", async () => {
     const query = gql`
       query {
         hello
@@ -6178,7 +6181,7 @@ describe("unconventional errors", () => {
         cache: new InMemoryCache(),
       });
 
-      const expectedError = new UnknownError(type);
+      const expectedError = new UnconventionalError(type);
 
       await expect(client.query({ query })).rejects.toEqual(expectedError);
 

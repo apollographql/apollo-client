@@ -16,7 +16,7 @@ Array [
   "ObservableQuery",
   "ServerError",
   "ServerParseError",
-  "UnknownError",
+  "UnconventionalError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -82,7 +82,7 @@ Array [
   "ObservableQuery",
   "ServerError",
   "ServerParseError",
-  "UnknownError",
+  "UnconventionalError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -130,7 +130,7 @@ Array [
   "PROTOCOL_ERRORS_SYMBOL",
   "ServerError",
   "ServerParseError",
-  "UnknownError",
+  "UnconventionalError",
   "graphQLResultHasProtocolErrors",
 ]
 `;

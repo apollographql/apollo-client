@@ -23,7 +23,7 @@ import { canonicalStringify } from "@apollo/client/cache";
 import {
   CombinedGraphQLErrors,
   graphQLResultHasProtocolErrors,
-  UnknownError,
+  UnconventionalError,
 } from "@apollo/client/errors";
 import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
 import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
@@ -1829,7 +1829,7 @@ function maybeWrapError(error: unknown) {
     return new Error(error, { cause: error });
   }
 
-  return new UnknownError(error);
+  return new UnconventionalError(error);
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

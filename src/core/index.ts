@@ -29,7 +29,7 @@ export {
   CombinedProtocolErrors,
   ServerError,
   ServerParseError,
-  UnknownError,
+  UnconventionalError,
 } from "../errors/index.js";
 /* Cache */
 

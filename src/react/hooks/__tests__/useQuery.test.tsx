@@ -4254,7 +4254,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error 1" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4264,7 +4264,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "error 2" }] })
+        new CombinedGraphQLErrors([{ message: "error 2" }])
       );
 
       {
@@ -4272,7 +4272,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error 2" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,

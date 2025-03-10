@@ -251,14 +251,14 @@ describe("GraphQL Subscriptions", () => {
         result: {
           data: null,
           extensions: {
-            [PROTOCOL_ERRORS_SYMBOL]: [
+            [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
               {
                 message: "cannot read message from websocket",
                 extensions: {
                   code: "WEBSOCKET_MESSAGE_ERROR",
                 },
               },
-            ],
+            ]),
           },
         },
       },
@@ -341,14 +341,14 @@ describe("GraphQL Subscriptions", () => {
         result: {
           data: null,
           extensions: {
-            [PROTOCOL_ERRORS_SYMBOL]: [
+            [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
               {
                 message: "cannot read message from websocket",
                 extensions: {
                   code: "WEBSOCKET_MESSAGE_ERROR",
                 },
               },
-            ],
+            ]),
           },
         },
       },
@@ -416,14 +416,14 @@ describe("GraphQL Subscriptions", () => {
       result: {
         data: null,
         extensions: {
-          [PROTOCOL_ERRORS_SYMBOL]: [
+          [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
             {
               message: "cannot read message from websocket",
               extensions: {
                 code: "WEBSOCKET_MESSAGE_ERROR",
               },
             },
-          ],
+          ]),
         },
       },
     });

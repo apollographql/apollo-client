@@ -5,6 +5,7 @@ type ObservableEvent<T> =
   | { type: "error"; error: unknown }
   | { type: "next"; value: T };
 
+/** @internal */
 export function onAnyEvent<T>(
   handleEvent: (event: ObservableEvent<T>) => void
 ) {

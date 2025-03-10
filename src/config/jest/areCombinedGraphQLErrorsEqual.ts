@@ -1,5 +1,6 @@
-import { CombinedGraphQLErrors } from "../../errors/index.js";
 import type { Tester } from "@jest/expect-utils";
+
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
 export const areCombinedGraphQLErrorsEqual: Tester = function (
   a,

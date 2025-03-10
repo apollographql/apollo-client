@@ -14,6 +14,7 @@ import { setLogVerbosity } from "@apollo/client";
 import { loadErrorMessageHandler } from "@apollo/client/dev";
 
 import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.js";
+import { areCombinedProtocolErrorsEqual } from "./areCombinedProtocolErrors.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
 
@@ -47,6 +48,7 @@ if (!Symbol.asyncDispose) {
 // @ts-ignore
 expect.addEqualityTesters([
   areCombinedGraphQLErrorsEqual,
+  areCombinedProtocolErrorsEqual,
   areGraphQLErrorsEqual,
   areMissingFieldErrorsEqual,
 ]);

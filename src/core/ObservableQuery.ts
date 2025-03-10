@@ -206,9 +206,11 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
-  public subscribe: Observable<
-    ApolloQueryResult<MaybeMasked<TData>>
-  >["subscribe"];
+  public subscribe: (
+    observer:
+      | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
+      | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
+  ) => Subscription;
 
   public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 

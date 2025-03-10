@@ -466,6 +466,12 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/utilities/internal 1`] = `
+Array [
+  "onAnyEvent",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/utilities/invariant 1`] = `
 Array [
   "ApolloErrorMessageHandler",

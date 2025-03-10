@@ -1,7 +1,10 @@
 import type { FormattedExecutionResult, GraphQLFormattedError } from "graphql";
 import { Observable } from "rxjs";
 
-import type { NetworkError } from "@apollo/client/errors";
+import type {
+  CombinedProtocolErrors,
+  NetworkError,
+} from "@apollo/client/errors";
 import {
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
@@ -28,7 +31,7 @@ export interface ErrorResponse {
    * Fatal transport-level errors from multipart subscriptions.
    * See the [multipart subscription protocol](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol#message-and-error-format) for more information.
    */
-  protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
+  protocolErrors?: CombinedProtocolErrors;
   response?: FormattedExecutionResult;
   operation: Operation;
   forward: NextLink;

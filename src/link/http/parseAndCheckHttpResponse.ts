@@ -1,6 +1,7 @@
 import type { Observer } from "rxjs";
 
 import {
+  CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerError,
   ServerParseError,
@@ -93,7 +94,9 @@ export async function readMultipartBody<
                 ...next,
                 extensions: {
                   ...("extensions" in next ? next.extensions : (null as any)),
-                  [PROTOCOL_ERRORS_SYMBOL]: result.errors,
+                  [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors(
+                    result.errors ?? []
+                  ),
                 },
               };
             }

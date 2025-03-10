@@ -3,7 +3,6 @@ import type { Observer } from "rxjs";
 import { Observable } from "rxjs";
 
 import {
-  CombinedProtocolErrors,
   graphQLResultHasProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
@@ -67,11 +66,7 @@ class RetryableOperation {
     this.currentSubscription = this.forward(this.operation).subscribe({
       next: (result) => {
         if (graphQLResultHasProtocolErrors(result)) {
-          this.onError(
-            new CombinedProtocolErrors(
-              result.extensions[PROTOCOL_ERRORS_SYMBOL]
-            )
-          );
+          this.onError(result.extensions[PROTOCOL_ERRORS_SYMBOL]);
           // Unsubscribe from the current subscription to prevent the `complete`
           // handler to be called as a result of the stream closing.
           this.currentSubscription?.unsubscribe();

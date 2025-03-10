@@ -8,7 +8,11 @@ import type { GraphQLFormattedError } from "graphql";
 export class CombinedProtocolErrors extends Error {
   errors: ReadonlyArray<GraphQLFormattedError>;
 
-  constructor(protocolErrors: Array<GraphQLFormattedError>) {
+  constructor(
+    protocolErrors:
+      | Array<GraphQLFormattedError>
+      | ReadonlyArray<GraphQLFormattedError>
+  ) {
     super(formatMessage(protocolErrors));
     this.name = "CombinedProtocolErrors";
     this.errors = protocolErrors;
@@ -17,7 +21,9 @@ export class CombinedProtocolErrors extends Error {
   }
 }
 
-function formatMessage(errors: Array<GraphQLFormattedError>) {
+function formatMessage(
+  errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>
+) {
   const messageList = errors.map((e) => `- ${e.message}`).join("\n");
 
   return `The GraphQL server returned with errors:

@@ -1,5 +1,6 @@
 import type { FetchResult } from "@apollo/client/link/core";
 
+import { CombinedProtocolErrors } from "./CombinedProtocolErrors.js";
 import type { ServerError } from "./ServerError.js";
 import type { ServerParseError } from "./ServerParseError.js";
 
@@ -16,10 +17,10 @@ export function graphQLResultHasProtocolErrors<T>(
   result: FetchResult<T>
 ): result is FetchResultWithSymbolExtensions<T> {
   if (result.extensions) {
-    return Array.isArray(
+    return (
       (result as FetchResultWithSymbolExtensions<T>).extensions[
         PROTOCOL_ERRORS_SYMBOL
-      ]
+      ] instanceof CombinedProtocolErrors
     );
   }
   return false;

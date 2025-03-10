@@ -9,6 +9,7 @@ import { ReadableStream } from "web-streams-polyfill";
 
 import { FetchResult, ServerError } from "@apollo/client";
 import {
+  CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
   ServerParseError,
 } from "@apollo/client/errors";
@@ -2020,14 +2021,14 @@ describe("HttpLink", () => {
               } else if (i === 1) {
                 expect(result).toEqual({
                   extensions: {
-                    [PROTOCOL_ERRORS_SYMBOL]: [
+                    [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
                       {
                         extensions: {
                           code: "INTERNAL_SERVER_ERROR",
                         },
                         message: "Error field",
                       },
-                    ],
+                    ]),
                   },
                 });
               }

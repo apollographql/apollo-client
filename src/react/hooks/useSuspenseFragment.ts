@@ -9,7 +9,7 @@ import type {
 import { canonicalStringify } from "../../cache/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { getSuspenseCache } from "../internal/index.js";
-import React, { useMemo } from "rehackt";
+import * as React from "rehackt";
 import type { FragmentKey } from "../internal/cache/types.js";
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
@@ -120,7 +120,7 @@ function useSuspenseFragment_<
   const { from, variables } = options;
   const { cache } = client;
 
-  const id = useMemo(
+  const id = React.useMemo(
     () =>
       typeof from === "string" ? from
       : from === null ? null

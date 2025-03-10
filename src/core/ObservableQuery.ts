@@ -85,7 +85,9 @@ export class ObservableQuery<
   }
 
   private subject: BehaviorSubject<ApolloQueryResult<MaybeMasked<TData>>>;
-  private observable: Observable<ApolloQueryResult<MaybeMasked<TData>>>;
+  private readonly observable: Observable<
+    ApolloQueryResult<MaybeMasked<TData>>
+  >;
   private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
 
   private isTornDown: boolean;

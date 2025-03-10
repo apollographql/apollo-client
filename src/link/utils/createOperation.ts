@@ -1,4 +1,4 @@
-import type { GraphQLRequest, Operation } from "../core/index.js";
+import type { GraphQLRequest, Operation } from "@apollo/client/link/core";
 
 export function createOperation(
   starting: any,

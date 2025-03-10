@@ -1,24 +1,33 @@
-import { invariant } from "../utilities/globals/index.js";
-import type { DocumentNode } from "graphql";
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
 
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
+import type { MissingFieldError } from "@apollo/client/cache";
+import type { MissingTree } from "@apollo/client/cache";
+import { ApolloError, isApolloError } from "@apollo/client/errors";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
   Concast,
-  Observer,
   ObservableSubscription,
-} from "../utilities/index.js";
+  Observer,
+} from "@apollo/client/utilities";
 import {
   cloneDeep,
   compact,
-  getOperationDefinition,
-  Observable,
-  iterateObserversSafely,
   fixObservableSubclass,
+  getOperationDefinition,
   getQueryDefinition,
+  iterateObserversSafely,
+  Observable,
   preventUnhandledRejection,
-} from "../utilities/index.js";
-import { ApolloError, isApolloError } from "../errors/index.js";
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import type { TODO } from "../utilities/types/TODO.js";
+
+import { equalByQuery } from "./equalByQuery.js";
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
@@ -26,20 +35,14 @@ import type {
   TypedDocumentNode,
 } from "./types.js";
 import type {
-  WatchQueryOptions,
   FetchMoreQueryOptions,
-  SubscribeToMoreOptions,
   NextFetchPolicyContext,
-  WatchQueryFetchPolicy,
+  SubscribeToMoreOptions,
   UpdateQueryMapFn,
   UpdateQueryOptions,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
 } from "./watchQueryOptions.js";
-import type { QueryInfo } from "./QueryInfo.js";
-import type { MissingFieldError } from "../cache/index.js";
-import type { MissingTree } from "../cache/core/types/common.js";
-import { equalByQuery } from "./equalByQuery.js";
-import type { TODO } from "../utilities/types/TODO.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 const { assign, hasOwnProperty } = Object;
 
@@ -376,10 +379,6 @@ export class ObservableQuery<
   public resetLastResults(): void {
     delete this.last;
     this.isTornDown = false;
-  }
-
-  public resetQueryStoreErrors() {
-    this.queryManager.resetErrors(this.queryId);
   }
 
   /**

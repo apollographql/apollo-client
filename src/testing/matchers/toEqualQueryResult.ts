@@ -1,6 +1,7 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
-import type { QueryResult } from "../../react/index.js";
+
+import type { QueryResult } from "@apollo/client/react";
 
 const CHECKED_KEYS = [
   "loading",

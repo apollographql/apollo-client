@@ -1,49 +1,48 @@
-import { cloneDeep, assign } from "lodash";
+import { waitFor } from "@testing-library/react";
 import {
-  GraphQLError,
   DocumentNode,
+  FormattedExecutionResult,
+  GraphQLError,
   Kind,
   print,
   visit,
-  FormattedExecutionResult,
 } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { assign, cloneDeep } from "lodash";
 
+import {
+  createFragmentRegistry,
+  InMemoryCache,
+  makeVar,
+  PossibleTypesMap,
+} from "@apollo/client/cache";
 import {
   ApolloClient,
   FetchPolicy,
-  WatchQueryFetchPolicy,
-  QueryOptions,
+  NetworkStatus,
   ObservableQuery,
   Operation,
+  QueryOptions,
   TypedDocumentNode,
-  NetworkStatus,
-} from "../core";
-
+  WatchQueryFetchPolicy,
+} from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
 import {
   DocumentTransform,
   Observable,
   ObservableSubscription,
   offsetLimitPagination,
   removeDirectivesFromDocument,
-} from "../utilities";
-import { ApolloLink } from "../link/core";
-import {
-  createFragmentRegistry,
-  InMemoryCache,
-  makeVar,
-  PossibleTypesMap,
-} from "../cache";
-import { ApolloError } from "../errors";
+} from "@apollo/client/utilities";
 
-import { mockSingleLink, MockLink, wait } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { waitFor } from "@testing-library/react";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("client", () => {
   it("can be loaded via require", () => {
     /* tslint:disable */
-    const ApolloClientRequire = require("../").ApolloClient;
+    const ApolloClientRequire = require("../index.js").ApolloClient;
     /* tslint:enable */
 
     const client = new ApolloClientRequire({

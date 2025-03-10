@@ -1,7 +1,13 @@
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "../../../core";
-import { getFragmentDefinitions, Observable } from "../../../utilities";
-import { InMemoryCache, createFragmentRegistry } from "../../index";
-import { ObservableStream } from "../../../testing/internal";
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
+import {
+  ApolloClient,
+  ApolloLink,
+  gql,
+  NetworkStatus,
+} from "@apollo/client/core";
+import { getFragmentDefinitions, Observable } from "@apollo/client/utilities";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 describe("FragmentRegistry", () => {
   it("can be passed to InMemoryCache", () => {

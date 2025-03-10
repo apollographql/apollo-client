@@ -1,29 +1,30 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
-import type { Transaction } from "../core/cache.js";
 import type {
+  Reference,
   StoreObject,
   StoreValue,
-  Reference,
-} from "../../utilities/index.js";
-import type { FieldValueGetter } from "./entityStore.js";
+} from "@apollo/client/utilities";
+
+import type { Transaction } from "../core/cache.js";
 import type {
-  TypePolicies,
-  PossibleTypesMap,
-  KeyFieldsFunction,
-  StorageType,
-  FieldMergeFunction,
-} from "./policies.js";
-import type {
+  AllFieldsModifier,
+  CanReadFunction,
   Modifiers,
   ToReferenceFunction,
-  CanReadFunction,
-  AllFieldsModifier,
 } from "../core/types/common.js";
 
+import type { FieldValueGetter } from "./entityStore.js";
 import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type {
+  FieldMergeFunction,
+  KeyFieldsFunction,
+  PossibleTypesMap,
+  StorageType,
+  TypePolicies,
+} from "./policies.js";
 
-export type { StoreObject, StoreValue, Reference };
+export type { Reference, StoreObject, StoreValue };
 
 export interface IdGetterObj extends Object {
   __typename?: string;

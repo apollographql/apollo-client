@@ -1,28 +1,23 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
 
-import type { Cache, ApolloCache } from "../cache/index.js";
-import { DeepMerger } from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/index.js";
-import type { WatchQueryOptions, ErrorPolicy } from "./watchQueryOptions.js";
+import type { ApolloCache, Cache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
+import {
+  canUseWeakMap,
+  graphQLResultHasError,
+  isNonEmptyArray,
+} from "@apollo/client/utilities";
+import { mergeIncrementalData } from "@apollo/client/utilities";
+import { DeepMerger } from "@apollo/client/utilities";
+
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { reobserveCacheFirst } from "./ObservableQuery.js";
-import type { QueryListener } from "./types.js";
-import type { FetchResult } from "../link/core/index.js";
-import {
-  isNonEmptyArray,
-  graphQLResultHasError,
-  canUseWeakMap,
-} from "../utilities/index.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type { ApolloError } from "../errors/index.js";
 import type { QueryManager } from "./QueryManager.js";
-import type { Unmasked } from "../masking/index.js";
-
-export type QueryStoreValue = Pick<
-  QueryInfo,
-  "variables" | "networkStatus" | "networkError" | "graphQLErrors"
->;
+import type { QueryListener } from "./types.js";
+import type { ErrorPolicy, WatchQueryOptions } from "./watchQueryOptions.js";
 
 export const enum CacheWriteBehavior {
   FORBID,
@@ -82,8 +77,6 @@ export class QueryInfo {
   lastRequestId = 1;
   variables?: Record<string, any>;
   networkStatus?: NetworkStatus;
-  networkError?: Error | null;
-  graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   stopped = false;
 
   private cache: ApolloCache<any>;
@@ -134,7 +127,6 @@ export class QueryInfo {
       document: query.document,
       variables: query.variables,
       networkError: null,
-      graphQLErrors: this.graphQLErrors || [],
       networkStatus,
     });
 
@@ -382,8 +374,6 @@ export class QueryInfo {
     cacheWriteBehavior: CacheWriteBehavior
   ) {
     const merger = new DeepMerger();
-    const graphQLErrors =
-      isNonEmptyArray(result.errors) ? result.errors.slice(0) : [];
 
     // Cancel the pending notify timeout (if it exists) to prevent extraneous network
     // requests. To allow future notify timeouts, diff and dirty are reset as well.
@@ -402,8 +392,6 @@ export class QueryInfo {
       const diff = this.getDiff();
       result.data = merger.merge(diff.result, result.data);
     }
-
-    this.graphQLErrors = graphQLErrors;
 
     if (options.fetchPolicy === "no-cache") {
       this.updateLastDiff(
@@ -505,25 +493,13 @@ export class QueryInfo {
   }
 
   public markReady() {
-    this.networkError = null;
     return (this.networkStatus = NetworkStatus.ready);
   }
 
-  public markError(error: ApolloError) {
+  public markError() {
     this.networkStatus = NetworkStatus.error;
     this.lastWrite = void 0;
-
     this.reset();
-
-    if (error.graphQLErrors) {
-      this.graphQLErrors = error.graphQLErrors;
-    }
-
-    if (error.networkError) {
-      this.networkError = error.networkError;
-    }
-
-    return error;
   }
 }
 

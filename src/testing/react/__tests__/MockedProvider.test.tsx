@@ -1,16 +1,17 @@
-import React from "react";
-import { DocumentNode } from "graphql";
 import { act, render, screen, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
-
-import { MockedResponse, MockLink } from "../../core";
-import { MockedProvider } from "../MockedProvider";
-import { useQuery } from "../../../react/hooks";
-import { InMemoryCache } from "../../../cache";
-import { QueryResult } from "../../../react/types/types";
-import { ApolloLink, FetchResult } from "../../../link/core";
+import { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
+import React from "react";
 import { Observable } from "zen-observable-ts";
-import { ApolloError } from "../../../errors";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloError } from "@apollo/client/errors";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { useQuery } from "@apollo/client/react/hooks";
+import { MockedResponse, MockLink } from "@apollo/client/testing/core";
+
+import { QueryResult } from "../../../react/types/types.js";
+import { MockedProvider } from "../MockedProvider.js";
 
 const variables = {
   username: "mock_username",

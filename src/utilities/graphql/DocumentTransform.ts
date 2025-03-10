@@ -1,11 +1,14 @@
-import { Trie } from "@wry/trie";
-import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
-import { checkDocument } from "./getFromAST.js";
-import { invariant } from "../globals/index.js";
-import type { DocumentNode } from "graphql";
 import { WeakCache } from "@wry/caches";
+import { Trie } from "@wry/trie";
+import type { DocumentNode } from "graphql";
 import { wrap } from "optimism";
+
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { cacheSizes } from "../caching/index.js";
+import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
+
+import { checkDocument } from "./getFromAST.js";
 
 export type DocumentTransformCacheKey = ReadonlyArray<unknown>;
 
@@ -78,10 +81,7 @@ export class DocumentTransform {
     );
   }
 
-  constructor(
-    transform: TransformFn,
-    options: DocumentTransformOptions = Object.create(null)
-  ) {
+  constructor(transform: TransformFn, options: DocumentTransformOptions = {}) {
     this.transform = transform;
 
     if (options.getCacheKey) {

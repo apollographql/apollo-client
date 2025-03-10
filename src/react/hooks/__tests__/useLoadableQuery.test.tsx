@@ -1,61 +1,65 @@
-import React, { Suspense, useState } from "react";
-import { act, screen, renderHook, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  AsyncRenderFn,
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
+import React, { Suspense, useState } from "react";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
-  gql,
-  ApolloError,
   ApolloClient,
-  ErrorPolicy,
-  NetworkStatus,
-  TypedDocumentNode,
+  ApolloError,
   ApolloLink,
+  ErrorPolicy,
+  gql,
+  NetworkStatus,
   Observable,
   OperationVariables,
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
   split,
-} from "../../../core";
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { QueryRef } from "@apollo/client/react";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../../../testing";
+} from "@apollo/client/testing";
+import {
+  MockedProvider,
+  MockedProviderProps,
+} from "@apollo/client/testing/react";
 import {
   concatPagination,
-  offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities";
-import { useLoadableQuery } from "../useLoadableQuery";
-import type { UseReadQueryResult } from "../useReadQuery";
-import { useReadQuery } from "../useReadQuery";
-import { ApolloProvider } from "../../context";
-import { InMemoryCache } from "../../../cache";
-import { LoadableQueryHookFetchPolicy } from "../../types/types";
-import { QueryRef } from "../../../react";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
-import invariant, { InvariantError } from "ts-invariant";
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
 import {
-  SimpleCaseData,
+  renderAsync,
   setupPaginatedCase,
   setupSimpleCase,
+  SimpleCaseData,
   spyOnConsole,
-  renderAsync,
-} from "../../../testing/internal";
-
-import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-  AsyncRenderFn,
-} from "@testing-library/react-render-stream";
-import { MockedProvider, MockedProviderProps } from "../../../testing/react";
+} from "../../../testing/internal/index.js";
+import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import type { UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {

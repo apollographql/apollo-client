@@ -1,28 +1,29 @@
+import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import gql from "graphql-tag";
 
+import {
+  ApolloCache,
+  FieldMergeFunction,
+  InMemoryCache,
+  InMemoryCacheConfig,
+} from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloLink,
   NetworkStatus,
   TypedDocumentNode,
-} from "../core";
-
+} from "@apollo/client/core";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import {
+  concatPagination,
   Observable,
   offsetLimitPagination,
-  concatPagination,
-} from "../utilities";
+} from "@apollo/client/utilities";
 
 import {
-  ApolloCache,
-  InMemoryCache,
-  InMemoryCacheConfig,
-  FieldMergeFunction,
-} from "../cache";
-
-import { MockedResponse, mockSingleLink } from "../testing";
-import { ObservableStream, setupPaginatedCase } from "../testing/internal";
+  ObservableStream,
+  setupPaginatedCase,
+} from "../testing/internal/index.js";
 
 describe("updateQuery on a simple query", () => {
   const query = gql`

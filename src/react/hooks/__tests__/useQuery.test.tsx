@@ -1,9 +1,16 @@
-import React, { Fragment, ReactNode, useEffect, useState } from "react";
-import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
-import gql from "graphql-tag";
 import { act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor, renderHook } from "@testing-library/react";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
+import { gql } from "graphql-tag";
+import React, { Fragment, ReactNode, useEffect, useState } from "react";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloError,
@@ -13,33 +20,35 @@ import {
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "../../../core";
-import { InMemoryCache } from "../../../cache";
-import { ApolloProvider } from "../../context";
-import { Observable, Reference, concatPagination } from "../../../utilities";
-import { ApolloLink } from "../../../link/core";
+} from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Unmasked } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
+  MockedResponse,
   MockLink,
-  MockSubscriptionLink,
   mockSingleLink,
+  MockSubscriptionLink,
   tick,
   wait,
-  MockedResponse,
-} from "../../../testing";
-import { QueryResult } from "../../types/types";
-import { useQuery } from "../useQuery";
-import { useMutation } from "../useMutation";
-import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
-import { useLazyQuery } from "../useLazyQuery";
-import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
-import { InvariantError } from "../../../utilities/globals";
-import { Unmasked } from "../../../masking";
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import {
-  createRenderStream,
-  renderHookToSnapshotStream,
-  disableActEnvironment,
-} from "@testing-library/react-render-stream";
-import { MockedProvider } from "../../../testing/react";
+  concatPagination,
+  Observable,
+  Reference,
+} from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
+import {
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import { QueryResult } from "../../types/types.js";
+import { useLazyQuery } from "../useLazyQuery.js";
+import { useMutation } from "../useMutation.js";
+import { useQuery } from "../useQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");

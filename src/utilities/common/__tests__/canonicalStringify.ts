@@ -1,4 +1,4 @@
-import { canonicalStringify } from "../canonicalStringify";
+import { canonicalStringify } from "../canonicalStringify.js";
 
 function forEachPermutation(
   keys: string[],

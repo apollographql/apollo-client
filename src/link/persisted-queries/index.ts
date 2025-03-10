@@ -1,26 +1,26 @@
-import { invariant } from "../../utilities/globals/index.js";
-
-import { print } from "../../utilities/index.js";
 import type {
   DocumentNode,
   FormattedExecutionResult,
   GraphQLFormattedError,
 } from "graphql";
 
-import type { Operation } from "../core/index.js";
-import { ApolloLink } from "../core/index.js";
+import type { NetworkError } from "@apollo/client/errors";
+import type { Operation } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import type { ServerError } from "@apollo/client/link/utils";
 import type {
-  Observer,
   ObservableSubscription,
-} from "../../utilities/index.js";
-import { Observable, compact, isNonEmptyArray } from "../../utilities/index.js";
-import type { NetworkError } from "../../errors/index.js";
-import type { ServerError } from "../utils/index.js";
+  Observer,
+} from "@apollo/client/utilities";
+import { print } from "@apollo/client/utilities";
+import { compact, isNonEmptyArray, Observable } from "@apollo/client/utilities";
 import {
-  cacheSizes,
   AutoCleanedWeakCache,
+  cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export const VERSION = 1;
 
@@ -68,8 +68,8 @@ function processErrors(
     | ReadonlyArray<GraphQLFormattedError>
     | undefined
 ): ErrorMeta {
-  const byMessage = Object.create(null),
-    byCode = Object.create(null);
+  const byMessage: Record<string, GraphQLFormattedError> = {},
+    byCode: Record<string, GraphQLFormattedError> = {};
 
   if (isNonEmptyArray(graphQLErrors)) {
     graphQLErrors.forEach((error) => {

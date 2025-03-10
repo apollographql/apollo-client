@@ -1,48 +1,49 @@
 // externals
+import { waitFor } from "@testing-library/react";
+import { DocumentNode, GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
 import { from } from "rxjs";
 import { map } from "rxjs/operators";
-import gql from "graphql-tag";
-import { DocumentNode, GraphQLError } from "graphql";
-import { InvariantError, setVerbosity } from "ts-invariant";
 
-import {
-  Observable,
-  Observer,
-} from "../../../utilities/observables/Observable";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, ApolloQueryResult } from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
 import {
   ApolloLink,
   FetchResult,
   type RequestHandler,
-} from "../../../link/core";
-import { InMemoryCache } from "../../../cache";
+} from "@apollo/client/link/core";
+import { wait } from "@apollo/client/testing/core";
+import {
+  addTypenameToDocument,
+  Concast,
+  print,
+} from "@apollo/client/utilities";
+import {
+  InvariantError,
+  setVerbosity,
+} from "@apollo/client/utilities/invariant";
 
-// mocks
 import {
   MockApolloLink,
   MockLink,
-} from "../../../testing/core/mocking/mockLink";
-
-// core
-import { NetworkStatus } from "../../networkStatus";
-import {
-  WatchQueryFetchPolicy,
-  WatchQueryOptions,
-} from "../../watchQueryOptions";
-import { QueryManager } from "../../QueryManager";
-
-import { ApolloError } from "../../../errors";
-
-// testing utils
-import { waitFor } from "@testing-library/react";
-import { wait } from "../../../testing/core";
-import { ApolloClient, ApolloQueryResult } from "../../../core";
-import { mockFetchQuery } from "../ObservableQuery";
-import { addTypenameToDocument, Concast, print } from "../../../utilities";
+} from "../../../testing/core/mocking/mockLink.js";
 import {
   mockDeferStream,
   ObservableStream,
   spyOnConsole,
-} from "../../../testing/internal";
+} from "../../../testing/internal/index.js";
+import {
+  Observable,
+  Observer,
+} from "../../../utilities/observables/Observable.js";
+import { NetworkStatus } from "../../networkStatus.js";
+import { QueryManager } from "../../QueryManager.js";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../../watchQueryOptions.js";
+import { mockFetchQuery } from "../ObservableQuery.js";
 
 describe("ApolloClient", () => {
   const getObservableStream = ({
@@ -3649,7 +3650,6 @@ describe("ApolloClient", () => {
       expect(client.cache.extract()).toEqual({});
       // TODO: Determine if we can drop this check against internal state and
       // replace it with something user-facing.
-      expect(client["queryManager"].getQueryStore()).toEqual({});
       expect(client["queryManager"].mutationStore).toEqual({});
     });
 

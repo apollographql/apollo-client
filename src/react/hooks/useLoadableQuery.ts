@@ -1,34 +1,36 @@
 import * as React from "rehackt";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   DocumentNode,
   FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
-} from "../../core/index.js";
+} from "@apollo/client/core";
 import type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
-} from "../../core/watchQueryOptions.js";
-import { useApolloClient } from "./useApolloClient.js";
+} from "@apollo/client/core";
+import type { LoadableQueryHookOptions } from "@apollo/client/react";
+import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getSuspenseCache,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../internal/index.js";
-import type { CacheKey, QueryRef } from "../internal/index.js";
-import type { LoadableQueryHookOptions } from "../types/types.js";
-import { __use, useRenderGuard } from "./internal/index.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
-import { canonicalStringify } from "../../cache/index.js";
+} from "@apollo/client/react/internal";
 import type {
   DeepPartial,
   OnlyRequiredProperties,
-} from "../../utilities/index.js";
-import { invariant } from "../../utilities/globals/index.js";
+} from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { __use, useRenderGuard } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 export type LoadQueryFunction<TVariables extends OperationVariables> = (
   // Use variadic args to handle cases where TVariables is type `never`, in
@@ -168,7 +170,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions = Object.create(null)
+  options: LoadableQueryHookOptions = {}
 ): UseLoadableQueryResult<TData, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

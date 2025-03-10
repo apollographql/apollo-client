@@ -1,52 +1,50 @@
-import gql from "graphql-tag";
-import { GraphQLError } from "graphql";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { waitFor } from "@testing-library/react";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import { SubscriptionObserver } from "zen-observable-ts";
 
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   WatchQueryFetchPolicy,
-} from "../../core";
-import { ObservableQuery } from "../ObservableQuery";
-import { QueryManager } from "../QueryManager";
-
+} from "@apollo/client/core";
+import { ApolloError } from "@apollo/client/errors";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import {
+  MockLink,
+  MockSubscriptionLink,
+  tick,
+  wait,
+} from "@apollo/client/testing";
 import {
   DeepPartial,
   DocumentTransform,
   Observable,
   removeDirectivesFromDocument,
-} from "../../utilities";
-import { ApolloLink, FetchResult } from "../../link/core";
-import { InMemoryCache } from "../../cache";
-import { ApolloError } from "../../errors";
+} from "@apollo/client/utilities";
 
-import { MockLink, MockSubscriptionLink, tick, wait } from "../../testing";
-import { expectTypeOf } from "expect-type";
-
-import { SubscriptionObserver } from "zen-observable-ts";
-import { waitFor } from "@testing-library/react";
-import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import type { ConcastAndInfo, SourcesAndInfo } from "../QueryManager.js";
+import { QueryManager } from "../QueryManager.js";
 
 export const mockFetchQuery = (queryManager: QueryManager<any>) => {
-  const fetchConcastWithInfo = queryManager["fetchConcastWithInfo"];
-  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
-    queryManager as any
-  ).fetchQueryByPolicy;
-
-  const mock = <
-    T extends typeof fetchConcastWithInfo | typeof fetchQueryByPolicy,
-  >(
-    original: T
-  ) =>
-    jest.fn<ReturnType<T>, Parameters<T>>(function (): ReturnType<T> {
-      // @ts-expect-error
-      return original.apply(queryManager, arguments);
-    });
-
   const mocks = {
-    fetchConcastWithInfo: mock(fetchConcastWithInfo),
-    fetchQueryByPolicy: mock(fetchQueryByPolicy),
+    fetchConcastWithInfo: jest.fn<
+      ConcastAndInfo<unknown>,
+      Parameters<QueryManager<any>["fetchConcastWithInfo"]>
+    >(queryManager["fetchConcastWithInfo"].bind(queryManager)),
+    fetchQueryByPolicy: jest.fn<
+      SourcesAndInfo<unknown>,
+      Parameters<QueryManager<any>["fetchQueryByPolicy"]>
+    >(queryManager["fetchQueryByPolicy"].bind(queryManager)),
   };
 
   Object.assign(queryManager, mocks);
@@ -3290,65 +3288,6 @@ describe("ObservableQuery", () => {
       }
       await checkThrows(true);
       await checkThrows(false);
-    });
-  });
-
-  // TODO: Determine if this API is useful. This clears out internal state not
-  // accessible to the end user.
-  describe("resetQueryStoreErrors", () => {
-    it("should remove any GraphQLError's stored in the query store", async () => {
-      const graphQLError = new GraphQLError("oh no!");
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { errors: [graphQLError] },
-          },
-        ]),
-      });
-      const observable = client.watchQuery({ query, variables });
-
-      await new Promise<void>((resolve) => {
-        observable.subscribe({
-          error() {
-            const { queryManager } = observable as any;
-            const queryInfo = queryManager["queries"].get(observable.queryId);
-            expect(queryInfo.graphQLErrors).toEqual([graphQLError]);
-
-            observable.resetQueryStoreErrors();
-            expect(queryInfo.graphQLErrors).toEqual([]);
-
-            resolve();
-          },
-        });
-      });
-    });
-
-    it("should remove network error's stored in the query store", async () => {
-      const networkError = new Error("oh no!");
-
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: dataOne },
-          },
-        ]),
-      });
-      const observable = client.watchQuery({ query, variables });
-
-      const stream = new ObservableStream(observable);
-
-      await stream.takeNext();
-
-      const { queryManager } = observable as any;
-      const queryInfo = queryManager["queries"].get(observable.queryId);
-      queryInfo.networkError = networkError;
-      observable.resetQueryStoreErrors();
-      expect(queryInfo.networkError).toBeUndefined();
     });
   });
 

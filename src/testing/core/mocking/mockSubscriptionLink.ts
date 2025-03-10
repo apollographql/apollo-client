@@ -1,6 +1,6 @@
-import { Observable } from "../../../utilities/index.js";
-import type { FetchResult, Operation } from "../../../link/core/index.js";
-import { ApolloLink } from "../../../link/core/index.js";
+import type { FetchResult, Operation } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Observable } from "@apollo/client/utilities";
 
 export interface MockedSubscriptionResult {
   result?: FetchResult;

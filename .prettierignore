@@ -37,3 +37,4 @@ node_modules/
 .yalc/
 .next/
 .changeset/
+pnpm-lock.yaml

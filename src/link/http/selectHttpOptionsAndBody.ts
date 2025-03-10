@@ -1,7 +1,7 @@
 import type { ASTNode } from "graphql";
-import { print } from "../../utilities/index.js";
 
-import type { Operation } from "../core/index.js";
+import type { Operation } from "@apollo/client/link/core";
+import { print } from "@apollo/client/utilities";
 
 interface Printer {
   (node: ASTNode, originalPrint: typeof print): string;

@@ -12,14 +12,14 @@
 //   store it in the appropriate dist sub-directory.
 
 import fs from "node:fs";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
-
-const distRoot = `${import.meta.dirname}/../dist`;
 
 /* @apollo/client */
 
 import pkg from "../package.json" with { type: "json" };
-import * as entryPoints from "./entryPoints.ts";
+
+import type { BuildStep } from "./build.ts";
 import type { JSONSchemaForNPMPackageJsonFiles } from "./schema.package.json.ts";
 
 // the generated `Person` type is a bit weird - `author` as a string is valid
@@ -27,8 +27,11 @@ const packageJson: Omit<JSONSchemaForNPMPackageJsonFiles, "author"> & {
   author: string;
 } = pkg;
 
-prepareDist.runOnce = "trailing" as const;
-export function prepareDist() {
+export const prepareDist: BuildStep = async (options) => {
+  if (!options.first) return;
+
+  await mkdir(options.packageRoot, { recursive: true });
+
   // The root package.json is marked as private to prevent publishing
   // from happening in the root of the project. This sets the package back to
   // public so it can be published from the "dist" directory.
@@ -39,6 +42,15 @@ export function prepareDist() {
   delete packageJson.bundlesize;
   delete packageJson.devEngines;
   delete packageJson.devDependencies;
+  delete packageJson.overrides;
+
+  packageJson.exports = {
+    "./package.json": "./package.json",
+    "./*.js": "./legacyEntryPoints/*.js",
+    "./*.cjs": "./legacyEntryPoints/*.cjs",
+    "./*.d.ts": "./legacyEntryPoints/*.d.ts",
+    "./*.d.cts": "./legacyEntryPoints/*.d.cts",
+  };
 
   // The root package.json points to the CJS/ESM source in "dist", to support
   // on-going package development (e.g. running tests, supporting npm link, etc.).
@@ -59,50 +71,18 @@ export function prepareDist() {
     ) + "\n";
 
   // Save the modified package.json to "dist"
-  fs.writeFileSync(`${distRoot}/package.json`, distPackageJson);
+  fs.writeFileSync(
+    path.join(options.packageRoot, `package.json`),
+    distPackageJson
+  );
 
   // Copy supporting files into "dist"
-  const srcDir = `${import.meta.dirname}/..`;
-  const destDir = `${srcDir}/dist`;
-  fs.copyFileSync(`${srcDir}/README.md`, `${destDir}/README.md`);
-  fs.copyFileSync(`${srcDir}/LICENSE`, `${destDir}/LICENSE`);
-
-  // Create individual bundle package.json files, storing them in their
-  // associated dist directory. This helps provide a way for the Apollo Client
-  // core to be used without React, as well as AC's cache, utilities, SSR,
-  // components, HOC, and various links to be used by themselves, via CommonJS
-  // entry point files that only include the exports needed for each bundle.
-  entryPoints.forEach(function buildPackageJson({
-    dirs,
-    bundleName = dirs[dirs.length - 1],
-    sideEffects = false,
-  }) {
-    if (!dirs.length) return;
-    fs.writeFileSync(
-      path.join(distRoot, ...dirs, "package.json"),
-      JSON.stringify(
-        {
-          name: path.posix.join("@apollo", "client", ...dirs),
-          type: "module",
-          main: `${bundleName}.cjs`,
-          module: "index.js",
-          types: "index.d.ts",
-          sideEffects,
-        },
-        null,
-        2
-      ) + "\n"
-    );
-  });
-
-  entryPoints.forEach(function buildCts({
-    dirs,
-    bundleName = dirs[dirs.length - 1],
-  }) {
-    if (!dirs.length) return;
-    fs.writeFileSync(
-      path.join(distRoot, ...dirs, `${bundleName}.d.cts`),
-      'export * from "./index.d.ts";\n'
-    );
-  });
-}
+  fs.copyFileSync(
+    `${options.rootDir}/README.md`,
+    `${options.packageRoot}/README.md`
+  );
+  fs.copyFileSync(
+    `${options.rootDir}/LICENSE`,
+    `${options.packageRoot}/LICENSE`
+  );
+};

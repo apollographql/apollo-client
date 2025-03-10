@@ -1,9 +1,10 @@
 import {
+  getObjectSubset,
   iterableEquality,
   subsetEquality,
-  getObjectSubset,
 } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
+
 import type { ObservableStream } from "../internal/index.js";
 import type { TakeOptions } from "../internal/ObservableStream.js";
 

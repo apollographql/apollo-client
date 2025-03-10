@@ -1,19 +1,21 @@
-import { invariant } from "../globals/index.js";
-
-// Provides the methods that allow QueryManager to handle the `skip` and
-// `include` directives within GraphQL.
 import type {
-  SelectionNode,
-  VariableNode,
+  ArgumentNode,
+  ASTNode,
   BooleanValueNode,
   DirectiveNode,
   DocumentNode,
-  ArgumentNode,
-  ValueNode,
-  ASTNode,
   FragmentSpreadNode,
+  SelectionNode,
+  ValueNode,
+  VariableNode,
 } from "graphql";
-import { visit, BREAK, Kind } from "graphql";
+import { BREAK, Kind, visit } from "graphql";
+
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+// Provides the methods that allow QueryManager to handle the `skip` and
+// `include` directives within GraphQL.
 
 export type DirectiveInfo = {
   [fieldName: string]: { [argName: string]: any };

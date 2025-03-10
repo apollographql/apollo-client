@@ -1,4 +1,4 @@
-import { serializeFetchParameter } from "../serializeFetchParameter";
+import { serializeFetchParameter } from "../serializeFetchParameter.js";
 
 describe("serializeFetchParameter", () => {
   it("throws a parse error on an unparsable body", () => {

@@ -1,25 +1,37 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "noUnusedParameters": false,
     "noUnusedLocals": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
+    "moduleResolution": "NodeNext",
     "importHelpers": true,
     "sourceMap": true,
     "inlineSources": true,
     "declaration": true,
     "declarationMap": true,
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "NodeNext",
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "outDir": "./dist",
-    "lib": ["es2015", "esnext.asynciterable"],
+    "rootDir": "./src",
+    "lib": ["DOM", "ES2023"],
+    "types": [
+      "jest",
+      "node",
+      "./src/testing/matchers/index.d.ts",
+      "@testing-library/react-render-stream/expect"
+    ],
     "jsx": "react",
     "strict": true
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["src/**/__tests__/**/*"]
+  "references": [
+    {
+      "path": "./config/tsconfig.json"
+    }
+  ]
 }

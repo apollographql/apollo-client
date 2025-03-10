@@ -1,11 +1,14 @@
 import type { OptimisticWrapperFunction } from "optimism";
+
 import type {
-  InMemoryCache,
-  DocumentTransform,
-  ApolloLink,
   ApolloCache,
-} from "../../core/index.js";
-import type { ApolloClient } from "../../core/index.js";
+  ApolloLink,
+  DocumentTransform,
+  InMemoryCache,
+} from "@apollo/client/core";
+import type { ApolloClient } from "@apollo/client/core";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+
 import type { CacheSizes } from "./sizes.js";
 import { cacheSizes, defaultCacheSizes } from "./sizes.js";
 

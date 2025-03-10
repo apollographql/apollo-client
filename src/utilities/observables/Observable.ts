@@ -1,7 +1,7 @@
 import type {
   Observer,
-  Subscription as ObservableSubscription,
   Subscriber,
+  Subscription as ObservableSubscription,
 } from "zen-observable-ts";
 import { Observable } from "zen-observable-ts";
 
@@ -9,7 +9,7 @@ import { Observable } from "zen-observable-ts";
 // proposal (https://github.com/zenparsing/es-observable)
 import "symbol-observable";
 
-export type { Observer, ObservableSubscription, Subscriber };
+export type { ObservableSubscription, Observer, Subscriber };
 
 // The zen-observable package defines Observable.prototype[Symbol.observable]
 // when Symbol is supported, but RxJS interop depends on also setting this fake

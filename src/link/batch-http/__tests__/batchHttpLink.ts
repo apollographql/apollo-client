@@ -1,17 +1,18 @@
 import fetchMock from "fetch-mock";
-import gql from "graphql-tag";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import { gql } from "graphql-tag";
 
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
+import { FetchResult } from "@apollo/client/link/core";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
 import {
   Observable,
   ObservableSubscription,
   Observer,
-} from "../../../utilities/observables/Observable";
-import { BatchHttpLink } from "../batchHttpLink";
-import { FetchResult } from "../../core";
-import { ObservableStream } from "../../../testing/internal";
+} from "../../../utilities/observables/Observable.js";
+import { ApolloLink } from "../../core/ApolloLink.js";
+import { execute } from "../../core/execute.js";
+import { BatchHttpLink } from "../batchHttpLink.js";
 
 const sampleQuery = gql`
   query SampleQuery {

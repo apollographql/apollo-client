@@ -1,9 +1,11 @@
-import { responseIterator } from "./responseIterator.js";
-import type { Operation } from "../core/index.js";
-import { throwServerError } from "../utils/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../errors/index.js";
-import { isApolloPayloadResult } from "../../utilities/common/incrementalResult.js";
 import type { SubscriptionObserver } from "zen-observable-ts";
+
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import type { Operation } from "@apollo/client/link/core";
+import { throwServerError } from "@apollo/client/link/utils";
+import { isApolloPayloadResult } from "@apollo/client/utilities";
+
+import { responseIterator } from "./responseIterator.js";
 
 const { hasOwnProperty } = Object.prototype;
 

@@ -1,21 +1,23 @@
-import gql from "graphql-tag";
-import { EntityStore, supportsResultCaching } from "../entityStore";
-import { InMemoryCache } from "../inMemoryCache";
-import { DocumentNode } from "graphql";
-import { StoreObject } from "../types";
-import { ApolloCache } from "../../core/cache";
-import { Cache } from "../../core/types/Cache";
-import {
-  Reference,
-  makeReference,
-  isReference,
-  StoreValue,
-} from "../../../utilities/graphql/storeUtils";
-import { MissingFieldError } from "../..";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { stringifyForDisplay } from "../../../utilities";
-import { InvariantError } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+import { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
+
+import { MissingFieldError } from "@apollo/client/cache";
+import { stringifyForDisplay } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import {
+  isReference,
+  makeReference,
+  Reference,
+  StoreValue,
+} from "../../../utilities/graphql/storeUtils.js";
+import { ApolloCache } from "../../core/cache.js";
+import { Cache } from "../../core/types/Cache.js";
+import { EntityStore, supportsResultCaching } from "../entityStore.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { StoreObject } from "../types.js";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {
@@ -1005,7 +1007,7 @@ describe("EntityStore", () => {
     // Hacky way of injecting a stray __ref field into the Will Smith Person
     // object, clearing store.refs (which was populated by the previous GC).
     storeRootData[willId]!.__ref = willId;
-    store["refs"] = Object.create(null);
+    store["refs"] = {};
 
     expect(cache.extract()).toEqual({
       'Person:{"name":"Jaden Smith"}': {

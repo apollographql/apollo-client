@@ -10,6 +10,25 @@ jobs:
   #     - run: npm ci
   #     - run: npm run bundlesize
 
+  Circularity:
+    docker:
+      - image: cimg/node:23.7.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run madge
+
+  Publint:
+    docker:
+      - image: cimg/node:23.7.0
+    steps:
+      - checkout
+      - run: npm version
+      - run: npm ci
+      - run: npm run build
+      - run: npm run publint
+
   Lint:
     docker:
       - image: cimg/node:23.7.0
@@ -38,6 +57,7 @@ jobs:
       - run: npm run ci:precheck
       - run: npm version
       - run: npm ci
+      - run: npm run typecheck
       - run: if test "<< parameters.project >>" = "Core Tests"; then npm run test:memory; fi
       - run:
           name: Jest suite with coverage
@@ -82,32 +102,35 @@ jobs:
       - checkout
       - attach_workspace:
           at: /tmp/workspace
-      - run: npm version
+      - run: pnpm version
       - run:
-          command: npm pkg set "overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
+          command: pnpm pkg set "pnpm.overrides[@apollo/client]=/tmp/workspace/apollo-client.tgz"
           working_directory: integration-tests
       - run:
           command: |
-            export VERSION=$(npm show react --json | jq '."dist-tags"."<< parameters.react >>"' -r)
-            npm pkg set "overrides[react]=${VERSION}" "overrides[react-dom]=${VERSION}"
+            export VERSION=$(pnpm view react@<< parameters.react >> version)
+            pnpm pkg set "pnpm.overrides[react]=${VERSION}" "pnpm.overrides[react-dom]=${VERSION}"
           working_directory: integration-tests
       - run:
-          command: npm run ci-preparations --workspace=<< parameters.framework >> --if-present
+          command: pnpm run --if-present --filter << parameters.framework >> ci-preparations
           working_directory: integration-tests
       - run:
-          command: npm install
+          command: pnpm install --no-frozen-lockfile
           working_directory: integration-tests
       - run:
-          command: npx playwright install-deps
+          command: cat pnpm-lock.yaml
           working_directory: integration-tests
       - run:
-          command: npx playwright install
+          command: pnpm exec playwright install-deps
           working_directory: integration-tests
       - run:
-          command: npm run build --workspace=<< parameters.framework >> --if-present
+          command: pnpm exec playwright install
           working_directory: integration-tests
       - run:
-          command: npm run test --workspace=<< parameters.framework >>
+          command: pnpm run --if-present --filter << parameters.framework >> build
+          working_directory: integration-tests
+      - run:
+          command: pnpm run --if-present --filter << parameters.framework >> "/test(:.*|$)/"
           working_directory: integration-tests
 
   TestPeerDepTypes:
@@ -137,6 +160,8 @@ workflows:
             parameters:
               project:
                 ["Core Tests", "ReactDOM 17", "ReactDOM 18", "ReactDOM 19"]
+      - Circularity
+      - Publint
       - Attest
       - Formatting
       - Lint
@@ -148,24 +173,33 @@ workflows:
           matrix:
             parameters:
               framework:
-                - cra4
                 - cra5
                 - next
-                - dual-module-test-esm
-                - dual-module-test-standard
+                - node
                 - vite
                 - vite-swc
                 - wrapping-library
                 # -browser-esm would need a package publish to npm/CDNs
               react:
+                - "18.3.0"
                 - latest
                 - next
             exclude:
-              - framework: cra4
+              # CRA only works with React 18
+              - framework: cra5
                 react: next
-              # next ships it's own React version anyways, no need to run this test twice
+              - framework: cra5
+                react: latest
+              # next ships it's own React version anyways
               - framework: next
                 react: next
+              - framework: next
+                react: "18.3.0"
+              # node doesn't use React in the tests
+              - framework: node
+                react: next
+              - framework: node
+                react: "18.3.0"
       - TestPeerDepTypes:
           name: Test external types for << matrix.externalPackage >>
           requires:

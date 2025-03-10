@@ -1,14 +1,23 @@
+//@ts-ignore
+globalThis.__DEV__ = true;
+
+import { TextDecoder, TextEncoder } from "util";
+
 import gql from "graphql-tag";
-import { TextEncoder, TextDecoder } from "util";
+
 global.TextEncoder ??= TextEncoder;
 // @ts-ignore
 global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
-import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";
+import { setLogVerbosity } from "@apollo/client";
+import { loadErrorMessageHandler } from "@apollo/client/dev";
+
 import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
 import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
+
+setLogVerbosity("log");
 
 // Turn off warnings for repeated fragment names
 gql.disableFragmentWarnings();

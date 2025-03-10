@@ -1,13 +1,14 @@
 import type {
+  ApolloPayloadResult,
   ExecutionPatchIncrementalResult,
   ExecutionPatchInitialResult,
   ExecutionPatchResult,
-  ApolloPayloadResult,
   FetchResult,
-} from "../../link/core/index.js";
-import { isNonNullObject } from "./objects.js";
+} from "@apollo/client/link/core";
+
 import { isNonEmptyArray } from "./arrays.js";
 import { DeepMerger } from "./mergeDeep.js";
+import { isNonNullObject } from "./objects.js";
 
 export function isExecutionPatchIncrementalResult<T>(
   value: FetchResult<T>

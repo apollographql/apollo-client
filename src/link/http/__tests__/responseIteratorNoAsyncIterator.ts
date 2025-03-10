@@ -1,10 +1,12 @@
-import gql from "graphql-tag";
-import { execute } from "../../core/execute";
-import { HttpLink } from "../HttpLink";
-import { TextEncoder, TextDecoder } from "util";
-import { ReadableStream } from "web-streams-polyfill";
 import { Readable } from "stream";
-import { ObservableStream } from "../../../testing/internal";
+import { TextDecoder, TextEncoder } from "util";
+
+import { gql } from "graphql-tag";
+import { ReadableStream } from "web-streams-polyfill";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
+import { execute } from "../../core/execute.js";
+import { HttpLink } from "../HttpLink.js";
 
 // As of Jest 26 there is no way to mock/unmock a module that is used indirectly
 // via a single test file.

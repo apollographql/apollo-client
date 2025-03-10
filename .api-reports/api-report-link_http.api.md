@@ -7,7 +7,6 @@
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import { InvariantError } from 'ts-invariant';
 import { Observable } from 'zen-observable-ts';
 import type { Observer } from 'zen-observable-ts';
 
@@ -66,6 +65,8 @@ interface Body_2 {
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
+// Warning: (ae-forgotten-export) The symbol "InvariantError" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export type ClientParseError = InvariantError & {
     parseError: Error;
@@ -225,6 +226,11 @@ interface IncrementalPayload<TData, TExtensions> {
     //
     // (undocumented)
     path: Path;
+}
+
+// @public (undocumented)
+class InvariantError extends Error {
+    constructor(message?: string);
 }
 
 // @public (undocumented)

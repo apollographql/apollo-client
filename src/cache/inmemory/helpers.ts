@@ -4,30 +4,29 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
-import type { NormalizedCache, InMemoryCacheConfig } from "./types.js";
-
-import type { KeyFieldsContext } from "./policies.js";
-import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
-
 import type {
-  Reference,
-  StoreValue,
-  StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
 import {
-  isReference,
-  isField,
-  DeepMerger,
-  resultKeyNameFromField,
-  shouldInclude,
-  isNonNullObject,
   compact,
   createFragmentMap,
+  DeepMerger,
   getFragmentDefinitions,
   isArray,
-} from "../../utilities/index.js";
+  isField,
+  isNonNullObject,
+  isReference,
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities";
+
+import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { KeyFieldsContext } from "./policies.js";
+import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
 
@@ -60,9 +59,8 @@ export function defaultDataIdFromObject(
   }
 }
 
-const defaultConfig = {
+const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
-  addTypename: true,
   resultCaching: true,
   // Thanks to the shouldCanonizeResults helper, this should be the only line
   // you have to change to reenable canonization by default in the future.
@@ -77,7 +75,7 @@ export function shouldCanonizeResults(
   config: Pick<InMemoryCacheConfig, "canonizeResults">
 ): boolean {
   const value = config.canonizeResults;
-  return value === void 0 ? defaultConfig.canonizeResults : value;
+  return value === void 0 ? !!defaultConfig.canonizeResults : value;
 }
 
 export function getTypenameFromStoreObject(

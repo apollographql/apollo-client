@@ -1,29 +1,32 @@
-import { $ } from "zx";
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-import { compileTs } from "./compileTs.ts";
-import { inlineInheritDoc } from "./inlineInheritDoc.ts";
-import { updateVersion, verifyVersion } from "./version.ts";
-import { processInvariants } from "./processInvariants.ts";
-import { prepareDist } from "./prepareDist.ts";
-import { postprocessDist } from "./postprocessDist.ts";
-import { verifySourceMaps } from "./verifySourceMaps.ts";
-import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
+import { $ } from "zx";
+
 import { babelTransform } from "./babel.ts";
+import { compileTs } from "./compileTs.ts";
+import { addExports } from "./exports.ts";
+import { inlineInheritDoc } from "./inlineInheritDoc.ts";
+import { postprocessDist } from "./postprocessDist.ts";
+import { prepareChangesetsRelease } from "./prepareChangesetsRelease.ts";
+import { prepareDist } from "./prepareDist.ts";
+import { processInvariants } from "./processInvariants.ts";
+import { verifySourceMaps } from "./verifySourceMaps.ts";
+import { updateVersion, verifyVersion } from "./version.ts";
 
 export interface BuildStepOptions {
   type: "esm" | "cjs";
   rootDir: string;
+  packageRoot: string;
   /** build target directory, relative to `rootDir` */
   targetDir: string;
   jsExt: "js" | "cjs";
   tsExt: "ts" | "cts";
+  first: boolean;
+  last: boolean;
 }
 export type BuildStep = {
   (options: BuildStepOptions): void | Promise<void>;
-  // some build steps only need to run once as they don't need to be run for each build type
-  runOnce?: "leading" | "trailing";
 };
 type BuildSteps = Record<string, BuildStep>;
 
@@ -31,6 +34,8 @@ $.cwd = join(import.meta.dirname, "..");
 $.verbose = true;
 
 const buildSteps = {
+  prepareDist,
+  addExports,
   typescript: compileTs,
   babelTransform,
   updateVersion,
@@ -39,7 +44,6 @@ const buildSteps = {
   postprocessDist,
   verifyVersion,
   verifySourceMaps,
-  prepareDist,
 } satisfies BuildSteps;
 const additionalSteps = {
   prepareChangesetsRelease,
@@ -76,23 +80,25 @@ if (wrongSteps.length) {
 
 console.log("Running build steps: %s", runSteps.join(", "));
 
-const rootDir = resolve(import.meta.dirname, "..");
 const buildStepOptions = [
   // this order is important so that globs on the esm build don't accidentally match the cjs build
-  { type: "esm", rootDir, targetDir: "dist", jsExt: "js", tsExt: "ts" },
-  { type: "cjs", rootDir, targetDir: "dist/__cjs", jsExt: "cjs", tsExt: "cts" },
-] satisfies BuildStepOptions[];
-for (const options of buildStepOptions)
+  { type: "esm", targetDir: "dist", jsExt: "js", tsExt: "ts" },
+  { type: "cjs", targetDir: "dist/__cjs", jsExt: "cjs", tsExt: "cts" },
+] satisfies Omit<
+  BuildStepOptions,
+  "first" | "last" | "rootDir" | "packageRoot"
+>[];
+for (const options of buildStepOptions) {
+  const first = options === buildStepOptions.at(0);
+  const last = options === buildStepOptions.at(-1);
+  const rootDir = resolve(import.meta.dirname, "..");
+  const packageRoot = resolve(rootDir, "dist");
+
   for (const step of runSteps) {
     const buildStep: BuildStep = allSteps[step];
-    if (
-      (buildStep.runOnce === "leading" && options !== buildStepOptions.at(0)) ||
-      (buildStep.runOnce === "trailing" && options !== buildStepOptions.at(-1))
-    ) {
-      continue;
-    }
 
     console.log("--- Step %s: running ---", step);
-    await buildStep(options);
+    await buildStep({ ...options, first, last, rootDir, packageRoot });
     console.log("--- Step %s: done ---", step);
   }
+}

@@ -1,32 +1,34 @@
-import { assign, omit } from "lodash";
 import {
-  SelectionNode,
-  FieldNode,
-  DefinitionNode,
-  OperationDefinitionNode,
   ASTNode,
+  DefinitionNode,
   DocumentNode,
+  FieldNode,
+  OperationDefinitionNode,
+  SelectionNode,
 } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { assign, omit } from "lodash";
 
+import { TypedDocumentNode } from "@apollo/client/core";
 import {
-  storeKeyNameFromField,
-  makeReference,
-  isReference,
-  Reference,
-  StoreObject,
   addTypenameToDocument,
   cloneDeep,
   getMainDefinition,
-} from "../../../utilities";
-import { StoreWriter } from "../writeToStore";
-import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers";
-import { InMemoryCache } from "../inMemoryCache";
-import { TypedDocumentNode } from "../../../core";
-import { extractFragmentContext } from "../helpers";
-import { KeyFieldsFunction } from "../policies";
-import { invariant } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+  isReference,
+  makeReference,
+  Reference,
+  storeKeyNameFromField,
+  StoreObject,
+} from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { extractFragmentContext } from "../helpers.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { KeyFieldsFunction } from "../policies.js";
+import { StoreWriter } from "../writeToStore.js";
+
+import { defaultNormalizedCacheFactory, writeQueryToStore } from "./helpers.js";
 
 const getIdField: KeyFieldsFunction = ({ id }) => {
   invariant(typeof id === "string", "id is not a string");
@@ -2815,7 +2817,7 @@ describe("writing to the store", () => {
       },
     });
 
-    const mergeCounts: Record<string, number> = Object.create(null);
+    const mergeCounts: Record<string, number> = {};
 
     const query = gql`
       query {

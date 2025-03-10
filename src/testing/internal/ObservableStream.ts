@@ -1,12 +1,14 @@
+import { ReadableStream } from "node:stream/web";
+
 import type { Tester } from "@jest/expect-utils";
 import { equals, iterableEquality } from "@jest/expect-utils";
 import { expect } from "@jest/globals";
 import * as matcherUtils from "jest-matcher-utils";
+
 import type {
   Observable,
   ObservableSubscription,
-} from "../../utilities/index.js";
-import { ReadableStream } from "node:stream/web";
+} from "@apollo/client/utilities";
 
 export interface TakeOptions {
   timeout?: number;

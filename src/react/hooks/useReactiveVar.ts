@@ -1,5 +1,7 @@
 import * as React from "rehackt";
-import type { ReactiveVar } from "../../core/index.js";
+
+import type { ReactiveVar } from "@apollo/client/core";
+
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 /**

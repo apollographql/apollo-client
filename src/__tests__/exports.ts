@@ -3,40 +3,42 @@
 // A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524)
 // B) We're just testing imports/exports, so no reason not to use Node for slightly better performance.
 
-import * as cache from "../cache";
-import * as client from "..";
-import * as core from "../core";
-import * as dev from "../dev";
-import * as errors from "../errors";
-import * as linkBatch from "../link/batch";
-import * as linkBatchHTTP from "../link/batch-http";
-import * as linkContext from "../link/context";
-import * as linkCore from "../link/core";
-import * as linkError from "../link/error";
-import * as linkHTTP from "../link/http";
-import * as linkPersistedQueries from "../link/persisted-queries";
-import * as linkRetry from "../link/retry";
-import * as linkRemoveTypename from "../link/remove-typename";
-import * as linkSchema from "../link/schema";
-import * as linkSubscriptions from "../link/subscriptions";
-import * as linkUtils from "../link/utils";
-import * as linkWS from "../link/ws";
-import * as masking from "../masking";
-import * as react from "../react";
-import * as reactContext from "../react/context";
-import * as reactHooks from "../react/hooks";
-import * as reactInternal from "../react/internal";
-import * as reactParser from "../react/parser";
-import * as reactSSR from "../react/ssr";
-import * as testing from "../testing";
-import * as testingCore from "../testing/core";
-import * as testingExperimental from "../testing/experimental";
-import * as testingReact from "../testing/react";
-import * as utilities from "../utilities";
-import * as utilitiesGlobals from "../utilities/globals";
-import * as urqlUtilities from "../utilities/subscriptions/urql";
+import * as client from "@apollo/client";
+import * as cache from "@apollo/client/cache";
+import * as core from "@apollo/client/core";
+import * as dev from "@apollo/client/dev";
+import * as errors from "@apollo/client/errors";
+import * as linkBatch from "@apollo/client/link/batch";
+import * as linkBatchHTTP from "@apollo/client/link/batch-http";
+import * as linkContext from "@apollo/client/link/context";
+import * as linkCore from "@apollo/client/link/core";
+import * as linkError from "@apollo/client/link/error";
+import * as linkHTTP from "@apollo/client/link/http";
+import * as linkPersistedQueries from "@apollo/client/link/persisted-queries";
+import * as linkRemoveTypename from "@apollo/client/link/remove-typename";
+import * as linkRetry from "@apollo/client/link/retry";
+import * as linkSchema from "@apollo/client/link/schema";
+import * as linkSubscriptions from "@apollo/client/link/subscriptions";
+import * as linkUtils from "@apollo/client/link/utils";
+import * as linkWS from "@apollo/client/link/ws";
+import * as masking from "@apollo/client/masking";
+import * as react from "@apollo/client/react";
+import * as reactContext from "@apollo/client/react/context";
+import * as reactHooks from "@apollo/client/react/hooks";
+import * as reactInternal from "@apollo/client/react/internal";
+import * as reactParser from "@apollo/client/react/parser";
+import * as reactSSR from "@apollo/client/react/ssr";
+import * as testing from "@apollo/client/testing";
+import * as testingCore from "@apollo/client/testing/core";
+import * as testingExperimental from "@apollo/client/testing/experimental";
+import * as testingReact from "@apollo/client/testing/react";
+import * as utilities from "@apollo/client/utilities";
+import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
+import * as utilitiesGlobals from "@apollo/client/utilities/globals";
+import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
+import * as urqlUtilities from "@apollo/client/utilities/subscriptions/urql";
 
-import * as entryPoints from "../../config/entryPoints.js";
+import { entryPoints } from "../../config/entryPoints.js";
 
 type Namespace = object;
 
@@ -82,6 +84,8 @@ describe("exports of public entry points", () => {
   check("@apollo/client/utilities", utilities);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
   check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);
+  check("@apollo/client/utilities/invariant", utilitiesInvariant);
+  check("@apollo/client/utilities/environment", utilitiesEnvironment);
 
   it("completeness", () => {
     const { join } = require("path").posix;

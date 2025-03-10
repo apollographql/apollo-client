@@ -1,5 +1,5 @@
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql";
 import * as React from "rehackt";
 
 import type {
@@ -7,8 +7,7 @@ import type {
   ApolloQueryResult,
   OperationVariables,
   WatchQueryOptions,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
+} from "@apollo/client/core";
 import type {
   LazyQueryHookExecOptions,
   LazyQueryHookOptions,
@@ -16,7 +15,10 @@ import type {
   NoInfer,
   QueryHookOptions,
   QueryResult,
-} from "../types/types.js";
+} from "@apollo/client/react";
+import { mergeOptions } from "@apollo/client/utilities";
+
+import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import type { InternalResult, ObsQueryWithMeta } from "./useQuery.js";
 import {
   createMakeWatchQueryOptions,
@@ -25,7 +27,6 @@ import {
   toQueryResult,
   useQueryInternals,
 } from "./useQuery.js";
-import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -124,7 +125,7 @@ export function useLazyQuery<
       const method = obsQueryFields[key];
       eagerMethods[key] = function () {
         if (!execOptionsRef.current) {
-          execOptionsRef.current = Object.create(null);
+          execOptionsRef.current = {};
           // Only the first time populating execOptionsRef.current matters here.
           forceUpdateState();
         }

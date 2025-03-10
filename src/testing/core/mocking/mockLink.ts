@@ -1,27 +1,25 @@
-import { invariant } from "../../../utilities/globals/index.js";
-
 import { equal } from "@wry/equality";
 
 import type {
-  Operation,
-  GraphQLRequest,
   FetchResult,
-} from "../../../link/core/index.js";
-import { ApolloLink } from "../../../link/core/index.js";
-
+  GraphQLRequest,
+  Operation,
+} from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
 import {
-  Observable,
   addTypenameToDocument,
-  removeClientSetsFromDocument,
-  cloneDeep,
-  stringifyForDisplay,
-  print,
-  getOperationDefinition,
-  getDefaultValues,
-  removeDirectivesFromDocument,
   checkDocument,
-} from "../../../utilities/index.js";
-import type { Unmasked } from "../../../masking/index.js";
+  cloneDeep,
+  getDefaultValues,
+  getOperationDefinition,
+  Observable,
+  print,
+  removeClientSetsFromDocument,
+  removeDirectivesFromDocument,
+  stringifyForDisplay,
+} from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 /** @internal */
 type CovariantUnaryFunction<out Arg, out Ret> = { fn(arg: Arg): Ret }["fn"];
@@ -70,7 +68,7 @@ export class MockLink extends ApolloLink {
 
   constructor(
     mockedResponses: ReadonlyArray<MockedResponse<any, any>>,
-    options: MockLinkOptions = Object.create(null)
+    options: MockLinkOptions = {}
   ) {
     super();
     this.showWarnings = options.showWarnings ?? true;

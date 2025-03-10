@@ -1,30 +1,31 @@
-import { newInvariantError } from "../globals/index.js";
-
 import type {
-  DirectiveNode,
-  FieldNode,
-  IntValueNode,
-  FloatValueNode,
-  StringValueNode,
   BooleanValueNode,
-  ObjectValueNode,
-  ListValueNode,
-  EnumValueNode,
-  NullValueNode,
-  VariableNode,
-  InlineFragmentNode,
-  ValueNode,
-  SelectionNode,
-  NameNode,
-  SelectionSetNode,
+  DirectiveNode,
   DocumentNode,
+  EnumValueNode,
+  FieldNode,
+  FloatValueNode,
   FragmentSpreadNode,
+  InlineFragmentNode,
+  IntValueNode,
+  ListValueNode,
+  NameNode,
+  NullValueNode,
+  ObjectValueNode,
+  SelectionNode,
+  SelectionSetNode,
+  StringValueNode,
+  ValueNode,
+  VariableNode,
 } from "graphql";
 
+import { newInvariantError } from "@apollo/client/utilities/invariant";
+
+import { canonicalStringify } from "../common/canonicalStringify.js";
 import { isNonNullObject } from "../common/objects.js";
+
 import type { FragmentMap } from "./fragments.js";
 import { getFragmentFromSelection } from "./fragments.js";
-import { canonicalStringify } from "../common/canonicalStringify.js";
 
 export interface Reference {
   readonly __ref: string;

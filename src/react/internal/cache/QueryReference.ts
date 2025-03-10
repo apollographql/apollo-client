@@ -1,23 +1,25 @@
 import { equal } from "@wry/equality";
+
 import type {
   ApolloError,
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
-} from "../../../core/index.js";
+} from "@apollo/client/core";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   ObservableSubscription,
   PromiseWithState,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   createRejectedPromise,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
+import { wrapPromiseWithState } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { QueryKey } from "./types.js";
-import { wrapPromiseWithState } from "../../../utilities/index.js";
-import { invariant } from "../../../utilities/globals/invariantWrappers.js";
-import type { MaybeMasked } from "../../../masking/index.js";
 
 type QueryRefPromise<TData> = PromiseWithState<
   ApolloQueryResult<MaybeMasked<TData>>

@@ -1,31 +1,32 @@
-import React from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
+import {
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
+import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloError,
   ApolloLink,
   concat,
   TypedDocumentNode,
-} from "../../../core";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
-import { InMemoryCache as Cache } from "../../../cache";
-import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink, wait } from "../../../testing";
-import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
-import { SubscriptionHookOptions } from "../../types/types";
-import { ErrorBoundary } from "react-error-boundary";
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
-import { Masked, MaskedDocumentNode } from "../../../masking";
-import { expectTypeOf } from "expect-type";
-import {
-  disableActEnvironment,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
+} from "@apollo/client/core";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { SubscriptionHookOptions } from "../../types/types.js";
+import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -651,7 +652,7 @@ describe("useSubscription Hook", () => {
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 
@@ -719,17 +720,17 @@ describe("useSubscription Hook", () => {
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 

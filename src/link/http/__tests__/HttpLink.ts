@@ -1,26 +1,29 @@
-import gql from "graphql-tag";
+import { Readable } from "stream";
+import { TextDecoder } from "util";
+
 import fetchMock from "fetch-mock";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
-import { TextDecoder } from "util";
+import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
-import { Readable } from "stream";
 
+import { FetchResult, ServerError } from "@apollo/client";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import { wait } from "@apollo/client/testing";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
 import {
   Observable,
-  Observer,
   ObservableSubscription,
-} from "../../../utilities/observables/Observable";
-import { ApolloLink } from "../../core/ApolloLink";
-import { execute } from "../../core/execute";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
-import { HttpLink } from "../HttpLink";
-import { createHttpLink } from "../createHttpLink";
-import { ClientParseError } from "../serializeFetchParameter";
-import { ServerParseError } from "../parseAndCheckHttpResponse";
-import { FetchResult, ServerError } from "../../..";
-import { voidFetchDuringEachTest } from "./helpers";
-import { wait } from "../../../testing";
-import { ObservableStream } from "../../../testing/internal";
+  Observer,
+} from "../../../utilities/observables/Observable.js";
+import { ApolloLink } from "../../core/ApolloLink.js";
+import { execute } from "../../core/execute.js";
+import { createHttpLink } from "../createHttpLink.js";
+import { HttpLink } from "../HttpLink.js";
+import { ServerParseError } from "../parseAndCheckHttpResponse.js";
+import { ClientParseError } from "../serializeFetchParameter.js";
+
+import { voidFetchDuringEachTest } from "./helpers.js";
 
 const sampleQuery = gql`
   query SampleQuery {

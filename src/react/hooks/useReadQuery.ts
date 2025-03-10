@@ -1,22 +1,24 @@
 import * as React from "rehackt";
+
+import type {
+  ApolloClient,
+  NetworkStatus,
+  ObservableQuery,
+} from "@apollo/client/core";
+import type { ApolloError } from "@apollo/client/errors";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
-} from "../internal/index.js";
-import type { QueryRef } from "../internal/index.js";
+} from "@apollo/client/react/internal";
+
 import { __use, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 import { toApolloError } from "./useSuspenseQuery.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloError } from "../../errors/index.js";
-import type {
-  ApolloClient,
-  NetworkStatus,
-  ObservableQuery,
-} from "../../core/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import type { MaybeMasked } from "../../masking/index.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**

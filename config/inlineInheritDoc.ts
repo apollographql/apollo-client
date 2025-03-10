@@ -24,29 +24,30 @@
 /** End file docs */
 
 // @ts-ignore
-import { buildDocEntryPoints } from "./entryPoints.ts";
-import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
-import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
-import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
 
-import { applyRecast } from "./helpers.ts";
-import { visit } from "recast";
-import type { BuildStep, BuildStepOptions } from "./build.ts";
-
-import fs from "node:fs";
+import fs, { mkdirSync, symlinkSync } from "node:fs";
 import path from "node:path";
+
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
+import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
+import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
+import { visit } from "recast";
+
+import type { BuildStep, BuildStepOptions } from "./build.ts";
+import { buildDocEntryPoints } from "./entryPoints.ts";
+import { applyRecast, withPseudoNodeModules } from "./helpers.ts";
 
 export const inlineInheritDoc: BuildStep = async (options) => {
   console.log(
     "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
   );
 
-  const model = loadApiModel(options);
+  const model = await withPseudoNodeModules(() => loadApiModel(options));
   await processComments(model, options);
 };
 
@@ -78,6 +79,13 @@ function loadApiModel(options: BuildStepOptions) {
   try {
     const entryPointFile = path.join(tempDir, "entry.d.ts");
     fs.writeFileSync(entryPointFile, buildDocEntryPoints(options));
+    mkdirSync(path.join(tempDir, "node_modules", "@apollo"), {
+      recursive: true,
+    });
+    symlinkSync(
+      options.packageRoot,
+      path.join(tempDir, "node_modules", "@apollo", "client")
+    );
 
     // Load and parse the api-extractor.json file
     const configObjectFullPath = path.resolve(

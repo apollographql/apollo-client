@@ -1,29 +1,31 @@
+import { screen } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { buildSchema } from "graphql";
 import * as React from "react";
+import {
+  ErrorBoundary as ReactErrorBoundary,
+  FallbackProps,
+} from "react-error-boundary";
+
+import type { TypedDocumentNode } from "@apollo/client/core";
 import {
   ApolloClient,
   ApolloError,
-  InMemoryCache,
   gql,
-} from "../../../core/index.js";
-import type { TypedDocumentNode } from "../../../core/index.js";
-import { spyOnConsole, createClientWrapper } from "../../internal/index.js";
-import { createTestSchema } from "../createTestSchema.js";
-import { buildSchema } from "graphql";
-import type { UseSuspenseQueryResult } from "../../../react/index.js";
-import { useMutation, useSuspenseQuery } from "../../../react/index.js";
-import userEvent from "@testing-library/user-event";
-import { screen } from "@testing-library/react";
+  InMemoryCache,
+} from "@apollo/client/core";
+import type { UseSuspenseQueryResult } from "@apollo/client/react";
+import { useMutation, useSuspenseQuery } from "@apollo/client/react";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { createClientWrapper, spyOnConsole } from "../../internal/index.js";
 import { createSchemaFetch } from "../createSchemaFetch.js";
-import {
-  FallbackProps,
-  ErrorBoundary as ReactErrorBoundary,
-} from "react-error-boundary";
-import { InvariantError } from "ts-invariant";
-import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-} from "@testing-library/react-render-stream";
+import { createTestSchema } from "../createTestSchema.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 

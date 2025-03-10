@@ -1,52 +1,57 @@
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
 import { equal } from "@wry/equality";
 import { Trie } from "@wry/trie";
-import type { SelectionSetNode, FieldNode } from "graphql";
+import type { FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 
+import type { Cache } from "@apollo/client/core";
 import type {
   FragmentMap,
   FragmentMapFunction,
-  StoreValue,
-  StoreObject,
   Reference,
-} from "../../utilities/index.js";
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
 import {
-  getFragmentFromSelection,
-  getDefaultValues,
-  getOperationDefinition,
-  getTypenameFromResult,
-  makeReference,
-  isField,
-  resultKeyNameFromField,
-  isReference,
-  shouldInclude,
-  cloneDeep,
   addTypenameToDocument,
-  isNonEmptyArray,
   argumentsObjectFromField,
   canonicalStringify,
-} from "../../utilities/index.js";
-
-import type {
-  NormalizedCache,
-  ReadMergeModifyContext,
-  MergeTree,
-  InMemoryCacheConfig,
-} from "./types.js";
+  cloneDeep,
+  getDefaultValues,
+  getFragmentFromSelection,
+  getOperationDefinition,
+  getTypenameFromResult,
+  isField,
+  isNonEmptyArray,
+  isReference,
+  makeReference,
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
+import type { ReadFieldFunction } from "../core/types/common.js";
+
+import type { EntityStore } from "./entityStore.js";
+import {
+  extractFragmentContext,
+  fieldNameFromStoreName,
   isArray,
   makeProcessedFieldsMerger,
-  fieldNameFromStoreName,
   storeValueIsStoreObject,
-  extractFragmentContext,
 } from "./helpers.js";
-import type { StoreReader } from "./readFromStore.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import type { EntityStore } from "./entityStore.js";
-import type { Cache } from "../../core/index.js";
 import { normalizeReadFieldOptions } from "./policies.js";
-import type { ReadFieldFunction } from "../core/types/common.js";
+import type { StoreReader } from "./readFromStore.js";
+import type {
+  InMemoryCacheConfig,
+  MergeTree,
+  NormalizedCache,
+  ReadMergeModifyContext,
+} from "./types.js";
 
 export interface WriteContext extends ReadMergeModifyContext {
   readonly written: {
@@ -136,7 +141,7 @@ export class StoreWriter {
 
     const context: WriteContext = {
       store,
-      written: Object.create(null),
+      written: {},
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
@@ -151,7 +156,7 @@ export class StoreWriter {
     };
 
     const ref = this.processSelectionSet({
-      result: result || Object.create(null),
+      result: result || {},
       dataId,
       selectionSet: operationDefinition.selectionSet,
       mergeTree: { map: new Map() },
@@ -187,8 +192,7 @@ export class StoreWriter {
         }
 
         if (__DEV__ && !context.overwrite) {
-          const fieldsWithSelectionSets: Record<string, true> =
-            Object.create(null);
+          const fieldsWithSelectionSets: Record<string, true> = {};
           fieldNodeSet.forEach((field) => {
             if (field.selectionSet) {
               fieldsWithSelectionSets[field.name.value] = true;
@@ -250,7 +254,7 @@ export class StoreWriter {
 
     // This variable will be repeatedly updated using context.merge to
     // accumulate all fields that need to be written into the store.
-    let incoming: StoreObject = Object.create(null);
+    let incoming: StoreObject = {};
 
     // If typename was not passed in, infer it. Note that typename is
     // always passed in for tricky-to-infer cases such as "Query" for

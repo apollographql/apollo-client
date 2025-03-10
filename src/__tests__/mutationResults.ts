@@ -1,16 +1,17 @@
-import { cloneDeep } from "lodash";
-import gql from "graphql-tag";
 import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import { cloneDeep } from "lodash";
 
-import { ApolloClient, ApolloError, FetchResult } from "../core";
-import { InMemoryCache } from "../cache";
-import { ApolloLink } from "../link/core";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, ApolloError, FetchResult } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import {
   Observable,
   ObservableSubscription as Subscription,
-} from "../utilities";
-import { MockedResponse, mockSingleLink } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
+} from "@apollo/client/utilities";
+
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("mutation results", () => {
   const query = gql`

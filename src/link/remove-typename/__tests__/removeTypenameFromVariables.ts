@@ -1,10 +1,11 @@
+import { gql, Observable } from "@apollo/client/core";
+import { ApolloLink, Operation } from "@apollo/client/link/core";
+import { createOperation, toPromise } from "@apollo/client/link/utils";
+
 import {
   KEEP,
   removeTypenameFromVariables,
-} from "../removeTypenameFromVariables";
-import { ApolloLink, Operation } from "../../core";
-import { Observable, gql } from "../../../core";
-import { createOperation, toPromise } from "../../utils";
+} from "../removeTypenameFromVariables.js";
 
 type PartialOperation = Partial<Pick<Operation, "variables">> &
   Pick<Operation, "query">;

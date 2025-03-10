@@ -1,5 +1,5 @@
-import { newInvariantError } from "../../utilities/globals/index.js";
-import type { GraphQLRequest } from "../core/index.js";
+import type { GraphQLRequest } from "@apollo/client/link/core";
+import { newInvariantError } from "@apollo/client/utilities/invariant";
 
 export function validateOperation(operation: GraphQLRequest): GraphQLRequest {
   const OPERATION_FIELDS = [

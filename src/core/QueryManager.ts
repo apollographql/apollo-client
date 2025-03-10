@@ -1,11 +1,26 @@
-import { invariant, newInvariantError } from "../utilities/globals/index.js";
-
+import { Trie } from "@wry/trie";
 import type { DocumentNode } from "graphql";
-// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
-type OperationTypeNode = any;
 
-import type { ApolloLink, FetchResult } from "../link/core/index.js";
-import { execute } from "../link/core/index.js";
+import type { ApolloCache, Cache } from "@apollo/client/cache";
+import { canonicalStringify } from "@apollo/client/cache";
+import type { ApolloErrorOptions } from "@apollo/client/errors";
+import {
+  ApolloError,
+  graphQLResultHasProtocolErrors,
+  isApolloError,
+} from "@apollo/client/errors";
+import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import type { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { execute } from "@apollo/client/link/core";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import { maskFragment, maskOperation } from "@apollo/client/masking";
+import type {
+  ConcastSourcesArray,
+  DeepPartial,
+  ObservableSubscription,
+} from "@apollo/client/utilities";
+import { print } from "@apollo/client/utilities";
+import { AutoCleanedWeakCache, cacheSizes } from "@apollo/client/utilities";
 import {
   addNonReactiveToNamedFragments,
   defaultCacheSizes,
@@ -14,76 +29,69 @@ import {
   isExecutionPatchResult,
   isFullyUnmaskedOperation,
   removeDirectivesFromDocument,
-} from "../utilities/index.js";
-import type { Cache, ApolloCache } from "../cache/index.js";
-import { canonicalStringify } from "../cache/index.js";
-
-import type {
-  ObservableSubscription,
-  ConcastSourcesArray,
-  DeepPartial,
-} from "../utilities/index.js";
+} from "@apollo/client/utilities";
 import {
+  asyncMap,
+  Concast,
+  DocumentTransform,
   getDefaultValues,
+  getGraphQLErrorsFromResult,
   getOperationDefinition,
   getOperationName,
-  hasClientExports,
   graphQLResultHasError,
-  getGraphQLErrorsFromResult,
-  Observable,
-  asyncMap,
-  isNonEmptyArray,
-  Concast,
-  makeUniqueId,
+  hasClientExports,
   isDocumentNode,
+  isNonEmptyArray,
   isNonNullObject,
-  DocumentTransform,
-} from "../utilities/index.js";
-import { mergeIncrementalData } from "../utilities/common/incrementalResult.js";
+  makeUniqueId,
+  Observable,
+} from "@apollo/client/utilities";
+import { mergeIncrementalData } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 import {
-  ApolloError,
-  isApolloError,
-  graphQLResultHasProtocolErrors,
-} from "../errors/index.js";
-import type {
-  QueryOptions,
-  WatchQueryOptions,
-  SubscriptionOptions,
-  MutationOptions,
-  ErrorPolicy,
-  MutationFetchPolicy,
-  WatchQueryFetchPolicy,
-} from "./watchQueryOptions.js";
-import { ObservableQuery, logMissingFieldErrors } from "./ObservableQuery.js";
-import { NetworkStatus, isNetworkRequestInFlight } from "./networkStatus.js";
-import type {
-  ApolloQueryResult,
-  OperationVariables,
-  MutationUpdaterFunction,
-  OnQueryUpdated,
-  InternalRefetchQueriesInclude,
-  InternalRefetchQueriesOptions,
-  InternalRefetchQueriesResult,
-  InternalRefetchQueriesMap,
-  DefaultContext,
-} from "./types.js";
-import type { LocalState } from "./LocalState.js";
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
-import type { QueryStoreValue } from "./QueryInfo.js";
-import {
-  QueryInfo,
-  shouldWriteResult,
-  CacheWriteBehavior,
-} from "./QueryInfo.js";
-import type { ApolloErrorOptions } from "../errors/index.js";
-import { PROTOCOL_ERRORS_SYMBOL } from "../errors/index.js";
-import { print } from "../utilities/index.js";
 import type { IgnoreModifier } from "../cache/core/types/common.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
+import type { DefaultOptions } from "./ApolloClient.js";
+import type { LocalState } from "./LocalState.js";
+import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
+import { logMissingFieldErrors, ObservableQuery } from "./ObservableQuery.js";
+import {
+  CacheWriteBehavior,
+  QueryInfo,
+  shouldWriteResult,
+} from "./QueryInfo.js";
+import type {
+  ApolloQueryResult,
+  DefaultContext,
+  InternalRefetchQueriesInclude,
+  InternalRefetchQueriesMap,
+  InternalRefetchQueriesOptions,
+  InternalRefetchQueriesResult,
+  MutationUpdaterFunction,
+  OnQueryUpdated,
+  OperationVariables,
+} from "./types.js";
+import type {
+  ErrorPolicy,
+  MutationFetchPolicy,
+  MutationOptions,
+  QueryOptions,
+  SubscriptionOptions,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "./watchQueryOptions.js";
+
 const { hasOwnProperty } = Object.prototype;
 
-const IGNORE: IgnoreModifier = Object.create(null);
+// TODO(brian): A hack until this issue is resolved (https://github.com/graphql/graphql-js/issues/3356)
+type OperationTypeNode = any;
+
+const IGNORE = {} as IgnoreModifier;
 
 interface MutationStoreValue {
   mutation: DocumentNode;
@@ -104,12 +112,6 @@ interface TransformCacheEntry {
   defaultVars: OperationVariables;
   asQuery: DocumentNode;
 }
-
-import type { DefaultOptions } from "./ApolloClient.js";
-import { Trie } from "@wry/trie";
-import { AutoCleanedWeakCache, cacheSizes } from "../utilities/index.js";
-import { maskFragment, maskOperation } from "../masking/index.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
 
 interface MaskFragmentOptions<TData> {
   fragment: DocumentNode;
@@ -196,10 +198,10 @@ export class QueryManager<TStore> {
           // selections and fragments from the fragment registry.
           .concat(defaultDocumentTransform)
       : defaultDocumentTransform;
-    this.defaultContext = options.defaultContext || Object.create(null);
+    this.defaultContext = options.defaultContext || {};
 
     if ((this.onBroadcast = options.onBroadcast)) {
-      this.mutationStore = Object.create(null);
+      this.mutationStore = {};
     }
   }
 
@@ -662,27 +664,6 @@ export class QueryManager<TStore> {
       .promise as TODO;
   }
 
-  public getQueryStore() {
-    const store: Record<string, QueryStoreValue> = Object.create(null);
-    this.queries.forEach((info, queryId) => {
-      store[queryId] = {
-        variables: info.variables,
-        networkStatus: info.networkStatus,
-        networkError: info.networkError,
-        graphQLErrors: info.graphQLErrors,
-      };
-    });
-    return store;
-  }
-
-  public resetErrors(queryId: string) {
-    const queryInfo = this.queries.get(queryId);
-    if (queryInfo) {
-      queryInfo.networkError = undefined;
-      queryInfo.graphQLErrors = [];
-    }
-  }
-
   public transform(document: DocumentNode) {
     return this.documentTransform.transformDocument(document);
   }
@@ -878,7 +859,7 @@ export class QueryManager<TStore> {
     });
 
     if (this.mutationStore) {
-      this.mutationStore = Object.create(null);
+      this.mutationStore = {};
     }
 
     // begin removing data from the store
@@ -1230,12 +1211,9 @@ export class QueryManager<TStore> {
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
+            queryInfo.markError();
             // Throwing here effectively calls observer.error.
-            throw queryInfo.markError(
-              new ApolloError({
-                graphQLErrors,
-              })
-            );
+            throw new ApolloError({ graphQLErrors });
           }
           // Use linkDocument rather than queryInfo.document so the
           // operation/fragments used to write the result are the same as the
@@ -1280,7 +1258,7 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError(error);
+          queryInfo.markError();
         }
 
         throw error;
@@ -1807,9 +1785,9 @@ interface FetchConcastInfo {
   // Metadata properties that can be returned in addition to the Concast.
   fromLink: boolean;
 }
-interface SourcesAndInfo<TData> extends FetchConcastInfo {
+export interface SourcesAndInfo<TData> extends FetchConcastInfo {
   sources: ConcastSourcesArray<ApolloQueryResult<TData>>;
 }
-interface ConcastAndInfo<TData> extends FetchConcastInfo {
+export interface ConcastAndInfo<TData> extends FetchConcastInfo {
   concast: Concast<ApolloQueryResult<TData>>;
 }

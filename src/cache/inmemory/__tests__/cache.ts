@@ -1,25 +1,25 @@
-import gql, { disableFragmentWarnings } from "graphql-tag";
 import { expectTypeOf } from "expect-type";
+import { disableFragmentWarnings, gql } from "graphql-tag";
 
-import { cloneDeep } from "../../../utilities/common/cloneDeep";
+import { Cache, MissingFieldError } from "@apollo/client/cache";
 import {
-  makeReference,
-  Reference,
-  makeVar,
-  TypedDocumentNode,
-  isReference,
   DocumentNode,
-} from "../../../core";
-import { Cache, MissingFieldError } from "../../../cache";
-import { InMemoryCache } from "../inMemoryCache";
-import { InMemoryCacheConfig } from "../types";
+  isReference,
+  makeReference,
+  makeVar,
+  Reference,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { defaultCacheSizes } from "@apollo/client/utilities";
 
-import { StoreReader } from "../readFromStore";
-import { StoreWriter } from "../writeToStore";
-import { ObjectCanon } from "../object-canon";
-import { TypePolicies } from "../policies";
-import { spyOnConsole } from "../../../testing/internal";
-import { defaultCacheSizes } from "../../../utilities";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { cloneDeep } from "../../../utilities/common/cloneDeep.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { ObjectCanon } from "../object-canon.js";
+import { TypePolicies } from "../policies.js";
+import { StoreReader } from "../readFromStore.js";
+import { InMemoryCacheConfig } from "../types.js";
+import { StoreWriter } from "../writeToStore.js";
 
 disableFragmentWarnings();
 
@@ -2328,7 +2328,7 @@ describe("InMemoryCache#broadcastWatches", function () {
         name: string;
       };
     }>;
-    const diffs: Record<string, Diff[]> = Object.create(null);
+    const diffs: Record<string, Diff[]> = {};
     function addDiff(name: string, diff: Diff) {
       (diffs[name] || (diffs[name] = [])).push(diff);
     }
@@ -3844,8 +3844,8 @@ describe("ReactiveVar and makeVar", () => {
 
   it("should remove all watchers when cache.reset() called", () => {
     const { cache, query, nameVar } = makeCacheAndVar(false);
-    const unwatchers: Record<string, Array<() => void>> = Object.create(null);
-    const diffCounts: Record<string, number> = Object.create(null);
+    const unwatchers: Record<string, Array<() => void>> = {};
+    const diffCounts: Record<string, number> = {};
 
     function watch(id: string) {
       const fns = unwatchers[id] || (unwatchers[id] = []);

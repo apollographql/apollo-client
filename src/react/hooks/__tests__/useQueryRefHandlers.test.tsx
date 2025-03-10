@@ -1,43 +1,45 @@
-import React from "react";
 import { screen } from "@testing-library/react";
-import {
-  ApolloClient,
-  InMemoryCache,
-  NetworkStatus,
-  TypedDocumentNode,
-  gql,
-  split,
-} from "../../../core";
-import {
-  SubscribeToMoreFunction,
-  SubscribeToMoreUpdateQueryFn,
-} from "../../../core/watchQueryOptions";
-import {
-  MockLink,
-  MockSubscriptionLink,
-  MockedResponse,
-} from "../../../testing";
-import {
-  createClientWrapper,
-  PaginatedCaseData,
-  SimpleCaseData,
-  setupPaginatedCase,
-  setupSimpleCase,
-} from "../../../testing/internal";
-import { useQueryRefHandlers } from "../useQueryRefHandlers";
-import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
-import { Suspense } from "react";
-import { createQueryPreloader } from "../../query-preloader/createQueryPreloader";
-import userEvent from "@testing-library/user-event";
-import { QueryRef } from "../../internal";
-import { useBackgroundQuery } from "../useBackgroundQuery";
-import { useLoadableQuery } from "../useLoadableQuery";
-import { concatPagination, getMainDefinition } from "../../../utilities";
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import React from "react";
+import { Suspense } from "react";
+
+import {
+  ApolloClient,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  split,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { QueryRef } from "@apollo/client/react/internal";
+import {
+  MockedResponse,
+  MockLink,
+  MockSubscriptionLink,
+} from "@apollo/client/testing";
+import { concatPagination, getMainDefinition } from "@apollo/client/utilities";
+
+import {
+  SubscribeToMoreFunction,
+  SubscribeToMoreUpdateQueryFn,
+} from "../../../core/watchQueryOptions.js";
+import {
+  createClientWrapper,
+  PaginatedCaseData,
+  setupPaginatedCase,
+  setupSimpleCase,
+  SimpleCaseData,
+} from "../../../testing/internal/index.js";
+import { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
+import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();

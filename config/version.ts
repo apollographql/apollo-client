@@ -1,13 +1,15 @@
-import assert from "assert";
-import path from "path";
+import assert from "node:assert";
 import { createRequire } from "node:module";
-import { applyRecast } from "./helpers.ts";
-import { visit } from "recast";
-import type { BuildStep } from "./build.ts";
+import path from "node:path";
 
-const require = createRequire(import.meta.url);
+import { visit } from "recast";
 
 import pkgJson from "../package.json" with { type: "json" };
+
+import type { BuildStep } from "./build.ts";
+import { applyRecast } from "./helpers.ts";
+
+const require = createRequire(import.meta.url);
 
 const { version } = pkgJson;
 assert.strictEqual(

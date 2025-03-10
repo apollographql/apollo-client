@@ -814,9 +814,6 @@ interface DeleteModifier {
 // @public (undocumented)
 const _deleteModifier: unique symbol;
 
-// @public @deprecated (undocumented)
-export const DEV: boolean;
-
 // @public (undocumented)
 interface DevtoolsOptions {
     enabled?: boolean;
@@ -2012,8 +2009,6 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     // (undocumented)
     resetLastResults(): void;
     // (undocumented)
-    resetQueryStoreErrors(): void;
-    // (undocumented)
     resubscribeAfterError(onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void, onError?: (error: any) => void, onComplete?: () => void): ObservableSubscription;
     // (undocumented)
     resubscribeAfterError(observer: Observer<ApolloQueryResult<TData>>): ObservableSubscription;
@@ -2163,8 +2158,6 @@ class QueryInfo {
     // (undocumented)
     getDiff(): Cache_2.DiffResult<any>;
     // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
     init(query: {
         document: DocumentNode;
         variables: Record<string, any> | undefined;
@@ -2179,15 +2172,13 @@ class QueryInfo {
     // (undocumented)
     listeners: Set<QueryListener>;
     // (undocumented)
-    markError(error: ApolloError): ApolloError;
+    markError(): void;
     // (undocumented)
     markReady(): NetworkStatus;
     // Warning: (ae-forgotten-export) The symbol "CacheWriteBehavior" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
     markResult<T>(result: FetchResult<T>, document: DocumentNode, options: Pick<WatchQueryOptions, "variables" | "fetchPolicy" | "errorPolicy">, cacheWriteBehavior: CacheWriteBehavior): void;
-    // (undocumented)
-    networkError?: Error | null;
     // (undocumented)
     networkStatus?: NetworkStatus;
     // (undocumented)
@@ -2259,10 +2250,6 @@ class QueryManager<TStore> {
     getLocalState(): LocalState<TStore>;
     // (undocumented)
     getObservableQueries(include?: InternalRefetchQueriesInclude): Map<string, ObservableQuery<any, OperationVariables>>;
-    // Warning: (ae-forgotten-export) The symbol "QueryStoreValue" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    getQueryStore(): Record<string, QueryStoreValue>;
     // (undocumented)
     protected inFlightLinkObservables: Trie<{
         observable?: Observable<FetchResult<any>>;
@@ -2324,8 +2311,6 @@ class QueryManager<TStore> {
     // (undocumented)
     removeQuery(queryId: string): void;
     // (undocumented)
-    resetErrors(queryId: string): void;
-    // (undocumented)
     setObservableQuery(observableQuery: ObservableQuery<any, any>): void;
     // (undocumented)
     readonly ssrMode: boolean;
@@ -2383,9 +2368,6 @@ interface QueryOptions<TVariables = OperationVariables, TData = any> {
     returnPartialData?: boolean;
     variables?: TVariables;
 }
-
-// @public (undocumented)
-type QueryStoreValue = Pick<QueryInfo, "variables" | "networkStatus" | "networkError" | "graphQLErrors">;
 
 // @public (undocumented)
 type ReactiveListener<T> = (value: T) => any;
@@ -2898,25 +2880,25 @@ interface WriteContext extends ReadMergeModifyContext {
 
 // Warnings were encountered during analysis:
 //
-// src/cache/core/types/DataProxy.ts:141:9 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:58:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:162:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:163:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/policies.ts:164:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/types.ts:139:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/cache/inmemory/writeToStore.ts:65:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
+// src/cache/core/types/DataProxy.ts:142:9 - (ae-forgotten-export) The symbol "MissingFieldError" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:62:3 - (ae-forgotten-export) The symbol "TypePolicy" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:167:3 - (ae-forgotten-export) The symbol "FieldReadFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/policies.ts:168:3 - (ae-forgotten-export) The symbol "FieldMergeFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/types.ts:140:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
+// src/cache/inmemory/writeToStore.ts:70:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:159:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:414:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:178:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:207:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:201:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-// src/utilities/graphql/storeUtils.ts:282:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
-// src/utilities/policies/pagination.ts:76:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
-// src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:121:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:122:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:161:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:416:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:179:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:208:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:203:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/utilities/graphql/storeUtils.ts:283:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
+// src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts
+// src/utilities/policies/pagination.ts:78:3 - (ae-forgotten-export) The symbol "TRelayPageInfo" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

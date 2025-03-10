@@ -1,9 +1,10 @@
 import type { GraphQLFormattedError } from "graphql";
 import type { DocumentNode } from "graphql";
-import type { DefaultContext } from "../../core/index.js";
-export type { DocumentNode };
 
-import type { Observable } from "../../utilities/index.js";
+import type { DefaultContext } from "@apollo/client/core";
+import type { Observable } from "@apollo/client/utilities";
+
+export type { DocumentNode };
 
 export type Path = ReadonlyArray<string | number>;
 

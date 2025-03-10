@@ -1,27 +1,29 @@
 import * as React from "rehackt";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   DocumentNode,
   FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryOptions,
-} from "../../core/index.js";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
-import { useApolloClient } from "./useApolloClient.js";
+} from "@apollo/client/core";
+import type { SubscribeToMoreFunction } from "@apollo/client/core";
+import type { BackgroundQueryHookOptions, NoInfer } from "@apollo/client/react";
+import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   getSuspenseCache,
   unwrapQueryRef,
   updateWrappedQueryRef,
   wrapQueryRef,
-} from "../internal/index.js";
-import type { CacheKey, QueryRef } from "../internal/index.js";
-import type { BackgroundQueryHookOptions, NoInfer } from "../types/types.js";
-import { wrapHook } from "./internal/index.js";
-import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
-import { canonicalStringify } from "../../cache/index.js";
-import type { DeepPartial } from "../../utilities/index.js";
+} from "@apollo/client/react/internal";
+import type { DeepPartial } from "@apollo/client/utilities";
+
 import type { SkipToken } from "./constants.js";
+import { wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
+import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 export type UseBackgroundQueryResult<
   TData = unknown,
@@ -180,7 +182,7 @@ export function useBackgroundQuery<
   options:
     | (SkipToken &
         Partial<BackgroundQueryHookOptionsNoInfer<TData, TVariables>>)
-    | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = Object.create(null)
+    | BackgroundQueryHookOptionsNoInfer<TData, TVariables> = {}
 ): [
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,

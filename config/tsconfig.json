@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
+    "composite": true,
+    "outDir": ".ignore",
     "target": "esnext",
     "module": "nodenext",
     "allowJs": true,
-    "noEmit": true,
     "allowImportingTsExtensions": true,
     "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": ["./**/*.ts", "./**/*.cts"]
 }

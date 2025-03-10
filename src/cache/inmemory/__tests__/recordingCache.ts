@@ -1,7 +1,7 @@
-import { NormalizedCacheObject, StoreObject } from "../types";
-import { EntityStore } from "../entityStore";
-import { Policies } from "../policies";
-import { InMemoryCache } from "../inMemoryCache";
+import { EntityStore } from "../entityStore.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { Policies } from "../policies.js";
+import { NormalizedCacheObject, StoreObject } from "../types.js";
 
 describe("Optimistic EntityStore layering", () => {
   function makeLayer(root: EntityStore) {

@@ -1,19 +1,18 @@
 import { DocumentNode, Kind, print } from "graphql";
-import gql from "graphql-tag";
-import { disableFragmentWarnings } from "graphql-tag";
+import { disableFragmentWarnings, gql } from "graphql-tag";
 
 // Turn off warnings for repeated fragment names
 disableFragmentWarnings();
 
+import { getQueryDefinition } from "../getFromAST.js";
 import {
   addTypenameToDocument,
-  removeDirectivesFromDocument,
-  removeConnectionDirectiveFromDocument,
   removeArgumentsFromDocument,
-  removeFragmentSpreadFromDocument,
   removeClientSetsFromDocument,
-} from "../transform";
-import { getQueryDefinition } from "../getFromAST";
+  removeConnectionDirectiveFromDocument,
+  removeDirectivesFromDocument,
+  removeFragmentSpreadFromDocument,
+} from "../transform.js";
 
 describe("removeArgumentsFromDocument", () => {
   it("should remove a single variable", () => {

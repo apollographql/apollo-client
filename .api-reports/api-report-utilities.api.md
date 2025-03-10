@@ -17,12 +17,14 @@ import { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import type { NameNode } from 'graphql';
 import { Observable } from 'rxjs';
+import type { Observer } from 'rxjs';
 import type { OperationDefinitionNode } from 'graphql';
 import type { SelectionNode } from 'graphql';
 import type { SelectionSetNode } from 'graphql';
 import { StrongCache } from '@wry/caches';
 import type { Subscribable } from 'rxjs';
 import type { Subscriber } from 'rxjs';
+import type { Subscription } from 'rxjs';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { ValueNode } from 'graphql';
@@ -1974,7 +1976,7 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     startPolling(pollInterval: number): void;
     stopPolling(): void;
     // (undocumented)
-    subscribe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["subscribe"];
+    subscribe: (observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)) => Subscription;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreOptions" needs to be exported by the entry point index.d.ts
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
     // Warning: (ae-forgotten-export) The symbol "UpdateQueryMapFn" needs to be exported by the entry point index.d.ts

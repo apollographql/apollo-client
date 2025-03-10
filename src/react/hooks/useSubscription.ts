@@ -12,7 +12,7 @@ import type {
   FetchResult,
   OperationVariables,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   NoInfer,

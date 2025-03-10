@@ -162,7 +162,7 @@ interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultC
 }
 
 // @public (undocumented)
-export class UnknownError extends Error {
+export class UnconventionalError extends Error {
     constructor(errorType: unknown);
 }
 

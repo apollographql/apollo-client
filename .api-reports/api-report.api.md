@@ -2366,6 +2366,11 @@ export type TypePolicy = {
 };
 
 // @public (undocumented)
+export class UnconventionalError extends Error {
+    constructor(errorType: unknown);
+}
+
+// @public (undocumented)
 type UnionForAny<T> = T extends never ? "a" : 1;
 
 // @public (undocumented)
@@ -2373,11 +2378,6 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 // @public (undocumented)
 type unionToIntersection<T> = (T extends unknown ? (x: T) => unknown : never) extends ((x: infer U) => unknown) ? U : never;
-
-// @public (undocumented)
-export class UnknownError extends Error {
-    constructor(errorType: unknown);
-}
 
 // Warning: (ae-forgotten-export) The symbol "ContainsFragmentsRefs" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "UnwrapFragmentRefs" needs to be exported by the entry point index.d.ts

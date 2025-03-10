@@ -219,7 +219,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
 export interface ApolloQueryResult<T> {
     // (undocumented)
     data: T | undefined;
-    error?: Error;
+    error?: ErrorLike;
     // (undocumented)
     loading: boolean;
     // (undocumented)
@@ -403,7 +403,7 @@ export class CombinedGraphQLErrors extends Error {
 
 // @public
 export class CombinedProtocolErrors extends Error {
-    constructor(protocolErrors: Array<GraphQLFormattedError>);
+    constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
     // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
 }
@@ -730,6 +730,16 @@ namespace EntityStore {
         // (undocumented)
         readonly stump: Stump;
     }
+}
+
+// @public (undocumented)
+export interface ErrorLike {
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    stack?: string;
 }
 
 // @public
@@ -1637,7 +1647,7 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     // (undocumented)
     getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
-    getLastError(variablesMustMatch?: boolean): Error | undefined;
+    getLastError(variablesMustMatch?: boolean): ErrorLike | undefined;
     // (undocumented)
     getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined;
     // (undocumented)
@@ -2487,8 +2497,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeySpecifier" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/policies.ts:166:3 - (ae-forgotten-export) The symbol "KeyArgsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/types.ts:140:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:426:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts

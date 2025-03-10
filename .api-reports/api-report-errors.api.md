@@ -15,7 +15,7 @@ export class CombinedGraphQLErrors extends Error {
 
 // @public
 export class CombinedProtocolErrors extends Error {
-    constructor(protocolErrors: Array<GraphQLFormattedError>);
+    constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
     // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
 }

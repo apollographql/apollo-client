@@ -50,6 +50,13 @@ class ApolloLink {
     split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
 }
 
+// @public
+class CombinedProtocolErrors extends Error {
+    constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
+    // (undocumented)
+    errors: ReadonlyArray<GraphQLFormattedError>;
+}
+
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {
 }
@@ -85,7 +92,8 @@ export interface ErrorResponse {
     networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
-    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
+    // Warning: (ae-forgotten-export) The symbol "CombinedProtocolErrors" needs to be exported by the entry point index.d.ts
+    protocolErrors?: CombinedProtocolErrors;
     // (undocumented)
     response?: FormattedExecutionResult;
 }

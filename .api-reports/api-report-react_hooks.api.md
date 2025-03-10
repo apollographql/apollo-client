@@ -249,7 +249,8 @@ class ApolloLink {
 interface ApolloQueryResult<T> {
     // (undocumented)
     data: T | undefined;
-    error?: Error;
+    // Warning: (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
+    error?: ErrorLike;
     // (undocumented)
     loading: boolean;
     // Warning: (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
@@ -300,7 +301,7 @@ interface BaseMutationOptions<TData = any, TVariables = OperationVariables, TCon
     client?: ApolloClient<object>;
     notifyOnNetworkStatusChange?: boolean;
     onCompleted?: (data: MaybeMasked<TData>, clientOptions?: BaseMutationOptions) => void;
-    onError?: (error: Error, clientOptions?: BaseMutationOptions) => void;
+    onError?: (error: ErrorLike, clientOptions?: BaseMutationOptions) => void;
 }
 
 // Warning: (ae-forgotten-export) The symbol "SharedWatchQueryOptions" needs to be exported by the entry point index.d.ts
@@ -325,7 +326,7 @@ interface BaseSubscriptionOptions<TData = any, TVariables extends OperationVaria
     onComplete?: () => void;
     // Warning: (ae-forgotten-export) The symbol "OnDataOptions" needs to be exported by the entry point index.d.ts
     onData?: (options: OnDataOptions<TData>) => any;
-    onError?: (error: Error) => void;
+    onError?: (error: ErrorLike) => void;
     // @deprecated
     onSubscriptionComplete?: () => void;
     // Warning: (ae-forgotten-export) The symbol "OnSubscriptionDataOptions" needs to be exported by the entry point index.d.ts
@@ -656,6 +657,16 @@ interface DocumentTransformOptions {
     cache?: boolean;
     // Warning: (ae-forgotten-export) The symbol "DocumentTransformCacheKey" needs to be exported by the entry point index.d.ts
     getCacheKey?: (document: DocumentNode) => DocumentTransformCacheKey | undefined;
+}
+
+// @public (undocumented)
+interface ErrorLike {
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    stack?: string;
 }
 
 // @public
@@ -1206,7 +1217,7 @@ interface MutationResult<TData = any> {
     called: boolean;
     client: ApolloClient<object>;
     data?: MaybeMasked<TData> | null;
-    error?: Error;
+    error?: ErrorLike;
     loading: boolean;
     reset: () => void;
 }
@@ -1300,7 +1311,7 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     // (undocumented)
     getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
-    getLastError(variablesMustMatch?: boolean): Error | undefined;
+    getLastError(variablesMustMatch?: boolean): ErrorLike | undefined;
     // (undocumented)
     getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined;
     // (undocumented)
@@ -1663,7 +1674,7 @@ interface QueryResult<TData = any, TVariables extends OperationVariables = Opera
     called: boolean;
     client: ApolloClient<any>;
     data: MaybeMasked<TData> | undefined;
-    error?: Error;
+    error?: ErrorLike;
     loading: boolean;
     networkStatus: NetworkStatus;
     observable: ObservableQuery<TData, TVariables>;
@@ -1895,7 +1906,7 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = any> {
 // @public (undocumented)
 interface SubscriptionResult<TData = any, TVariables = any> {
     data?: MaybeMasked<TData>;
-    error?: Error;
+    error?: ErrorLike;
     loading: boolean;
     // @internal (undocumented)
     variables?: TVariables;
@@ -2191,7 +2202,7 @@ export function useSubscription<TData = any, TVariables extends OperationVariabl
     restart: () => void;
     loading: boolean;
     data?: TData | undefined;
-    error?: Error;
+    error?: ErrorLike;
     variables?: TVariables | undefined;
 };
 
@@ -2337,12 +2348,12 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:426:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:173:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:202:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:179:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:208:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:203:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:35:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:37:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts

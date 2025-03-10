@@ -22,6 +22,12 @@ export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
 
+export interface ErrorLike {
+  message: string;
+  name: string;
+  stack?: string;
+}
+
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
   diff: Cache.DiffResult<any>,

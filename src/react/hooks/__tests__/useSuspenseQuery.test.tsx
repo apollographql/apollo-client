@@ -8903,10 +8903,10 @@ describe("useSuspenseQuery", () => {
     expect(error).toBeInstanceOf(CombinedGraphQLErrors);
     expect(error).toEqual(
       new CombinedGraphQLErrors([
-        new GraphQLError(
-          "homeWorld for character with ID 1000 could not be fetched.",
-          { path: ["hero", "heroFriends", 0, "homeWorld"] }
-        ),
+        {
+          message: "homeWorld for character with ID 1000 could not be fetched.",
+          path: ["hero", "heroFriends", 0, "homeWorld"],
+        },
       ])
     );
   });
@@ -9026,10 +9026,11 @@ describe("useSuspenseQuery", () => {
         },
         networkStatus: NetworkStatus.error,
         error: new CombinedGraphQLErrors([
-          new GraphQLError(
-            "homeWorld for character with ID 1000 could not be fetched.",
-            { path: ["hero", "heroFriends", 0, "homeWorld"] }
-          ),
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
         ]),
       });
     });
@@ -9076,10 +9077,11 @@ describe("useSuspenseQuery", () => {
         },
         networkStatus: NetworkStatus.error,
         error: new CombinedGraphQLErrors([
-          new GraphQLError(
-            "homeWorld for character with ID 1000 could not be fetched.",
-            { path: ["hero", "heroFriends", 0, "homeWorld"] }
-          ),
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
         ]),
       },
     ]);
@@ -9345,10 +9347,11 @@ describe("useSuspenseQuery", () => {
         },
         networkStatus: NetworkStatus.error,
         error: new CombinedGraphQLErrors([
-          new GraphQLError(
-            "homeWorld for character with ID 1000 could not be fetched.",
-            { path: ["hero", "heroFriends", 0, "homeWorld"] }
-          ),
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
         ]),
       });
     });
@@ -9494,10 +9497,11 @@ describe("useSuspenseQuery", () => {
         },
         networkStatus: NetworkStatus.error,
         error: new CombinedGraphQLErrors([
-          new GraphQLError(
-            "homeWorld for character with ID 1000 could not be fetched.",
-            { path: ["hero", "heroFriends", 0, "homeWorld"] }
-          ),
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
         ]),
       },
       {

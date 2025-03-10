@@ -3,7 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { EmptyError, map, Observable, of, Subject } from "rxjs";
+import { EmptyError, Observable, of, Subject } from "rxjs";
 import { Observer } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -31,7 +31,6 @@ import {
   ObservableStream,
   spyOnConsole,
 } from "../../testing/internal/index.js";
-import { ObservableQuery } from "../ObservableQuery.js";
 import type { ObservableAndInfo } from "../QueryManager.js";
 import { QueryManager } from "../QueryManager.js";
 

@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.13.4
+
+### Patch Changes
+
+- [#12420](https://github.com/apollographql/apollo-client/pull/12420) [`fee9368`](https://github.com/apollographql/apollo-client/commit/fee9368750e242ea03dea8d1557683506d411d8d) Thanks [@jorenbroekema](https://github.com/jorenbroekema)! - Use import star from `rehackt` to prevent issues with importing named exports from external CJS modules.
+
 ## 3.13.3
 
 ### Patch Changes

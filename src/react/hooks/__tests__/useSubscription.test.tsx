@@ -1085,16 +1085,14 @@ describe("useSubscription Hook", () => {
           result: {
             data: null,
             extensions: {
-              [PROTOCOL_ERRORS_SYMBOL]: [
+              [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
                 {
                   message: "cannot read message from websocket",
-                  extensions: [
-                    {
-                      code: "WEBSOCKET_MESSAGE_ERROR",
-                    },
-                  ],
+                  extensions: {
+                    code: "WEBSOCKET_MESSAGE_ERROR",
+                  },
                 },
-              ],
+              ]),
             },
           },
         },
@@ -1124,13 +1122,18 @@ describe("useSubscription Hook", () => {
       expect(renderCount).toBe(1);
       await waitFor(
         () => {
-          expect(result.current.error).toBeInstanceOf(Error);
+          expect(result.current.error).toBeInstanceOf(CombinedProtocolErrors);
         },
         { interval: 1 }
       );
       expect(result.current.error).toEqual(
         new CombinedProtocolErrors([
-          { message: "cannot read message from websocket" },
+          {
+            message: "cannot read message from websocket",
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
+          },
         ])
       );
     });

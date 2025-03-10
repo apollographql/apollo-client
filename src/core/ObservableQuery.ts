@@ -1,11 +1,6 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import type {
-  Observer,
-  OperatorFunction,
-  Subscribable,
-  Subscription,
-} from "rxjs";
+import type { Observer, Subscribable, Subscription } from "rxjs";
 import type { Observable } from "rxjs";
 import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
 
@@ -163,6 +158,9 @@ export class ObservableQuery<
       )
     );
 
+    this.pipe = this.observable.pipe.bind(this.observable);
+    this.subscribe = this.observable.subscribe.bind(this.observable);
+
     // related classes
     this.queryInfo = queryInfo;
     this.queryManager = queryManager;
@@ -206,94 +204,11 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
-  subscribe(
-    observer:
-      | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>
-      | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)
-  ) {
-    return this.observable.subscribe(observer);
-  }
+  public subscribe: Observable<
+    ApolloQueryResult<MaybeMasked<TData>>
+  >["subscribe"];
 
-  pipe(): Observable<ApolloQueryResult<MaybeMasked<TData>>>;
-  pipe<A>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>
-  ): Observable<A>;
-  pipe<A, B>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>
-  ): Observable<B>;
-  pipe<A, B, C>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>
-  ): Observable<C>;
-  pipe<A, B, C, D>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>
-  ): Observable<D>;
-  pipe<A, B, C, D, E>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>,
-    op5: OperatorFunction<D, E>
-  ): Observable<E>;
-  pipe<A, B, C, D, E, F>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>,
-    op5: OperatorFunction<D, E>,
-    op6: OperatorFunction<E, F>
-  ): Observable<F>;
-  pipe<A, B, C, D, E, F, G>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>,
-    op5: OperatorFunction<D, E>,
-    op6: OperatorFunction<E, F>,
-    op7: OperatorFunction<F, G>
-  ): Observable<G>;
-  pipe<A, B, C, D, E, F, G, H>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>,
-    op5: OperatorFunction<D, E>,
-    op6: OperatorFunction<E, F>,
-    op7: OperatorFunction<F, G>,
-    op8: OperatorFunction<G, H>
-  ): Observable<H>;
-  pipe<A, B, C, D, E, F, G, H, I>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>,
-    op5: OperatorFunction<D, E>,
-    op6: OperatorFunction<E, F>,
-    op7: OperatorFunction<F, G>,
-    op8: OperatorFunction<G, H>,
-    op9: OperatorFunction<H, I>
-  ): Observable<I>;
-  pipe<A, B, C, D, E, F, G, H, I>(
-    op1: OperatorFunction<ApolloQueryResult<MaybeMasked<TData>>, A>,
-    op2: OperatorFunction<A, B>,
-    op3: OperatorFunction<B, C>,
-    op4: OperatorFunction<C, D>,
-    op5: OperatorFunction<D, E>,
-    op6: OperatorFunction<E, F>,
-    op7: OperatorFunction<F, G>,
-    op8: OperatorFunction<G, H>,
-    op9: OperatorFunction<H, I>,
-    ...operations: OperatorFunction<any, any>[]
-  ): Observable<unknown>;
-
-  pipe(...args: any[]) {
-    return (this.observable as any).pipe(...args);
-  }
+  public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
   // TODO: Consider deprecating this method. If not, use firstValueFrom helper
   // instead.

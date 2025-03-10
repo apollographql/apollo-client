@@ -79,6 +79,7 @@ import {
 import type {
   ApolloQueryResult,
   DefaultContext,
+  ErrorLike,
   InternalRefetchQueriesInclude,
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
@@ -1811,8 +1812,19 @@ export class QueryManager<TStore> {
   }
 }
 
+function isErrorLike(error: unknown): error is ErrorLike {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    typeof (error as ErrorLike).message === "string" &&
+    typeof (error as ErrorLike).name === "string" &&
+    (typeof (error as ErrorLike).stack === "undefined" ||
+      typeof (error as ErrorLike).stack === "string")
+  );
+}
+
 function maybeWrapError(error: unknown) {
-  if (error instanceof Error) {
+  if (isErrorLike(error)) {
     return error;
   }
 

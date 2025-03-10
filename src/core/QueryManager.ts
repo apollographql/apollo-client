@@ -15,7 +15,6 @@ import {
   share,
   shareReplay,
   Subject,
-  switchMap,
   tap,
 } from "rxjs";
 
@@ -1390,7 +1389,7 @@ export class QueryManager<TStore> {
           normalized.variables,
           normalized.context
         )
-      ).pipe(switchMap((variables) => fromVariables(variables).observable));
+      ).pipe(mergeMap((variables) => fromVariables(variables).observable));
 
       // there is just no way we can synchronously get the *right* value here,
       // so we will assume `true`, which is the behaviour before the bug fix in

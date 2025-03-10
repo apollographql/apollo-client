@@ -58,13 +58,13 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { onAnyEvent } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import { onAnyEvent } from "../utilities/internal/index.js";
 import type { TODO } from "../utilities/types/TODO.js";
 
 import type { DefaultOptions } from "./ApolloClient.js";

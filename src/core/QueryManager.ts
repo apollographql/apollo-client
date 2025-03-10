@@ -1365,14 +1365,14 @@ export class QueryManager<TStore> {
       // We need to call `complete` on the subject here otherwise the merged
       // observable will never complete since it waits for all source
       // observables to complete before itself completes.
-      subject.complete();
+      fetchCancelSubject.complete();
     };
     this.fetchCancelFns.set(queryId, (reason) => {
-      subject.error(reason);
+      fetchCancelSubject.error(reason);
       cleanupCancelFn();
     });
 
-    const subject = new Subject<ApolloQueryResult<TData>>();
+    const fetchCancelSubject = new Subject<ApolloQueryResult<TData>>();
     let observable: Observable<ApolloQueryResult<TData>>,
       containsDataFromLink: boolean;
     // If the query has @export(as: ...) directives, then we need to
@@ -1406,7 +1406,7 @@ export class QueryManager<TStore> {
     return {
       observable: observable.pipe(
         tap({ error: cleanupCancelFn, complete: cleanupCancelFn }),
-        mergeWith(subject),
+        mergeWith(fetchCancelSubject),
         share()
       ),
       fromLink: containsDataFromLink,

@@ -1180,9 +1180,11 @@ export class QueryManager<TStore> {
           observable = entry.observable = execute(link, operation).pipe(
             onAnyEvent((event) => {
               if (
-                event.type !== "next" ||
-                !("hasNext" in event.value) ||
-                !event.value.hasNext
+                (event.type !== "next" ||
+                  !("hasNext" in event.value) ||
+                  !event.value.hasNext) &&
+                inFlightLinkObservables.peek(printedServerQuery, varJson) ===
+                  entry
               ) {
                 inFlightLinkObservables.remove(printedServerQuery, varJson);
               }

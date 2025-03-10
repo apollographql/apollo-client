@@ -206,6 +206,9 @@ export class ObservableQuery<
     this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
+  // We can't use Observable['subscribe'] here as the type as it conflicts with
+  // the ability to infer T from Subscribable<T>. This limits the surface area
+  // to the non-deprecated signature which works properly with type inference.
   public subscribe: (
     observer:
       | Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>>

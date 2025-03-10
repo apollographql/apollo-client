@@ -7,6 +7,7 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   DefaultContext,
+  ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
   FetchPolicy,
@@ -127,7 +128,7 @@ export interface QueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
   previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: Error;
+  error?: ErrorLike;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
@@ -271,7 +272,7 @@ export interface BaseMutationOptions<
     clientOptions?: BaseMutationOptions
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-  onError?: (error: Error, clientOptions?: BaseMutationOptions) => void;
+  onError?: (error: ErrorLike, clientOptions?: BaseMutationOptions) => void;
 }
 
 export interface MutationFunctionOptions<
@@ -288,7 +289,7 @@ export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: MaybeMasked<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-  error?: Error;
+  error?: ErrorLike;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
@@ -379,7 +380,7 @@ export interface BaseSubscriptionOptions<
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
-  onError?: (error: Error) => void;
+  onError?: (error: ErrorLike) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
   /**
@@ -395,7 +396,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
   data?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
-  error?: Error;
+  error?: ErrorLike;
   // This was added by the legacy useSubscription type, and is tested in unit
   // tests, but probably shouldn’t be added to the result.
   /**

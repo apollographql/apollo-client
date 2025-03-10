@@ -23,6 +23,7 @@ import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryManager } from "./QueryManager.js";
 import type {
   ApolloQueryResult,
+  ErrorLike,
   OperationVariables,
   TypedDocumentNode,
 } from "./types.js";
@@ -54,7 +55,7 @@ export interface FetchMoreOptions<
 interface Last<TData, TVariables> {
   result: ApolloQueryResult<TData>;
   variables?: TVariables;
-  error?: Error;
+  error?: ErrorLike;
 }
 
 export class ObservableQuery<
@@ -400,7 +401,7 @@ export class ObservableQuery<
   }
 
   // TODO: Consider deprecating this function
-  public getLastError(variablesMustMatch?: boolean): Error | undefined {
+  public getLastError(variablesMustMatch?: boolean): ErrorLike | undefined {
     return this.getLast("error", variablesMustMatch);
   }
 

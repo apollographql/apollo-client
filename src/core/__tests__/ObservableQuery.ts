@@ -3615,50 +3615,6 @@ describe("ObservableQuery", () => {
 
     await expect(stream).not.toEmitAnything();
   });
-
-  // TODO: Determine if we still want this behavior
-  it.skip("ObservableQuery#map respects Symbol.species", async () => {
-    const client = new ApolloClient({
-      cache: new InMemoryCache(),
-      link: new MockLink([
-        {
-          request: { query, variables },
-          result: { data: dataOne },
-        },
-      ]),
-    });
-    const observable = client.watchQuery({ query, variables });
-    expect(observable).toBeInstanceOf(Observable);
-    expect(observable).toBeInstanceOf(ObservableQuery);
-
-    const mapped = observable.pipe(
-      map((result) => {
-        expect(result).toEqualApolloQueryResult({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: dataOne,
-          partial: false,
-        });
-        return {
-          ...result,
-          data: { mapped: true },
-        };
-      })
-    );
-    expect(mapped).toBeInstanceOf(Observable);
-    expect(mapped).not.toBeInstanceOf(ObservableQuery);
-
-    const stream = new ObservableStream(mapped);
-
-    await expect(stream).toEmitApolloQueryResult({
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      data: { mapped: true },
-      partial: false,
-    });
-
-    await expect(stream).not.toEmitAnything();
-  });
 });
 
 test("regression test for #10587", async () => {

@@ -7,14 +7,14 @@ export const areCombinedProtocolErrorsEqual: Tester = function (
   b,
   customTesters
 ) {
-  const isACombinedGraphQLErrors = a instanceof CombinedProtocolErrors;
-  const isBCombinedGraphQLErrors = b instanceof CombinedProtocolErrors;
+  const isACombinedProtocolErrors = a instanceof CombinedProtocolErrors;
+  const isBCombinedProtocolErrors = b instanceof CombinedProtocolErrors;
 
-  if (isACombinedGraphQLErrors && isBCombinedGraphQLErrors) {
+  if (isACombinedProtocolErrors && isBCombinedProtocolErrors) {
     return (
       a.message === b.message && this.equals(a.errors, b.errors, customTesters)
     );
-  } else if (isACombinedGraphQLErrors === isBCombinedGraphQLErrors) {
+  } else if (isACombinedProtocolErrors === isBCombinedProtocolErrors) {
     return undefined;
   } else {
     return false;

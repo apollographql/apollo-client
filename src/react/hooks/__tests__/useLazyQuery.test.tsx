@@ -45,7 +45,6 @@ import {
 } from "../../../testing/internal/index.js";
 import { useLazyQuery } from "../useLazyQuery.js";
 
-
 describe("useLazyQuery Hook", () => {
   const helloQuery: TypedDocumentNode<{
     hello: string;
@@ -1948,7 +1947,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
-      errors: [{ message: "Not logged in" }],
+      error: new ApolloError({ graphQLErrors: [{ message: "Not logged in" }] }),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -1963,14 +1962,18 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        errors: [{ message: "Not logged in" }],
+        error: new ApolloError({
+          graphQLErrors: [{ message: "Not logged in" }],
+        }),
         variables: {},
       });
     }
 
-    await expect(execute()).resolves.toEqual({
+    await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
-      errors: [{ message: "Not logged in 2" }],
+      error: new ApolloError({
+        graphQLErrors: [{ message: "Not logged in 2" }],
+      }),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -1985,7 +1988,9 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        errors: [{ message: "Not logged in 2" }],
+        error: new ApolloError({
+          graphQLErrors: [{ message: "Not logged in 2" }],
+        }),
         variables: {},
       });
     }
@@ -4539,11 +4544,9 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: null,
       },
-      // TODO: Re-enable when errors is deprecated in favor of this property
-      // error: new ApolloError({
-      //   graphQLErrors: [{ message: "Could not find character 1" }],
-      // }),
-      errors: [{ message: "Could not find character 1" }],
+      error: new ApolloError({
+        graphQLErrors: [{ message: "Could not find character 1" }],
+      }),
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,

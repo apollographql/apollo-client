@@ -1,16 +1,16 @@
 import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
-import type { LazyQueryResult } from "../../react/index.js";
-import type { OperationVariables } from "../../core/types.js";
+
+import type { OperationVariables } from "@apollo/client/core";
+import type { LazyQueryResult } from "@apollo/client/react";
+
 
 const CHECKED_KEYS = [
   "loading",
   "error",
-  "errors",
   "data",
   "variables",
   "networkStatus",
-  "errors",
   "called",
   "previousData",
 ] as const;

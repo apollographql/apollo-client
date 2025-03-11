@@ -340,30 +340,14 @@ export function useLazyQuery<
         options.fetchPolicy = observable.options.initialFetchPolicy;
       }
 
-      const concast = observable.reobserveAsConcast(options);
+      const promise = observable.reobserve(options);
 
       // TODO: This should be fixed in core
       if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
         updateResult(observable.getCurrentResult(), forceUpdateState);
       }
 
-      return new Promise<ApolloQueryResult<TData>>((resolve, reject) => {
-        let result: ApolloQueryResult<TData>;
-
-        // Subscribe to the concast independently of the ObservableQuery in case
-        // the component gets unmounted before the promise resolves. This prevents
-        // the concast from terminating early and resolving with `undefined` when
-        // there are no more subscribers for the concast.
-        concast.subscribe({
-          next(value) {
-            result = value;
-          },
-          complete() {
-            resolve(observable["maskResult"](result));
-          },
-          error: reject,
-        });
-      });
+      return promise;
     },
     [
       observable,

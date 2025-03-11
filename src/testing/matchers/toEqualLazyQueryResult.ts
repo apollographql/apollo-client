@@ -4,7 +4,6 @@ import type { MatcherFunction } from "expect";
 import type { OperationVariables } from "@apollo/client/core";
 import type { LazyQueryResult } from "@apollo/client/react";
 
-
 const CHECKED_KEYS = [
   "loading",
   "error",

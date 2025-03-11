@@ -1,3 +1,5 @@
+export { Observable } from "rxjs";
+
 export { maybe } from "./globals/index.js";
 
 export type {

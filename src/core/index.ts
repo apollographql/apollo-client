@@ -83,6 +83,7 @@ export {
   DocumentTransform,
   isReference,
   makeReference,
+  Observable,
 } from "../utilities/index.js";
 
 /* Supporting */

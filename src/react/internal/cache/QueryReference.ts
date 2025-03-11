@@ -1,17 +1,15 @@
 import { equal } from "@wry/equality";
+import type { Subscription } from "rxjs";
+import { filter } from "rxjs";
 
 import type {
-  ApolloError,
   ApolloQueryResult,
   ObservableQuery,
   OperationVariables,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type {
-  ObservableSubscription,
-  PromiseWithState,
-} from "@apollo/client/utilities";
+import type { PromiseWithState } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   createRejectedPromise,
@@ -215,7 +213,7 @@ export class InternalQueryReference<TData = unknown> {
 
   public promise!: QueryRefPromise<TData>;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<TData>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
@@ -232,7 +230,6 @@ export class InternalQueryReference<TData = unknown> {
     options: InternalQueryReferenceOptions
   ) {
     this.handleNext = this.handleNext.bind(this);
-    this.handleError = this.handleError.bind(this);
     this.dispose = this.dispose.bind(this);
     this.observable = observable;
 
@@ -407,8 +404,13 @@ export class InternalQueryReference<TData = unknown> {
         if (result.data === void 0) {
           result.data = this.result.data;
         }
-        this.result = result;
-        this.resolve?.(result);
+
+        if (result.error) {
+          this.reject?.(result.error);
+        } else {
+          this.result = result;
+          this.resolve?.(result);
+        }
         break;
       }
       default: {
@@ -428,29 +430,15 @@ export class InternalQueryReference<TData = unknown> {
           result.data = this.result.data;
         }
 
-        this.result = result;
-        this.promise = createFulfilledPromise(result);
-        this.deliver(this.promise);
+        if (result.error) {
+          this.promise = createRejectedPromise(result.error);
+          this.deliver(this.promise);
+        } else {
+          this.result = result;
+          this.promise = createFulfilledPromise(result);
+          this.deliver(this.promise);
+        }
         break;
-      }
-    }
-  }
-
-  private handleError(error: ApolloError) {
-    this.subscription.unsubscribe();
-    this.subscription = this.observable.resubscribeAfterError(
-      this.handleNext,
-      this.handleError
-    );
-
-    switch (this.promise.status) {
-      case "pending": {
-        this.reject?.(error);
-        break;
-      }
-      default: {
-        this.promise = createRejectedPromise(error);
-        this.deliver(this.promise);
       }
     }
   }
@@ -504,10 +492,8 @@ export class InternalQueryReference<TData = unknown> {
 
   private subscribeToQuery() {
     this.subscription = this.observable
-      .filter(
-        (result) => !equal(result.data, {}) && !equal(result, this.result)
-      )
-      .subscribe(this.handleNext, this.handleError);
+      .pipe(filter((result) => !equal(result, this.result)))
+      .subscribe(this.handleNext);
   }
 
   private setResult() {

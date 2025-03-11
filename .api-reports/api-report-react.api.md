@@ -12,11 +12,12 @@ import type { FragmentDefinitionNode } from 'graphql';
 import type { GraphQLErrorExtensions } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
+import { Observable } from 'rxjs';
+import type { Observer } from 'rxjs';
 import type * as ReactTypes from 'react';
-import type { Subscriber } from 'zen-observable-ts';
-import type { Subscription } from 'zen-observable-ts';
+import type { Subscribable } from 'rxjs';
+import type { Subscriber } from 'rxjs';
+import type { Subscription } from 'rxjs';
 import { Trie } from '@wry/trie';
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { VariableDefinitionNode } from 'graphql';
@@ -295,7 +296,7 @@ class ApolloLink {
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
+    protected onError(error: any, observer?: Subscriber<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -544,30 +545,6 @@ type CombineIntersection<T> = Exclude<T, {
 export type CommonOptions<TOptions> = TOptions & {
     client?: ApolloClient<object>;
 };
-
-// @public (undocumented)
-class Concast<T> extends Observable<T> {
-    // Warning: (ae-forgotten-export) The symbol "MaybeAsync" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ConcastSourcesIterable" needs to be exported by the entry point index.d.ts
-    constructor(sources: MaybeAsync<ConcastSourcesIterable<T>> | Subscriber<T>);
-    // (undocumented)
-    addObserver(observer: Observer<T>): void;
-    // Warning: (ae-forgotten-export) The symbol "NextResultListener" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    beforeNext(callback: NextResultListener): void;
-    // (undocumented)
-    cancel: (reason: any) => void;
-    // (undocumented)
-    readonly promise: Promise<T | undefined>;
-    // (undocumented)
-    removeObserver(observer: Observer<T>): void;
-}
-
-// Warning: (ae-forgotten-export) The symbol "Source" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-type ConcastSourcesIterable<T> = Iterable<Source<T>>;
 
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
@@ -1148,9 +1125,6 @@ interface MaskOperationOptions<TData> {
     id: string;
 }
 
-// @public (undocumented)
-type MaybeAsync<T> = T | PromiseLike<T>;
-
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 //
@@ -1367,15 +1341,12 @@ interface NextFetchPolicyContext<TData, TVariables extends OperationVariables> {
 // @public (undocumented)
 type NextLink = (operation: Operation) => Observable<FetchResult>;
 
-// @public (undocumented)
-type NextResultListener = (method: "next" | "error" | "complete", arg?: any) => any;
-
 // @public
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
 export { NoInfer_2 as NoInfer }
 
 // @public (undocumented)
-class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> extends Observable<ApolloQueryResult<MaybeMasked<TData>>> {
+class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>> {
     constructor({ queryManager, queryInfo, options, }: {
         queryManager: QueryManager<any>;
         queryInfo: QueryInfo;
@@ -1400,6 +1371,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     // (undocumented)
     readonly options: WatchQueryOptions<TVariables, TData>;
     // (undocumented)
+    pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
+    // (undocumented)
     get query(): TypedDocumentNode<TData, TVariables>;
     // (undocumented)
     readonly queryId: string;
@@ -1408,18 +1381,10 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     // (undocumented)
     reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // Warning: (ae-forgotten-export) The symbol "Concast" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    reobserveAsConcast(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Concast<ApolloQueryResult<TData>>;
     // @internal (undocumented)
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
-    // (undocumented)
-    resubscribeAfterError(onNext: (value: ApolloQueryResult<MaybeMasked<TData>>) => void, onError?: (error: any) => void, onComplete?: () => void): Subscription;
-    // (undocumented)
-    resubscribeAfterError(observer: Observer<ApolloQueryResult<TData>>): Subscription;
     // (undocumented)
     result(): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     // (undocumented)
@@ -1429,6 +1394,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
     startPolling(pollInterval: number): void;
     stopPolling(): void;
+    // (undocumented)
+    subscribe: (observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)) => Subscription;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreOptions" needs to be exported by the entry point index.d.ts
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
     // Warning: (ae-forgotten-export) The symbol "UpdateQueryMapFn" needs to be exported by the entry point index.d.ts
@@ -2041,9 +2008,6 @@ export type SkipToken = typeof skipToken;
 export const skipToken: unique symbol;
 
 // @public (undocumented)
-type Source<T> = MaybeAsync<Observable<T>>;
-
-// @public (undocumented)
 type StorageType = Record<string, any>;
 
 // @public (undocumented)
@@ -2095,14 +2059,6 @@ type SubscribeToMoreUpdateQueryFn<TData = any, TVariables extends OperationVaria
         };
     }): Unmasked<TData> | void;
 };
-
-// @public (undocumented)
-export interface SubscriptionCurrentObservable {
-    // (undocumented)
-    query?: Observable<any>;
-    // (undocumented)
-    subscription?: Subscription;
-}
 
 // @public @deprecated (undocumented)
 export interface SubscriptionDataOptions<TData = any, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
@@ -2558,10 +2514,10 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:121:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:122:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:161:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:416:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:116:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:430:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:179:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:208:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:203:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts

@@ -61,6 +61,7 @@
     "./testing/experimental": "./src/testing/experimental/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
     "./utilities": "./src/utilities/index.ts",
+    "./utilities/internal": "./src/utilities/internal/index.ts",
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/subscriptions/urql": "./src/utilities/subscriptions/urql/index.ts",
     "./utilities/globals": "./src/utilities/globals/index.ts",
@@ -123,6 +124,7 @@
     "graphql-ws": "^5.5.5 || ^6.0.3",
     "react": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
     "react-dom": "^17.0.0 || ^18.0.0 || >=19.0.0-rc",
+    "rxjs": "^7.8.0",
     "subscriptions-transport-ws": "^0.9.0 || ^0.11.0"
   },
   "peerDependenciesMeta": {
@@ -147,9 +149,7 @@
     "graphql-tag": "^2.12.6",
     "optimism": "^0.18.0",
     "rehackt": "^0.1.0",
-    "symbol-observable": "^4.0.0",
-    "tslib": "^2.3.0",
-    "zen-observable-ts": "^1.2.5"
+    "tslib": "^2.3.0"
   },
   "devDependencies": {
     "@actions/github-script": "github:actions/github-script#v7.0.1",

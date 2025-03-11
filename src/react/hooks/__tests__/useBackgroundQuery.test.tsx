@@ -14,6 +14,7 @@ import {
   ErrorBoundary as ReactErrorBoundary,
   FallbackProps,
 } from "react-error-boundary";
+import { Observable, of } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import {
@@ -23,7 +24,6 @@ import {
   ErrorPolicy,
   gql,
   NetworkStatus,
-  Observable,
   split,
   TypedDocumentNode,
 } from "@apollo/client/core";
@@ -807,16 +807,12 @@ it("allows the client to be overridden", async () => {
   const { query } = setupSimpleCase();
 
   const globalClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "global hello" } })
-    ),
+    link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
     cache: new InMemoryCache(),
   });
 
   const localClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "local hello" } })
-    ),
+    link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
     cache: new InMemoryCache(),
   });
 

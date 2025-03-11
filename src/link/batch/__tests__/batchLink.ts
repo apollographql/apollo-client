@@ -1,9 +1,9 @@
 import { print } from "graphql";
 import { gql } from "graphql-tag";
+import { EMPTY, map, Observable, of } from "rxjs";
 
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import { wait } from "@apollo/client/testing";
-import { Observable } from "@apollo/client/utilities";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 import { FetchResult, GraphQLRequest, Operation } from "../../core/types.js";
@@ -19,6 +19,7 @@ interface MockedResponse {
   result?: FetchResult;
   error?: Error;
   delay?: number;
+  maxUsageCount?: number;
 }
 
 function getKey(operation: GraphQLRequest) {
@@ -85,7 +86,16 @@ function createMockBatchHandler(...mockedResponses: MockedResponse[]) {
           );
         }
 
-        const { result, error } = responses.shift()!;
+        let response: MockedResponse;
+
+        if (responses[0].maxUsageCount && responses[0].maxUsageCount > 1) {
+          responses[0].maxUsageCount--;
+          response = responses[0];
+        } else {
+          response = responses.shift()!;
+        }
+
+        const { result, error } = response;
 
         if (!result && !error) {
           throw new Error(
@@ -190,16 +200,11 @@ describe("OperationBatcher", () => {
         lastName: "Smith",
       },
     };
-    const batchHandler = createMockBatchHandler(
-      {
-        request: { query },
-        result: { data },
-      },
-      {
-        request: { query },
-        result: { data },
-      }
-    );
+    const batchHandler = createMockBatchHandler({
+      request: { query },
+      result: { data },
+      maxUsageCount: Number.POSITIVE_INFINITY,
+    });
     const operation: Operation = createOperation(
       {},
       {
@@ -664,9 +669,7 @@ describe("BatchLink", () => {
   `;
 
   it("does not need any constructor arguments", () => {
-    expect(
-      () => new BatchLink({ batchHandler: () => Observable.of() })
-    ).not.toThrow();
+    expect(() => new BatchLink({ batchHandler: () => EMPTY })).not.toThrow();
   });
 
   it("passes forward on", async () => {
@@ -679,7 +682,7 @@ describe("BatchLink", () => {
           expect(forward!.length).toBe(1);
           expect(operation.length).toBe(1);
 
-          return forward![0]!(operation[0]).map((result) => [result]);
+          return forward![0]!(operation[0]).pipe(map((result) => [result]));
         },
       }),
       new ApolloLink((operation) => {
@@ -703,12 +706,12 @@ describe("BatchLink", () => {
     let calls = 0;
     const link_full = new BatchLink({
       batchHandler: (operation, forward) =>
-        forward![0]!(operation[0]).map((r) => [r]),
+        forward![0]!(operation[0]).pipe(map((r) => [r])),
     });
     const link_one_op = new BatchLink({
-      batchHandler: (operation) => Observable.of(),
+      batchHandler: (operation) => EMPTY,
     });
-    const link_no_op = new BatchLink({ batchHandler: () => Observable.of() });
+    const link_no_op = new BatchLink({ batchHandler: () => EMPTY });
     const _warn = console.warn;
     console.warn = (...args: any) => {
       calls++;
@@ -737,7 +740,7 @@ describe("BatchLink", () => {
     const sizes = [1, 2, 3];
     const terminating = new ApolloLink((operation) => {
       expect(operation.query).toEqual(query);
-      return Observable.of(operation.variables.count);
+      return of(operation.variables.count);
     });
 
     let runBatchSize = async (size: number) => {
@@ -802,12 +805,12 @@ describe("BatchLink", () => {
       const batchInterval = intervals.pop();
       if (!batchInterval) return done();
 
-      const batchHandler = jest.fn((operation, forward) => {
+      const batchHandler = jest.fn(((operation, forward) => {
         expect(operation.length).toBe(1);
-        expect(forward.length).toBe(1);
+        expect(forward!.length).toBe(1);
 
-        return forward[0](operation[0]).map((d: any) => [d]);
-      });
+        return forward![0]!(operation[0]).pipe(map((d: any) => [d]));
+      }) as BatchHandler);
 
       const link = ApolloLink.from([
         new BatchLink({
@@ -815,7 +818,7 @@ describe("BatchLink", () => {
           batchMax: 0,
           batchHandler,
         }),
-        () => Observable.of(42) as any,
+        () => of(42) as any,
       ]);
 
       execute(
@@ -860,7 +863,7 @@ describe("BatchLink", () => {
   it("throws an error when more requests than results", () => {
     expect.assertions(4);
     const result = [{ data: {} }];
-    const batchHandler = jest.fn((op) => Observable.of(result));
+    const batchHandler = jest.fn((op) => of(result));
 
     const link = ApolloLink.from([
       new BatchLink({
@@ -895,7 +898,7 @@ describe("BatchLink", () => {
 
       const batchHandler = jest.fn((op) => {
         expect(op.length).toBe(2);
-        return Observable.of(result);
+        return of(result);
       });
       let key = true;
       const batchKey = () => {

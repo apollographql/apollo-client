@@ -1,5 +1,6 @@
 import { DocumentNode, ExecutionResult } from "graphql";
 import { gql } from "graphql-tag";
+import { of } from "rxjs";
 
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import {
@@ -10,7 +11,6 @@ import {
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockLink } from "@apollo/client/testing";
-import { Observable } from "@apollo/client/utilities";
 
 import { LocalState } from "../../core/LocalState.js";
 import { ObservableStream } from "../../testing/internal/index.js";
@@ -760,7 +760,7 @@ describe("Resolving field aliases", () => {
     const link = new ApolloLink(() =>
       // Each link is responsible for implementing their own aliasing so it
       // returns baz not bar
-      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+      of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const client = new ApolloClient({
@@ -831,7 +831,7 @@ describe("Resolving field aliases", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+      of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const fie = jest.fn();
@@ -917,7 +917,7 @@ describe("Resolving field aliases", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           launch: {
             id: 1,
@@ -1047,7 +1047,7 @@ describe("Force local resolvers", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           author: {
             name: "John Smith",
@@ -1272,7 +1272,7 @@ describe("Async resolvers", () => {
     };
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           member: {
             name: testMember.name,

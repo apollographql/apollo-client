@@ -5,9 +5,9 @@ import {
   InMemoryCache,
   ApolloClient,
   ApolloLink,
-  Observable,
   HttpLink,
 } from "@apollo/client";
+import { Observable } from "rxjs";
 
 import { useQuery, ApolloProvider } from "@apollo/client/react";
 

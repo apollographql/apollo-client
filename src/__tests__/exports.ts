@@ -35,6 +35,7 @@ import * as testingReact from "@apollo/client/testing/react";
 import * as utilities from "@apollo/client/utilities";
 import * as utilitiesEnvironment from "@apollo/client/utilities/environment";
 import * as utilitiesGlobals from "@apollo/client/utilities/globals";
+import * as utilitiesInternal from "@apollo/client/utilities/internal";
 import * as utilitiesInvariant from "@apollo/client/utilities/invariant";
 import * as urqlUtilities from "@apollo/client/utilities/subscriptions/urql";
 
@@ -82,6 +83,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/testing/experimental", testingExperimental);
   check("@apollo/client/testing/react", testingReact);
   check("@apollo/client/utilities", utilities);
+  check("@apollo/client/utilities/internal", utilitiesInternal);
   check("@apollo/client/utilities/globals", utilitiesGlobals);
   check("@apollo/client/utilities/subscriptions/urql", urqlUtilities);
   check("@apollo/client/utilities/invariant", utilitiesInvariant);

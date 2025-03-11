@@ -358,7 +358,7 @@ export abstract class EntityStore implements NormalizedCache {
             [storeFieldName]: delModifier,
           }
         : delModifier,
-        args ? true : false
+        !!args
       );
     }
     return false;

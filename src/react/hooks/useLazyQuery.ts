@@ -14,22 +14,23 @@ import type {
   ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
+  SubscribeToMoreFunction,
   Unmasked,
+  UpdateQueryMapFn,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { NoInfer } from "@apollo/client/react";
+import type {
+  ObservableQueryFields,
+  VariablesOption,
+} from "@apollo/client/react";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import type {
-  NextFetchPolicyContext,
-  SubscribeToMoreFunction,
-  UpdateQueryMapFn,
-} from "../../core/watchQueryOptions.js";
-import type { ObservableQueryFields, VariablesOption } from "../types/types.js";
+import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
 import { useRenderGuard } from "./internal/index.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";

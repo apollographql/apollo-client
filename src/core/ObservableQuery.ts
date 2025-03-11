@@ -108,6 +108,8 @@ export class ObservableQuery<
     timeout: ReturnType<typeof setTimeout>;
   };
 
+  private networkStatus: NetworkStatus;
+
   constructor({
     queryManager,
     queryInfo,
@@ -117,10 +119,11 @@ export class ObservableQuery<
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {
+    this.networkStatus = NetworkStatus.loading;
     this.initialResult = {
       data: undefined,
       loading: true,
-      networkStatus: NetworkStatus.loading,
+      networkStatus: this.networkStatus,
       partial: true,
     };
 
@@ -266,11 +269,7 @@ export class ObservableQuery<
   ): ApolloQueryResult<TData> {
     // Use the last result as long as the variables match this.variables.
     const lastResult = this.getLastResult(true);
-
-    const networkStatus =
-      this.queryInfo.networkStatus ||
-      (lastResult && lastResult.networkStatus) ||
-      NetworkStatus.ready;
+    const networkStatus = this.networkStatus;
 
     const result: ApolloQueryResult<TData> = {
       data: undefined,
@@ -517,9 +516,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     // Simulate a loading result for the original query with
     // result.networkStatus === NetworkStatus.fetchMore.
-    const { queryInfo } = this;
-    const originalNetworkStatus = queryInfo.networkStatus;
-    queryInfo.networkStatus = NetworkStatus.fetchMore;
+    const originalNetworkStatus = this.networkStatus;
+    this.networkStatus = NetworkStatus.fetchMore;
     if (combinedOptions.notifyOnNetworkStatusChange) {
       this.observe();
     }
@@ -541,8 +539,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       .then((fetchMoreResult) => {
         this.queryManager.removeQuery(qid);
 
-        if (queryInfo.networkStatus === NetworkStatus.fetchMore) {
-          queryInfo.networkStatus = originalNetworkStatus;
+        if (this.networkStatus === NetworkStatus.fetchMore) {
+          this.networkStatus = originalNetworkStatus;
         }
 
         if (isCached) {
@@ -612,7 +610,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           this.reportResult(
             {
               ...lastResult,
-              networkStatus: originalNetworkStatus!,
+              networkStatus: originalNetworkStatus,
               loading: isNetworkRequestInFlight(originalNetworkStatus),
               data: data as TData,
             },
@@ -843,17 +841,19 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   private fetch(
     options: WatchQueryOptions<TVariables, TData>,
-    newNetworkStatus?: NetworkStatus,
+    newNetworkStatus: NetworkStatus,
+    emitLoadingState: boolean,
     query?: DocumentNode
   ) {
     // TODO Make sure we update the networkStatus (and infer fetchVariables)
     // before actually committing to the fetch.
     this.queryManager.setObservableQuery(this);
-    return this.queryManager["fetchObservableWithInfo"](
+    return this.queryManager.fetchObservableWithInfo(
       this.queryId,
       options,
       newNetworkStatus,
-      query
+      query,
+      emitLoadingState
     );
   }
 
@@ -892,7 +892,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     const maybeFetch = () => {
       if (this.pollingInfo) {
         if (
-          !isNetworkRequestInFlight(this.queryInfo.networkStatus) &&
+          !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
           this.reobserve(
@@ -1010,6 +1010,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       }
     }
 
+    const oldNetworkStatus = this.networkStatus;
+
+    if (!newNetworkStatus) {
+      newNetworkStatus = NetworkStatus.loading;
+
+      if (
+        oldNetworkStatus !== NetworkStatus.loading &&
+        newOptions?.variables &&
+        !equal(newOptions.variables, oldVariables)
+      ) {
+        newNetworkStatus = NetworkStatus.setVariables;
+      }
+    }
+
+    this.networkStatus = newNetworkStatus;
     this.waitForOwnResult &&= skipCacheDataFor(options.fetchPolicy);
     const finishWaitingForOwnResult = () => {
       if (this.linkObservable === observable) {
@@ -1018,9 +1033,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     const variables = options.variables && { ...options.variables };
+    const { notifyOnNetworkStatusChange = false } = options;
     const { observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
+      notifyOnNetworkStatusChange &&
+        oldNetworkStatus !== newNetworkStatus &&
+        isNetworkRequestInFlight(newNetworkStatus),
       query
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {
@@ -1087,6 +1106,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // save the the latest version of any nonreactive subtrees (in case
     // getCurrentResult is called), even though we skip broadcasting changes.
     this.updateLastResult(result, variables);
+    this.networkStatus = result.networkStatus;
     if (lastError || isDifferent) {
       this.subject.next(this.maskResult(result));
     }
@@ -1105,6 +1125,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
 
     this.updateLastResult(errorResult, variables);
+    this.networkStatus = NetworkStatus.error;
     this.last!.error = error;
     this.subject.next(errorResult);
   }

@@ -870,7 +870,7 @@ export class QueryManager<TStore> {
       if (queryInfo.observableQuery) {
         // Set loading to true so listeners don't trigger unless they want
         // results with partial data.
-        queryInfo.networkStatus = NetworkStatus.loading;
+        queryInfo.observableQuery["networkStatus"] = NetworkStatus.loading;
       } else {
         queryInfo.stop();
       }
@@ -1230,7 +1230,8 @@ export class QueryManager<TStore> {
 
         // Avoid storing errors from older interrupted queries.
         if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.markError();
+          queryInfo.resetLastWrite();
+          queryInfo.reset();
         }
 
         throw error;
@@ -1244,7 +1245,8 @@ export class QueryManager<TStore> {
         // with the same QueryInfo object, we ignore the old results.
         if (requestId >= queryInfo.lastRequestId) {
           if (hasErrors && errorPolicy === "none") {
-            queryInfo.markError();
+            queryInfo.resetLastWrite();
+            queryInfo.reset();
             // Throwing here effectively calls observer.error.
             throw new ApolloError({ graphQLErrors });
           }
@@ -1257,7 +1259,6 @@ export class QueryManager<TStore> {
             options,
             cacheWriteBehavior
           );
-          queryInfo.markReady();
         }
 
         const aqr: ApolloQueryResult<TData> = {
@@ -1285,14 +1286,15 @@ export class QueryManager<TStore> {
     );
   }
 
-  private fetchObservableWithInfo<TData, TVars extends OperationVariables>(
+  public fetchObservableWithInfo<TData, TVars extends OperationVariables>(
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
     networkStatus = NetworkStatus.loading,
-    query = options.query
+    query = options.query,
+    emitLoadingState = false
   ): ObservableAndInfo<TData> {
     const variables = this.getVariables(query, options.variables) as TVars;
     const queryInfo = this.getQuery(queryId);
@@ -1325,7 +1327,8 @@ export class QueryManager<TStore> {
       const observableWithInfo = this.fetchQueryByPolicy<TData, TVars>(
         queryInfo,
         normalized,
-        networkStatus
+        networkStatus,
+        emitLoadingState
       );
 
       if (
@@ -1617,26 +1620,23 @@ export class QueryManager<TStore> {
       errorPolicy,
       returnPartialData,
       context,
-      notifyOnNetworkStatusChange,
     }: WatchQueryOptions<TVars, TData>,
     // The initial networkStatus for this fetch, most often
     // NetworkStatus.loading, but also possibly fetchMore, poll, refetch,
     // or setVariables.
-    networkStatus: NetworkStatus
+    newNetworkStatus: NetworkStatus,
+    emitLoadingState: boolean
   ): ObservableAndInfo<TData> {
-    const oldNetworkStatus = queryInfo.networkStatus;
-
     queryInfo.init({
       document: query,
       variables,
-      networkStatus,
     });
 
     const readCache = () => queryInfo.getDiff();
 
     const resultsFromCache = (
       diff: Cache.DiffResult<TData>,
-      networkStatus = queryInfo.networkStatus || NetworkStatus.loading
+      networkStatus = newNetworkStatus
     ) => {
       const data = diff.result;
 
@@ -1709,7 +1709,7 @@ export class QueryManager<TStore> {
         // Watched queries must opt into overwriting existing data on refetch,
         // by passing refetchWritePolicy: "overwrite" in their WatchQueryOptions.
       : (
-        networkStatus === NetworkStatus.refetch &&
+        newNetworkStatus === NetworkStatus.refetch &&
         refetchWritePolicy !== "merge"
       ) ?
         CacheWriteBehavior.OVERWRITE
@@ -1724,12 +1724,6 @@ export class QueryManager<TStore> {
         errorPolicy,
       });
 
-    const shouldNotify =
-      notifyOnNetworkStatusChange &&
-      typeof oldNetworkStatus === "number" &&
-      oldNetworkStatus !== networkStatus &&
-      isNetworkRequestInFlight(networkStatus);
-
     switch (fetchPolicy) {
       default:
       case "cache-first": {
@@ -1738,11 +1732,11 @@ export class QueryManager<TStore> {
         if (diff.complete) {
           return {
             fromLink: false,
-            observable: resultsFromCache(diff, queryInfo.markReady()),
+            observable: resultsFromCache(diff, NetworkStatus.ready),
           };
         }
 
-        if (returnPartialData || shouldNotify) {
+        if (returnPartialData || emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
@@ -1755,7 +1749,7 @@ export class QueryManager<TStore> {
       case "cache-and-network": {
         const diff = readCache();
 
-        if (diff.complete || returnPartialData || shouldNotify) {
+        if (diff.complete || returnPartialData || emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(resultsFromCache(diff), resultsFromLink()),
@@ -1769,12 +1763,12 @@ export class QueryManager<TStore> {
         return {
           fromLink: false,
           observable: concat(
-            resultsFromCache(readCache(), queryInfo.markReady())
+            resultsFromCache(readCache(), NetworkStatus.ready)
           ),
         };
 
       case "network-only":
-        if (shouldNotify) {
+        if (emitLoadingState) {
           return {
             fromLink: true,
             observable: concat(
@@ -1787,7 +1781,7 @@ export class QueryManager<TStore> {
         return { fromLink: true, observable: resultsFromLink() };
 
       case "no-cache":
-        if (shouldNotify) {
+        if (emitLoadingState) {
           return {
             fromLink: true,
             // Note that queryInfo.getDiff() for no-cache queries does not call

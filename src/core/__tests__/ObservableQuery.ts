@@ -281,7 +281,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: true,
       });
 
@@ -1169,7 +1169,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: true,
       });
 
@@ -1510,7 +1510,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: true,
       });
 
@@ -1526,7 +1526,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         data,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: false,
       });
 
@@ -1628,7 +1628,7 @@ describe("ObservableQuery", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: true,
       });
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -2393,8 +2393,6 @@ describe("ObservableQuery", () => {
         data: dataOne,
         error: new ApolloError({ graphQLErrors: [error] }),
         loading: false,
-        // TODO: The networkStatus returned here is different than the one
-        // returned from `observable.result()`. These should match
         networkStatus: NetworkStatus.error,
         partial: false,
       });

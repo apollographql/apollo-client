@@ -267,7 +267,7 @@ export function mockSingleLink(
 // support for NaN in addition to undefined. More values may be handled in the
 // future. This is not added to the primary stringifyForDisplay helper since it
 // is used for the cache and other purposes. We need this for debuggging only.
-export function stringifyForDebugging(value: any, space = 0): string {
+function stringifyForDebugging(value: any, space = 0): string {
   const undefId = makeUniqueId("undefined");
   const nanId = makeUniqueId("NaN");
 

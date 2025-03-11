@@ -1,7 +1,11 @@
 import { gql } from "graphql-tag";
 
 import { execute } from "../../../../link/core/execute.js";
-import { enableFakeTimers, ObservableStream, spyOnConsole } from "../../../internal/index.js";
+import {
+  enableFakeTimers,
+  ObservableStream,
+  spyOnConsole,
+} from "../../../internal/index.js";
 import { MockedResponse, MockLink } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {

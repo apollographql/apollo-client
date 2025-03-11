@@ -1049,8 +1049,6 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
     client: ApolloClient<any>;
     data: MaybeMasked<TData> | undefined;
     error?: ApolloError;
-    // @deprecated (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
         updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
             fetchMoreResult: Unmasked<TFetchData>;
@@ -1845,9 +1843,6 @@ export interface QueryResult<TData = any, TVariables extends OperationVariables 
     observable: ObservableQuery<TData, TVariables>;
     previousData?: MaybeMasked<TData>;
 }
-
-// @public @deprecated (undocumented)
-export type QueryTuple<TData, TVariables extends OperationVariables> = LazyQueryResultTuple<TData, TVariables>;
 
 // @public (undocumented)
 type ReactiveListener<T> = (value: T) => any;

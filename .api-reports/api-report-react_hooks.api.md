@@ -993,8 +993,6 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
     client: ApolloClient<any>;
     data: MaybeMasked<TData> | undefined;
     error?: ApolloError;
-    // @deprecated (undocumented)
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
         updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
             fetchMoreResult: Unmasked<TFetchData>;

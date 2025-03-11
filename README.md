@@ -12,7 +12,7 @@
 ---
 
 **Announcement:**
-Join 1000+ engineers at GraphQL Summit for talks, workshops, and office hours, Oct 8-10 in NYC. [Get your pass here ->](https://summit.graphql.com/?utm_campaign=github_federation_readme)
+Join 1000+ engineers at GraphQL Summit 2025 by Apollo for talks, workshops, and office hours. Oct 6-8, 2025 in San Francisco. [Get your pass here ->](https://www.apollographql.com/graphql-summit-2025?utm_campaign=2025-03-04_graphql-summit-github-announcement&utm_medium=github&utm_source=apollo-server)
 
 ---
 

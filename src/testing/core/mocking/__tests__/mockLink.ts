@@ -1,7 +1,7 @@
 import { gql } from "graphql-tag";
 
 import { execute } from "../../../../link/core/execute.js";
-import { enableFakeTimers, ObservableStream } from "../../../internal/index.js";
+import { enableFakeTimers, ObservableStream, spyOnConsole } from "../../../internal/index.js";
 import { MockedResponse, MockLink } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {
@@ -356,6 +356,34 @@ test("removes fields with @client directives", async () => {
 
     await expect(stream.takeNext()).resolves.toEqual({ data: { a: 3, b: 4 } });
   }
+});
+
+test("shows undefined and NaN in debug messages", async () => {
+  using _ = spyOnConsole("warn");
+
+  const query = gql`
+    query ($id: ID!, $filter: Boolean) {
+      usersByTestId(id: $id, filter: $filter) {
+        id
+      }
+    }
+  `;
+
+  const link = new MockLink([
+    {
+      request: { query, variables: { id: 1, filter: true } },
+      // The actual response data makes no difference in this test
+      result: { data: { usersByTestId: null } },
+    },
+  ]);
+
+  const stream = new ObservableStream(
+    execute(link, { query, variables: { id: NaN, filter: undefined } })
+  );
+
+  const error = await stream.takeError();
+
+  expect(error.message).toMatchSnapshot();
 });
 
 describe.skip("type tests", () => {

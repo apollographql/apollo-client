@@ -2341,6 +2341,7 @@ describe("ObservableQuery", () => {
       const result = await observable.result();
       const currentResult = observable.getCurrentResult();
 
+      // TODO: This should include an `error` property, not just `errors`
       expect(result).toEqualApolloQueryResult({
         data: dataOne,
         errors: [error],
@@ -2562,6 +2563,12 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,

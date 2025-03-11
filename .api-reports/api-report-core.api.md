@@ -1642,6 +1642,8 @@ export interface NormalizedCacheObject {
     };
 }
 
+export { Observable }
+
 // @public (undocumented)
 export class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>> {
     constructor({ queryManager, queryInfo, options, }: {

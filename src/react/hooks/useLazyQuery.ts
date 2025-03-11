@@ -270,7 +270,7 @@ export function useLazyQuery<
     () => initialResult
   );
 
-  const forceUpdateState = React.useReducer((tick) => tick + 1, 0)[1];
+  const [, forceUpdateState] = React.useReducer((tick) => tick + 1, 0);
   // We use useMemo here to make sure the eager methods have a stable identity.
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
@@ -344,13 +344,7 @@ export function useLazyQuery<
 
       return promise;
     },
-    [
-      observable,
-      stableOptions,
-      forceUpdateState,
-      updateResult,
-      calledDuringRender,
-    ]
+    [observable, stableOptions, updateResult, calledDuringRender]
   );
 
   const executeRef = React.useRef(execute);

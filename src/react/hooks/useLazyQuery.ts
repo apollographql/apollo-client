@@ -1,6 +1,6 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 import * as React from "rehackt";
 
 import type {

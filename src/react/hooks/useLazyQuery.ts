@@ -259,50 +259,14 @@ export function useLazyQuery<
   const observableResult = useSyncExternalStore(
     React.useCallback(
       (forceUpdate) => {
-        function handleNext(result: ApolloQueryResult<TData>) {
+        const subscription = observable.subscribe((result) => {
           if (!equal(resultRef.current, result)) {
             updateResult(result, forceUpdate);
           }
-        }
-
-        function handleError(error: unknown) {
-          subscription.current.unsubscribe();
-          subscription.current = observable.resubscribeAfterError(
-            handleNext,
-            handleError
-          );
-
-          // TODO: Determine if this is still needed.
-          if (!Object.prototype.hasOwnProperty.call(error, "graphQLErrors")) {
-            // The error is not a GraphQL error
-            throw error;
-          }
-
-          const previousResult = resultRef.current;
-          if (!previousResult || !equal(error, previousResult.error)) {
-            updateResult(
-              {
-                data: previousResult?.data,
-                partial: !previousResult?.data,
-                ...resultRef.current,
-                error: error as ApolloError,
-                loading: false,
-                networkStatus: NetworkStatus.error,
-              },
-              forceUpdate
-            );
-          }
-        }
-
-        const subscription = {
-          current: observable.subscribe({
-            next: handleNext,
-            error: handleError,
-          }),
-        };
+        });
 
         return () => {
-          subscription.current.unsubscribe();
+          subscription.unsubscribe();
         };
       },
       [observable, updateResult]

@@ -690,7 +690,7 @@ export class DeepMerger<TContextArgs extends any[]> {
 //
 // @public (undocumented)
 export type DeepOmit<T, K> = T extends DeepOmitPrimitive ? T : {
-    [P in Exclude<keyof T, K>]: T[P] extends infer TP ? TP extends DeepOmitPrimitive ? TP : TP extends any[] ? DeepOmitArray<TP, K> : DeepOmit<TP, K> : never;
+    [P in keyof T as P extends K ? never : P]: T[P] extends infer TP ? TP extends DeepOmitPrimitive ? TP : TP extends any[] ? DeepOmitArray<TP, K> : DeepOmit<TP, K> : never;
 };
 
 // @public (undocumented)
@@ -2271,8 +2271,6 @@ class QueryManager<TStore> {
     stop(): void;
     // (undocumented)
     stopQuery(queryId: string): void;
-    // (undocumented)
-    stopQueryInStore(queryId: string): void;
     // (undocumented)
     transform(document: DocumentNode): DocumentNode;
     // (undocumented)

@@ -324,6 +324,17 @@ export class ObservableQuery<
         }
       }
 
+      // We need to check for both both `error` and `errors` field because there
+      // are cases where sometimes `error` is set, but not `errors` and
+      // vice-versa. This will be updated in the next major version when
+      // `errors` is deprecated in favor of `error`.
+      if (
+        result.networkStatus === NetworkStatus.ready &&
+        (result.error || result.errors)
+      ) {
+        result.networkStatus = NetworkStatus.error;
+      }
+
       if (
         __DEV__ &&
         !diff.complete &&

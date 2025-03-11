@@ -1,4 +1,4 @@
-import React, { useMemo } from "rehackt";
+import * as React from "rehackt";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
@@ -123,7 +123,7 @@ function useSuspenseFragment_<
   const { from, variables } = options;
   const { cache } = client;
 
-  const id = useMemo(
+  const id = React.useMemo(
     () =>
       typeof from === "string" ? from
       : from === null ? null

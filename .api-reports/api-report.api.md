@@ -1970,8 +1970,6 @@ class QueryManager<TStore> {
     // (undocumented)
     stopQuery(queryId: string): void;
     // (undocumented)
-    stopQueryInStore(queryId: string): void;
-    // (undocumented)
     transform(document: DocumentNode): DocumentNode;
     // (undocumented)
     watchQuery<T, TVariables extends OperationVariables = OperationVariables>(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables>;

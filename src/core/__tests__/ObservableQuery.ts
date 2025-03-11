@@ -1049,7 +1049,7 @@ describe("ObservableQuery", () => {
         data: undefined,
         errors: [error],
         loading: false,
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         partial: true,
       });
 
@@ -2386,6 +2386,7 @@ describe("ObservableQuery", () => {
       const result = await observable.result();
       const currentResult = observable.getCurrentResult();
 
+      // TODO: This should include an `error` property, not just `errors`
       expect(result).toEqualApolloQueryResult({
         data: dataOne,
         errors: [error],
@@ -2399,7 +2400,7 @@ describe("ObservableQuery", () => {
         loading: false,
         // TODO: The networkStatus returned here is different than the one
         // returned from `observable.result()`. These should match
-        networkStatus: NetworkStatus.ready,
+        networkStatus: NetworkStatus.error,
         partial: false,
       });
     });
@@ -2616,6 +2617,12 @@ describe("ObservableQuery", () => {
       });
 
       await expect(stream).toEmitApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataTwo,
         loading: false,
         networkStatus: NetworkStatus.ready,

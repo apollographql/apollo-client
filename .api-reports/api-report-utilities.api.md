@@ -321,7 +321,6 @@ interface ApolloQueryResult<T> {
     data: T | undefined;
     // Warning: (ae-forgotten-export) The symbol "ApolloError" needs to be exported by the entry point index.d.ts
     error?: ApolloError;
-    errors?: ReadonlyArray<GraphQLFormattedError>;
     // (undocumented)
     loading: boolean;
     // Warning: (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
@@ -2842,8 +2841,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:117:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:430:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:179:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:208:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:174:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:203:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:203:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/utilities/graphql/storeUtils.ts:283:1 - (ae-forgotten-export) The symbol "storeKeyNameStringify" needs to be exported by the entry point index.d.ts
 // src/utilities/policies/pagination.ts:77:3 - (ae-forgotten-export) The symbol "TRelayEdge" needs to be exported by the entry point index.d.ts

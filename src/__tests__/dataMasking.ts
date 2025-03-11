@@ -12,6 +12,7 @@ import {
   FetchPolicy,
   gql,
   InMemoryCache,
+  NetworkStatus,
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
@@ -922,7 +923,7 @@ describe("client.watchQuery", () => {
       currentUser: {
         __typename: "User";
         id: number;
-        name: string;
+        name: string | null;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
@@ -968,19 +969,21 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const { data, errors } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: null,
         },
-      });
-
-      expect(errors).toEqual([{ message: "Couldn't get name" }]);
-    }
+      },
+      error: new ApolloError({
+        graphQLErrors: [{ message: "Couldn't get name" }],
+      }),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
   });
 
   it.each([
@@ -3867,13 +3870,17 @@ describe("client.query", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+    const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(data).toEqual({
-      currentUser: null,
+    expect(result).toEqualApolloQueryResult({
+      data: { currentUser: null },
+      error: new ApolloError({
+        graphQLErrors: [{ message: "User not logged in" }],
+      }),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
     });
-
-    expect(errors).toEqual([{ message: "User not logged in" }]);
   });
 
   test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
@@ -3914,17 +3921,23 @@ describe("client.query", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+    const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(data).toEqual({
-      currentUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
       },
+      error: new ApolloError({
+        graphQLErrors: [{ message: "Could not determine age" }],
+      }),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
     });
-
-    expect(errors).toEqual([{ message: "Could not determine age" }]);
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {

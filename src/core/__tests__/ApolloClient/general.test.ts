@@ -114,7 +114,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         graphQLErrors: [{ message: "This is an error message." }],
       }),
-      errors: [{ message: "This is an error message." }],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -146,8 +145,10 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
       loading: false,
+      error: new ApolloError({
+        graphQLErrors: [{ message: "This is an error message." }],
+      }),
       networkStatus: 8,
-      errors: [{ message: "This is an error message." }],
       partial: true,
     });
   });
@@ -180,7 +181,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         graphQLErrors: [{ message: "This is an error message." }],
       }),
-      errors: [{ message: "This is an error message." }],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -249,7 +249,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         graphQLErrors: [null as any],
       }),
-      errors: [null as any],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -277,7 +276,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         networkError: new Error("Network error"),
       }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: true,
@@ -2374,7 +2372,6 @@ describe("ApolloClient", () => {
       error: new ApolloError({
         networkError: new Error("Network error occurred."),
       }),
-      errors: [],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -2996,7 +2993,6 @@ describe("ApolloClient", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: firstResult.data,
       error: expectedError,
-      errors: [{ message: expectedError.graphQLErrors[0].message }],
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -3526,7 +3522,6 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: data1,
         error: new ApolloError({ networkError: new Error("Network error") }),
-        errors: [],
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
@@ -5170,14 +5165,6 @@ describe("ApolloClient", () => {
   });
 
   describe("refetchQueries", () => {
-    let consoleWarnSpy: jest.SpyInstance;
-    beforeEach(() => {
-      consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation();
-    });
-    afterEach(() => {
-      consoleWarnSpy.mockRestore();
-    });
-
     it("should refetch the right query when a result is successfully returned", async () => {
       const mutation = gql`
         mutation changeAuthorName {
@@ -5262,6 +5249,7 @@ describe("ApolloClient", () => {
     });
 
     it("should not warn and continue when an unknown query name is asked to refetch", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5337,13 +5325,14 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "fakeQuery"
       );
     });
 
     it("should ignore (with warning) a query named in refetchQueries that has no active subscriptions", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5412,13 +5401,14 @@ describe("ApolloClient", () => {
         refetchQueries: ["getAuthors"],
       });
 
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "getAuthors"
       );
     });
 
     it("should ignore (with warning) a document node in refetchQueries that has no active subscriptions", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5488,13 +5478,14 @@ describe("ApolloClient", () => {
         refetchQueries: [query],
       });
 
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "getAuthors"
       );
     });
 
     it("should ignore (with warning) a document node containing an anonymous query in refetchQueries that has no active subscriptions", async () => {
+      using _ = spyOnConsole("warn");
       const mutation = gql`
         mutation changeAuthorName {
           changeAuthorName(newName: "Jack Smith") {
@@ -5564,7 +5555,7 @@ describe("ApolloClient", () => {
         refetchQueries: [query],
       });
 
-      expect(consoleWarnSpy).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenLastCalledWith(
         "Unknown anonymous query requested in refetchQueries options.include array"
       );
     });
@@ -6748,7 +6739,6 @@ describe("ApolloClient", () => {
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
         error: new ApolloError({ networkError: refetchError }),
-        errors: [],
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,

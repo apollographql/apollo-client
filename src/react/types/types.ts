@@ -1,5 +1,5 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 import type * as ReactTypes from "react";
 
 import type {
@@ -129,11 +129,6 @@ export interface QueryResult<
   previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ApolloError;
-  /**
-   * @deprecated This property will be removed in a future version of Apollo Client.
-   * Please use `error.graphQLErrors` instead.
-   */
-  errors?: ReadonlyArray<GraphQLFormattedError>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */

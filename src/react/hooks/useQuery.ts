@@ -62,7 +62,7 @@ interface ObsQueryWithMeta<TData, TVariables extends OperationVariables>
   [lastWatchOptions]?: WatchQueryOptions<TVariables, TData>;
 }
 
-export interface InternalResult<TData, TVariables extends OperationVariables> {
+interface InternalResult<TData, TVariables extends OperationVariables> {
   // These members are populated by getCurrentResult and setResult, and it's
   // okay/normal for them to be initially undefined.
   current?: undefined | InternalQueryResult<TData, TVariables>;
@@ -132,7 +132,12 @@ function useQuery_<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const { result, obsQueryFields } = useQueryInternals(query, options);
+  const result = useQueryInternals(query, options);
+  const obsQueryFields = React.useMemo(
+    () => bindObservableMethods(result.observable),
+    [result.observable]
+  );
+
   return React.useMemo(
     () => ({ ...result, ...obsQueryFields }),
     [result, obsQueryFields]
@@ -177,33 +182,6 @@ function useInternalState<
   let [internalState, updateInternalState] =
     React.useState(createInternalState);
 
-  /**
-   * Used by `useLazyQuery` when a new query is executed.
-   * We keep this logic here since it needs to update things in unsafe
-   * ways and here we at least can keep track of that in a single place.
-   */
-  function onQueryExecuted(
-    watchQueryOptions: WatchQueryOptions<TVariables, TData>
-  ) {
-    // this needs to be set to prevent an immediate `resubscribe` in the
-    // next rerender of the `useQuery` internals
-    Object.assign(internalState.observable, {
-      [lastWatchOptions]: watchQueryOptions,
-    });
-    const resultData = internalState.resultData;
-    updateInternalState({
-      ...internalState,
-      // might be a different query
-      query: watchQueryOptions.query,
-      resultData: Object.assign(resultData, {
-        // We need to modify the previous `resultData` object as we rely on the
-        // object reference in other places
-        previousData: resultData.current?.data || resultData.previousData,
-        current: undefined,
-      }),
-    });
-  }
-
   if (client !== internalState.client || query !== internalState.query) {
     // If the client or query have changed, we need to create a new InternalState.
     // This will trigger a re-render with the new state, but it will also continue
@@ -213,13 +191,13 @@ function useInternalState<
     // triggered with the new state.
     const newInternalState = createInternalState(internalState);
     updateInternalState(newInternalState);
-    return [newInternalState, onQueryExecuted] as const;
+    return newInternalState;
   }
 
-  return [internalState, onQueryExecuted] as const;
+  return internalState;
 }
 
-export function useQueryInternals<
+function useQueryInternals<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -240,7 +218,7 @@ export function useQueryInternals<
     isSyncSSR
   );
 
-  const [{ observable, resultData }, onQueryExecuted] = useInternalState(
+  const { observable, resultData } = useInternalState(
     client,
     query,
     options,
@@ -259,11 +237,6 @@ export function useQueryInternals<
     watchQueryOptions
   );
 
-  const obsQueryFields = React.useMemo(
-    () => bindObservableMethods(observable),
-    [observable]
-  );
-
   useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
 
   const result = useObservableSubscriptionResult<TData, TVariables>(
@@ -276,14 +249,7 @@ export function useQueryInternals<
     isSyncSSR
   );
 
-  return {
-    result,
-    obsQueryFields,
-    observable,
-    resultData,
-    client,
-    onQueryExecuted,
-  };
+  return result;
 }
 
 function useObservableSubscriptionResult<
@@ -450,7 +416,7 @@ function useResubscribeIfNecessary<
  * This is two-step curried because we want to reuse the `make` function,
  * but the `observable` might differ between calls to `make`.
  */
-export function createMakeWatchQueryOptions<
+function createMakeWatchQueryOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
@@ -508,10 +474,7 @@ export function createMakeWatchQueryOptions<
   };
 }
 
-export function getObsQueryOptions<
-  TData,
-  TVariables extends OperationVariables,
->(
+function getObsQueryOptions<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables> | undefined,
   client: ApolloClient<object>,
   queryHookOptions: QueryHookOptions<TData, TVariables>,
@@ -584,10 +547,7 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   return resultData.current!;
 }
 
-export function getDefaultFetchPolicy<
-  TData,
-  TVariables extends OperationVariables,
->(
+function getDefaultFetchPolicy<TData, TVariables extends OperationVariables>(
   queryHookDefaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
   clientDefaultOptions?: DefaultOptions
 ): WatchQueryFetchPolicy {
@@ -598,7 +558,7 @@ export function getDefaultFetchPolicy<
   );
 }
 
-export function toQueryResult<TData, TVariables extends OperationVariables>(
+function toQueryResult<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<MaybeMasked<TData>>,
   previousData: MaybeMasked<TData> | undefined,
   observable: ObservableQuery<TData, TVariables>,

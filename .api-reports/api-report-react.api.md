@@ -704,7 +704,7 @@ enum DocumentType_2 {
 }
 export { DocumentType_2 as DocumentType }
 
-// @public (undocumented)
+// @public
 interface ErrorLike {
     // (undocumented)
     message: string;
@@ -2340,7 +2340,7 @@ export function useReadQuery<TData>(queryRef: QueryRef<TData>): UseReadQueryResu
 // @public (undocumented)
 export interface UseReadQueryResult<TData = unknown> {
     data: MaybeMasked<TData>;
-    error: Error | undefined;
+    error: ErrorLike | undefined;
     networkStatus: NetworkStatus;
 }
 
@@ -2433,7 +2433,7 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
     // (undocumented)
     data: MaybeMasked<TData>;
     // (undocumented)
-    error: Error | undefined;
+    error: ErrorLike | undefined;
     // (undocumented)
     fetchMore: FetchMoreFunction<TData, TVariables>;
     // (undocumented)
@@ -2497,8 +2497,8 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:426:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:179:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
-// src/core/types.ts:208:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:207:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
+// src/core/types.ts:236:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:203:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:35:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useBackgroundQuery.ts:37:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts

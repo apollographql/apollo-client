@@ -394,10 +394,9 @@ type CombineByTypeName<T extends {
     [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
 }[NonNullable<T["__typename"]>];
 
-// @public (undocumented)
+// @public
 export class CombinedGraphQLErrors extends Error {
     constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
-    // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
 }
 
@@ -732,7 +731,7 @@ namespace EntityStore {
     }
 }
 
-// @public (undocumented)
+// @public
 export interface ErrorLike {
     // (undocumented)
     message: string;
@@ -2164,15 +2163,12 @@ export const selectURI: (operation: Operation, fallbackURI?: string | ((operatio
 // @public (undocumented)
 export const serializeFetchParameter: (p: any, label: string) => string;
 
-// @public (undocumented)
+// @public
 export class ServerError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(message: string, options: ServerErrorOptions);
-    // (undocumented)
     response: Response;
-    // (undocumented)
     result: Record<string, any> | string;
-    // (undocumented)
     statusCode: number;
 }
 
@@ -2184,15 +2180,12 @@ interface ServerErrorOptions {
     result: Record<string, any> | string;
 }
 
-// @public (undocumented)
+// @public
 export class ServerParseError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(originalParseError: unknown, options: ServerParseErrorOptions);
-    // (undocumented)
     bodyText: string;
-    // (undocumented)
     response: Response;
-    // (undocumented)
     statusCode: number;
 }
 
@@ -2365,7 +2358,7 @@ export type TypePolicy = {
     };
 };
 
-// @public (undocumented)
+// @public
 export class UnconventionalError extends Error {
     constructor(errorType: unknown);
 }

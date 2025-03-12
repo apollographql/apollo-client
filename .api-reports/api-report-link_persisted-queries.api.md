@@ -245,15 +245,12 @@ export namespace PersistedQueryLink {
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
-// @public (undocumented)
+// @public
 class ServerError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(message: string, options: ServerErrorOptions);
-    // (undocumented)
     response: Response;
-    // (undocumented)
     result: Record<string, any> | string;
-    // (undocumented)
     statusCode: number;
 }
 
@@ -265,15 +262,12 @@ interface ServerErrorOptions {
     result: Record<string, any> | string;
 }
 
-// @public (undocumented)
+// @public
 class ServerParseError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(originalParseError: unknown, options: ServerParseErrorOptions);
-    // (undocumented)
     bodyText: string;
-    // (undocumented)
     response: Response;
-    // (undocumented)
     statusCode: number;
 }
 

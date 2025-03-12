@@ -6,10 +6,9 @@
 
 import type { GraphQLFormattedError } from 'graphql';
 
-// @public (undocumented)
+// @public
 export class CombinedGraphQLErrors extends Error {
     constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
-    // (undocumented)
     errors: ReadonlyArray<GraphQLFormattedError>;
 }
 
@@ -107,15 +106,12 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 export const PROTOCOL_ERRORS_SYMBOL: unique symbol;
 
-// @public (undocumented)
+// @public
 export class ServerError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(message: string, options: ServerErrorOptions);
-    // (undocumented)
     response: Response;
-    // (undocumented)
     result: Record<string, any> | string;
-    // (undocumented)
     statusCode: number;
 }
 
@@ -127,15 +123,12 @@ interface ServerErrorOptions {
     result: Record<string, any> | string;
 }
 
-// @public (undocumented)
+// @public
 export class ServerParseError extends Error {
     // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
     constructor(originalParseError: unknown, options: ServerParseErrorOptions);
-    // (undocumented)
     bodyText: string;
-    // (undocumented)
     response: Response;
-    // (undocumented)
     statusCode: number;
 }
 
@@ -161,7 +154,7 @@ interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultC
     extensions?: TExtensions;
 }
 
-// @public (undocumented)
+// @public
 export class UnconventionalError extends Error {
     constructor(errorType: unknown);
 }

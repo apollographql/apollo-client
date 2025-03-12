@@ -1015,7 +1015,7 @@ describe("useLazyQuery Hook", () => {
 
     getCurrentSnapshot()[1].stopPolling();
 
-    expect(takeSnapshot).not.toRerender();
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should persist previous data when a query is re-run and variable changes", async () => {

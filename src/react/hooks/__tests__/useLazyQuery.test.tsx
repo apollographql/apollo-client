@@ -917,7 +917,7 @@ describe("useLazyQuery Hook", () => {
   // TODO: Determine if this hook makes sense for polling or if that should be
   // reserved for useQuery. At the very least, we need to figure out if you can
   // start polling a query before it has been executed
-  it.skip("should allow for the query to start with polling", async () => {
+  it("should allow for the query to start with polling", async () => {
     const mocks = [
       {
         request: { query: helloQuery },
@@ -949,7 +949,6 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
@@ -958,21 +957,14 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await tick();
-    getCurrentSnapshot()[1].startPolling(10);
+    const [execute] = getCurrentSnapshot();
 
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-    }
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: { hello: "world 1" },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
 
     {
       const [, result] = await takeSnapshot();
@@ -986,6 +978,8 @@ describe("useLazyQuery Hook", () => {
         variables: {},
       });
     }
+
+    getCurrentSnapshot()[1].startPolling(10);
 
     {
       const [, result] = await takeSnapshot();

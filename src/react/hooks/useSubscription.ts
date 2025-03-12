@@ -12,7 +12,7 @@ import type {
   FetchResult,
   OperationVariables,
 } from "@apollo/client/core";
-import { ApolloError } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
   NoInfer,
@@ -241,7 +241,7 @@ export function useSubscription<
               data: fetchResult.data!,
               error:
                 fetchResult.errors ?
-                  new ApolloError({ graphQLErrors: fetchResult.errors })
+                  new CombinedGraphQLErrors(fetchResult.errors)
                 : undefined,
               variables,
             };
@@ -263,10 +263,6 @@ export function useSubscription<
             }
           },
           error(error) {
-            error =
-              error instanceof ApolloError ? error : (
-                new ApolloError({ protocolErrors: [error] })
-              );
             if (!subscriptionStopped) {
               observable.__.setResult({
                 loading: false,

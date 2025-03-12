@@ -8,6 +8,7 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { PromiseWithState } from "@apollo/client/utilities";
 import {
@@ -515,9 +516,11 @@ export class InternalQueryReference<TData = unknown> {
   private shouldReject(result: ApolloQueryResult<any>) {
     const { errorPolicy } = this.watchQueryOptions;
 
+    // TODO: Determine if we still want the behavior of always rejecting
+    // "network" errors (any error that isn't a CombinedGraphQLErrors).
     return (
       result.error &&
-      (result.error.networkError ||
+      (!(result.error instanceof CombinedGraphQLErrors) ||
         errorPolicy === "none" ||
         errorPolicy === undefined)
     );

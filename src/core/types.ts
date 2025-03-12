@@ -2,7 +2,6 @@ import type { DocumentNode } from "graphql";
 
 import type { ApolloCache } from "@apollo/client/cache";
 import type { Cache } from "@apollo/client/cache";
-import type { ApolloError } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
 import type { IsStrictlyAny } from "@apollo/client/utilities";
@@ -22,6 +21,40 @@ export type MethodKeys<T> = {
 export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
+
+/**
+ * Represents an `Error` type, but used throughout Apollo Client to represent
+ * errors that may otherwise fail `instanceof` checks if they are cross-realm
+ * Error instances (see the [`Error.isError` proposal](https://github.com/tc39/proposal-is-error) for more details).
+ *
+ * Apollo Client uses several types of errors throughout the client which can be
+ * narrowed using `instanceof`:
+ * - `CombinedGraphQLErrors` - `errors` returned from a GraphQL result
+ * - `CombinedProtocolErrors` - Transport-level errors from multipart subscriptions.
+ * - `ServerParseError` - A JSON-parse error when parsing the server response.
+ * - `ServerError` - A non-200 server response.
+ *
+ * @example
+ * ```ts
+ * import { CombinedGraphQLErrors } from "@apollo/client";
+ *
+ * try {
+ *   await client.query({ query });
+ * } catch (error) {
+ *   // Use `instanceof` to check for more specific types of errors.
+ *   if (error instanceof CombinedGraphQLErrors) {
+ *     error.errors.map(graphQLError => console.log(graphQLError.message));
+ *   } else {
+ *     console.error(errors);
+ *   }
+ * }
+ * ```
+ */
+export interface ErrorLike {
+  message: string;
+  name: string;
+  stack?: string;
+}
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
@@ -148,7 +181,7 @@ export interface ApolloQueryResult<T> {
    * This will contain both a NetworkError field and any GraphQLErrors.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  error?: ApolloError;
+  error?: ErrorLike;
   loading: boolean;
   networkStatus: NetworkStatus;
   /**

@@ -7,6 +7,7 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   DefaultContext,
+  ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
   FetchPolicy,
@@ -20,7 +21,6 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import type { ApolloError } from "@apollo/client/errors";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
@@ -128,7 +128,7 @@ export interface QueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
   previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: ErrorLike;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
@@ -150,20 +150,6 @@ export interface QueryHookOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {}
-
-export interface LazyQueryHookOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables, TData> {
-  /** @internal */
-  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
-}
-export interface LazyQueryHookExecOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> extends LazyQueryHookOptions<TData, TVariables> {
-  query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
 
 export type SuspenseQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
@@ -264,47 +250,6 @@ export interface LoadableQueryHookOptions {
   returnPartialData?: boolean;
 }
 
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export interface QueryLazyOptions<TVariables> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-}
-
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export type LazyQueryResult<
-  TData,
-  TVariables extends OperationVariables,
-> = QueryResult<TData, TVariables>;
-
-/**
- * @deprecated This type will be removed in the next major version of Apollo Client
- */
-export type QueryTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = LazyQueryResultTuple<TData, TVariables>;
-
-export type LazyQueryExecFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = (
-  options?: Partial<LazyQueryHookExecOptions<TData, TVariables>>
-) => Promise<QueryResult<TData, TVariables>>;
-
-export type LazyQueryResultTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = [
-  execute: LazyQueryExecFunction<TData, TVariables>,
-  result: QueryResult<TData, TVariables>,
-];
-
 /* Mutation types */
 
 export type RefetchQueriesFunction = (
@@ -327,7 +272,7 @@ export interface BaseMutationOptions<
     clientOptions?: BaseMutationOptions
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-  onError?: (error: ApolloError, clientOptions?: BaseMutationOptions) => void;
+  onError?: (error: ErrorLike, clientOptions?: BaseMutationOptions) => void;
 }
 
 export interface MutationFunctionOptions<
@@ -344,7 +289,7 @@ export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: MaybeMasked<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: ErrorLike;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
@@ -435,7 +380,7 @@ export interface BaseSubscriptionOptions<
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
   onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
-  onError?: (error: ApolloError) => void;
+  onError?: (error: ErrorLike) => void;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
   onSubscriptionComplete?: () => void;
   /**
@@ -451,7 +396,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
   data?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: ErrorLike;
   // This was added by the legacy useSubscription type, and is tested in unit
   // tests, but probably shouldn’t be added to the result.
   /**

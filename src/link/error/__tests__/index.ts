@@ -1,7 +1,11 @@
 import { gql } from "graphql-tag";
 import { Observable, of } from "rxjs";
 
-import { PROTOCOL_ERRORS_SYMBOL } from "@apollo/client/errors";
+import {
+  CombinedProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+  ServerError,
+} from "@apollo/client/errors";
 import { ErrorLink, onError } from "@apollo/client/link/error";
 
 import {
@@ -11,7 +15,6 @@ import {
 } from "../../../testing/internal/index.js";
 import { ApolloLink } from "../../core/ApolloLink.js";
 import { execute } from "../../core/execute.js";
-import { ServerError, throwServerError } from "../../utils/throwServerError.js";
 
 describe("error handling", () => {
   it("has an easy way to handle GraphQL errors", async () => {
@@ -160,12 +163,14 @@ describe("error handling", () => {
     const errorLink = onError((args) => {
       const { operation, protocolErrors } = args;
       expect(operation.operationName).toBe("MySubscription");
-      expect(protocolErrors).toEqual([
-        {
-          message: "Error field",
-          extensions: { code: "INTERNAL_SERVER_ERROR" },
-        },
-      ]);
+      expect(protocolErrors).toEqual(
+        new CombinedProtocolErrors([
+          {
+            message: "Error field",
+            extensions: { code: "INTERNAL_SERVER_ERROR" },
+          },
+        ])
+      );
     });
 
     const { httpLink, enqueuePayloadResult, enqueueProtocolErrors } =
@@ -189,14 +194,14 @@ describe("error handling", () => {
 
     await expect(stream).toEmitValue({
       extensions: {
-        [PROTOCOL_ERRORS_SYMBOL]: [
+        [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
           {
             extensions: {
               code: "INTERNAL_SERVER_ERROR",
             },
             message: "Error field",
           },
-        ],
+        ]),
       },
     });
   });
@@ -254,7 +259,10 @@ describe("error handling", () => {
     const mockLink = new ApolloLink((operation) => {
       return new Observable((obs) => {
         const response = { status: 500, ok: false } as Response;
-        throwServerError(response, "ServerError", "app is crashing");
+        throw new ServerError("app is crashing", {
+          response,
+          result: "ServerError",
+        });
       });
     });
 
@@ -285,7 +293,7 @@ describe("error handling", () => {
     const mockLink = new ApolloLink((operation) => {
       return new Observable((obs) => {
         const response = { status: 500, ok: false } as Response;
-        throwServerError(response, "", "app is crashing");
+        throw new ServerError("app is crashing", { response, result: "" });
       });
     });
 
@@ -505,12 +513,14 @@ describe("error handling with class", () => {
 
     const errorLink = new ErrorLink(({ operation, protocolErrors }) => {
       expect(operation.operationName).toBe("MySubscription");
-      expect(protocolErrors).toEqual([
-        {
-          message: "Error field",
-          extensions: { code: "INTERNAL_SERVER_ERROR" },
-        },
-      ]);
+      expect(protocolErrors).toEqual(
+        new CombinedProtocolErrors([
+          {
+            message: "Error field",
+            extensions: { code: "INTERNAL_SERVER_ERROR" },
+          },
+        ])
+      );
     });
 
     const link = errorLink.concat(httpLink);
@@ -530,14 +540,14 @@ describe("error handling with class", () => {
 
     await expect(stream).toEmitValue({
       extensions: {
-        [PROTOCOL_ERRORS_SYMBOL]: [
+        [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
           {
             extensions: {
               code: "INTERNAL_SERVER_ERROR",
             },
             message: "Error field",
           },
-        ],
+        ]),
       },
     });
   });
@@ -746,14 +756,16 @@ describe("support for request retrying", () => {
       ({ protocolErrors, operation, forward }) => {
         if (protocolErrors) {
           errorHandlerCalled = true;
-          expect(protocolErrors).toEqual([
-            {
-              message: "cannot read message from websocket",
-              extensions: {
-                code: "WEBSOCKET_MESSAGE_ERROR",
+          expect(protocolErrors).toEqual(
+            new CombinedProtocolErrors([
+              {
+                message: "cannot read message from websocket",
+                extensions: {
+                  code: "WEBSOCKET_MESSAGE_ERROR",
+                },
               },
-            },
-          ]);
+            ])
+          );
           return forward(operation);
         }
       }

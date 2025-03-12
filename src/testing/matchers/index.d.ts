@@ -5,11 +5,16 @@ import type {
   FetchResult,
   OperationVariables,
 } from "../../core/index.js";
-import type { QueryRef, QueryResult } from "../../react/index.js";
+import type {
+  LazyQueryResult,
+  QueryRef,
+  QueryResult,
+} from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
 import { TakeOptions } from "../internal/ObservableStream.js";
 import { CheckedKeys } from "./toEqualQueryResult.js";
+import { CheckedLazyQueryResult } from "./toEqualLazyQueryResult.js";
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -88,6 +93,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : T extends Promise<ApolloQueryResult<infer TData>> ?
     (expected: ApolloQueryResult<TData>) => R
   : { error: "matchers needs to be called on an ApolloQueryResult" };
+
+  toEqualLazyQueryResult: T extends (
+    LazyQueryResult<infer TData, infer TVariables>
+  ) ?
+    (expected: CheckedLazyQueryResult<TData, TVariables>) => R
+  : T extends Promise<LazyQueryResult<infer TData, infer TVariables>> ?
+    (expected: CheckedLazyQueryResult<TData, TVariables>) => R
+  : { error: "matchers needs to be called on a LazyQueryResult" };
 
   toEqualQueryResult: T extends QueryResult<infer TData, infer TVariables> ?
     (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R

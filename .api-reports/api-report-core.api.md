@@ -13,7 +13,6 @@ import type { FieldNode } from 'graphql';
 import type { FormattedExecutionResult } from 'graphql';
 import type { FragmentDefinitionNode } from 'graphql';
 import { gql } from 'graphql-tag';
-import type { GraphQLErrorExtensions } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
 import { Observable } from 'rxjs';
@@ -178,46 +177,6 @@ export interface ApolloClientOptions<TCacheShape> {
 }
 
 // @public (undocumented)
-export class ApolloError extends Error {
-    // Warning: (ae-forgotten-export) The symbol "ApolloErrorOptions" needs to be exported by the entry point index.d.ts
-    constructor({ graphQLErrors, protocolErrors, clientErrors, networkError, errorMessage, extraInfo, }: ApolloErrorOptions);
-    cause: ({
-        readonly message: string;
-        extensions?: GraphQLErrorExtensions[] | GraphQLFormattedError["extensions"];
-    } & Omit<Partial<Error> & Partial<GraphQLFormattedError>, "extensions">) | null;
-    // (undocumented)
-    clientErrors: ReadonlyArray<Error>;
-    // (undocumented)
-    extraInfo: any;
-    // (undocumented)
-    graphQLErrors: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    message: string;
-    // (undocumented)
-    name: string;
-    // (undocumented)
-    networkError: Error | ServerParseError | ServerError | null;
-    // (undocumented)
-    protocolErrors: ReadonlyArray<GraphQLFormattedError>;
-}
-
-// @public (undocumented)
-interface ApolloErrorOptions {
-    // (undocumented)
-    clientErrors?: ReadonlyArray<Error>;
-    // (undocumented)
-    errorMessage?: string;
-    // (undocumented)
-    extraInfo?: any;
-    // (undocumented)
-    graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
-    // (undocumented)
-    networkError?: Error | ServerParseError | ServerError | null;
-    // (undocumented)
-    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
-}
-
-// @public (undocumented)
 export class ApolloLink {
     constructor(request?: RequestHandler);
     // (undocumented)
@@ -260,7 +219,7 @@ export interface ApolloPayloadResult<TData = Record<string, any>, TExtensions = 
 export interface ApolloQueryResult<T> {
     // (undocumented)
     data: T | undefined;
-    error?: ApolloError;
+    error?: ErrorLike;
     // (undocumented)
     loading: boolean;
     // (undocumented)
@@ -434,6 +393,19 @@ type CombineByTypeName<T extends {
 }> = {
     [TypeName in NonNullable<T["__typename"]>]: Prettify<MergeUnions<ExtractByMatchingTypeNames<T, TypeName>>>;
 }[NonNullable<T["__typename"]>];
+
+// @public
+export class CombinedGraphQLErrors extends Error {
+    constructor(errors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
+    errors: ReadonlyArray<GraphQLFormattedError>;
+}
+
+// @public
+export class CombinedProtocolErrors extends Error {
+    constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
+    // (undocumented)
+    errors: ReadonlyArray<GraphQLFormattedError>;
+}
 
 // Warning: (ae-forgotten-export) The symbol "CombineByTypeName" needs to be exported by the entry point index.d.ts
 //
@@ -757,6 +729,16 @@ namespace EntityStore {
         // (undocumented)
         readonly stump: Stump;
     }
+}
+
+// @public
+export interface ErrorLike {
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    stack?: string;
 }
 
 // @public
@@ -1232,9 +1214,6 @@ class InvariantError extends Error {
 // @public (undocumented)
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
-// @public (undocumented)
-export function isApolloError(err: Error): err is ApolloError;
-
 // @public
 export function isNetworkRequestSettled(networkStatus?: NetworkStatus): boolean;
 
@@ -1667,7 +1646,7 @@ export class ObservableQuery<TData = any, TVariables extends OperationVariables 
     // (undocumented)
     getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
-    getLastError(variablesMustMatch?: boolean): ApolloError | undefined;
+    getLastError(variablesMustMatch?: boolean): ErrorLike | undefined;
     // (undocumented)
     getLastResult(variablesMustMatch?: boolean): ApolloQueryResult<TData> | undefined;
     // (undocumented)
@@ -2184,19 +2163,39 @@ export const selectURI: (operation: Operation, fallbackURI?: string | ((operatio
 // @public (undocumented)
 export const serializeFetchParameter: (p: any, label: string) => string;
 
-// @public (undocumented)
-export type ServerError = Error & {
+// @public
+export class ServerError extends Error {
+    // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
+    constructor(message: string, options: ServerErrorOptions);
     response: Response;
     result: Record<string, any> | string;
     statusCode: number;
-};
+}
 
 // @public (undocumented)
-export type ServerParseError = Error & {
+interface ServerErrorOptions {
+    // (undocumented)
+    response: Response;
+    // (undocumented)
+    result: Record<string, any> | string;
+}
+
+// @public
+export class ServerParseError extends Error {
+    // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
+    constructor(originalParseError: unknown, options: ServerParseErrorOptions);
+    bodyText: string;
     response: Response;
     statusCode: number;
+}
+
+// @public (undocumented)
+interface ServerParseErrorOptions {
+    // (undocumented)
     bodyText: string;
-};
+    // (undocumented)
+    response: Response;
+}
 
 // Warning: (ae-forgotten-export) The symbol "VerbosityLevel" needs to be exported by the entry point index.d.ts
 //
@@ -2312,9 +2311,6 @@ export interface SubscriptionOptions<TVariables = OperationVariables, TData = an
 type takeOneFromUnion<T> = unionToIntersection<T extends T ? (x: T) => 0 : never> extends ((x: infer U) => 0) ? U : never;
 
 // @public (undocumented)
-export const throwServerError: (response: Response, result: any, message: string) => never;
-
-// @public (undocumented)
 type ToReferenceFunction = (objOrIdOrRef: StoreObject | string | Reference, mergeIntoStore?: boolean) => Reference | undefined;
 
 // @public (undocumented)
@@ -2361,6 +2357,11 @@ export type TypePolicy = {
         [fieldName: string]: FieldPolicy<any> | FieldReadFunction<any>;
     };
 };
+
+// @public
+export class UnconventionalError extends Error {
+    constructor(errorType: unknown);
+}
 
 // @public (undocumented)
 type UnionForAny<T> = T extends never ? "a" : 1;
@@ -2492,7 +2493,7 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
 // src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:430:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:426:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)

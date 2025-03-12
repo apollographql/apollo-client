@@ -3,6 +3,9 @@ interface ServerErrorOptions {
   result: Record<string, any> | string;
 }
 
+/**
+ * Thrown when a non-200 response is returned from the server.
+ */
 export class ServerError extends Error {
   response: Response;
   statusCode: number;

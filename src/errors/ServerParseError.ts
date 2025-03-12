@@ -3,6 +3,9 @@ interface ServerParseErrorOptions {
   bodyText: string;
 }
 
+/**
+ * Thrown when failing to parse the response as JSON from the server.
+ */
 export class ServerParseError extends Error {
   response: Response;
   statusCode: number;

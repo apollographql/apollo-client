@@ -1,6 +1,13 @@
 import type { GraphQLFormattedError } from "graphql";
 
+/**
+ * Represents the combined list of GraphQL errors returned from the server in a
+ * GraphQL response.
+ */
 export class CombinedGraphQLErrors extends Error {
+  /**
+   * The raw list of GraphQL errors returned in a GraphQL response.
+   */
   errors: ReadonlyArray<GraphQLFormattedError>;
 
   constructor(

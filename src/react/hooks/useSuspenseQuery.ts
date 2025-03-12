@@ -5,6 +5,7 @@ import type {
   ApolloClient,
   ApolloQueryResult,
   DocumentNode,
+  ErrorLike,
   FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
@@ -37,7 +38,7 @@ export interface UseSuspenseQueryResult<
 > {
   client: ApolloClient<any>;
   data: MaybeMasked<TData>;
-  error: Error | undefined;
+  error: ErrorLike | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
   refetch: RefetchFunction<TData, TVariables>;

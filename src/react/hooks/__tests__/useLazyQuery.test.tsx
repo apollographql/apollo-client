@@ -29,7 +29,6 @@ import {
   MockLink,
   mockSingleLink,
   MockSubscriptionLink,
-  tick,
   wait,
 } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";

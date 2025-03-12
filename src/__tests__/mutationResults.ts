@@ -182,12 +182,6 @@ describe("mutation results", () => {
     };
   }
 
-  it("correctly primes cache for tests", async () => {
-    const { client, obsQuery } = setupObsQuery();
-
-    await obsQuery.result().then(() => client.query({ query }));
-  });
-
   it("correctly integrates field changes by default", async () => {
     const mutation = gql`
       mutation setCompleted {

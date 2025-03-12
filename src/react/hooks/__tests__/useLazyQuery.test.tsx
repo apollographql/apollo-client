@@ -110,63 +110,6 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Should we delete this? This is covered by the first test
-  it("should set `called` to false by default", async () => {
-    using _disabledAct = disableActEnvironment();
-    const { takeSnapshot } = await renderHookToSnapshotStream(
-      () => useLazyQuery(helloQuery),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={[]}>{children}</MockedProvider>
-        ),
-      }
-    );
-
-    const [, { called }] = await takeSnapshot();
-
-    expect(called).toBe(false);
-  });
-
-  // TODO: Should we delete this? This is covered by the first test
-  it.skip("should set `called` to true after calling the lazy execute function", async () => {
-    const mocks = [
-      {
-        request: { query: helloQuery },
-        result: { data: { hello: "world" } },
-        delay: 20,
-      },
-    ];
-
-    using _disabledAct = disableActEnvironment();
-    const { takeSnapshot, getCurrentSnapshot } =
-      await renderHookToSnapshotStream(() => useLazyQuery(helloQuery), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-    {
-      const [, { loading, called }] = await takeSnapshot();
-      expect(loading).toBe(false);
-      expect(called).toBe(false);
-    }
-
-    const execute = getCurrentSnapshot()[0];
-    setTimeout(() => execute());
-
-    {
-      const [, { loading, called }] = await takeSnapshot();
-      expect(loading).toBe(true);
-      expect(called).toBe(true);
-    }
-
-    {
-      const [, { loading, called }] = await takeSnapshot();
-      expect(loading).toBe(false);
-      expect(called).toBe(true);
-    }
-  });
-
   it("should use variables passed to execute function when running the lazy execution function", async () => {
     const query = gql`
       query ($id: number) {

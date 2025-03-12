@@ -7,7 +7,6 @@ import { Cache, InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloCache,
   ApolloClient,
-  ApolloError,
   ApolloLink,
   makeReference,
   MutationQueryReducersMap,
@@ -230,7 +229,7 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {
@@ -456,7 +455,7 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {

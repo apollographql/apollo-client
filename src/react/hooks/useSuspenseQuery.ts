@@ -3,9 +3,9 @@ import * as React from "rehackt";
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DocumentNode,
+  ErrorLike,
   FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
@@ -38,7 +38,7 @@ export interface UseSuspenseQueryResult<
 > {
   client: ApolloClient<any>;
   data: MaybeMasked<TData>;
-  error: ApolloError | undefined;
+  error: ErrorLike | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
   refetch: RefetchFunction<TData, TVariables>;

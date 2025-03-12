@@ -4,7 +4,6 @@ import { of } from "rxjs";
 import {
   ApolloCache,
   ApolloClient,
-  ApolloError,
   ApolloLink,
   Cache,
   DataProxy,
@@ -16,6 +15,7 @@ import {
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { MaskedDocumentNode } from "@apollo/client/masking";
 import {
   MockedResponse,
@@ -977,9 +977,7 @@ describe("client.watchQuery", () => {
           name: null,
         },
       },
-      error: new ApolloError({
-        graphQLErrors: [{ message: "Couldn't get name" }],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -3833,9 +3831,7 @@ describe("client.query", () => {
     });
 
     await expect(client.query({ query, errorPolicy: "none" })).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      })
+      new CombinedGraphQLErrors([{ message: "User not logged in" }])
     );
   });
 
@@ -3874,9 +3870,7 @@ describe("client.query", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { currentUser: null },
-      error: new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -3931,9 +3925,9 @@ describe("client.query", () => {
           name: "Test User",
         },
       },
-      error: new ApolloError({
-        graphQLErrors: [{ message: "Could not determine age" }],
-      }),
+      error: new CombinedGraphQLErrors([
+        { message: "Could not determine age" },
+      ]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -4396,7 +4390,7 @@ describe("client.subscribe", () => {
     const error = await stream.takeError();
 
     expect(error).toEqual(
-      new ApolloError({ graphQLErrors: [{ message: "Something went wrong" }] })
+      new CombinedGraphQLErrors([{ message: "Something went wrong" }])
     );
   });
 
@@ -5483,9 +5477,7 @@ describe("client.mutate", () => {
     await expect(
       client.mutate({ mutation, errorPolicy: "none" })
     ).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      })
+      new CombinedGraphQLErrors([{ message: "User not logged in" }])
     );
   });
 

@@ -50,6 +50,13 @@ class ApolloLink {
     split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
 }
 
+// @public
+class CombinedProtocolErrors extends Error {
+    constructor(protocolErrors: Array<GraphQLFormattedError> | ReadonlyArray<GraphQLFormattedError>);
+    // (undocumented)
+    errors: ReadonlyArray<GraphQLFormattedError>;
+}
+
 // @public (undocumented)
 interface DefaultContext extends Record<string, any> {
 }
@@ -85,7 +92,8 @@ export interface ErrorResponse {
     networkError?: NetworkError;
     // (undocumented)
     operation: Operation;
-    protocolErrors?: ReadonlyArray<GraphQLFormattedError>;
+    // Warning: (ae-forgotten-export) The symbol "CombinedProtocolErrors" needs to be exported by the entry point index.d.ts
+    protocolErrors?: CombinedProtocolErrors;
     // (undocumented)
     response?: FormattedExecutionResult;
 }
@@ -205,19 +213,39 @@ type Path = ReadonlyArray<string | number>;
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
 
-// @public (undocumented)
-type ServerError = Error & {
+// @public
+class ServerError extends Error {
+    // Warning: (ae-forgotten-export) The symbol "ServerErrorOptions" needs to be exported by the entry point index.d.ts
+    constructor(message: string, options: ServerErrorOptions);
     response: Response;
     result: Record<string, any> | string;
     statusCode: number;
-};
+}
 
 // @public (undocumented)
-type ServerParseError = Error & {
+interface ServerErrorOptions {
+    // (undocumented)
+    response: Response;
+    // (undocumented)
+    result: Record<string, any> | string;
+}
+
+// @public
+class ServerParseError extends Error {
+    // Warning: (ae-forgotten-export) The symbol "ServerParseErrorOptions" needs to be exported by the entry point index.d.ts
+    constructor(originalParseError: unknown, options: ServerParseErrorOptions);
+    bodyText: string;
     response: Response;
     statusCode: number;
+}
+
+// @public (undocumented)
+interface ServerParseErrorOptions {
+    // (undocumented)
     bodyText: string;
-};
+    // (undocumented)
+    response: Response;
+}
 
 // @public (undocumented)
 interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {

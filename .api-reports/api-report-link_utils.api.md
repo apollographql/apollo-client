@@ -57,16 +57,6 @@ interface Operation {
 }
 
 // @public (undocumented)
-export type ServerError = Error & {
-    response: Response;
-    result: Record<string, any> | string;
-    statusCode: number;
-};
-
-// @public (undocumented)
-export const throwServerError: (response: Response, result: any, message: string) => never;
-
-// @public (undocumented)
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest;
 
 // @public (undocumented)

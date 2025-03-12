@@ -5,9 +5,9 @@ import * as React from "rehackt";
 
 import type {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DefaultContext,
+  ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
   MaybeMasked,
@@ -128,7 +128,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
   previousData?: MaybeMasked<TData>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: ApolloError;
+  error?: ErrorLike;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */

@@ -4,8 +4,9 @@ exports[`exports of public entry points @apollo/client 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloError",
   "ApolloLink",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -13,6 +14,9 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -27,7 +31,6 @@ Array [
   "fallbackHttpConfig",
   "from",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
   "makeReference",
@@ -42,7 +45,6 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
-  "throwServerError",
 ]
 `;
 
@@ -68,8 +70,9 @@ exports[`exports of public entry points @apollo/client/core 1`] = `
 Array [
   "ApolloCache",
   "ApolloClient",
-  "ApolloError",
   "ApolloLink",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "DocumentTransform",
   "HttpLink",
   "InMemoryCache",
@@ -77,6 +80,9 @@ Array [
   "NetworkStatus",
   "Observable",
   "ObservableQuery",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "checkFetcher",
   "concat",
   "createHttpLink",
@@ -91,7 +97,6 @@ Array [
   "fallbackHttpConfig",
   "from",
   "gql",
-  "isApolloError",
   "isNetworkRequestSettled",
   "isReference",
   "makeReference",
@@ -106,7 +111,6 @@ Array [
   "serializeFetchParameter",
   "setLogVerbosity",
   "split",
-  "throwServerError",
 ]
 `;
 
@@ -121,10 +125,13 @@ Array [
 
 exports[`exports of public entry points @apollo/client/errors 1`] = `
 Array [
-  "ApolloError",
+  "CombinedGraphQLErrors",
+  "CombinedProtocolErrors",
   "PROTOCOL_ERRORS_SYMBOL",
+  "ServerError",
+  "ServerParseError",
+  "UnconventionalError",
   "graphQLResultHasProtocolErrors",
-  "isApolloError",
 ]
 `;
 
@@ -218,7 +225,6 @@ exports[`exports of public entry points @apollo/client/link/utils 1`] = `
 Array [
   "createOperation",
   "filterOperationVariables",
-  "throwServerError",
   "transformOperation",
   "validateOperation",
 ]

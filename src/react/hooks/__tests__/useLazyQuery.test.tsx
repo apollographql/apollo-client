@@ -13,9 +13,9 @@ import { Observable } from "rxjs";
 
 import {
   ApolloClient,
-  ApolloError,
   ApolloLink,
   ApolloQueryResult,
+  CombinedGraphQLErrors,
   ErrorPolicy,
   InMemoryCache,
   NetworkStatus,
@@ -1790,7 +1790,7 @@ describe("useLazyQuery Hook", () => {
     // https://github.com/apollographql/apollo-client/issues/9142#issuecomment-1118972947
     // justifies the old behavior
     await expect(execute()).rejects.toEqual(
-      new ApolloError({ graphQLErrors: [{ message: "error 1" }] })
+      new CombinedGraphQLErrors([{ message: "error 1" }])
     );
 
     {
@@ -1802,13 +1802,13 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+        error: new CombinedGraphQLErrors([{ message: "error 1" }]),
         variables: {},
       });
     }
 
     await expect(execute()).rejects.toEqual(
-      new ApolloError({ graphQLErrors: [{ message: "error 2" }] })
+      new CombinedGraphQLErrors([{ message: "error 2" }])
     );
 
     {
@@ -1820,7 +1820,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+        error: new CombinedGraphQLErrors([{ message: "error 2" }]),
         variables: {},
       });
     }
@@ -1883,7 +1883,7 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
-      error: new ApolloError({ graphQLErrors: [{ message: "Not logged in" }] }),
+      error: new CombinedGraphQLErrors([{ message: "Not logged in" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -1898,18 +1898,14 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new ApolloError({
-          graphQLErrors: [{ message: "Not logged in" }],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Not logged in" }]),
         variables: {},
       });
     }
 
     await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
-      error: new ApolloError({
-        graphQLErrors: [{ message: "Not logged in 2" }],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
       partial: false,
@@ -1924,9 +1920,7 @@ describe("useLazyQuery Hook", () => {
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
-        error: new ApolloError({
-          graphQLErrors: [{ message: "Not logged in 2" }],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Not logged in 2" }]),
         variables: {},
       });
     }
@@ -2539,9 +2533,7 @@ describe("useLazyQuery Hook", () => {
     expect(execute).toBe(originalExecute);
 
     await expect(execute({ variables: { id: "2" } })).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "Oops" }],
-      })
+      new CombinedGraphQLErrors([{ message: "Oops" }])
     );
 
     {
@@ -2549,7 +2541,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: { user: { id: "1", name: "John Doe" } },
-        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        error: new CombinedGraphQLErrors([{ message: "Oops" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2576,7 +2568,7 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: { user: { id: "1", name: "John Doe" } },
-        error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
+        error: new CombinedGraphQLErrors([{ message: "Oops" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2710,16 +2702,14 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(
-        new ApolloError({ networkError })
-      );
+      await expect(execute()).rejects.toEqual(networkError);
 
       {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: new ApolloError({ networkError }),
+          error: networkError,
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2778,16 +2768,14 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(
-        new ApolloError({ networkError })
-      );
+      await expect(execute()).rejects.toEqual(networkError);
 
       {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: new ApolloError({ networkError }),
+          error: networkError,
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2846,16 +2834,14 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(
-        new ApolloError({ networkError })
-      );
+      await expect(execute()).rejects.toEqual(networkError);
 
       {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: new ApolloError({ networkError }),
+          error: networkError,
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -2916,11 +2902,9 @@ describe("useLazyQuery Hook", () => {
 
       expect(result).toEqualLazyQueryResult({
         data: undefined,
-        error: new ApolloError({
-          networkError: new InvariantError(
-            "Store reset while query was in flight (not completed in link chain)"
-          ),
-        }),
+        error: new InvariantError(
+          "Store reset while query was in flight (not completed in link chain)"
+        ),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -4455,9 +4439,9 @@ test("applies `errorPolicy` on next fetch when it changes between renders", asyn
       data: {
         character: null,
       },
-      error: new ApolloError({
-        graphQLErrors: [{ message: "Could not find character 1" }],
-      }),
+      error: new CombinedGraphQLErrors([
+        { message: "Could not find character 1" },
+      ]),
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,

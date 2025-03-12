@@ -2475,7 +2475,7 @@ describe("useLazyQuery Hook", () => {
       },
       {
         request: { query, variables: { id: "2" } },
-        result: { errors: [new GraphQLError("Oops")] },
+        result: { errors: [{ message: "Oops" }] },
         delay: 20,
       },
       {

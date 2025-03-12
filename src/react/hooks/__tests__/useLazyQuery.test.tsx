@@ -2020,51 +2020,6 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  // TODO: Need to determine whether to keep this test depending on whether we
-  // keep the promise rejection behavior in 4.x. With the updated behavior, the
-  // execute function throws
-  it.skip("the promise should not cause an unhandled rejection", async () => {
-    const mocks = [
-      {
-        request: { query: helloQuery },
-        result: {
-          errors: [new GraphQLError("error 1")],
-        },
-        delay: 20,
-      },
-    ];
-
-    using _disabledAct = disableActEnvironment();
-    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
-      () => useLazyQuery(helloQuery),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
-
-    const [execute] = await peekSnapshot();
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: false,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-    }
-
-    void execute();
-
-    // Making sure the rejection triggers a test failure.
-    await wait(50);
-  });
-
   it("allows in-flight requests to resolve when component unmounts", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({ link, cache: new InMemoryCache() });

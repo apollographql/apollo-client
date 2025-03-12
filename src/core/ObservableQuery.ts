@@ -220,45 +220,6 @@ export class ObservableQuery<
 
   public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
-  // TODO: Consider deprecating this method. If not, use firstValueFrom helper
-  // instead.
-  public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    return new Promise((resolve, reject) => {
-      // TODO: this code doesn’t actually make sense insofar as the observer
-      // will never exist in this.observers due how zen-observable wraps observables.
-      // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
-      const observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> =
-        {
-          next: (result) => {
-            resolve(result);
-
-            // Stop the query within the QueryManager if we can before
-            // this function returns.
-            //
-            // We do this in order to prevent observers piling up within
-            // the QueryManager. Notice that we only fully unsubscribe
-            // from the subscription in a setTimeout(..., 0)  call. This call can
-            // actually be handled by the browser at a much later time. If queries
-            // are fired in the meantime, observers that should have been removed
-            // from the QueryManager will continue to fire, causing an unnecessary
-            // performance hit.
-            if (!this.hasObservers()) {
-              // TODO: I think this can be removed, especially when we do the work to
-              // emit a `complete` notification once this instance is torn down.
-              // This was added in https://github.com/apollographql/apollo-client/pull/1567/commits/f9219c399a86e82db709e48cef64468bfd1056fe
-              this.queryManager.removeQuery(this.queryId);
-            }
-
-            setTimeout(() => {
-              subscription.unsubscribe();
-            }, 0);
-          },
-          error: reject,
-        };
-      const subscription = this.subscribe(observer);
-    });
-  }
-
   /** @internal */
   public resetDiff() {
     this.queryInfo.resetDiff();

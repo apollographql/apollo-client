@@ -294,13 +294,15 @@ export function useLazyQuery<
   }, [observable]);
 
   React.useEffect(() => {
-    const options: Partial<WatchQueryOptions<TVariables, TData>> = {
+    const updatedOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       query,
       errorPolicy: stableOptions?.errorPolicy,
       context: stableOptions?.context,
       refetchWritePolicy: stableOptions?.refetchWritePolicy,
       returnPartialData: stableOptions?.returnPartialData,
       notifyOnNetworkStatusChange: stableOptions?.notifyOnNetworkStatusChange,
+      nextFetchPolicy: options?.nextFetchPolicy,
+      skipPollAttempt: options?.skipPollAttempt,
     };
 
     // Wait to apply the changed fetch policy until after the execute
@@ -310,11 +312,20 @@ export function useLazyQuery<
       observable.options.fetchPolicy !== "standby" &&
       stableOptions?.fetchPolicy
     ) {
-      options.fetchPolicy = stableOptions?.fetchPolicy;
+      updatedOptions.fetchPolicy = stableOptions?.fetchPolicy;
     }
 
-    observable.silentSetOptions(options);
-  }, [query, observable, stableOptions]);
+    observable.silentSetOptions(updatedOptions);
+  }, [
+    query,
+    observable,
+    stableOptions,
+    // Ensure inline functions don't suffer from stale closures by checking for
+    // these deps separately. @wry/equality doesn't compare function identity
+    // so `stableOptions` isn't updated when using inline functions.
+    options?.nextFetchPolicy,
+    options?.skipPollAttempt,
+  ]);
 
   const execute: LazyQueryExecFunction<TData, TVariables> = React.useCallback(
     (...args) => {

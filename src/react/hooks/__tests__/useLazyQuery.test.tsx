@@ -2449,7 +2449,7 @@ describe("useLazyQuery Hook", () => {
     }
   );
 
-  it.skip("maintains stable execute function when passing in dynamic function options", async () => {
+  it("maintains stable execute function when passing in dynamic function options", async () => {
     interface Data {
       user: { id: string; name: string };
     }
@@ -2560,19 +2560,6 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: { id: "1" },
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
         data: { user: { id: "1", name: "John Doe" } },
         called: true,
         loading: false,
@@ -2607,31 +2594,22 @@ describe("useLazyQuery Hook", () => {
     [execute] = getCurrentSnapshot();
     expect(execute).toBe(originalExecute);
 
-    await execute({ variables: { id: "2" } });
+    await expect(execute({ variables: { id: "2" } })).rejects.toEqual(
+      new ApolloError({
+        graphQLErrors: [{ message: "Oops" }],
+      })
+    );
 
     {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.setVariables,
-        previousData: { user: { id: "1", name: "John Doe" } },
-        variables: { id: "2" },
-      });
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
-        data: undefined,
+        data: { user: { id: "1", name: "John Doe" } },
         error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
-        previousData: { user: { id: "1", name: "John Doe" } },
+        previousData: undefined,
         variables: { id: "2" },
       });
     }
@@ -2653,30 +2631,17 @@ describe("useLazyQuery Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualLazyQueryResult({
-        data: undefined,
+        data: { user: { id: "1", name: "John Doe" } },
         error: new ApolloError({ graphQLErrors: [{ message: "Oops" }] }),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
-        previousData: { user: { id: "1", name: "John Doe" } },
+        previousData: undefined,
         variables: { id: "2" },
       });
     }
 
     await execute({ variables: { id: "3" } });
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result).toEqualLazyQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.setVariables,
-        previousData: { user: { id: "1", name: "John Doe" } },
-        variables: { id: "3" },
-      });
-    }
 
     {
       const [, result] = await takeSnapshot();

@@ -714,7 +714,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * Note: the promise will return the old results immediately if the variables
    * have not changed.
    *
-   * Note: the promise will return null immediately if the query is not active
+   * Note: the promise will return the last result immediately if the query is not active
    * (there are no subscribers).
    *
    * @param variables - The new set of variables. If there are missing variables,

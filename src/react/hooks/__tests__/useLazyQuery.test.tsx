@@ -4152,7 +4152,7 @@ test("uses cached result when switching to variables already written to the cach
   await expect(takeSnapshot).not.toRerender();
 });
 
-test("renders loading states when switching to variables already written to the cache with notifyOnNetworkStatusChange", async () => {
+test("renders loading states where necessary when switching to variables maybe written to the cache with notifyOnNetworkStatusChange", async () => {
   const { query, mocks } = setupVariablesCase();
 
   const client = new ApolloClient({
@@ -4266,6 +4266,65 @@ test("renders loading states when switching to variables already written to the 
         character: { __typename: "Character", id: "1", name: "Spider-Man" },
       },
       variables: { id: "2" },
+    });
+  }
+
+  await expect(
+    execute({ variables: { id: "3" } })
+  ).resolves.toEqualApolloQueryResult({
+    data: {
+      character: {
+        __typename: "Character",
+        id: "3",
+        name: "Iron Man",
+      },
+    },
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: undefined,
+      called: true,
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      previousData: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
+      },
+      variables: { id: "3" },
+    });
+  }
+
+  {
+    const [, result] = await takeSnapshot();
+
+    expect(result).toEqualLazyQueryResult({
+      data: {
+        character: {
+          __typename: "Character",
+          id: "3",
+          name: "Iron Man",
+        },
+      },
+      called: true,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      previousData: {
+        character: {
+          __typename: "Character",
+          id: "2",
+          name: "Cached Character",
+        },
+      },
+      variables: { id: "3" },
     });
   }
 

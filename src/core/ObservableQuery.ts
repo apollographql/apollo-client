@@ -720,21 +720,21 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public setVariables(
+  public async setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.hasObservers() ? this.result() : Promise.resolve();
+      return this.subject.getValue();
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return Promise.resolve();
+      return this.subject.getValue();
     }
 
     return this.reobserve(

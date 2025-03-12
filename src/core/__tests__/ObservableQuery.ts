@@ -861,7 +861,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
@@ -911,7 +918,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -994,7 +1008,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -1050,7 +1071,14 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -1076,7 +1104,14 @@ describe("ObservableQuery", () => {
       });
       const observable = client.watchQuery({ query, variables });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
     });
 
     it("sets networkStatus to `setVariables` when fetching", async () => {
@@ -1111,7 +1146,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
@@ -1130,7 +1172,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("sets networkStatus to `setVariables` when calling refetch with new variables", async () => {
+    it("sets networkStatus to `refetch` when calling refetch with new variables", async () => {
       const mockedResponses = [
         {
           request: { query, variables },
@@ -1162,7 +1204,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.refetch(differentVariables);
+      await expect(
+        observable.refetch(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
@@ -1205,7 +1254,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(variables);
+      await expect(
+        observable.setVariables(variables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1232,7 +1288,14 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,

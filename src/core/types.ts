@@ -34,21 +34,21 @@ export type QueryListener = (queryInfo: QueryInfo) => void;
  * - `ServerParseError` - A JSON-parse error when parsing the server response.
  * - `ServerError` - A non-200 server response.
  *
- *  @example
- *  ```ts
- *  import { CombinedGraphQLErrors } from "@apollo/client";
+ * @example
+ * ```ts
+ * import { CombinedGraphQLErrors } from "@apollo/client";
  *
- *  try {
- *    await client.query({ query });
- *  } catch (error) {
- *    // Use `instanceof` to check for more specific types of errors.
- *    if (error instanceof CombinedGraphQLErrors) {
- *      error.errors.map(graphQLError => console.log(graphQLError.message));
- *    } else {
- *      console.error(errors);
- *    }
- *  }
- *  ```
+ * try {
+ *   await client.query({ query });
+ * } catch (error) {
+ *   // Use `instanceof` to check for more specific types of errors.
+ *   if (error instanceof CombinedGraphQLErrors) {
+ *     error.errors.map(graphQLError => console.log(graphQLError.message));
+ *   } else {
+ *     console.error(errors);
+ *   }
+ * }
+ * ```
  */
 export interface ErrorLike {
   message: string;

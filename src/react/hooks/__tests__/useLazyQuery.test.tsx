@@ -2582,7 +2582,7 @@ describe("useLazyQuery Hook", () => {
     {
       const [, result] = await takeSnapshot();
 
-      expect(result).toEqualQueryResult({
+      expect(result).toEqualLazyQueryResult({
         data: { user: { id: "3", name: "Johnny Three" } },
         called: true,
         loading: false,

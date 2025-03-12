@@ -7,8 +7,17 @@ interface ServerParseErrorOptions {
  * Thrown when failing to parse the response as JSON from the server.
  */
 export class ServerParseError extends Error {
+  /**
+   * The server response.
+   */
   response: Response;
+  /**
+   * The status code returned from the server.
+   */
   statusCode: number;
+  /**
+   * The raw body text returned in the server response.
+   */
   bodyText: string;
 
   constructor(originalParseError: unknown, options: ServerParseErrorOptions) {

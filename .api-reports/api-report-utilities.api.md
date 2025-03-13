@@ -14,6 +14,7 @@ import type { FragmentDefinitionNode } from 'graphql';
 import type { FragmentSpreadNode } from 'graphql';
 import { GraphQLFormattedError } from 'graphql';
 import type { InlineFragmentNode } from 'graphql';
+import type { InteropObservable } from 'rxjs';
 import type { NameNode } from 'graphql';
 import { Observable } from 'rxjs';
 import type { Observer } from 'rxjs';
@@ -1901,7 +1902,11 @@ interface ObservableAndInfo<TData> {
 }
 
 // @public (undocumented)
-class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>> {
+class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>>, InteropObservable<ApolloQueryResult<MaybeMasked<TData>>> {
+    // (undocumented)
+    ["@@observable"]: () => Observable<ApolloQueryResult<MaybeMasked<TData>>>;
+    // (undocumented)
+    [Symbol.observable]: () => Observable<ApolloQueryResult<MaybeMasked<TData>>>;
     constructor({ queryManager, queryInfo, options, }: {
         queryManager: QueryManager<any>;
         queryInfo: QueryInfo;
@@ -2794,8 +2799,8 @@ interface WriteContext extends ReadMergeModifyContext {
 // src/cache/inmemory/types.ts:140:3 - (ae-forgotten-export) The symbol "KeyFieldsFunction" needs to be exported by the entry point index.d.ts
 // src/cache/inmemory/writeToStore.ts:70:7 - (ae-forgotten-export) The symbol "MergeTree" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:71:3 - (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:118:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:119:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:126:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:127:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:172:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
 // src/core/QueryManager.ts:426:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:207:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts

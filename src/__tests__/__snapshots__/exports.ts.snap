@@ -267,33 +267,7 @@ Array [
   "useSubscription",
   "useSuspenseFragment",
   "useSuspenseQuery",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/context 1`] = `
-Array [
-  "ApolloConsumer",
-  "ApolloProvider",
-  "getApolloContext",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/hooks 1`] = `
-Array [
-  "skipToken",
-  "useApolloClient",
-  "useBackgroundQuery",
-  "useFragment",
-  "useLazyQuery",
-  "useLoadableQuery",
-  "useMutation",
-  "useQuery",
-  "useQueryRefHandlers",
-  "useReactiveVar",
-  "useReadQuery",
-  "useSubscription",
-  "useSuspenseFragment",
-  "useSuspenseQuery",
+  "verifyDocumentType",
 ]
 `;
 
@@ -306,15 +280,6 @@ Array [
   "unwrapQueryRef",
   "updateWrappedQueryRef",
   "wrapQueryRef",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/react/parser 1`] = `
-Array [
-  "DocumentType",
-  "operationName",
-  "parser",
-  "verifyDocumentType",
 ]
 `;
 

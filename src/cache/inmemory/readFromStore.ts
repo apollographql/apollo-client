@@ -13,7 +13,6 @@ import {
   addTypenameToDocument,
   cacheSizes,
   canonicalStringify,
-  canUseWeakMap,
   compact,
   DeepMerger,
   defaultCacheSizes,
@@ -138,10 +137,7 @@ export class StoreReader {
     fragments?: InMemoryCacheConfig["fragments"];
   };
 
-  private knownResults = new (canUseWeakMap ? WeakMap : Map)<
-    Record<string, any>,
-    SelectionSetNode
-  >();
+  private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
   public canon: ObjectCanon;
   public resetCanon() {

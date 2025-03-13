@@ -2,17 +2,6 @@ import { maybe } from "@apollo/client/utilities/globals";
 
 const isReactNative = maybe(() => navigator.product) == "ReactNative";
 
-export const canUseWeakMap =
-  typeof WeakMap === "function" &&
-  !(isReactNative && !(global as any).HermesInternal);
-
-export const canUseWeakSet = typeof WeakSet === "function";
-
-export const canUseSymbol =
-  typeof Symbol === "function" && typeof Symbol.for === "function";
-
-export const canUseAsyncIteratorSymbol = canUseSymbol && Symbol.asyncIterator;
-
 export const canUseDOM =
   typeof maybe(() => window.document.createElement) === "function";
 

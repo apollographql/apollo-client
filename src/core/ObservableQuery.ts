@@ -1,6 +1,11 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import type { Observer, Subscribable, Subscription } from "rxjs";
+import type {
+  InteropObservable,
+  Observer,
+  Subscribable,
+  Subscription,
+} from "rxjs";
 import type { Observable } from "rxjs";
 import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
 
@@ -59,9 +64,12 @@ interface Last<TData, TVariables> {
 }
 
 export class ObservableQuery<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>>
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >
+  implements
+    Subscribable<ApolloQueryResult<MaybeMasked<TData>>>,
+    InteropObservable<ApolloQueryResult<MaybeMasked<TData>>>
 {
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
@@ -163,6 +171,10 @@ export class ObservableQuery<
       )
     );
 
+    this["@@observable"] = () => this;
+    if (Symbol.observable) {
+      this[Symbol.observable] = () => this;
+    }
     this.pipe = this.observable.pipe.bind(this.observable);
     this.subscribe = this.observable.subscribe.bind(this.observable);
 
@@ -220,44 +232,12 @@ export class ObservableQuery<
 
   public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
-  // TODO: Consider deprecating this method. If not, use firstValueFrom helper
-  // instead.
-  public result(): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    return new Promise((resolve, reject) => {
-      // TODO: this code doesn’t actually make sense insofar as the observer
-      // will never exist in this.observers due how zen-observable wraps observables.
-      // https://github.com/zenparsing/zen-observable/blob/master/src/Observable.js#L169
-      const observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> =
-        {
-          next: (result) => {
-            resolve(result);
-
-            // Stop the query within the QueryManager if we can before
-            // this function returns.
-            //
-            // We do this in order to prevent observers piling up within
-            // the QueryManager. Notice that we only fully unsubscribe
-            // from the subscription in a setTimeout(..., 0)  call. This call can
-            // actually be handled by the browser at a much later time. If queries
-            // are fired in the meantime, observers that should have been removed
-            // from the QueryManager will continue to fire, causing an unnecessary
-            // performance hit.
-            if (!this.hasObservers()) {
-              // TODO: I think this can be removed, especially when we do the work to
-              // emit a `complete` notification once this instance is torn down.
-              // This was added in https://github.com/apollographql/apollo-client/pull/1567/commits/f9219c399a86e82db709e48cef64468bfd1056fe
-              this.queryManager.removeQuery(this.queryId);
-            }
-
-            setTimeout(() => {
-              subscription.unsubscribe();
-            }, 0);
-          },
-          error: reject,
-        };
-      const subscription = this.subscribe(observer);
-    });
-  }
+  public [Symbol.observable]!: () => Subscribable<
+    ApolloQueryResult<MaybeMasked<TData>>
+  >;
+  public ["@@observable"]: () => Subscribable<
+    ApolloQueryResult<MaybeMasked<TData>>
+  >;
 
   /** @internal */
   public resetDiff() {
@@ -714,27 +694,27 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * Note: the promise will return the old results immediately if the variables
    * have not changed.
    *
-   * Note: the promise will return null immediately if the query is not active
+   * Note: the promise will return the last result immediately if the query is not active
    * (there are no subscribers).
    *
    * @param variables - The new set of variables. If there are missing variables,
    * the previous values of those variables will be used.
    */
-  public setVariables(
+  public async setVariables(
     variables: TVariables
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>> | void> {
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     if (equal(this.variables, variables)) {
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.hasObservers() ? this.result() : Promise.resolve();
+      return this.subject.getValue();
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return Promise.resolve();
+      return this.subject.getValue();
     }
 
     return this.reobserve(

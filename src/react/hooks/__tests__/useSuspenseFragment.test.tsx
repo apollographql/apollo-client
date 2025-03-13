@@ -20,7 +20,7 @@ import {
   OperationVariables,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";

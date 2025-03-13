@@ -22,8 +22,8 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { Masked } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useReadQuery, UseReadQueryResult } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useReadQuery, UseReadQueryResult } from "@apollo/client/react";
 import {
   PreloadedQueryRef,
   QueryRef,

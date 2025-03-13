@@ -40,8 +40,8 @@ import type {
   QueryHookOptions,
   QueryResult,
 } from "@apollo/client/react";
-import { getApolloContext } from "@apollo/client/react/context";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { getApolloContext } from "@apollo/client/react";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react";
 import type { RenderPromises } from "@apollo/client/react/ssr";
 import { compact, maybeDeepFreeze } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";

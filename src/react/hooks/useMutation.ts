@@ -17,7 +17,7 @@ import type {
   MutationTuple,
   NoInfer,
 } from "@apollo/client/react";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react";
 import { mergeOptions } from "@apollo/client/utilities";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";

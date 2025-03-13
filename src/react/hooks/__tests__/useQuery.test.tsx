@@ -24,7 +24,7 @@ import {
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
 import { Unmasked } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import {
   MockedResponse,
   MockLink,

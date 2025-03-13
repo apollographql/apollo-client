@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 
-import { DocumentType, parser } from "@apollo/client/react/parser";
+import { DocumentType, parser } from "@apollo/client/react";
 
 type OperationDefinition = any;
 

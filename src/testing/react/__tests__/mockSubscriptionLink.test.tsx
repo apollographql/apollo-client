@@ -4,8 +4,8 @@ import React from "react";
 
 import { InMemoryCache as Cache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
-import { ApolloProvider } from "@apollo/client/react/context";
-import { useSubscription } from "@apollo/client/react/hooks";
+import { ApolloProvider } from "@apollo/client/react";
+import { useSubscription } from "@apollo/client/react";
 import { MockSubscriptionLink } from "@apollo/client/testing/core";
 
 describe("mockSubscriptionLink", () => {

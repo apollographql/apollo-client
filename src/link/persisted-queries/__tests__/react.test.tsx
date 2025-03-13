@@ -13,7 +13,7 @@ import {
   VERSION,
 } from "@apollo/client/link/persisted-queries";
 import { useQuery } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";

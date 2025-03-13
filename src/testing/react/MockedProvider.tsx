@@ -6,7 +6,7 @@ import type { DefaultOptions } from "@apollo/client/core";
 import type { Resolvers } from "@apollo/client/core";
 import { ApolloClient } from "@apollo/client/core";
 import type { ApolloLink } from "@apollo/client/link/core";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import type { MockedResponse } from "@apollo/client/testing/core";
 import { MockLink } from "@apollo/client/testing/core";
 

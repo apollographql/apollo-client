@@ -2,7 +2,7 @@ import type * as ReactTypes from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import * as React from "rehackt";
 
-import { getApolloContext } from "@apollo/client/react/context";
+import { getApolloContext } from "@apollo/client/react";
 
 import { RenderPromises } from "./RenderPromises.js";
 

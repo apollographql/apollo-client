@@ -6,8 +6,8 @@ import React from "react";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
-import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react";
+import { useApolloClient, useQuery } from "@apollo/client/react";
 import { renderToStringWithData } from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";

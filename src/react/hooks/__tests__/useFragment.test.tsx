@@ -32,7 +32,7 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { FragmentType } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
 

@@ -19,7 +19,7 @@ import type {
   SubscriptionHookOptions,
   SubscriptionResult,
 } from "@apollo/client/react";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";

@@ -22,7 +22,7 @@ import {
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
 import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import { MockSubscriptionLink, wait } from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 

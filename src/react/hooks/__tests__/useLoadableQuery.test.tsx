@@ -28,7 +28,7 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { QueryRef } from "@apollo/client/react";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import {
   MockedResponse,
   MockLink,

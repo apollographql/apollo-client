@@ -20,9 +20,9 @@ import type {
   ObservableQueryFields,
   SuspenseQueryHookOptions,
 } from "@apollo/client/react";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react";
 import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
-import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { DeepPartial } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";

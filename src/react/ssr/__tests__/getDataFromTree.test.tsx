@@ -9,8 +9,8 @@ import {
   CombinedGraphQLErrors,
   TypedDocumentNode,
 } from "@apollo/client/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
-import { useQuery } from "@apollo/client/react/hooks";
+import { ApolloProvider, getApolloContext } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
 import { mockSingleLink } from "@apollo/client/testing";
 
 import { getDataFromTree } from "../getDataFromTree.js";

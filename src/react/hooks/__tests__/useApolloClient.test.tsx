@@ -4,7 +4,7 @@ import React from "react";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { useApolloClient } from "../useApolloClient.js";

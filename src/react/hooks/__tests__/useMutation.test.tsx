@@ -27,7 +27,7 @@ import {
 import { BatchHttpLink } from "@apollo/client/link/batch-http";
 import { FetchResult } from "@apollo/client/link/core";
 import { Masked } from "@apollo/client/masking";
-import { ApolloProvider } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react";
 import {
   MockedResponse,
   MockLink,

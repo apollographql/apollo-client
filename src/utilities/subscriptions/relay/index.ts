@@ -10,10 +10,14 @@ import {
   readMultipartBody,
 } from "../../../link/http/parseAndCheckHttpResponse.js";
 import type { Body } from "../../../link/http/selectHttpOptionsAndBody.js";
-import type { CreateMultipartSubscriptionOptions } from "../shared.js";
-import { generateOptionsForMultipartSubscription } from "../shared.js";
+import { fallbackHttpConfig } from "../../../link/http/selectHttpOptionsAndBody.js";
 
 const backupFetch = maybe(() => fetch);
+
+type CreateMultipartSubscriptionOptions = {
+  fetch?: WindowOrWorkerGlobalScope["fetch"];
+  headers?: Record<string, string>;
+};
 
 export function createFetchMultipartSubscription(
   uri: string,
@@ -58,4 +62,19 @@ export function createFetchMultipartSubscription(
         });
     });
   };
+}
+
+function generateOptionsForMultipartSubscription(
+  headers: Record<string, string>
+) {
+  const options: { headers: Record<string, any>; body?: string } = {
+    ...fallbackHttpConfig.options,
+    headers: {
+      ...(headers || {}),
+      ...fallbackHttpConfig.headers,
+      accept:
+        "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+    },
+  };
+  return options;
 }

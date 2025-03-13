@@ -490,9 +490,3 @@ Array [
   "setVerbosity",
 ]
 `;
-
-exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
-Array [
-  "createFetchMultipartSubscription",
-]
-`;

@@ -977,6 +977,7 @@ describe("client.watchQuery", () => {
           name: null,
         },
       },
+      dataState: "complete",
       error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -3894,6 +3895,7 @@ describe("client.query", () => {
 
     expect(result).toEqualApolloQueryResult({
       data: { currentUser: null },
+      dataState: "complete",
       error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -3949,6 +3951,7 @@ describe("client.query", () => {
           name: "Test User",
         },
       },
+      dataState: "complete",
       error: new CombinedGraphQLErrors([
         { message: "Could not determine age" },
       ]),

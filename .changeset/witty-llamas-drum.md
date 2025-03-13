@@ -6,5 +6,5 @@ Add a new `dataState` property to `ApolloQueryResult` that determines whether th
 
 - `none`: No data could be fulfilled from the cache or the result is incomplete. `data` is `undefined`.
 - `partial`: Some data could be fulfilled from the cache but `data` is incomplete. This is only possible when `returnPartialData` is `true`.
-- `hasNext`: `data` is incomplete as a result of a deferred query and the result is still streaming in.
+- `streaming`: `data` is incomplete as a result of a deferred query and the result is still streaming in.
 - `complete`: `data` is a fully satisfied query result fulfilled either from the cache or network.

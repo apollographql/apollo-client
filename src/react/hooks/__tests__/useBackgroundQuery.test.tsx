@@ -8272,7 +8272,7 @@ describe.skip("type tests", () => {
         >();
       }
 
-      if (result.dataState === "hasNext") {
+      if (result.dataState === "streaming") {
         expectTypeOf(result.data).branded.toEqualTypeOf<
           Masked<MaskedVariablesCaseData>
         >();
@@ -8300,7 +8300,7 @@ describe.skip("type tests", () => {
         >();
       }
 
-      if (result.dataState === "hasNext") {
+      if (result.dataState === "streaming") {
         expectTypeOf(
           result.data
         ).branded.toEqualTypeOf<MaskedVariablesCaseData>();
@@ -8346,7 +8346,7 @@ describe.skip("type tests", () => {
         >();
       }
 
-      if (result.dataState === "hasNext") {
+      if (result.dataState === "streaming") {
         expectTypeOf(result.data).branded.toEqualTypeOf<
           Masked<MaskedVariablesCaseData>
         >();
@@ -8388,7 +8388,7 @@ describe.skip("type tests", () => {
         >();
       }
 
-      if (result.dataState === "hasNext") {
+      if (result.dataState === "streaming") {
         expectTypeOf(
           result.data
         ).branded.toEqualTypeOf<MaskedVariablesCaseData>();

@@ -5428,7 +5428,7 @@ describe.skip("Type Tests", () => {
         expectTypeOf(data).toEqualTypeOf<DeepPartial<Masked<Query>>>();
       }
 
-      if (dataState === "hasNext") {
+      if (dataState === "streaming") {
         expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
       }
 
@@ -5456,7 +5456,7 @@ describe.skip("Type Tests", () => {
         expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Masked<Query>>>();
       }
 
-      if (dataState === "hasNext") {
+      if (dataState === "streaming") {
         expectTypeOf(data).branded.toEqualTypeOf<Masked<Query>>();
       }
 
@@ -5476,7 +5476,7 @@ describe.skip("Type Tests", () => {
         expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Masked<Query>>>();
       }
 
-      if (dataState === "hasNext") {
+      if (dataState === "streaming") {
         expectTypeOf(data).branded.toEqualTypeOf<Masked<Query>>();
       }
 
@@ -5586,7 +5586,7 @@ describe.skip("Type Tests", () => {
         expectTypeOf(data).toEqualTypeOf<DeepPartial<Query>>();
       }
 
-      if (dataState === "hasNext") {
+      if (dataState === "streaming") {
         expectTypeOf(data).toEqualTypeOf<Query>();
       }
 
@@ -5614,7 +5614,7 @@ describe.skip("Type Tests", () => {
         expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Query>>();
       }
 
-      if (dataState === "hasNext") {
+      if (dataState === "streaming") {
         expectTypeOf(data).branded.toEqualTypeOf<Query>();
       }
 
@@ -5634,7 +5634,7 @@ describe.skip("Type Tests", () => {
         expectTypeOf(data).branded.toEqualTypeOf<DeepPartial<Query>>();
       }
 
-      if (dataState === "hasNext") {
+      if (dataState === "streaming") {
         expectTypeOf(data).branded.toEqualTypeOf<Query>();
       }
 

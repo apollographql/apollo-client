@@ -1262,7 +1262,7 @@ export class QueryManager<TStore> {
         };
 
         if (isExecutionPatchResult(result) && result.hasNext) {
-          aqr.dataState = "hasNext";
+          aqr.dataState = "streaming";
           aqr.partial = true;
         }
 

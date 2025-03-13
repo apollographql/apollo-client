@@ -12783,7 +12783,7 @@ describe("useSuspenseQuery", () => {
           >();
         }
 
-        if (result.dataState === "hasNext") {
+        if (result.dataState === "streaming") {
           expectTypeOf(result.data).branded.toEqualTypeOf<
             Masked<MaskedVariablesCaseData>
           >();
@@ -12811,7 +12811,7 @@ describe("useSuspenseQuery", () => {
           >();
         }
 
-        if (result.dataState === "hasNext") {
+        if (result.dataState === "streaming") {
           expectTypeOf(
             result.data
           ).branded.toEqualTypeOf<MaskedVariablesCaseData>();
@@ -12859,7 +12859,7 @@ describe("useSuspenseQuery", () => {
           >();
         }
 
-        if (result.dataState === "hasNext") {
+        if (result.dataState === "streaming") {
           expectTypeOf(result.data).branded.toEqualTypeOf<
             Masked<MaskedVariablesCaseData>
           >();
@@ -12903,7 +12903,7 @@ describe("useSuspenseQuery", () => {
           >();
         }
 
-        if (result.dataState === "hasNext") {
+        if (result.dataState === "streaming") {
           expectTypeOf(
             result.data
           ).branded.toEqualTypeOf<MaskedVariablesCaseData>();

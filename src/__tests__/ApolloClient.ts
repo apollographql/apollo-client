@@ -3121,7 +3121,7 @@ describe("ApolloClient", () => {
         >();
       }
 
-      if (result.dataState === "hasNext") {
+      if (result.dataState === "streaming") {
         expectTypeOf(result.data).branded.toEqualTypeOf<Masked<Query>>();
       }
 
@@ -3224,7 +3224,7 @@ describe("ApolloClient", () => {
             >();
           }
 
-          if (result.dataState === "hasNext") {
+          if (result.dataState === "streaming") {
             expectTypeOf(result.data).branded.toEqualTypeOf<Masked<Query>>();
           }
 
@@ -3262,7 +3262,7 @@ describe("ApolloClient", () => {
         >();
       }
 
-      if (fetchMoreResult.dataState === "hasNext") {
+      if (fetchMoreResult.dataState === "streaming") {
         expectTypeOf(fetchMoreResult.data).branded.toEqualTypeOf<
           Masked<Query>
         >();
@@ -3284,7 +3284,7 @@ describe("ApolloClient", () => {
         >();
       }
 
-      if (refetchResult.dataState === "hasNext") {
+      if (refetchResult.dataState === "streaming") {
         expectTypeOf(refetchResult.data).branded.toEqualTypeOf<Masked<Query>>();
       }
 
@@ -3308,7 +3308,7 @@ describe("ApolloClient", () => {
         >();
       }
 
-      if (setVariablesResult?.dataState === "hasNext") {
+      if (setVariablesResult?.dataState === "streaming") {
         expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
           Masked<Query>
         >();
@@ -3336,7 +3336,7 @@ describe("ApolloClient", () => {
         >();
       }
 
-      if (setOptionsResult.dataState === "hasNext") {
+      if (setOptionsResult.dataState === "streaming") {
         expectTypeOf(setOptionsResult.data).branded.toEqualTypeOf<
           Masked<Query>
         >();

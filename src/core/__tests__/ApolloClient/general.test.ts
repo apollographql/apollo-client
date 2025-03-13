@@ -7208,7 +7208,7 @@ describe("ApolloClient", () => {
       };
       const initialResult: ApolloQueryResult<any> = {
         data: initialData,
-        dataState: "hasNext",
+        dataState: "streaming",
         loading: false,
         networkStatus: 7,
         partial: true,

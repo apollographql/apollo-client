@@ -199,7 +199,7 @@ export type ApolloQueryResult<T> = {
        *   incomplete. `data` is `undefined`.
        * - `partial`: Some data could be fulfilled from the cache but `data` is
        *   incomplete. This is only possible when `returnPartialData` is `true`.
-       * - `hasNext`: `data` is incomplete as a result of a deferred query and
+       * - `streaming`: `data` is incomplete as a result of a deferred query and
        *   the result is still streaming in.
        *  - `complete`: `data` is a fully satisfied query result fulfilled
        *  either from the cache or network.
@@ -213,7 +213,7 @@ export type ApolloQueryResult<T> = {
   | {
       // Defer to the passed in type to properly type the `@defer` fields.
       data: T;
-      dataState: "hasNext";
+      dataState: "streaming";
     }
   | {
       data: undefined;

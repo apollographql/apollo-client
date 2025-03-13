@@ -2006,7 +2006,7 @@ describe("client.watchQuery", () => {
       data: {
         greeting: { message: "Hello world", __typename: "Greeting" },
       },
-      dataState: "hasNext",
+      dataState: "streaming",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,

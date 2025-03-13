@@ -130,6 +130,7 @@ export class ObservableQuery<
     this.networkStatus = NetworkStatus.loading;
     this.initialResult = {
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: this.networkStatus,
       partial: true,

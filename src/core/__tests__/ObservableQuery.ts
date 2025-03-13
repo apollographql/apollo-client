@@ -3858,7 +3858,7 @@ test("works with `from`", async () => {
     },
   ]);
   const client = new ApolloClient({
-    link: ApolloLink.from([link]),
+    link,
     cache: new InMemoryCache(),
   });
   const observableQuery = client.watchQuery({

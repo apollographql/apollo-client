@@ -12,7 +12,12 @@ export {
 export * from "./hooks/index.js";
 
 export type { IDocumentDefinition } from "./parser/index.js";
-export { DocumentType, operationName, parser } from "./parser/index.js";
+export {
+  DocumentType,
+  operationName,
+  parser,
+  verifyDocumentType,
+} from "./parser/index.js";
 
 export type {
   PreloadQueryFetchPolicy,

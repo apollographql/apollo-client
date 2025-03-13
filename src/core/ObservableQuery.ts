@@ -1,6 +1,11 @@
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import type { Observer, Subscribable, Subscription } from "rxjs";
+import type {
+  InteropObservable,
+  Observer,
+  Subscribable,
+  Subscription,
+} from "rxjs";
 import type { Observable } from "rxjs";
 import { BehaviorSubject, filter, lastValueFrom, tap } from "rxjs";
 
@@ -59,9 +64,12 @@ interface Last<TData, TVariables> {
 }
 
 export class ObservableQuery<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
-> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>>
+    TData = any,
+    TVariables extends OperationVariables = OperationVariables,
+  >
+  implements
+    Subscribable<ApolloQueryResult<MaybeMasked<TData>>>,
+    InteropObservable<ApolloQueryResult<MaybeMasked<TData>>>
 {
   public readonly options: WatchQueryOptions<TVariables, TData>;
   public readonly queryId: string;
@@ -163,6 +171,10 @@ export class ObservableQuery<
       )
     );
 
+    this["@@observable"] = () => this.observable;
+    if (Symbol.observable) {
+      this[Symbol.observable] = this["@@observable"];
+    }
     this.pipe = this.observable.pipe.bind(this.observable);
     this.subscribe = this.observable.subscribe.bind(this.observable);
 
@@ -219,6 +231,13 @@ export class ObservableQuery<
   ) => Subscription;
 
   public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
+
+  public [Symbol.observable]!: () => Observable<
+    ApolloQueryResult<MaybeMasked<TData>>
+  >;
+  public ["@@observable"]: () => Observable<
+    ApolloQueryResult<MaybeMasked<TData>>
+  >;
 
   // TODO: Consider deprecating this method. If not, use firstValueFrom helper
   // instead.

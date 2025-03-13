@@ -41,9 +41,6 @@ jobs:
       - name: Install dependencies (with cache)
         uses: bahmutov/npm-install@v1
 
-      - name: Run build
-        run: npm run build
-
       - name: Run Api-Extractor
         run: npm run extract-api
         env:
@@ -51,6 +48,9 @@ jobs:
 
       - name: Run prettier
         run: npm run format
+
+      - name: Run build
+        run: npm run build
 
       - name: Update size-limit
         run: npm run update-size-limits

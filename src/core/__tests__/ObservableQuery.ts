@@ -2403,9 +2403,14 @@ describe("ObservableQuery", () => {
       });
 
       const observable = client.watchQuery({ query, variables });
+      const stream = new ObservableStream(observable);
 
-      await expect(observable.result()).resolves.toMatchObject({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         error: new CombinedGraphQLErrors([error]),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
       });
 
       const currentResult = observable.getCurrentResult();
@@ -2438,19 +2443,16 @@ describe("ObservableQuery", () => {
         variables,
         errorPolicy: "all",
       });
+      const stream = new ObservableStream(observable);
 
-      const result = await observable.result();
-      const currentResult = observable.getCurrentResult();
-
-      // TODO: This should include an `error` property, not just `errors`
-      expect(result).toEqualApolloQueryResult({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
       });
-      expect(currentResult).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         error: new CombinedGraphQLErrors([error]),
         loading: false,
@@ -2476,8 +2478,14 @@ describe("ObservableQuery", () => {
         errorPolicy: "none",
       });
 
-      await expect(observable.result()).resolves.toMatchObject({
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         error: wrappedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
       });
 
       expect(observable.getLastError()).toEqual(wrappedError);
@@ -2499,11 +2507,20 @@ describe("ObservableQuery", () => {
         variables,
         errorPolicy: "none",
       });
+      const stream = new ObservableStream(observable);
 
-      await expect(observable.result()).resolves.toMatchObject({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: new CombinedGraphQLErrors([error]),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      expect(observable.getCurrentResult()).toMatchObject({
         error: wrappedError,
       });
-      await expect(observable.result()).resolves.toMatchObject({
+      expect(observable.getCurrentResult()).toMatchObject({
         error: wrappedError,
       });
 
@@ -2527,16 +2544,15 @@ describe("ObservableQuery", () => {
         errorPolicy: "ignore",
       });
 
-      const result = await observable.result();
-      const currentResult = observable.getCurrentResult();
+      const stream = new ObservableStream(observable);
 
-      expect(result).toEqualApolloQueryResult({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(currentResult).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,

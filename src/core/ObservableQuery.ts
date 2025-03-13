@@ -134,7 +134,7 @@ export class ObservableQuery<
       loading: true,
       networkStatus: this.networkStatus,
       partial: true,
-    };
+    } as ApolloQueryResult<TData>;
 
     this.subject = new BehaviorSubject(this.initialResult);
     this.observable = this.subject.pipe(

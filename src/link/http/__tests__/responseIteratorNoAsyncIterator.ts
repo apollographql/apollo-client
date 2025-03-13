@@ -235,4 +235,60 @@ describe("multipart responses", () => {
 
     await expect(observableStream).toComplete();
   });
+
+  it("can handle node stream bodies (strings) with default boundary", async () => {
+    const stream = ReadableStream.from(
+      bodyDefaultBoundary.split("\r\n").map((line) => line + "\r\n")
+    );
+
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body: stream,
+      // if no boundary is specified, default to -
+      headers: new Headers({
+        "content-type": `multipart/mixed`,
+      }),
+    }));
+    const link = new HttpLink({
+      fetch: fetch as any,
+    });
+
+    const observable = execute(link, { query: sampleDeferredQuery });
+    const observableStream = new ObservableStream(observable);
+
+    for (const result of results) {
+      await expect(observableStream).toEmitValue(result);
+    }
+
+    await expect(observableStream).toComplete();
+  });
+
+  it("can handle node stream bodies (array buffers) with batched results", async () => {
+    const stream = ReadableStream.from(
+      bodyBatchedResults
+        .split("\r\n")
+        .map((line) => new TextEncoder().encode(line + "\r\n"))
+    );
+
+    const fetch = jest.fn(async () => ({
+      status: 200,
+      body: stream,
+      // if no boundary is specified, default to -
+      headers: new Headers({
+        "Content-Type": `multipart/mixed;boundary="graphql";deferSpec=20220824`,
+      }),
+    }));
+    const link = new HttpLink({
+      fetch: fetch as any,
+    });
+
+    const observable = execute(link, { query: sampleDeferredQuery });
+    const observableStream = new ObservableStream(observable);
+
+    for (const result of batchedResults) {
+      await expect(observableStream).toEmitValue(result);
+    }
+
+    await expect(observableStream).toComplete();
+  });
 });

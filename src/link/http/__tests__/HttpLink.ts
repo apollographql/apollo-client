@@ -1861,6 +1861,67 @@ describe("HttpLink", () => {
         );
         warningSpy.mockRestore();
       });
+      it("with errors", (done) => {
+        const stream = ReadableStream.from(
+          subscriptionsBodyError.split("\r\n").map((line) => line + "\r\n")
+        );
+
+        const fetch = jest.fn(async () => ({
+          status: 200,
+          body: stream,
+          headers: new Headers({ "Content-Type": "multipart/mixed" }),
+        }));
+        const link = new HttpLink({
+          fetch: fetch as any,
+        });
+
+        let i = 0;
+        execute(link, { query: sampleSubscription }).subscribe(
+          (result) => {
+            try {
+              if (i === 0) {
+                expect(result).toEqual({
+                  data: {
+                    aNewDieWasCreated: {
+                      die: {
+                        color: "red",
+                        roll: 1,
+                        sides: 4,
+                      },
+                    },
+                  },
+                });
+              } else if (i === 1) {
+                expect(result).toEqual({
+                  extensions: {
+                    [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
+                      {
+                        extensions: {
+                          code: "INTERNAL_SERVER_ERROR",
+                        },
+                        message: "Error field",
+                      },
+                    ]),
+                  },
+                });
+              }
+            } catch (err) {
+              done(err);
+            } finally {
+              i++;
+            }
+          },
+          (err) => {
+            done(err);
+          },
+          () => {
+            if (i !== 2) {
+              done(new Error("Unexpected end to observable"));
+            }
+            done();
+          }
+        );
+      });
 
       it("sets correct accept header on request with subscription", async () => {
         const stream = ReadableStream.from(

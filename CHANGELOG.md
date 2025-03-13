@@ -1,5 +1,423 @@
 # @apollo/client
 
+## 4.0.0-alpha.0
+
+### Major Changes
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `asyncMap` utility function. Instead use one of the RxJS operators that creates Observables from promises, such as `from`.
+
+- [#12398](https://github.com/apollographql/apollo-client/pull/12398) [`8cf5077`](https://github.com/apollographql/apollo-client/commit/8cf5077bed1ab46fdd32c5e253071506c0076064) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `isApolloError` utility function to check if the error object is an `ApolloError` instance. Use `instanceof` to check for more specific error types that replace `ApolloError`.
+
+- [#12379](https://github.com/apollographql/apollo-client/pull/12379) [`ef892b4`](https://github.com/apollographql/apollo-client/commit/ef892b4dc505b02049525f9aba32c51f1c00c922) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `addTypename` option from `InMemoryCache` and `MockedProvider`. `__typename` is now always added to the outgoing query document when using `InMemoryCache` and cannot be disabled.
+
+  If you are using `<MockedProvider />` with `addTypename={false}`, ensure that your mocked responses include a `__typename` field. This will ensure cache normalization kicks in and behaves more like production.
+
+- [#12396](https://github.com/apollographql/apollo-client/pull/12396) [`00f3d0a`](https://github.com/apollographql/apollo-client/commit/00f3d0a674eede1f909092283041cf8ac8d1b576) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `errors` property from `useQuery` and `useLazyQuery`. Read errors from the `error` property instead.
+
+- [#12222](https://github.com/apollographql/apollo-client/pull/12222) [`d1a9054`](https://github.com/apollographql/apollo-client/commit/d1a905461d4378522c3257de00afba2ae8decd22) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Drop support for React 16.
+
+- [#12376](https://github.com/apollographql/apollo-client/pull/12376) [`a0c996a`](https://github.com/apollographql/apollo-client/commit/a0c996a816fbb6a2323231c0422d1c8a3e20cbaf) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `ignoreResults` option from `useMutation`. If you don't want to synchronize component state with the mutation, use `useApolloClient` to access your client instance and use `client.mutate` directly.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Unusubscribing from `ObservableQuery` while a request is in flight will no longer terminate the request by unsubscribing from the link observable.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `previousData` property on `useLazyQuery` will now change only when `data` changes. Previously `previousData` would change to the same value as `data` while the query was loading.
+
+- [#12224](https://github.com/apollographql/apollo-client/pull/12224) [`51e6c0f`](https://github.com/apollographql/apollo-client/commit/51e6c0f8657d20cedc570c6e9a244f877047dd61) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove deprecated `partialRefetch` option.
+
+- [#12407](https://github.com/apollographql/apollo-client/pull/12407) [`8b1390b`](https://github.com/apollographql/apollo-client/commit/8b1390bf0050c6bd4d5a32b67c3b96369d0552d4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Calling `refetch` with new variables will now set the `networkStatus` to `refetch` instead of `setVariables`.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `iterateObserversSafely` utility function.
+
+- [#12398](https://github.com/apollographql/apollo-client/pull/12398) [`8cf5077`](https://github.com/apollographql/apollo-client/commit/8cf5077bed1ab46fdd32c5e253071506c0076064) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Apollo Client no longer wraps errors in `ApolloError`. `ApolloError` has been replaced with separate error classes depending on the cause of the error. As such, APIs that return an `error` property have been updated to use the generic `Error` type. Use `instanceof` to check for more specific error types.
+
+  ## Migration guide
+
+  `ApolloError` encapsulated 4 main error properties. The type of error would determine which property was set:
+
+  - `graphqlErrors` - Errors returned from the `errors` field by the GraphQL server
+  - `networkError` - Any non-GraphQL error that caused the query to fail
+  - `protocolErrors` - Transport-level errors that occur during [multipart HTTP subscriptions](https://www.apollographql.com/docs/graphos/routing/operations/subscriptions/multipart-protocol)
+  - `clientErrors` - A space to define custom errors. Mostly unused.
+
+  These errors were mutally exclusive, meaning both `networkError` and `graphqlErrors` were never set simultaneously. The following replaces each of these fields from `ApolloError`.
+
+  ### `graphqlErrors`
+
+  GraphQL errors are now encapsulated in a `CombinedGraphQLErrors` instance. You can access the raw GraphQL errors via the `errors` property.
+
+  ```js
+  import { CombinedGraphQLErrors } from "@apollo/client";
+
+  // ...
+
+  const { error } = useQuery(query);
+
+  if (error && error instanceof CombinedGraphQLErrors) {
+    console.log(error.errors);
+  }
+  ```
+
+  ### `networkError`
+
+  Network errors are no longer wrapped and are instead passed through directly.
+
+  ```js
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      return new Observable((observer) => {
+        observer.error(new Error("Test error"));
+      });
+    }),
+  });
+
+  // ...
+
+  const { error } = useQuery(query);
+
+  // error is `new Error('Test error')`;
+  ```
+
+  ### `protocolErrors`
+
+  Protocol errors are now encapsulated in a `CombinedProtocolErrors` instance. You can access the raw protocol errors via the `errors` property.
+
+  ```js
+  import { CombinedProtocolErrors } from "@apollo/client";
+
+  // ...
+
+  const { error } = useSubscription(subscription);
+
+  if (error && error instanceof CombinedProtocolErrors) {
+    console.log(error.errors);
+  }
+  ```
+
+  ### `clientErrors`
+
+  These were unused by the client and have no replacement. Any non-GraphQL or non-protocol errors are now passed through unwrapped.
+
+  ### Strings as errors
+
+  If the link sends a string error, Apollo Client will wrap this in an `Error` instance. This ensures `error` properties are guaranteed to be of type `Error`.
+
+  ```js
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      return new Observable((observer) => {
+        // Oops we sent a string instead of wrapping it in an `Error`
+        observer.error("Test error");
+      });
+    }),
+  });
+
+  // ...
+
+  const { error } = useQuery(query);
+
+  // The error string is wrapped and returned as `new Error('Test error')`;
+  ```
+
+  ### Non-error types
+
+  If the link chain sends any other object type as an error, Apollo Client will wrap this in an `UnknownError` instance with the [`cause`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/cause) set to the original object. This ensures `error` properties are guaranteed to be of type `Error`.
+
+  ```js
+  const client = new ApolloClient({
+    link: new ApolloLink(() => {
+      return new Observable((observer) => {
+        observer.error({ message: "Not a proper error type" });
+      });
+    }),
+  });
+
+  // ...
+
+  const { error } = useQuery(query);
+
+  // error is an `UnknownError` instance. error.cause returns the original object.
+  ```
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `fromError` utility function. Use [`throwError`](https://rxjs.dev/api/index/function/throwError) instead.
+
+- [#12211](https://github.com/apollographql/apollo-client/pull/12211) [`c2736db`](https://github.com/apollographql/apollo-client/commit/c2736db3ad6f8b6e56f065682d5b76614f41bfd4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `graphql`, `withQuery`, `withMutation`, `withSubscription`, and `withApollo` hoc components. Use the provided React hooks instead.
+
+- [#12262](https://github.com/apollographql/apollo-client/pull/12262) [`10ef733`](https://github.com/apollographql/apollo-client/commit/10ef7338cdcbbaf75d806f426e9708c9e095c2da) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `itAsync` test utility.
+
+- [#12398](https://github.com/apollographql/apollo-client/pull/12398) [`8cf5077`](https://github.com/apollographql/apollo-client/commit/8cf5077bed1ab46fdd32c5e253071506c0076064) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Updates the `ServerError` and `ServerParseError` types to be proper `Error` subclasses. Perviously these were plain `Error` intances with additional properties added at runtime. All properties are retained, but `instanceof` checks now work correctly.
+
+  ```js
+  import { ServerError, ServerParseError } from "@apollo/client";
+
+  if (error instanceof ServerError) {
+    // ...
+  }
+
+  if (error instanceof ServerParseError) {
+    // ...
+  }
+  ```
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useLazyQuery` no longer supports SSR environments and will now throw if the `execute` function is called in SSR. If you need to run a query in an SSR environment, use `useQuery` instead.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The execute function returned from `useLazyQuery` now only supports the `context` and `variables` options. This means that passing options supported by the hook no longer override the hook value.
+
+  To change options, rerender the component with new options. These options will take effect with the next query execution.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery` will no longer terminate on errors and will instead emit a `next` value with an `error` property. This ensures that `ObservableQuery` instances can continue to receive updates after errors are returned in requests without the need to resubscribe to the observable.
+
+- [#12398](https://github.com/apollographql/apollo-client/pull/12398) [`8cf5077`](https://github.com/apollographql/apollo-client/commit/8cf5077bed1ab46fdd32c5e253071506c0076064) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `throwServerError` utility function. Now that `ServerError` is an
+  `Error` subclass, you can throw these errors directly:
+
+  ```js
+  import { ServerError } from "@apollo/client";
+
+  // instead of
+  throwServerError(response, result, "error message");
+
+  // Use
+  throw new ServerError("error message", { response, result });
+  ```
+
+- [#12304](https://github.com/apollographql/apollo-client/pull/12304) [`86469a2`](https://github.com/apollographql/apollo-client/commit/86469a25abb72dbd68adff3554e3909036e77eee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `Cache.DiffResult<T>` type is now a union type with better type safety for both complete and partial results. Checking `diff.complete` will now narrow the type of `result` depending on whether the value is `true` or `false`.
+
+  When `true`, `diff.result` will be a non-null value equal to the `T` generic type. When `false`, `diff.result` now reports `result` as `DeepPartial<T> | null` indicating that fields in the result may be missing (`DeepPartial<T>`) or empty entirely (`null`).
+
+- [#12396](https://github.com/apollographql/apollo-client/pull/12396) [`00f3d0a`](https://github.com/apollographql/apollo-client/commit/00f3d0a674eede1f909092283041cf8ac8d1b576) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `errors` property from the results emitted from `ObservableQuery` or returned from `client.query`. Read errors from the `error` property instead.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The result resolved from the promise returned from the execute function in `useLazyQuery` is now an `ApolloQueryResult` type and no longer includes all the fields returned from the `useLazyQuery` hook tuple.
+
+  If you need access to the additional properties such as `called`, `refetch`, etc. not included in `ApolloQueryResult`, read them from the hook instead.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useLazyQuery` will no longer rerender with the loading state when calling the execute function the first time unless the `notifyOnNetworkStatusChange` option is set to `true` (which is the new default).
+
+  If you prefer the behavior from 3.x, rerender the component with
+  `notifyOnNetworkStatusChange` set to `false` after the execute function is
+  called the first time.
+
+  ```ts
+  function MyComponent() {
+    const [notifyOnNetworkStatusChange, setNotifyOnNetworkStatusChange] =
+      useState(true);
+    const [execute] = useLazyQuery(query, { notifyOnNetworkStatusChange });
+
+    async function runExecute() {
+      await execute();
+
+      // Set to false after the initial fetch to stop receiving notifications
+      // about changes to the loading states.
+      setNotifyOnNetworkStatusChange(false);
+    }
+
+    // ...
+  }
+  ```
+
+- [#12254](https://github.com/apollographql/apollo-client/pull/12254) [`0028ac0`](https://github.com/apollographql/apollo-client/commit/0028ac0147aaea9ab559f15630200a132b43da42) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Changes the default `Accept` header to `application/graphql-response+json`.
+
+- [#12430](https://github.com/apollographql/apollo-client/pull/12430) [`2ff66d0`](https://github.com/apollographql/apollo-client/commit/2ff66d06b6d444fbcb46e580ac40e673e695740f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery.setVariables` will now resolve with the last emitted result instead of `undefined` when either the variables match the current variables or there are no subscribers to the query.
+
+- [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - Apollo Client now defaults to production mode, not development mode, if the
+  environment cannot be determined.
+
+  In modern bundlers, this should automatically be handled by the bundler loading
+  the bundler with the `development` export condition.
+
+  If neither the `production` nor the `development` export condition are
+  used by the bundler/runtime, Apollo Client will fall back to `globalThis.__DEV__`
+  to determine if it should run in production or development mode.
+
+  Unlike Apollo Client 3 though, if `globalThis.__DEV__` is not set to `true`,
+  Apollo Client will now default to `production`, not to `development`, behaviour.
+
+  This switch to _explicilty_ requiring `true` also resolves a situation where
+  an HTML element with `id="__DEV__"` would create a global `__DEV__` variable
+  with a referent to the DOM element, which in the past was picked up as "truthy" and
+  would have triggered development mode.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `reobserve` option is no longer available in the result returned from `useLazyQuery`. This was considered an internal API and should not be used directly.
+
+- [#12333](https://github.com/apollographql/apollo-client/pull/12333) [`3e4beaa`](https://github.com/apollographql/apollo-client/commit/3e4beaa8b768a893da80aae0428f79ee01d6aa38) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix type of `data` property on `ApolloQueryResult`. Previously this field was non-optional, non-null `TData`, however at runtime this value could be set to `undefined`. This field is now reported as `TData | undefined`.
+
+  This will affect you in a handful of places:
+
+  - The `data` property emitted from the result passed to the `next` callback from `client.watchQuery`
+  - Fetch-based APIs that return an `ApolloQueryResult` type such as `observableQuery.refetch`, `observableQuery.fetchMore`, etc.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The promise returned when calling the execute function from `useLazyQuery` will now reject when using an `errorPolicy` of `none` when GraphQL errors are returned from the result.
+
+- [#12223](https://github.com/apollographql/apollo-client/pull/12223) [`69c1cb6`](https://github.com/apollographql/apollo-client/commit/69c1cb6f831941598987185238a299b050a364bd) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `subscribeAndCount` testing utility from `@apollo/client/testing`.
+
+- [#12300](https://github.com/apollographql/apollo-client/pull/12300) [`4d581e4`](https://github.com/apollographql/apollo-client/commit/4d581e4f5a3c5409e5f06a5f164beabdada150f1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Moves all React-related exports to the `@apollo/client/react` entrypoint and out of the main `@apollo/client` entrypoint. This prevents the need to install React in order to use the core client.
+
+  The following is a list of exports available in `@apollo/client` that should now import from `@apollo/client/react`.
+
+  - `ApolloConsumer`
+  - `ApolloProvider`
+  - `createQueryPreloader`
+  - `getApolloContext`
+  - `skipToken`
+  - `useApolloClient`
+  - `useBackgroundQuery`
+  - `useFragment`
+  - `useLazyQuery`
+  - `useLoadableQuery`
+  - `useMutation`
+  - `useQuery`
+  - `useQueryRefHandlers`
+  - `useReactiveVar`
+  - `useReadQuery`
+  - `useSubscription`
+  - `useSuspenseQuery`
+
+  The following is a list of exports available in `@apollo/client/testing` that should now import from `@apollo/client/testing/react`:
+
+  - `MockedProvider`
+
+- [#12428](https://github.com/apollographql/apollo-client/pull/12428) [`abed922`](https://github.com/apollographql/apollo-client/commit/abed92225fd2a5d2a0a2298893a1170df1cd7400) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `urql` multipart subscriptions utilities. Use the native multipart subscriptions support in `urql` instead.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Switch to [RxJS](https://rxjs.dev/) as the observable implementation. `rxjs` is now a peer dependency of Apollo Client which means you will now need to install `rxjs` in addition to `@apollo/client`.
+
+  This change is mostly transparent, however transforming values on observables, common in link implementations, differs in RxJS vs `zen-observable`. For example, you could modify values in the link chain emitted from a downstream link by using the `.map` function. In RxJS, this is done with the `.pipe` function and passing a `map` operator instead.
+
+  ```ts
+  import { map } from "rxjs";
+
+  const link new ApolloLink((operation, forward) => {
+    return forward(operation).pipe(
+      map((result) => performTransform(result))
+    );
+  });
+  ```
+
+  For a full list of operators and comprehensive documentation on the capabilities of RxJS, check out the [documentation](https://rxjs.dev/).
+
+- [#12329](https://github.com/apollographql/apollo-client/pull/12329) [`61febe4`](https://github.com/apollographql/apollo-client/commit/61febe4ef8712a2035d7ac89ea7283138db5229d) Thanks [@phryneas](https://github.com/phryneas)! - Rework package publish format (#12329, #12382)
+
+  We have reworked the way Apollo Client is packaged.
+
+  - shipping ESM and CJS
+  - fixing up source maps
+  - the build targets a modern runtime environment (browserslist query: `"since 2023, node >= 20, not dead"`)
+  - removed the "proxy directory" `package.json` files, e.g. `cache/core/package.json` and `react/package.json`. While these helped with older build tools, modern build tooling uses the `exports` field in the root `package.json` instead and the presence of these files can confuse modern build tooling. If your build tooling still relies on those, please update your imports to import from e.g. `@apollo/client/cache/core/index.js` instead of `@apollo/client/cache/core` - but generally, this should not be necessary.
+  - added an `exports` field to `package.json` to expose entry points
+  - instead of `globalThis.__DEV__`, Apollo Client now primarily relies on the `development` and `production` exports conditions. It falls back to `globalThis.__DEV__` if the bundler doesn't know these, though.
+
+- [#12397](https://github.com/apollographql/apollo-client/pull/12397) [`2545a54`](https://github.com/apollographql/apollo-client/commit/2545a5415b06283be83eb9c4a03a3a8a39b8bcde) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `ObservableQuery.resetQueryStoreErrors` method. This method reset some internal state that was not consumed elsewhere in the client and resulted in a no-op.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `fromPromise` utility function. Use [`from`](https://rxjs.dev/api/index/function/from) instead.
+
+- [#12388](https://github.com/apollographql/apollo-client/pull/12388) [`0d825be`](https://github.com/apollographql/apollo-client/commit/0d825bef533b41f2e99ef22e620d9f9472825057) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Require environments that support `WeakMap`, `WeakSet` and symbols. Apollo Client would fallback to `Map` and `Set` if the weak versions were not available. This has been removed and expects that these features are available in the source environment.
+
+  If you are running in an environment without `WeakMap`, `WeakSet` or symbols, you will need to find appropriate polyfills.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useLazyQuery` no longer supports calling the execute function in render and will now throw. If you need to execute the query immediately, use `useQuery` instead or move the call to a `useEffect`.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - The `defaultOptions` and `initialFetchPolicy` options are no longer supported with `useLazyQuery`.
+
+  If you use `defaultOptions`, pass those options directly to the hook instead. If you use `initialFetchPolicy`, use `fetchPolicy` instead.
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useLazyQuery` no longer supports `variables` in the hook options and therefore no longer performs variable merging. The execute function must now be called with `variables` instead.
+
+  ```ts
+  function MyComponent() {
+    const [execute] = useLazyQuery(query);
+
+    function runExecute() {
+      execute({ variables: { ... }});
+    }
+  }
+  ```
+
+  This change means the execute function returned from `useLazyQuery` is more type-safe. The execute function will require you to pass a `variables` option if the query type includes required variables.
+
+- [#12304](https://github.com/apollographql/apollo-client/pull/12304) [`86469a2`](https://github.com/apollographql/apollo-client/commit/86469a25abb72dbd68adff3554e3909036e77eee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - ### Changes for users of `InMemoryCache`
+
+  `cache.diff` now returns `null` instead of an empty object (`{}`) when `returnPartialData` is `true` and the result is empty.
+
+  If you use `cache.diff` directly with `returnPartialData: true`, you will need to check for `null` before accessing any other fields on the `result` property. A non-null value indicates that at least one field was present in the cache for the given query document.
+
+  ### Changes for third-party cache implementations
+
+  The client now expects `cache.diff` to return `null` instead of an empty object when there is no data that can be fulfilled from the cache and `returnPartialData` is `true`. If your cache implementation returns an empty object, please update this to return `null`.
+
+- [#12430](https://github.com/apollographql/apollo-client/pull/12430) [`2ff66d0`](https://github.com/apollographql/apollo-client/commit/2ff66d06b6d444fbcb46e580ac40e673e695740f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes `ObservableQuery.result()` method. If you use this method and need similar functionality, use the `firstValueFrom` helper in RxJS.
+
+  ```ts
+  import { firstValueFrom, from } from "rxjs";
+
+  // The `from` is necessary to turn `observableQuery` into an RxJS observable
+  const result = await firstValueFrom(from(observableQuery));
+  ```
+
+- [#12359](https://github.com/apollographql/apollo-client/pull/12359) [`ebb4d96`](https://github.com/apollographql/apollo-client/commit/ebb4d9644104244fb066b93a32df778928f2f8a9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `onCompleted` and `onError` callbacks from `useQuery` and `useLazyQuery`.
+
+  See [#12352](https://github.com/apollographql/apollo-client/issues/12352) for more context on this change.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Subscriptions are no longer eagerly started after calling `client.subscribe`. To kick off the subscription, you will now need to subscribe to the returned observable.
+
+  ```ts
+  // Subscriptions are no longer started when calling subscribe on its own.
+  const subscriptionObservable = client.subscribe(...);
+
+  // Instead, subscribe to the returned observable to kick off the subscription.
+  subscriptionObservable.subscribe({
+    next: (value) => console.log(value)
+  });
+  ```
+
+- [#12367](https://github.com/apollographql/apollo-client/pull/12367) [`e6af35e`](https://github.com/apollographql/apollo-client/commit/e6af35ed30c732ad834e6c524bc9ce5adbe5f706) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useLazyQuery` will now only execute the query when the execute function is called. Previously `useLazyQuery` would behave like `useQuery` after the first call to the execute function which means changes to options might perform network requests.
+
+  You can now safely rerender `useLazyQuery` with new options which will take effect the next time you manually trigger the query.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `toPromise` utility function. Use [`firstValueFrom`](https://rxjs.dev/api/index/function/firstValueFrom) instead.
+
+- [#12304](https://github.com/apollographql/apollo-client/pull/12304) [`86469a2`](https://github.com/apollographql/apollo-client/commit/86469a25abb72dbd68adff3554e3909036e77eee) Thanks [@jerelmiller](https://github.com/jerelmiller)! - ### Changes for users of `InMemoryCache`
+
+  `cache.diff` no longer throws when `returnPartialData` is set to `false` without a complete result. Instead, `cache.diff` will return `null` when it is unable to read a full cache result.
+
+  If you use `cache.diff` directly with `returnPartialData: false`, remove the `try`/`catch` block and replace with a check for `null`.
+
+  ### Changes for third-party cache implementations
+
+  The client now expects `cache.diff` to return `null` instead of throwing when the cache returns an incomplete result and `returnPartialData` is `false`. The internal `try`/`catch` blocks have been removed around `cache.diff`. If your cache implementation throws for incomplete results, please update this to return `null`.
+
+- [#12211](https://github.com/apollographql/apollo-client/pull/12211) [`c2736db`](https://github.com/apollographql/apollo-client/commit/c2736db3ad6f8b6e56f065682d5b76614f41bfd4) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `Query`, `Mutation`, and `Subscription` components. Use the provided React hooks instead.
+
+### Minor Changes
+
+- [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - Apollo Client is no longer using `ts-invariant`, but ships with a modified variant of it.
+
+  The existing export `setLogVerbosity` from `@apollo/client` is still available and
+  now points to this new integration.
+  **In most cases, you should be using this export.**
+  It will no longer adjust the verbosity of `ts-invariant` and as such no longer
+  influence other packages relying on `ts-invariant`.
+
+  The new entry point `@apollo/client/utilities/invariant` now exports `invariant`,
+  `InvariantError` and `setVerbosity`.
+  (Note that these tools are mostly meant to be used by Apollo Client and libraries directly
+  based on Apollo Client like the `@apollo/client-integration-*` packages.)
+
+- [#12333](https://github.com/apollographql/apollo-client/pull/12333) [`3e4beaa`](https://github.com/apollographql/apollo-client/commit/3e4beaa8b768a893da80aae0428f79ee01d6aa38) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Deprecate the `partial` flag on `ApolloQueryResult` and make it a non-optional property. Previously `partial` was only set conditionally if the result emitted was partial. This value is now available with all results that return an `ApolloQueryResult`.
+
+### Patch Changes
+
+- [#12291](https://github.com/apollographql/apollo-client/pull/12291) [`ae5d06a`](https://github.com/apollographql/apollo-client/commit/ae5d06ac45ca6584d3c79aa417dae22f37a7d3b6) Thanks [@phryneas](https://github.com/phryneas)! - Remove deprecated `resetApolloContext` export
+
+- [#12402](https://github.com/apollographql/apollo-client/pull/12402) [`903c3ef`](https://github.com/apollographql/apollo-client/commit/903c3ef9f77280492c298b4d8e5f96f110e3cda1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Use an an empty object (`{}`) rather than an object with `null` prototype (`Object.create(null)`) in all areas that instantiate objects.
+
+- [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - \* dropped the deprecated `DEV` export from `@apollo/client/utilities` and `@apollo/client/utilities/globals`
+
+  - moved the `__DEV__` export from `@apollo/client/utilities/globals` to `@apollo/client/utilities/environment`
+  - moved the `invariant`, `newInvariantError` and `InvariantError` exports from `@apollo/client/utilities/globals` to `@apollo/client/utilities/invariant`
+
+- [#12432](https://github.com/apollographql/apollo-client/pull/12432) [`c7c2f61`](https://github.com/apollographql/apollo-client/commit/c7c2f6122c874eed16d5621be26992f86d9756eb) Thanks [@phryneas](https://github.com/phryneas)! - ObservableQuery: implement the `rxjs` `InteropObservable` interface to ensure `from(observableQuery)` stays possible
+
+- [#12385](https://github.com/apollographql/apollo-client/pull/12385) [`cad5117`](https://github.com/apollographql/apollo-client/commit/cad511723a1b8b0ac2042cf49435f7affb0dc4e4) Thanks [@phryneas](https://github.com/phryneas)! - `@apollo/client`, `@apollo/client/core` and `@apollo/client/cache` no longer export an empty `Cache` runtime object. This is meant to be a type-only namespace.
+
+- [#12384](https://github.com/apollographql/apollo-client/pull/12384) [`6aa6fd3`](https://github.com/apollographql/apollo-client/commit/6aa6fd316cfdb31ebbe3e3133cca2965604e7ca1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Don't emit a partial cache result from `cache-only` queries when `returnPartialData` is `false`.
+
 ## 3.13.4
 
 ### Patch Changes

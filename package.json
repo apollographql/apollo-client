@@ -52,7 +52,6 @@
     "./masking": "./src/masking/index.ts",
     "./react": "./src/react/index.ts",
     "./react/context": "./src/react/context/index.ts",
-    "./react/hooks": "./src/react/hooks/index.ts",
     "./react/internal": "./src/react/internal/index.ts",
     "./react/parser": "./src/react/parser/index.ts",
     "./react/ssr": "./src/react/ssr/index.ts",

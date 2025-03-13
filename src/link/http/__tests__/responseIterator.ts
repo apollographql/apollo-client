@@ -10,8 +10,6 @@ import { ObservableStream } from "../../../testing/internal/index.js";
 import { execute } from "../../core/execute.js";
 import { HttpLink } from "../HttpLink.js";
 
-var Blob = require("blob-polyfill").Blob;
-
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
     stub {

@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import { TextDecoder, TextEncoder } from "util";
 
 import { gql } from "graphql-tag";

@@ -346,6 +346,7 @@ describe("mutiple results", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: initialData,
+      dataState: "complete",
       error: new Error("defer failed"),
       loading: false,
       networkStatus: NetworkStatus.error,

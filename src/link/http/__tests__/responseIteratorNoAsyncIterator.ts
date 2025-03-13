@@ -7,20 +7,6 @@ import { ObservableStream } from "../../../testing/internal/index.js";
 import { execute } from "../../core/execute.js";
 import { HttpLink } from "../HttpLink.js";
 
-// As of Jest 26 there is no way to mock/unmock a module that is used indirectly
-// via a single test file.
-// These tests duplicate __tests__/responseIterator.ts while mocking
-// `isAsyncIterableIterator = false` in order to test the integration of the
-// implementations inside /iterators via src/link/http/responseIterator.ts
-// which do not execute when isAsyncIterableIterator is true
-// See: https://github.com/facebook/jest/issues/2582#issuecomment-655110424
-
-jest.mock("../../../utilities/index.js", () => ({
-  __esModule: true,
-  ...jest.requireActual("../../../utilities/index.js"),
-  canUseAsyncIteratorSymbol: false,
-}));
-
 const sampleDeferredQuery = gql`
   query SampleDeferredQuery {
     stub {

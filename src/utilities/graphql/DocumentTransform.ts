@@ -6,7 +6,6 @@ import { wrap } from "optimism";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { cacheSizes } from "../caching/index.js";
-import { canUseWeakMap, canUseWeakSet } from "../common/canUse.js";
 
 import { checkDocument } from "./getFromAST.js";
 
@@ -41,8 +40,7 @@ export class DocumentTransform {
   private readonly transform: TransformFn;
   private cached: boolean;
 
-  private readonly resultCache =
-    canUseWeakSet ? new WeakSet<DocumentNode>() : new Set<DocumentNode>();
+  private readonly resultCache = new WeakSet<DocumentNode>();
 
   // This default implementation of getCacheKey can be overridden by providing
   // options.getCacheKey to the DocumentTransform constructor. In general, a
@@ -98,7 +96,7 @@ export class DocumentTransform {
    */
   resetCache() {
     if (this.cached) {
-      const stableCacheKeys = new Trie<WeakKey>(canUseWeakMap);
+      const stableCacheKeys = new Trie<WeakKey>();
       this.performWork = wrap(
         DocumentTransform.prototype.performWork.bind(this),
         {

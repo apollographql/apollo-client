@@ -3,8 +3,6 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/reader.ts
  */
 
-import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
-
 interface ReaderIterator<T> {
   next(): Promise<IteratorResult<T, T | undefined>>;
   [Symbol.asyncIterator]?(): AsyncIterator<T>;
@@ -24,14 +22,12 @@ export default function readerIterator<T>(
     },
   };
 
-  if (canUseAsyncIteratorSymbol) {
-    iterator[Symbol.asyncIterator] = function (): AsyncIterator<
-      T,
-      T | undefined
-    > {
-      return this;
-    };
-  }
+  iterator[Symbol.asyncIterator] = function (): AsyncIterator<
+    T,
+    T | undefined
+  > {
+    return this;
+  };
 
   return iterator as AsyncIterableIterator<T>;
 }

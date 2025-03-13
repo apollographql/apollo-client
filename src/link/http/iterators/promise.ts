@@ -3,8 +3,6 @@
  * https://github.com/kmalakoff/response-iterator/blob/master/src/iterators/promise.ts
  */
 
-import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
-
 interface PromiseIterator<T> {
   next(): Promise<IteratorResult<T, ArrayBuffer | undefined>>;
   [Symbol.asyncIterator]?(): AsyncIterator<T>;
@@ -33,11 +31,9 @@ export default function promiseIterator<T = ArrayBuffer>(
     },
   };
 
-  if (canUseAsyncIteratorSymbol) {
-    iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
-      return this;
-    };
-  }
+  iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
+    return this;
+  };
 
   return iterator as AsyncIterableIterator<T>;
 }

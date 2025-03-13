@@ -12,11 +12,7 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { maskDefinition } from "./maskDefinition.js";
-import {
-  MapImpl,
-  SetImpl,
-  warnOnImproperCacheImplementation,
-} from "./utils.js";
+import { warnOnImproperCacheImplementation } from "./utils.js";
 
 /** @internal */
 export function maskOperation<TData = unknown>(
@@ -49,7 +45,7 @@ export function maskOperation<TData = unknown>(
     operationName: definition.name?.value,
     fragmentMap: createFragmentMap(getFragmentDefinitions(document)),
     cache,
-    mutableTargets: new MapImpl(),
-    knownChanged: new SetImpl(),
+    mutableTargets: new WeakMap(),
+    knownChanged: new WeakSet(),
   });
 }

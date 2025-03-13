@@ -475,22 +475,10 @@ export const canonicalStringify: ((value: any) => string) & {
 type CanReadFunction = (value: StoreValue) => boolean;
 
 // @public (undocumented)
-export const canUseAsyncIteratorSymbol: false | typeof Symbol.asyncIterator;
-
-// @public (undocumented)
 export const canUseDOM: boolean;
 
 // @public (undocumented)
 export const canUseLayoutEffect: boolean;
-
-// @public (undocumented)
-export const canUseSymbol: boolean;
-
-// @public (undocumented)
-export const canUseWeakMap: boolean;
-
-// @public (undocumented)
-export const canUseWeakSet: boolean;
 
 // @public (undocumented)
 export function checkDocument(doc: DocumentNode): DocumentNode;
@@ -1947,10 +1935,8 @@ class ObservableQuery<TData = any, TVariables extends OperationVariables = Opera
     // (undocumented)
     resetLastResults(): void;
     // (undocumented)
-    result(): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // (undocumented)
     setOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>> | void>;
+    setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     // (undocumented)
     silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
     startPolling(pollInterval: number): void;

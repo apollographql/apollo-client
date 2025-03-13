@@ -869,7 +869,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
@@ -919,7 +926,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -1002,7 +1016,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -1058,7 +1079,14 @@ describe("ObservableQuery", () => {
         partial: true,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -1084,7 +1112,14 @@ describe("ObservableQuery", () => {
       });
       const observable = client.watchQuery({ query, variables });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
     });
 
     it("sets networkStatus to `setVariables` when fetching", async () => {
@@ -1119,7 +1154,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
@@ -1138,7 +1180,7 @@ describe("ObservableQuery", () => {
       await expect(stream).not.toEmitAnything();
     });
 
-    it("sets networkStatus to `setVariables` when calling refetch with new variables", async () => {
+    it("sets networkStatus to `refetch` when calling refetch with new variables", async () => {
       const mockedResponses = [
         {
           request: { query, variables },
@@ -1170,7 +1212,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.refetch(differentVariables);
+      await expect(
+        observable.refetch(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
@@ -1213,7 +1262,14 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setVariables(variables);
+      await expect(
+        observable.setVariables(variables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataOne,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).not.toEmitAnything();
     });
@@ -1240,7 +1296,14 @@ describe("ObservableQuery", () => {
       const observable = client.watchQuery({ query, variables });
       const stream = new ObservableStream(observable);
 
-      await observable.setVariables(differentVariables);
+      await expect(
+        observable.setVariables(differentVariables)
+      ).resolves.toEqualApolloQueryResult({
+        data: dataTwo,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
+      });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -2348,9 +2411,14 @@ describe("ObservableQuery", () => {
       });
 
       const observable = client.watchQuery({ query, variables });
+      const stream = new ObservableStream(observable);
 
-      await expect(observable.result()).resolves.toMatchObject({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         error: new CombinedGraphQLErrors([error]),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
       });
 
       const currentResult = observable.getCurrentResult();
@@ -2383,19 +2451,16 @@ describe("ObservableQuery", () => {
         variables,
         errorPolicy: "all",
       });
+      const stream = new ObservableStream(observable);
 
-      const result = await observable.result();
-      const currentResult = observable.getCurrentResult();
-
-      // TODO: This should include an `error` property, not just `errors`
-      expect(result).toEqualApolloQueryResult({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         error: new CombinedGraphQLErrors([error]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: false,
       });
-      expect(currentResult).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         error: new CombinedGraphQLErrors([error]),
         loading: false,
@@ -2421,8 +2486,14 @@ describe("ObservableQuery", () => {
         errorPolicy: "none",
       });
 
-      await expect(observable.result()).resolves.toMatchObject({
+      const stream = new ObservableStream(observable);
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         error: wrappedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
       });
 
       expect(observable.getLastError()).toEqual(wrappedError);
@@ -2444,11 +2515,20 @@ describe("ObservableQuery", () => {
         variables,
         errorPolicy: "none",
       });
+      const stream = new ObservableStream(observable);
 
-      await expect(observable.result()).resolves.toMatchObject({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: new CombinedGraphQLErrors([error]),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      expect(observable.getCurrentResult()).toMatchObject({
         error: wrappedError,
       });
-      await expect(observable.result()).resolves.toMatchObject({
+      expect(observable.getCurrentResult()).toMatchObject({
         error: wrappedError,
       });
 
@@ -2472,16 +2552,15 @@ describe("ObservableQuery", () => {
         errorPolicy: "ignore",
       });
 
-      const result = await observable.result();
-      const currentResult = observable.getCurrentResult();
+      const stream = new ObservableStream(observable);
 
-      expect(result).toEqualApolloQueryResult({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(currentResult).toEqualApolloQueryResult({
+      expect(observable.getCurrentResult()).toEqualApolloQueryResult({
         data: dataOne,
         loading: false,
         networkStatus: NetworkStatus.ready,

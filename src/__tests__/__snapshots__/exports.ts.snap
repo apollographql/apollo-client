@@ -382,12 +382,8 @@ Array [
   "argumentsObjectFromField",
   "buildQueryFromSelectionSet",
   "cacheSizes",
-  "canUseAsyncIteratorSymbol",
   "canUseDOM",
   "canUseLayoutEffect",
-  "canUseSymbol",
-  "canUseWeakMap",
-  "canUseWeakSet",
   "canonicalStringify",
   "checkDocument",
   "cloneDeep",
@@ -488,11 +484,5 @@ Array [
   "invariant",
   "newInvariantError",
   "setVerbosity",
-]
-`;
-
-exports[`exports of public entry points @apollo/client/utilities/subscriptions/urql 1`] = `
-Array [
-  "createFetchMultipartSubscription",
 ]
 `;

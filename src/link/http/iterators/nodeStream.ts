@@ -5,8 +5,6 @@
 
 import type { Readable as NodeReadableStream } from "stream";
 
-import { canUseAsyncIteratorSymbol } from "@apollo/client/utilities";
-
 interface NodeStreamIterator<T> {
   next(): Promise<IteratorResult<T, boolean | undefined>>;
   [Symbol.asyncIterator]?(): AsyncIterator<T>;
@@ -86,11 +84,9 @@ export default function nodeStreamIterator<T>(
     },
   };
 
-  if (canUseAsyncIteratorSymbol) {
-    iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
-      return this;
-    };
-  }
+  iterator[Symbol.asyncIterator] = function (): AsyncIterator<T> {
+    return this;
+  };
 
   return iterator as AsyncIterableIterator<T>;
 }

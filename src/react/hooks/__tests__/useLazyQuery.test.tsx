@@ -2031,8 +2031,9 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    await expect(execute()).resolves.toEqual({
+    await expect(execute()).resolves.toEqualApolloQueryResult({
       data: { currentUser: null },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -5417,9 +5418,23 @@ describe.skip("Type Tests", () => {
     });
 
     {
-      const { data } = await execute();
+      const { data, dataState } = await execute();
 
-      expectTypeOf(data).toEqualTypeOf<Masked<Query> | undefined>();
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<Masked<Query>>>();
+      }
+
+      if (dataState === "hasNext") {
+        expectTypeOf(data).toEqualTypeOf<Masked<Query>>();
+      }
+
+      if (dataState === "none") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {
@@ -5561,9 +5576,23 @@ describe.skip("Type Tests", () => {
     });
 
     {
-      const { data } = await execute();
+      const { data, dataState } = await execute();
 
-      expectTypeOf(data).toEqualTypeOf<Query | undefined>();
+      if (dataState === "complete") {
+        expectTypeOf(data).toEqualTypeOf<Query>();
+      }
+
+      if (dataState === "partial") {
+        expectTypeOf(data).toEqualTypeOf<DeepPartial<Query>>();
+      }
+
+      if (dataState === "hasNext") {
+        expectTypeOf(data).toEqualTypeOf<Query>();
+      }
+
+      if (dataState === "none") {
+        expectTypeOf(data).toEqualTypeOf<undefined>();
+      }
     }
 
     {

@@ -238,7 +238,7 @@ export class ObservableQuery<
   public ["@@observable"]: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  
+
   /** @internal */
   public resetDiff() {
     this.queryInfo.resetDiff();

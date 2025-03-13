@@ -1892,9 +1892,9 @@ interface ObservableAndInfo<TData> {
 // @public (undocumented)
 class ObservableQuery<TData = any, TVariables extends OperationVariables = OperationVariables> implements Subscribable<ApolloQueryResult<MaybeMasked<TData>>>, InteropObservable<ApolloQueryResult<MaybeMasked<TData>>> {
     // (undocumented)
-    ["@@observable"]: () => Observable<ApolloQueryResult<MaybeMasked<TData>>>;
+    ["@@observable"]: () => Subscribable<ApolloQueryResult<MaybeMasked<TData>>>;
     // (undocumented)
-    [Symbol.observable]: () => Observable<ApolloQueryResult<MaybeMasked<TData>>>;
+    [Symbol.observable]: () => Subscribable<ApolloQueryResult<MaybeMasked<TData>>>;
     constructor({ queryManager, queryInfo, options, }: {
         queryManager: QueryManager<any>;
         queryInfo: QueryInfo;

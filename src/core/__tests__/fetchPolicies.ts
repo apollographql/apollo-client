@@ -449,6 +449,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
+        dataState: "none",
         loading: true,
         networkStatus: NetworkStatus.loading,
         partial: true,
@@ -456,6 +457,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(1),
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -466,6 +468,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
+        dataState: "none",
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
@@ -473,6 +476,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -483,6 +487,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
+        dataState: "complete",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: false,
@@ -491,6 +496,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -501,6 +507,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
+        dataState: "none",
         loading: true,
         networkStatus: NetworkStatus.refetch,
         partial: true,
@@ -509,6 +516,7 @@ describe("no-cache", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(3),
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -547,6 +555,7 @@ describe("cache-first", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
@@ -562,6 +571,7 @@ describe("cache-first", () => {
           lastName: "Smith",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -588,6 +598,7 @@ describe("cache-first", () => {
           __typename: "Bogus",
         },
       },
+      dataState: "partial",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -608,6 +619,7 @@ describe("cache-first", () => {
           lastName: "Smith",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -638,6 +650,7 @@ describe("cache-first", () => {
           lastName: "Achebe",
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -686,6 +699,7 @@ describe("cache-only", () => {
       data: {
         count: 1,
       },
+      dataState: "complete",
       partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
@@ -698,6 +712,7 @@ describe("cache-only", () => {
       data: {
         count: 2,
       },
+      dataState: "complete",
       partial: false,
     });
 
@@ -753,6 +768,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(1),
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -762,6 +778,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       partial: true,
@@ -769,6 +786,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -778,6 +796,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: false,
@@ -785,6 +804,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -794,6 +814,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: NetworkStatus.refetch,
       partial: true,
@@ -801,6 +822,7 @@ describe("cache-and-network", function () {
 
     await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(3),
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -940,6 +962,7 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -957,6 +980,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -982,6 +1006,7 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1002,6 +1027,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1089,6 +1115,7 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1106,6 +1133,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1132,6 +1160,7 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1149,6 +1178,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       partial: false,
@@ -1167,6 +1197,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1261,6 +1292,7 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1278,6 +1310,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,
@@ -1302,6 +1335,7 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
+        dataState: "complete",
         loading: false,
         networkStatus: NetworkStatus.ready,
         partial: false,
@@ -1325,6 +1359,7 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      dataState: "complete",
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

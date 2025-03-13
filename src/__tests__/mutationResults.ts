@@ -8,6 +8,7 @@ import { ApolloClient, FetchResult } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { ApolloLink } from "@apollo/client/link/core";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
@@ -283,12 +284,24 @@ describe("mutation results", () => {
     const stream = new ObservableStream(obs);
     {
       const result = await stream.takeNext();
-      expect(result.data!.mini.cover).toBe("image");
+
+      invariant(
+        result.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
+      expect(result.data.mini.cover).toBe("image");
     }
     await client.mutate({ mutation, variables: { signature: "1234" } });
     {
       const result = await stream.takeNext();
-      expect(result.data!.mini.cover).toBe("image2");
+
+      invariant(
+        result.dataState === "complete",
+        "expected dataState to be complete"
+      );
+
+      expect(result.data.mini.cover).toBe("image2");
     }
   });
 

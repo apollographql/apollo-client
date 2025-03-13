@@ -130,10 +130,11 @@ export class ObservableQuery<
     this.networkStatus = NetworkStatus.loading;
     this.initialResult = {
       data: undefined,
+      dataState: "none",
       loading: true,
       networkStatus: this.networkStatus,
       partial: true,
-    };
+    } as ApolloQueryResult<TData>;
 
     this.subject = new BehaviorSubject(this.initialResult);
     this.observable = this.subject.pipe(
@@ -253,6 +254,7 @@ export class ObservableQuery<
 
     const result: ApolloQueryResult<TData> = {
       data: undefined,
+      dataState: "none",
       partial: true,
       ...lastResult,
       loading: isNetworkRequestInFlight(networkStatus),
@@ -283,10 +285,15 @@ export class ObservableQuery<
 
       if (diff.complete || this.options.returnPartialData) {
         result.data = diff.result;
+        result.dataState =
+          diff.complete ? "complete"
+          : diff.result ? "partial"
+          : "none";
       }
 
       if (result.data === null) {
         result.data = void 0 as any;
+        result.dataState = "none";
       }
 
       if (diff.complete) {
@@ -592,8 +599,8 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
               ...lastResult,
               networkStatus: originalNetworkStatus,
               loading: isNetworkRequestInFlight(originalNetworkStatus),
-              data: data as TData,
-            },
+              data,
+            } as ApolloQueryResult<TData>,
             this.variables
           );
         }
@@ -1091,6 +1098,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     // must mirror the updates that occur in QueryStore.markQueryError here
     const errorResult: ApolloQueryResult<TData> = {
       data: undefined,
+      dataState: "none",
       partial: true,
       ...this.getLastResult(),
       error,
@@ -1132,7 +1140,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     result: ApolloQueryResult<T>
   ): ApolloQueryResult<MaybeMasked<T>> {
     return result && "data" in result ?
-        {
+        ({
           ...result,
           data: this.queryManager.maskOperation({
             document: this.query,
@@ -1140,7 +1148,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
             fetchPolicy: this.options.fetchPolicy,
             id: this.queryId,
           }),
-        }
+        } as ApolloQueryResult<T>)
       : result;
   }
 }

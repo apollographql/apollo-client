@@ -421,6 +421,7 @@ describe("Cache manipulation", () => {
         serverData,
         selectedItemId: -1,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -437,6 +438,7 @@ describe("Cache manipulation", () => {
         serverData,
         selectedItemId: 123,
       },
+      dataState: "complete",
       loading: false,
       networkStatus: 7,
       partial: false,
@@ -1179,6 +1181,7 @@ describe("Combining client and server state/operations", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       error: new CombinedGraphQLErrors([error]),
       loading: false,
       networkStatus: NetworkStatus.error,

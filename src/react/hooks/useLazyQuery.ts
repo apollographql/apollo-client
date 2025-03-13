@@ -241,7 +241,7 @@ export function useLazyQuery<
 
       if (previousData && !equal(previousData, result.data)) {
         // eslint-disable-next-line react-compiler/react-compiler
-        previousDataRef.current = previousData;
+        previousDataRef.current = previousData as TData;
       }
 
       resultRef.current = result;
@@ -386,6 +386,7 @@ export function useLazyQuery<
 
 const initialResult: ApolloQueryResult<any> = maybeDeepFreeze({
   data: undefined,
+  dataState: "none",
   loading: false,
   networkStatus: NetworkStatus.ready,
   partial: true,

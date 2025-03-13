@@ -564,9 +564,9 @@ function toQueryResult<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient<object>
 ): InternalQueryResult<TData, TVariables> {
-  const { data, partial, ...resultWithoutPartial } = result;
+  const { data, partial, dataState, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {
-    data, // Ensure always defined, even if result.data is missing.
+    data: data as TData, // Ensure always defined, even if result.data is missing.
     ...resultWithoutPartial,
     client: client,
     observable: observable,
@@ -577,17 +577,19 @@ function toQueryResult<TData, TVariables extends OperationVariables>(
   return queryResult;
 }
 
-const ssrDisabledResult = maybeDeepFreeze({
+const ssrDisabledResult: ApolloQueryResult<any> = maybeDeepFreeze({
   loading: true,
   data: void 0 as any,
+  dataState: "none",
   error: void 0,
   networkStatus: NetworkStatus.loading,
   partial: true,
 });
 
-const skipStandbyResult = maybeDeepFreeze({
+const skipStandbyResult: ApolloQueryResult<any> = maybeDeepFreeze({
   loading: false,
   data: void 0 as any,
+  dataState: "none",
   error: void 0,
   networkStatus: NetworkStatus.ready,
   partial: true,

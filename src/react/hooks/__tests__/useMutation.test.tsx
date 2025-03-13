@@ -1919,6 +1919,7 @@ describe("useMutation Hook", () => {
           data: {
             todoCount: 1,
           },
+          dataState: "complete",
           partial: false,
         });
       });

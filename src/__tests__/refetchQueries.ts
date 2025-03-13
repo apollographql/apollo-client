@@ -481,6 +481,7 @@ describe("client.refetchQueries", () => {
         next(result) {
           expect(result).toEqualApolloQueryResult({
             data: { a: "A", b: "B" },
+            dataState: "complete",
             loading: false,
             networkStatus: NetworkStatus.ready,
             partial: false,

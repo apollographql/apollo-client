@@ -1822,6 +1822,7 @@ describe("client", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
+        dataState: "none",
         error: new Error("Oops"),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -1860,6 +1861,7 @@ describe("client", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: initialData,
+        dataState: "complete",
         error: new CombinedGraphQLErrors([{ message: "network failure" }]),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -2507,6 +2509,7 @@ describe("client", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       error: new Error("Uh oh!"),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -2565,6 +2568,7 @@ describe("client", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data,
+      dataState: "complete",
       error: new Error("This is an error!"),
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -3563,6 +3567,7 @@ describe("@connection", () => {
 
       expect(result).toEqualApolloQueryResult({
         data: undefined,
+        dataState: "none",
         error: new CombinedGraphQLErrors(errors),
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6168,6 +6173,7 @@ describe("unconventional errors", () => {
 
     await expect(stream).toEmitApolloQueryResult({
       data: undefined,
+      dataState: "none",
       error: expectedError,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -6223,6 +6229,7 @@ describe("unconventional errors", () => {
 
       await expect(stream).toEmitApolloQueryResult({
         data: undefined,
+        dataState: "none",
         error: expectedError,
         loading: false,
         networkStatus: NetworkStatus.error,

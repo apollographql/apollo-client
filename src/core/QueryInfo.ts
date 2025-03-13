@@ -5,7 +5,6 @@ import type { ApolloCache, Cache } from "@apollo/client/cache";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { Unmasked } from "@apollo/client/masking";
 import {
-  canUseWeakMap,
   graphQLResultHasError,
   isNonEmptyArray,
 } from "@apollo/client/utilities";
@@ -25,10 +24,7 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-const destructiveMethodCounts = new (canUseWeakMap ? WeakMap : Map)<
-  ApolloCache<any>,
-  number
->();
+const destructiveMethodCounts = new WeakMap<ApolloCache<any>, number>();
 
 function wrapDestructiveCacheMethod(
   cache: ApolloCache<any>,

@@ -3,7 +3,14 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import { EmptyError, Observable, of, Subject } from "rxjs";
+import {
+  EmptyError,
+  from,
+  Observable,
+  ObservedValueOf,
+  of,
+  Subject,
+} from "rxjs";
 import { Observer } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -11,6 +18,7 @@ import {
   ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
+  ObservableQuery,
   WatchQueryFetchPolicy,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
@@ -3832,4 +3840,44 @@ test("handles changing variables in rapid succession before other request is com
     networkStatus: NetworkStatus.ready,
     partial: false,
   });
+});
+
+test("works with `from`", async () => {
+  const query = gql`
+    query {
+      hello
+    }
+  `;
+  const data = {
+    hello: "world",
+  };
+  const link = new MockLink([
+    {
+      request: { query },
+      result: { data },
+    },
+  ]);
+  const client = new ApolloClient({
+    link: ApolloLink.from([link]),
+    cache: new InMemoryCache(),
+  });
+  const observableQuery = client.watchQuery({
+    query,
+  });
+
+  const observable = from(observableQuery);
+  const stream = new ObservableStream(observable);
+  const result = await stream.takeNext();
+  expect(result).toEqualApolloQueryResult({
+    data,
+    loading: false,
+    networkStatus: NetworkStatus.ready,
+    partial: false,
+  });
+});
+
+test.skip("type test for `from`", () => {
+  expectTypeOf<
+    ObservedValueOf<ObservableQuery<{ foo: string }, { bar: number }>>
+  >().toEqualTypeOf<ApolloQueryResult<{ foo: string }>>();
 });

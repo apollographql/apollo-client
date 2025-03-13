@@ -171,9 +171,9 @@ export class ObservableQuery<
       )
     );
 
-    this["@@observable"] = () => this.observable;
+    this["@@observable"] = () => this;
     if (Symbol.observable) {
-      this[Symbol.observable] = this["@@observable"];
+      this[Symbol.observable] = () => this;
     }
     this.pipe = this.observable.pipe.bind(this.observable);
     this.subscribe = this.observable.subscribe.bind(this.observable);
@@ -232,10 +232,10 @@ export class ObservableQuery<
 
   public pipe: Observable<ApolloQueryResult<MaybeMasked<TData>>>["pipe"];
 
-  public [Symbol.observable]!: () => Observable<
+  public [Symbol.observable]!: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  public ["@@observable"]: () => Observable<
+  public ["@@observable"]: () => Subscribable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
 

@@ -7206,12 +7206,12 @@ describe("ApolloClient", () => {
           ],
         },
       };
-      const initialResult = {
+      const initialResult: ApolloQueryResult<any> = {
         data: initialData,
-        dataState: "hasNext" as const,
+        dataState: "hasNext",
         loading: false,
         networkStatus: 7,
-        partial: false,
+        partial: true,
       };
 
       defer.enqueueInitialChunk({
@@ -7267,13 +7267,15 @@ describe("ApolloClient", () => {
       };
       const resultAfterSecondChunk = structuredClone(resultAfterFirstChunk);
       resultAfterSecondChunk.data.people.friends[1].name = "Han Solo";
+      resultAfterSecondChunk.dataState = "complete" as any;
+      resultAfterSecondChunk.partial = false;
 
       defer.enqueueSubsequentChunk(secondChunk);
 
-      await expect(query1).toEmitFetchResult(resultAfterSecondChunk);
-      await expect(query2).toEmitFetchResult(resultAfterSecondChunk);
-      await expect(query3).toEmitFetchResult(resultAfterSecondChunk);
-      await expect(query4).toEmitFetchResult(resultAfterSecondChunk);
+      await expect(query1).toEmitApolloQueryResult(resultAfterSecondChunk);
+      await expect(query2).toEmitApolloQueryResult(resultAfterSecondChunk);
+      await expect(query3).toEmitApolloQueryResult(resultAfterSecondChunk);
+      await expect(query4).toEmitApolloQueryResult(resultAfterSecondChunk);
 
       // TODO: Re-enable once below condition can be met
       /* const query5 = */ new ObservableStream(

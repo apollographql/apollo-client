@@ -209,13 +209,11 @@ interface ApolloClientOptions<TCacheShape> {
     version?: string;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ApolloConsumerProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export const ApolloConsumer: ReactTypes.FC<ApolloConsumerProps>;
 
 // @public (undocumented)
-interface ApolloConsumerProps {
+export interface ApolloConsumerProps {
     // Warning: (ae-forgotten-export) The symbol "ApolloClient" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -269,13 +267,11 @@ class ApolloLink {
     split(test: (op: Operation) => boolean, left: ApolloLink | RequestHandler, right?: ApolloLink | RequestHandler): ApolloLink;
 }
 
-// Warning: (ae-forgotten-export) The symbol "ApolloProviderProps" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export const ApolloProvider: ReactTypes.FC<ApolloProviderProps<any>>;
 
 // @public (undocumented)
-interface ApolloProviderProps<TCache> {
+export interface ApolloProviderProps<TCache> {
     // (undocumented)
     children: ReactTypes.ReactNode | ReactTypes.ReactNode[] | null;
     // (undocumented)
@@ -2454,6 +2450,9 @@ TVariables
 } : {
     variables: TVariables;
 };
+
+// @public (undocumented)
+export function verifyDocumentType(document: DocumentNode, type: DocumentType_2): void;
 
 // @public
 interface WatchFragmentOptions<TData, TVars> {

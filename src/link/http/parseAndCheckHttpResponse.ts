@@ -8,8 +8,7 @@ import {
 } from "@apollo/client/errors";
 import type { Operation } from "@apollo/client/link/core";
 import { isApolloPayloadResult } from "@apollo/client/utilities";
-
-import { responseIterator } from "./responseIterator.js";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 const { hasOwnProperty } = Object.prototype;
 
@@ -40,11 +39,15 @@ export async function readMultipartBody<
 
   const boundary = `\r\n--${boundaryVal}`;
   let buffer = "";
-  const iterator = responseIterator(response);
+  invariant(
+    response.body && typeof response.body.getReader === "function",
+    "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
+  );
+  const iterator = response.body.getReader();
   let running = true;
 
   while (running) {
-    const { value, done } = await iterator.next();
+    const { value, done } = await iterator.read();
     const chunk = typeof value === "string" ? value : decoder.decode(value);
     const searchFrom = buffer.length - boundary.length + 1;
     running = !done;

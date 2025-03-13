@@ -1,4 +1,3 @@
-import { Readable } from "stream";
 import { TextDecoder } from "util";
 
 import fetchMock from "fetch-mock";
@@ -1655,72 +1654,8 @@ describe("HttpLink", () => {
         );
       });
 
-      it("node stream bodies", (done) => {
-        const stream = Readable.from(
-          body.split("\r\n").map((line) => line + "\r\n")
-        );
-
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({
-            "Content-Type": 'multipart/mixed;boundary="-";deferSpec=20220824',
-          }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
-        });
-
-        let i = 0;
-        execute(link, { query: sampleDeferredQuery }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    stub: {
-                      id: "0",
-                    },
-                  },
-                  hasNext: true,
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  incremental: [
-                    {
-                      data: {
-                        name: "stubby---",
-                      },
-                      extensions: {
-                        timestamp: 1633038919,
-                      },
-                      path: ["stub"],
-                    },
-                  ],
-                  hasNext: false,
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-
-            done();
-          }
-        );
-      });
-
       it("sets correct accept header on request with deferred query", async () => {
-        const stream = Readable.from(
+        const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
         const fetch = jest.fn(async () => ({
@@ -1750,7 +1685,7 @@ describe("HttpLink", () => {
       // ensure that custom directives beginning with '@defer..' do not trigger
       // custom accept header for multipart responses
       it("sets does not set accept header on query with custom directive begging with @defer", async () => {
-        const stream = Readable.from(
+        const stream = ReadableStream.from(
           body.split("\r\n").map((line) => line + "\r\n")
         );
         const fetch = jest.fn(async () => ({
@@ -1927,131 +1862,8 @@ describe("HttpLink", () => {
         warningSpy.mockRestore();
       });
 
-      it("node stream bodies", (done) => {
-        const stream = Readable.from(
-          subscriptionsBody.split("\r\n").map((line) => line + "\r\n")
-        );
-
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
-        });
-
-        let i = 0;
-        execute(link, { query: sampleSubscription }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "red",
-                        roll: 1,
-                        sides: 4,
-                      },
-                    },
-                  },
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "blue",
-                        roll: 2,
-                        sides: 5,
-                      },
-                    },
-                  },
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-            done();
-          }
-        );
-      });
-
-      it("node stream bodies, with errors", (done) => {
-        const stream = Readable.from(
-          subscriptionsBodyError.split("\r\n").map((line) => line + "\r\n")
-        );
-
-        const fetch = jest.fn(async () => ({
-          status: 200,
-          body: stream,
-          headers: new Headers({ "Content-Type": "multipart/mixed" }),
-        }));
-        const link = new HttpLink({
-          fetch: fetch as any,
-        });
-
-        let i = 0;
-        execute(link, { query: sampleSubscription }).subscribe(
-          (result) => {
-            try {
-              if (i === 0) {
-                expect(result).toEqual({
-                  data: {
-                    aNewDieWasCreated: {
-                      die: {
-                        color: "red",
-                        roll: 1,
-                        sides: 4,
-                      },
-                    },
-                  },
-                });
-              } else if (i === 1) {
-                expect(result).toEqual({
-                  extensions: {
-                    [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
-                      {
-                        extensions: {
-                          code: "INTERNAL_SERVER_ERROR",
-                        },
-                        message: "Error field",
-                      },
-                    ]),
-                  },
-                });
-              }
-            } catch (err) {
-              done(err);
-            } finally {
-              i++;
-            }
-          },
-          (err) => {
-            done(err);
-          },
-          () => {
-            if (i !== 2) {
-              done(new Error("Unexpected end to observable"));
-            }
-            done();
-          }
-        );
-      });
-
       it("sets correct accept header on request with subscription", async () => {
-        const stream = Readable.from(
+        const stream = ReadableStream.from(
           subscriptionsBody.split("\r\n").map((line) => line + "\r\n")
         );
         const fetch = jest.fn(async () => ({

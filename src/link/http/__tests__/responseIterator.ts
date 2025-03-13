@@ -1,8 +1,10 @@
 import { Readable } from "stream";
-import { TextDecoder, TextEncoder } from "util";
+import { TextDecoder } from "util";
 
 import { gql } from "graphql-tag";
 import { ReadableStream } from "web-streams-polyfill";
+
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream } from "../../../testing/internal/index.js";
 import { execute } from "../../core/execute.js";
@@ -48,20 +50,6 @@ describe("multipart responses", () => {
     `--${BOUNDARY}--`,
   ].join("\r\n");
 
-  const bodyDefaultBoundary = [
-    `---`,
-    "Content-Type: application/json; charset=utf-8",
-    "Content-Length: 43",
-    "",
-    '{"data":{"stub":{"id":"0"}},"hasNext":true}',
-    `---`,
-    "Content-Type: application/json; charset=utf-8",
-    "Content-Length: 58",
-    "",
-    '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
-    `-----`,
-  ].join("\r\n");
-
   const bodyIncorrectChunkType = [
     `---`,
     "Content-Type: foo/bar; charset=utf-8",
@@ -74,22 +62,6 @@ describe("multipart responses", () => {
     "",
     '{"hasNext":false, "incremental": [{"data":{"name":"stubby"},"path":["stub"]}]}',
     `-----`,
-  ].join("\r\n");
-
-  const bodyBatchedResults = [
-    "--graphql",
-    "content-type: application/json",
-    "",
-    '{"data":{"allProducts":[{"delivery":{"__typename":"DeliveryEstimates"},"sku":"federation","id":"apollo-federation","__typename":"Product"},{"delivery":{"__typename":"DeliveryEstimates"},"sku":"studio","id":"apollo-studio","__typename":"Product"}]},"hasNext":true}',
-    "--graphql",
-    "content-type: application/json",
-    "",
-    '{"hasNext":true,"incremental":[{"data":{"estimatedDelivery":"6/25/2021","fastestDelivery":"6/24/2021","__typename":"DeliveryEstimates"},"path":["allProducts",0,"delivery"]},{"data":{"estimatedDelivery":"6/25/2021","fastestDelivery":"6/24/2021","__typename":"DeliveryEstimates"},"path":["allProducts",1,"delivery"]}]}',
-    "--graphql",
-    "content-type: application/json",
-    "",
-    '{"hasNext":false}',
-    "--graphql--",
   ].join("\r\n");
 
   const results = [
@@ -111,53 +83,6 @@ describe("multipart responses", () => {
         },
       ],
       hasNext: false,
-    },
-  ];
-
-  const batchedResults = [
-    {
-      data: {
-        allProducts: [
-          {
-            __typename: "Product",
-            delivery: {
-              __typename: "DeliveryEstimates",
-            },
-            id: "apollo-federation",
-            sku: "federation",
-          },
-          {
-            __typename: "Product",
-            delivery: {
-              __typename: "DeliveryEstimates",
-            },
-            id: "apollo-studio",
-            sku: "studio",
-          },
-        ],
-      },
-      hasNext: true,
-    },
-    {
-      hasNext: true,
-      incremental: [
-        {
-          data: {
-            __typename: "DeliveryEstimates",
-            estimatedDelivery: "6/25/2021",
-            fastestDelivery: "6/24/2021",
-          },
-          path: ["allProducts", 0, "delivery"],
-        },
-        {
-          data: {
-            __typename: "DeliveryEstimates",
-            estimatedDelivery: "6/25/2021",
-            fastestDelivery: "6/24/2021",
-          },
-          path: ["allProducts", 1, "delivery"],
-        },
-      ],
     },
   ];
 
@@ -238,72 +163,6 @@ describe("multipart responses", () => {
     await expect(observableStream).toComplete();
   });
 
-  it("can handle streamable blob bodies", async () => {
-    const body = new Blob(bodyCustomBoundary.split("\r\n"), {
-      type: "application/text",
-    });
-    const stream = new ReadableStream({
-      async start(controller) {
-        const lines = bodyCustomBoundary.split("\r\n");
-        try {
-          for (const line of lines) {
-            controller.enqueue(line + "\r\n");
-          }
-        } finally {
-          controller.close();
-        }
-      },
-    });
-    body.stream = () => stream;
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
-  it("can handle non-streamable blob bodies", async () => {
-    const body = new Blob(
-      bodyCustomBoundary.split("\r\n").map((i) => i + "\r\n"),
-      { type: "application/text" }
-    );
-    body.stream = undefined;
-
-    const fetch = jest.fn(async () => ({
-      status: 200,
-      body,
-      headers: new Headers({
-        "content-type": `multipart/mixed; boundary=${BOUNDARY}`,
-      }),
-    }));
-    const link = new HttpLink({
-      fetch: fetch as any,
-    });
-
-    const observable = execute(link, { query: sampleDeferredQuery });
-    const observableStream = new ObservableStream(observable);
-
-    for (const result of results) {
-      await expect(observableStream).toEmitValue(result);
-    }
-
-    await expect(observableStream).toComplete();
-  });
-
   it("throws error on non-streamable body", async () => {
     // non-streamable body
     const body = 12345;
@@ -319,8 +178,8 @@ describe("multipart responses", () => {
     });
     const observable = execute(link, { query: sampleDeferredQuery });
     const mockError = {
-      throws: new Error(
-        "Unknown body type for responseIterator. Please pass a streamable response."
+      throws: new InvariantError(
+        "Unknown type for `response.body`. Please use a `fetch` implementation that is WhatWG-compliant and that uses WhatWG ReadableStreams for `body`."
       ),
     };
 

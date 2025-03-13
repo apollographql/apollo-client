@@ -3296,25 +3296,25 @@ describe("ApolloClient", () => {
         id: "2",
       });
 
-      if (setVariablesResult?.dataState === "complete") {
+      if (setVariablesResult.dataState === "complete") {
         expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
           Masked<Query>
         >();
       }
 
-      if (setVariablesResult?.dataState === "partial") {
+      if (setVariablesResult.dataState === "partial") {
         expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
           DeepPartial<Masked<Query>>
         >();
       }
 
-      if (setVariablesResult?.dataState === "streaming") {
+      if (setVariablesResult.dataState === "streaming") {
         expectTypeOf(setVariablesResult.data).branded.toEqualTypeOf<
           Masked<Query>
         >();
       }
 
-      if (setVariablesResult?.dataState === "none") {
+      if (setVariablesResult.dataState === "none") {
         expectTypeOf(
           setVariablesResult.data
         ).branded.toEqualTypeOf<undefined>();

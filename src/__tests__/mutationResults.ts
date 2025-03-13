@@ -1,7 +1,7 @@
 import { GraphQLError, GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
-import { Observable, Subscription } from "rxjs";
+import { firstValueFrom, from, Observable, Subscription } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, FetchResult } from "@apollo/client/core";
@@ -210,7 +210,7 @@ describe("mutation results", () => {
       result: mutationResult,
     });
 
-    await new Promise((resolve) => obsQuery.subscribe(resolve));
+    await firstValueFrom(from(obsQuery));
     await client.mutate({ mutation });
     const newResult = await client.query({ query });
     expect(newResult.data.todoList.todos[0].completed).toBe(true);
@@ -443,7 +443,7 @@ describe("mutation results", () => {
       }
     );
 
-    await new Promise((resolve) => obsQuery.subscribe(resolve));
+    await firstValueFrom(from(obsQuery));
 
     // we have to actually subscribe to the query to be able to update it
     await new Promise((resolve) => {
@@ -752,53 +752,39 @@ describe("mutation results", () => {
     };
 
     it("analogous of ARRAY_INSERT", async () => {
-      let subscriptionHandle: Subscription;
       const { client, obsQuery } = setupObsQuery({
         request: { query: mutation },
         result: mutationResult,
       });
 
-      await new Promise((resolve) => obsQuery.subscribe(resolve))
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve) => {
-            const handle = client.watchQuery({ query });
-            subscriptionHandle = handle.subscribe({
-              next(res) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() =>
-          client.mutate({
-            mutation,
-            updateQueries: {
-              todoList: (prev, options) => {
-                const mResult = options.mutationResult as any;
-                expect(mResult.data.createTodo.id).toBe("99");
-                expect(mResult.data.createTodo.text).toBe(
-                  "This one was created with a mutation."
-                );
-                const state = cloneDeep(prev) as any;
-                state.todoList.todos.unshift(mResult.data.createTodo);
-                return state;
-              },
-            },
-          })
-        )
-        .then(() => client.query({ query }))
-        .then((newResult: any) => {
-          subscriptionHandle.unsubscribe();
+      await firstValueFrom(from(obsQuery));
+      await firstValueFrom(from(client.watchQuery({ query })));
 
-          // There should be one more todo item than before
-          expect(newResult.data.todoList.todos.length).toBe(4);
+      await client.mutate({
+        mutation,
+        updateQueries: {
+          todoList: (prev, options) => {
+            const mResult = options.mutationResult as any;
+            expect(mResult.data.createTodo.id).toBe("99");
+            expect(mResult.data.createTodo.text).toBe(
+              "This one was created with a mutation."
+            );
+            const state = cloneDeep(prev) as any;
+            state.todoList.todos.unshift(mResult.data.createTodo);
+            return state;
+          },
+        },
+      });
 
-          // Since we used `prepend` it should be at the front
-          expect(newResult.data.todoList.todos[0].text).toBe(
-            "This one was created with a mutation."
-          );
-        });
+      const newResult = await client.query({ query });
+
+      // There should be one more todo item than before
+      expect(newResult.data.todoList.todos.length).toBe(4);
+
+      // Since we used `prepend` it should be at the front
+      expect(newResult.data.todoList.todos[0].text).toBe(
+        "This one was created with a mutation."
+      );
     });
 
     it("does not fail if optional query variables are not supplied", async () => {
@@ -827,7 +813,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await new Promise((resolve) => obsQuery.subscribe(resolve));
+      await firstValueFrom(from(obsQuery));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -975,7 +961,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await new Promise((resolve) => obsQuery.subscribe(resolve));
+      await firstValueFrom(from(obsQuery));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -1358,7 +1344,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await new Promise((resolve) => obsQuery.subscribe(resolve));
+      await firstValueFrom(from(obsQuery));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -1436,7 +1422,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await new Promise((resolve) => obsQuery.subscribe(resolve));
+      await firstValueFrom(from(obsQuery));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -1584,7 +1570,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await new Promise((resolve) => obsQuery.subscribe(resolve));
+      await firstValueFrom(from(obsQuery));
       // we have to actually subscribe to the query to be able to update it
 
       const handle = client.watchQuery({ query });

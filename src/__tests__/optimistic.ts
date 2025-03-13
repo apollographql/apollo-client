@@ -1,6 +1,6 @@
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { lastValueFrom, Observable } from "rxjs";
+import { firstValueFrom, from, lastValueFrom, Observable } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
 import { Cache, InMemoryCache } from "@apollo/client/cache";
@@ -142,6 +142,8 @@ describe("optimistic mutation results", () => {
     });
 
     const obsHandle = client.watchQuery({ query });
+    // We can't use firstValueFrom here because we need to unsubscribe in the
+    // setTimeout
     await new Promise((resolve) => {
       const subscription = obsHandle.subscribe((value) => {
         resolve(value);
@@ -2272,12 +2274,7 @@ describe("optimistic mutation - githunt comments", () => {
       variables,
     });
 
-    await new Promise((resolve) => {
-      const subscription = obsHandle.subscribe((value) => {
-        resolve(value);
-        setTimeout(() => subscription.unsubscribe());
-      });
-    });
+    await firstValueFrom(from(obsHandle));
 
     return client;
   }

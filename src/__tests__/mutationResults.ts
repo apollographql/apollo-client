@@ -210,7 +210,7 @@ describe("mutation results", () => {
       result: mutationResult,
     });
 
-    await obsQuery.result();
+    await new Promise((resolve) => obsQuery.subscribe(resolve));
     await client.mutate({ mutation });
     const newResult = await client.query({ query });
     expect(newResult.data.todoList.todos[0].completed).toBe(true);
@@ -384,99 +384,94 @@ describe("mutation results", () => {
 
   it("should warn when the result fields don't match the query fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
-    await new Promise((resolve, reject) => {
-      let handle: any;
-      let subscriptionHandle: Subscription;
+    let handle: any;
+    let subscriptionHandle: Subscription;
 
-      const queryTodos = gql`
-        query todos {
-          todos {
-            id
-            name
-            description
-            __typename
-          }
+    const queryTodos = gql`
+      query todos {
+        todos {
+          id
+          name
+          description
+          __typename
         }
-      `;
+      }
+    `;
 
-      const queryTodosResult = {
-        data: {
-          todos: [
-            {
-              id: "1",
-              name: "Todo 1",
-              description: "Description 1",
-              __typename: "todos",
-            },
-          ],
+    const queryTodosResult = {
+      data: {
+        todos: [
+          {
+            id: "1",
+            name: "Todo 1",
+            description: "Description 1",
+            __typename: "todos",
+          },
+        ],
+      },
+    };
+
+    const mutationTodo = gql`
+      mutation createTodo {
+        createTodo {
+          id
+          name
+          # missing field: description
+          __typename
+        }
+      }
+    `;
+
+    const mutationTodoResult = {
+      data: {
+        createTodo: {
+          id: "2",
+          name: "Todo 2",
+          __typename: "createTodo",
         },
-      };
+      },
+    };
 
-      const mutationTodo = gql`
-        mutation createTodo {
-          createTodo {
-            id
-            name
-            # missing field: description
-            __typename
-          }
-        }
-      `;
+    const { client, obsQuery } = setupObsQuery(
+      {
+        request: { query: queryTodos },
+        result: queryTodosResult,
+      },
+      {
+        request: { query: mutationTodo },
+        result: mutationTodoResult,
+      }
+    );
 
-      const mutationTodoResult = {
-        data: {
-          createTodo: {
-            id: "2",
-            name: "Todo 2",
-            __typename: "createTodo",
+    await new Promise((resolve) => obsQuery.subscribe(resolve));
+
+    // we have to actually subscribe to the query to be able to update it
+    await new Promise((resolve) => {
+      handle = client.watchQuery({ query: queryTodos });
+      subscriptionHandle = handle.subscribe({
+        next(res: any) {
+          resolve(res);
+        },
+      });
+    });
+
+    await client
+      .mutate({
+        mutation: mutationTodo,
+        updateQueries: {
+          todos: (prev, { mutationResult }) => {
+            const newTodo = (mutationResult as any).data.createTodo;
+            const newResults = {
+              todos: [...(prev as any).todos, newTodo],
+            };
+            return newResults;
           },
         },
-      };
-
-      const { client, obsQuery } = setupObsQuery(
-        {
-          request: { query: queryTodos },
-          result: queryTodosResult,
-        },
-        {
-          request: { query: mutationTodo },
-          result: mutationTodoResult,
-        }
-      );
-
-      return obsQuery
-        .result()
-        .then(() => {
-          // we have to actually subscribe to the query to be able to update it
-          return new Promise((resolve) => {
-            handle = client.watchQuery({ query: queryTodos });
-            subscriptionHandle = handle.subscribe({
-              next(res: any) {
-                resolve(res);
-              },
-            });
-          });
-        })
-        .then(() =>
-          client.mutate({
-            mutation: mutationTodo,
-            updateQueries: {
-              todos: (prev, { mutationResult }) => {
-                const newTodo = (mutationResult as any).data.createTodo;
-                const newResults = {
-                  todos: [...(prev as any).todos, newTodo],
-                };
-                return newResults;
-              },
-            },
-          })
-        )
-        .finally(() => subscriptionHandle.unsubscribe())
-        .then((result) => {
-          expect(result).toEqual(mutationTodoResult);
-        })
-        .then(resolve, reject);
-    });
+      })
+      .finally(() => subscriptionHandle.unsubscribe())
+      .then((result) => {
+        expect(result).toEqual(mutationTodoResult);
+      });
   });
 
   describe("InMemoryCache type/field policies", () => {
@@ -763,8 +758,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await obsQuery
-        .result()
+      await new Promise((resolve) => obsQuery.subscribe(resolve))
         .then(() => {
           // we have to actually subscribe to the query to be able to update it
           return new Promise((resolve) => {
@@ -833,7 +827,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await obsQuery.result();
+      await new Promise((resolve) => obsQuery.subscribe(resolve));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -981,7 +975,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await obsQuery.result();
+      await new Promise((resolve) => obsQuery.subscribe(resolve));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -1364,7 +1358,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await obsQuery.result();
+      await new Promise((resolve) => obsQuery.subscribe(resolve));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -1442,7 +1436,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await obsQuery.result();
+      await new Promise((resolve) => obsQuery.subscribe(resolve));
 
       // we have to actually subscribe to the query to be able to update it
 
@@ -1590,7 +1584,7 @@ describe("mutation results", () => {
         result: mutationResult,
       });
 
-      await obsQuery.result();
+      await new Promise((resolve) => obsQuery.subscribe(resolve));
       // we have to actually subscribe to the query to be able to update it
 
       const handle = client.watchQuery({ query });

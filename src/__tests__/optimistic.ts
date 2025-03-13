@@ -142,7 +142,12 @@ describe("optimistic mutation results", () => {
     });
 
     const obsHandle = client.watchQuery({ query });
-    await obsHandle.result();
+    await new Promise((resolve) => {
+      const subscription = obsHandle.subscribe((value) => {
+        resolve(value);
+        setTimeout(() => subscription.unsubscribe());
+      });
+    });
 
     return client;
   }
@@ -2267,7 +2272,12 @@ describe("optimistic mutation - githunt comments", () => {
       variables,
     });
 
-    await obsHandle.result();
+    await new Promise((resolve) => {
+      const subscription = obsHandle.subscribe((value) => {
+        resolve(value);
+        setTimeout(() => subscription.unsubscribe());
+      });
+    });
 
     return client;
   }

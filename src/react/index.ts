@@ -1,4 +1,8 @@
-export type { ApolloContextValue } from "./context/index.js";
+export type {
+  ApolloConsumerProps,
+  ApolloContextValue,
+  ApolloProviderProps,
+} from "./context/index.js";
 export {
   ApolloConsumer,
   ApolloProvider,

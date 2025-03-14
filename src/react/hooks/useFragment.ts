@@ -1,5 +1,5 @@
 import equal from "@wry/equality";
-import * as React from "rehackt";
+import * as React from "react";
 
 import type {
   Cache,

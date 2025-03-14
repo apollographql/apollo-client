@@ -1,4 +1,4 @@
-import * as React from "rehackt";
+import * as React from "react";
 
 import type { ApolloClient } from "@apollo/client/core";
 import { getApolloContext } from "@apollo/client/react/context";

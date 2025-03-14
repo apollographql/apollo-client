@@ -1,5 +1,5 @@
 import type * as ReactTypes from "react";
-import * as React from "rehackt";
+import * as React from "react";
 
 import type { ApolloClient } from "@apollo/client/core";
 import { invariant } from "@apollo/client/utilities/invariant";

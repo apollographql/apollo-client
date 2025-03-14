@@ -49,7 +49,10 @@
     "./link/utils": "./src/link/utils/index.ts",
     "./link/ws": "./src/link/ws/index.ts",
     "./masking": "./src/masking/index.ts",
-    "./react": "./src/react/index.ts",
+    "./react": {
+      "react-server": "./src/react/index.react-server.ts",
+      "default": "./src/react/index.ts"
+    },
     "./react/context": "./src/react/context/index.ts",
     "./react/hooks": "./src/react/hooks/index.ts",
     "./react/internal": "./src/react/internal/index.ts",
@@ -149,7 +152,6 @@
     "@wry/trie": "^0.5.0",
     "graphql-tag": "^2.12.6",
     "optimism": "^0.18.0",
-    "rehackt": "^0.1.0",
     "tslib": "^2.3.0"
   },
   "devDependencies": {

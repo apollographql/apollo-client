@@ -1,4 +1,4 @@
-import * as React from "rehackt";
+import * as React from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {

@@ -3,6 +3,10 @@
 // A) JSDOM doesn't yet support the TextEncoder/TextDecoder globals added in node 11, meaning certain imports (e.g. reactSSR) will fail (See https://github.com/jsdom/jsdom/issues/2524)
 // B) We're just testing imports/exports, so no reason not to use Node for slightly better performance.
 
+import { resolve } from "node:path";
+
+import { $ } from "zx";
+
 import * as client from "@apollo/client";
 import * as cache from "@apollo/client/cache";
 import * as core from "@apollo/client/core";
@@ -51,6 +55,20 @@ describe("exports of public entry points", () => {
       expect(Object.keys(ns).sort()).toMatchSnapshot();
     });
   }
+  function checkWithConditions(id: string, conditions: string[]) {
+    test(`${id} with conditions [${conditions.join(",")}]`, async () => {
+      const exports = await $({
+        cwd: resolve(__dirname, "../../"),
+      })`node --experimental-transform-types --no-warnings ${conditions.flatMap(
+        (condition) => [`--conditions`, condition]
+      )} config/listImports.ts ${id}`;
+      expect(
+        exports.stdout.split("\n").filter((x) => x.trim() !== "")
+      ).toMatchSnapshot();
+    });
+  }
+
+  checkWithConditions("@apollo/client/react", ["react-server"]);
 
   check("@apollo/client", client);
   check("@apollo/client/cache", cache);
@@ -86,6 +104,7 @@ describe("exports of public entry points", () => {
   check("@apollo/client/utilities/globals", utilitiesGlobals);
   check("@apollo/client/utilities/invariant", utilitiesInvariant);
   check("@apollo/client/utilities/environment", utilitiesEnvironment);
+  expect();
 
   it("completeness", () => {
     const { join } = require("path").posix;

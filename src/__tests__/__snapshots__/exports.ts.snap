@@ -270,6 +270,31 @@ Array [
 ]
 `;
 
+exports[`exports of public entry points @apollo/client/react with conditions [react-server] 1`] = `
+Array [
+  "ApolloConsumer",
+  "ApolloProvider",
+  "DocumentType",
+  "createQueryPreloader",
+  "getApolloContext",
+  "operationName",
+  "parser",
+  "useApolloClient",
+  "useBackgroundQuery",
+  "useFragment",
+  "useLazyQuery",
+  "useLoadableQuery",
+  "useMutation",
+  "useQuery",
+  "useQueryRefHandlers",
+  "useReactiveVar",
+  "useReadQuery",
+  "useSubscription",
+  "useSuspenseFragment",
+  "useSuspenseQuery",
+]
+`;
+
 exports[`exports of public entry points @apollo/client/react/context 1`] = `
 Array [
   "ApolloConsumer",

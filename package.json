@@ -51,7 +51,7 @@
     "./link/ws": "./src/link/ws/index.ts",
     "./masking": "./src/masking/index.ts",
     "./react": {
-      "react-server": "./src/react-server/index.ts",
+      "react-server": "./src/react/index.react-server.ts",
       "default": "./src/react/index.ts"
     },
     "./react/context": "./src/react/context/index.ts",

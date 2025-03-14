@@ -856,7 +856,6 @@ describe("ApolloClient", () => {
         }
       `,
       notifyOnNetworkStatusChange: false,
-      canonizeResults: true,
     };
 
     const data1 = {
@@ -910,7 +909,7 @@ describe("ApolloClient", () => {
       const result = await stream.takeNext();
 
       expect(result.data).toEqual(data3);
-      expect(result.data).toBe(firstResultData);
+      expect(result.data).not.toBe(firstResultData);
     }
   });
 

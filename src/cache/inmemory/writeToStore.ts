@@ -276,9 +276,9 @@ export class StoreWriter {
     // pending in context.incomingById, which is important whenever keyFields
     // need to be extracted from a child object that processSelectionSet has
     // turned into a Reference.
-    const readField: ReadFieldFunction = function (this: void) {
+    const readField: ReadFieldFunction = (...args) => {
       const options = normalizeReadFieldOptions(
-        arguments,
+        args,
         incoming,
         context.variables
       );

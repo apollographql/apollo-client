@@ -1259,7 +1259,7 @@ class Layer extends EntityStore {
     // (undocumented)
     findChildRefIds(dataId: string): Record<string, true>;
     // (undocumented)
-    getStorage(): StorageType;
+    getStorage(...args: Parameters<EntityStore["getStorage"]>): StorageType;
     // (undocumented)
     readonly group: CacheGroup;
     // (undocumented)

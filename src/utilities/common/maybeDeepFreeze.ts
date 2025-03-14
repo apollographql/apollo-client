@@ -18,7 +18,7 @@ export function deepFreeze(value: any) {
 function shallowFreeze<T extends object>(obj: T): T | null {
   if (__DEV__ && !Object.isFrozen(obj)) {
     try {
-      maybeDeepFreeze.freezeFn(obj);
+      Object.freeze(obj);
     } catch (e) {
       // Some types like Uint8Array and Node.js's Buffer cannot be frozen, but
       // they all throw a TypeError when you try, so we re-throw any exceptions
@@ -36,4 +36,3 @@ export function maybeDeepFreeze<T>(obj: T): T {
   }
   return obj;
 }
-maybeDeepFreeze.freezeFn = Object.freeze.bind(Object);

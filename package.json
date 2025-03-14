@@ -59,10 +59,7 @@
     "./testing/core": "./src/testing/core/index.ts",
     "./testing/experimental": "./src/testing/experimental/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
-    "./utilities": {
-      "react-native": "./src/utilities/index.react-native.ts",
-      "default": "./src/utilities/index.ts"
-    },
+    "./utilities": "./src/utilities/index.ts",
     "./utilities/internal": "./src/utilities/internal/index.ts",
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/globals": "./src/utilities/globals/index.ts",

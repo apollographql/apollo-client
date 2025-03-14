@@ -50,7 +50,10 @@
     "./link/utils": "./src/link/utils/index.ts",
     "./link/ws": "./src/link/ws/index.ts",
     "./masking": "./src/masking/index.ts",
-    "./react": "./src/react/index.ts",
+    "./react": {
+      "react-server": "./src/react-server/index.ts",
+      "default": "./src/react/index.ts"
+    },
     "./react/context": "./src/react/context/index.ts",
     "./react/hooks": "./src/react/hooks/index.ts",
     "./react/internal": "./src/react/internal/index.ts",

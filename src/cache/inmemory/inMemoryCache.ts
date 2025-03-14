@@ -23,9 +23,9 @@ import {
   print,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
 

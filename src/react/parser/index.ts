@@ -11,9 +11,8 @@ import {
   defaultCacheSizes,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { registerGlobalCache } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
-
-import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
 
 export enum DocumentType {
   Query,

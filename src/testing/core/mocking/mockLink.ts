@@ -14,10 +14,10 @@ import {
   cloneDeep,
   getDefaultValues,
   getOperationDefinition,
+  makeUniqueId,
   print,
   removeClientSetsFromDocument,
   removeDirectivesFromDocument,
-  makeUniqueId,
 } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 

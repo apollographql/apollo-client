@@ -119,6 +119,7 @@ export function useSubscription<
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
 
+  // eslint-disable-next-line react-compiler/react-compiler
   if (!hasIssuedDeprecationWarningRef.current) {
     // eslint-disable-next-line react-compiler/react-compiler
     hasIssuedDeprecationWarningRef.current = true;

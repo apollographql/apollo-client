@@ -1,5 +1,5 @@
 import type { Subscription } from "rxjs";
-import { Observable, EMPTY } from "rxjs";
+import { EMPTY, Observable } from "rxjs";
 
 import type {
   FetchResult,

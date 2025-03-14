@@ -240,7 +240,6 @@ export function useLazyQuery<
       const previousData = resultRef.current?.data;
 
       if (previousData && !equal(previousData, result.data)) {
-        // eslint-disable-next-line react-compiler/react-compiler
         previousDataRef.current = previousData;
       }
 
@@ -275,6 +274,7 @@ export function useLazyQuery<
   const eagerMethods = React.useMemo(() => {
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
+      // eslint-disable-next-line react-compiler/react-compiler
       eagerMethods[key] = function () {
         invariant(
           resultRef.current,
@@ -373,9 +373,11 @@ export function useLazyQuery<
       ...eagerMethods,
       ...observableResult,
       client,
+      // eslint-disable-next-line react-compiler/react-compiler
       previousData: previousDataRef.current,
       variables: observable.variables,
       observable,
+      // eslint-disable-next-line react-compiler/react-compiler
       called: !!resultRef.current,
     }),
     [client, observableResult, eagerMethods, observable]

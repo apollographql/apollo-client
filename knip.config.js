@@ -39,6 +39,7 @@ const config = {
     ".yalc/**/*",
     "config/schema.package.json.ts",
     "src/config/jest/resolver.ts",
+    "config/listImports.ts",
   ],
   ignoreBinaries: ["jq"],
   ignoreDependencies: [

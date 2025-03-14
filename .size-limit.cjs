@@ -32,7 +32,6 @@ const checks = [
     brotli: true,
     ignore: [
       ...(config.ignore || []),
-      "rehackt",
       "react",
       "react-dom",
       "@graphql-typed-document-node/core",

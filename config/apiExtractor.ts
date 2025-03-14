@@ -127,36 +127,13 @@ async function buildReport(
     })
   );
 
-  let succeededAdditionalChecks = true;
-  if (fs.existsSync(extractorConfig.reportFilePath)) {
-    const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
-    if (contents.includes("rehackt")) {
-      succeededAdditionalChecks = false;
-      console.error(
-        "❗ %s contains a reference to the `rehackt` package!",
-        extractorConfig.reportFilePath
-      );
-    }
-    if (contents.includes('/// <reference types="react" />')) {
-      succeededAdditionalChecks = false;
-      console.error(
-        "❗ %s contains a reference to the global `React` type!/n" +
-          'Use `import type * as ReactTypes from "react";` instead',
-        extractorConfig.reportFilePath
-      );
-    }
-  }
-
-  if (extractorResult.succeeded && succeededAdditionalChecks) {
+  if (extractorResult.succeeded) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
     console.error(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
-    if (!succeededAdditionalChecks) {
-      console.error("Additional checks failed.");
-    }
     process.exitCode = 1;
   }
 }

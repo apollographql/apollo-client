@@ -1,7 +1,7 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
 import type { DocumentNode } from "graphql";
-import * as React from "rehackt";
+import * as React from "react";
 
 import type {
   ApolloClient,

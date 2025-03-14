@@ -1,6 +1,6 @@
 import type * as ReactTypes from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import * as React from "rehackt";
+import * as React from "react";
 
 import { getApolloContext } from "@apollo/client/react/context";
 

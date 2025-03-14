@@ -1,4 +1,4 @@
-import * as React from "rehackt";
+import * as React from "react";
 
 import { canUseLayoutEffect } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";

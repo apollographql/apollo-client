@@ -1,4 +1,4 @@
-import * as React from "rehackt";
+import * as React from "react";
 
 import type { OperationVariables } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";

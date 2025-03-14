@@ -1,6 +1,6 @@
 import { equal } from "@wry/equality";
 import type { DependencyList } from "react";
-import * as React from "rehackt";
+import * as React from "react";
 
 export function useDeepMemo<TValue>(
   memoFn: () => TValue,

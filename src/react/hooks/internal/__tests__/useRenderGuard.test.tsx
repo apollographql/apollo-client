@@ -1,5 +1,5 @@
 /* eslint-disable testing-library/render-result-naming-convention */
-import * as React from "rehackt";
+import * as React from "react";
 import { render, waitFor } from "@testing-library/react";
 
 import { useRenderGuard } from "../useRenderGuard.js";

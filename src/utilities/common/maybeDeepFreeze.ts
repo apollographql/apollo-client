@@ -3,10 +3,10 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { isNonNullObject } from "./objects.js";
 
 /** @internal only to be imported in tests */
-export function deepFreeze(value: any, freezeFn: (obj: any) => void) {
+export function deepFreeze(value: any) {
   const workSet = new Set([value]);
   workSet.forEach((obj) => {
-    if (isNonNullObject(obj) && shallowFreeze(obj, freezeFn) === obj) {
+    if (isNonNullObject(obj) && shallowFreeze(obj) === obj) {
       Object.getOwnPropertyNames(obj).forEach((name) => {
         if (isNonNullObject(obj[name])) workSet.add(obj[name]);
       });
@@ -15,13 +15,10 @@ export function deepFreeze(value: any, freezeFn: (obj: any) => void) {
   return value;
 }
 
-function shallowFreeze<T extends object>(
-  obj: T,
-  freezeFn: (obj: any) => void
-): T | null {
+function shallowFreeze<T extends object>(obj: T): T | null {
   if (__DEV__ && !Object.isFrozen(obj)) {
     try {
-      freezeFn(obj);
+      maybeDeepFreeze.freezeFn(obj);
     } catch (e) {
       // Some types like Uint8Array and Node.js's Buffer cannot be frozen, but
       // they all throw a TypeError when you try, so we re-throw any exceptions
@@ -35,7 +32,7 @@ function shallowFreeze<T extends object>(
 
 export function maybeDeepFreeze<T>(obj: T): T {
   if (__DEV__) {
-    deepFreeze(obj, maybeDeepFreeze.freezeFn);
+    deepFreeze(obj);
   }
   return obj;
 }

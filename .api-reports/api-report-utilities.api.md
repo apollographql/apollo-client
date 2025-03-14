@@ -1608,6 +1608,18 @@ export function maybe<T>(thunk: () => T): T | undefined;
 // @public (undocumented)
 export function maybeDeepFreeze<T>(obj: T): T;
 
+// @public (undocumented)
+export namespace maybeDeepFreeze {
+    var // (undocumented)
+    freezeFn: {
+        <T extends Function>(f: T): T;
+        <T extends {
+            [idx: string]: U | null | undefined | object;
+        }, U extends string | bigint | number | boolean | symbol>(o: T): Readonly<T>;
+        <T>(o: T): Readonly<T>;
+    };
+}
+
 // Warning: (ae-forgotten-export) The symbol "DataMasking" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveMaskedMarker" needs to be exported by the entry point index.d.ts
 //

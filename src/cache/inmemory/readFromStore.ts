@@ -62,7 +62,6 @@ import type {
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
   policies: Policies;
-  canonizeResults: boolean;
   fragmentMap: FragmentMap;
   lookupFragment: FragmentMapFunction;
 }
@@ -89,7 +88,6 @@ type ExecSubSelectedArrayOptions = {
 interface StoreReaderConfig {
   cache: InMemoryCache;
   resultCacheMaxSize?: number;
-  canonizeResults?: boolean;
   canon?: ObjectCanon;
   fragments?: InMemoryCacheConfig["fragments"];
 }
@@ -133,7 +131,6 @@ export class StoreReader {
   private config: {
     cache: InMemoryCache;
     resultCacheMaxSize?: number;
-    canonizeResults: boolean;
     fragments?: InMemoryCacheConfig["fragments"];
   };
 

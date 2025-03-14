@@ -1,17 +1,17 @@
-import gql from "graphql-tag";
+import type { DocumentNode, FragmentSpreadNode } from "graphql";
+import { BREAK, visit } from "graphql";
+import { gql } from "graphql-tag";
 import { cloneDeep } from "lodash";
 
-import { getQueryDefinition } from "../getFromAST";
+import { spyOnConsole } from "../../../testing/internal/index.js";
 import {
-  shouldInclude,
-  hasDirectives,
-  hasAnyDirectives,
-  hasAllDirectives,
   getFragmentMaskMode,
-} from "../directives";
-import { spyOnConsole } from "../../../testing/internal";
-import { BREAK, visit } from "graphql";
-import type { DocumentNode, FragmentSpreadNode } from "graphql";
+  hasAllDirectives,
+  hasAnyDirectives,
+  hasDirectives,
+  shouldInclude,
+} from "../directives.js";
+import { getQueryDefinition } from "../getFromAST.js";
 
 describe("hasDirectives", () => {
   it("should allow searching the ast for a directive", () => {

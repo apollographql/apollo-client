@@ -1,45 +1,46 @@
-import React, { useEffect } from "react";
-import { GraphQLError } from "graphql";
-import gql from "graphql-tag";
 import { act } from "@testing-library/react";
-import { render, waitFor, screen, renderHook } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { expectTypeOf } from "expect-type";
 import fetchMock from "fetch-mock";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import React, { useEffect } from "react";
+import { Observable } from "rxjs";
 
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
-  ApolloError,
   ApolloLink,
   ApolloQueryResult,
   Cache,
+  CombinedGraphQLErrors,
   NetworkStatus,
-  Observable,
   ObservableQuery,
   TypedDocumentNode,
-} from "../../../core";
-import { InMemoryCache } from "../../../cache";
+} from "@apollo/client/core";
+import { BatchHttpLink } from "@apollo/client/link/batch-http";
+import { FetchResult } from "@apollo/client/link/core";
+import { Masked } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
-  MockedProvider,
-  MockSubscriptionLink,
-  mockSingleLink,
   MockedResponse,
   MockLink,
-} from "../../../testing";
-import { ApolloProvider } from "../../context";
-import { useQuery } from "../useQuery";
-import { useMutation } from "../useMutation";
-import { BatchHttpLink } from "../../../link/batch-http";
-import { FetchResult } from "../../../link/core";
-import { spyOnConsole } from "../../../testing/internal";
-import { expectTypeOf } from "expect-type";
-import { Masked } from "../../../masking";
-import {
-  disableActEnvironment,
-  createRenderStream,
-  renderHookToSnapshotStream,
-} from "@testing-library/react-render-stream";
-import { MutationTuple, QueryResult } from "../../types/types";
-import { invariant } from "../../../utilities/globals";
+  mockSingleLink,
+  MockSubscriptionLink,
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { MutationTuple, QueryResult } from "../../types/types.js";
+import { useMutation } from "../useMutation.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -338,9 +339,18 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchResult.data).toBe(undefined);
-        expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+        // TODO: This should either be an `error` property or it should be the
+        // raw error array. This value is a lie against the TypeScript type.
+        // This will be fixed by https://github.com/apollographql/apollo-client/issues/7167
+        // when we address the issue with onError.
+        expect(fetchResult.errors).toEqual(
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        );
         expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+        expect(onError).toHaveBeenLastCalledWith(
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          expect.anything()
+        );
       });
 
       it("should reject when there’s only an error and no error policy is set", async () => {
@@ -381,7 +391,7 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchError).toEqual(
-          new ApolloError({ graphQLErrors: [{ message: CREATE_TODO_ERROR }] })
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
         );
       });
 
@@ -501,9 +511,12 @@ describe("useMutation Hook", () => {
         });
 
         expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
-        expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
+        expect(fetchResult.errors).toEqual([{ message: CREATE_TODO_ERROR }]);
         expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+        expect(onError).toHaveBeenLastCalledWith(
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          expect.anything()
+        );
         expect(onCompleted).not.toHaveBeenCalled();
       });
 
@@ -968,13 +981,13 @@ describe("useMutation Hook", () => {
 
       expect(fetchResult).toEqual({
         data: undefined,
-        errors: new ApolloError({ graphQLErrors: errors }),
+        errors: new CombinedGraphQLErrors(errors),
       });
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ graphQLErrors: errors }),
+        new CombinedGraphQLErrors(errors),
         expect.objectContaining({ variables })
       );
     });
@@ -1066,14 +1079,14 @@ describe("useMutation Hook", () => {
 
       expect(fetchResult).toEqual({
         data: undefined,
-        errors: new ApolloError({ graphQLErrors: errors }),
+        errors: new CombinedGraphQLErrors(errors),
       });
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onError1).toHaveBeenCalledTimes(1);
       expect(onError1).toHaveBeenCalledWith(
-        new ApolloError({ graphQLErrors: errors }),
+        new CombinedGraphQLErrors(errors),
         expect.objectContaining({ variables })
       );
     });
@@ -1900,12 +1913,13 @@ describe("useMutation Hook", () => {
             todoCount: 1,
           },
         });
-        expect(onUpdateResult.result).toEqual({
+        expect(onUpdateResult.result).toEqualApolloQueryResult({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
             todoCount: 1,
           },
+          partial: false,
         });
       });
 
@@ -2865,7 +2879,9 @@ describe("useMutation Hook", () => {
       });
 
       await waitFor(() => {
-        expect(fetchResult.errors.message).toBe(CREATE_TODO_ERROR);
+        expect(fetchResult.errors).toEqual(
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+        );
       });
       await waitFor(() => {
         expect(fetchResult.data).toBe(undefined);
@@ -2874,7 +2890,10 @@ describe("useMutation Hook", () => {
         expect(onError).toHaveBeenCalledTimes(1);
       });
       await waitFor(() => {
-        expect(onError.mock.calls[0][0].message).toBe(CREATE_TODO_ERROR);
+        expect(onError).toHaveBeenLastCalledWith(
+          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          expect.anything()
+        );
       });
       await waitFor(() => {
         expect(consoleSpies.error).not.toHaveBeenCalled();

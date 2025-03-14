@@ -1,8 +1,9 @@
 import { FragmentSpreadNode, Kind, visit } from "graphql";
+import { of } from "rxjs";
+
 import {
   ApolloCache,
   ApolloClient,
-  ApolloError,
   ApolloLink,
   Cache,
   DataProxy,
@@ -10,21 +11,23 @@ import {
   FetchPolicy,
   gql,
   InMemoryCache,
-  Observable,
+  NetworkStatus,
   Reference,
   TypedDocumentNode,
-} from "../core";
+} from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { MaskedDocumentNode } from "@apollo/client/masking";
 import {
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { invariant } from "../utilities/globals";
-import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry";
-import { isSubscriptionOperation } from "../utilities";
-import { MaskedDocumentNode } from "../masking";
+} from "@apollo/client/testing";
+import { isSubscriptionOperation } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { createFragmentRegistry } from "../cache/inmemory/fragmentRegistry.js";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 const NO_CACHE_WARNING =
   '[%s]: Fragments masked by data masking are inaccessible when using fetch policy "no-cache". Please add `@unmask` to each fragment spread to access the data.';
@@ -920,7 +923,7 @@ describe("client.watchQuery", () => {
       currentUser: {
         __typename: "User";
         id: number;
-        name: string;
+        name: string | null;
       } & { " $fragmentRefs"?: { UserFieldsFragment: UserFieldsFragment } };
     }
 
@@ -966,19 +969,19 @@ describe("client.watchQuery", () => {
 
     const stream = new ObservableStream(observable);
 
-    {
-      const { data, errors } = await stream.takeNext();
-
-      expect(data).toEqual({
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
         currentUser: {
           __typename: "User",
           id: 1,
           name: null,
         },
-      });
-
-      expect(errors).toEqual([{ message: "Couldn't get name" }]);
-    }
+      },
+      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
   });
 
   it.each([
@@ -1126,13 +1129,13 @@ describe("client.watchQuery", () => {
 
     {
       const { data } = await stream.takeNext();
-      data.currentUser.__typename;
-      data.currentUser.id;
-      data.currentUser.name;
+      data!.currentUser.__typename;
+      data!.currentUser.id;
+      data!.currentUser.name;
 
       expect(consoleSpy.warn).not.toHaveBeenCalled();
 
-      data.currentUser.age;
+      data!.currentUser.age;
 
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
       expect(consoleSpy.warn).toHaveBeenCalledWith(
@@ -1142,7 +1145,7 @@ describe("client.watchQuery", () => {
       );
 
       // Ensure we only warn once
-      data.currentUser.age;
+      data!.currentUser.age;
       expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
     }
   });
@@ -1208,7 +1211,7 @@ describe("client.watchQuery", () => {
 
     const { data } = await stream.takeNext();
 
-    const id = client.cache.identify(data.currentUser);
+    const id = client.cache.identify(data!.currentUser);
 
     expect(consoleSpy.warn).not.toHaveBeenCalled();
     expect(id).toEqual("User:1");
@@ -1272,7 +1275,7 @@ describe("client.watchQuery", () => {
     const { data } = await queryStream.takeNext();
     const fragmentObservable = client.watchFragment({
       fragment,
-      from: data.currentUser,
+      from: data!.currentUser,
     });
 
     const fragmentStream = new ObservableStream(fragmentObservable);
@@ -1345,7 +1348,7 @@ describe("client.watchQuery", () => {
     const { data } = await queryStream.takeNext();
     const fragmentObservable = client.watchFragment({
       fragment,
-      from: data.currentUser,
+      from: data!.currentUser,
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -1422,7 +1425,7 @@ describe("client.watchQuery", () => {
     const { data } = await queryStream.takeNext();
     const fragmentObservable = client.watchFragment({
       fragment,
-      from: data.currentUser,
+      from: data!.currentUser,
     });
 
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -1478,7 +1481,7 @@ describe("client.watchQuery", () => {
       dataMasking: true,
       cache: new InMemoryCache({ fragments }),
       link: new ApolloLink(() => {
-        return Observable.of({
+        return of({
           data: {
             currentUser: {
               __typename: "User",
@@ -3828,9 +3831,7 @@ describe("client.query", () => {
     });
 
     await expect(client.query({ query, errorPolicy: "none" })).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      })
+      new CombinedGraphQLErrors([{ message: "User not logged in" }])
     );
   });
 
@@ -3865,13 +3866,15 @@ describe("client.query", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+    const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(data).toEqual({
-      currentUser: null,
+    expect(result).toEqualApolloQueryResult({
+      data: { currentUser: null },
+      error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
     });
-
-    expect(errors).toEqual([{ message: "User not logged in" }]);
   });
 
   test("masks fragment data in fields nulled by errors when using errorPolicy `all`", async () => {
@@ -3912,17 +3915,23 @@ describe("client.query", () => {
       link: new MockLink(mocks),
     });
 
-    const { data, errors } = await client.query({ query, errorPolicy: "all" });
+    const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(data).toEqual({
-      currentUser: {
-        __typename: "User",
-        id: 1,
-        name: "Test User",
+    expect(result).toEqualApolloQueryResult({
+      data: {
+        currentUser: {
+          __typename: "User",
+          id: 1,
+          name: "Test User",
+        },
       },
+      error: new CombinedGraphQLErrors([
+        { message: "Could not determine age" },
+      ]),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
     });
-
-    expect(errors).toEqual([{ message: "Could not determine age" }]);
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {
@@ -4381,7 +4390,7 @@ describe("client.subscribe", () => {
     const error = await stream.takeError();
 
     expect(error).toEqual(
-      new ApolloError({ graphQLErrors: [{ message: "Something went wrong" }] })
+      new CombinedGraphQLErrors([{ message: "Something went wrong" }])
     );
   });
 
@@ -5468,9 +5477,7 @@ describe("client.mutate", () => {
     await expect(
       client.mutate({ mutation, errorPolicy: "none" })
     ).rejects.toEqual(
-      new ApolloError({
-        graphQLErrors: [{ message: "User not logged in" }],
-      })
+      new CombinedGraphQLErrors([{ message: "User not logged in" }])
     );
   });
 
@@ -5883,7 +5890,7 @@ describe("client.mutate", () => {
 
 class TestCache extends ApolloCache<unknown> {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return {};
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {

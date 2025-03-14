@@ -1,11 +1,12 @@
-import gql from "graphql-tag";
-import { MockLink, MockedResponse } from "../mockLink";
-import { execute } from "../../../../link/core/execute";
+import { gql } from "graphql-tag";
+
+import { execute } from "../../../../link/core/execute.js";
 import {
-  ObservableStream,
   enableFakeTimers,
+  ObservableStream,
   spyOnConsole,
-} from "../../../internal";
+} from "../../../internal/index.js";
+import { MockedResponse, MockLink } from "../mockLink.js";
 
 describe("MockedResponse.newData", () => {
   const setup = () => {
@@ -168,7 +169,7 @@ describe("mockLink", () => {
     // in the operation before calling the Link, so we have to do the same here
     // when we call `execute`
     const defaults = { done: true };
-    const link = new MockLink(mocks, false, { showWarnings: false });
+    const link = new MockLink(mocks, { showWarnings: false });
     {
       // Non-optional variable is missing, should not match.
       const stream = new ObservableStream(

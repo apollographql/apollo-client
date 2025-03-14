@@ -1,18 +1,23 @@
+import type { GraphQLResponse, RequestParameters } from "relay-runtime";
 import { Observable } from "relay-runtime";
-import type { RequestParameters, GraphQLResponse } from "relay-runtime";
+
+import type { OperationVariables } from "@apollo/client/core";
+import { serializeFetchParameter } from "@apollo/client/core";
+import { maybe } from "@apollo/client/utilities";
+
 import {
   handleError,
   readMultipartBody,
 } from "../../../link/http/parseAndCheckHttpResponse.js";
-import { maybe } from "../../index.js";
-import { serializeFetchParameter } from "../../../core/index.js";
-
-import type { OperationVariables } from "../../../core/index.js";
 import type { Body } from "../../../link/http/selectHttpOptionsAndBody.js";
-import { generateOptionsForMultipartSubscription } from "../shared.js";
-import type { CreateMultipartSubscriptionOptions } from "../shared.js";
+import { fallbackHttpConfig } from "../../../link/http/selectHttpOptionsAndBody.js";
 
 const backupFetch = maybe(() => fetch);
+
+type CreateMultipartSubscriptionOptions = {
+  fetch?: WindowOrWorkerGlobalScope["fetch"];
+  headers?: Record<string, string>;
+};
 
 export function createFetchMultipartSubscription(
   uri: string,
@@ -57,4 +62,19 @@ export function createFetchMultipartSubscription(
         });
     });
   };
+}
+
+function generateOptionsForMultipartSubscription(
+  headers: Record<string, string>
+) {
+  const options: { headers: Record<string, any>; body?: string } = {
+    ...fallbackHttpConfig.options,
+    headers: {
+      ...(headers || {}),
+      ...fallbackHttpConfig.headers,
+      accept:
+        "multipart/mixed;boundary=graphql;subscriptionSpec=1.0,application/json",
+    },
+  };
+  return options;
 }

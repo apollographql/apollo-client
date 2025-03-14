@@ -1,33 +1,36 @@
-import * as React from "rehackt";
-import { invariant } from "../../utilities/globals/index.js";
+import * as React from "react";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   ApolloQueryResult,
   DocumentNode,
+  ErrorLike,
+  FetchMoreQueryOptions,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
-  FetchMoreQueryOptions,
   WatchQueryOptions,
-} from "../../core/index.js";
-import { ApolloError, NetworkStatus } from "../../core/index.js";
-import type { SubscribeToMoreFunction } from "../../core/watchQueryOptions.js";
-import type { DeepPartial } from "../../utilities/index.js";
-import { isNonEmptyArray } from "../../utilities/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
+} from "@apollo/client/core";
+import type { SubscribeToMoreFunction } from "@apollo/client/core";
+import { NetworkStatus } from "@apollo/client/core";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
-  SuspenseQueryHookOptions,
-  ObservableQueryFields,
   NoInfer,
-} from "../types/types.js";
-import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
-import { getSuspenseCache } from "../internal/index.js";
-import { canonicalStringify } from "../../cache/index.js";
-import { skipToken } from "./constants.js";
+  ObservableQueryFields,
+  SuspenseQueryHookOptions,
+} from "@apollo/client/react";
+import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
+import { getSuspenseCache } from "@apollo/client/react/internal";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import type { DeepPartial } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import type { SkipToken } from "./constants.js";
-import type { CacheKey, QueryKey } from "../internal/index.js";
-import type { MaybeMasked, Unmasked } from "../../masking/index.js";
+import { skipToken } from "./constants.js";
+import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 export interface UseSuspenseQueryResult<
   TData = unknown,
@@ -35,7 +38,7 @@ export interface UseSuspenseQueryResult<
 > {
   client: ApolloClient<any>;
   data: MaybeMasked<TData>;
-  error: ApolloError | undefined;
+  error: ErrorLike | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
   networkStatus: NetworkStatus;
   refetch: RefetchFunction<TData, TVariables>;
@@ -170,7 +173,7 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables> = Object.create(null)
+    | SuspenseQueryHookOptions<TData, TVariables> = {}
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
@@ -238,14 +241,17 @@ function useSuspenseQuery_<
     };
   }, [queryRef]);
 
-  const skipResult = React.useMemo(() => {
-    const error = toApolloError(queryRef.result);
+  const skipResult = React.useMemo<ApolloQueryResult<TData>>(() => {
+    const error = queryRef.result.error;
+    const complete = !!queryRef.result.data;
 
     return {
       loading: false,
       data: queryRef.result.data,
       networkStatus: error ? NetworkStatus.error : NetworkStatus.ready,
       error,
+      complete,
+      partial: !complete,
     };
   }, [queryRef.result]);
 
@@ -283,7 +289,7 @@ function useSuspenseQuery_<
     return {
       client,
       data: result.data,
-      error: toApolloError(result),
+      error: result.error,
       networkStatus: result.networkStatus,
       fetchMore,
       refetch,
@@ -326,12 +332,6 @@ function validatePartialDataReturn(
       "Using `returnPartialData` with a `no-cache` fetch policy has no effect. To read partial data from the cache, consider using an alternate fetch policy."
     );
   }
-}
-
-export function toApolloError(result: ApolloQueryResult<any>) {
-  return isNonEmptyArray(result.errors) ?
-      new ApolloError({ graphQLErrors: result.errors })
-    : result.error;
 }
 
 interface UseWatchQueryOptionsHookOptions<

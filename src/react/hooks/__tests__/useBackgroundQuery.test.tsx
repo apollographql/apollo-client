@@ -1,75 +1,77 @@
+import { act, renderHook, screen } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import equal from "@wry/equality";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
 import React, { Suspense } from "react";
-import { act, screen, renderHook } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import {
   ErrorBoundary as ReactErrorBoundary,
   FallbackProps,
 } from "react-error-boundary";
-import { expectTypeOf } from "expect-type";
-import { GraphQLError } from "graphql";
+import { Observable, of } from "rxjs";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
-  gql,
-  ApolloError,
   ApolloClient,
-  ErrorPolicy,
-  NetworkStatus,
-  TypedDocumentNode,
   ApolloLink,
-  Observable,
+  CombinedGraphQLErrors,
+  ErrorPolicy,
+  gql,
+  NetworkStatus,
   split,
-} from "../../../core";
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { QueryRef, QueryReference } from "@apollo/client/react/internal";
 import {
   MockedResponse,
   MockLink,
-  MockSubscriptionLink,
   mockSingleLink,
-  MockedProvider,
+  MockSubscriptionLink,
   wait,
-} from "../../../testing";
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
 import {
   concatPagination,
-  offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities";
-import { useBackgroundQuery } from "../useBackgroundQuery";
-import { UseReadQueryResult, useReadQuery } from "../useReadQuery";
-import { ApolloProvider } from "../../context";
-import { QueryRef, QueryReference } from "../../internal";
-import { InMemoryCache } from "../../../cache";
-import { SuspenseQueryHookFetchPolicy } from "../../types/types";
-import equal from "@wry/equality";
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+
 import {
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
   SubscribeToMoreFunction,
-} from "../../../core/watchQueryOptions";
-import { skipToken } from "../constants";
+  SubscribeToMoreOptions,
+} from "../../../core/watchQueryOptions.js";
 import {
-  PaginatedCaseData,
-  SimpleCaseData,
-  VariablesCaseData,
-  VariablesCaseVariables,
-  createMockWrapper,
+  addDelayToMocks,
   createClientWrapper,
+  createMockWrapper,
+  PaginatedCaseData,
   setupPaginatedCase,
   setupSimpleCase,
   setupVariablesCase,
+  SimpleCaseData,
   spyOnConsole,
-  addDelayToMocks,
-} from "../../../testing/internal";
+  VariablesCaseData,
+  VariablesCaseVariables,
+} from "../../../testing/internal/index.js";
 import {
   MaskedVariablesCaseData,
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
-} from "../../../testing/internal/scenarios";
-import { Masked, MaskedDocumentNode } from "../../../masking";
-import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-} from "@testing-library/react-render-stream";
+} from "../../../testing/internal/scenarios/index.js";
+import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
+import { skipToken } from "../constants.js";
+import { useBackgroundQuery } from "../useBackgroundQuery.js";
+import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
 
 afterEach(() => {
   jest.useRealTimers();
@@ -805,16 +807,12 @@ it("allows the client to be overridden", async () => {
   const { query } = setupSimpleCase();
 
   const globalClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "global hello" } })
-    ),
+    link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
     cache: new InMemoryCache(),
   });
 
   const localClient = new ApolloClient({
-    link: new ApolloLink(() =>
-      Observable.of({ data: { greeting: "local hello" } })
-    ),
+    link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
     cache: new InMemoryCache(),
   });
 
@@ -2691,7 +2689,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
       error: null,
       result: {
         data: { greeting: "Hello" },
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors([{ message: "oops" }]),
         networkStatus: NetworkStatus.error,
       },
     });
@@ -3436,7 +3434,7 @@ it("properly handles changing options along with changing `variables`", async ()
             name: "Doctor Strangecache",
           },
         },
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors([{ message: "oops" }]),
         networkStatus: NetworkStatus.error,
       },
     });
@@ -5056,9 +5054,7 @@ it("masks partial data returned from data on errors with errorPolicy `all`", asy
           name: null,
         },
       },
-      error: new ApolloError({
-        graphQLErrors: [new GraphQLError("Couldn't get name")],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
       networkStatus: NetworkStatus.error,
     });
   }
@@ -5447,9 +5443,7 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual(["ErrorFallback"]);
       expect(snapshot.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError("Something went wrong")],
-        })
+        new CombinedGraphQLErrors([{ message: "Something went wrong" }])
       );
     }
 
@@ -5643,9 +5637,9 @@ describe("refetch", () => {
               name: "Spider-Man",
             },
           },
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Something went wrong")],
-          }),
+          error: new CombinedGraphQLErrors([
+            { message: "Something went wrong" },
+          ]),
           networkStatus: NetworkStatus.error,
         },
       });
@@ -5744,9 +5738,9 @@ describe("refetch", () => {
               name: null,
             },
           },
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Something went wrong")],
-          }),
+          error: new CombinedGraphQLErrors([
+            { message: "Something went wrong" },
+          ]),
           networkStatus: NetworkStatus.error,
         },
       });
@@ -5851,9 +5845,7 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
         result: null,
       });
     }
@@ -5874,9 +5866,7 @@ describe("refetch", () => {
         // TODO: We should reset the snapshot between renders to better capture
         // the actual result. This makes it seem like the error is rendered, but
         // in this is just leftover from the previous snapshot.
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
         result: {
           data: { todo: { id: "1", name: "Clean room", completed: true } },
           error: undefined,
@@ -5982,9 +5972,7 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Oops couldn't fetch" }]),
         result: null,
       });
     }
@@ -6002,9 +5990,9 @@ describe("refetch", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot).toEqual({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Oops couldn't fetch again")],
-        }),
+        error: new CombinedGraphQLErrors([
+          { message: "Oops couldn't fetch again" },
+        ]),
         result: null,
       });
     }
@@ -8273,7 +8261,7 @@ describe.skip("type tests", () => {
       const result = await refetch();
 
       expectTypeOf(result.data).toEqualTypeOf<
-        Masked<MaskedVariablesCaseData>
+        Masked<MaskedVariablesCaseData> | undefined
       >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
@@ -8283,7 +8271,9 @@ describe.skip("type tests", () => {
 
       const result = await refetch();
 
-      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+      expectTypeOf(result.data).toEqualTypeOf<
+        MaskedVariablesCaseData | undefined
+      >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });
@@ -8311,7 +8301,7 @@ describe.skip("type tests", () => {
       });
 
       expectTypeOf(result.data).toEqualTypeOf<
-        Masked<MaskedVariablesCaseData>
+        Masked<MaskedVariablesCaseData> | undefined
       >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
@@ -8335,7 +8325,9 @@ describe.skip("type tests", () => {
         },
       });
 
-      expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+      expectTypeOf(result.data).toEqualTypeOf<
+        MaskedVariablesCaseData | undefined
+      >();
       expectTypeOf(result.data).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
     }
   });

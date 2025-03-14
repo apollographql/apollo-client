@@ -1,20 +1,19 @@
-import gql from "graphql-tag";
 import { DocumentNode, ExecutionResult } from "graphql";
+import { gql } from "graphql-tag";
+import { of } from "rxjs";
 
-import { LocalState } from "../../core/LocalState";
-
+import { InMemoryCache, isReference } from "@apollo/client/cache";
 import {
   ApolloClient,
   ApolloQueryResult,
   NetworkStatus,
   Resolvers,
-} from "../../core";
+} from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockLink } from "@apollo/client/testing";
 
-import { InMemoryCache, isReference } from "../../cache";
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { ObservableStream } from "../../testing/internal";
-import { MockLink } from "../../testing";
+import { LocalState } from "../../core/LocalState.js";
+import { ObservableStream } from "../../testing/internal/index.js";
 
 const setupTestWithResolvers = ({
   resolvers,
@@ -36,7 +35,7 @@ const setupTestWithResolvers = ({
   delay?: number;
 }) => {
   const client = new ApolloClient({
-    cache: new InMemoryCache({ addTypename: false }),
+    cache: new InMemoryCache(),
     link: new MockLink([
       {
         request: { query: serverQuery || query, variables },
@@ -76,6 +75,7 @@ describe("Basic resolver capabilities", () => {
       data: { foo: { bar: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -121,6 +121,7 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -167,10 +168,11 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: {
         foo: { bar: true, __typename: "ClientData" },
-        bar: { baz: true },
+        bar: { baz: true, __typename: "Bar" },
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -232,6 +234,7 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -262,9 +265,10 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: 1 } },
+      data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -295,9 +299,10 @@ describe("Basic resolver capabilities", () => {
     });
 
     await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: 1 } },
+      data: { foo: { __typename: "Foo", bar: 1 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -354,8 +359,10 @@ describe("Basic resolver capabilities", () => {
     await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
+          __typename: "Author",
           name: "John Smith",
           stats: {
+            __typename: "Stats",
             totalPosts: 100,
             postsToday: 10,
           },
@@ -363,6 +370,7 @@ describe("Basic resolver capabilities", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -393,6 +401,7 @@ describe("Basic resolver capabilities", () => {
       data: { isInCart: false },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -551,13 +560,17 @@ describe("Basic resolver capabilities", () => {
       resolvers,
       query,
       serverQuery,
-      serverResult: { data: { bar: { baz: true } } },
+      serverResult: { data: { bar: { __typename: "Bar", baz: true } } },
     });
 
     await expect(stream).toEmitApolloQueryResult({
-      data: { foo: { bar: true }, bar: { baz: true } },
+      data: {
+        foo: { __typename: "Foo", bar: true },
+        bar: { __typename: "Bar", baz: true },
+      },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(barResolver).not.toHaveBeenCalled();
   });
@@ -597,6 +610,7 @@ describe("Writing cache data from resolvers", () => {
       data: { field: 1 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -654,6 +668,7 @@ describe("Writing cache data from resolvers", () => {
       data: { obj: { __typename: "Object", field: 2 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -724,6 +739,7 @@ describe("Writing cache data from resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });
@@ -744,7 +760,7 @@ describe("Resolving field aliases", () => {
     const link = new ApolloLink(() =>
       // Each link is responsible for implementing their own aliasing so it
       // returns baz not bar
-      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+      of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const client = new ApolloClient({
@@ -766,6 +782,7 @@ describe("Resolving field aliases", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -796,6 +813,7 @@ describe("Resolving field aliases", () => {
       data: { fie: { bar: true, __typename: "Foo" } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -813,7 +831,7 @@ describe("Resolving field aliases", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { baz: { foo: true, __typename: "Baz" } } })
+      of({ data: { baz: { foo: true, __typename: "Baz" } } })
     );
 
     const fie = jest.fn();
@@ -837,6 +855,7 @@ describe("Resolving field aliases", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -879,6 +898,7 @@ describe("Resolving field aliases", () => {
       data: { fie: { bar: "yo", __typename: "Foo" } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -897,7 +917,7 @@ describe("Resolving field aliases", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           launch: {
             id: 1,
@@ -941,6 +961,7 @@ describe("Resolving field aliases", () => {
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     // When the same query fires again, `isInCart` should be pulled from
@@ -949,6 +970,7 @@ describe("Resolving field aliases", () => {
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });
@@ -990,6 +1012,7 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     client.addResolvers({
@@ -1009,6 +1032,7 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1023,7 +1047,7 @@ describe("Force local resolvers", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           author: {
             name: "John Smith",
@@ -1057,6 +1081,7 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(count).toEqual(1);
   });
@@ -1195,6 +1220,7 @@ describe("Force local resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });
@@ -1224,6 +1250,7 @@ describe("Async resolvers", () => {
       data: { isLoggedIn: true },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -1245,7 +1272,7 @@ describe("Async resolvers", () => {
     };
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: {
           member: {
             name: testMember.name,
@@ -1283,6 +1310,7 @@ describe("Async resolvers", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 });

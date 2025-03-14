@@ -1,10 +1,10 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
+import { createOperation } from "../../utils/createOperation.js";
 import {
-  selectHttpOptionsAndBody,
   fallbackHttpConfig,
-} from "../selectHttpOptionsAndBody";
+  selectHttpOptionsAndBody,
+} from "../selectHttpOptionsAndBody.js";
 
 const query = gql`
   query SampleQuery {

@@ -1,20 +1,20 @@
-import * as React from "rehackt";
-import type { DeepPartial } from "../../utilities/index.js";
-import { mergeDeepArray } from "../../utilities/index.js";
+import equal from "@wry/equality";
+import * as React from "react";
+
 import type {
   Cache,
+  MissingTree,
   Reference,
   StoreObject,
-  MissingTree,
-} from "../../cache/index.js";
+} from "@apollo/client/cache";
+import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { NoInfer } from "@apollo/client/react";
+import type { DeepPartial } from "@apollo/client/utilities";
 
+import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloClient, OperationVariables } from "../../core/index.js";
-import type { NoInfer } from "../types/types.js";
-import { useDeepMemo, wrapHook } from "./internal/index.js";
-import equal from "@wry/equality";
-import type { FragmentType, MaybeMasked } from "../../masking/index.js";
 
 export interface UseFragmentOptions<TData, TVars>
   extends Omit<
@@ -39,6 +39,8 @@ export interface UseFragmentOptions<TData, TVars>
   client?: ApolloClient<any>;
 }
 
+// TODO: Update this to return `null` when there is no data returned from the
+// fragment.
 export type UseFragmentResult<TData> =
   | {
       data: MaybeMasked<TData>;
@@ -91,9 +93,9 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     if (from === null) {
       return {
         result: diffToResult({
-          result: {} as TData,
+          result: {},
           complete: false,
-        }),
+        } as Cache.DiffResult<TData>),
       };
     }
 
@@ -107,14 +109,18 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     });
 
     return {
-      result: diffToResult({
-        ...diff,
-        result: client["queryManager"].maskFragment({
-          fragment,
-          fragmentName,
-          data: diff.result,
-        }),
-      }),
+      result: diffToResult(
+        {
+          ...diff,
+          result: client["queryManager"].maskFragment({
+            fragment,
+            fragmentName,
+            // TODO: Revert to `diff.result` once `useFragment` supports `null` as
+            // valid return value
+            data: diff.result === null ? {} : diff.result,
+          }),
+        } as Cache.DiffResult<TData> // TODO: Remove assertion
+      ),
     };
   }, [client, stableOptions]);
 
@@ -161,12 +167,12 @@ function diffToResult<TData>(
   diff: Cache.DiffResult<TData>
 ): UseFragmentResult<TData> {
   const result = {
-    data: diff.result!,
+    data: diff.result,
     complete: !!diff.complete,
-  } as UseFragmentResult<TData>;
+  } as UseFragmentResult<TData>; // TODO: Remove assertion once useFragment returns null
 
   if (diff.missing) {
-    result.missing = mergeDeepArray(diff.missing.map((error) => error.missing));
+    result.missing = diff.missing.missing;
   }
 
   return result;

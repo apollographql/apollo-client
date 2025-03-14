@@ -1,9 +1,10 @@
-import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql"; // ignore-comment eslint-disable-line import/no-extraneous-dependencies, import/no-unresolved
+
+import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial, Reference } from "@apollo/client/utilities";
 
 import type { MissingFieldError } from "./common.js";
-import type { Reference } from "../../../utilities/index.js";
-import type { Unmasked } from "../../../masking/index.js";
 
 export namespace DataProxy {
   export interface Query<TVariables, TData> {
@@ -128,12 +129,19 @@ export namespace DataProxy {
       "data"
     > {}
 
-  export type DiffResult<T> = {
-    result?: T;
-    complete?: boolean;
-    missing?: MissingFieldError[];
-    fromOptimisticTransaction?: boolean;
-  };
+  export type DiffResult<T> =
+    | {
+        result: T;
+        complete: true;
+        missing?: never;
+        fromOptimisticTransaction?: boolean;
+      }
+    | {
+        result: DeepPartial<T> | null;
+        complete: false;
+        missing?: MissingFieldError;
+        fromOptimisticTransaction?: boolean;
+      };
 }
 
 /**

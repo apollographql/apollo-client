@@ -14,11 +14,10 @@
 // - Add both .changeset and CHANGELOG.md to an .npmignore so they are not
 //   included in the published package.
 
-const fs = require("fs");
-const path = require("path");
+import fs from "node:fs";
+import path from "node:path";
 
-const distRoot = `${__dirname}/../dist`;
-const srcDir = `${__dirname}/..`;
+const srcDir = `${import.meta.dirname}/..`;
 const destDir = `${srcDir}/dist`;
 
 // recursive copy function
@@ -36,6 +35,8 @@ function copyDir(src: string, dest: string) {
   }
 }
 
-fs.copyFileSync(`${srcDir}/CHANGELOG.md`, `${destDir}/CHANGELOG.md`);
-copyDir(`${srcDir}/.changeset`, `${destDir}/.changeset`);
-fs.writeFileSync(`${destDir}/.npmignore`, `.changeset\nCHANGELOG.md`);
+export async function prepareChangesetsRelease() {
+  fs.copyFileSync(`${srcDir}/CHANGELOG.md`, `${destDir}/CHANGELOG.md`);
+  copyDir(`${srcDir}/.changeset`, `${destDir}/.changeset`);
+  fs.writeFileSync(`${destDir}/.npmignore`, `.changeset\nCHANGELOG.md`);
+}

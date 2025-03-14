@@ -1,13 +1,14 @@
 import { Trie } from "@wry/trie";
+
 import type {
   ApolloClient,
   ObservableQuery,
   WatchFragmentOptions,
-} from "../../../core/index.js";
-import { canUseWeakMap } from "../../../utilities/index.js";
+} from "@apollo/client/core";
+
+import { FragmentReference } from "./FragmentReference.js";
 import { InternalQueryReference } from "./QueryReference.js";
 import type { CacheKey, FragmentCacheKey } from "./types.js";
-import { FragmentReference } from "./FragmentReference.js";
 
 export interface SuspenseCacheOptions {
   /**
@@ -24,16 +25,12 @@ export interface SuspenseCacheOptions {
 }
 
 export class SuspenseCache {
-  private queryRefs = new Trie<{ current?: InternalQueryReference }>(
-    canUseWeakMap
-  );
-  private fragmentRefs = new Trie<{ current?: FragmentReference }>(
-    canUseWeakMap
-  );
+  private queryRefs = new Trie<{ current?: InternalQueryReference }>();
+  private fragmentRefs = new Trie<{ current?: FragmentReference }>();
 
   private options: SuspenseCacheOptions;
 
-  constructor(options: SuspenseCacheOptions = Object.create(null)) {
+  constructor(options: SuspenseCacheOptions = {}) {
     this.options = options;
   }
 

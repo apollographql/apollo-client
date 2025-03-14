@@ -24,29 +24,34 @@
 /** End file docs */
 
 // @ts-ignore
-import { buildDocEntryPoints } from "./entryPoints.js";
-// @ts-ignore
-import { Project, ts, printNode, Node } from "ts-morph";
-import { ApiModel, ApiDocumentedItem } from "@microsoft/api-extractor-model";
-import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference";
-import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
 
-import fs from "node:fs";
+import fs, { mkdirSync, symlinkSync } from "node:fs";
 import path from "node:path";
+
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
 } from "@microsoft/api-extractor";
+import { ApiDocumentedItem, ApiModel } from "@microsoft/api-extractor-model";
+import { StringBuilder, TSDocEmitter } from "@microsoft/tsdoc";
+import { DeclarationReference } from "@microsoft/tsdoc/lib-commonjs/beta/DeclarationReference.js";
+import { visit } from "recast";
 
-console.log(
-  "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
-);
+import type { BuildStep, BuildStepOptions } from "./build.ts";
+import { buildDocEntryPoints } from "./entryPoints.ts";
+import { applyRecast, withPseudoNodeModules } from "./helpers.ts";
 
-const model = loadApiModel();
-processComments();
+export const inlineInheritDoc: BuildStep = async (options) => {
+  console.log(
+    "Processing {@inheritDoc <canonicalReference>} comments in .d.ts files."
+  );
 
-function getCommentFor(canonicalReference: string) {
+  const model = await withPseudoNodeModules(() => loadApiModel(options));
+  await processComments(model, options);
+};
+
+function getCommentFor(canonicalReference: string, model: ApiModel) {
   const apiItem = model.resolveDeclarationReference(
     DeclarationReference.parse(canonicalReference),
     undefined
@@ -69,18 +74,28 @@ function getCommentFor(canonicalReference: string) {
   }
 }
 
-function loadApiModel() {
+function loadApiModel(options: BuildStepOptions) {
   const tempDir = fs.mkdtempSync("api-model");
   try {
     const entryPointFile = path.join(tempDir, "entry.d.ts");
-    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
+    fs.writeFileSync(entryPointFile, buildDocEntryPoints(options));
+    mkdirSync(path.join(tempDir, "node_modules", "@apollo"), {
+      recursive: true,
+    });
+    symlinkSync(
+      options.packageRoot,
+      path.join(tempDir, "node_modules", "@apollo", "client")
+    );
 
     // Load and parse the api-extractor.json file
     const configObjectFullPath = path.resolve(
-      __dirname,
+      import.meta.dirname,
       "../api-extractor.json"
     );
-    const packageJsonFullPath = path.resolve(__dirname, "../package.json");
+    const packageJsonFullPath = path.resolve(
+      import.meta.dirname,
+      "../package.json"
+    );
     const tempModelFile = path.join(tempDir, "client.api.json");
 
     const configObject = ExtractorConfig.loadFile(configObjectFullPath);
@@ -129,45 +144,52 @@ function loadApiModel() {
   }
 }
 
-function processComments() {
+function processComments(model: ApiModel, options: BuildStepOptions) {
   const inheritDocRegex = /\{@inheritDoc ([^}]+)\}/;
 
-  const project = new Project({
-    tsConfigFilePath: "tsconfig.json",
-    skipAddingFilesFromTsConfig: true,
-  });
+  return applyRecast({
+    glob: `**/*.{${options.jsExt},d.${options.tsExt}}`,
+    cwd: options.targetDir,
+    transformStep({ ast, sourceName }) {
+      return {
+        ast: visit(ast, {
+          visitNode(path) {
+            this.traverse(path);
+            const node = path.node;
 
-  const sourceFiles = project.addSourceFilesAtPaths("dist/**/*.d.ts");
-  for (const file of sourceFiles) {
-    file.forEachDescendant((node) => {
-      if (
-        Node.isPropertySignature(node) ||
-        Node.isMethodSignature(node) ||
-        Node.isMethodDeclaration(node) ||
-        Node.isCallSignatureDeclaration(node) ||
-        Node.isInterfaceDeclaration(node)
-      ) {
-        const docsNode = node.getJsDocs()[0];
-        if (!docsNode) return;
-        const oldText = docsNode.getInnerText();
-        let newText = oldText;
-        while (inheritDocRegex.test(newText)) {
-          newText = newText.replace(
-            inheritDocRegex,
-            (_, canonicalReference) => {
-              return getCommentFor(canonicalReference) || "";
+            if (!node.comments) {
+              return;
             }
-          );
-        }
-        if (oldText !== newText) {
-          docsNode.replaceWithText(frameComment(newText)) as any;
-        }
-      }
-    });
-    file.saveSync();
-  }
+
+            for (const comment of node.comments) {
+              if (comment.type === "CommentBlock") {
+                let newText = comment.value;
+                while (inheritDocRegex.test(newText)) {
+                  newText = newText.replace(
+                    inheritDocRegex,
+                    (_, canonicalReference) => {
+                      return getCommentFor(canonicalReference, model) || "";
+                    }
+                  );
+                }
+                if (comment.value !== newText) {
+                  comment.value = frameComment(newText);
+                }
+              }
+            }
+          },
+        }),
+      };
+    },
+  });
 }
 
 function frameComment(text: string) {
-  return `/**\n * ${text.trim().replace(/\n/g, "\n * ")}\n */`;
+  const framed = text
+    .split("\n")
+    .map((t) => t.trim())
+    .map((t) => (!t.startsWith("*") ? "* " + t : t))
+    .join("\n")
+    .replaceAll(/(^(\s*\*\s*\n)*|(\n\s*\*\s*)*$)/g, "");
+  return `*\n${framed}\n`;
 }

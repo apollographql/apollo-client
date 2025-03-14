@@ -1,15 +1,22 @@
-import gql from "graphql-tag";
-
-import { ApolloClient, NetworkStatus } from "../../core";
-import { ApolloLink } from "../../link/core";
-import { InMemoryCache } from "../../cache";
-import { Observable } from "../../utilities";
-import { mockSingleLink } from "../../testing";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { WatchQueryFetchPolicy, WatchQueryOptions } from "../watchQueryOptions";
-import { ApolloQueryResult } from "../types";
-import { ObservableQuery } from "../ObservableQuery";
-import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { gql } from "graphql-tag";
+import { map, Observable } from "rxjs";
+
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { mockSingleLink } from "@apollo/client/testing";
+
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
+import { ObservableQuery } from "../ObservableQuery.js";
+import { ApolloQueryResult } from "../types.js";
+import {
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "../watchQueryOptions.js";
 
 const query = gql`
   query {
@@ -102,15 +109,17 @@ describe("network-only", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -127,15 +136,17 @@ describe("network-only", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query, fetchPolicy: "network-only" });
@@ -149,15 +160,17 @@ describe("network-only", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createFailureLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     let didFail = false;
@@ -176,14 +189,16 @@ describe("network-only", () => {
 
   it("updates the cache on a mutation", async () => {
     const inspector = new ApolloLink((operation, forward) => {
-      return forward(operation).map((result) => {
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createMutationLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -202,15 +217,17 @@ describe("no-cache", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ fetchPolicy: "no-cache", query });
@@ -223,15 +240,17 @@ describe("no-cache", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -245,15 +264,17 @@ describe("no-cache", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query, fetchPolicy: "no-cache" });
@@ -268,15 +289,17 @@ describe("no-cache", () => {
     let called = 0;
     const inspector = new ApolloLink((operation, forward) => {
       called++;
-      return forward(operation).map((result) => {
-        called++;
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          called++;
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createFailureLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     let didFail = false;
@@ -295,14 +318,16 @@ describe("no-cache", () => {
 
   it("does not update the cache on a mutation", async () => {
     const inspector = new ApolloLink((operation, forward) => {
-      return forward(operation).map((result) => {
-        return result;
-      });
+      return forward(operation).pipe(
+        map((result) => {
+          return result;
+        })
+      );
     });
 
     const client = new ApolloClient({
       link: inspector.concat(createMutationLink()),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -317,15 +342,17 @@ describe("no-cache", () => {
       let called = 0;
       const inspector = new ApolloLink((operation, forward) => {
         called++;
-        return forward(operation).map((result) => {
-          called++;
-          return result;
-        });
+        return forward(operation).pipe(
+          map((result) => {
+            called++;
+            return result;
+          })
+        );
       });
 
       const client = new ApolloClient({
         link: inspector.concat(createLink()),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       await client.query({
@@ -344,15 +371,17 @@ describe("no-cache", () => {
       let called = 0;
       const inspector = new ApolloLink((operation, forward) => {
         called++;
-        return forward(operation).map((result) => {
-          called++;
-          return result;
-        });
+        return forward(operation).pipe(
+          map((result) => {
+            called++;
+            return result;
+          })
+        );
       });
 
       const client = new ApolloClient({
         link: inspector.concat(createFailureLink()),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       let didFail = false;
@@ -418,57 +447,71 @@ describe("no-cache", () => {
         };
       }
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      });
+
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(1),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
       await observable.setVariables({ id: "2" });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         partial: true,
       });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
       await observable.refetch();
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: true,
         networkStatus: NetworkStatus.refetch,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(2),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
       await observable.refetch({ id: "3" });
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         partial: true,
       });
       expect(client.cache.extract(true)).toEqual({});
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         data: dataWithId(3),
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(client.cache.extract(true)).toEqual({});
 
@@ -482,10 +525,12 @@ describe("cache-first", () => {
     const results: any[] = [];
     const client = new ApolloClient({
       link: new ApolloLink((operation, forward) => {
-        return forward(operation).map((result) => {
-          results.push(result);
-          return result;
-        });
+        return forward(operation).pipe(
+          map((result) => {
+            results.push(result);
+            return result;
+          })
+        );
       }).concat(createMutationLink()),
       cache: new InMemoryCache(),
     });
@@ -500,15 +545,15 @@ describe("cache-first", () => {
       })
     );
 
-    await expect(stream).toEmitValue({
-      data: {},
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.loading,
       partial: true,
     });
     expect(results).toHaveLength(0);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Author",
@@ -519,6 +564,7 @@ describe("cache-first", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(results).toHaveLength(1);
 
@@ -536,7 +582,7 @@ describe("cache-first", () => {
       });
     }, "bogus");
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Bogus",
@@ -553,7 +599,7 @@ describe("cache-first", () => {
       client.cache.removeOptimistic("bogus");
     }, 50);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Author",
@@ -564,6 +610,7 @@ describe("cache-first", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // A network request should not be triggered until after the bogus
     // optimistic transaction has been removed.
@@ -582,7 +629,7 @@ describe("cache-first", () => {
       },
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         author: {
           __typename: "Author",
@@ -593,6 +640,7 @@ describe("cache-first", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(inOptimisticTransaction).toBe(false);
     expect(results).toHaveLength(1);
@@ -632,23 +680,25 @@ describe("cache-only", () => {
 
     const stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         count: 1,
       },
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-only");
 
     await observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         count: 2,
       },
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-only");
@@ -701,54 +751,59 @@ describe("cache-and-network", function () {
       };
     }
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(1),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await observable.setVariables({ id: "2" });
 
-    await expect(stream).toEmitValue({
-      data: {},
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
       loading: true,
       networkStatus: NetworkStatus.setVariables,
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await observable.refetch();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: true,
       networkStatus: NetworkStatus.refetch,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(2),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await observable.refetch({ id: "3" });
 
-    await expect(stream).toEmitValue({
-      data: {},
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
       loading: true,
-      networkStatus: NetworkStatus.setVariables,
+      networkStatus: NetworkStatus.refetch,
       partial: true,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: dataWithId(3),
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -758,6 +813,7 @@ describe("cache-and-network", function () {
 describe("nextFetchPolicy", () => {
   type TData = {
     echo: {
+      __typename: "Echo";
       linkCounter: number;
       opName: string;
       opVars: Record<string, any>;
@@ -816,9 +872,7 @@ describe("nextFetchPolicy", () => {
     } (${args.useDefaultOptions ? "" : "not "}using defaults)`, async () => {
       const client = new ApolloClient({
         link: makeLink(),
-        cache: new InMemoryCache({
-          addTypename: true,
-        }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           watchQuery:
             args.useDefaultOptions ?
@@ -875,18 +929,24 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -897,6 +957,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -908,22 +971,27 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result.loading).toBe(false);
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 3,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: false,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 3,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: false,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       // Changing variables resets the fetchPolicy to its initial value.
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -934,6 +1002,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     // But nextFetchPolicy is applied again after the first request.
@@ -1007,18 +1078,24 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1029,6 +1106,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     // Changing variables resets the fetchPolicy to its initial value.
     // expect(observable.options.fetchPolicy).toBe("cache-and-network");
@@ -1041,19 +1121,24 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result.loading).toBe(false);
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 3,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: false,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 3,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: false,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: true,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1064,12 +1149,14 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: true,
+      networkStatus: NetworkStatus.setVariables,
+      partial: false,
     });
     // But nextFetchPolicy is applied again after the first request.
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1080,6 +1167,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1160,18 +1250,24 @@ describe("nextFetchPolicy", () => {
     {
       const result = await observable.refetch({ refetching: true });
 
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1182,6 +1278,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
@@ -1192,14 +1291,20 @@ describe("nextFetchPolicy", () => {
         },
       });
 
-      expect(result.loading).toBe(false);
-      expect(result.data.echo).toEqual({
-        __typename: "Echo",
-        linkCounter: 2,
-        opName: "EchoQuery",
-        opVars: {
-          refetching: true,
+      expect(result).toEqualApolloQueryResult({
+        data: {
+          echo: {
+            __typename: "Echo",
+            linkCounter: 2,
+            opName: "EchoQuery",
+            opVars: {
+              refetching: true,
+            },
+          },
         },
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       // The nextFetchPolicy function we provided always returnes cache-first,
@@ -1209,8 +1314,7 @@ describe("nextFetchPolicy", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
     }
 
-    await expect(stream).toEmitMatchedValue({
-      loading: false,
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         echo: {
           __typename: "Echo",
@@ -1221,6 +1325,9 @@ describe("nextFetchPolicy", () => {
           },
         },
       },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
     expect(observable.options.fetchPolicy).toBe("cache-first");
 

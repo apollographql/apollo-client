@@ -1,26 +1,27 @@
-import * as React from "rehackt";
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import type {
-  MutationFunctionOptions,
-  MutationHookOptions,
-  MutationResult,
-  MutationTuple,
-  NoInfer,
-} from "../types/types.js";
+import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
+import * as React from "react";
 
 import type {
   ApolloCache,
   DefaultContext,
   MutationOptions,
   OperationVariables,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
-import { equal } from "@wry/equality";
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
-import { ApolloError } from "../../errors/index.js";
-import { useApolloClient } from "./useApolloClient.js";
+} from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import type {
+  MutationFunctionOptions,
+  MutationHookOptions,
+  MutationResult,
+  MutationTuple,
+  NoInfer,
+} from "@apollo/client/react";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { mergeOptions } from "@apollo/client/utilities";
+
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 /**
  *
@@ -117,11 +118,7 @@ export function useMutation<
       const baseOptions = { ...options, mutation };
       const client = executeOptions.client || ref.current.client;
 
-      if (
-        !ref.current.result.loading &&
-        !baseOptions.ignoreResults &&
-        ref.current.isMounted
-      ) {
+      if (!ref.current.result.loading && ref.current.isMounted) {
         setResult(
           (ref.current.result = {
             loading: true,
@@ -143,7 +140,7 @@ export function useMutation<
             const { data, errors } = response;
             const error =
               errors && errors.length > 0 ?
-                new ApolloError({ graphQLErrors: errors })
+                new CombinedGraphQLErrors(errors)
               : void 0;
 
             const onError =
@@ -156,10 +153,7 @@ export function useMutation<
               );
             }
 
-            if (
-              mutationId === ref.current.mutationId &&
-              !clientOptions.ignoreResults
-            ) {
+            if (mutationId === ref.current.mutationId) {
               const result = {
                 called: true,
                 loading: false,
@@ -237,7 +231,6 @@ export function useMutation<
 
   React.useEffect(() => {
     const current = ref.current;
-    // eslint-disable-next-line react-compiler/react-compiler
     current.isMounted = true;
 
     return () => {

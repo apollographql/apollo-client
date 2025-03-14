@@ -1,21 +1,23 @@
-import gql from "graphql-tag";
-import { EntityStore, supportsResultCaching } from "../entityStore";
-import { InMemoryCache } from "../inMemoryCache";
-import { DocumentNode } from "graphql";
-import { StoreObject } from "../types";
-import { ApolloCache } from "../../core/cache";
-import { Cache } from "../../core/types/Cache";
-import {
-  Reference,
-  makeReference,
-  isReference,
-  StoreValue,
-} from "../../../utilities/graphql/storeUtils";
-import { MissingFieldError } from "../..";
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { stringifyForDisplay } from "../../../utilities";
-import { InvariantError } from "../../../utilities/globals";
-import { spyOnConsole } from "../../../testing/internal";
+import { DocumentNode } from "graphql";
+import { gql } from "graphql-tag";
+
+import { MissingFieldError } from "@apollo/client/cache";
+import { stringifyForDisplay } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import {
+  isReference,
+  makeReference,
+  Reference,
+  StoreValue,
+} from "../../../utilities/graphql/storeUtils.js";
+import { ApolloCache } from "../../core/cache.js";
+import { Cache } from "../../core/types/Cache.js";
+import { EntityStore, supportsResultCaching } from "../entityStore.js";
+import { InMemoryCache } from "../inMemoryCache.js";
+import { StoreObject } from "../types.js";
 
 describe("EntityStore", () => {
   it("should support result caching if so configured", () => {
@@ -1005,7 +1007,7 @@ describe("EntityStore", () => {
     // Hacky way of injecting a stray __ref field into the Will Smith Person
     // object, clearing store.refs (which was populated by the previous GC).
     storeRootData[willId]!.__ref = willId;
-    store["refs"] = Object.create(null);
+    store["refs"] = {};
 
     expect(cache.extract()).toEqual({
       'Person:{"name":"Jaden Smith"}': {
@@ -1321,21 +1323,19 @@ describe("EntityStore", () => {
       result: {
         authorOfBook: tedWithoutHobby,
       },
-      missing: [
-        new MissingFieldError(
-          'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-          {
-            publisherOfBook:
-              "Can't find field 'publisherOfBook' on ROOT_QUERY object",
-            authorOfBook: {
-              hobby:
-                'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
-            },
+      missing: new MissingFieldError(
+        'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
+        {
+          publisherOfBook:
+            "Can't find field 'publisherOfBook' on ROOT_QUERY object",
+          authorOfBook: {
+            hobby:
+              'Can\'t find field \'hobby\' on Author:{"name":"Ted Chiang"} object',
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
     });
 
     cache.evict({ id: "ROOT_QUERY", fieldName: "authorOfBook" });
@@ -1862,9 +1862,18 @@ describe("EntityStore", () => {
       })
     ).toBe(null);
 
-    expect(() => diff(queryWithAliases)).toThrow(
-      /Dangling reference to missing ABCs:.* object/
-    );
+    expect(diff(queryWithAliases)).toEqual({
+      result: null,
+      complete: false,
+      missing: new MissingFieldError(
+        'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        {
+          abcs: 'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        },
+        queryWithAliases,
+        {}
+      ),
+    });
 
     expect(
       cache.readQuery({
@@ -1872,9 +1881,18 @@ describe("EntityStore", () => {
       })
     ).toBe(null);
 
-    expect(() => diff(queryWithoutAliases)).toThrow(
-      /Dangling reference to missing ABCs:.* object/
-    );
+    expect(diff(queryWithoutAliases)).toEqual({
+      result: null,
+      complete: false,
+      missing: new MissingFieldError(
+        'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        {
+          abcs: 'Dangling reference to missing ABCs:{"b":"bee","a":"ay","c":"see"} object',
+        },
+        queryWithoutAliases,
+        {}
+      ),
+    });
   });
 
   it("gracefully handles eviction amid optimistic updates", () => {
@@ -1952,18 +1970,16 @@ describe("EntityStore", () => {
 
     expect(cache.evict({ id: authorId })).toBe(false);
 
-    const missing = [
-      new MissingFieldError(
-        "Dangling reference to missing Author:2 object",
-        {
-          book: {
-            author: "Dangling reference to missing Author:2 object",
-          },
+    const missing = new MissingFieldError(
+      "Dangling reference to missing Author:2 object",
+      {
+        book: {
+          author: "Dangling reference to missing Author:2 object",
         },
-        expect.anything(), // query
-        expect.anything() // variables
-      ),
-    ];
+      },
+      expect.anything(), // query
+      expect.anything() // variables
+    );
 
     expect(
       cache.diff({
@@ -2241,19 +2257,17 @@ describe("EntityStore", () => {
           isbn: "031648637X",
         },
       },
-      missing: [
-        new MissingFieldError(
-          'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-          {
-            book: {
-              title:
-                'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
-            },
+      missing: new MissingFieldError(
+        'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
+        {
+          book: {
+            title:
+              'Can\'t find field \'title\' on Book:{"isbn":"031648637X"} object',
           },
-          expect.anything(), // query
-          expect.anything() // variables
-        ),
-      ],
+        },
+        expect.anything(), // query
+        expect.anything() // variables
+      ),
     });
 
     expect(cache.extract()).toEqual({

@@ -1,7 +1,9 @@
 import type { OptimisticDependencyFunction } from "optimism";
 import { dep, Slot } from "optimism";
+
+import type { ApolloCache } from "@apollo/client/core";
+
 import type { InMemoryCache } from "./inMemoryCache.js";
-import type { ApolloCache } from "../../core/index.js";
 
 export interface ReactiveVar<T> {
   (newValue?: T): T;
@@ -10,7 +12,7 @@ export interface ReactiveVar<T> {
   forgetCache(cache: ApolloCache<any>): boolean;
 }
 
-export type ReactiveListener<T> = (value: T) => any;
+type ReactiveListener<T> = (value: T) => any;
 
 // Contextual Slot that acquires its value when custom read functions are
 // called in Policies#readField.

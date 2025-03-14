@@ -1,61 +1,63 @@
-import { invariant, newInvariantError } from "../../utilities/globals/index.js";
-
 import type { DocumentNode, FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
 
 import type {
-  Reference,
-  StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
 import {
-  isField,
-  resultKeyNameFromField,
-  isReference,
-  makeReference,
-  shouldInclude,
   addTypenameToDocument,
+  cacheSizes,
+  canonicalStringify,
+  compact,
+  DeepMerger,
+  defaultCacheSizes,
   getDefaultValues,
+  getFragmentFromSelection,
   getMainDefinition,
   getQueryDefinition,
-  getFragmentFromSelection,
+  isField,
+  isNonNullObject,
+  isReference,
+  makeReference,
   maybeDeepFreeze,
   mergeDeepArray,
-  DeepMerger,
-  isNonNullObject,
-  canUseWeakMap,
-  compact,
-  canonicalStringify,
-  cacheSizes,
-  defaultCacheSizes,
-} from "../../utilities/index.js";
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import type { Cache } from "../core/types/Cache.js";
+import type { MissingTree } from "../core/types/common.js";
+import { MissingFieldError } from "../core/types/common.js";
+
+import {
+  maybeDependOnExistenceOfEntity,
+  supportsResultCaching,
+} from "./entityStore.js";
+import {
+  extractFragmentContext,
+  getTypenameFromStoreObject,
+  isArray,
+  shouldCanonizeResults,
+} from "./helpers.js";
+import type { InMemoryCache } from "./inMemoryCache.js";
+import { ObjectCanon } from "./object-canon.js";
+import type { Policies } from "./policies.js";
 import type {
   DiffQueryAgainstStoreOptions,
   InMemoryCacheConfig,
   NormalizedCache,
   ReadMergeModifyContext,
 } from "./types.js";
-import {
-  maybeDependOnExistenceOfEntity,
-  supportsResultCaching,
-} from "./entityStore.js";
-import {
-  isArray,
-  extractFragmentContext,
-  getTypenameFromStoreObject,
-  shouldCanonizeResults,
-} from "./helpers.js";
-import type { Policies } from "./policies.js";
-import type { InMemoryCache } from "./inMemoryCache.js";
-import type { MissingTree } from "../core/types/common.js";
-import { MissingFieldError } from "../core/types/common.js";
-import { ObjectCanon } from "./object-canon.js";
-
-export type VariableMap = { [name: string]: any };
 
 interface ReadContext extends ReadMergeModifyContext {
   query: DocumentNode;
@@ -65,7 +67,7 @@ interface ReadContext extends ReadMergeModifyContext {
   lookupFragment: FragmentMapFunction;
 }
 
-export type ExecResult<R = any> = {
+type ExecResult<R = any> = {
   result: R;
   missing?: MissingTree;
 };
@@ -84,9 +86,8 @@ type ExecSubSelectedArrayOptions = {
   context: ReadContext;
 };
 
-export interface StoreReaderConfig {
+interface StoreReaderConfig {
   cache: InMemoryCache;
-  addTypename?: boolean;
   resultCacheMaxSize?: number;
   canonizeResults?: boolean;
   canon?: ObjectCanon;
@@ -131,16 +132,12 @@ export class StoreReader {
 
   private config: {
     cache: InMemoryCache;
-    addTypename: boolean;
     resultCacheMaxSize?: number;
     canonizeResults: boolean;
     fragments?: InMemoryCacheConfig["fragments"];
   };
 
-  private knownResults = new (canUseWeakMap ? WeakMap : Map)<
-    Record<string, any>,
-    SelectionSetNode
-  >();
+  private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
   public canon: ObjectCanon;
   public resetCanon() {
@@ -149,7 +146,6 @@ export class StoreReader {
 
   constructor(config: StoreReaderConfig) {
     this.config = compact(config, {
-      addTypename: config.addTypename !== false,
       canonizeResults: shouldCanonizeResults(config),
     });
 
@@ -272,30 +268,29 @@ export class StoreReader {
       },
     });
 
-    let missing: MissingFieldError[] | undefined;
+    let missing: MissingFieldError | undefined;
     if (execResult.missing) {
-      // For backwards compatibility we still report an array of
-      // MissingFieldError objects, even though there will only ever be at most
-      // one of them, now that all missing field error messages are grouped
-      // together in the execResult.missing tree.
-      missing = [
-        new MissingFieldError(
-          firstMissing(execResult.missing)!,
-          execResult.missing,
-          query,
-          variables
-        ),
-      ];
-      if (!returnPartialData) {
-        throw missing[0];
-      }
+      missing = new MissingFieldError(
+        firstMissing(execResult.missing)!,
+        execResult.missing,
+        query,
+        variables
+      );
     }
 
+    const complete = !missing;
+    const { result } = execResult;
+
     return {
-      result: execResult.result,
-      complete: !missing,
+      result:
+        complete || returnPartialData ?
+          Object.keys(result).length === 0 ?
+            null
+          : result
+        : null,
+      complete,
       missing,
-    };
+    } as Cache.DiffResult<T>;
   }
 
   public isFresh(
@@ -352,14 +347,10 @@ export class StoreReader {
     let missing: MissingTree | undefined;
     const missingMerger = new DeepMerger();
 
-    if (
-      this.config.addTypename &&
-      typeof typename === "string" &&
-      !policies.rootIdsByTypename[typename]
-    ) {
+    if (typeof typename === "string" && !policies.rootIdsByTypename[typename]) {
       // Ensure we always include a default value for the __typename
-      // field, if we have one, and this.config.addTypename is true. Note
-      // that this field can be overridden by other merged objects.
+      // field, if we have one. Note that this field can be overridden by other
+      // merged objects.
       objectsToMerge.push({ __typename: typename });
     }
 

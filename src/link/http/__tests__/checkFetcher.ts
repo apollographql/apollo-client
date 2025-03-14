@@ -1,5 +1,6 @@
-import { checkFetcher } from "../checkFetcher";
-import { voidFetchDuringEachTest } from "./helpers";
+import { checkFetcher } from "../checkFetcher.js";
+
+import { voidFetchDuringEachTest } from "./helpers.js";
 
 describe("checkFetcher", () => {
   voidFetchDuringEachTest();

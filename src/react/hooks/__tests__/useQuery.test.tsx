@@ -1,46 +1,51 @@
-import React, { Fragment, ReactNode, useEffect, useState } from "react";
-import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
-import gql from "graphql-tag";
 import { act } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { render, screen, waitFor, renderHook } from "@testing-library/react";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  createRenderStream,
+  disableActEnvironment,
+  renderHookToSnapshotStream,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { DocumentNode, GraphQLError, GraphQLFormattedError } from "graphql";
+import { gql } from "graphql-tag";
+import React, { Fragment, ReactNode, useEffect, useState } from "react";
+import { asapScheduler, Observable, observeOn, of } from "rxjs";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
-  ApolloError,
-  ApolloQueryResult,
+  CombinedGraphQLErrors,
   FetchPolicy,
   NetworkStatus,
   OperationVariables,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
-} from "../../../core";
-import { InMemoryCache } from "../../../cache";
-import { ApolloProvider } from "../../context";
-import { Observable, Reference, concatPagination } from "../../../utilities";
-import { ApolloLink } from "../../../link/core";
+} from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Unmasked } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
+  MockedResponse,
   MockLink,
-  MockedProvider,
-  MockSubscriptionLink,
   mockSingleLink,
+  MockSubscriptionLink,
   tick,
   wait,
-  MockedResponse,
-} from "../../../testing";
-import { QueryResult } from "../../types/types";
-import { useQuery } from "../useQuery";
-import { useMutation } from "../useMutation";
-import { setupPaginatedCase, spyOnConsole } from "../../../testing/internal";
-import { useLazyQuery } from "../useLazyQuery";
-import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery";
-import { InvariantError } from "../../../utilities/globals";
-import { Unmasked } from "../../../masking";
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
+import { concatPagination, Reference } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { mockFetchQuery } from "../../../core/__tests__/ObservableQuery.js";
 import {
-  createRenderStream,
-  renderHookToSnapshotStream,
-  disableActEnvironment,
-} from "@testing-library/react-render-stream";
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import { QueryResult } from "../../types/types.js";
+import { LazyQueryResult, useLazyQuery } from "../useLazyQuery.js";
+import { useMutation } from "../useMutation.js";
+import { useQuery } from "../useQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -1089,7 +1094,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -1854,6 +1859,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -1907,6 +1913,7 @@ describe("useQuery Hook", () => {
         data: { vars: { sourceOfVar: "reobserve without variable merge" } },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -1958,12 +1965,12 @@ describe("useQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "GetCounter") {
-                observer.next({
-                  data: {
-                    counter: ++count,
-                  },
-                });
                 setTimeout(() => {
+                  observer.next({
+                    data: {
+                      counter: ++count,
+                    },
+                  });
                   observer.complete();
                 }, 10);
               } else {
@@ -2179,12 +2186,15 @@ describe("useQuery Hook", () => {
           (request) =>
             new Observable((observer) => {
               if (request.operationName === "Counter") {
-                observer.next({
-                  data: {
-                    linkCount: ++linkCount,
-                  },
+                // Emit the value async so we can observe the loading state
+                setTimeout(() => {
+                  observer.next({
+                    data: {
+                      linkCount: ++linkCount,
+                    },
+                  });
+                  observer.complete();
                 });
-                observer.complete();
               }
             })
         ),
@@ -2243,12 +2253,13 @@ describe("useQuery Hook", () => {
           if (obsQuery.hasObservers()) {
             expect(inactiveSet.has(obsQuery)).toBe(false);
             activeSet.add(obsQuery);
-            expect(obsQuery.getCurrentResult()).toEqual({
+            expect(obsQuery.getCurrentResult()).toEqualApolloQueryResult({
               loading: false,
               networkStatus: NetworkStatus.ready,
               data: {
                 linkCount: expectedLinkCount,
               },
+              partial: false,
             });
           } else {
             expect(activeSet.has(obsQuery)).toBe(false);
@@ -2267,6 +2278,7 @@ describe("useQuery Hook", () => {
         data: { linkCount: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -2767,7 +2779,8 @@ describe("useQuery Hook", () => {
         expect(requestSpy).toHaveBeenCalledTimes(1);
       }
 
-      jest.advanceTimersByTime(100);
+      // We wait a tick longer than 100 since values are emitted on the asapScheduler
+      jest.advanceTimersByTime(101);
 
       {
         const promise = takeSnapshot();
@@ -3471,7 +3484,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3479,134 +3492,6 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
-    });
-
-    it("calls `onError` when a GraphQL error is returned", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ graphQLErrors: [{ message: "error" }] })
-      );
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("calls `onError` when a network error has occurred", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          error: new Error("Could not fetch"),
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({
-            networkError: new Error("Could not fetch"),
-          }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ networkError: new Error("Could not fetch") })
-      );
-
-      await expect(takeSnapshot).not.toRerender();
     });
 
     it("removes partial data from result when response has errors", async () => {
@@ -3632,10 +3517,9 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const onError = jest.fn();
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError }),
+        () => useQuery(query),
         { wrapper }
       );
 
@@ -3657,9 +3541,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({
-            graphQLErrors: [{ message: 'Could not fetch "hello"' }],
-          }),
+          error: new CombinedGraphQLErrors([
+            { message: 'Could not fetch "hello"' },
+          ]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -3667,132 +3551,6 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('does not call `onError` when returning GraphQL errors while using an `errorPolicy` set to "ignore"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "ignore" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      await tick();
-
-      expect(onError).not.toHaveBeenCalled();
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('calls `onError` when a network error has occurred while using an `errorPolicy` set to "ignore"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          error: new Error("Could not fetch"),
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "ignore" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({
-            networkError: new Error("Could not fetch"),
-          }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ networkError: new Error("Could not fetch") })
-      );
 
       await expect(takeSnapshot).not.toRerender();
     });
@@ -3855,136 +3613,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it('calls `onCompleted` with partial data but avoids calling `onError` when using an `errorPolicy` set to "ignore"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            data: { hello: null },
-            errors: [new GraphQLError('Could not fetch "hello"')],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      const onCompleted = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, onCompleted, errorPolicy: "ignore" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: null },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: null });
-      expect(onError).not.toHaveBeenCalled();
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('calls `onError` when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "all" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          // TODO: Why does this only populate when errorPolicy is "all"?
-          errors: [{ message: "error" }],
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({ graphQLErrors: [new GraphQLError("error")] })
-      );
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
     it('returns partial data when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
       const query = gql`
         {
@@ -4008,10 +3636,9 @@ describe("useQuery Hook", () => {
         </MockedProvider>
       );
 
-      const onError = jest.fn();
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, errorPolicy: "all" }),
+        () => useQuery(query, { errorPolicy: "all" }),
         { wrapper }
       );
 
@@ -4033,10 +3660,9 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: null },
-          error: new ApolloError({
-            graphQLErrors: [{ message: 'Could not fetch "hello"' }],
-          }),
-          errors: [{ message: 'Could not fetch "hello"' }],
+          error: new CombinedGraphQLErrors([
+            { message: 'Could not fetch "hello"' },
+          ]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4044,181 +3670,6 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it('calls `onError` but not `onCompleted` when returning partial data with GraphQL errors while using an `errorPolicy` set to "all"', async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            data: { hello: null },
-            errors: [new GraphQLError('Could not fetch "hello"')],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      const onCompleted = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError, onCompleted, errorPolicy: "all" }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: null },
-          error: new ApolloError({
-            graphQLErrors: [{ message: 'Could not fetch "hello"' }],
-          }),
-          errors: [{ message: 'Could not fetch "hello"' }],
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledWith(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError('Could not fetch "hello"')],
-        })
-      );
-      expect(onCompleted).not.toHaveBeenCalled();
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("calls `onError` a single time when refetching returns a successful result", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-        {
-          request: { query },
-          result: {
-            data: { hello: "world" },
-          },
-          delay: 10,
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onError = jest.fn();
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () =>
-            useQuery(query, {
-              onError,
-              notifyOnNetworkStatusChange: true,
-            }),
-          { wrapper }
-        );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
-
-      void getCurrentSnapshot().refetch();
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.refetch,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "world" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onError).toHaveBeenCalledTimes(1);
 
       await expect(takeSnapshot).not.toRerender();
     });
@@ -4270,7 +3721,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4286,7 +3737,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4339,7 +3790,7 @@ describe("useQuery Hook", () => {
         request: { query: GET_DOG_DETAILS, variables: { breed } },
         result: {
           errors: [
-            new GraphQLError(`Cannot query field "unexisting" on type "Dog".`),
+            { message: `Cannot query field "unexisting" on type "Dog".` },
           ],
         },
       });
@@ -4427,18 +3878,14 @@ describe("useQuery Hook", () => {
 
       // With the default errorPolicy of 'none', the error is rendered
       // and partial data is not
-      await screen.findByText(
-        'Error!: ApolloError: Cannot query field "unexisting" on type "Dog".'
-      );
+      await screen.findByText(/Error!: CombinedGraphQLErrors:/);
       expect(screen.queryByText(/partial data rendered/i)).toBeNull();
 
       // When we call refetch...
       await user.click(screen.getByRole("button", { name: /Refetch!/i }));
 
       // The error is still present, and partial data still not rendered
-      await screen.findByText(
-        'Error!: ApolloError: Cannot query field "unexisting" on type "Dog".'
-      );
+      await screen.findByText(/Error!: CombinedGraphQLErrors:/);
       expect(screen.queryByText(/partial data rendered/i)).toBeNull();
     });
 
@@ -4522,85 +3969,6 @@ describe("useQuery Hook", () => {
       expect(screen.getByText("Data rendered")).toBeTruthy();
     });
 
-    it("should persist errors on re-render with inline onError/onCompleted callbacks", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: {
-            errors: [new GraphQLError("error")],
-          },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const link = new MockLink(mocks);
-      const onErrorFn = jest.fn();
-      link.setOnError(onErrorFn);
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} link={link} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onError: () => {}, onCompleted: () => {} }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      await rerender(undefined);
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.error,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onErrorFn).toHaveBeenCalledTimes(0);
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
     it("should not persist errors when variables change", async () => {
       const query = gql`
         query hello($id: ID) {
@@ -4667,7 +4035,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4735,7 +4103,7 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it("should render multiple errors when refetching", async () => {
+    it("should render multiple errors when refetching with notifyOnNetworkStatusChange: true", async () => {
       const query = gql`
         {
           hello
@@ -4789,7 +4157,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error 1" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error 1" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4799,7 +4167,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "error 2" }] })
+        new CombinedGraphQLErrors([{ message: "error 2" }])
       );
 
       {
@@ -4820,7 +4188,91 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({ graphQLErrors: [{ message: "error 2" }] }),
+          error: new CombinedGraphQLErrors([{ message: "error 2" }]),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it("should render multiple errors when refetching with notifyOnNetworkStatusChange: false", async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const mocks = [
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError("error 1")],
+          },
+        },
+        {
+          request: { query },
+          result: {
+            errors: [new GraphQLError("error 2")],
+          },
+          delay: 10,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useQuery(query, { notifyOnNetworkStatusChange: false }),
+          { wrapper }
+        );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          called: true,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new CombinedGraphQLErrors([{ message: "error 1" }]),
+          called: true,
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
+        new CombinedGraphQLErrors([{ message: "error 2" }])
+      );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: new CombinedGraphQLErrors([{ message: "error 2" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4886,9 +4338,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({
-            graphQLErrors: [{ message: "same error" }],
-          }),
+          error: new CombinedGraphQLErrors([{ message: "same error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4898,7 +4348,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "same error" }] })
+        new CombinedGraphQLErrors([{ message: "same error" }])
       );
 
       {
@@ -4919,9 +4369,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({
-            graphQLErrors: [{ message: "same error" }],
-          }),
+          error: new CombinedGraphQLErrors([{ message: "same error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -4993,9 +4441,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          error: new ApolloError({
-            graphQLErrors: [{ message: "same error" }],
-          }),
+          error: new CombinedGraphQLErrors([{ message: "same error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -5032,7 +4478,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new ApolloError({ graphQLErrors: [{ message: "same error" }] })
+        new CombinedGraphQLErrors([{ message: "same error" }])
       );
 
       {
@@ -5052,9 +4498,7 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           // TODO: Is this correct behavior here?
           data: { hello: "world" },
-          error: new ApolloError({
-            graphQLErrors: [{ message: "same error" }],
-          }),
+          error: new CombinedGraphQLErrors([{ message: "same error" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -5062,124 +4506,6 @@ describe("useQuery Hook", () => {
           variables: {},
         });
       }
-    });
-
-    it("should call onCompleted when variables change", async () => {
-      const query = gql`
-        query people($first: Int) {
-          allPeople(first: $first) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      const data1 = { allPeople: { people: [{ name: "Luke Skywalker" }] } };
-      const data2 = { allPeople: { people: [{ name: "Han Solo" }] } };
-      const mocks = [
-        {
-          request: { query, variables: { first: 1 } },
-          result: { data: data1 },
-        },
-        {
-          request: { query, variables: { first: 2 } },
-          result: { data: data2 },
-        },
-      ];
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ variables }) => useQuery(query, { variables, onCompleted }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-          initialProps: {
-            variables: { first: 1 },
-          },
-        }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: { first: 1 },
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: data1,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: { first: 1 },
-        });
-      }
-
-      expect(onCompleted).toHaveBeenLastCalledWith(data1);
-
-      await rerender({ variables: { first: 2 } });
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.setVariables,
-          previousData: data1,
-          variables: { first: 2 },
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: data2,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: data1,
-          variables: { first: 2 },
-        });
-      }
-
-      expect(onCompleted).toHaveBeenLastCalledWith(data2);
-
-      await rerender({ variables: { first: 1 } });
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: data1,
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: data2,
-          variables: { first: 1 },
-        });
-      }
-
-      expect(onCompleted).toHaveBeenLastCalledWith(data1);
-      expect(onCompleted).toHaveBeenCalledTimes(3);
-
-      await expect(takeSnapshot).not.toRerender();
     });
   });
 
@@ -5274,6 +4600,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5345,6 +4672,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5434,6 +4762,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5514,6 +4843,7 @@ describe("useQuery Hook", () => {
         data: { letters: cd },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -5729,6 +5059,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -5806,6 +5137,7 @@ describe("useQuery Hook", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -6056,7 +5388,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
-        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+        useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
 
@@ -6090,14 +5422,16 @@ describe("useQuery Hook", () => {
       });
 
       const [execute, useLazyQueryResult] = useLazyQuery(query2, {
-        variables: { id: 1 },
+        notifyOnNetworkStatusChange: true,
       });
 
       renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
       return (
         <>
-          <button onClick={() => execute()}>Run 2nd query</button>
+          <button onClick={() => execute({ variables: { id: 1 } })}>
+            Run 2nd query
+          </button>
           <button
             onClick={() => {
               // Intentionally use reobserve here as opposed to refetch to
@@ -6130,14 +5464,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -6146,9 +5480,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6156,14 +5488,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -6174,9 +5506,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6184,7 +5514,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
         called: true,
         loading: true,
@@ -6199,9 +5529,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6214,19 +5542,14 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
-        errors: [new GraphQLError("Intentional error")],
+        data: undefined,
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
-        // TODO: Fix ApolloQueryResult type to allow `data` to be an optional property.
-        // This fails without the type case for now even though the runtime
-        // code doesn't include a `data` property.
-      } as unknown as ApolloQueryResult<Query1>);
+      });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -6250,7 +5573,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -6265,9 +5588,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6280,18 +5601,14 @@ describe("useQuery Hook", () => {
       expect(
         snapshot.useQueryResult?.observable.getCurrentResult(false)!
       ).toEqualApolloQueryResult({
-        // TODO: Fix TypeScript types to allow for `data` to be `undefined`
-        data: undefined as unknown as Query1,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
-        errors: [new GraphQLError("Intentional error")],
+        data: undefined,
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         loading: false,
         networkStatus: NetworkStatus.error,
         partial: true,
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: { person: { __typename: "Person", id: 1, lastName: "Doe" } },
         called: true,
         loading: false,
@@ -6351,7 +5668,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
-        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+        useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
 
@@ -6391,12 +5708,16 @@ describe("useQuery Hook", () => {
       });
 
       const [execute, useLazyQueryResult] = useLazyQuery(query2, {
-        variables: { id: 1 },
+        notifyOnNetworkStatusChange: true,
       });
 
       renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
-      return <button onClick={() => execute()}>Run 2nd query</button>;
+      return (
+        <button onClick={() => execute({ variables: { id: 1 } })}>
+          Run 2nd query
+        </button>
+      );
     }
 
     await renderStream.render(<App />, {
@@ -6417,14 +5738,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -6433,9 +5754,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6443,14 +5762,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -6461,9 +5780,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6471,7 +5788,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
         called: true,
         loading: true,
@@ -6489,9 +5806,7 @@ describe("useQuery Hook", () => {
       // the other query has finished and re-rendered.
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6499,7 +5814,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -6534,7 +5849,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -6601,7 +5916,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as QueryResult<Query1, Variables> | null,
-        useLazyQueryResult: null as QueryResult<Query2, Variables> | null,
+        useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
 
@@ -6641,12 +5956,16 @@ describe("useQuery Hook", () => {
       });
 
       const [execute, useLazyQueryResult] = useLazyQuery(query2, {
-        variables: { id: 1 },
+        notifyOnNetworkStatusChange: true,
       });
 
       renderStream.replaceSnapshot({ useQueryResult, useLazyQueryResult });
 
-      return <button onClick={() => execute()}>Run 2nd query</button>;
+      return (
+        <button onClick={() => execute({ variables: { id: 1 } })}>
+          Run 2nd query
+        </button>
+      );
     }
 
     await renderStream.render(<App />, {
@@ -6667,14 +5986,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -6683,9 +6002,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6693,14 +6010,14 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
-        error: undefined,
         called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
-        variables: { id: 1 },
+        // @ts-expect-error should be undefined
+        variables: {},
       });
     }
 
@@ -6711,9 +6028,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6721,7 +6036,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: undefined,
         called: true,
         loading: true,
@@ -6736,9 +6051,7 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        error: new ApolloError({
-          graphQLErrors: [new GraphQLError("Intentional error")],
-        }),
+        error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -6746,7 +6059,7 @@ describe("useQuery Hook", () => {
         variables: { id: 1 },
       });
 
-      expect(snapshot.useLazyQueryResult!).toEqualQueryResult({
+      expect(snapshot.useLazyQueryResult!).toEqualLazyQueryResult({
         data: {
           person: {
             __typename: "Person",
@@ -7169,7 +6482,7 @@ describe("useQuery Hook", () => {
           data: undefined,
           called: true,
           loading: true,
-          networkStatus: NetworkStatus.setVariables,
+          networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
           variables: { id: 2 },
         });
@@ -7257,7 +6570,7 @@ describe("useQuery Hook", () => {
       }
 
       await expect(getCurrentSnapshot().refetch()).rejects.toEqual(
-        new ApolloError({ networkError: new Error("This is an error!") })
+        new Error("This is an error!")
       );
 
       {
@@ -7278,9 +6591,7 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          error: new ApolloError({
-            networkError: new Error("This is an error!"),
-          }),
+          error: new Error("This is an error!"),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
@@ -7295,6 +6606,7 @@ describe("useQuery Hook", () => {
         data: { hello: "world 2" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       {
@@ -7429,6 +6741,7 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7441,7 +6754,7 @@ describe("useQuery Hook", () => {
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
-            networkStatus: NetworkStatus.setVariables,
+            networkStatus: NetworkStatus.refetch,
             previousData: { primes: [2, 3, 5, 7, 11] },
             variables: { min: 12, max: 30 },
           });
@@ -7539,6 +6852,7 @@ describe("useQuery Hook", () => {
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7551,7 +6865,7 @@ describe("useQuery Hook", () => {
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
-            networkStatus: NetworkStatus.setVariables,
+            networkStatus: NetworkStatus.refetch,
             previousData: { primes: [2, 3, 5, 7, 11] },
             variables: { min: 12, max: 30 },
           });
@@ -7647,6 +6961,7 @@ describe("useQuery Hook", () => {
           data: { primes: [13, 17, 19, 23, 29] },
           loading: false,
           networkStatus: NetworkStatus.ready,
+          partial: false,
         });
 
         {
@@ -7661,7 +6976,7 @@ describe("useQuery Hook", () => {
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
-            networkStatus: NetworkStatus.setVariables,
+            networkStatus: NetworkStatus.refetch,
             previousData: { primes: [2, 3, 5, 7, 11] },
             variables: { min: 12, max: 30 },
           });
@@ -7738,8 +7053,11 @@ describe("useQuery Hook", () => {
             } else if (operation.variables.id === 2) {
               // Queries for this ID return immediately
               const data = mocks[2].splice(0, 1).pop();
-              observer.next({ data });
-              observer.complete();
+              // Delay execution so we can obseve the loading state
+              setTimeout(() => {
+                observer.next({ data });
+                observer.complete();
+              });
             } else {
               observer.error(new Error("Unexpected query"));
             }
@@ -7868,685 +7186,6 @@ describe("useQuery Hook", () => {
           variables: { id: 2 },
         });
       }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-  });
-
-  describe("Callbacks", () => {
-    it("onCompleted is called once with cached data", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      cache.writeQuery({
-        query,
-        data: { hello: "world" },
-      });
-
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={[]} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            fetchPolicy: "cache-only",
-            onCompleted,
-          }),
-        { wrapper }
-      );
-
-      const result = await takeSnapshot();
-
-      expect(result).toEqualQueryResult({
-        data: { hello: "world" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("onCompleted is called once despite state changes", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onCompleted }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "world" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-
-      await rerender(undefined);
-
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "world" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      expect(onCompleted).toHaveBeenCalledWith({ hello: "world" });
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("should not call onCompleted if skip is true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            skip: true,
-            onCompleted,
-          }),
-        { wrapper }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        error: undefined,
-        called: false,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(0);
-      await expect(takeSnapshot).not.toRerender();
-      expect(onCompleted).toHaveBeenCalledTimes(0);
-    });
-
-    it("should not make extra network requests when `onCompleted` is defined with a `network-only` fetch policy", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => {
-          return useQuery(query, {
-            fetchPolicy: "network-only",
-            onCompleted,
-          });
-        },
-        { wrapper }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot).not.toRerender();
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-    });
-
-    it("onCompleted should not fire for polling queries without notifyOnNetworkStatusChange: true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world 1" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 2" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 3" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            onCompleted,
-            pollInterval: 10,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 1" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 2" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world 1" },
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "world 3" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "world 2" },
-        variables: {},
-      });
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-    });
-
-    it("onCompleted should fire when polling with notifyOnNetworkStatusChange: true", async () => {
-      jest.useFakeTimers();
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world 1" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 2" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world 3" } },
-          delay: 20,
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            onCompleted,
-            notifyOnNetworkStatusChange: true,
-            pollInterval: 200,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks} cache={cache}>
-              {children}
-            </MockedProvider>
-          ),
-        }
-      );
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(0);
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 1" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      // Polling is started with the first request, so we only need to advance
-      // the timer by 180 (200 poll time - 20 result delay)
-      jest.advanceTimersByTime(180);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 1" },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.poll,
-          previousData: { hello: "world 1" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 2" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 1" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-      jest.advanceTimersByTime(200);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 2" },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.poll,
-          previousData: { hello: "world 2" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-      jest.advanceTimersByTime(20);
-
-      {
-        const promise = takeSnapshot();
-        await jest.advanceTimersByTimeAsync(0);
-
-        await expect(promise).resolves.toEqualQueryResult({
-          data: { hello: "world 3" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { hello: "world 2" },
-          variables: {},
-        });
-      }
-
-      expect(onCompleted).toHaveBeenCalledTimes(3);
-
-      jest.runOnlyPendingTimers();
-      jest.useRealTimers();
-    });
-
-    // This test was added for issue https://github.com/apollographql/apollo-client/issues/9794
-    it("onCompleted can set state without causing react errors", async () => {
-      using consoleSpy = spyOnConsole("error");
-      const query = gql`
-        {
-          hello
-        }
-      `;
-
-      const cache = new InMemoryCache();
-      cache.writeQuery({
-        query,
-        data: { hello: "world" },
-      });
-
-      const ChildComponent: React.FC<{
-        setOnCompletedCalled: React.Dispatch<React.SetStateAction<boolean>>;
-      }> = ({ setOnCompletedCalled }) => {
-        useQuery(query, {
-          fetchPolicy: "cache-only",
-          onCompleted: () => {
-            setOnCompletedCalled(true);
-          },
-        });
-
-        return null;
-      };
-
-      const ParentComponent: React.FC = () => {
-        const [onCompletedCalled, setOnCompletedCalled] = useState(false);
-        return (
-          <MockedProvider mocks={[]} cache={cache}>
-            <div>
-              <ChildComponent setOnCompletedCalled={setOnCompletedCalled} />
-              onCompletedCalled: {String(onCompletedCalled)}
-            </div>
-          </MockedProvider>
-        );
-      };
-
-      render(<ParentComponent />);
-      await screen.findByText("onCompletedCalled: true");
-      expect(consoleSpy.error).not.toHaveBeenCalled();
-    });
-
-    it("onCompleted should not execute on cache writes after initial query execution", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "foo" } },
-        },
-        {
-          request: { query },
-          result: { data: { hello: "bar" } },
-        },
-      ];
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink(mocks),
-      });
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { onCompleted }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "foo" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      void client.refetchQueries({ include: "active" });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "bar" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "foo" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      client.writeQuery({ query, data: { hello: "baz" } });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "baz" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "bar" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("onCompleted should execute on cache writes after initial query execution with notifyOnNetworkStatusChange: true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "foo" } },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "bar" } },
-          delay: 20,
-        },
-      ];
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new MockLink(mocks),
-      });
-      const onCompleted = jest.fn();
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, { onCompleted, notifyOnNetworkStatusChange: true }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: undefined,
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        previousData: undefined,
-        variables: {},
-      });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "foo" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: undefined,
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      void client.refetchQueries({ include: "active" });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "foo" },
-        called: true,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
-        previousData: { hello: "foo" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(1);
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "bar" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "foo" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(2);
-
-      client.writeQuery({ query, data: { hello: "baz" } });
-
-      await expect(takeSnapshot()).resolves.toEqualQueryResult({
-        data: { hello: "baz" },
-        called: true,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        previousData: { hello: "bar" },
-        variables: {},
-      });
-      expect(onCompleted).toHaveBeenCalledTimes(2);
 
       await expect(takeSnapshot).not.toRerender();
     });
@@ -8750,215 +7389,6 @@ describe("useQuery Hook", () => {
     });
   });
 
-  describe("Partial refetch", () => {
-    it("should attempt a refetch when data is missing and partialRefetch is true", async () => {
-      using consoleSpy = spyOnConsole("error");
-      const query = gql`
-        {
-          hello
-        }
-      `;
-
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: {} },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-          delay: 20,
-        }
-      );
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-      });
-
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            partialRefetch: true,
-            notifyOnNetworkStatusChange: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-
-      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
-      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
-
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
-
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual({ hello: "world" });
-      expect(result.current.error).toBe(undefined);
-    });
-
-    it("should attempt a refetch when data is missing and partialRefetch is true 2", async () => {
-      const query = gql`
-        query people {
-          allPeople(first: 1) {
-            people {
-              name
-            }
-          }
-        }
-      `;
-
-      const data = {
-        allPeople: { people: [{ name: "Luke Skywalker" }] },
-      };
-
-      using consoleSpy = spyOnConsole("error");
-      const link = mockSingleLink(
-        { request: { query }, result: { data: {} }, delay: 20 },
-        { request: { query }, result: { data }, delay: 20 }
-      );
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-      });
-
-      const { result } = renderHook(
-        () =>
-          useQuery(query, {
-            partialRefetch: true,
-            notifyOnNetworkStatusChange: true,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.networkStatus).toBe(NetworkStatus.loading);
-
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.refetch);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-      expect(result.current.error).toBe(undefined);
-
-      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
-      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
-
-      await waitFor(
-        () => {
-          expect(result.current.networkStatus).toBe(NetworkStatus.ready);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.loading).toBe(false);
-      expect(result.current.data).toEqual(data);
-      expect(result.current.error).toBe(undefined);
-    });
-
-    it("should attempt a refetch when data is missing, partialRefetch is true and addTypename is false for the cache", async () => {
-      using consoleSpy = spyOnConsole("error");
-      const query = gql`
-        {
-          hello
-        }
-      `;
-
-      const link = mockSingleLink(
-        {
-          request: { query },
-          result: { data: {} },
-          delay: 20,
-        },
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-          delay: 20,
-        }
-      );
-
-      const client = new ApolloClient({
-        link,
-        // THIS LINE IS THE ONLY DIFFERENCE FOR THIS TEST
-        cache: new InMemoryCache({ addTypename: false }),
-      });
-
-      const wrapper = ({ children }: any) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      );
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useQuery(query, {
-            partialRefetch: true,
-            notifyOnNetworkStatusChange: true,
-          }),
-        { wrapper }
-      );
-
-      {
-        const result = await takeSnapshot();
-        expect(result.loading).toBe(true);
-        expect(result.data).toBe(undefined);
-        expect(result.error).toBe(undefined);
-        expect(result.networkStatus).toBe(NetworkStatus.loading);
-      }
-
-      {
-        const result = await takeSnapshot();
-        expect(result.networkStatus).toBe(NetworkStatus.refetch);
-        expect(result.loading).toBe(true);
-        expect(result.error).toBe(undefined);
-        expect(result.data).toBe(undefined);
-      }
-
-      const calls = consoleSpy.error.mock.calls;
-      expect(calls.length).toBe(1);
-      expect(calls[0][0]).toMatch("Missing field");
-
-      {
-        const result = await takeSnapshot();
-        expect(result.networkStatus).toBe(NetworkStatus.ready);
-        expect(result.loading).toBe(false);
-        expect(result.data).toEqual({ hello: "world" });
-        expect(result.error).toBe(undefined);
-      }
-    });
-  });
-
   describe("Client Resolvers", () => {
     it("should receive up to date @client(always: true) fields on entity update", async () => {
       const query = gql`
@@ -8986,7 +7416,7 @@ describe("useQuery Hook", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new ApolloLink(() => Observable.of({ data: {} })),
+        link: new ApolloLink(() => of({ data: {} })),
         resolvers: {
           ClientData: {
             titleLength(data) {
@@ -9231,7 +7661,7 @@ describe("useQuery Hook", () => {
 
     it("should tear down the query if `skip` is `true`", async () => {
       const client = new ApolloClient({
-        link: new ApolloLink(() => Observable.of({ data: { hello: "world" } })),
+        link: new ApolloLink(() => of({ data: { hello: "world" } })),
         cache: new InMemoryCache(),
       });
 
@@ -9314,7 +7744,7 @@ describe("useQuery Hook", () => {
         }
       `;
       const link = new ApolloLink(() =>
-        Observable.of({
+        of({
           data: { hello: "world" },
         })
       );
@@ -9352,6 +7782,7 @@ describe("useQuery Hook", () => {
         data: { hello: "world" },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(requestSpy).toHaveBeenCalledTimes(1);
@@ -9368,9 +7799,8 @@ describe("useQuery Hook", () => {
       `;
       let linkCount = 0;
       const link = new ApolloLink(() =>
-        Observable.of({
-          data: { hello: ++linkCount },
-        })
+        // Emit the value  async so we can observe the loading state
+        of({ data: { hello: ++linkCount } }).pipe(observeOn(asapScheduler))
       );
 
       const client = new ApolloClient({
@@ -9465,6 +7895,7 @@ describe("useQuery Hook", () => {
         data: { hello: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
 
@@ -9524,7 +7955,8 @@ describe("useQuery Hook", () => {
           nth,
           expect.anything(),
           expect.objectContaining({ fetchPolicy }),
-          expect.any(Number)
+          expect.any(Number),
+          expect.any(Boolean)
         );
       };
       const nextFetchPolicy: WatchQueryOptions<
@@ -10192,7 +8624,7 @@ describe("useQuery Hook", () => {
         data: undefined,
         called: true,
         loading: true,
-        networkStatus: NetworkStatus.setVariables,
+        networkStatus: NetworkStatus.refetch,
         previousData: data2,
         variables: { vin: "ABCDEFG0123456789" },
       });
@@ -10243,34 +8675,34 @@ describe("useQuery Hook", () => {
         link: new ApolloLink(
           (request) =>
             new Observable((observer) => {
-              switch (request.operationName) {
-                case "A": {
-                  observer.next({
-                    data: {
-                      a: (stringOfAs += "a"),
-                    },
-                  });
-                  break;
-                }
-                case "AB": {
-                  observer.next({
-                    data: {
-                      a: (stringOfAs += "a"),
-                      b: (countOfBs += 1),
-                    },
-                  });
-                  break;
-                }
-                case "B": {
-                  observer.next({
-                    data: {
-                      b: (countOfBs += 1),
-                    },
-                  });
-                  break;
-                }
-              }
               setTimeout(() => {
+                switch (request.operationName) {
+                  case "A": {
+                    observer.next({
+                      data: {
+                        a: (stringOfAs += "a"),
+                      },
+                    });
+                    break;
+                  }
+                  case "AB": {
+                    observer.next({
+                      data: {
+                        a: (stringOfAs += "a"),
+                        b: (countOfBs += 1),
+                      },
+                    });
+                    break;
+                  }
+                  case "B": {
+                    observer.next({
+                      data: {
+                        b: (countOfBs += 1),
+                      },
+                    });
+                    break;
+                  }
+                }
                 observer.complete();
               }, 10);
             })
@@ -10338,6 +8770,7 @@ describe("useQuery Hook", () => {
         data: { a: "aaa", b: 2 },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
@@ -11828,15 +10261,13 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        error: new ApolloError({
-          graphQLErrors: [
-            {
-              message:
-                "homeWorld for character with ID 1000 could not be fetched.",
-              path: ["hero", "heroFriends", 0, "homeWorld"],
-            },
-          ],
-        }),
+        error: new CombinedGraphQLErrors([
+          {
+            message:
+              "homeWorld for character with ID 1000 could not be fetched.",
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -12007,22 +10438,13 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        error: new ApolloError({
-          graphQLErrors: [
-            {
-              message:
-                "homeWorld for character with ID 1000 could not be fetched.",
-              path: ["hero", "heroFriends", 0, "homeWorld"],
-            },
-          ],
-        }),
-        errors: [
+        error: new CombinedGraphQLErrors([
           {
             message:
               "homeWorld for character with ID 1000 could not be fetched.",
             path: ["hero", "heroFriends", 0, "homeWorld"],
           },
-        ],
+        ]),
         called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
@@ -12424,11 +10846,9 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      error: new ApolloError({
-        networkError: new InvariantError(
-          "Store reset while query was in flight (not completed in link chain)"
-        ),
-      }),
+      error: new InvariantError(
+        "Store reset while query was in flight (not completed in link chain)"
+      ),
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -12488,7 +10908,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      error: new CombinedGraphQLErrors([graphQLError]),
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -12512,7 +10932,7 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      error: new ApolloError({ graphQLErrors: [graphQLError] }),
+      error: new CombinedGraphQLErrors([graphQLError]),
       called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
@@ -13500,10 +11920,7 @@ describe("useQuery Hook", () => {
               name: null,
             },
           },
-          error: new ApolloError({
-            graphQLErrors: [new GraphQLError("Couldn't get name")],
-          }),
-          errors: [{ message: "Couldn't get name" }],
+          error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
           called: true,
           loading: false,
           networkStatus: NetworkStatus.error,

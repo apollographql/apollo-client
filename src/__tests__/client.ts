@@ -1,49 +1,50 @@
-import { cloneDeep, assign } from "lodash";
+import { waitFor } from "@testing-library/react";
 import {
-  GraphQLError,
   DocumentNode,
+  FormattedExecutionResult,
+  GraphQLError,
   Kind,
   print,
   visit,
-  FormattedExecutionResult,
 } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { assign, cloneDeep } from "lodash";
+import { EMPTY, EmptyError, Observable, of, Subscription } from "rxjs";
 
-import {
-  ApolloClient,
-  FetchPolicy,
-  WatchQueryFetchPolicy,
-  QueryOptions,
-  ObservableQuery,
-  Operation,
-  TypedDocumentNode,
-  NetworkStatus,
-} from "../core";
-
-import {
-  DocumentTransform,
-  Observable,
-  ObservableSubscription,
-  offsetLimitPagination,
-  removeDirectivesFromDocument,
-} from "../utilities";
-import { ApolloLink } from "../link/core";
 import {
   createFragmentRegistry,
   InMemoryCache,
   makeVar,
   PossibleTypesMap,
-} from "../cache";
-import { ApolloError } from "../errors";
+} from "@apollo/client/cache";
+import {
+  ApolloClient,
+  FetchPolicy,
+  NetworkStatus,
+  ObservableQuery,
+  Operation,
+  QueryOptions,
+  TypedDocumentNode,
+  WatchQueryFetchPolicy,
+} from "@apollo/client/core";
+import {
+  CombinedGraphQLErrors,
+  UnconventionalError,
+} from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link/core";
+import { MockLink, mockSingleLink, wait } from "@apollo/client/testing";
+import {
+  DocumentTransform,
+  offsetLimitPagination,
+  removeDirectivesFromDocument,
+} from "@apollo/client/utilities";
 
-import { mockSingleLink, MockLink, wait } from "../testing";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { waitFor } from "@testing-library/react";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("client", () => {
   it("can be loaded via require", () => {
     /* tslint:disable */
-    const ApolloClientRequire = require("../").ApolloClient;
+    const ApolloClientRequire = require("../index.js").ApolloClient;
     /* tslint:enable */
 
     const client = new ApolloClientRequire({
@@ -161,11 +162,11 @@ describe("client", () => {
 
     const variables = { first: 1 };
 
-    const link = ApolloLink.from([() => Observable.of({ data })]);
+    const link = ApolloLink.from([() => of({ data })]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query, variables });
@@ -210,7 +211,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     {
@@ -276,7 +277,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     {
@@ -434,9 +435,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data
-      ),
+      cache: new InMemoryCache().restore(initialState.data),
     });
 
     const result = await client.query({ query });
@@ -460,6 +459,7 @@ describe("client", () => {
       allPeople: {
         people: [
           {
+            __typename: "Person",
             name: "Luke Skywalker",
           },
         ],
@@ -477,6 +477,7 @@ describe("client", () => {
           'allPeople({"first":1})': {
             people: [
               {
+                __typename: "Person",
                 name: "Luke Skywalker",
               },
             ],
@@ -486,13 +487,11 @@ describe("client", () => {
       },
     };
 
-    const finalState = assign({}, initialState, {});
+    const finalState = Object.assign({}, initialState);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data
-      ),
+      cache: new InMemoryCache().restore(initialState.data),
     });
 
     const result = await client.query({ query });
@@ -554,9 +553,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }).restore(
-        initialState.data
-      ),
+      cache: new InMemoryCache().restore(initialState.data),
     });
 
     expect(client.restore(initialState.data)).toEqual(
@@ -588,11 +585,11 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors(errors)
     );
   });
 
@@ -633,11 +630,11 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await expect(client.query({ query })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors(errors)
     );
   });
 
@@ -664,12 +661,10 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
-    await expect(client.query({ query })).rejects.toThrow(
-      new ApolloError({ networkError })
-    );
+    await expect(client.query({ query })).rejects.toThrow(networkError);
   });
 
   it("should not warn when receiving multiple results from apollo-link network interface", () => {
@@ -693,11 +688,11 @@ describe("client", () => {
       },
     };
 
-    const link = ApolloLink.from([() => Observable.of({ data }, { data })]);
+    const link = ApolloLink.from([() => of({ data }, { data })]);
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     return client.query({ query }).then((result: FormattedExecutionResult) => {
@@ -748,7 +743,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({ query });
@@ -791,7 +786,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({ query });
@@ -833,7 +828,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({ query });
@@ -861,12 +856,6 @@ describe("client", () => {
       }
     `;
 
-    const result = {
-      author: {
-        firstName: "John",
-        lastName: "Smith",
-      },
-    };
     const transformedResult = {
       author: {
         firstName: "John",
@@ -875,21 +864,14 @@ describe("client", () => {
       },
     };
 
-    const link = mockSingleLink(
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: transformedQuery },
-        result: { data: transformedResult },
-      },
-      false
-    );
+    const link = mockSingleLink({
+      request: { query: transformedQuery },
+      result: { data: transformedResult },
+    });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: true }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query });
@@ -915,12 +897,6 @@ describe("client", () => {
         }
       }
     `;
-    const result = {
-      author: {
-        firstName: "John",
-        lastName: "Smith",
-      },
-    };
     const transformedResult = {
       author: {
         firstName: "John",
@@ -928,21 +904,14 @@ describe("client", () => {
         __typename: "Author",
       },
     };
-    const link = mockSingleLink(
-      {
-        request: { query },
-        result: { data: result },
-      },
-      {
-        request: { query: transformedQuery },
-        result: { data: transformedResult },
-      },
-      false
-    );
+    const link = mockSingleLink({
+      request: { query: transformedQuery },
+      result: { data: transformedResult },
+    });
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: true }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({
@@ -973,6 +942,7 @@ describe("client", () => {
         author {
           firstName
           lastName
+          __typename
         }
       }
     `;
@@ -980,7 +950,7 @@ describe("client", () => {
     const link = new ApolloLink((operation) => {
       result.current = operation;
 
-      return Observable.of({
+      return of({
         data: {
           author: {
             firstName: "John",
@@ -993,7 +963,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await client.query({ query });
@@ -1032,7 +1002,7 @@ describe("client", () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.mutate({ mutation });
@@ -1069,7 +1039,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({
@@ -1114,7 +1084,7 @@ describe("client", () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query });
@@ -1150,7 +1120,7 @@ describe("client", () => {
     });
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const actualResult = await client.query({ query });
@@ -1352,12 +1322,12 @@ describe("client", () => {
     const link = ApolloLink.from([
       (request) => {
         expect(request.operationName).toBe("myQueryName");
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     return client.query({ query }).then((actualResult) => {
@@ -1377,12 +1347,12 @@ describe("client", () => {
     const link = ApolloLink.from([
       (request) => {
         expect(request.operationName).toBe("myMutationName");
-        return Observable.of({ data });
+        return of({ data });
       },
     ]);
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     return client.mutate({ mutation }).then((actualResult) => {
@@ -1425,7 +1395,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       queryDeduplication: false,
     });
 
@@ -1473,7 +1443,7 @@ describe("client", () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const q1 = client.query({ query: queryDoc });
@@ -1519,7 +1489,7 @@ describe("client", () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
       queryDeduplication: false,
     });
 
@@ -1574,7 +1544,7 @@ describe("client", () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     // The first query gets tracked in the dedup logic, the second one ignores it and runs anyways
@@ -1591,6 +1561,11 @@ describe("client", () => {
     });
   });
 
+  // TODO: This is a bit of an odd test because its half testing that
+  // deduplication kicks in, but its also testing some of the behavior of the
+  // observable itself. With the move to RxJS, the unsubscribe cleanup function
+  // is called with `complete` which means it might be called synchronously
+  // (hence why the `complete` needs to be wrapped in setTimeout for this test).
   it("unsubscribes from deduplicated observables only once", async () => {
     const document: DocumentNode = gql`
       query test1($x: String) {
@@ -1606,7 +1581,7 @@ describe("client", () => {
     const client = new ApolloClient({
       link: new ApolloLink(() => {
         return new Observable((observer) => {
-          observer.complete();
+          setTimeout(() => observer.complete());
           return () => {
             unsubscribeCount++;
           };
@@ -1701,7 +1676,6 @@ describe("client", () => {
 
         cache: new InMemoryCache({
           dataIdFromObject: (obj: any) => obj.id,
-          addTypename: false,
         }),
       });
 
@@ -1786,7 +1760,7 @@ describe("client", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({ query, data: initialData });
@@ -1811,7 +1785,7 @@ describe("client", () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const obs = client.watchQuery({
@@ -1829,10 +1803,15 @@ describe("client", () => {
     });
 
     it("fails if network request fails", async () => {
-      const link = mockSingleLink(); // no queries = no replies.
+      const link = new MockLink([
+        {
+          request: { query },
+          error: new Error("Oops"),
+        },
+      ]);
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const obs = client.watchQuery({
@@ -1841,9 +1820,15 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: new Error("Oops"),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
 
-      expect(error.message).toMatch(/No more mocked responses/);
+      await expect(stream).not.toEmitAnything();
     });
 
     it("fetches from cache first, then network and does not have an unhandled error", async () => {
@@ -1854,7 +1839,7 @@ describe("client", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({ query, data: initialData });
@@ -1865,15 +1850,22 @@ describe("client", () => {
       });
       const stream = new ObservableStream(obs);
 
-      await expect(stream).toEmitValue({
+      await expect(stream).toEmitApolloQueryResult({
         loading: true,
         data: initialData,
         networkStatus: 1,
+        partial: false,
       });
 
-      const error = await stream.takeError();
+      await expect(stream).toEmitApolloQueryResult({
+        data: initialData,
+        error: new CombinedGraphQLErrors([{ message: "network failure" }]),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: false,
+      });
 
-      expect(error.message).toMatch(/network failure/);
+      await expect(stream).not.toEmitAnything();
     });
   });
 
@@ -1898,7 +1890,10 @@ describe("client", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        obs.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Update this behavior
+      ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 
@@ -1925,7 +1920,10 @@ describe("client", () => {
 
       await expect(stream).toEmitMatchedValue({ data });
 
-      await obs.setOptions({ query, fetchPolicy: "standby" });
+      await expect(
+        obs.setOptions({ query, fetchPolicy: "standby" })
+        // TODO: Update this behavior
+      ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
@@ -1973,7 +1971,7 @@ describe("client", () => {
     it("forces the query to rerun", async () => {
       const client = new ApolloClient({
         link: makeLink(),
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       // Run a query first to initialize the store
@@ -1988,7 +1986,7 @@ describe("client", () => {
       const client = new ApolloClient({
         link: makeLink(),
         ssrMode: true,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       const options: QueryOptions = { query, fetchPolicy: "network-only" };
@@ -2010,7 +2008,7 @@ describe("client", () => {
       const client = new ApolloClient({
         link: makeLink(),
         ssrForceFetchDelay: 100,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
       });
 
       // Run a query first to initialize the store
@@ -2055,12 +2053,10 @@ describe("client", () => {
         result: { data },
         error: networkError,
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
-    await expect(client.mutate({ mutation })).rejects.toThrow(
-      new ApolloError({ networkError })
-    );
+    await expect(client.mutate({ mutation })).rejects.toThrow(networkError);
   });
 
   it("should pass a GraphQL error correctly on a mutation", async () => {
@@ -2086,11 +2082,11 @@ describe("client", () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     await expect(client.mutate({ mutation })).rejects.toEqual(
-      expect.objectContaining({ graphQLErrors: errors })
+      new CombinedGraphQLErrors(errors)
     );
   });
 
@@ -2122,7 +2118,7 @@ describe("client", () => {
           },
         },
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const result = await client.mutate({ mutation, errorPolicy: "all" });
@@ -2160,7 +2156,7 @@ describe("client", () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const result = await client.mutate({ mutation, errorPolicy: "ignore" });
@@ -2194,7 +2190,7 @@ describe("client", () => {
         request: { query: mutation },
         result: { data, errors },
       }),
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
     const mutatePromise = client.mutate({
       mutation,
@@ -2493,7 +2489,7 @@ describe("client", () => {
 
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const handle = client.watchQuery({
@@ -2508,9 +2504,13 @@ describe("client", () => {
 
     const stream = new ObservableStream(handle);
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("Uh oh!");
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new Error("Uh oh!"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
   });
 
   it("should be able to refetch after there was a network error", async () => {
@@ -2533,7 +2533,7 @@ describe("client", () => {
     );
     const client = new ApolloClient({
       link,
-      cache: new InMemoryCache({ addTypename: false }),
+      cache: new InMemoryCache(),
     });
 
     const observable = client.watchQuery({
@@ -2543,30 +2543,36 @@ describe("client", () => {
 
     let stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      partial: false,
     });
 
     await wait(0);
     await expect(observable.refetch()).rejects.toThrow();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      partial: false,
     });
 
-    const error = await stream.takeError();
-
-    expect(error.message).toBe("This is an error!");
+    await expect(stream).toEmitApolloQueryResult({
+      data,
+      error: new Error("This is an error!"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
 
     stream.unsubscribe();
 
     const lastError = observable.getLastError();
-    expect(lastError).toBeInstanceOf(ApolloError);
-    expect(lastError!.networkError).toEqual((error as any).networkError);
+    expect(lastError).toBeInstanceOf(Error);
+    expect(lastError).toEqual(new Error("This is an error!"));
 
     const lastResult = observable.getLastResult();
     expect(lastResult).toBeTruthy();
@@ -2576,26 +2582,28 @@ describe("client", () => {
     observable.resetLastResults();
     stream = new ObservableStream(observable);
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data,
+      partial: false,
     });
 
     await wait(0);
     await expect(observable.refetch()).resolves.toBeTruthy();
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.refetch,
       data,
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
-      errors: undefined,
       data: dataTwo,
+      partial: false,
     });
 
     await expect(stream).not.toEmitAnything();
@@ -2999,75 +3007,85 @@ describe("@connection", () => {
       }
     `);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       data: { a: 123 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       data: { b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 123, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     aVar(aVar() + 111);
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       data: { a: 234 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     await expect(bStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "asdf" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     bVar(bVar().toUpperCase());
 
     await expect(aStream).not.toEmitAnything({ timeout: 10 });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       data: { b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 234, b: "ASDF" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     aVar(aVar() + 222);
     bVar("oyez");
 
-    await expect(aStream).toEmitValue({
+    await expect(aStream).toEmitApolloQueryResult({
       data: { a: 456 },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(bStream).toEmitValue({
+    await expect(bStream).toEmitApolloQueryResult({
       data: { b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
-    await expect(abStream).toEmitValue({
+    await expect(abStream).toEmitApolloQueryResult({
       data: { a: 456, b: "oyez" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     // Since the ObservableQuery skips results that are the same as the
@@ -3098,8 +3116,8 @@ describe("@connection", () => {
     // result to be delivered even though networkStatus is still loading.
     const cStream = watch(cQuery, "cache-only");
 
-    await expect(cStream).toEmitValue({
-      data: {},
+    await expect(cStream).toEmitApolloQueryResult({
+      data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3117,10 +3135,11 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitApolloQueryResult({
       data: { c: "see" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     cache.modify({
@@ -3135,10 +3154,11 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
+    await expect(cStream).toEmitApolloQueryResult({
       data: { c: "saw" },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
 
     client.cache.evict({ fieldName: "c" });
@@ -3146,8 +3166,8 @@ describe("@connection", () => {
     await expect(aStream).not.toEmitAnything();
     await expect(bStream).not.toEmitAnything();
     await expect(abStream).not.toEmitAnything();
-    await expect(cStream).toEmitValue({
-      data: {},
+    await expect(cStream).toEmitApolloQueryResult({
+      data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: true,
@@ -3163,7 +3183,7 @@ describe("@connection", () => {
     const bVar = makeVar("asdf");
     const aSpy = jest.spyOn(aVar, "forgetCache");
     const bSpy = jest.spyOn(bVar, "forgetCache");
-    const cache: InMemoryCache = new InMemoryCache({
+    const cache = new InMemoryCache({
       typePolicies: {
         Query: {
           fields: {
@@ -3181,7 +3201,7 @@ describe("@connection", () => {
     const client = new ApolloClient({ cache });
 
     const obsQueries = new Set<ObservableQuery<any>>();
-    const subs = new Set<ObservableSubscription>();
+    const subs = new Set<Subscription>();
     function watch(
       query: DocumentNode,
       fetchPolicy: WatchQueryFetchPolicy = "cache-first"
@@ -3224,41 +3244,41 @@ describe("@connection", () => {
 
     expect(cache["watches"].size).toBe(2);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
-    expect(aSpy).not.toBeCalled();
-    expect(bSpy).not.toBeCalled();
+    expect(aSpy).not.toHaveBeenCalled();
+    expect(bSpy).not.toHaveBeenCalled();
 
     subs.forEach((sub) => sub.unsubscribe());
 
-    expect(aSpy).toBeCalledTimes(1);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(1);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(1);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(1);
+    expect(bSpy).toHaveBeenCalledWith(cache);
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
 
     expect(cache["watches"].size).toBe(0);
     const abResults = watch(abQuery);
-    expect(abResults).toEqual([]);
+    expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
     expect(cache["watches"].size).toBe(1);
 
     await wait();
 
-    expect(aResults).toEqual([]);
-    expect(bResults).toEqual([]);
+    expect(aResults).toEqual([{ a: 123 }]);
+    expect(bResults).toEqual([{ b: "asdf" }]);
     expect(abResults).toEqual([{ a: 123, b: "asdf" }]);
 
     client.stop();
 
     await wait();
 
-    expect(aSpy).toBeCalledTimes(2);
-    expect(aSpy).toBeCalledWith(cache);
-    expect(bSpy).toBeCalledTimes(2);
-    expect(bSpy).toBeCalledWith(cache);
+    expect(aSpy).toHaveBeenCalledTimes(2);
+    expect(aSpy).toHaveBeenCalledWith(cache);
+    expect(bSpy).toHaveBeenCalledTimes(2);
+    expect(bSpy).toHaveBeenCalledWith(cache);
   });
 
   describe("default settings", () => {
@@ -3288,7 +3308,7 @@ describe("@connection", () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           watchQuery: {
             fetchPolicy: "cache-and-network",
@@ -3513,7 +3533,7 @@ describe("@connection", () => {
       });
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           query: { errorPolicy: "all" },
         },
@@ -3521,7 +3541,13 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result.errors).toEqual(errors);
+      expect(result).toEqualApolloQueryResult({
+        data: undefined,
+        error: new CombinedGraphQLErrors(errors),
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
     });
 
     it("allows setting default options for mutation", async () => {
@@ -3544,7 +3570,7 @@ describe("@connection", () => {
 
       const client = new ApolloClient({
         link,
-        cache: new InMemoryCache({ addTypename: false }),
+        cache: new InMemoryCache(),
         defaultOptions: {
           mutate: { variables: { id: 1 } },
         },
@@ -3583,7 +3609,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           dogs: [
             {
@@ -3665,7 +3691,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           dogs: [
             {
@@ -3752,7 +3778,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -3844,7 +3870,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             id: 1,
@@ -3907,7 +3933,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             id: 1,
@@ -3946,7 +3972,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of();
+      return EMPTY;
     });
 
     const client = new ApolloClient({
@@ -3989,7 +4015,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4161,7 +4187,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4226,7 +4252,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
           changeUsername: {
             id: 1,
@@ -4266,7 +4292,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           updateProfile: {
             __typename: "Profile",
@@ -4317,7 +4343,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             id: 1,
@@ -4393,7 +4419,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             id: 1,
@@ -4486,7 +4512,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           profileUpdated: {
             __typename: "Profile",
@@ -4553,7 +4579,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: { currentUser: { __typename: "User", id: 1, name: "John Doe" } },
       });
     });
@@ -4584,6 +4610,7 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(transformedQuery);
@@ -4611,7 +4638,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           currentUser: {
             __typename: "User",
@@ -4680,7 +4707,7 @@ describe("custom document transforms", () => {
     });
 
     const link = new ApolloLink(() => {
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -4735,6 +4762,7 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
     });
   });
@@ -4825,6 +4853,7 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -4850,6 +4879,7 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -4936,23 +4966,20 @@ describe("custom document transforms", () => {
     });
 
     const observable = client.watchQuery({ query, variables: { offset: 0 } });
-    const handleNext = jest.fn();
+    const stream = new ObservableStream(observable);
 
-    observable.subscribe(handleNext);
-
-    await waitFor(() => {
-      expect(handleNext).toHaveBeenLastCalledWith({
-        data: {
-          products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-      });
-
-      expect(document).toMatchDocument(enabledQuery);
-      expect(observable.options.query).toMatchDocument(query);
-      expect(observable.query).toMatchDocument(enabledQuery);
+    await expect(stream).toEmitApolloQueryResult({
+      data: {
+        products: [{ __typename: "Product", id: 1, metrics: "1000/vpm" }],
+      },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    expect(document!).toMatchDocument(enabledQuery);
+    expect(observable.options.query).toMatchDocument(query);
+    expect(observable.query).toMatchDocument(enabledQuery);
 
     enabled = false;
 
@@ -4966,7 +4993,7 @@ describe("custom document transforms", () => {
       products: [{ __typename: "Product", id: 2 }],
     });
 
-    expect(handleNext).toHaveBeenLastCalledWith({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         products: [
           { __typename: "Product", id: 1 },
@@ -4975,7 +5002,10 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
+
+    await expect(stream).not.toEmitAnything();
   });
 
   it("runs custom document transforms on the passed query and original query when calling `fetchMore` with a different query", async () => {
@@ -5111,6 +5141,7 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(handleNext).toHaveBeenCalledTimes(1);
@@ -5155,6 +5186,7 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -5244,6 +5276,7 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -5269,6 +5302,7 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -5358,6 +5392,7 @@ describe("custom document transforms", () => {
         },
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(enabledQuery);
@@ -5383,6 +5418,7 @@ describe("custom document transforms", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -5481,6 +5517,7 @@ describe("custom document transforms", () => {
         data: mocks[0].result.data,
         loading: false,
         networkStatus: NetworkStatus.ready,
+        partial: false,
       });
 
       expect(document).toMatchDocument(transformedQuery);
@@ -5500,6 +5537,7 @@ describe("custom document transforms", () => {
       data: mocks[1].result.data,
       loading: false,
       networkStatus: NetworkStatus.ready,
+      partial: false,
     });
   });
 
@@ -5523,7 +5561,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5599,7 +5637,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5688,7 +5726,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return Observable.of({
+      return of({
         data: {
           product: {
             __typename: "Product",
@@ -5770,7 +5808,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -5855,7 +5893,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -5944,7 +5982,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -6018,7 +6056,7 @@ describe("custom document transforms", () => {
       link: new ApolloLink((operation) => {
         requests.push(operation);
 
-        return Observable.of({
+        return of({
           data: operation.operationName
             .split("")
             .reduce<Record<string, string>>(
@@ -6069,7 +6107,119 @@ describe("custom document transforms", () => {
   });
 });
 
-function clientRoundtrip(
+describe("unconventional errors", () => {
+  test("wraps error mesage in Error type when erroring with a string", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    const client = new ApolloClient({
+      link: new ApolloLink(() => {
+        return new Observable((observer) => {
+          setTimeout(() => {
+            observer.error("This is an error");
+          }, 10);
+        });
+      }),
+      cache: new InMemoryCache(),
+    });
+
+    const expectedError = new Error("This is an error");
+
+    await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+    const stream = new ObservableStream(client.watchQuery({ query }));
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: expectedError,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(
+      client.mutate({
+        mutation: gql`
+          mutation {
+            foo
+          }
+        `,
+      })
+    ).rejects.toEqual(expectedError);
+
+    const subscription = client.subscribe({
+      query: gql`
+        subscription {
+          foo
+        }
+      `,
+    });
+    const subscriptionStream = new ObservableStream(subscription);
+
+    await expect(subscriptionStream).toEmitError(expectedError);
+  });
+
+  test("wraps unconventional types in UnconventionalError", async () => {
+    const query = gql`
+      query {
+        hello
+      }
+    `;
+
+    for (const type of [Symbol(), { message: "This is an error" }, ["Error"]]) {
+      const client = new ApolloClient({
+        link: new ApolloLink(() => {
+          return new Observable((observer) => {
+            setTimeout(() => {
+              observer.error(type);
+            }, 10);
+          });
+        }),
+        cache: new InMemoryCache(),
+      });
+
+      const expectedError = new UnconventionalError(type);
+
+      await expect(client.query({ query })).rejects.toEqual(expectedError);
+
+      const stream = new ObservableStream(client.watchQuery({ query }));
+
+      await expect(stream).toEmitApolloQueryResult({
+        data: undefined,
+        error: expectedError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
+
+      await expect(
+        client.mutate({
+          mutation: gql`
+            mutation {
+              foo
+            }
+          `,
+        })
+      ).rejects.toEqual(expectedError);
+
+      const subscription = client.subscribe({
+        query: gql`
+          subscription {
+            foo
+          }
+        `,
+      });
+      const subscriptionStream = new ObservableStream(subscription);
+
+      await expect(subscriptionStream).toEmitError(expectedError);
+    }
+  });
+});
+
+async function clientRoundtrip(
   query: DocumentNode,
   data: FormattedExecutionResult,
   variables?: any,
@@ -6087,7 +6237,6 @@ function clientRoundtrip(
     }),
   });
 
-  return client.query({ query, variables }).then((result) => {
-    expect(result.data).toEqual(data.data);
-  });
+  const result = await client.query({ query, variables });
+  expect(result.data).toEqual(data.data);
 }

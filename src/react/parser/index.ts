@@ -1,17 +1,18 @@
-import { invariant } from "../../utilities/globals/index.js";
-
 import type {
-  DocumentNode,
   DefinitionNode,
-  VariableDefinitionNode,
+  DocumentNode,
   OperationDefinitionNode,
+  VariableDefinitionNode,
 } from "graphql";
+
 import {
   AutoCleanedWeakCache,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
-import { registerGlobalCache } from "../../utilities/caching/getMemoryInternals.js";
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { registerGlobalCache } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export enum DocumentType {
   Query,

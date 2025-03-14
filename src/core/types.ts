@@ -1,16 +1,16 @@
-import type { DocumentNode, GraphQLFormattedError } from "graphql";
+import type { DocumentNode } from "graphql";
 
-import type { ApolloCache } from "../cache/index.js";
-import type { FetchResult } from "../link/core/index.js";
-import type { ApolloError } from "../errors/index.js";
-import type { QueryInfo } from "./QueryInfo.js";
-import type { NetworkStatus } from "./networkStatus.js";
+import type { ApolloCache } from "@apollo/client/cache";
+import type { Cache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
+import type { IsStrictlyAny } from "@apollo/client/utilities";
+
 import type { Resolver } from "./LocalState.js";
+import type { NetworkStatus } from "./networkStatus.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
+import type { QueryInfo } from "./QueryInfo.js";
 import type { QueryOptions } from "./watchQueryOptions.js";
-import type { Cache } from "../cache/index.js";
-import type { IsStrictlyAny } from "../utilities/index.js";
-import type { Unmasked } from "../masking/index.js";
 
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 
@@ -21,6 +21,40 @@ export type MethodKeys<T> = {
 export interface DefaultContext extends Record<string, any> {}
 
 export type QueryListener = (queryInfo: QueryInfo) => void;
+
+/**
+ * Represents an `Error` type, but used throughout Apollo Client to represent
+ * errors that may otherwise fail `instanceof` checks if they are cross-realm
+ * Error instances (see the [`Error.isError` proposal](https://github.com/tc39/proposal-is-error) for more details).
+ *
+ * Apollo Client uses several types of errors throughout the client which can be
+ * narrowed using `instanceof`:
+ * - `CombinedGraphQLErrors` - `errors` returned from a GraphQL result
+ * - `CombinedProtocolErrors` - Transport-level errors from multipart subscriptions.
+ * - `ServerParseError` - A JSON-parse error when parsing the server response.
+ * - `ServerError` - A non-200 server response.
+ *
+ * @example
+ * ```ts
+ * import { CombinedGraphQLErrors } from "@apollo/client";
+ *
+ * try {
+ *   await client.query({ query });
+ * } catch (error) {
+ *   // Use `instanceof` to check for more specific types of errors.
+ *   if (error instanceof CombinedGraphQLErrors) {
+ *     error.errors.map(graphQLError => console.log(graphQLError.message));
+ *   } else {
+ *     console.error(errors);
+ *   }
+ * }
+ * ```
+ */
+export interface ErrorLike {
+  message: string;
+  name: string;
+  stack?: string;
+}
 
 export type OnQueryUpdated<TResult> = (
   observableQuery: ObservableQuery<any>,
@@ -141,24 +175,22 @@ export type { QueryOptions as PureQueryOptions };
 export type OperationVariables = Record<string, any>;
 
 export interface ApolloQueryResult<T> {
-  data: T;
-  /**
-   * A list of any errors that occurred during server-side execution of a GraphQL operation.
-   * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
-   */
-  errors?: ReadonlyArray<GraphQLFormattedError>;
+  data: T | undefined;
   /**
    * The single Error object that is passed to onError and useQuery hooks, and is often thrown during manual `client.query` calls.
    * This will contain both a NetworkError field and any GraphQLErrors.
    * See https://www.apollographql.com/docs/react/data/error-handling/ for more information.
    */
-  error?: ApolloError;
+  error?: ErrorLike;
   loading: boolean;
   networkStatus: NetworkStatus;
-  // If result.data was read from the cache with missing fields,
-  // result.partial will be true. Otherwise, result.partial will be falsy
-  // (usually because the property is absent from the result object).
-  partial?: boolean;
+  /**
+   * Describes whether `data` is a complete or partial result. This flag is only
+   * set when `returnPartialData` is `true` in query options.
+   *
+   * @deprecated This field will be removed in a future version of Apollo Client.
+   */
+  partial: boolean;
 }
 
 // This is part of the public API, people write these functions in `updateQueries`.

@@ -1,10 +1,11 @@
 import type { MatcherFunction } from "expect";
 import type { DocumentNode } from "graphql";
-import type { OperationVariables } from "../../core/index.js";
-import { ApolloClient } from "../../core/index.js";
-import { canonicalStringify } from "../../cache/index.js";
-import { getSuspenseCache } from "../../react/internal/index.js";
-import type { CacheKey } from "../../react/internal/index.js";
+
+import { canonicalStringify } from "@apollo/client/cache";
+import type { OperationVariables } from "@apollo/client/core";
+import { ApolloClient } from "@apollo/client/core";
+import type { CacheKey } from "@apollo/client/react/internal";
+import { getSuspenseCache } from "@apollo/client/react/internal";
 
 export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
   [
@@ -14,11 +15,7 @@ export const toHaveSuspenseCacheEntryUsing: MatcherFunction<
       queryKey?: string | number | any[];
     },
   ]
-> = function (
-  client,
-  query,
-  { variables, queryKey = [] } = Object.create(null)
-) {
+> = function (client, query, { variables, queryKey = [] } = {}) {
   if (!(client instanceof ApolloClient)) {
     throw new Error("Actual must be an instance of `ApolloClient`");
   }

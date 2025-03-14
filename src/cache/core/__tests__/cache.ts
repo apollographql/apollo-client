@@ -1,8 +1,10 @@
-import gql from "graphql-tag";
-import { ApolloCache } from "../cache";
-import { Cache, DataProxy } from "../..";
-import { Reference } from "../../../utilities/graphql/storeUtils";
 import { expectTypeOf } from "expect-type";
+import { gql } from "graphql-tag";
+
+import { Cache, DataProxy } from "@apollo/client/cache";
+
+import { Reference } from "../../../utilities/graphql/storeUtils.js";
+import { ApolloCache } from "../cache.js";
 
 class TestCache extends ApolloCache<unknown> {
   constructor() {
@@ -10,7 +12,7 @@ class TestCache extends ApolloCache<unknown> {
   }
 
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
-    return {};
+    return { result: null, complete: false };
   }
 
   public evict(): boolean {

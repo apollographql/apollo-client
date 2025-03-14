@@ -1,20 +1,22 @@
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import type { DocumentNode } from "graphql";
 
-import type { FetchResult } from "../link/core/index.js";
+import type { ApolloCache } from "@apollo/client/cache";
+import type { FetchResult } from "@apollo/client/link/core";
+import type { Unmasked } from "@apollo/client/masking";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
+
+import type { IgnoreModifier } from "../cache/core/types/common.js";
+
+import type { ObservableQuery } from "./ObservableQuery.js";
 import type {
   DefaultContext,
+  InternalRefetchQueriesInclude,
   MutationQueryReducersMap,
-  OperationVariables,
   MutationUpdaterFunction,
   OnQueryUpdated,
-  InternalRefetchQueriesInclude,
+  OperationVariables,
 } from "./types.js";
-import type { ApolloCache } from "../cache/index.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { Unmasked } from "../masking/index.js";
-import type { DeepPartial, NoInfer } from "../utilities/index.js";
 
 /**
  * fetchPolicy determines where the client may return a result from. The options are:
@@ -78,9 +80,6 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
-  partialRefetch?: boolean;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 }
@@ -136,9 +135,6 @@ export interface SharedWatchQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#partialRefetch:member} */
-  partialRefetch?: boolean;
-
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
   canonizeResults?: boolean;
 
@@ -163,23 +159,6 @@ export interface FetchMoreQueryOptions<TVariables, TData = any> {
   variables?: Partial<TVariables>;
   context?: DefaultContext;
 }
-
-/**
- * @deprecated `UpdateQueryFn` is deprecated and will be removed or updated in a
- * future version of Apollo Client. Use `SubscribeToMoreUpdateQueryFn` instead
- * which provides a more type-safe result.
- */
-export type UpdateQueryFn<
-  TData = any,
-  TSubscriptionVariables = OperationVariables,
-  TSubscriptionData = TData,
-> = (
-  previousQueryResult: Unmasked<TData>,
-  options: {
-    subscriptionData: { data: Unmasked<TSubscriptionData> };
-    variables?: TSubscriptionVariables;
-  }
-) => Unmasked<TData>;
 
 export type UpdateQueryOptions<TData, TVariables> = {
   variables?: TVariables;
@@ -293,7 +272,7 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-export interface MutationBaseOptions<
+interface MutationBaseOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,

@@ -7,9 +7,8 @@
 import type { ASTNode } from 'graphql';
 import type { DocumentNode } from 'graphql';
 import type { GraphQLFormattedError } from 'graphql';
-import { InvariantError } from 'ts-invariant';
-import { Observable } from 'zen-observable-ts';
-import type { Observer } from 'zen-observable-ts';
+import type { Observable } from 'rxjs';
+import type { Subscriber } from 'rxjs';
 
 // @public (undocumented)
 class ApolloLink {
@@ -34,7 +33,7 @@ class ApolloLink {
     // @internal
     readonly left?: ApolloLink;
     // (undocumented)
-    protected onError(error: any, observer?: Observer<FetchResult>): false | void;
+    protected onError(error: any, observer?: Subscriber<FetchResult>): false | void;
     // Warning: (ae-forgotten-export) The symbol "NextLink" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -66,6 +65,8 @@ interface Body_2 {
 // @public (undocumented)
 export const checkFetcher: (fetcher: typeof fetch | undefined) => void;
 
+// Warning: (ae-forgotten-export) The symbol "InvariantError" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export type ClientParseError = InvariantError & {
     parseError: Error;
@@ -228,6 +229,11 @@ interface IncrementalPayload<TData, TExtensions> {
 }
 
 // @public (undocumented)
+class InvariantError extends Error {
+    constructor(message?: string);
+}
+
+// @public (undocumented)
 type NextLink = (operation: Operation) => Observable<FetchResult>;
 
 // @public (undocumented)
@@ -303,13 +309,6 @@ export const selectURI: (operation: Operation, fallbackURI?: string | ((operatio
 export const serializeFetchParameter: (p: any, label: string) => string;
 
 // @public (undocumented)
-export type ServerParseError = Error & {
-    response: Response;
-    statusCode: number;
-    bodyText: string;
-};
-
-// @public (undocumented)
 interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
@@ -329,7 +328,7 @@ export interface UriFunction {
 
 // Warnings were encountered during analysis:
 //
-// src/link/http/selectHttpOptionsAndBody.ts:128:32 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
+// src/link/http/selectHttpOptionsAndBody.ts:128:1 - (ae-forgotten-export) The symbol "HttpQueryOptions" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

@@ -1,4 +1,4 @@
-import { stripTypename } from "../stripTypename";
+import { stripTypename } from "../stripTypename.js";
 
 test("omits __typename from a shallow object", () => {
   expect(

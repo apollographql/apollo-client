@@ -1,6 +1,6 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { InMemoryCache } from "../inMemoryCache";
+import { InMemoryCache } from "../inMemoryCache.js";
 
 describe("optimistic cache layers", () => {
   it("return === results for repeated reads", () => {

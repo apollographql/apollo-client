@@ -1,22 +1,23 @@
-import * as React from "rehackt";
+import * as React from "react";
+
+import type {
+  ApolloClient,
+  ErrorLike,
+  NetworkStatus,
+  ObservableQuery,
+} from "@apollo/client/core";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,
   unwrapQueryRef,
   updateWrappedQueryRef,
-} from "../internal/index.js";
-import type { QueryRef } from "../internal/index.js";
+} from "@apollo/client/react/internal";
+
 import { __use, wrapHook } from "./internal/index.js";
-import { toApolloError } from "./useSuspenseQuery.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import type { ApolloError } from "../../errors/index.js";
-import type {
-  ApolloClient,
-  NetworkStatus,
-  ObservableQuery,
-} from "../../core/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import type { MaybeMasked } from "../../masking/index.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface UseReadQueryResult<TData = unknown> {
   /**
@@ -35,7 +36,7 @@ export interface UseReadQueryResult<TData = unknown> {
    * `errorPolicy` of `none`. The hook will throw the error instead of setting
    * this property.
    */
-  error: ApolloError | undefined;
+  error: ErrorLike | undefined;
   /**
    * A number indicating the current network state of the query's associated
    * request. {@link https://github.com/apollographql/apollo-client/blob/d96f4578f89b933c281bb775a39503f6cdb59ee8/src/core/networkStatus.ts#L4 | See possible values}.
@@ -102,9 +103,9 @@ function useReadQuery_<TData>(
 
   return React.useMemo(() => {
     return {
-      data: result.data,
+      data: result.data!,
       networkStatus: result.networkStatus,
-      error: toApolloError(result),
+      error: result.error,
     };
   }, [result]);
 }

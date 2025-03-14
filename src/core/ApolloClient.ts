@@ -1,40 +1,49 @@
-import { invariant, newInvariantError } from "../utilities/globals/index.js";
-
 import type { DocumentNode, FormattedExecutionResult } from "graphql";
+import type { Observable } from "rxjs";
+import { map } from "rxjs";
 
-import type { FetchResult, GraphQLRequest } from "../link/core/index.js";
-import { ApolloLink, execute } from "../link/core/index.js";
-import type { ApolloCache, DataProxy, Reference } from "../cache/index.js";
-import type { DocumentTransform } from "../utilities/index.js";
-import type { Observable } from "../utilities/index.js";
+import type { ApolloCache, DataProxy, Reference } from "@apollo/client/cache";
+import type {
+  WatchFragmentOptions,
+  WatchFragmentResult,
+} from "@apollo/client/cache";
+import type { FetchResult, GraphQLRequest } from "@apollo/client/link/core";
+import { ApolloLink, execute } from "@apollo/client/link/core";
+import type { UriFunction } from "@apollo/client/link/http";
+import { HttpLink } from "@apollo/client/link/http";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DocumentTransform } from "@apollo/client/utilities";
+import { mergeOptions } from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
+
 import { version } from "../version.js";
-import type { UriFunction } from "../link/http/index.js";
-import { HttpLink } from "../link/http/index.js";
-
-import { QueryManager } from "./QueryManager.js";
-import type { ObservableQuery } from "./ObservableQuery.js";
-
-import type {
-  ApolloQueryResult,
-  DefaultContext,
-  OperationVariables,
-  Resolvers,
-  RefetchQueriesOptions,
-  RefetchQueriesResult,
-  InternalRefetchQueriesResult,
-  RefetchQueriesInclude,
-} from "./types.js";
-
-import type {
-  QueryOptions,
-  WatchQueryOptions,
-  MutationOptions,
-  SubscriptionOptions,
-  WatchQueryFetchPolicy,
-} from "./watchQueryOptions.js";
 
 import type { FragmentMatcher } from "./LocalState.js";
 import { LocalState } from "./LocalState.js";
+import type { ObservableQuery } from "./ObservableQuery.js";
+import { QueryManager } from "./QueryManager.js";
+import type {
+  ApolloQueryResult,
+  DefaultContext,
+  InternalRefetchQueriesResult,
+  OperationVariables,
+  RefetchQueriesInclude,
+  RefetchQueriesOptions,
+  RefetchQueriesResult,
+  Resolvers,
+} from "./types.js";
+import type {
+  MutationOptions,
+  QueryOptions,
+  SubscriptionOptions,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "./watchQueryOptions.js";
 
 export interface DefaultOptions {
   watchQuery?: Partial<WatchQueryOptions<any, any>>;
@@ -42,7 +51,7 @@ export interface DefaultOptions {
   mutate?: Partial<MutationOptions<any, any, any>>;
 }
 
-export interface DevtoolsOptions {
+interface DevtoolsOptions {
   /**
    * If `true`, the [Apollo Client Devtools](https://www.apollographql.com/docs/react/development-testing/developer-tooling/#apollo-client-devtools) browser extension can connect to this `ApolloClient` instance.
    *
@@ -158,13 +167,6 @@ export interface ApolloClientOptions<TCacheShape> {
 // previously declared and exported from this module, and then reexported from
 // @apollo/client/core. Since we need to preserve that API anyway, the easiest
 // solution is to reexport mergeOptions where it was previously declared (here).
-import { mergeOptions } from "../utilities/index.js";
-import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
-import type {
-  WatchFragmentOptions,
-  WatchFragmentResult,
-} from "../cache/core/cache.js";
-import type { MaybeMasked, Unmasked } from "../masking/index.js";
 export { mergeOptions };
 
 /**
@@ -260,7 +262,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     this.cache = cache;
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
-    this.defaultOptions = defaultOptions || Object.create(null);
+    this.defaultOptions = defaultOptions || {};
     this.typeDefs = typeDefs;
     this.devtoolsConfig = {
       ...devtools,
@@ -313,14 +315,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
         this.devtoolsConfig.enabled ?
           () => {
             if (this.devToolsHookCb) {
-              this.devToolsHookCb({
-                action: {},
-                state: {
-                  queries: this.queryManager.getQueryStore(),
-                  mutations: this.queryManager.mutationStore || {},
-                },
-                dataWithOptimisticResults: this.cache.extract(true),
-              });
+              this.devToolsHookCb();
             }
           }
         : void 0,
@@ -512,9 +507,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   ): Observable<FetchResult<MaybeMasked<T>>> {
     const id = this.queryManager.generateQueryId();
 
-    return this.queryManager
-      .startGraphQLSubscription<T>(options)
-      .map((result) => ({
+    return this.queryManager.startGraphQLSubscription<T>(options).pipe(
+      map((result) => ({
         ...result,
         data: this.queryManager.maskOperation({
           document: options.query,
@@ -522,7 +516,8 @@ export class ApolloClient<TCacheShape> implements DataProxy {
           fetchPolicy: options.fetchPolicy,
           id,
         }),
-      }));
+      }))
+    );
   }
 
   /**

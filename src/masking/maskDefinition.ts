@@ -1,14 +1,17 @@
-import { Kind } from "graphql";
 import type { FragmentDefinitionNode, SelectionSetNode } from "graphql";
+import { Kind } from "graphql";
+
+import type { ApolloCache } from "@apollo/client/cache";
+import type { FragmentMap } from "@apollo/client/utilities";
 import {
   getFragmentMaskMode,
   maybeDeepFreeze,
   resultKeyNameFromField,
-} from "../utilities/index.js";
-import type { FragmentMap } from "../utilities/index.js";
-import type { ApolloCache } from "../cache/index.js";
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { disableWarningsSlot } from "./utils.js";
-import { invariant } from "../utilities/globals/index.js";
 
 interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
@@ -42,7 +45,7 @@ function getMutableTarget(
     return mutableTargets.get(data);
   }
 
-  const mutableTarget = Array.isArray(data) ? [] : Object.create(null);
+  const mutableTarget = Array.isArray(data) ? [] : {};
   mutableTargets.set(data, mutableTarget);
   return mutableTarget;
 }

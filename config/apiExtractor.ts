@@ -1,16 +1,17 @@
+import { readFileSync } from "fs";
+import fs from "node:fs";
+import { parseArgs } from "node:util";
 import * as path from "path";
+
+import type { IConfigFile } from "@microsoft/api-extractor";
 import {
   Extractor,
   ExtractorConfig,
   ExtractorLogLevel,
-  IConfigFile,
 } from "@microsoft/api-extractor";
-import { parseArgs } from "node:util";
-import fs from "node:fs";
 
-// @ts-ignore
-import { map, buildDocEntryPoints } from "./entryPoints.js";
-import { readFileSync } from "fs";
+import { buildDocEntryPoints, entryPoints } from "./entryPoints.ts";
+import { withPseudoNodeModules } from "./helpers.ts";
 
 const parsed = parseArgs({
   options: {
@@ -35,9 +36,15 @@ if (
 }
 
 // Load and parse the api-extractor.json file
-const configObjectFullPath = path.resolve(__dirname, "../api-extractor.json");
+const configObjectFullPath = path.resolve(
+  import.meta.dirname,
+  "../api-extractor.json"
+);
 const baseConfig = ExtractorConfig.loadFile(configObjectFullPath);
-const packageJsonFullPath = path.resolve(__dirname, "../package.json");
+const packageJsonFullPath = path.resolve(
+  import.meta.dirname,
+  "../package.json"
+);
 
 process.exitCode = 0;
 
@@ -48,31 +55,38 @@ try {
       "\n\nCreating API extractor docmodel for the a combination of all entry points"
     );
     const entryPointFile = path.join(tempDir, "entry.d.ts");
-    fs.writeFileSync(entryPointFile, buildDocEntryPoints());
+    fs.writeFileSync(
+      entryPointFile,
+      buildDocEntryPoints({
+        rootDir: path.resolve(import.meta.dirname, ".."),
+        targetDir: "dist",
+        jsExt: "js",
+      })
+    );
 
-    buildReport(entryPointFile, "docModel");
+    await buildReport(entryPointFile, "docModel");
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
-    map((entryPoint: { dirs: string[] }) => {
+    for (const entryPoint of entryPoints) {
       const path = entryPoint.dirs.join("/");
       const mainEntryPointFilePath =
         `<projectFolder>/dist/${path}/index.d.ts`.replace("//", "/");
       console.log(
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );
-      buildReport(
+      await buildReport(
         mainEntryPointFilePath,
         "apiReport",
         `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
       );
-    });
+    }
   }
 } finally {
   fs.rmSync(tempDir, { recursive: true });
 }
 
-function buildReport(
+async function buildReport(
   mainEntryPointFilePath: string,
   mode: "apiReport" | "docModel",
   reportFileName = ""
@@ -106,41 +120,20 @@ function buildReport(
     configObjectFullPath,
   });
 
-  const extractorResult = Extractor.invoke(extractorConfig, {
-    localBuild: process.env.CI === undefined || process.env.CI === "false",
-    showVerboseMessages: true,
-  });
+  const extractorResult = await withPseudoNodeModules(() =>
+    Extractor.invoke(extractorConfig, {
+      localBuild: process.env.CI === undefined || process.env.CI === "false",
+      showVerboseMessages: true,
+    })
+  );
 
-  let succeededAdditionalChecks = true;
-  if (fs.existsSync(extractorConfig.reportFilePath)) {
-    const contents = readFileSync(extractorConfig.reportFilePath, "utf8");
-    if (contents.includes("rehackt")) {
-      succeededAdditionalChecks = false;
-      console.error(
-        "❗ %s contains a reference to the `rehackt` package!",
-        extractorConfig.reportFilePath
-      );
-    }
-    if (contents.includes('/// <reference types="react" />')) {
-      succeededAdditionalChecks = false;
-      console.error(
-        "❗ %s contains a reference to the global `React` type!/n" +
-          'Use `import type * as ReactTypes from "react";` instead',
-        extractorConfig.reportFilePath
-      );
-    }
-  }
-
-  if (extractorResult.succeeded && succeededAdditionalChecks) {
+  if (extractorResult.succeeded) {
     console.log(`✅ API Extractor completed successfully`);
   } else {
     console.error(
       `❗ API Extractor completed with ${extractorResult.errorCount} errors` +
         ` and ${extractorResult.warningCount} warnings`
     );
-    if (!succeededAdditionalChecks) {
-      console.error("Additional checks failed.");
-    }
     process.exitCode = 1;
   }
 }

@@ -1,4 +1,4 @@
-import { maybeDeepFreeze } from "../maybeDeepFreeze";
+import { maybeDeepFreeze } from "../maybeDeepFreeze.js";
 
 describe("maybeDeepFreeze", () => {
   it("should deep freeze", () => {
@@ -9,7 +9,7 @@ describe("maybeDeepFreeze", () => {
   });
 
   it("should properly freeze objects without hasOwnProperty", () => {
-    const foo = Object.create(null);
+    const foo: Record<string, any> = {};
     foo.bar = undefined;
     maybeDeepFreeze(foo);
     expect(() => (foo.bar = 1)).toThrow();

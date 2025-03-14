@@ -1,7 +1,7 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
-import { selectURI } from "../selectURI";
+import { createOperation } from "../../utils/createOperation.js";
+import { selectURI } from "../selectURI.js";
 
 const query = gql`
   query SampleQuery {

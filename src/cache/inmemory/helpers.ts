@@ -4,36 +4,31 @@ import type {
   SelectionSetNode,
 } from "graphql";
 
-import type { NormalizedCache, InMemoryCacheConfig } from "./types.js";
-
-import type { KeyFieldsContext } from "./policies.js";
-import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
-
 import type {
-  Reference,
-  StoreValue,
-  StoreObject,
   FragmentMap,
   FragmentMapFunction,
-} from "../../utilities/index.js";
+  Reference,
+  StoreObject,
+  StoreValue,
+} from "@apollo/client/utilities";
 import {
-  isReference,
-  isField,
-  DeepMerger,
-  resultKeyNameFromField,
-  shouldInclude,
-  isNonNullObject,
   compact,
   createFragmentMap,
+  DeepMerger,
   getFragmentDefinitions,
   isArray,
-} from "../../utilities/index.js";
+  isField,
+  isNonNullObject,
+  isReference,
+  resultKeyNameFromField,
+  shouldInclude,
+} from "@apollo/client/utilities";
+
+import type { FragmentRegistryAPI } from "./fragmentRegistry.js";
+import type { KeyFieldsContext } from "./policies.js";
+import type { InMemoryCacheConfig, NormalizedCache } from "./types.js";
 
 export const { hasOwnProperty: hasOwn } = Object.prototype;
-
-export function isNullish(value: any): value is null | undefined {
-  return value === null || value === void 0;
-}
 
 export { isArray };
 
@@ -44,17 +39,17 @@ export function defaultDataIdFromObject(
   if (typeof __typename === "string") {
     if (context) {
       context.keyObject =
-        !isNullish(id) ? { id }
-        : !isNullish(_id) ? { _id }
+        id != null ? { id }
+        : _id != null ? { _id }
         : void 0;
     }
 
     // If there is no object.id, fall back to object._id.
-    if (isNullish(id) && !isNullish(_id)) {
+    if (id == null && _id != null) {
       id = _id;
     }
 
-    if (!isNullish(id)) {
+    if (id != null) {
       return `${__typename}:${
         typeof id === "number" || typeof id === "string" ?
           id
@@ -64,9 +59,8 @@ export function defaultDataIdFromObject(
   }
 }
 
-const defaultConfig = {
+const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
-  addTypename: true,
   resultCaching: true,
   // Thanks to the shouldCanonizeResults helper, this should be the only line
   // you have to change to reenable canonization by default in the future.
@@ -81,7 +75,7 @@ export function shouldCanonizeResults(
   config: Pick<InMemoryCacheConfig, "canonizeResults">
 ): boolean {
   const value = config.canonizeResults;
-  return value === void 0 ? defaultConfig.canonizeResults : value;
+  return value === void 0 ? !!defaultConfig.canonizeResults : value;
 }
 
 export function getTypenameFromStoreObject(

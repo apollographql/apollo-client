@@ -1,23 +1,29 @@
-import gql from "graphql-tag";
 import {
-  graphql,
-  GraphQLInt,
-  print,
   DocumentNode,
-  GraphQLError,
   getIntrospectionQuery,
-  GraphQLSchema,
-  GraphQLObjectType,
+  graphql,
+  GraphQLError,
   GraphQLID,
+  GraphQLInt,
+  GraphQLObjectType,
+  GraphQLSchema,
   GraphQLString,
+  print,
 } from "graphql";
+import { GraphQLFormattedError } from "graphql";
+import { gql } from "graphql-tag";
+import { defer, Observable, of } from "rxjs";
 
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { Operation } from "../../link/core";
-import { ApolloClient } from "../../core";
-import { ApolloCache, InMemoryCache } from "../../cache";
-import { ObservableStream, spyOnConsole } from "../../testing/internal";
+import { ApolloCache, InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient, NetworkStatus } from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import { ApolloLink } from "@apollo/client/link/core";
+import { Operation } from "@apollo/client/link/core";
+
+import {
+  ObservableStream,
+  spyOnConsole,
+} from "../../testing/internal/index.js";
 
 describe("General functionality", () => {
   it("should not impact normal non-@client use", () => {
@@ -27,7 +33,7 @@ describe("General functionality", () => {
       }
     `;
 
-    const link = new ApolloLink(() => Observable.of({ data: { field: 1 } }));
+    const link = new ApolloLink(() => of({ data: { field: 1 } }));
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
@@ -49,7 +55,7 @@ describe("General functionality", () => {
     `;
 
     const error = new GraphQLError("no introspection result found");
-    const link = new ApolloLink(() => Observable.of({ errors: [error] }));
+    const link = new ApolloLink(() => of({ errors: [error] }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -93,7 +99,7 @@ describe("General functionality", () => {
     });
   });
 
-  it("should cache data for future lookups", () => {
+  it("should cache data for future lookups", async () => {
     const query = gql`
       {
         field @client
@@ -114,18 +120,19 @@ describe("General functionality", () => {
       },
     });
 
-    return client
-      .query({ query })
-      .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ field: 1 });
-        expect(count).toBe(1);
-      })
-      .then(() =>
-        client.query({ query }).then(({ data }) => {
-          expect({ ...data }).toMatchObject({ field: 1 });
-          expect(count).toBe(1);
-        })
-      );
+    {
+      const { data } = await client.query({ query });
+
+      expect(data).toMatchObject({ field: 1 });
+      expect(count).toBe(1);
+    }
+
+    {
+      const { data } = await client.query({ query });
+
+      expect(data).toMatchObject({ field: 1 });
+      expect(count).toBe(1);
+    }
   });
 
   it("should honour `fetchPolicy` settings", () => {
@@ -180,7 +187,7 @@ describe("General functionality", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({
+      of({
         data: { foo: [{ __typename: "Bar" }, { __typename: "Baz" }] },
       })
     );
@@ -392,7 +399,7 @@ describe("Cache manipulation", () => {
     let selectedItemId = -1;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new ApolloLink(() => Observable.of({ data: { serverData } })),
+      link: new ApolloLink(() => of({ data: { serverData } })),
       resolvers: {
         Query: {
           selectedItemId() {
@@ -409,13 +416,14 @@ describe("Cache manipulation", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         serverData,
         selectedItemId: -1,
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
 
     await client.mutate({
@@ -424,13 +432,14 @@ describe("Cache manipulation", () => {
       refetchQueries: ["FetchInitialData"],
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       data: {
         serverData,
         selectedItemId: 123,
       },
       loading: false,
       networkStatus: 7,
+      partial: false,
     });
   });
 
@@ -459,7 +468,7 @@ describe("Cache manipulation", () => {
     `;
     const client = new ApolloClient({
       cache: new InMemoryCache(),
-      link: new ApolloLink(() => Observable.of({ data: {} })),
+      link: new ApolloLink(() => of({ data: {} })),
       resolvers: {
         ClientData: {
           titleLength(data) {
@@ -557,7 +566,7 @@ describe("Sample apps", () => {
 
     const link = new ApolloLink((operation) => {
       expect(operation.operationName).toBe("GetCount");
-      return Observable.of({ data: { lastCount: 1 } });
+      return of({ data: { lastCount: 1 } });
     });
 
     const client = new ApolloClient({
@@ -735,7 +744,7 @@ describe("Combining client and server state/operations", () => {
       },
     };
 
-    const link = new ApolloLink(() => Observable.of({ data }));
+    const link = new ApolloLink(() => of({ data }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -856,21 +865,15 @@ describe("Combining client and server state/operations", () => {
     const schema = new GraphQLSchema({ query: QueryType });
 
     const link = new ApolloLink((operation) => {
-      // @ts-ignore
-      return new Observable(async (observer) => {
+      return defer(() => {
         const { query, operationName, variables } = operation;
-        try {
-          const result = await graphql({
-            schema,
-            source: print(query),
-            variableValues: variables,
-            operationName,
-          });
-          observer.next(result);
-          observer.complete();
-        } catch (err) {
-          observer.error(err);
-        }
+
+        return graphql({
+          schema,
+          source: print(query),
+          variableValues: variables,
+          operationName,
+        });
       });
     });
 
@@ -901,7 +904,7 @@ describe("Combining client and server state/operations", () => {
       },
     };
 
-    const link = new ApolloLink(() => Observable.of({ data }));
+    const link = new ApolloLink(() => of({ data }));
 
     const client = new ApolloClient({
       cache: new InMemoryCache(),
@@ -954,7 +957,7 @@ describe("Combining client and server state/operations", () => {
 
     const link = new ApolloLink((operation) => {
       expect(operation.operationName).toBe("GetCount");
-      return Observable.of({ data: { lastCount: 1 } });
+      return of({ data: { lastCount: 1 } });
     });
 
     const client = new ApolloClient({
@@ -991,7 +994,7 @@ describe("Combining client and server state/operations", () => {
     const cache = new InMemoryCache();
     const link = new ApolloLink((operation) => {
       expect(operation.operationName).toBe("GetUser");
-      return Observable.of({
+      return of({
         data: {
           user: {
             __typename: "User",
@@ -1071,16 +1074,16 @@ describe("Combining client and server state/operations", () => {
 
     const link = new ApolloLink((operation: Operation): Observable<{}> => {
       if (operation.operationName === "SampleQuery") {
-        return Observable.of({
+        return of({
           data: { user: { __typename: "User", firstName: "John" } },
         });
       }
       if (operation.operationName === "SampleMutation") {
-        return Observable.of({
+        return of({
           data: { updateUser: { __typename: "User", firstName: "Harry" } },
         });
       }
-      return Observable.of({
+      return of({
         errors: [new Error(`Unknown operation ${operation.operationName}`)],
       });
     });
@@ -1150,18 +1153,19 @@ describe("Combining client and server state/operations", () => {
       }
     `;
 
+    const error: GraphQLFormattedError = {
+      message: "something went wrong",
+      extensions: {
+        code: "INTERNAL_SERVER_ERROR",
+      },
+      path: ["user"],
+    };
+
     const cache = new InMemoryCache();
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: null,
-        errors: [
-          new GraphQLError("something went wrong", {
-            extensions: {
-              code: "INTERNAL_SERVER_ERROR",
-            },
-            path: ["user"],
-          }),
-        ],
+        errors: [error],
       });
     });
 
@@ -1173,6 +1177,12 @@ describe("Combining client and server state/operations", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitError("something went wrong");
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new CombinedGraphQLErrors([error]),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
   });
 });

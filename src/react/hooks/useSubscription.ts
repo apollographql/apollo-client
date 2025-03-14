@@ -1,15 +1,9 @@
-import { invariant } from "../../utilities/globals/index.js";
-import * as React from "rehackt";
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
+import * as React from "react";
+import { Observable } from "rxjs";
 
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
-import type {
-  NoInfer,
-  SubscriptionHookOptions,
-  SubscriptionResult,
-} from "../types/types.js";
 import type {
   ApolloClient,
   DefaultContext,
@@ -17,14 +11,21 @@ import type {
   FetchPolicy,
   FetchResult,
   OperationVariables,
-} from "../../core/index.js";
-import { ApolloError, Observable } from "../../core/index.js";
-import { useApolloClient } from "./useApolloClient.js";
+} from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type {
+  NoInfer,
+  SubscriptionHookOptions,
+  SubscriptionResult,
+} from "@apollo/client/react";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { invariant } from "@apollo/client/utilities/invariant";
+
 import { useDeepMemo } from "./internal/useDeepMemo.js";
-import { useSyncExternalStore } from "./useSyncExternalStore.js";
-import { toApolloError } from "./useQuery.js";
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
-import type { MaybeMasked } from "../../masking/index.js";
+import { useApolloClient } from "./useApolloClient.js";
+import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -112,15 +113,13 @@ export function useSubscription<
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SubscriptionHookOptions<
-    NoInfer<TData>,
-    NoInfer<TVariables>
-  > = Object.create(null)
+  options: SubscriptionHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
 ) {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
 
+  // eslint-disable-next-line react-compiler/react-compiler
   if (!hasIssuedDeprecationWarningRef.current) {
     // eslint-disable-next-line react-compiler/react-compiler
     hasIssuedDeprecationWarningRef.current = true;
@@ -241,7 +240,10 @@ export function useSubscription<
               // TODO: fetchResult.data can be null but SubscriptionResult.data
               // expects TData | undefined only
               data: fetchResult.data!,
-              error: toApolloError(fetchResult),
+              error:
+                fetchResult.errors ?
+                  new CombinedGraphQLErrors(fetchResult.errors)
+                : undefined,
               variables,
             };
             observable.__.setResult(result);
@@ -262,10 +264,6 @@ export function useSubscription<
             }
           },
           error(error) {
-            error =
-              error instanceof ApolloError ? error : (
-                new ApolloError({ protocolErrors: [error] })
-              );
             if (!subscriptionStopped) {
               observable.__.setResult({
                 loading: false,

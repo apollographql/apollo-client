@@ -1,41 +1,43 @@
+import { WeakCache } from "@wry/caches";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
   InlineFragmentNode,
 } from "graphql";
 import { wrap } from "optimism";
+import { Observable } from "rxjs";
 
-import type {
-  StoreObject,
-  Reference,
-  DeepPartial,
-  NoInfer,
-} from "../../utilities/index.js";
-import {
-  Observable,
-  cacheSizes,
-  defaultCacheSizes,
-  getFragmentDefinition,
-  getFragmentQueryDocument,
-  mergeDeepArray,
-} from "../../utilities/index.js";
-import type { DataProxy } from "./types/DataProxy.js";
-import type { Cache } from "./types/Cache.js";
-import { WeakCache } from "@wry/caches";
-import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 import type {
   OperationVariables,
   TypedDocumentNode,
-} from "../../core/types.js";
-import type { MissingTree } from "./types/common.js";
-import { equalByQuery } from "../../core/equalByQuery.js";
-import { invariant } from "../../utilities/globals/index.js";
-import { maskFragment } from "../../masking/index.js";
+} from "@apollo/client/core";
 import type {
   FragmentType,
   MaybeMasked,
   Unmasked,
-} from "../../masking/index.js";
+} from "@apollo/client/masking";
+import { maskFragment } from "@apollo/client/masking";
+import type {
+  DeepPartial,
+  NoInfer,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
+import {
+  cacheSizes,
+  defaultCacheSizes,
+  getFragmentDefinition,
+  getFragmentQueryDocument,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getApolloCacheMemoryInternals } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
+
+import { equalByQuery } from "../../core/equalByQuery.js";
+
+import type { Cache } from "./types/Cache.js";
+import type { MissingTree } from "./types/common.js";
+import type { DataProxy } from "./types/DataProxy.js";
 
 export type Transaction<T> = (c: ApolloCache<T>) => void;
 
@@ -110,6 +112,18 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   public abstract write<TData = any, TVariables = any>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
+
+  /**
+   * Returns data read from the cache for a given query along with information
+   * about the cache result such as whether the result is complete and details
+   * about missing fields.
+   *
+   * Will return `complete` as `true` if it can fulfill the full cache result or
+   * `false` if not. When no data can be fulfilled from the cache, `null` is
+   * returned. When `returnPartialData` is `true`, non-null partial results are
+   * returned if it contains at least one field that can be fulfilled from the
+   * cache.
+   */
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
   public abstract watch<TData = any, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>
@@ -297,10 +311,16 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
         ...diffOptions,
         immediate: true,
         callback: (diff) => {
-          const data =
+          let data =
             dataMasking ?
               maskFragment(diff.result, fragment, this, fragmentName)
             : diff.result;
+
+          // TODO: Remove this once `watchFragment` supports `null` as valid
+          // value emitted
+          if (data === null) {
+            data = {} as any;
+          }
 
           if (
             // Always ensure we deliver the first result
@@ -323,12 +343,10 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
           } as WatchFragmentResult<TData>;
 
           if (diff.missing) {
-            result.missing = mergeDeepArray(
-              diff.missing.map((error) => error.missing)
-            );
+            result.missing = diff.missing.missing;
           }
 
-          latestDiff = { ...diff, result: data };
+          latestDiff = { ...diff, result: data } as DataProxy.DiffResult<TData>;
           observer.next(result);
         },
       });

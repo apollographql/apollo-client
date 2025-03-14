@@ -1,8 +1,4 @@
-import { invariant } from "../../utilities/globals/index.js";
-
-// Make builtins like Map and Set safe to use with non-extensible objects.
-import "./fixPolyfills.js";
-
+import { equal } from "@wry/equality";
 import type {
   DocumentNode,
   FragmentDefinitionNode,
@@ -10,30 +6,36 @@ import type {
 } from "graphql";
 import type { OptimisticWrapperFunction } from "optimism";
 import { wrap } from "optimism";
-import { equal } from "@wry/equality";
+
+import type { OperationVariables } from "@apollo/client/core";
+import type {
+  DeepPartial,
+  Reference,
+  StoreObject,
+} from "@apollo/client/utilities";
+import {
+  addTypenameToDocument,
+  cacheSizes,
+  canonicalStringify,
+  defaultCacheSizes,
+  DocumentTransform,
+  isReference,
+  print,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getInMemoryCacheMemoryInternals } from "@apollo/client/utilities/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
-import { MissingFieldError } from "../core/types/common.js";
-import type { StoreObject, Reference } from "../../utilities/index.js";
-import {
-  addTypenameToDocument,
-  isReference,
-  DocumentTransform,
-  canonicalStringify,
-  print,
-  cacheSizes,
-  defaultCacheSizes,
-} from "../../utilities/index.js";
-import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
-import { StoreReader } from "./readFromStore.js";
-import { StoreWriter } from "./writeToStore.js";
+
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
-import { makeVar, forgetCache, recallCache } from "./reactiveVars.js";
-import { Policies } from "./policies.js";
 import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
-import type { OperationVariables } from "../../core/index.js";
-import { getInMemoryCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
+import { Policies } from "./policies.js";
+import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
+import { StoreReader } from "./readFromStore.js";
+import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
+import { StoreWriter } from "./writeToStore.js";
 
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
@@ -46,7 +48,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
 
   protected config: InMemoryCacheConfig;
   private watches = new Set<Cache.WatchOptions>();
-  private addTypename: boolean;
 
   private storeReader!: StoreReader;
   private storeWriter!: StoreWriter;
@@ -72,7 +73,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   constructor(config: InMemoryCacheConfig = {}) {
     super();
     this.config = normalizeConfig(config);
-    this.addTypename = !!this.config.addTypename;
 
     this.policies = new Policies({
       cache: this,
@@ -114,7 +114,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       this,
       (this.storeReader = new StoreReader({
         cache: this,
-        addTypename: this.addTypename,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
         canonizeResults: shouldCanonizeResults(this.config),
         canon:
@@ -178,7 +177,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     return (optimistic ? this.optimisticData : this.data).extract();
   }
 
-  public read<T>(options: Cache.ReadOptions): T | null {
+  public read<T>(
+    options: Cache.ReadOptions & { returnPartialData: true }
+  ): T | DeepPartial<T> | null;
+
+  public read<T>(options: Cache.ReadOptions): T | null;
+
+  public read<T>(options: Cache.ReadOptions): T | DeepPartial<T> | null {
     const {
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the
@@ -189,26 +194,13 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       // specified explicitly.
       returnPartialData = false,
     } = options;
-    try {
-      return (
-        this.storeReader.diffQueryAgainstStore<T>({
-          ...options,
-          store: options.optimistic ? this.optimisticData : this.data,
-          config: this.config,
-          returnPartialData,
-        }).result || null
-      );
-    } catch (e) {
-      if (e instanceof MissingFieldError) {
-        // Swallow MissingFieldError and return null, so callers do not need to
-        // worry about catching "normal" exceptions resulting from incomplete
-        // cache data. Unexpected errors will be re-thrown. If you need more
-        // information about which fields were missing, use cache.diff instead,
-        // and examine diffResult.missing.
-        return null;
-      }
-      throw e;
-    }
+
+    return this.storeReader.diffQueryAgainstStore<T>({
+      ...options,
+      store: options.optimistic ? this.optimisticData : this.data,
+      config: this.config,
+      returnPartialData,
+    }).result;
   }
 
   public write(options: Cache.WriteOptions): Reference | undefined {
@@ -529,7 +521,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }
 
   public transformDocument(document: DocumentNode): DocumentNode {
-    return this.addTypenameToDocument(this.addFragmentsToDocument(document));
+    return this.addTypenameTransform.transformDocument(
+      this.addFragmentsToDocument(document)
+    );
   }
 
   public fragmentMatches(
@@ -552,13 +546,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   private addFragmentsToDocument(document: DocumentNode) {
     const { fragments } = this.config;
     return fragments ? fragments.transform(document) : document;
-  }
-
-  private addTypenameToDocument(document: DocumentNode) {
-    if (this.addTypename) {
-      return this.addTypenameTransform.transformDocument(document);
-    }
-    return document;
   }
 
   // This method is wrapped by maybeBroadcastWatch, which is called by
@@ -605,7 +592,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
    * information to the DevTools.
    * Use at your own risk!
    */
-  public getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
+  public declare getMemoryInternals?: typeof getInMemoryCacheMemoryInternals;
 }
 
 if (__DEV__) {

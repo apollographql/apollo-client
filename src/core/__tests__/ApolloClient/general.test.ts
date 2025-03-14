@@ -5278,20 +5278,23 @@ describe("ApolloClient", () => {
       };
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query },
-            result: { data },
-          },
-          {
-            request: { query },
-            result: { data: secondReqData },
-          },
-          {
-            request: { query: mutation },
-            result: { data: mutationData },
-          },
-        ]),
+        link: new MockLink(
+          [
+            {
+              request: { query },
+              result: { data },
+            },
+            {
+              request: { query },
+              result: { data: secondReqData },
+            },
+            {
+              request: { query: mutation },
+              result: { data: mutationData },
+            },
+          ],
+          { showWarnings: false }
+        ),
       });
       const observable = client.watchQuery({
         query,

@@ -48,7 +48,6 @@ import {
   isArray,
 } from "./helpers.js";
 import type { InMemoryCache } from "./inMemoryCache.js";
-import { ObjectCanon } from "./object-canon.js";
 import type { Policies } from "./policies.js";
 import type {
   DiffQueryAgainstStoreOptions,
@@ -86,7 +85,6 @@ type ExecSubSelectedArrayOptions = {
 interface StoreReaderConfig {
   cache: InMemoryCache;
   resultCacheMaxSize?: number;
-  canon?: ObjectCanon;
   fragments?: InMemoryCacheConfig["fragments"];
 }
 
@@ -126,15 +124,8 @@ export class StoreReader {
 
   private knownResults = new WeakMap<Record<string, any>, SelectionSetNode>();
 
-  public canon: ObjectCanon;
-  public resetCanon() {
-    this.canon = new ObjectCanon();
-  }
-
   constructor(config: StoreReaderConfig) {
     this.config = config;
-
-    this.canon = config.canon || new ObjectCanon();
 
     // memoized functions in this class will be "garbage-collected"
     // by recreating the whole `StoreReader` in
@@ -296,7 +287,7 @@ export class StoreReader {
       !context.store.has(objectOrReference.__ref)
     ) {
       return {
-        result: this.canon.empty,
+        result: {},
         missing: `Dangling reference to missing ${objectOrReference.__ref} object`,
       };
     }

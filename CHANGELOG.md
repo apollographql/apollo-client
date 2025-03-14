@@ -1,5 +1,36 @@
 # @apollo/client
 
+## 4.0.0-alpha.1
+
+### Major Changes
+
+- [#12433](https://github.com/apollographql/apollo-client/pull/12433) [`b86e50b`](https://github.com/apollographql/apollo-client/commit/b86e50b1dc121cd67fe73655256b6c61afc18cb4) Thanks [@phryneas](https://github.com/phryneas)! - Remove workarounds for streaming with non-WhatWG response bodies to reduce bundle size.
+
+  This removes support for `fetch` implementations that return Node Streams, Async Iterators or Blob instances as `Response.body`.
+
+  In the WhatWG Fetch specification, [`Response.body`](https://fetch.spec.whatwg.org/#body) is specified as a WhatWG [ReadableStream](https://streams.spec.whatwg.org/#readablestream).
+
+  At this point in time, this is natively supported in browsers, `node` and React Native (via [react-native-fetch-api](https://www.npmjs.com/package/react-native-fetch-api), see our [setup instructions for React Native](https://www.apollographql.com/docs/react/integrations/react-native#consuming-multipart-http-via-text-streaming)).
+
+  If you are using an older `fetch` polyfill that deviates from the spec, this might not be compatible - for example, [node-fetch](https://github.com/node-fetch/node-fetch?tab=readme-ov-file#interface-body) returns a node `Readable` instead of a `ReadableStream`.
+  In those cases, please switch to a compatible alternative such as the `node`-native `fetch`, or `undici`.
+
+### Minor Changes
+
+- [#12438](https://github.com/apollographql/apollo-client/pull/12438) [`5089516`](https://github.com/apollographql/apollo-client/commit/5089516aa3ad140df22bb8a458faeeb884ed0388) Thanks [@phryneas](https://github.com/phryneas)! - Drop `rehackt` dependency.
+  We can now directly import from `react` without causing build errors in RSC.
+
+- [#12437](https://github.com/apollographql/apollo-client/pull/12437) [`4779dc7`](https://github.com/apollographql/apollo-client/commit/4779dc7badaba10d8c7a271eb0da6a079049b65d) Thanks [@phryneas](https://github.com/phryneas)! - Remove polyfills for Object.freeze,seal and preventExtensions in React Native
+
+  These polyfills were only necessary until React Native 0.59, which
+  [patched the problem](https://github.com/facebook/react-native/pull/21492) on
+  the React Native side.
+
+  With React Native 0.61, the `Map` function was [completely replaced](https://github.com/facebook/react-native/commit/93b9ac74e59bbe84ea388d7c1879857b4acab114)
+  with a native implementation that never had the problems we guarded against.
+
+- [#12438](https://github.com/apollographql/apollo-client/pull/12438) [`5089516`](https://github.com/apollographql/apollo-client/commit/5089516aa3ad140df22bb8a458faeeb884ed0388) Thanks [@phryneas](https://github.com/phryneas)! - Add `react-server` entry point with stubs for normal exports.
+
 ## 4.0.0-alpha.0
 
 ### Major Changes

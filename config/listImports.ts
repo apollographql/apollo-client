@@ -3,7 +3,7 @@
 ```sh
 node --experimental-transform-types --no-warnings --conditions 'react-server' config/listImports.ts @apollo/client/react
 ```
-from `src/__tests__/exports.ts
+from `src/__tests__/exports.ts`
 */
 import { registerHooks } from "node:module";
 

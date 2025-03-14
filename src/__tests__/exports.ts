@@ -68,8 +68,6 @@ describe("exports of public entry points", () => {
     });
   }
 
-  checkWithConditions("@apollo/client/react", ["react-server"]);
-
   check("@apollo/client", client);
   check("@apollo/client/cache", cache);
   check("@apollo/client/core", core);
@@ -104,7 +102,8 @@ describe("exports of public entry points", () => {
   check("@apollo/client/utilities/globals", utilitiesGlobals);
   check("@apollo/client/utilities/invariant", utilitiesInvariant);
   check("@apollo/client/utilities/environment", utilitiesEnvironment);
-  expect();
+
+  checkWithConditions("@apollo/client/react", ["react-server"]);
 
   it("completeness", () => {
     const { join } = require("path").posix;

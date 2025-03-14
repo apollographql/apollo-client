@@ -1082,7 +1082,7 @@ describe("ApolloClient", () => {
         for (const expected of expectedRefetchedResults) {
           await expect(stream).toEmitApolloQueryResult(expected);
         }
-        expect(stream).not.toEmitAnything();
+        await expect(stream).not.toEmitAnything();
       }
     );
   }

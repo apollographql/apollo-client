@@ -37,11 +37,6 @@ import { StoreReader } from "./readFromStore.js";
 import type { InMemoryCacheConfig, NormalizedCacheObject } from "./types.js";
 import { StoreWriter } from "./writeToStore.js";
 
-// Make builtins like Map and Set safe to use with non-extensible objects.
-// TODO: this needs to be removed for 4.0, so we really don't have side effects.
-// that means we have to find an alternative means for the React Native fixes in there.
-import "./fixPolyfills.js";
-
 type BroadcastOptions = Pick<
   Cache.BatchOptions<InMemoryCache>,
   "optimistic" | "onWatchUpdated"

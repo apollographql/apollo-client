@@ -3634,15 +3634,7 @@ describe("ObservableQuery", () => {
       ]),
     });
 
-    const observable = client.watchQuery({
-      query,
-      variables,
-      // If we let the cache return canonical results, it will be harder to
-      // write this test, because any two results that are deeply equal will
-      // also be !==, making the choice of equality test in queryInfo.setDiff
-      // less visible/important.
-      canonizeResults: false,
-    });
+    const observable = client.watchQuery({ query, variables });
 
     const queryInfo = observable["queryInfo"];
     const cache = queryInfo["cache"];

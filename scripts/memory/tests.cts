@@ -110,11 +110,8 @@ describe("garbage collection", () => {
       const expectedKeys = {
         __proto__: null,
         StoreReader1: true,
-        ObjectCanon1: true,
         StoreReader2: true,
-        ObjectCanon2: true,
         StoreReader3: false,
-        ObjectCanon3: false,
       };
 
       const registry = makeRegistry((key) => {
@@ -142,8 +139,6 @@ describe("garbage collection", () => {
             },
           },
         },
-        // Explicitly disable canonization to test that it can be overridden.
-        canonizeResults: false,
       });
 
       const client = new ApolloClient({ cache });
@@ -154,15 +149,11 @@ describe("garbage collection", () => {
             local
           }
         `;
-        const obsQuery = client.watchQuery({
-          query,
-          canonizeResults: true,
-        });
+        const obsQuery = client.watchQuery({ query });
 
         function register(suffix) {
           const reader = cache["storeReader"];
           registry.register(reader, "StoreReader" + suffix);
-          registry.register(reader.canon, "ObjectCanon" + suffix);
         }
 
         register(1);
@@ -173,25 +164,20 @@ describe("garbage collection", () => {
               local: "hello",
             });
 
-            const read = () =>
-              cache.readQuery({
-                query,
-                canonizeResults: true,
-              });
+            const read = () => cache.readQuery({ query });
 
-            assert.strictEqual(read(), result.data);
+            assert.deepStrictEqual(read(), result.data);
 
             assert.deepStrictEqual(cache.gc(), []);
 
             // Nothing changes because we merely called cache.gc().
-            assert.strictEqual(read(), result.data);
+            assert.deepStrictEqual(read(), result.data);
 
             assert.deepStrictEqual(
               cache.gc({
                 // Now reset the result cache but preserve reader.canon, so the
                 // results will be === even though they have to be recomputed.
                 resetResultCache: true,
-                resetResultIdentities: false,
               }),
               []
             );
@@ -199,14 +185,13 @@ describe("garbage collection", () => {
             register(2);
 
             const dataAfterResetWithSameCanon = read();
-            assert.strictEqual(dataAfterResetWithSameCanon, result.data);
+            assert.deepStrictEqual(dataAfterResetWithSameCanon, result.data);
 
             assert.deepStrictEqual(
               cache.gc({
                 // Finally, do a full reset of the result caching system, including
                 // discarding reader.canon, so === result identity is lost.
                 resetResultCache: true,
-                resetResultIdentities: true,
               }),
               []
             );

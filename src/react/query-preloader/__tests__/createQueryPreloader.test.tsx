@@ -1696,126 +1696,6 @@ test("does not suspend and returns partial data when `returnPartialData` is `tru
   }
 });
 
-test('enables canonical results when canonizeResults is "true"', async () => {
-  interface Result {
-    __typename: string;
-    value: number;
-  }
-
-  interface QueryData {
-    results: Result[];
-  }
-
-  const cache = new InMemoryCache({
-    typePolicies: {
-      Result: {
-        keyFields: false,
-      },
-    },
-  });
-
-  const query: TypedDocumentNode<QueryData, never> = gql`
-    query {
-      results {
-        value
-      }
-    }
-  `;
-
-  const results: Result[] = [
-    { __typename: "Result", value: 0 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 2 },
-    { __typename: "Result", value: 3 },
-    { __typename: "Result", value: 5 },
-  ];
-
-  cache.writeQuery({
-    query,
-    data: { results },
-  });
-
-  const client = new ApolloClient({ cache, link: new MockLink([]) });
-
-  const preloadQuery = createQueryPreloader(client);
-  const queryRef = preloadQuery(query, { canonizeResults: true });
-
-  using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
-
-  const { snapshot } = await renderStream.takeRender();
-  const resultSet = new Set(snapshot.result?.data.results);
-  const values = Array.from(resultSet).map((item) => item.value);
-
-  expect(snapshot.result).toEqual({
-    data: { results },
-    networkStatus: NetworkStatus.ready,
-    error: undefined,
-  });
-
-  expect(resultSet.size).toBe(5);
-  expect(values).toEqual([0, 1, 2, 3, 5]);
-});
-
-test("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-  interface Result {
-    __typename: string;
-    value: number;
-  }
-
-  const cache = new InMemoryCache({
-    canonizeResults: true,
-    typePolicies: {
-      Result: {
-        keyFields: false,
-      },
-    },
-  });
-
-  const query: TypedDocumentNode<{ results: Result[] }, never> = gql`
-    query {
-      results {
-        value
-      }
-    }
-  `;
-
-  const results: Result[] = [
-    { __typename: "Result", value: 0 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 2 },
-    { __typename: "Result", value: 3 },
-    { __typename: "Result", value: 5 },
-  ];
-
-  cache.writeQuery({
-    query,
-    data: { results },
-  });
-
-  const client = new ApolloClient({ cache, link: new MockLink([]) });
-
-  const preloadQuery = createQueryPreloader(client);
-  const queryRef = preloadQuery(query, { canonizeResults: false });
-
-  using _disabledAct = disableActEnvironment();
-  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
-
-  const { snapshot } = await renderStream.takeRender();
-  const resultSet = new Set(snapshot.result!.data.results);
-  const values = Array.from(resultSet).map((item) => item.value);
-
-  expect(snapshot.result).toEqual({
-    data: { results },
-    networkStatus: NetworkStatus.ready,
-    error: undefined,
-  });
-  expect(resultSet.size).toBe(6);
-  expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-});
-
 test("suspends deferred queries until initial chunk loads then rerenders with deferred data", async () => {
   const query = gql`
     query {
@@ -2557,7 +2437,7 @@ describe.skip("type tests", () => {
   test("returns QueryReference<TData> when passing an option unrelated to TData", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
-      const queryRef = preloadQuery(query, { canonizeResults: true });
+      const queryRef = preloadQuery(query, { fetchPolicy: "cache-first" });
 
       expectTypeOf(queryRef).toEqualTypeOf<
         PreloadedQueryRef<SimpleCaseData, { [key: string]: any }>
@@ -2567,7 +2447,7 @@ describe.skip("type tests", () => {
     {
       const query = gql``;
       const queryRef = preloadQuery<SimpleCaseData>(query, {
-        canonizeResults: true,
+        fetchPolicy: "cache-first",
       });
 
       expectTypeOf(queryRef).toEqualTypeOf<
@@ -2636,7 +2516,7 @@ describe.skip("type tests", () => {
     {
       const query: TypedDocumentNode<SimpleCaseData> = gql``;
       const queryRef = preloadQuery(query, {
-        canonizeResults: true,
+        fetchPolicy: "cache-first",
         returnPartialData: true,
         errorPolicy: "none",
       });
@@ -2649,7 +2529,7 @@ describe.skip("type tests", () => {
     {
       const query = gql``;
       const queryRef = preloadQuery<SimpleCaseData>(query, {
-        canonizeResults: true,
+        fetchPolicy: "cache-first",
         returnPartialData: true,
         errorPolicy: "none",
       });

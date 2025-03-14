@@ -135,25 +135,6 @@ By specifying the ID of another cached object, you can query arbitrary cached da
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `canonizeResults`
-
-`Boolean`
-</td>
-<td>
-
-> **⚠️ Deprecated**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
-
-If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
-
-The default value is `false`.
-</td>
-</tr>
-
 </tbody>
 </table>
 
@@ -586,26 +567,6 @@ You don't need to provide this value if the `fragment` document includes only on
 <td>
 
 A map of any GraphQL variable names and values required by `fragment`.
-</td>
-</tr>
-
-
-<tr>
-<td>
-
-###### `canonizeResults`
-
-`Boolean`
-</td>
-<td>
-
-> **⚠️ Deprecated**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
-
-If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
-
-The default value is `false`.
 </td>
 </tr>
 

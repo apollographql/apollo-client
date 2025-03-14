@@ -30,7 +30,7 @@ import { ApolloCache } from "../core/cache.js";
 import type { Cache } from "../core/types/Cache.js";
 
 import { EntityStore, supportsResultCaching } from "./entityStore.js";
-import { hasOwn, normalizeConfig, shouldCanonizeResults } from "./helpers.js";
+import { hasOwn, normalizeConfig } from "./helpers.js";
 import { Policies } from "./policies.js";
 import { forgetCache, makeVar, recallCache } from "./reactiveVars.js";
 import { StoreReader } from "./readFromStore.js";
@@ -103,8 +103,7 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     this.resetResultCache();
   }
 
-  private resetResultCache(resetResultIdentities?: boolean) {
-    const previousReader = this.storeReader;
+  private resetResultCache() {
     const { fragments } = this.config;
 
     // The StoreWriter is mostly stateless and so doesn't really need to be
@@ -115,11 +114,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
       (this.storeReader = new StoreReader({
         cache: this,
         resultCacheMaxSize: this.config.resultCacheMaxSize,
-        canonizeResults: shouldCanonizeResults(this.config),
-        canon:
-          resetResultIdentities ? void 0 : (
-            previousReader && previousReader.canon
-          ),
         fragments,
       })),
       fragments
@@ -294,22 +288,14 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     // If true, also free non-essential result cache memory by bulk-releasing
     // this.{store{Reader,Writer},maybeBroadcastWatch}. Defaults to false.
     resetResultCache?: boolean;
-    // If resetResultCache is true, this.storeReader.canon will be preserved by
-    // default, but can also be discarded by passing resetResultIdentities:true.
-    // Defaults to false.
-    resetResultIdentities?: boolean;
   }) {
     canonicalStringify.reset();
     print.reset();
     this.addTypenameTransform.resetCache();
     this.config.fragments?.resetCaches();
     const ids = this.optimisticData.gc();
-    if (options && !this.txCount) {
-      if (options.resetResultCache) {
-        this.resetResultCache(options.resetResultIdentities);
-      } else if (options.resetResultIdentities) {
-        this.storeReader.resetCanon();
-      }
+    if (options && !this.txCount && options.resetResultCache) {
+      this.resetResultCache();
     }
     return ids;
   }

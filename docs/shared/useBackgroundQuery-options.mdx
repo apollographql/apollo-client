@@ -81,28 +81,6 @@ If you're using [Apollo Link](/react/api/link/introduction/), this object is the
 <tr>
 <td>
 
-###### `canonizeResults`
-
-`Boolean`
-
-</td>
-
-<td>
-
-> **⚠️ Deprecated**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
-
-If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
-
-The default value is `false`.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `client`
 
 `ApolloClient`

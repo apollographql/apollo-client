@@ -168,8 +168,6 @@ export interface SuspenseQueryHookOptions<
   variables?: TVariables;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
@@ -206,7 +204,6 @@ export interface BackgroundQueryHookOptions<
     | "variables"
     | "errorPolicy"
     | "context"
-    | "canonizeResults"
     | "returnPartialData"
     | "refetchWritePolicy"
   > {
@@ -232,8 +229,6 @@ export type LoadableQueryHookFetchPolicy = Extract<
 >;
 
 export interface LoadableQueryHookOptions {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient<any>;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */

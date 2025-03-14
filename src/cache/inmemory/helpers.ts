@@ -62,20 +62,10 @@ export function defaultDataIdFromObject(
 const defaultConfig: InMemoryCacheConfig = {
   dataIdFromObject: defaultDataIdFromObject,
   resultCaching: true,
-  // Thanks to the shouldCanonizeResults helper, this should be the only line
-  // you have to change to reenable canonization by default in the future.
-  canonizeResults: false,
 };
 
 export function normalizeConfig(config: InMemoryCacheConfig) {
   return compact(defaultConfig, config);
-}
-
-export function shouldCanonizeResults(
-  config: Pick<InMemoryCacheConfig, "canonizeResults">
-): boolean {
-  const value = config.canonizeResults;
-  return value === void 0 ? !!defaultConfig.canonizeResults : value;
 }
 
 export function getTypenameFromStoreObject(

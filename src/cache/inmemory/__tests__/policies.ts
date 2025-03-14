@@ -5838,7 +5838,6 @@ describe("type policies", function () {
     function readFirstBookResult() {
       return cache.readQuery<{ author: any }>({
         query: firstBookQuery,
-        canonizeResults: true,
       })!;
     }
 
@@ -5931,7 +5930,6 @@ describe("type policies", function () {
 
     const thirdFirstBookResult = readFirstBookResult();
     expect(thirdFirstBookResult).toEqual(secondFirstBookResult);
-    expect(thirdFirstBookResult).toBe(secondFirstBookResult);
   });
 
   it("readField can read fields with arguments", function () {

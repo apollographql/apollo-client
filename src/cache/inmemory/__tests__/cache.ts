@@ -15,8 +15,6 @@ import { defaultCacheSizes } from "@apollo/client/utilities";
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import { cloneDeep } from "../../../utilities/common/cloneDeep.js";
 import { InMemoryCache } from "../inMemoryCache.js";
-import { ObjectCanon } from "../object-canon.js";
-import { TypePolicies } from "../policies.js";
 import { StoreReader } from "../readFromStore.js";
 import { InMemoryCacheConfig } from "../types.js";
 import { StoreWriter } from "../writeToStore.js";
@@ -1507,9 +1505,6 @@ describe("Cache", () => {
       const originalMBW = cache["maybeBroadcastWatch"];
       expect(typeof originalMBW).toBe("function");
 
-      const originalCanon = originalReader.canon;
-      expect(originalCanon).toBeInstanceOf(ObjectCanon);
-
       cache.writeQuery({
         query,
         data: {
@@ -1537,9 +1532,6 @@ describe("Cache", () => {
       expect(originalReader).not.toBe(cache["storeReader"]);
       expect(originalWriter).not.toBe(cache["storeWriter"]);
       expect(originalMBW).not.toBe(cache["maybeBroadcastWatch"]);
-      // The cache.storeReader.canon is preserved by default, but can be dropped
-      // by passing resetResultIdentities:true to cache.gc.
-      expect(originalCanon).toBe(cache["storeReader"].canon);
     });
   });
 
@@ -2291,171 +2283,6 @@ describe("InMemoryCache#broadcastWatches", function () {
       received2AllCaps,
     ]);
   });
-
-  it("should pass WatchOptions through to cache.diff", () => {
-    const typePolicies: TypePolicies = {
-      Query: {
-        fields: {
-          object(_, { variables }) {
-            return { name: variables?.name ?? "UNKNOWN" };
-          },
-        },
-      },
-    };
-
-    const canonicalCache = new InMemoryCache({
-      canonizeResults: true,
-      typePolicies,
-    });
-
-    const nonCanonicalCache = new InMemoryCache({
-      canonizeResults: false,
-      typePolicies,
-    });
-
-    const query = gql`
-      query {
-        object {
-          name
-        }
-      }
-    `;
-
-    const unwatchers = new Set<() => void>();
-
-    type Diff = Cache.DiffResult<{
-      object: {
-        name: string;
-      };
-    }>;
-    const diffs: Record<string, Diff[]> = {};
-    function addDiff(name: string, diff: Diff) {
-      (diffs[name] || (diffs[name] = [])).push(diff);
-    }
-
-    const commonWatchOptions = {
-      query,
-      optimistic: true,
-      immediate: true,
-      callback(diff: Diff) {
-        if (diff.complete) {
-          addDiff(diff.result.object.name, diff);
-        }
-      },
-    };
-
-    unwatchers.add(
-      canonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "canonicalByDefault" },
-        // Pass nothing for canonizeResults to let the default for canonicalCache
-        // (true) prevail.
-      })
-    );
-
-    unwatchers.add(
-      nonCanonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "nonCanonicalByDefault" },
-        // Pass nothing for canonizeResults to let the default for
-        // nonCanonicalCache (false) prevail.
-      })
-    );
-
-    unwatchers.add(
-      nonCanonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "canonicalByChoice" },
-        canonizeResults: true, // Override the default.
-      })
-    );
-
-    unwatchers.add(
-      canonicalCache.watch({
-        ...commonWatchOptions,
-        variables: { name: "nonCanonicalByChoice" },
-        canonizeResults: false, // Override the default.
-      })
-    );
-
-    function makeDiff(name: string): Diff {
-      return {
-        complete: true,
-        result: {
-          object: { name },
-        },
-      };
-    }
-
-    const canonicalByDefaultDiff = makeDiff("canonicalByDefault");
-    const nonCanonicalByDefaultDiff = makeDiff("nonCanonicalByDefault");
-    const canonicalByChoiceDiff = makeDiff("canonicalByChoice");
-    const nonCanonicalByChoiceDiff = makeDiff("nonCanonicalByChoice");
-
-    expect(diffs).toEqual({
-      canonicalByDefault: [canonicalByDefaultDiff],
-      nonCanonicalByDefault: [nonCanonicalByDefaultDiff],
-      canonicalByChoice: [canonicalByChoiceDiff],
-      nonCanonicalByChoice: [nonCanonicalByChoiceDiff],
-    });
-
-    [canonicalCache, nonCanonicalCache].forEach((cache) => {
-      // Hack: delete every watch.lastDiff, so subsequent results will be
-      // broadcast, even though they are deeply equal to the previous results.
-      cache["watches"].forEach((watch) => {
-        delete watch.lastDiff;
-      });
-    });
-
-    // Evict Query.object to invalidate the result cache.
-    canonicalCache.evict({
-      fieldName: "object",
-    });
-    nonCanonicalCache.evict({
-      fieldName: "object",
-    });
-
-    // Every watcher receives the same (deeply equal) Diff a second time.
-    expect(diffs).toEqual({
-      canonicalByDefault: [canonicalByDefaultDiff, canonicalByDefaultDiff],
-      nonCanonicalByDefault: [
-        nonCanonicalByDefaultDiff,
-        nonCanonicalByDefaultDiff,
-      ],
-      canonicalByChoice: [canonicalByChoiceDiff, canonicalByChoiceDiff],
-      nonCanonicalByChoice: [
-        nonCanonicalByChoiceDiff,
-        nonCanonicalByChoiceDiff,
-      ],
-    });
-
-    function expectCanonical(name: string) {
-      const count = diffs[name].length;
-      const firstDiff = diffs[name][0];
-      for (let i = 1; i < count; ++i) {
-        expect(firstDiff).toEqual(diffs[name][i]);
-        expect(firstDiff.result).toBe(diffs[name][i].result);
-      }
-    }
-
-    function expectNonCanonical(name: string) {
-      const count = diffs[name].length;
-      const firstDiff = diffs[name][0];
-      for (let i = 1; i < count; ++i) {
-        expect(firstDiff).toEqual(diffs[name][i]);
-        expect(firstDiff.result).not.toBe(diffs[name][i].result);
-      }
-    }
-
-    // However, some of the diff.result objects are canonized and thus ===, and
-    // others are deeply equal but not canonized (and thus not ===).
-    expectCanonical("canonicalByDefault");
-    expectCanonical("canonicalByChoice");
-    expectNonCanonical("nonCanonicalByDefault");
-    expectNonCanonical("nonCanonicalByChoice");
-
-    unwatchers.forEach((unwatch) => unwatch());
-  });
 });
 
 describe("InMemoryCache#modify", () => {
@@ -2565,7 +2392,6 @@ describe("InMemoryCache#modify", () => {
 
   it("should allow invalidation using details.INVALIDATE", () => {
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Book: {
           keyFields: ["isbn"],
@@ -2637,7 +2463,7 @@ describe("InMemoryCache#modify", () => {
 
     const resultAfterAuthorInvalidation = read();
     expect(resultAfterAuthorInvalidation).toEqual(initialResult);
-    expect(resultAfterAuthorInvalidation).toBe(initialResult);
+    expect(resultAfterAuthorInvalidation).not.toBe(initialResult);
 
     expect(
       cache.modify({
@@ -2654,7 +2480,7 @@ describe("InMemoryCache#modify", () => {
 
     const resultAfterBookInvalidation = read();
     expect(resultAfterBookInvalidation).toEqual(resultAfterAuthorInvalidation);
-    expect(resultAfterBookInvalidation).toBe(resultAfterAuthorInvalidation);
+    expect(resultAfterBookInvalidation).not.toBe(resultAfterAuthorInvalidation);
     expect(resultAfterBookInvalidation.currentlyReading.author).toEqual({
       __typename: "Author",
       name: "Maria Dahvana Headley",
@@ -3763,10 +3589,7 @@ describe("ReactiveVar and makeVar", () => {
   it("should work with resultCaching disabled (unusual)", () => {
     const { cache, nameVar, query } = makeCacheAndVar(false);
 
-    const result1 = cache.readQuery({
-      query,
-      canonizeResults: true,
-    });
+    const result1 = cache.readQuery({ query });
     expect(result1).toEqual({
       onCall: {
         __typename: "Person",
@@ -3774,20 +3597,14 @@ describe("ReactiveVar and makeVar", () => {
       },
     });
 
-    const result2 = cache.readQuery({
-      query,
-      canonizeResults: true,
-    });
+    const result2 = cache.readQuery({ query });
     expect(result2).toEqual(result1);
-    expect(result2).toBe(result1);
+    expect(result2).not.toBe(result1);
 
     expect(nameVar()).toBe("Ben");
     expect(nameVar("Hugh")).toBe("Hugh");
 
-    const result3 = cache.readQuery({
-      query,
-      canonizeResults: true,
-    });
+    const result3 = cache.readQuery({ query });
     expect(result3).toEqual({
       onCall: {
         __typename: "Person",

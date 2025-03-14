@@ -187,7 +187,7 @@ describe("EntityStore", () => {
     });
 
     function read() {
-      return cache.readQuery({ query, canonizeResults: true });
+      return cache.readQuery({ query });
     }
 
     const resultBeforeGC = read();
@@ -230,16 +230,13 @@ describe("EntityStore", () => {
     ).toEqual([]);
     expect(cache["storeReader"]).not.toBe(originalReader);
     const resultAfterResetResultCache = read();
-    expect(resultAfterResetResultCache).toBe(resultBeforeGC);
-    expect(resultAfterResetResultCache).toBe(resultAfterGC);
+    expect(resultAfterResetResultCache).toEqual(resultBeforeGC);
+    expect(resultAfterResetResultCache).not.toBe(resultBeforeGC);
+    expect(resultAfterResetResultCache).toEqual(resultAfterGC);
+    expect(resultAfterResetResultCache).not.toBe(resultAfterGC);
 
     // Now discard cache.storeReader.canon as well.
-    expect(
-      cache.gc({
-        resetResultCache: true,
-        resetResultIdentities: true,
-      })
-    ).toEqual([]);
+    expect(cache.gc({ resetResultCache: true })).toEqual([]);
 
     const resultAfterFullGC = read();
     expect(resultAfterFullGC).toEqual(resultBeforeGC);
@@ -1051,7 +1048,6 @@ describe("EntityStore", () => {
     `;
 
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -1284,7 +1280,7 @@ describe("EntityStore", () => {
     const partialJennyResult = cache.diff<any>({
       query,
       returnPartialData: true,
-      optimistic: true, // required but not important
+      optimistic: false, // required but not important
       variables: {
         isbn: "1760641790",
       },
@@ -2474,7 +2470,6 @@ describe("EntityStore", () => {
     const isbnsWeHaveRead: string[] = [];
 
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -2667,7 +2662,7 @@ describe("EntityStore", () => {
         // runs again, adding "1449373321" again to isbnsWeHaveRead.
         optimistic: false,
       })
-    ).toBe(diffs[0].result);
+    ).toEqual(diffs[0].result);
 
     expect(isbnsWeHaveRead).toEqual(["1449373321", "1982103558", "1449373321"]);
   });

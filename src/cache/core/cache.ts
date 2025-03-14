@@ -30,10 +30,10 @@ import {
   getFragmentQueryDocument,
 } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getApolloCacheMemoryInternals } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { equalByQuery } from "../../core/equalByQuery.js";
-import { getApolloCacheMemoryInternals } from "../../utilities/caching/getMemoryInternals.js";
 
 import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";

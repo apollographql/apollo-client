@@ -6,6 +6,75 @@
 
 import { Observable } from 'rxjs';
 
+// @internal
+export const getApolloCacheMemoryInternals: (() => {
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
+// @internal
+export const getApolloClientMemoryInternals: (() => {
+    limits: {
+        [k: string]: number;
+    };
+    sizes: {
+        cache?: {
+            fragmentQueryDocuments: number | undefined;
+        } | undefined;
+        addTypenameDocumentTransform?: {
+            cache: number;
+        }[] | undefined;
+        inMemoryCache?: {
+            executeSelectionSet: number | undefined;
+            executeSubSelectedArray: number | undefined;
+            maybeBroadcastWatch: number | undefined;
+        } | undefined;
+        fragmentRegistry?: {
+            findFragmentSpreads: number | undefined;
+            lookup: number | undefined;
+            transform: number | undefined;
+        } | undefined;
+        print: number | undefined;
+        parser: number | undefined;
+        canonicalStringify: number | undefined;
+        links: unknown[];
+        queryManager: {
+            getDocumentInfo: number;
+            documentTransforms: {
+                cache: number;
+            }[];
+        };
+    };
+}) | undefined;
+
+// @internal
+export const getInMemoryCacheMemoryInternals: (() => {
+    addTypenameDocumentTransform: {
+        cache: number;
+    }[];
+    inMemoryCache: {
+        executeSelectionSet: number | undefined;
+        executeSubSelectedArray: number | undefined;
+        maybeBroadcastWatch: number | undefined;
+    };
+    fragmentRegistry: {
+        findFragmentSpreads: number | undefined;
+        lookup: number | undefined;
+        transform: number | undefined;
+    };
+    cache: {
+        fragmentQueryDocuments: number | undefined;
+    };
+}) | undefined;
+
+// @public (undocumented)
+const globalCaches: {
+    print?: () => number;
+    parser?: () => number;
+    canonicalStringify?: () => number;
+};
+
 // @public (undocumented)
 type ObservableEvent<T> = {
     type: "complete";
@@ -21,6 +90,11 @@ type ObservableEvent<T> = {
 //
 // @internal (undocumented)
 export function onAnyEvent<T>(handleEvent: (event: ObservableEvent<T>) => void): (observable: Observable<T>) => Observable<T>;
+
+// Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function registerGlobalCache(name: keyof typeof globalCaches, getSize: () => number): void;
 
 // (No @packageDocumentation comment for this package)
 

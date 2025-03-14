@@ -60,7 +60,10 @@
     "./testing/experimental": "./src/testing/experimental/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
     "./utilities": "./src/utilities/index.ts",
-    "./utilities/internal": "./src/utilities/internal/index.ts",
+    "./utilities/internal": {
+      "production": "./src/utilities/internal/index.production.ts",
+      "default": "./src/utilities/internal/index.ts"
+    },
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/globals": "./src/utilities/globals/index.ts",
     "./utilities/invariant": {

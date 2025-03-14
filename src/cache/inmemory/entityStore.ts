@@ -821,14 +821,12 @@ class Layer extends EntityStore {
       : fromParent;
   }
 
-  public getStorage(): StorageType {
+  public getStorage(
+    ...args: Parameters<EntityStore["getStorage"]>
+  ): StorageType {
     let p: EntityStore = this.parent;
     while ((p as Layer).parent) p = (p as Layer).parent;
-    return p.getStorage.apply(
-      p,
-      // @ts-expect-error
-      arguments
-    );
+    return p.getStorage(...args);
   }
 }
 

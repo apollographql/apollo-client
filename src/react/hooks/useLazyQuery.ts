@@ -275,7 +275,7 @@ export function useLazyQuery<
     const eagerMethods: Record<string, any> = {};
     for (const key of EAGER_METHODS) {
       // eslint-disable-next-line react-compiler/react-compiler
-      eagerMethods[key] = function () {
+      eagerMethods[key] = function (...args: any[]) {
         invariant(
           resultRef.current,
           "useLazyQuery: '%s' cannot be called before executing the query.",
@@ -283,7 +283,7 @@ export function useLazyQuery<
         );
 
         // @ts-expect-error this is just to generic to type
-        return observable[key].apply(observable, arguments);
+        return observable[key](...args);
       };
     }
 

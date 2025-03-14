@@ -381,13 +381,13 @@ export class Policies {
       storeObject,
       readField:
         (partialContext && partialContext.readField) ||
-        function () {
-          const options = normalizeReadFieldOptions(arguments, storeObject);
+        (((...args) => {
+          const options = normalizeReadFieldOptions(args, storeObject);
           return policies.readField(options, {
             store: policies.cache["data"],
             variables: options.variables,
           });
-        },
+        }) satisfies ReadFieldFunction),
     };
 
     let id: KeyFieldsResult;
@@ -972,9 +972,9 @@ function makeFieldFunctionOptions(
     storage,
     cache: policies.cache,
     canRead,
-    readField<T>() {
+    readField<T>(...args: any[]) {
       return policies.readField<T>(
-        normalizeReadFieldOptions(arguments, objectOrReference, variables),
+        normalizeReadFieldOptions(args, objectOrReference, variables),
         context
       );
     },
@@ -983,7 +983,7 @@ function makeFieldFunctionOptions(
 }
 
 export function normalizeReadFieldOptions(
-  readFieldArgs: IArguments,
+  readFieldArgs: any[],
   objectOrReference: StoreObject | Reference | undefined,
   variables?: ReadMergeModifyContext["variables"]
 ): ReadFieldOptions {

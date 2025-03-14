@@ -15,12 +15,12 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { DocumentTransform } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { getApolloClientMemoryInternals } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
 } from "@apollo/client/utilities/invariant";
 
-import { getApolloClientMemoryInternals } from "../utilities/caching/getMemoryInternals.js";
 import { version } from "../version.js";
 
 import type { FragmentMatcher } from "./LocalState.js";

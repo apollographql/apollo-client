@@ -78,4 +78,5 @@ const checks = [
     return value;
   });
 
-module.exports = checks;
+// useful snippet to locally run this with `size-limit --save-bundle /tmp/size --clean-dir` to debug bundle sizes
+module.exports = checks; //.filter(  (limit) => limit.name === Object.keys(limits).at(-1));

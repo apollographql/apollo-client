@@ -9,8 +9,8 @@ import type {
 import type { ApolloClient } from "@apollo/client/core";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 
-import type { CacheSizes } from "./sizes.js";
-import { cacheSizes, defaultCacheSizes } from "./sizes.js";
+import type { CacheSizes } from "../caching/sizes.js";
+import { cacheSizes, defaultCacheSizes } from "../caching/sizes.js";
 
 const globalCaches: {
   print?: () => number;

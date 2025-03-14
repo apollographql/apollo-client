@@ -19,7 +19,6 @@
   "types": "./dist/index.d.ts",
   "sideEffects": false,
   "react-native": {
-    "./dist/cache/inmemory/fixPolyfills.js": "./dist/cache/inmemory/fixPolyfills.native.js",
     "react-dom/server": false
   },
   "repository": {
@@ -64,7 +63,10 @@
     "./testing/experimental": "./src/testing/experimental/index.ts",
     "./testing/react": "./src/testing/react/index.ts",
     "./utilities": "./src/utilities/index.ts",
-    "./utilities/internal": "./src/utilities/internal/index.ts",
+    "./utilities/internal": {
+      "production": "./src/utilities/internal/index.production.ts",
+      "default": "./src/utilities/internal/index.ts"
+    },
     "./utilities/subscriptions/relay": "./src/utilities/subscriptions/relay/index.ts",
     "./utilities/globals": "./src/utilities/globals/index.ts",
     "./utilities/invariant": {
@@ -185,7 +187,6 @@
     "@types/jest": "29.5.12",
     "@types/lodash": "4.17.7",
     "@types/node": "^22.10.7",
-    "@types/node-fetch": "2.6.11",
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "@types/relay-runtime": "14.1.24",
@@ -196,8 +197,6 @@
     "@typescript-eslint/types": "8.21.0",
     "@typescript-eslint/utils": "8.21.0",
     "ast-types": "0.16.1",
-    "blob-polyfill": "7.0.20220408",
-    "bytes": "3.1.2",
     "eslint": "9.18.0",
     "eslint-import-resolver-typescript": "3.7.0",
     "eslint-plugin-import": "2.31.0",

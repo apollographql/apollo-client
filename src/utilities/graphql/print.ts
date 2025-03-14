@@ -2,8 +2,8 @@ import type { ASTNode } from "graphql";
 import { print as origPrint } from "graphql";
 
 import { __DEV__ } from "@apollo/client/utilities/environment";
+import { registerGlobalCache } from "@apollo/client/utilities/internal";
 
-import { registerGlobalCache } from "../caching/getMemoryInternals.js";
 import {
   AutoCleanedWeakCache,
   cacheSizes,

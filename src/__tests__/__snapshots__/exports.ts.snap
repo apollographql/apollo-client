@@ -498,7 +498,11 @@ Array [
 
 exports[`exports of public entry points @apollo/client/utilities/internal 1`] = `
 Array [
+  "getApolloCacheMemoryInternals",
+  "getApolloClientMemoryInternals",
+  "getInMemoryCacheMemoryInternals",
   "onAnyEvent",
+  "registerGlobalCache",
 ]
 `;
 

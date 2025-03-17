@@ -131,7 +131,7 @@ function getCurrentCacheSizes() {
   );
 }
 
-function _getApolloClientMemoryInternals(this: ApolloClient<any>) {
+function _getApolloClientMemoryInternals(this: ApolloClient) {
   if (!__DEV__) throw new Error("only supported in development mode");
 
   return {
@@ -155,7 +155,7 @@ function _getApolloClientMemoryInternals(this: ApolloClient<any>) {
   };
 }
 
-function _getApolloCacheMemoryInternals(this: ApolloCache<any>) {
+function _getApolloCacheMemoryInternals(this: ApolloCache) {
   return {
     cache: {
       fragmentQueryDocuments: getWrapperInformation(this["getFragmentDoc"]),

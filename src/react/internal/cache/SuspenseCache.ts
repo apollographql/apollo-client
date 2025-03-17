@@ -3,6 +3,7 @@ import { Trie } from "@wry/trie";
 import type {
   ApolloClient,
   ObservableQuery,
+  OperationVariables,
   WatchFragmentOptions,
 } from "@apollo/client/core";
 
@@ -54,7 +55,7 @@ export class SuspenseCache {
     return ref.current;
   }
 
-  getFragmentRef<TData, TVariables>(
+  getFragmentRef<TData, TVariables extends OperationVariables>(
     cacheKey: FragmentCacheKey,
     client: ApolloClient,
     options: WatchFragmentOptions<TData, TVariables> & { from: string }

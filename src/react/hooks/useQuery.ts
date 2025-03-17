@@ -269,11 +269,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<any, any>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const watchQueryOptions = createMakeWatchQueryOptions(
-    client,
-    query,
-    options
-  )();
+  const watchQueryOptions = getWatchQueryOptions(client, query, options);
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 

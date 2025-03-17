@@ -66,13 +66,6 @@ export interface QueryFunctionOptions<
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
   skip?: boolean;
-  // Default WatchQueryOptions for this useQuery, providing initial values for
-  // unspecified options, superseding client.defaultOptions.watchQuery (option
-  // by option, not whole), but never overriding options previously passed to
-  // useQuery (or options added/modified later by other means).
-  // TODO What about about default values that are expensive to evaluate?
-  /** @internal */
-  defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
 }
 
 export interface ObservableQueryFields<

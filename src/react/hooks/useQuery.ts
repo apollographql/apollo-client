@@ -111,7 +111,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
  * @returns Query result object
  */
 export function useQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

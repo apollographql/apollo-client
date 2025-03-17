@@ -385,7 +385,10 @@ export interface BaseSubscriptionOptions<
   ignoreResults?: boolean;
 }
 
-export interface SubscriptionResult<TData = unknown, TVariables = any> {
+export interface SubscriptionResult<
+  TData = unknown,
+  TVariables = OperationVariables,
+> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */

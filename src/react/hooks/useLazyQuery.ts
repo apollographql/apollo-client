@@ -39,7 +39,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface LazyQueryHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
@@ -200,7 +200,7 @@ const EAGER_METHODS = [
  * @returns A tuple in the form of `[execute, result]`
  */
 export function useLazyQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

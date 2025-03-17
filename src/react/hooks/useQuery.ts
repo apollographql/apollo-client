@@ -19,7 +19,12 @@ import { equal } from "@wry/equality";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type {
+  ApolloClient,
+  DefaultOptions,
+  OperationVariables,
+  WatchQueryFetchPolicy,
+} from "@apollo/client/core";
 import type {
   ApolloQueryResult,
   DocumentNode,
@@ -441,10 +446,14 @@ function createMakeWatchQueryOptions<
       // "standby", but we also need/want to preserve the initial non-standby
       // fetchPolicy that would have been used if not skipping.
       watchQueryOptions.initialFetchPolicy =
-        watchQueryOptions.initialFetchPolicy || watchQueryOptions.fetchPolicy;
+        watchQueryOptions.initialFetchPolicy ||
+        watchQueryOptions.fetchPolicy ||
+        getDefaultFetchPolicy(client.defaultOptions);
       watchQueryOptions.fetchPolicy = "standby";
     } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy = observable?.options.initialFetchPolicy;
+      watchQueryOptions.fetchPolicy =
+        observable?.options.initialFetchPolicy ||
+        getDefaultFetchPolicy(client.defaultOptions);
     }
 
     return watchQueryOptions;
@@ -517,6 +526,12 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
     );
   }
   return resultData.current!;
+}
+
+function getDefaultFetchPolicy<TData, TVariables extends OperationVariables>(
+  clientDefaultOptions?: DefaultOptions
+): WatchQueryFetchPolicy {
+  return clientDefaultOptions?.watchQuery?.fetchPolicy || "cache-first";
 }
 
 function toQueryResult<TData, TVariables extends OperationVariables>(

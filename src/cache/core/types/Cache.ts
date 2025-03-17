@@ -1,3 +1,4 @@
+import type { OperationVariables } from "@apollo/client/core";
 import type { Unmasked } from "@apollo/client/masking";
 
 import type { ApolloCache } from "../cache.js";
@@ -11,7 +12,7 @@ export namespace Cache {
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  export interface ReadOptions<TVariables = any, TData = unknown>
+  export interface ReadOptions<TVariables = OperationVariables, TData = unknown>
     extends DataProxy.Query<TVariables, TData> {
     rootId?: string;
     previousResult?: any;
@@ -19,22 +20,26 @@ export namespace Cache {
     returnPartialData?: boolean;
   }
 
-  export interface WriteOptions<TResult = unknown, TVariables = any>
-    extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
+  export interface WriteOptions<
+    TResult = unknown,
+    TVariables = OperationVariables,
+  > extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
       Omit<DataProxy.WriteOptions<TResult>, "data"> {
     dataId?: string;
     result: Unmasked<TResult>;
   }
 
-  export interface DiffOptions<TData = unknown, TVariables = any>
+  export interface DiffOptions<TData = unknown, TVariables = OperationVariables>
     extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
   }
 
-  export interface WatchOptions<TData = unknown, TVariables = any>
-    extends DiffOptions<TData, TVariables> {
+  export interface WatchOptions<
+    TData = unknown,
+    TVariables = OperationVariables,
+  > extends DiffOptions<TData, TVariables> {
     watcher?: object;
     immediate?: boolean;
     callback: WatchCallback<TData>;

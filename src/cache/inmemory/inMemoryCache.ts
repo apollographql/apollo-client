@@ -47,16 +47,16 @@ export class InMemoryCache extends ApolloCache {
   private optimisticData!: EntityStore;
 
   protected config: InMemoryCacheConfig;
-  private watches = new Set<Cache.WatchOptions>();
+  private watches = new Set<Cache.WatchOptions<any, any>>();
 
   private storeReader!: StoreReader;
   private storeWriter!: StoreWriter;
   private addTypenameTransform = new DocumentTransform(addTypenameToDocument);
 
   private maybeBroadcastWatch!: OptimisticWrapperFunction<
-    [Cache.WatchOptions, BroadcastOptions?],
+    [Cache.WatchOptions<any, any>, BroadcastOptions?],
     any,
-    [Cache.WatchOptions]
+    [Cache.WatchOptions<any, any>]
   >;
 
   // Override the default value, since InMemoryCache result objects are frozen

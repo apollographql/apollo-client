@@ -42,7 +42,7 @@ type BroadcastOptions = Pick<
   "optimistic" | "onWatchUpdated"
 >;
 
-export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
+export class InMemoryCache extends ApolloCache {
   private data!: EntityStore;
   private optimisticData!: EntityStore;
 

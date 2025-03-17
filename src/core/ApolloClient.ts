@@ -418,7 +418,7 @@ export class ApolloClient implements DataProxy {
    * a description of store reactivity.
    */
   public watchQuery<
-    T = any,
+    T = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
     if (this.defaultOptions.watchQuery) {
@@ -447,7 +447,7 @@ export class ApolloClient implements DataProxy {
    * server at all or just resolve from the cache, etc.
    */
   public query<
-    T = any,
+    T = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: QueryOptions<TVariables, T>
@@ -480,7 +480,7 @@ export class ApolloClient implements DataProxy {
    * It takes options as an object with the following keys and values:
    */
   public mutate<
-    TData = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
     TContext extends Record<string, any> = DefaultContext,
     TCache extends ApolloCache = ApolloCache,
@@ -500,7 +500,7 @@ export class ApolloClient implements DataProxy {
    * `Observable` which either emits received data or an error.
    */
   public subscribe<
-    T = any,
+    T = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: SubscriptionOptions<TVariables, T>
@@ -529,7 +529,7 @@ export class ApolloClient implements DataProxy {
    * @param optimistic - Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
-  public readQuery<T = any, TVariables = OperationVariables>(
+  public readQuery<T = unknown, TVariables = OperationVariables>(
     options: DataProxy.Query<TVariables, T>,
     optimistic: boolean = false
   ): Unmasked<T> | null {
@@ -579,7 +579,7 @@ export class ApolloClient implements DataProxy {
    * @param optimistic - Set to `true` to allow `readFragment` to return
    * optimistic results. Is `false` by default.
    */
-  public readFragment<T = any, TVariables = OperationVariables>(
+  public readFragment<T = unknown, TVariables = OperationVariables>(
     options: DataProxy.Fragment<TVariables, T>,
     optimistic: boolean = false
   ): Unmasked<T> | null {
@@ -591,7 +591,7 @@ export class ApolloClient implements DataProxy {
    * the store. This method will start at the root query. To start at a
    * specific id returned by `dataIdFromObject` then use `writeFragment`.
    */
-  public writeQuery<TData = any, TVariables = OperationVariables>(
+  public writeQuery<TData = unknown, TVariables = OperationVariables>(
     options: DataProxy.WriteQueryOptions<TData, TVariables>
   ): Reference | undefined {
     const ref = this.cache.writeQuery<TData, TVariables>(options);
@@ -614,7 +614,7 @@ export class ApolloClient implements DataProxy {
    * in a document with multiple fragments then you must also specify a
    * `fragmentName`.
    */
-  public writeFragment<TData = any, TVariables = OperationVariables>(
+  public writeFragment<TData = unknown, TVariables = OperationVariables>(
     options: DataProxy.WriteFragmentOptions<TData, TVariables>
   ): Reference | undefined {
     const ref = this.cache.writeFragment<TData, TVariables>(options);

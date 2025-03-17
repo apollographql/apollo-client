@@ -892,7 +892,7 @@ describe("useQuery Hook", () => {
             setName = setName1;
             return [
               useQuery(query, { variables: { name } }),
-              useMutation(mutation, {
+              useMutation<any>(mutation, {
                 update(cache, { data }) {
                   cache.writeQuery({
                     query,
@@ -4559,7 +4559,7 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
-          () => useQuery(query, { variables: { limit: 2 } }),
+          () => useQuery<any>(query, { variables: { limit: 2 } }),
           { wrapper }
         );
 
@@ -4628,7 +4628,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () =>
-            useQuery(query, {
+            useQuery<any>(query, {
               variables: { limit: 2 },
               notifyOnNetworkStatusChange: true,
             }),
@@ -7263,7 +7263,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () => ({
-            mutation: useMutation(mutation, {
+            mutation: useMutation<any>(mutation, {
               optimisticResponse: { addCar: carData },
               update(cache, { data }) {
                 cache.modify({
@@ -9174,7 +9174,10 @@ describe("useQuery Hook", () => {
     // TODO: See if we can rewrite this with renderHookToSnapshotStream and
     // check output of hook to ensure its a stable object
     it("should handle a simple query", async () => {
-      const query = gql`
+      const query: TypedDocumentNode<
+        { hello: string },
+        Record<string, never>
+      > = gql`
         {
           hello
         }
@@ -9186,7 +9189,11 @@ describe("useQuery Hook", () => {
         },
       ];
 
-      const Component = ({ query }: any) => {
+      const Component = ({
+        query,
+      }: {
+        query: TypedDocumentNode<{ hello: string }, Record<string, never>>;
+      }) => {
         const [counter, setCounter] = useState(0);
         const result = useQuery(query);
 
@@ -9206,7 +9213,7 @@ describe("useQuery Hook", () => {
 
         return (
           <div>
-            {result.data.hello}
+            {result.data!.hello}
             {counter}
           </div>
         );

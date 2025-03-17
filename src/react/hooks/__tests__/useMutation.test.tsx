@@ -1294,7 +1294,7 @@ describe("useMutation Hook", () => {
         })
     );
 
-    const mutation = gql`
+    const mutation: TypedDocumentNode<any> = gql`
       mutation DoSomething {
         doSomething {
           time
@@ -2677,8 +2677,8 @@ describe("useMutation Hook", () => {
       );
 
       const Test = () => {
-        const { data } = useQuery(QUERY_1);
-        const [mutate] = useMutation(MUTATION_1, {
+        const { data } = useQuery<any>(QUERY_1);
+        const [mutate] = useMutation<any>(MUTATION_1, {
           awaitRefetchQueries: true,
           refetchQueries: [QUERY_1],
         });
@@ -2909,7 +2909,7 @@ describe("useMutation Hook", () => {
       });
 
       const { result } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION_DEFER, { update }),
+        () => useMutation<any>(CREATE_TODO_MUTATION_DEFER, { update }),
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>

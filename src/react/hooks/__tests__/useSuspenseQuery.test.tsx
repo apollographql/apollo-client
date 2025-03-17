@@ -9270,7 +9270,7 @@ describe("useSuspenseQuery", () => {
       partial: false,
     });
 
-    cache.updateQuery({ query }, (data) => ({
+    cache.updateQuery<any>({ query }, (data) => ({
       hero: {
         ...data.hero,
         name: "C3PO",

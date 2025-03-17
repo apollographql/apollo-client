@@ -159,7 +159,7 @@ describe("@client @export tests", () => {
 
     const { data } = await client.query({ query });
 
-    expect({ ...data }).toMatchObject({
+    expect(data).toMatchObject({
       currentAuthor: testAuthor,
       postCount: testPostCount,
     });

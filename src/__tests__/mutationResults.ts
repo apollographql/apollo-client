@@ -212,7 +212,7 @@ describe("mutation results", () => {
 
     await firstValueFrom(from(obsQuery));
     await client.mutate({ mutation });
-    const newResult = await client.query({ query });
+    const newResult = await client.query<any>({ query });
     expect(newResult.data.todoList.todos[0].completed).toBe(true);
   });
 
@@ -528,7 +528,7 @@ describe("mutation results", () => {
       });
 
       return client
-        .mutate({
+        .mutate<any>({
           mutation,
           update(
             cache,
@@ -606,7 +606,7 @@ describe("mutation results", () => {
       });
 
       return client
-        .mutate({
+        .mutate<any>({
           mutation,
           keepRootFields: true,
           update(
@@ -687,7 +687,7 @@ describe("mutation results", () => {
       });
 
       return client
-        .mutate({
+        .mutate<any>({
           mutation,
           fetchPolicy: "no-cache",
           update(
@@ -776,7 +776,7 @@ describe("mutation results", () => {
         },
       });
 
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toBe(4);
@@ -840,7 +840,7 @@ describe("mutation results", () => {
           },
         },
       });
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toBe(4);
@@ -1384,7 +1384,7 @@ describe("mutation results", () => {
         },
       });
 
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toBe(4);
@@ -1466,7 +1466,7 @@ describe("mutation results", () => {
           });
         },
       });
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       // There should be one more todo item than before
       expect(newResult.data.todoList.todos.length).toBe(4);

@@ -309,7 +309,7 @@ export class QueryManager {
     this.broadcastQueries();
 
     return new Promise((resolve, reject) => {
-      return this.getObservableFromLink(
+      return this.getObservableFromLink<TData>(
         mutation,
         {
           ...context,
@@ -411,7 +411,7 @@ export class QueryManager {
 
   public markMutationResult<
     TData,
-    TVariables,
+    TVariables extends OperationVariables,
     TContext,
     TCache extends ApolloCache,
   >(
@@ -622,7 +622,7 @@ export class QueryManager {
 
   public markMutationOptimistic<
     TData,
-    TVariables,
+    TVariables extends OperationVariables,
     TContext,
     TCache extends ApolloCache,
   >(
@@ -1211,7 +1211,7 @@ export class QueryManager {
     // through the link chain.
     const linkDocument = this.cache.transformForLink(options.query);
 
-    return this.getObservableFromLink(
+    return this.getObservableFromLink<TData>(
       linkDocument,
       options.context,
       options.variables
@@ -1253,7 +1253,7 @@ export class QueryManager {
         }
 
         const aqr: ApolloQueryResult<TData> = {
-          data: result.data,
+          data: result.data as TData,
           loading: false,
           networkStatus: NetworkStatus.ready,
           partial: !result.data,

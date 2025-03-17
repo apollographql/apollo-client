@@ -250,7 +250,7 @@ export class InMemoryCache extends ApolloCache {
     });
   }
 
-  public watch<TData = any, TVariables = any>(
+  public watch<TData = unknown, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void {
     if (!this.watches.size) {

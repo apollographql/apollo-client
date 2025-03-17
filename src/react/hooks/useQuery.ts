@@ -446,14 +446,10 @@ function createMakeWatchQueryOptions<
       // "standby", but we also need/want to preserve the initial non-standby
       // fetchPolicy that would have been used if not skipping.
       watchQueryOptions.initialFetchPolicy =
-        watchQueryOptions.initialFetchPolicy ||
-        watchQueryOptions.fetchPolicy ||
-        getDefaultFetchPolicy(client.defaultOptions);
+        watchQueryOptions.initialFetchPolicy || watchQueryOptions.fetchPolicy;
       watchQueryOptions.fetchPolicy = "standby";
     } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy =
-        observable?.options.initialFetchPolicy ||
-        getDefaultFetchPolicy(client.defaultOptions);
+      watchQueryOptions.fetchPolicy = observable?.options.initialFetchPolicy;
     }
 
     return watchQueryOptions;
@@ -526,12 +522,6 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
     );
   }
   return resultData.current!;
-}
-
-function getDefaultFetchPolicy<TData, TVariables extends OperationVariables>(
-  clientDefaultOptions?: DefaultOptions
-): WatchQueryFetchPolicy {
-  return clientDefaultOptions?.watchQuery?.fetchPolicy || "cache-first";
 }
 
 function toQueryResult<TData, TVariables extends OperationVariables>(

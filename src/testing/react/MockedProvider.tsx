@@ -10,10 +10,10 @@ import { ApolloProvider } from "@apollo/client/react/context";
 import type { MockedResponse } from "@apollo/client/testing/core";
 import { MockLink } from "@apollo/client/testing/core";
 
-export interface MockedProviderProps<TSerializedCache = {}> {
+export interface MockedProviderProps {
   mocks?: ReadonlyArray<MockedResponse<any, any>>;
   defaultOptions?: DefaultOptions;
-  cache?: ApolloCache<TSerializedCache>;
+  cache?: ApolloCache;
   resolvers?: Resolvers;
   childProps?: object;
   children?: any;
@@ -27,7 +27,7 @@ export interface MockedProviderProps<TSerializedCache = {}> {
 }
 
 interface MockedProviderState {
-  client: ApolloClient<any>;
+  client: ApolloClient;
 }
 
 export class MockedProvider extends React.Component<

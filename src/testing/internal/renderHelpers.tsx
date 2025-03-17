@@ -6,7 +6,7 @@ import type { MockedProviderProps } from "@apollo/client/testing/react";
 import { MockedProvider } from "@apollo/client/testing/react";
 
 export function createClientWrapper(
-  client: ApolloClient<any>,
+  client: ApolloClient,
   Wrapper: React.JSXElementConstructor<{
     children: React.ReactNode;
   }> = React.Fragment
@@ -23,7 +23,7 @@ export function createClientWrapper(
 }
 
 export function createMockWrapper(
-  renderOptions: MockedProviderProps<any>,
+  renderOptions: MockedProviderProps,
   Wrapper: React.JSXElementConstructor<{
     children: React.ReactNode;
   }> = React.Fragment

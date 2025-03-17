@@ -6,12 +6,12 @@ import type { AllFieldsModifier, Modifiers } from "./common.js";
 import { DataProxy } from "./DataProxy.js";
 
 export namespace Cache {
-  export type WatchCallback<TData = any> = (
+  export type WatchCallback<TData = unknown> = (
     diff: Cache.DiffResult<TData>,
     lastDiff?: Cache.DiffResult<TData>
   ) => void;
 
-  export interface ReadOptions<TVariables = any, TData = any>
+  export interface ReadOptions<TVariables = any, TData = unknown>
     extends DataProxy.Query<TVariables, TData> {
     rootId?: string;
     previousResult?: any;
@@ -19,21 +19,21 @@ export namespace Cache {
     returnPartialData?: boolean;
   }
 
-  export interface WriteOptions<TResult = any, TVariables = any>
+  export interface WriteOptions<TResult = unknown, TVariables = any>
     extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
       Omit<DataProxy.WriteOptions<TResult>, "data"> {
     dataId?: string;
     result: Unmasked<TResult>;
   }
 
-  export interface DiffOptions<TData = any, TVariables = any>
+  export interface DiffOptions<TData = unknown, TVariables = any>
     extends Omit<ReadOptions<TVariables, TData>, "rootId"> {
     // The DiffOptions interface is currently just an alias for
     // ReadOptions, though DiffOptions used to be responsible for
     // declaring the returnPartialData option.
   }
 
-  export interface WatchOptions<TData = any, TVariables = any>
+  export interface WatchOptions<TData = unknown, TVariables = any>
     extends DiffOptions<TData, TVariables> {
     watcher?: object;
     immediate?: boolean;

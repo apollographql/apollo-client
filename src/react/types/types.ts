@@ -264,10 +264,13 @@ export interface BaseMutationOptions<
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
   onCompleted?: (
     data: MaybeMasked<TData>,
-    clientOptions?: BaseMutationOptions
+    clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
   ) => void;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-  onError?: (error: ErrorLike, clientOptions?: BaseMutationOptions) => void;
+  onError?: (
+    error: ErrorLike,
+    clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
+  ) => void;
 }
 
 export interface MutationFunctionOptions<

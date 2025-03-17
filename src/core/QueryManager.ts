@@ -1008,7 +1008,7 @@ export class QueryManager {
     this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
-  public startGraphQLSubscription<T = any>(
+  public startGraphQLSubscription<T = unknown>(
     options: SubscriptionOptions
   ): Observable<FetchResult<T>> {
     let { query, variables } = options;
@@ -1116,7 +1116,7 @@ export class QueryManager {
     observable?: Observable<FetchResult<any>>;
   }>(false);
 
-  private getObservableFromLink<T = any>(
+  private getObservableFromLink<T = unknown>(
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,

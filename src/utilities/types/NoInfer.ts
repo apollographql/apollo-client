@@ -6,7 +6,7 @@ This type was first suggested [in this Github discussion](https://github.com/mic
 Example usage:
 ```ts
 export function useQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

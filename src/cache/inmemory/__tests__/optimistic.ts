@@ -6,7 +6,6 @@ describe("optimistic cache layers", () => {
   it("return === results for repeated reads", () => {
     const cache = new InMemoryCache({
       resultCaching: true,
-      canonizeResults: true,
       dataIdFromObject(value: any) {
         switch (value && value.__typename) {
           case "Book":
@@ -64,7 +63,7 @@ describe("optimistic cache layers", () => {
     });
 
     expect(result1984).toBe(readOptimistic(cache));
-    expect(result1984).toBe(readRealistic(cache));
+    expect(result1984).toEqual(readRealistic(cache));
 
     let result2666InTransaction: ReturnType<typeof readOptimistic> | null =
       null;
@@ -101,7 +100,8 @@ describe("optimistic cache layers", () => {
 
     expect(readOptimistic(cache)).toBe(result2666InTransaction);
 
-    expect(result1984).toBe(readRealistic(cache));
+    expect(result1984).toEqual(readRealistic(cache));
+    expect(result1984).not.toBe(readRealistic(cache));
 
     let resultCatch22: ReturnType<typeof readOptimistic> | null = null;
     cache.performTransaction((proxy) => {
@@ -135,7 +135,7 @@ describe("optimistic cache layers", () => {
 
     expect(readOptimistic(cache)).toBe(resultCatch22);
 
-    expect(result1984).toBe(readRealistic(cache));
+    expect(result1984).toEqual(readRealistic(cache));
 
     cache.removeOptimistic("first");
 
@@ -158,7 +158,7 @@ describe("optimistic cache layers", () => {
       },
     });
 
-    expect(readOptimistic(cache)).toBe(resultCatch22);
+    expect(readOptimistic(cache)).toEqual(resultCatch22);
 
     const resultF451 = readRealistic(cache);
     expect(resultF451).toEqual({
@@ -175,7 +175,7 @@ describe("optimistic cache layers", () => {
     cache.removeOptimistic("second");
 
     expect(resultF451).toBe(readRealistic(cache));
-    expect(resultF451).toBe(readOptimistic(cache));
+    expect(resultF451).toEqual(readOptimistic(cache));
 
     expect(cache.extract(true)).toEqual({
       ROOT_QUERY: {
@@ -206,7 +206,6 @@ describe("optimistic cache layers", () => {
   it("dirties appropriate IDs when optimistic layers are removed", () => {
     const cache = new InMemoryCache({
       resultCaching: true,
-      canonizeResults: true,
       dataIdFromObject(value: any) {
         switch (value && value.__typename) {
           case "Book":
@@ -411,7 +410,7 @@ describe("optimistic cache layers", () => {
       },
     });
 
-    expect(readWithAuthors()).toBe(resultWithBuzz);
+    expect(readWithAuthors()).toEqual(resultWithBuzz);
 
     function readSpinelessFragment() {
       return cache.readFragment<{ author: any }>(
@@ -431,17 +430,15 @@ describe("optimistic cache layers", () => {
 
     const resultAfterRemovingBuzzLayer = readWithAuthors();
     expect(resultAfterRemovingBuzzLayer).toEqual(resultWithBuzz);
-    expect(resultAfterRemovingBuzzLayer).toBe(resultWithBuzz);
     resultWithTwoAuthors.books.forEach((book, i) => {
       expect(book).toEqual(resultAfterRemovingBuzzLayer.books[i]);
-      expect(book).toBe(resultAfterRemovingBuzzLayer.books[i]);
     });
 
     const nonOptimisticResult = readWithAuthors(false);
     expect(nonOptimisticResult).toEqual(resultWithBuzz);
     cache.removeOptimistic("eager author");
     const resultWithoutOptimisticLayers = readWithAuthors();
-    expect(resultWithoutOptimisticLayers).toBe(nonOptimisticResult);
+    expect(resultWithoutOptimisticLayers).toEqual(nonOptimisticResult);
   });
 
   describe("eviction during optimistic updates", function () {

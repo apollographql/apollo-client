@@ -178,7 +178,6 @@ export class QueryInfo {
       variables,
       returnPartialData: true,
       optimistic: true,
-      canonizeResults: this.observableQuery?.options.canonizeResults,
     };
   }
 

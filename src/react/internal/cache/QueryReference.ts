@@ -194,7 +194,6 @@ export function updateWrappedQueryRef<TData>(
 }
 
 const OBSERVED_CHANGED_OPTIONS = [
-  "canonizeResults",
   "context",
   "errorPolicy",
   "fetchPolicy",
@@ -348,10 +347,7 @@ export class InternalQueryReference<TData = unknown> {
   }
 
   applyOptions(watchQueryOptions: ObservedOptions) {
-    const {
-      fetchPolicy: currentFetchPolicy,
-      canonizeResults: currentCanonizeResults,
-    } = this.watchQueryOptions;
+    const { fetchPolicy: currentFetchPolicy } = this.watchQueryOptions;
 
     // "standby" is used when `skip` is set to `true`. Detect when we've
     // enabled the query (i.e. `skip` is `false`) to execute a network request.
@@ -362,11 +358,6 @@ export class InternalQueryReference<TData = unknown> {
       this.initiateFetch(this.observable.reobserve(watchQueryOptions));
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
-
-      if (currentCanonizeResults !== watchQueryOptions.canonizeResults) {
-        this.result = { ...this.result, ...this.observable.getCurrentResult() };
-        this.promise = createFulfilledPromise(this.result);
-      }
     }
 
     return this.promise;

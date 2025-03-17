@@ -79,9 +79,6 @@ export interface QueryOptions<TVariables = OperationVariables, TData = any> {
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
 }
 
 /**
@@ -134,9 +131,6 @@ export interface SharedWatchQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-  canonizeResults?: boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
   skipPollAttempt?: () => boolean;

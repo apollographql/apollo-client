@@ -100,222 +100,6 @@ describe("EntityStore", () => {
     };
   }
 
-  it("should reclaim no-longer-reachable, unretained entities", () => {
-    const { cache, query } = newBookAuthorCache();
-
-    cache.writeQuery({
-      query,
-      data: {
-        book: {
-          __typename: "Book",
-          isbn: "9781451673319",
-          title: "Fahrenheit 451",
-          author: {
-            __typename: "Author",
-            name: "Ray Bradbury",
-          },
-        },
-      },
-    });
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:9781451673319",
-        },
-      },
-      "Book:9781451673319": {
-        __typename: "Book",
-        title: "Fahrenheit 451",
-        author: {
-          __ref: "Author:Ray Bradbury",
-        },
-      },
-      "Author:Ray Bradbury": {
-        __typename: "Author",
-        name: "Ray Bradbury",
-      },
-    });
-
-    cache.writeQuery({
-      query,
-      data: {
-        book: {
-          __typename: "Book",
-          isbn: "0312429215",
-          title: "2666",
-          author: {
-            __typename: "Author",
-            name: "Roberto Bolaño",
-          },
-        },
-      },
-    });
-
-    const snapshot = cache.extract();
-
-    expect(snapshot).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:0312429215",
-        },
-      },
-      "Book:9781451673319": {
-        __typename: "Book",
-        title: "Fahrenheit 451",
-        author: {
-          __ref: "Author:Ray Bradbury",
-        },
-      },
-      "Author:Ray Bradbury": {
-        __typename: "Author",
-        name: "Ray Bradbury",
-      },
-      "Book:0312429215": {
-        __typename: "Book",
-        author: {
-          __ref: "Author:Roberto Bolaño",
-        },
-        title: "2666",
-      },
-      "Author:Roberto Bolaño": {
-        __typename: "Author",
-        name: "Roberto Bolaño",
-      },
-    });
-
-    function read() {
-      return cache.readQuery({ query, canonizeResults: true });
-    }
-
-    const resultBeforeGC = read();
-
-    expect(cache.gc().sort()).toEqual([
-      "Author:Ray Bradbury",
-      "Book:9781451673319",
-    ]);
-
-    const resultAfterGC = read();
-    expect(resultBeforeGC).toBe(resultAfterGC);
-
-    expect(cache.extract()).toEqual({
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:0312429215",
-        },
-      },
-      "Book:0312429215": {
-        __typename: "Book",
-        author: {
-          __ref: "Author:Roberto Bolaño",
-        },
-        title: "2666",
-      },
-      "Author:Roberto Bolaño": {
-        __typename: "Author",
-        name: "Roberto Bolaño",
-      },
-    });
-
-    // Nothing left to collect, but let's also reset the result cache to
-    // demonstrate that the recomputed cache results are unchanged.
-    const originalReader = cache["storeReader"];
-    expect(
-      cache.gc({
-        resetResultCache: true,
-      })
-    ).toEqual([]);
-    expect(cache["storeReader"]).not.toBe(originalReader);
-    const resultAfterResetResultCache = read();
-    expect(resultAfterResetResultCache).toBe(resultBeforeGC);
-    expect(resultAfterResetResultCache).toBe(resultAfterGC);
-
-    // Now discard cache.storeReader.canon as well.
-    expect(
-      cache.gc({
-        resetResultCache: true,
-        resetResultIdentities: true,
-      })
-    ).toEqual([]);
-
-    const resultAfterFullGC = read();
-    expect(resultAfterFullGC).toEqual(resultBeforeGC);
-    expect(resultAfterFullGC).toEqual(resultAfterGC);
-    // These !== relations are triggered by passing resetResultIdentities:true
-    // to cache.gc, above.
-    expect(resultAfterFullGC).not.toBe(resultBeforeGC);
-    expect(resultAfterFullGC).not.toBe(resultAfterGC);
-    // Result caching immediately begins working again after the intial reset.
-    expect(read()).toBe(resultAfterFullGC);
-
-    // Go back to the pre-GC snapshot.
-    cache.restore(snapshot);
-    expect(cache.extract()).toEqual(snapshot);
-
-    // Reading a specific fragment causes it to be retained during garbage collection.
-    const authorNameFragment = gql`
-      fragment AuthorName on Author {
-        name
-      }
-    `;
-    const ray = cache.readFragment({
-      id: "Author:Ray Bradbury",
-      fragment: authorNameFragment,
-    });
-
-    expect(cache.retain("Author:Ray Bradbury")).toBe(1);
-
-    expect(ray).toEqual({
-      __typename: "Author",
-      name: "Ray Bradbury",
-    });
-
-    expect(cache.gc()).toEqual([
-      // Only Fahrenheit 451 (the book) is reclaimed this time.
-      "Book:9781451673319",
-    ]);
-
-    const rayMeta = {
-      extraRootIds: ["Author:Ray Bradbury"],
-    };
-
-    expect(cache.extract()).toEqual({
-      __META: rayMeta,
-      ROOT_QUERY: {
-        __typename: "Query",
-        book: {
-          __ref: "Book:0312429215",
-        },
-      },
-      "Author:Ray Bradbury": {
-        __typename: "Author",
-        name: "Ray Bradbury",
-      },
-      "Book:0312429215": {
-        __typename: "Book",
-        author: {
-          __ref: "Author:Roberto Bolaño",
-        },
-        title: "2666",
-      },
-      "Author:Roberto Bolaño": {
-        __typename: "Author",
-        name: "Roberto Bolaño",
-      },
-    });
-
-    expect(cache.gc()).toEqual([]);
-
-    expect(cache.release("Author:Ray Bradbury")).toBe(0);
-
-    expect(cache.gc()).toEqual(["Author:Ray Bradbury"]);
-
-    expect(cache.gc()).toEqual([]);
-  });
-
   it("should respect optimistic updates, when active", () => {
     const { cache, query } = newBookAuthorCache();
 
@@ -1051,7 +835,6 @@ describe("EntityStore", () => {
     `;
 
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -1284,7 +1067,7 @@ describe("EntityStore", () => {
     const partialJennyResult = cache.diff<any>({
       query,
       returnPartialData: true,
-      optimistic: true, // required but not important
+      optimistic: false, // required but not important
       variables: {
         isbn: "1760641790",
       },
@@ -2474,7 +2257,6 @@ describe("EntityStore", () => {
     const isbnsWeHaveRead: string[] = [];
 
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Query: {
           fields: {
@@ -2667,7 +2449,7 @@ describe("EntityStore", () => {
         // runs again, adding "1449373321" again to isbnsWeHaveRead.
         optimistic: false,
       })
-    ).toBe(diffs[0].result);
+    ).toEqual(diffs[0].result);
 
     expect(isbnsWeHaveRead).toEqual(["1449373321", "1982103558", "1449373321"]);
   });

@@ -17,7 +17,7 @@ interface MaskingContext {
   operationType: "query" | "mutation" | "subscription" | "fragment";
   operationName: string | undefined;
   fragmentMap: FragmentMap;
-  cache: ApolloCache<unknown>;
+  cache: ApolloCache;
   mutableTargets: WeakMap<any, any>;
   knownChanged: WeakSet<any>;
 }

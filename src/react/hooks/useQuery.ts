@@ -313,16 +313,13 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
 ) {
   const client = useApolloClient(options.client);
 
-  const makeWatchQueryOptions = createMakeWatchQueryOptions(
-    client,
-    query,
-    options
-  );
-
   const { observable, resultData } = useInternalState(client, query, options);
 
   const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
-    makeWatchQueryOptions(observable.options.initialFetchPolicy);
+    getWatchQueryOptions(client, query, {
+      ...options,
+      initialFetchPolicy: observable.options.initialFetchPolicy,
+    });
 
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render

@@ -106,10 +106,10 @@ export abstract class ApolloCache implements DataProxy {
 
   // required to implement
   // core API
-  public abstract read<TData = any, TVariables = any>(
+  public abstract read<TData = unknown, TVariables = any>(
     query: Cache.ReadOptions<TVariables, TData>
   ): Unmasked<TData> | null;
-  public abstract write<TData = any, TVariables = any>(
+  public abstract write<TData = unknown, TVariables = any>(
     write: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined;
 
@@ -125,7 +125,7 @@ export abstract class ApolloCache implements DataProxy {
    * cache.
    */
   public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
-  public abstract watch<TData = any, TVariables = any>(
+  public abstract watch<TData = unknown, TVariables = any>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void;
 
@@ -259,7 +259,7 @@ export abstract class ApolloCache implements DataProxy {
   }
 
   /** {@inheritDoc @apollo/client!ApolloClient#watchFragment:member(1)} */
-  public watchFragment<TData = any, TVars = OperationVariables>(
+  public watchFragment<TData = unknown, TVars = OperationVariables>(
     options: WatchFragmentOptions<TData, TVars>
   ): Observable<WatchFragmentResult<TData>> {
     const {
@@ -372,7 +372,7 @@ export abstract class ApolloCache implements DataProxy {
     });
   }
 
-  public writeQuery<TData = any, TVariables = any>({
+  public writeQuery<TData = unknown, TVariables = any>({
     id,
     data,
     ...options
@@ -385,7 +385,7 @@ export abstract class ApolloCache implements DataProxy {
     );
   }
 
-  public writeFragment<TData = any, TVariables = any>({
+  public writeFragment<TData = unknown, TVariables = any>({
     id,
     data,
     fragment,
@@ -401,7 +401,7 @@ export abstract class ApolloCache implements DataProxy {
     );
   }
 
-  public updateQuery<TData = any, TVariables = any>(
+  public updateQuery<TData = unknown, TVariables = any>(
     options: Cache.UpdateQueryOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {
@@ -416,7 +416,7 @@ export abstract class ApolloCache implements DataProxy {
     });
   }
 
-  public updateFragment<TData = any, TVariables = any>(
+  public updateFragment<TData = unknown, TVariables = any>(
     options: Cache.UpdateFragmentOptions<TData, TVariables>,
     update: (data: Unmasked<TData> | null) => Unmasked<TData> | null | void
   ): Unmasked<TData> | null {

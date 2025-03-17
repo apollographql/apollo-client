@@ -64,7 +64,7 @@ export function initializeApollo(
   //  the initial state gets hydrated here
   if (initialState) {
     // Get existing cache, loaded during client side data fetching
-    const existingCache = _apolloClient.extract();
+    const existingCache = _apolloClient.extract() as NormalizedCacheObject;
 
     // Merge the initialState from getStaticProps/getServerSideProps
     // in the existing cache

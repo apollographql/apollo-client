@@ -19,12 +19,7 @@ import { equal } from "@wry/equality";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
-import type {
-  ApolloClient,
-  DefaultOptions,
-  OperationVariables,
-  WatchQueryFetchPolicy,
-} from "@apollo/client/core";
+import type { ApolloClient, OperationVariables } from "@apollo/client/core";
 import type {
   ApolloQueryResult,
   DocumentNode,

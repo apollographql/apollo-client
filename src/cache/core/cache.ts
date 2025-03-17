@@ -124,7 +124,10 @@ export abstract class ApolloCache implements DataProxy {
    * returned if it contains at least one field that can be fulfilled from the
    * cache.
    */
-  public abstract diff<T>(query: Cache.DiffOptions): Cache.DiffResult<T>;
+  public abstract diff<
+    T = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  >(query: Cache.DiffOptions<T, TVariables>): Cache.DiffResult<T>;
   public abstract watch<TData = unknown, TVariables = OperationVariables>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void;

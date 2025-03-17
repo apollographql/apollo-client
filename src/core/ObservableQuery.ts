@@ -45,7 +45,7 @@ import type {
 const { assign, hasOwnProperty } = Object;
 
 export interface FetchMoreOptions<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
 > {
   updateQuery?: (
@@ -64,7 +64,7 @@ interface Last<TData, TVariables> {
 }
 
 export class ObservableQuery<
-    TData = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >
   implements

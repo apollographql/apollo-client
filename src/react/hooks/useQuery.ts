@@ -267,9 +267,9 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<any, any>,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>
 ) {
-  const watchQueryOptions = getWatchQueryOptions(client, query, options);
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
 
@@ -313,7 +313,12 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
 ) {
   const client = useApolloClient(options.client);
 
-  const { observable, resultData } = useInternalState(client, query, options);
+  const { observable, resultData } = useInternalState(
+    client,
+    query,
+    options,
+    getWatchQueryOptions(client, query, options)
+  );
 
   const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
     getWatchQueryOptions(client, query, {

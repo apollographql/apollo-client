@@ -175,7 +175,7 @@ export { mergeOptions };
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through `Observable` instances.
  */
-export class ApolloClient<TCacheShape = any> implements DataProxy {
+export class ApolloClient implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache;
   public disableNetworkFetches: boolean;
@@ -330,11 +330,11 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
     }
 
     type DevToolsConnector = {
-      push(client: ApolloClient<any>): void;
+      push(client: ApolloClient): void;
     };
     const windowWithDevTools = window as Window & {
       [devtoolsSymbol]?: DevToolsConnector;
-      __APOLLO_CLIENT__?: ApolloClient<any>;
+      __APOLLO_CLIENT__?: ApolloClient;
     };
     const devtoolsSymbol = Symbol.for("apollo.devtools");
     (windowWithDevTools[devtoolsSymbol] =
@@ -804,7 +804,7 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
    * Called when hydrating a cache (server side rendering, or offline storage),
    * and also (potentially) during hot reloads.
    */
-  public restore(serializedState: TCacheShape) {
+  public restore(serializedState: unknown) {
     return this.cache.restore(serializedState);
   }
 

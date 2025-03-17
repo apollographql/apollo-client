@@ -325,7 +325,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   );
 
   const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
-    makeWatchQueryOptions(observable);
+    makeWatchQueryOptions(observable.options.initialFetchPolicy);
 
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render
@@ -497,7 +497,7 @@ function createMakeWatchQueryOptions<
   }: useQuery.Options<TData, TVariables> = {}
 ) {
   return (
-    observable?: ObservableQuery<TData, TVariables>
+    initialFetchPolicy?: WatchQueryFetchPolicy
   ): WatchQueryOptions<TVariables, TData> => {
     // This Object.assign is safe because otherOptions is a fresh ...rest object
     // that did not exist until just now, so modifications are still allowed.
@@ -519,7 +519,7 @@ function createMakeWatchQueryOptions<
         "cache-first";
       watchQueryOptions.fetchPolicy = "standby";
     } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy = observable?.options.initialFetchPolicy;
+      watchQueryOptions.fetchPolicy = initialFetchPolicy;
     }
 
     return watchQueryOptions;

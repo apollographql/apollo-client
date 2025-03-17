@@ -152,7 +152,7 @@ interface QueryManagerOptions {
   dataMasking: boolean;
 }
 
-export class QueryManager<TStore> {
+export class QueryManager {
   public cache: ApolloCache;
   public link: ApolloLink;
   public defaultOptions: DefaultOptions;

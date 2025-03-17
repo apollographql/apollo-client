@@ -185,7 +185,7 @@ export class ApolloClient<TCacheShape = any> implements DataProxy {
   public readonly typeDefs: ApolloClientOptions["typeDefs"];
   public readonly devtoolsConfig: DevtoolsOptions;
 
-  private queryManager: QueryManager<TCacheShape>;
+  private queryManager: QueryManager;
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];

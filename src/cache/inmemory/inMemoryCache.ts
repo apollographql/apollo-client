@@ -197,7 +197,9 @@ export class InMemoryCache extends ApolloCache {
     }).result;
   }
 
-  public write(options: Cache.WriteOptions): Reference | undefined {
+  public write<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.WriteOptions<TData, TVariables>
+  ): Reference | undefined {
     try {
       ++this.txCount;
       return this.storeWriter.writeToStore(this.data, options);
@@ -240,7 +242,7 @@ export class InMemoryCache extends ApolloCache {
   }
 
   public diff<
-    TData,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(options: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({

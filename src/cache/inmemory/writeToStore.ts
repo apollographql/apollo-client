@@ -3,7 +3,7 @@ import { Trie } from "@wry/trie";
 import type { FieldNode, SelectionSetNode } from "graphql";
 import { Kind } from "graphql";
 
-import type { Cache } from "@apollo/client/core";
+import type { Cache, OperationVariables } from "@apollo/client/core";
 import type {
   FragmentMap,
   FragmentMapFunction,
@@ -127,9 +127,15 @@ export class StoreWriter {
     private fragments?: InMemoryCacheConfig["fragments"]
   ) {}
 
-  public writeToStore(
+  public writeToStore<TData = unknown, TVariables = OperationVariables>(
     store: NormalizedCache,
-    { query, result, dataId, variables, overwrite }: Cache.WriteOptions
+    {
+      query,
+      result,
+      dataId,
+      variables,
+      overwrite,
+    }: Cache.WriteOptions<TData, TVariables>
   ): Reference | undefined {
     const operationDefinition = getOperationDefinition(query)!;
     const merger = makeProcessedFieldsMerger();
@@ -145,7 +151,7 @@ export class StoreWriter {
       merge<T>(existing: T, incoming: T) {
         return merger.merge(existing, incoming) as T;
       },
-      variables,
+      variables: variables as OperationVariables,
       varString: canonicalStringify(variables),
       ...extractFragmentContext(query, this.fragments),
       overwrite: !!overwrite,

@@ -1,5 +1,6 @@
 import type { DocumentNode, FieldNode } from "graphql";
 
+import type { OperationVariables } from "@apollo/client/core";
 import type {
   Reference,
   StoreObject,
@@ -157,7 +158,7 @@ export interface MergeTree {
 
 export interface ReadMergeModifyContext {
   store: NormalizedCache;
-  variables?: Record<string, any>;
+  variables?: OperationVariables;
   // A JSON.stringify-serialized version of context.variables.
   varString?: string;
 }

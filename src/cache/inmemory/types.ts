@@ -106,7 +106,7 @@ export interface NormalizedCacheObject {
 export type OptimisticStoreItem = {
   id: string;
   data: NormalizedCacheObject;
-  transaction: Transaction<NormalizedCacheObject>;
+  transaction: Transaction;
 };
 
 export type ReadQueryOptions = {

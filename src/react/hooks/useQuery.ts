@@ -125,10 +125,7 @@ export function useQuery<
   )(query, options);
 }
 
-function useQuery_<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
+function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
@@ -144,10 +141,7 @@ function useQuery_<
   );
 }
 
-function useInternalState<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
+function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<any, any>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
@@ -197,10 +191,7 @@ function useInternalState<
   return internalState;
 }
 
-function useQueryInternals<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
+function useQueryInternals<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
@@ -253,8 +244,8 @@ function useQueryInternals<
 }
 
 function useObservableSubscriptionResult<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
 >(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
@@ -374,8 +365,8 @@ function useRegisterSSRObservable(
 // this hook is not compatible with any rules of React, and there's no good way to rewrite it.
 // it should stay a separate hook that will not be optimized by the compiler
 function useResubscribeIfNecessary<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
 >(
   /** this hook will mutate properties on `resultData` */
   resultData: InternalResult<TData, TVariables>,
@@ -417,8 +408,8 @@ function useResubscribeIfNecessary<
  * but the `observable` might differ between calls to `make`.
  */
 function createMakeWatchQueryOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
 >(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

@@ -36,7 +36,7 @@ export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
-  client: ApolloClient<any>;
+  client: ApolloClient;
   data: MaybeMasked<TData>;
   error: ErrorLike | undefined;
   fetchMore: FetchMoreFunction<TData, TVariables>;
@@ -338,7 +338,7 @@ interface UseWatchQueryOptionsHookOptions<
   TData,
   TVariables extends OperationVariables,
 > {
-  client: ApolloClient<unknown>;
+  client: ApolloClient;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
   options: SkipToken | SuspenseQueryHookOptions<TData, TVariables>;
 }

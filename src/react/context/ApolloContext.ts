@@ -6,7 +6,7 @@ import type { RenderPromises } from "@apollo/client/react/ssr";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 export interface ApolloContextValue {
-  client?: ApolloClient<object>;
+  client?: ApolloClient;
   renderPromises?: RenderPromises;
 }
 

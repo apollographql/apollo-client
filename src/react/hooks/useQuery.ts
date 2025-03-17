@@ -148,7 +148,7 @@ function useInternalState<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  client: ApolloClient<object>,
+  client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<any, any>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   renderPromises: RenderPromises | undefined,
@@ -258,7 +258,7 @@ function useObservableSubscriptionResult<
 >(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>,
+  client: ApolloClient,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   disableNetworkFetches: boolean,
@@ -381,7 +381,7 @@ function useResubscribeIfNecessary<
   resultData: InternalResult<TData, TVariables>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  client: ApolloClient<object>,
+  client: ApolloClient,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
@@ -420,7 +420,7 @@ function createMakeWatchQueryOptions<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  client: ApolloClient<object>,
+  client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   {
     skip,
@@ -476,7 +476,7 @@ function createMakeWatchQueryOptions<
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables> | undefined,
-  client: ApolloClient<object>,
+  client: ApolloClient,
   queryHookOptions: QueryHookOptions<TData, TVariables>,
   watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>
 ): WatchQueryOptions<TVariables, TData> {
@@ -508,7 +508,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   nextResult: ApolloQueryResult<MaybeMasked<TData>>,
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>,
+  client: ApolloClient,
   forceUpdate: () => void
 ) {
   const previousResult = resultData.current;
@@ -530,7 +530,7 @@ function setResult<TData, TVariables extends OperationVariables>(
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>
+  client: ApolloClient
 ): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
@@ -562,7 +562,7 @@ function toQueryResult<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<MaybeMasked<TData>>,
   previousData: MaybeMasked<TData> | undefined,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>
+  client: ApolloClient
 ): InternalQueryResult<TData, TVariables> {
   const { data, partial, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {

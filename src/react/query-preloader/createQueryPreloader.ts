@@ -153,7 +153,7 @@ export interface PreloadQueryFunction {
  * @since 3.9.0
  */
 export function createQueryPreloader(
-  client: ApolloClient<any>
+  client: ApolloClient
 ): PreloadQueryFunction {
   return wrapHook(
     "createQueryPreloader",

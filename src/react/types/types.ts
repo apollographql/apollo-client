@@ -43,7 +43,7 @@ export type {
 export type { DefaultContext as Context } from "../../core/index.js";
 
 export type CommonOptions<TOptions> = TOptions & {
-  client?: ApolloClient<object>;
+  client?: ApolloClient;
 };
 
 /* Query types */
@@ -55,7 +55,7 @@ export interface BaseQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
   ssr?: boolean;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 }
@@ -120,7 +120,7 @@ export interface QueryResult<
   TVariables extends OperationVariables = OperationVariables,
 > extends ObservableQueryFields<TData, TVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-  client: ApolloClient<any>;
+  client: ApolloClient;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
@@ -161,7 +161,7 @@ export interface SuspenseQueryHookOptions<
   TVariables extends OperationVariables = OperationVariables,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
@@ -230,7 +230,7 @@ export type LoadableQueryHookFetchPolicy = Extract<
 
 export interface LoadableQueryHookOptions {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
@@ -255,10 +255,10 @@ export interface BaseMutationOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
-  client?: ApolloClient<object>;
+  client?: ApolloClient;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
   notifyOnNetworkStatusChange?: boolean;
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
@@ -274,7 +274,7 @@ export interface MutationFunctionOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
@@ -290,7 +290,7 @@ export interface MutationResult<TData = any> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
   called: boolean;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
-  client: ApolloClient<object>;
+  client: ApolloClient;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
   reset: () => void;
 }
@@ -299,7 +299,7 @@ export declare type MutationFunction<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > = (
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
 ) => Promise<FetchResult<MaybeMasked<TData>>>;
@@ -308,14 +308,14 @@ export interface MutationHookOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
 
 export interface MutationDataOptions<
   TData = any,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
@@ -324,7 +324,7 @@ export type MutationTuple<
   TData,
   TVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 > = [
   mutate: (
     options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
@@ -337,12 +337,12 @@ export type MutationTuple<
 /* Subscription types */
 
 export interface OnDataOptions<TData = any> {
-  client: ApolloClient<object>;
+  client: ApolloClient;
   data: SubscriptionResult<TData>;
 }
 
 export interface OnSubscriptionDataOptions<TData = any> {
-  client: ApolloClient<object>;
+  client: ApolloClient;
   subscriptionData: SubscriptionResult<TData>;
 }
 
@@ -361,7 +361,7 @@ export interface BaseSubscriptionOptions<
     | boolean
     | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
-  client?: ApolloClient<object>;
+  client?: ApolloClient;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#skip:member} */
   skip?: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#context:member} */

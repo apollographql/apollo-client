@@ -41,7 +41,7 @@ export class FragmentReference<
   private references = 0;
 
   constructor(
-    client: ApolloClient<any>,
+    client: ApolloClient,
     watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
       from: string;
     },
@@ -173,7 +173,7 @@ export class FragmentReference<
   }
 
   private getDiff<TData, TVariables>(
-    client: ApolloClient<any>,
+    client: ApolloClient,
     options: WatchFragmentOptions<TData, TVariables> & { from: string }
   ) {
     const { cache } = client;

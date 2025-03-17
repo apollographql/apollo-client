@@ -54,7 +54,7 @@ export function useReadQuery<TData>(
       // return any truthy value that is passed in as an override so we cast the result
       (unwrapped["observable"] as any)
     : undefined
-  ) as ApolloClient<any> | ObservableQuery<TData>;
+  ) as ApolloClient | ObservableQuery<TData>;
 
   return wrapHook(
     "useReadQuery",

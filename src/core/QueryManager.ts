@@ -138,7 +138,7 @@ interface MaskOperationOptions<TData> {
 }
 
 interface QueryManagerOptions<TStore> {
-  cache: ApolloCache<TStore>;
+  cache: ApolloCache;
   link: ApolloLink;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
@@ -153,7 +153,7 @@ interface QueryManagerOptions<TStore> {
 }
 
 export class QueryManager<TStore> {
-  public cache: ApolloCache<TStore>;
+  public cache: ApolloCache;
   public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
@@ -239,7 +239,7 @@ export class QueryManager<TStore> {
     TData,
     TVariables extends OperationVariables,
     TContext extends Record<string, any>,
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
   >({
     mutation,
     variables,
@@ -413,7 +413,7 @@ export class QueryManager<TStore> {
     TData,
     TVariables,
     TContext,
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
   >(
     mutation: {
       mutationId: string;
@@ -624,7 +624,7 @@ export class QueryManager<TStore> {
     TData,
     TVariables,
     TContext,
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
   >(
     optimisticResponse: any,
     mutation: {
@@ -1399,7 +1399,7 @@ export class QueryManager<TStore> {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<
-    ApolloCache<TStore>,
+    ApolloCache,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
     const includedQueriesById = new Map<

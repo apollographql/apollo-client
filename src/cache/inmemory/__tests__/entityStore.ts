@@ -1690,7 +1690,7 @@ describe("EntityStore", () => {
       }
     `;
 
-    function writeInitialData(cache: ApolloCache<any>) {
+    function writeInitialData(cache: ApolloCache) {
       cache.writeQuery({
         query,
         data: {

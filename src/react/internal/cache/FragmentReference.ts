@@ -5,7 +5,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { ApolloClient } from "@apollo/client/core";
+import type { ApolloClient, OperationVariables } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { PromiseWithState } from "@apollo/client/utilities";
 import {
@@ -25,7 +25,7 @@ interface FragmentReferenceOptions {
 
 export class FragmentReference<
   TData = unknown,
-  TVariables = Record<string, unknown>,
+  TVariables extends OperationVariables = OperationVariables,
 > {
   public readonly observable: Observable<WatchFragmentResult<TData>>;
   public readonly key: FragmentKey = {};
@@ -172,14 +172,14 @@ export class FragmentReference<
     );
   }
 
-  private getDiff<TData, TVariables>(
+  private getDiff<TData, TVariables extends OperationVariables>(
     client: ApolloClient,
     options: WatchFragmentOptions<TData, TVariables> & { from: string }
   ) {
     const { cache } = client;
     const { from, fragment, fragmentName } = options;
 
-    const diff = cache.diff({
+    const diff = cache.diff<TData, TVariables>({
       ...options,
       query: cache["getFragmentDoc"](fragment, fragmentName),
       returnPartialData: true,

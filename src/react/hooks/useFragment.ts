@@ -53,9 +53,10 @@ export type UseFragmentResult<TData> =
       missing?: MissingTree;
     };
 
-export function useFragment<TData = unknown, TVars = OperationVariables>(
-  options: UseFragmentOptions<TData, TVars>
-): UseFragmentResult<TData> {
+export function useFragment<
+  TData = unknown,
+  TVars extends OperationVariables = OperationVariables,
+>(options: UseFragmentOptions<TData, TVars>): UseFragmentResult<TData> {
   return wrapHook(
     "useFragment",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -64,7 +65,7 @@ export function useFragment<TData = unknown, TVars = OperationVariables>(
   )(options);
 }
 
-function useFragment_<TData, TVars>(
+function useFragment_<TData, TVars extends OperationVariables>(
   options: UseFragmentOptions<TData, TVars>
 ): UseFragmentResult<TData> {
   const client = useApolloClient(options.client);
@@ -100,7 +101,7 @@ function useFragment_<TData, TVars>(
     }
 
     const { cache } = client;
-    const diff = cache.diff<TData>({
+    const diff = cache.diff<TData, TVars>({
       ...stableOptions,
       returnPartialData: true,
       id: from,

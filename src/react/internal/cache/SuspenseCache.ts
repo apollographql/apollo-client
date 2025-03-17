@@ -34,7 +34,7 @@ export class SuspenseCache {
     this.options = options;
   }
 
-  getQueryRef<TData = any>(
+  getQueryRef<TData = unknown>(
     cacheKey: CacheKey,
     createObservable: () => ObservableQuery<TData>
   ) {

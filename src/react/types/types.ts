@@ -50,7 +50,7 @@ export type CommonOptions<TOptions> = TOptions & {
 
 export interface BaseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
-  TData = any,
+  TData = unknown,
 > extends SharedWatchQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
   ssr?: boolean;
@@ -61,7 +61,7 @@ export interface BaseQueryOptions<
 }
 
 export interface QueryFunctionOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseQueryOptions<TVariables, TData> {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
@@ -116,7 +116,7 @@ export interface ObservableQueryFields<
 }
 
 export interface QueryResult<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends ObservableQueryFields<TData, TVariables> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
@@ -138,7 +138,7 @@ export interface QueryResult<
 }
 
 export interface QueryDataOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {
   children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
@@ -147,7 +147,7 @@ export interface QueryDataOptions<
 }
 
 export interface QueryHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends QueryFunctionOptions<TData, TVariables> {}
 
@@ -252,7 +252,7 @@ export type RefetchQueriesFunction = (
 ) => InternalRefetchQueriesInclude;
 
 export interface BaseMutationOptions<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
@@ -271,7 +271,7 @@ export interface BaseMutationOptions<
 }
 
 export interface MutationFunctionOptions<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
@@ -280,7 +280,7 @@ export interface MutationFunctionOptions<
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export interface MutationResult<TData = any> {
+export interface MutationResult<TData = unknown> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: MaybeMasked<TData> | null;
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
@@ -296,7 +296,7 @@ export interface MutationResult<TData = any> {
 }
 
 export declare type MutationFunction<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
@@ -305,14 +305,14 @@ export declare type MutationFunction<
 ) => Promise<FetchResult<MaybeMasked<TData>>>;
 
 export interface MutationHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
 > extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
 
 export interface MutationDataOptions<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
@@ -336,18 +336,18 @@ export type MutationTuple<
 
 /* Subscription types */
 
-export interface OnDataOptions<TData = any> {
+export interface OnDataOptions<TData = unknown> {
   client: ApolloClient;
   data: SubscriptionResult<TData>;
 }
 
-export interface OnSubscriptionDataOptions<TData = any> {
+export interface OnSubscriptionDataOptions<TData = unknown> {
   client: ApolloClient;
   subscriptionData: SubscriptionResult<TData>;
 }
 
 export interface BaseSubscriptionOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#variables:member} */
@@ -385,7 +385,7 @@ export interface BaseSubscriptionOptions<
   ignoreResults?: boolean;
 }
 
-export interface SubscriptionResult<TData = any, TVariables = any> {
+export interface SubscriptionResult<TData = unknown, TVariables = any> {
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
@@ -401,7 +401,7 @@ export interface SubscriptionResult<TData = any, TVariables = any> {
 }
 
 export interface SubscriptionHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {}
 
@@ -409,7 +409,7 @@ export interface SubscriptionHookOptions<
  * @deprecated This type is not used anymore. It will be removed in the next major version of Apollo Client
  */
 export interface SubscriptionDataOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends BaseSubscriptionOptions<TData, TVariables> {
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;

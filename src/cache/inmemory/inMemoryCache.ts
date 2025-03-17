@@ -239,9 +239,10 @@ export class InMemoryCache extends ApolloCache {
     }
   }
 
-  public diff<TData, TVariables extends OperationVariables = any>(
-    options: Cache.DiffOptions<TData, TVariables>
-  ): Cache.DiffResult<TData> {
+  public diff<
+    TData,
+    TVariables extends OperationVariables = OperationVariables,
+  >(options: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData> {
     return this.storeReader.diffQueryAgainstStore({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,
@@ -250,7 +251,7 @@ export class InMemoryCache extends ApolloCache {
     });
   }
 
-  public watch<TData = unknown, TVariables = any>(
+  public watch<TData = unknown, TVariables = OperationVariables>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void {
     if (!this.watches.size) {

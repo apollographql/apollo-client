@@ -98,7 +98,8 @@ export function addApolloState(
   }
 ) {
   if (pageProps?.props) {
-    pageProps.props[APOLLO_STATE_PROP_NAME] = client.cache.extract();
+    pageProps.props[APOLLO_STATE_PROP_NAME] =
+      client.cache.extract() as NormalizedCacheObject;
   }
   return pageProps;
 }

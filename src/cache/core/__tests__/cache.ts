@@ -6,7 +6,7 @@ import { Cache, DataProxy } from "@apollo/client/cache";
 import { Reference } from "../../../utilities/graphql/storeUtils.js";
 import { ApolloCache } from "../cache.js";
 
-class TestCache extends ApolloCache<unknown> {
+class TestCache extends ApolloCache {
   constructor() {
     super();
   }
@@ -23,9 +23,7 @@ class TestCache extends ApolloCache<unknown> {
     return undefined;
   }
 
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
+  public performTransaction(transaction: (c: ApolloCache) => void): void {
     transaction(this);
   }
 
@@ -36,7 +34,7 @@ class TestCache extends ApolloCache<unknown> {
   }
 
   public recordOptimisticTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void,
+    transaction: (c: ApolloCache) => void,
     id: string
   ): void {}
 
@@ -46,7 +44,7 @@ class TestCache extends ApolloCache<unknown> {
     return new Promise<void>(() => null);
   }
 
-  public restore(serializedState: unknown): ApolloCache<unknown> {
+  public restore(serializedState: unknown) {
     return this;
   }
 

@@ -5888,7 +5888,7 @@ describe("client.mutate", () => {
   });
 });
 
-class TestCache extends ApolloCache<unknown> {
+class TestCache extends ApolloCache {
   public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
     return { result: null, complete: false };
   }
@@ -5901,9 +5901,7 @@ class TestCache extends ApolloCache<unknown> {
     return undefined;
   }
 
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
+  public performTransaction(transaction: (c: ApolloCache) => void): void {
     transaction(this);
   }
 
@@ -5919,7 +5917,7 @@ class TestCache extends ApolloCache<unknown> {
     return new Promise<void>(() => null);
   }
 
-  public restore(serializedState: unknown): ApolloCache<unknown> {
+  public restore(serializedState: unknown): this {
     return this;
   }
 

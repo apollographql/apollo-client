@@ -42,15 +42,15 @@ import {
 import type { ObservableAndInfo } from "../QueryManager.js";
 import { QueryManager } from "../QueryManager.js";
 
-export const mockFetchQuery = (queryManager: QueryManager<any>) => {
+export const mockFetchQuery = (queryManager: QueryManager) => {
   const mocks = {
     fetchObservableWithInfo: jest.fn<
       ObservableAndInfo<unknown>,
-      Parameters<QueryManager<any>["fetchObservableWithInfo"]>
+      Parameters<QueryManager["fetchObservableWithInfo"]>
     >(queryManager["fetchObservableWithInfo"].bind(queryManager)),
     fetchQueryByPolicy: jest.fn<
       ObservableAndInfo<unknown>,
-      Parameters<QueryManager<any>["fetchQueryByPolicy"]>
+      Parameters<QueryManager["fetchQueryByPolicy"]>
     >(queryManager["fetchQueryByPolicy"].bind(queryManager)),
   };
 

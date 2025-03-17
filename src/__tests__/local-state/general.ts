@@ -343,7 +343,7 @@ describe("Cache manipulation", () => {
         start: (
           _1: any,
           variables: { field: string },
-          { cache }: { cache: ApolloCache<any> }
+          { cache }: { cache: ApolloCache }
         ) => {
           cache.writeQuery({ query, data: { field: variables.field } });
           return {
@@ -582,7 +582,7 @@ describe("Sample apps", () => {
       return (
         _result: {},
         variables: { amount: number },
-        { cache }: { cache: ApolloCache<any> }
+        { cache }: { cache: ApolloCache }
       ): null => {
         const read = client.readQuery<{ count: number }>({
           query,
@@ -669,7 +669,7 @@ describe("Sample apps", () => {
       return (
         _result: {},
         variables: Todo,
-        { cache }: { cache: ApolloCache<any> }
+        { cache }: { cache: ApolloCache }
       ): null => {
         const data = updater(client.readQuery({ query, variables }), variables);
         cache.writeQuery({ query, variables, data });

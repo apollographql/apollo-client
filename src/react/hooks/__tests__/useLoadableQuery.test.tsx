@@ -240,7 +240,7 @@ async function renderWithMocks(
 
 async function renderWithClient(
   ui: React.ReactElement,
-  options: { client: ApolloClient<any> },
+  options: { client: ApolloClient },
   { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const { client } = options;

@@ -137,7 +137,7 @@ interface MaskOperationOptions<TData> {
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-interface QueryManagerOptions<TStore> {
+interface QueryManagerOptions {
   cache: ApolloCache;
   link: ApolloLink;
   defaultOptions: DefaultOptions;
@@ -146,7 +146,7 @@ interface QueryManagerOptions<TStore> {
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
   clientAwareness: Record<string, string>;
-  localState: LocalState<TStore>;
+  localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
@@ -165,7 +165,7 @@ export class QueryManager<TStore> {
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
-  private localState: LocalState<TStore>;
+  private localState: LocalState;
 
   private onBroadcast?: () => void;
   public mutationStore?: {
@@ -182,7 +182,7 @@ export class QueryManager<TStore> {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected fetchCancelFns = new Map<string, (error: any) => any>();
 
-  constructor(options: QueryManagerOptions<TStore>) {
+  constructor(options: QueryManagerOptions) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
@@ -1106,7 +1106,7 @@ export class QueryManager<TStore> {
     this.queries.forEach((info) => info.notify());
   }
 
-  public getLocalState(): LocalState<TStore> {
+  public getLocalState() {
     return this.localState;
   }
 

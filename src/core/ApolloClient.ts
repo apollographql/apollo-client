@@ -175,7 +175,7 @@ export { mergeOptions };
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through `Observable` instances.
  */
-export class ApolloClient<TCacheShape> implements DataProxy {
+export class ApolloClient<TCacheShape = any> implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache;
   public disableNetworkFetches: boolean;
@@ -189,7 +189,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private localState: LocalState<TCacheShape>;
+  private localState: LocalState;
 
   /**
    * Constructs an instance of `ApolloClient`.

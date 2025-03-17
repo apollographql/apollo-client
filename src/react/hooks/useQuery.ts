@@ -477,6 +477,63 @@ function useResubscribeIfNecessary<
   observable[lastWatchOptions] = watchQueryOptions;
 }
 
+function getWatchQueryOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(
+  client: ApolloClient<object>,
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  {
+    skip,
+    ssr,
+    defaultOptions,
+    initialFetchPolicy,
+    // The above options are useQuery-specific, so this ...otherOptions spread
+    // makes otherOptions almost a WatchQueryOptions object, except for the
+    // query property that we add below.
+    ...otherOptions
+  }: QueryHookOptions<TData, TVariables> = {},
+  isSyncSSR: boolean
+) {
+  // This Object.assign is safe because otherOptions is a fresh ...rest object
+  // that did not exist until just now, so modifications are still allowed.
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
+    otherOptions,
+    { query }
+  );
+
+  if (
+    isSyncSSR &&
+    (watchQueryOptions.fetchPolicy === "network-only" ||
+      watchQueryOptions.fetchPolicy === "cache-and-network")
+  ) {
+    // this behavior was added to react-apollo without explanation in this PR
+    // https://github.com/apollographql/react-apollo/pull/1579
+    watchQueryOptions.fetchPolicy = "cache-first";
+  }
+
+  if (!watchQueryOptions.variables) {
+    watchQueryOptions.variables = {} as TVariables;
+  }
+
+  if (skip) {
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    watchQueryOptions.initialFetchPolicy =
+      watchQueryOptions.initialFetchPolicy ||
+      watchQueryOptions.fetchPolicy ||
+      getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+    watchQueryOptions.fetchPolicy = "standby";
+  } else if (!watchQueryOptions.fetchPolicy) {
+    watchQueryOptions.fetchPolicy =
+      initialFetchPolicy ||
+      getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+  }
+
+  return watchQueryOptions;
+}
+
 /*
  * A function to massage options before passing them to ObservableQuery.
  * This is two-step curried because we want to reuse the `make` function,

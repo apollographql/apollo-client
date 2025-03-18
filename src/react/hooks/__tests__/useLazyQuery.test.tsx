@@ -1822,6 +1822,80 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it("the promise returned from execute rejects when network errors are returned and errorPolicy is `none`", async () => {
+    const mocks = [
+      {
+        request: { query: helloQuery },
+        error: new Error("Could not fetch"),
+        delay: 20,
+      },
+      {
+        request: { query: helloQuery },
+        error: new Error("Could not fetch 2"),
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(helloQuery),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).rejects.toEqual(new Error("Could not fetch"));
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        error: new Error("Could not fetch"),
+        variables: {},
+      });
+    }
+
+    await expect(execute()).rejects.toEqual(new Error("Could not fetch 2"));
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        error: new Error("Could not fetch 2"),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("the promise returned from execute resolves when GraphQL errors are returned and errorPolicy is `all`", async () => {
     const query: TypedDocumentNode<{
       currentUser: { __typename: "User"; id: string } | null;
@@ -1922,6 +1996,100 @@ describe("useLazyQuery Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  it("the promise returned from execute resolves when network errors are returned and errorPolicy is `all`", async () => {
+    const query: TypedDocumentNode<{
+      currentUser: { __typename: "User"; id: string } | null;
+    }> = gql`
+      query currentUser {
+        id
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        error: new Error("Could not fetch"),
+        delay: 20,
+      },
+      {
+        request: { query },
+        error: new Error("Could not fetch 2"),
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(query, { errorPolicy: "all" }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: undefined,
+      error: new Error("Could not fetch"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: { currentUser: null },
+        error: new Error("Could not fetch"),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: undefined,
+      error: new Error("Could not fetch 2"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        error: new Error("Could not fetch 2"),
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("the promise returned from execute resolves when GraphQL errors are returned and errorPolicy is `ignore`", async () => {
     const query: TypedDocumentNode<{
       currentUser: { __typename: "User"; id: string } | null;
@@ -1997,6 +2165,85 @@ describe("useLazyQuery Hook", () => {
 
     await expect(execute()).resolves.toEqual({
       data: { currentUser: null },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    // We don't see an extra render here since the result is deeply equal to the
+    // previous result.
+    await expect(takeSnapshot).not.toRerender();
+  });
+
+  it("the promise returned from execute resolves when network errors are returned and errorPolicy is `ignore`", async () => {
+    const query: TypedDocumentNode<{
+      currentUser: { __typename: "User"; id: string } | null;
+    }> = gql`
+      query currentUser {
+        id
+      }
+    `;
+
+    const mocks = [
+      {
+        request: { query },
+        error: new Error("Could not fetch"),
+        delay: 20,
+      },
+      {
+        request: { query },
+        error: new Error("Could not fetch 2"),
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, peekSnapshot } = await renderHookToSnapshotStream(
+      () => useLazyQuery(query, { errorPolicy: "ignore" }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const [execute] = await peekSnapshot();
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqualApolloQueryResult({
+      data: undefined,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualLazyQueryResult({
+        data: undefined,
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: {},
+      });
+    }
+
+    await expect(execute()).resolves.toEqual({
+      data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
       partial: false,

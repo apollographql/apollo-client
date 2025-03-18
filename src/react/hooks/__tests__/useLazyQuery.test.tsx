@@ -1783,12 +1783,6 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    // TODO: Determine if this is the correct behavior. This is different than
-    // 3.x where this resolves with an `ApolloQueryResult`.
-    // https://github.com/apollographql/apollo-client/issues/10787 wants this
-    // behavior
-    // https://github.com/apollographql/apollo-client/issues/9142#issuecomment-1118972947
-    // justifies the old behavior
     await expect(execute()).rejects.toEqual(
       new CombinedGraphQLErrors([{ message: "error 1" }])
     );

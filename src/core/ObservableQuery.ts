@@ -1163,7 +1163,7 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
   const { fetchPolicy, nextFetchPolicy } = obsQuery.options;
 
   if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-    return obsQuery.reobserve({
+    return obsQuery.setOptions({
       fetchPolicy: "cache-first",
       // Use a temporary nextFetchPolicy function that replaces itself with the
       // previous nextFetchPolicy value and returns the original fetchPolicy.
@@ -1186,7 +1186,7 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
     });
   }
 
-  return obsQuery.reobserve();
+  return obsQuery["reobserve"]();
 }
 
 export function logMissingFieldErrors(

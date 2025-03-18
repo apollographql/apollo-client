@@ -338,7 +338,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     observable,
     client,
     options,
-    watchQueryOptions
+    { fetchPolicy: watchQueryOptions.fetchPolicy }
   );
 
   return result;
@@ -352,7 +352,9 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
+  watchQueryOptions: Readonly<
+    Pick<WatchQueryOptions<TVariables, TData>, "fetchPolicy">
+  >
 ) {
   const ssrDisabledOverride = useSyncExternalStore(
     () => () => {},

@@ -1,3 +1,6 @@
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { visit } from "recast";
 import { $ } from "zx";
 
@@ -8,8 +11,23 @@ export const compileTs: BuildStep = async (options) => {
   if (options.type === "esm") {
     await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir}`;
   } else {
-    // for a `commonjs` output, we have to specify `moduleResulution: node`, and as that will error because it cannot verify some imports, we add `--noCheck`
-    await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir} --module commonjs --moduleResolution node --noCheck`;
+    const packageJsonPath = join(import.meta.dirname, "..", `package.json`);
+    const originalPackageJson = await readFile(packageJsonPath, "utf-8");
+    try {
+      // module `node18` will compile to CommonJS if the [detected module format](https://www.typescriptlang.org/docs/handbook/modules/reference.html#module-format-detection)
+      // is CommonJS, so we temporarily overwrite the `package.json` file
+      // this is the right way to build CommonJS, the `commonjs` module option should actually not be used
+      // see https://www.typescriptlang.org/docs/handbook/modules/reference.html#commonjs
+      const packageJson = JSON.parse(originalPackageJson);
+      packageJson.type = "commonjs";
+      writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
+      // noCheck is required to suppress errors like
+      // error TS1479: The current file is a CommonJS module whose imports will produce 'require' calls; however, the referenced file is an ECMAScript module and cannot be imported with 'require'. Consider writing a dynamic 'import("@wry/equality")' call instead.
+      await $`npx tsc --project tsconfig.build.json --outDir ${options.targetDir} --module node16 --moduleResolution node16 --noCheck`;
+    } finally {
+      await writeFile(packageJsonPath, originalPackageJson);
+    }
+
     await renameJsFilesToCjs(options);
   }
 };

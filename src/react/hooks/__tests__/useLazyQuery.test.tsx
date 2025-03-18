@@ -2715,9 +2715,6 @@ describe("useLazyQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    // If there was any data to report, errorPolicy:"all" would report both
-    // result.data and result.error, but there is no GraphQL data when we
-    // encounter a network error, so the test again captures desired behavior.
     it('handles errorPolicy:"all" appropriately', async () => {
       const networkError = new Error("from the network");
 

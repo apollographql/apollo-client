@@ -8,7 +8,6 @@ import type {
   OperationVariables,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/core";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { PromiseWithState } from "@apollo/client/utilities";
 import {

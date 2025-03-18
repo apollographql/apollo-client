@@ -1526,7 +1526,6 @@ describe("reading from the store", () => {
 
   it("propagates eviction signals to parent queries", () => {
     const cache = new InMemoryCache({
-      canonizeResults: true,
       typePolicies: {
         Deity: {
           keyFields: ["name"],
@@ -1839,7 +1838,7 @@ describe("reading from the store", () => {
       cache.readQuery({
         query: rulerQuery,
       })
-    ).toBe(lastDiff.result);
+    ).toEqual(lastDiff.result);
 
     expect(
       cache.evict({
@@ -2023,123 +2022,6 @@ describe("reading from the store", () => {
     });
   });
 
-  it("returns === results for different queries", function () {
-    const cache = new InMemoryCache({
-      canonizeResults: true,
-    });
-
-    const aQuery: TypedDocumentNode<{
-      a: string[];
-    }> = gql`
-      query {
-        a
-      }
-    `;
-
-    const abQuery: TypedDocumentNode<{
-      a: string[];
-      b: {
-        c: string;
-        d: string;
-      };
-    }> = gql`
-      query {
-        a
-        b {
-          c
-          d
-        }
-      }
-    `;
-
-    const bQuery: TypedDocumentNode<{
-      b: {
-        c: string;
-        d: string;
-      };
-    }> = gql`
-      query {
-        b {
-          d
-          c
-        }
-      }
-    `;
-
-    const abData1 = {
-      a: ["a", "y"],
-      b: {
-        c: "see",
-        d: "dee",
-      },
-    };
-
-    cache.writeQuery({
-      query: abQuery,
-      data: abData1,
-    });
-
-    function read<Data, Vars>(query: TypedDocumentNode<Data, Vars>) {
-      return cache.readQuery({ query })!;
-    }
-
-    const aResult1 = read(aQuery);
-    const abResult1 = read(abQuery);
-    const bResult1 = read(bQuery);
-
-    expect(aResult1.a).toBe(abResult1.a);
-    expect(abResult1).toEqual(abData1);
-    expect(aResult1).toEqual({ a: abData1.a });
-    expect(bResult1).toEqual({ b: abData1.b });
-    expect(abResult1.b).toBe(bResult1.b);
-
-    const aData2 = {
-      a: "ayy".split(""),
-    };
-
-    cache.writeQuery({
-      query: aQuery,
-      data: aData2,
-    });
-
-    const aResult2 = read(aQuery);
-    const abResult2 = read(abQuery);
-    const bResult2 = read(bQuery);
-
-    expect(aResult2).toEqual(aData2);
-    expect(abResult2).toEqual({ ...abData1, ...aData2 });
-    expect(aResult2.a).toBe(abResult2.a);
-    expect(bResult2).toBe(bResult1);
-    expect(abResult2.b).toBe(bResult2.b);
-    expect(abResult2.b).toBe(bResult1.b);
-
-    const bData3 = {
-      b: {
-        d: "D",
-        c: "C",
-      },
-    };
-
-    cache.writeQuery({
-      query: bQuery,
-      data: bData3,
-    });
-
-    const aResult3 = read(aQuery);
-    const abResult3 = read(abQuery);
-    const bResult3 = read(bQuery);
-
-    expect(aResult3).toBe(aResult2);
-    expect(bResult3).toEqual(bData3);
-    expect(bResult3).not.toBe(bData3);
-    expect(abResult3).toEqual({
-      ...abResult2,
-      ...bData3,
-    });
-
-    expect(cache.extract()).toMatchSnapshot();
-  });
-
   it("does not canonicalize custom scalar objects", function () {
     const now = new Date();
     const abc = { a: 1, b: 2, c: 3 };
@@ -2191,119 +2073,5 @@ describe("reading from the store", () => {
     expect(result1.abc).toBe(result2.abc);
     expect(result1.abc).toBe(abc);
     expect(result2.abc).toBe(abc);
-  });
-
-  it("readQuery can opt out of canonization", function () {
-    let count = 0;
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            count() {
-              return count++;
-            },
-          },
-        },
-      },
-    });
-
-    const canon = cache["storeReader"].canon;
-
-    const query = gql`
-      query {
-        count
-      }
-    `;
-
-    function readQuery(canonizeResults: boolean) {
-      return cache.readQuery<{
-        count: number;
-      }>({
-        query,
-        canonizeResults,
-      });
-    }
-
-    const nonCanonicalQueryResult0 = readQuery(false);
-    expect(canon.isKnown(nonCanonicalQueryResult0)).toBe(false);
-    expect(nonCanonicalQueryResult0).toEqual({ count: 0 });
-
-    const canonicalQueryResult0 = readQuery(true);
-    expect(canon.isKnown(canonicalQueryResult0)).toBe(true);
-    // The preservation of { count: 0 } proves the result didn't have to be
-    // recomputed, but merely canonized.
-    expect(canonicalQueryResult0).toEqual({ count: 0 });
-
-    cache.evict({
-      fieldName: "count",
-    });
-
-    const canonicalQueryResult1 = readQuery(true);
-    expect(canon.isKnown(canonicalQueryResult1)).toBe(true);
-    expect(canonicalQueryResult1).toEqual({ count: 1 });
-
-    const nonCanonicalQueryResult1 = readQuery(false);
-    // Since we already read a canonical result, we were able to reuse it when
-    // reading the non-canonical result.
-    expect(nonCanonicalQueryResult1).toBe(canonicalQueryResult1);
-  });
-
-  it("readFragment can opt out of canonization", function () {
-    let count = 0;
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Query: {
-          fields: {
-            count() {
-              return count++;
-            },
-          },
-        },
-      },
-    });
-
-    const canon = cache["storeReader"].canon;
-
-    const fragment = gql`
-      fragment CountFragment on Query {
-        count
-      }
-    `;
-
-    function readFragment(canonizeResults: boolean) {
-      return cache.readFragment<{
-        count: number;
-      }>({
-        id: "ROOT_QUERY",
-        fragment,
-        canonizeResults,
-      });
-    }
-
-    const canonicalFragmentResult1 = readFragment(true);
-    expect(canon.isKnown(canonicalFragmentResult1)).toBe(true);
-    expect(canonicalFragmentResult1).toEqual({ count: 0 });
-
-    const nonCanonicalFragmentResult1 = readFragment(false);
-    // Since we already read a canonical result, we were able to reuse it when
-    // reading the non-canonical result.
-    expect(nonCanonicalFragmentResult1).toBe(canonicalFragmentResult1);
-
-    cache.evict({
-      fieldName: "count",
-    });
-
-    const nonCanonicalFragmentResult2 = readFragment(false);
-    expect(readFragment(false)).toBe(nonCanonicalFragmentResult2);
-    expect(canon.isKnown(nonCanonicalFragmentResult2)).toBe(false);
-    expect(nonCanonicalFragmentResult2).toEqual({ count: 1 });
-    expect(readFragment(false)).toBe(nonCanonicalFragmentResult2);
-
-    const canonicalFragmentResult2 = readFragment(true);
-    expect(readFragment(true)).toBe(canonicalFragmentResult2);
-    expect(canon.isKnown(canonicalFragmentResult2)).toBe(true);
-    expect(canonicalFragmentResult2).toEqual({ count: 1 });
   });
 });

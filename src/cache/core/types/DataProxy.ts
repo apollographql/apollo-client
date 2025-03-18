@@ -70,8 +70,6 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-    canonizeResults?: boolean;
   }
 
   export interface ReadFragmentOptions<TData, TVariables>
@@ -87,8 +85,6 @@ export namespace DataProxy {
      * readQuery method can be omitted. Defaults to false.
      */
     optimistic?: boolean;
-    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#canonizeResults:member} */
-    canonizeResults?: boolean;
   }
 
   export interface WriteOptions<TData> {

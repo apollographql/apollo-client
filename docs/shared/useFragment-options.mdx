@@ -98,27 +98,6 @@ Each key in the object corresponds to a variable name, and that key's value corr
 </td>
 </tr>
 
-<tr>
-<td>
-
-###### `canonizeResults`
-
-`boolean`
-</td>
-
-<td>
-
-> **⚠️ Deprecated**:
-> Using `canonizeResults` can result in memory leaks so we generally do not recommend using this option anymore.
-> A future version of Apollo Client will contain a similar feature without the risk of memory leaks.
-
-If `true`, result objects read from the cache will be _canonized_, which means deeply-equal objects will also be `===` (literally the same object), allowing much more efficient comparison of past/present results.
-
-The default value is `false`.
-
-</td>
-</tr>
-
 </tbody>
 
 </table>

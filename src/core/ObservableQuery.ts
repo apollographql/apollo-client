@@ -931,7 +931,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
   // TODO: catch `EmptyError` and rethrow as network error if `complete`
   // notification is emitted without a value.
-  public reobserve(
+  private reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
     newNetworkStatus?: NetworkStatus
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {

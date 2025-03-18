@@ -1267,12 +1267,10 @@ export class QueryManager<TStore> {
         error = maybeWrapError(error);
 
         // Avoid storing errors from older interrupted queries.
-        if (requestId >= queryInfo.lastRequestId) {
-          if (errorPolicy === "none") {
-            queryInfo.resetLastWrite();
-            queryInfo.reset();
-            throw error;
-          }
+        if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
+          queryInfo.resetLastWrite();
+          queryInfo.reset();
+          throw error;
         }
 
         const aqr: ApolloQueryResult<TData> = {

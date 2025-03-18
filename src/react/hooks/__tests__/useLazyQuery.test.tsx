@@ -2048,14 +2048,14 @@ describe("useLazyQuery Hook", () => {
       error: new Error("Could not fetch"),
       loading: false,
       networkStatus: NetworkStatus.error,
-      partial: false,
+      partial: true,
     });
 
     {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualLazyQueryResult({
-        data: { currentUser: null },
+        data: undefined,
         error: new Error("Could not fetch"),
         called: true,
         loading: false,
@@ -2070,7 +2070,7 @@ describe("useLazyQuery Hook", () => {
       error: new Error("Could not fetch 2"),
       loading: false,
       networkStatus: NetworkStatus.error,
-      partial: false,
+      partial: true,
     });
 
     {
@@ -2226,7 +2226,7 @@ describe("useLazyQuery Hook", () => {
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      partial: false,
+      partial: true,
     });
 
     {
@@ -2246,7 +2246,7 @@ describe("useLazyQuery Hook", () => {
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
-      partial: false,
+      partial: true,
     });
 
     // We don't see an extra render here since the result is deeply equal to the
@@ -3009,7 +3009,13 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(networkError);
+      await expect(execute()).resolves.toEqualApolloQueryResult({
+        data: undefined,
+        error: networkError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
 
       {
         const [, result] = await takeSnapshot();
@@ -3028,9 +3034,6 @@ describe("useLazyQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    // Technically errorPolicy:"ignore" is supposed to throw away result.error,
-    // but in the case of network errors, since there's no actual data to
-    // report, it's useful/important that we report result.error anyway.
     it('handles errorPolicy:"ignore" appropriately', async () => {
       const networkError = new Error("from the network");
 
@@ -3075,17 +3078,21 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(networkError);
+      await expect(execute()).resolves.toEqualApolloQueryResult({
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
 
       {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: networkError,
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.error,
+          networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
         });

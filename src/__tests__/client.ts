@@ -3639,7 +3639,7 @@ describe("@connection", () => {
       });
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
-      const finalResult = await observable.reobserve({
+      const finalResult = await observable.setOptions({
         // Allow delivery of loading:true result.
         notifyOnNetworkStatusChange: true,
         // Force a network request in addition to loading:true cache result.

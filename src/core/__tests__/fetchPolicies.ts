@@ -965,7 +965,7 @@ describe("nextFetchPolicy", () => {
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
     {
-      const result = await observable.reobserve({
+      const result = await observable.setOptions({
         variables: {
           refetching: false,
         },
@@ -1115,7 +1115,7 @@ describe("nextFetchPolicy", () => {
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
     {
-      const result = await observable.reobserve({
+      const result = await observable.setOptions({
         variables: {
           refetching: false,
         },
@@ -1285,7 +1285,7 @@ describe("nextFetchPolicy", () => {
     expect(observable.options.fetchPolicy).toBe("cache-first");
 
     {
-      const result = await observable.reobserve({
+      const result = await observable.setOptions({
         variables: {
           refetching: false,
         },

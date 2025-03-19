@@ -433,7 +433,7 @@ describe("ObservableQuery", () => {
       });
 
       // go back to first set of variables
-      const current = await observable.reobserve({ variables });
+      const current = await observable.setOptions({ variables });
       expect(current).toEqualApolloQueryResult({
         data,
         loading: false,
@@ -1739,7 +1739,7 @@ describe("ObservableQuery", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
       {
-        const result = await observable.reobserve({ variables: variables2 });
+        const result = await observable.setOptions({ variables: variables2 });
 
         expect(result).toEqualApolloQueryResult({
           data: data2,
@@ -3897,9 +3897,9 @@ test("handles changing variables in rapid succession before other request is com
     });
   });
 
-  void observable.reobserve({ variables: { department: "HR" } });
+  void observable.setOptions({ variables: { department: "HR" } });
   await wait(10);
-  void observable.reobserve({ variables: { department: null } });
+  void observable.setOptions({ variables: { department: null } });
 
   // Wait for request to finish
   await wait(50);

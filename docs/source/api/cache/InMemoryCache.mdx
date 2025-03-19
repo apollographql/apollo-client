@@ -141,10 +141,10 @@ By specifying the ID of another cached object, you can query arbitrary cached da
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-readQuery<QueryType, TVariables = OperationVariables>(
-  options: DataProxy.Query<TVariables>,
+readQuery<TData = unknown, TVariables = OperationVariables>(
+  options: Cache.ReadQueryOptions<TData, TVariables>,
   optimistic: boolean = false,
-): QueryType | null
+): Unmasked<TData> | null
 ```
 
 
@@ -576,10 +576,10 @@ A map of any GraphQL variable names and values required by `fragment`.
 ### Signature
 
 ```ts title="src/cache/core/cache.ts"
-readFragment<FragmentType, TVariables = OperationVariables>(
-  options: DataProxy.Fragment<TVariables>,
+readFragment<TData = unknown, TVariables = OperationVariables>(
+  options: Cache.ReadFragmentOptions<TData, TVariables>,
   optimistic: boolean = false,
-): FragmentType | null
+): Unmasked<TData> | null
 ```
 
 ## `writeFragment`

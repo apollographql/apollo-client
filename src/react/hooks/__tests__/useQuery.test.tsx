@@ -1622,7 +1622,7 @@ describe("useQuery Hook", () => {
     });
 
     // https://github.com/apollographql/apollo-client/issues/12458
-    it("works when changing variables with skip", async () => {
+    it("returns correct result when cache updates after changing variables and skipping query", async () => {
       interface Data {
         user: {
           __typename: "User";
@@ -1641,36 +1641,15 @@ describe("useQuery Hook", () => {
       `;
 
       const client = new ApolloClient({
-        link: new MockLink([
-          {
-            request: { query, variables: { id: 1 } },
-            result: {
-              data: { user: { __typename: "User", id: 1, name: "User 1" } },
-            },
-          },
-          {
-            request: { query, variables: { id: 2 } },
-            result: {
-              data: { user: { __typename: "User", id: 2, name: "User 2" } },
-            },
-          },
-        ]),
+        link: ApolloLink.empty(),
         cache: new InMemoryCache(),
       });
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ id }) => {
-          const result1 = useQuery(query, { variables: { id } });
-          const result2 = useQuery(query, {
-            skip: !result1.data?.user.id || result1.data.user.id !== id,
-            variables: { id },
-          });
-
-          return [result1, result2];
-        },
+        ({ id, skip }) => useQuery(query, { skip, variables: { id } }),
         {
-          initialProps: { id: 1 },
+          initialProps: { id: 1, skip: true },
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
@@ -1678,18 +1657,9 @@ describe("useQuery Hook", () => {
       );
 
       {
-        const [result1, result2] = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(result1).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: { id: 1 },
-        });
-
-        expect(result2).toEqualQueryResult({
+        expect(result).toEqualQueryResult({
           data: undefined,
           error: undefined,
           called: false,
@@ -1700,17 +1670,15 @@ describe("useQuery Hook", () => {
         });
       }
 
-      {
-        const [result1, result2] = await takeSnapshot();
+      client.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      });
+      await rerender({ id: 1, skip: false });
 
-        expect(result1).toEqualQueryResult({
-          data: { user: { __typename: "User", id: 1, name: "User 1" } },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: { id: 1 },
-        });
+      {
+        const result2 = await takeSnapshot();
 
         expect(result2).toEqualQueryResult({
           data: { user: { __typename: "User", id: 1, name: "User 1" } },
@@ -1722,21 +1690,12 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender({ id: 2 });
+      await rerender({ id: 2, skip: true });
 
       {
-        const [result1, result2] = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(result1).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.setVariables,
-          previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
-          variables: { id: 2 },
-        });
-
-        expect(result2).toEqualQueryResult({
+        expect(result).toEqualQueryResult({
           data: undefined,
           error: undefined,
           called: false,
@@ -1747,19 +1706,18 @@ describe("useQuery Hook", () => {
         });
       }
 
+      client.writeQuery({
+        query,
+        variables: { id: 2 },
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+      });
+
+      await rerender({ id: 2, skip: false });
+
       {
-        const [result1, result2] = await takeSnapshot();
+        const result = await takeSnapshot();
 
-        expect(result1).toEqualQueryResult({
-          data: { user: { __typename: "User", id: 2, name: "User 2" } },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
-          variables: { id: 2 },
-        });
-
-        expect(result2).toEqualQueryResult({
+        expect(result).toEqualQueryResult({
           data: { user: { __typename: "User", id: 2, name: "User 2" } },
           called: true,
           loading: false,

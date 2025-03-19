@@ -513,7 +513,7 @@ function useResubscribeIfNecessary<
     // subscriptions, though it does feel less than ideal that reobserve
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
-    observable.reobserve(
+    observable.setOptions(
       getObsQueryOptions(observable, client, watchQueryOptions)
     );
 

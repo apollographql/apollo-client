@@ -1500,8 +1500,6 @@ const QUERY_REFERENCE_SYMBOL: unique symbol;
 //
 // @public (undocumented)
 interface QueryFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
-    // @internal (undocumented)
-    defaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>;
     skip?: boolean;
 }
 

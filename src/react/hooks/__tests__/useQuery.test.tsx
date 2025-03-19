@@ -1656,19 +1656,15 @@ describe("useQuery Hook", () => {
         }
       );
 
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: undefined,
-          called: false,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: { id: 1 },
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
 
       client.writeQuery({
         query,
@@ -1677,34 +1673,26 @@ describe("useQuery Hook", () => {
       });
       await rerender({ id: 1, skip: false });
 
-      {
-        const result2 = await takeSnapshot();
-
-        expect(result2).toEqualQueryResult({
-          data: { user: { __typename: "User", id: 1, name: "User 1" } },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: { id: 1 },
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
 
       await rerender({ id: 2, skip: true });
 
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          error: undefined,
-          called: false,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
-          variables: { id: 2 },
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
 
       client.writeQuery({
         query,
@@ -1714,18 +1702,14 @@ describe("useQuery Hook", () => {
 
       await rerender({ id: 2, skip: false });
 
-      {
-        const result = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { user: { __typename: "User", id: 2, name: "User 2" } },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
-          variables: { id: 2 },
-        });
-      }
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
 
       await expect(takeSnapshot).not.toRerender();
     });

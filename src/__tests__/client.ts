@@ -696,7 +696,7 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    return client.query({ query }).then((result: FormattedExecutionResult) => {
+    return client.query({ query }).then((result) => {
       expect(result.data).toEqual(data);
     });
   });

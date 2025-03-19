@@ -45,7 +45,7 @@ describe("General functionality", () => {
     });
 
     return client.query({ query }).then(({ data }) => {
-      expect({ ...data }).toMatchObject({ field: 1 });
+      expect(data).toMatchObject({ field: 1 });
     });
   });
 
@@ -95,7 +95,7 @@ describe("General functionality", () => {
     });
 
     return client.query({ query }).then(({ data }) => {
-      expect({ ...data }).toMatchObject({ field: 1 });
+      expect(data).toMatchObject({ field: 1 });
     });
   });
 
@@ -159,14 +159,14 @@ describe("General functionality", () => {
     return client
       .query({ query })
       .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ field: 1 });
+        expect(data).toMatchObject({ field: 1 });
         expect(count).toBe(1);
       })
       .then(() =>
         client
           .query({ query, fetchPolicy: "network-only" })
           .then(({ data }) => {
-            expect({ ...data }).toMatchObject({ field: 1 });
+            expect(data).toMatchObject({ field: 1 });
             expect(count).toBe(2);
           })
       );
@@ -245,7 +245,7 @@ describe("Cache manipulation", () => {
 
       client
         .query({ query })
-        .then(({ data }) => expect({ ...data }).toMatchObject({ field: "yo" }));
+        .then(({ data }) => expect(data).toMatchObject({ field: "yo" }));
     }
   );
 
@@ -281,7 +281,7 @@ describe("Cache manipulation", () => {
       .mutate({ mutation })
       .then(() => client.query({ query }))
       .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ field: 1 });
+        expect(data).toMatchObject({ field: 1 });
       });
   });
 
@@ -363,13 +363,13 @@ describe("Cache manipulation", () => {
     return client
       .mutate({ mutation, variables: { id: "1234" } })
       .then(({ data }) => {
-        expect({ ...data }).toEqual({
+        expect(data).toEqual({
           start: { field: "1234", __typename: "Field" },
         });
       })
       .then(() => client.query({ query }))
       .then(({ data }) => {
-        expect({ ...data }).toMatchObject({ field: "1234" });
+        expect(data).toMatchObject({ field: "1234" });
       });
   });
 
@@ -506,7 +506,7 @@ describe("Cache manipulation", () => {
       },
     });
     const stream = new ObservableStream(
-      client.watchQuery({ query, variables: { id: entityId } })
+      client.watchQuery<any>({ query, variables: { id: entityId } })
     );
 
     {
@@ -689,7 +689,7 @@ describe("Sample apps", () => {
     };
 
     client.addResolvers(resolvers);
-    const stream = new ObservableStream(client.watchQuery({ query }));
+    const stream = new ObservableStream(client.watchQuery<any>({ query }));
 
     {
       const { data } = await stream.takeNext();
@@ -1123,7 +1123,7 @@ describe("Combining client and server state/operations", () => {
       },
     });
 
-    await client.mutate({
+    await client.mutate<any>({
       mutation,
       update(proxy, { data: { updateUser } }) {
         proxy.writeQuery({

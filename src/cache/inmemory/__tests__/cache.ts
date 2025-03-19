@@ -1403,7 +1403,7 @@ describe("Cache", () => {
         name: "Ben Newman",
       });
 
-      cache.updateFragment(
+      cache.updateFragment<any>(
         {
           id: bnId,
           fragment: usernameFragment,

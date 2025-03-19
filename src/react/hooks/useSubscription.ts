@@ -109,7 +109,7 @@ import { useSyncExternalStore } from "./useSyncExternalStore.js";
  * @returns Query result object
  */
 export function useSubscription<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -317,7 +317,7 @@ export function useSubscription<
 }
 
 function createSubscription<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   client: ApolloClient,

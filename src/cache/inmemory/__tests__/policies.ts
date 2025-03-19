@@ -5,6 +5,7 @@ import {
   ApolloClient,
   DocumentNode,
   NetworkStatus,
+  OperationVariables,
   Reference,
   StoreObject,
   TypedDocumentNode,
@@ -1194,7 +1195,10 @@ describe("type policies", function () {
         },
       };
 
-      function check<TData extends typeof data, TVars>(
+      function check<
+        TData extends typeof data,
+        TVars extends OperationVariables,
+      >(
         query: DocumentNode | TypedDocumentNode<TData, TVars>,
         variables?: TVars
       ) {

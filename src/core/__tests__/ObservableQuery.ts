@@ -3378,7 +3378,7 @@ describe("ObservableQuery", () => {
           cache,
         });
 
-        const observable = client.watchQuery(queryOptions);
+        const observable = client.watchQuery<any>(queryOptions);
         const values: any[] = [];
 
         return new Promise<any[]>((resolve, reject) => {

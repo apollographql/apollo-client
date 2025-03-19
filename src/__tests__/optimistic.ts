@@ -979,7 +979,7 @@ describe("optimistic mutation results", () => {
 
       await promise;
 
-      const result = await client.query({ query });
+      const result = await client.query<any>({ query });
 
       stream.unsubscribe();
 
@@ -1393,7 +1393,7 @@ describe("optimistic mutation results", () => {
 
       // wrap the QueryObservable with an rxjs observable
       const promise = lastValueFrom(
-        client.watchQuery({ query }).pipe(
+        client.watchQuery<any>({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
@@ -1543,7 +1543,7 @@ describe("optimistic mutation results", () => {
         "Optimistically generated"
       );
       await promise;
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       stream.unsubscribe();
       // There should be one more todo item than before
@@ -1839,7 +1839,7 @@ describe("optimistic mutation results", () => {
       });
 
       const promise = lastValueFrom(
-        client.watchQuery({ query }).pipe(
+        client.watchQuery<any>({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
@@ -1900,7 +1900,7 @@ describe("optimistic mutation results", () => {
         ),
       });
 
-      const query = gql`
+      const query: TypedDocumentNode<Data> = gql`
         query {
           items {
             text
@@ -1920,7 +1920,7 @@ describe("optimistic mutation results", () => {
       type Data = { items: Item[] };
 
       function append(cache: ApolloCache, item: Item) {
-        const data = cache.readQuery<Data>({ query });
+        const data = cache.readQuery({ query });
         cache.writeQuery({
           query,
           data: {

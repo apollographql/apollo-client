@@ -2785,7 +2785,7 @@ describe("ApolloClient", () => {
 
       client.setLink(newLink);
 
-      const { data } = await client.query({
+      const { data } = await client.query<any>({
         query: gql`
           {
             widgets

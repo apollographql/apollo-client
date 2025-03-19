@@ -107,6 +107,9 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
     const previousReader = this.storeReader;
     const { fragments } = this.config;
 
+    this.addTypenameTransform.resetCache();
+    fragments?.resetCaches();
+
     // The StoreWriter is mostly stateless and so doesn't really need to be
     // reset, but it does need to have its writer.storeReader reference updated,
     // so it's simpler to update this.storeWriter as well.
@@ -309,8 +312,6 @@ export class InMemoryCache extends ApolloCache<NormalizedCacheObject> {
   }) {
     canonicalStringify.reset();
     print.reset();
-    this.addTypenameTransform.resetCache();
-    this.config.fragments?.resetCaches();
     const ids = this.optimisticData.gc();
     if (options && !this.txCount) {
       if (options.resetResultCache) {

@@ -7297,7 +7297,7 @@ describe("useQuery Hook", () => {
 
       const reasons: string[] = [];
 
-      const result = await getCurrentSnapshot().observable.reobserve({
+      const result = await getCurrentSnapshot().observable.setOptions({
         variables: {
           newVar: true,
         },

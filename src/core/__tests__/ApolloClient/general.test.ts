@@ -546,7 +546,7 @@ describe("ApolloClient", () => {
 
     // Kick off another request while the other is still pending
     await wait(10);
-    void observableQuery.reobserve({ variables: { offset: 20 } });
+    void observableQuery.setOptions({ variables: { offset: 20 } });
 
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
 
@@ -618,7 +618,7 @@ describe("ApolloClient", () => {
 
     // Kick off another request while the other is still pending
     await wait(10);
-    void observableQuery.reobserve({ variables: { id: 2 } });
+    void observableQuery.setOptions({ variables: { id: 2 } });
 
     await expect(stream).toEmitApolloQueryResult({
       data: {
@@ -6345,7 +6345,7 @@ describe("ApolloClient", () => {
 
         onQueryUpdated(obsQuery) {
           expect(obsQuery.options.query).toBe(query);
-          return obsQuery.reobserve({
+          return obsQuery.setOptions({
             fetchPolicy: "network-only",
             context: {
               ...obsQuery.options.context,

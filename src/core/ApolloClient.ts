@@ -418,9 +418,11 @@ export class ApolloClient implements DataProxy {
    * a description of store reactivity.
    */
   public watchQuery<
-    T = unknown,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(options: WatchQueryOptions<TVariables, T>): ObservableQuery<T, TVariables> {
+  >(
+    options: WatchQueryOptions<TVariables, TData>
+  ): ObservableQuery<TData, TVariables> {
     if (this.defaultOptions.watchQuery) {
       options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
@@ -434,7 +436,7 @@ export class ApolloClient implements DataProxy {
       options = { ...options, fetchPolicy: "cache-first" };
     }
 
-    return this.queryManager.watchQuery<T, TVariables>(options);
+    return this.queryManager.watchQuery<TData, TVariables>(options);
   }
 
   /**
@@ -447,11 +449,11 @@ export class ApolloClient implements DataProxy {
    * server at all or just resolve from the cache, etc.
    */
   public query<
-    T = unknown,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: QueryOptions<TVariables, T>
-  ): Promise<ApolloQueryResult<MaybeMasked<T>>> {
+    options: QueryOptions<TVariables, TData>
+  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }
@@ -468,7 +470,7 @@ export class ApolloClient implements DataProxy {
       options = { ...options, fetchPolicy: "cache-first" };
     }
 
-    return this.queryManager.query<T, TVariables>(options);
+    return this.queryManager.query<TData, TVariables>(options);
   }
 
   /**
@@ -500,14 +502,14 @@ export class ApolloClient implements DataProxy {
    * `Observable` which either emits received data or an error.
    */
   public subscribe<
-    T = unknown,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >(
-    options: SubscriptionOptions<TVariables, T>
-  ): Observable<FetchResult<MaybeMasked<T>>> {
+    options: SubscriptionOptions<TVariables, TData>
+  ): Observable<FetchResult<MaybeMasked<TData>>> {
     const id = this.queryManager.generateQueryId();
 
-    return this.queryManager.startGraphQLSubscription<T>(options).pipe(
+    return this.queryManager.startGraphQLSubscription<TData>(options).pipe(
       map((result) => ({
         ...result,
         data: this.queryManager.maskOperation({
@@ -529,11 +531,11 @@ export class ApolloClient implements DataProxy {
    * @param optimistic - Set to `true` to allow `readQuery` to return
    * optimistic results. Is `false` by default.
    */
-  public readQuery<T = unknown, TVariables = OperationVariables>(
-    options: DataProxy.Query<TVariables, T>,
+  public readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: DataProxy.Query<TVariables, TData>,
     optimistic: boolean = false
-  ): Unmasked<T> | null {
-    return this.cache.readQuery<T, TVariables>(options, optimistic);
+  ): Unmasked<TData> | null {
+    return this.cache.readQuery<TData, TVariables>(options, optimistic);
   }
 
   /**
@@ -553,12 +555,9 @@ export class ApolloClient implements DataProxy {
    * to optimistic updates.
    */
 
-  public watchFragment<
-    TFragmentData = unknown,
-    TVariables = OperationVariables,
-  >(
-    options: WatchFragmentOptions<TFragmentData, TVariables>
-  ): Observable<WatchFragmentResult<TFragmentData>> {
+  public watchFragment<TData = unknown, TVariables = OperationVariables>(
+    options: WatchFragmentOptions<TData, TVariables>
+  ): Observable<WatchFragmentResult<TData>> {
     return this.cache.watchFragment({
       ...options,
       [Symbol.for("apollo.dataMasking")]: this.queryManager.dataMasking,

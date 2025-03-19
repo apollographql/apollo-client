@@ -171,13 +171,19 @@ export class InMemoryCache extends ApolloCache {
     return (optimistic ? this.optimisticData : this.data).extract();
   }
 
-  public read<T>(
-    options: Cache.ReadOptions & { returnPartialData: true }
-  ): T | DeepPartial<T> | null;
+  public read<TData = unknown>(
+    options: Cache.ReadOptions<OperationVariables, TData> & {
+      returnPartialData: true;
+    }
+  ): TData | DeepPartial<TData> | null;
 
-  public read<T>(options: Cache.ReadOptions): T | null;
+  public read<TData = unknown>(
+    options: Cache.ReadOptions<OperationVariables, TData>
+  ): TData | null;
 
-  public read<T>(options: Cache.ReadOptions): T | DeepPartial<T> | null {
+  public read<TData = unknown>(
+    options: Cache.ReadOptions<OperationVariables, TData>
+  ): TData | DeepPartial<TData> | null {
     const {
       // Since read returns data or null, without any additional metadata
       // about whether/where there might have been missing fields, the
@@ -189,7 +195,7 @@ export class InMemoryCache extends ApolloCache {
       returnPartialData = false,
     } = options;
 
-    return this.storeReader.diffQueryAgainstStore<T>({
+    return this.storeReader.diffQueryAgainstStore<TData>({
       ...options,
       store: options.optimistic ? this.optimisticData : this.data,
       config: this.config,

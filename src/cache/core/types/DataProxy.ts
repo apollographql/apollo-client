@@ -126,15 +126,15 @@ export namespace DataProxy {
       "data"
     > {}
 
-  export type DiffResult<T> =
+  export type DiffResult<TData> =
     | {
-        result: T;
+        result: TData;
         complete: true;
         missing?: never;
         fromOptimisticTransaction?: boolean;
       }
     | {
-        result: DeepPartial<T> | null;
+        result: DeepPartial<TData> | null;
         complete: false;
         missing?: MissingFieldError;
         fromOptimisticTransaction?: boolean;
@@ -151,20 +151,20 @@ export interface DataProxy {
   /**
    * Reads a GraphQL query from the root query id.
    */
-  readQuery<QueryType, TVariables = OperationVariables>(
-    options: DataProxy.ReadQueryOptions<QueryType, TVariables>,
+  readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: DataProxy.ReadQueryOptions<TData, TVariables>,
     optimistic?: boolean
-  ): Unmasked<QueryType> | null;
+  ): Unmasked<TData> | null;
 
   /**
    * Reads a GraphQL fragment from any arbitrary id. If there is more than
    * one fragment in the provided document then a `fragmentName` must be
    * provided to select the correct fragment.
    */
-  readFragment<FragmentType, TVariables = OperationVariables>(
-    options: DataProxy.ReadFragmentOptions<FragmentType, TVariables>,
+  readFragment<TData = unknown, TVariables = OperationVariables>(
+    options: DataProxy.ReadFragmentOptions<TData, TVariables>,
     optimistic?: boolean
-  ): Unmasked<FragmentType> | null;
+  ): Unmasked<TData> | null;
 
   /**
    * Writes a GraphQL query to the root query id.

@@ -21,12 +21,12 @@ export namespace Cache {
   }
 
   export interface WriteOptions<
-    TResult = unknown,
+    TData = unknown,
     TVariables = OperationVariables,
-  > extends Omit<DataProxy.Query<TVariables, TResult>, "id">,
-      Omit<DataProxy.WriteOptions<TResult>, "data"> {
+  > extends Omit<DataProxy.Query<TVariables, TData>, "id">,
+      Omit<DataProxy.WriteOptions<TData>, "data"> {
     dataId?: string;
-    result: Unmasked<TResult>;
+    result: Unmasked<TData>;
   }
 
   export interface DiffOptions<TData = unknown, TVariables = OperationVariables>

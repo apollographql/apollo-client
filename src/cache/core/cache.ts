@@ -125,9 +125,9 @@ export abstract class ApolloCache implements DataProxy {
    * cache.
    */
   public abstract diff<
-    T = unknown,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
-  >(query: Cache.DiffOptions<T, TVariables>): Cache.DiffResult<T>;
+  >(query: Cache.DiffOptions<TData, TVariables>): Cache.DiffResult<TData>;
   public abstract watch<TData = unknown, TVariables = OperationVariables>(
     watch: Cache.WatchOptions<TData, TVariables>
   ): () => void;
@@ -250,10 +250,10 @@ export abstract class ApolloCache implements DataProxy {
   }
 
   // DataProxy API
-  public readQuery<QueryType, TVariables = OperationVariables>(
-    options: Cache.ReadQueryOptions<QueryType, TVariables>,
+  public readQuery<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.ReadQueryOptions<TData, TVariables>,
     optimistic = !!options.optimistic
-  ): Unmasked<QueryType> | null {
+  ): Unmasked<TData> | null {
     return this.read({
       ...options,
       rootId: options.id || "ROOT_QUERY",
@@ -363,10 +363,10 @@ export abstract class ApolloCache implements DataProxy {
     cache: WeakCache,
   });
 
-  public readFragment<FragmentType, TVariables = OperationVariables>(
-    options: Cache.ReadFragmentOptions<FragmentType, TVariables>,
+  public readFragment<TData = unknown, TVariables = OperationVariables>(
+    options: Cache.ReadFragmentOptions<TData, TVariables>,
     optimistic = !!options.optimistic
-  ): Unmasked<FragmentType> | null {
+  ): Unmasked<TData> | null {
     return this.read({
       ...options,
       query: this.getFragmentDoc(options.fragment, options.fragmentName),

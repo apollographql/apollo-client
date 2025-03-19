@@ -1008,9 +1008,9 @@ export class QueryManager {
     this.getQuery(observableQuery.queryId).setObservableQuery(observableQuery);
   }
 
-  public startGraphQLSubscription<T = unknown>(
+  public startGraphQLSubscription<TData = unknown>(
     options: SubscriptionOptions
-  ): Observable<FetchResult<T>> {
+  ): Observable<FetchResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -1023,7 +1023,12 @@ export class QueryManager {
     variables = this.getVariables(query, variables);
 
     const makeObservable = (variables: OperationVariables) =>
-      this.getObservableFromLink<T>(query, context, variables, extensions).pipe(
+      this.getObservableFromLink<TData>(
+        query,
+        context,
+        variables,
+        extensions
+      ).pipe(
         map((result) => {
           if (fetchPolicy !== "no-cache") {
             // the subscription interface should handle not sending us results we no longer subscribe to.
@@ -1070,7 +1075,7 @@ export class QueryManager {
         .addExportedVariables(query, variables, context)
         .then(makeObservable);
 
-      return new Observable<FetchResult<T>>((observer) => {
+      return new Observable<FetchResult<TData>>((observer) => {
         let sub: Subscription | null = null;
         observablePromise.then(
           (observable) => (sub = observable.subscribe(observer)),
@@ -1116,7 +1121,7 @@ export class QueryManager {
     observable?: Observable<FetchResult<any>>;
   }>(false);
 
-  private getObservableFromLink<T = unknown>(
+  private getObservableFromLink<TData = unknown>(
     query: DocumentNode,
     context: any,
     variables?: OperationVariables,
@@ -1124,8 +1129,8 @@ export class QueryManager {
     // Prefer context.queryDeduplication if specified.
     deduplication: boolean = context?.queryDeduplication ??
       this.queryDeduplication
-  ): Observable<FetchResult<T>> {
-    let observable: Observable<FetchResult<T>> | undefined;
+  ): Observable<FetchResult<TData>> {
+    let observable: Observable<FetchResult<TData>> | undefined;
 
     const { serverQuery, clientQuery } = this.getDocumentInfo(query);
     if (serverQuery) {
@@ -1171,10 +1176,10 @@ export class QueryManager {
           );
         }
       } else {
-        observable = execute(link, operation) as Observable<FetchResult<T>>;
+        observable = execute(link, operation) as Observable<FetchResult<TData>>;
       }
     } else {
-      observable = of({ data: {} } as FetchResult<T>);
+      observable = of({ data: {} } as FetchResult<TData>);
       context = this.prepareContext(context);
     }
 

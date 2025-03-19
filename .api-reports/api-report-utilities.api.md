@@ -1909,13 +1909,11 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables = O
     // (undocumented)
     readonly queryName?: string;
     refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // (undocumented)
-    reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    rerun(): Promise<ApolloQueryResult<TData>>;
     // @internal (undocumented)
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
-    // (undocumented)
     setOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
     // (undocumented)

@@ -680,6 +680,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve(newOptions);
   }
 
+  public rerun() {
+    return this.reobserve();
+  }
+
   public silentSetOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ) {

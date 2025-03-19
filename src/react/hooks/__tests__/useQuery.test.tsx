@@ -1754,7 +1754,7 @@ describe("useQuery Hook", () => {
       checkObservableQueries(1);
 
       await expect(
-        getCurrentSnapshot().observable.reobserve()
+        getCurrentSnapshot().observable.rerun()
       ).resolves.toEqualApolloQueryResult({
         data: { linkCount: 2 },
         loading: false,
@@ -4925,10 +4925,10 @@ describe("useQuery Hook", () => {
           </button>
           <button
             onClick={() => {
-              // Intentionally use reobserve here as opposed to refetch to
+              // Intentionally use rerun here as opposed to refetch to
               // ensure we check against reported cache results with cache-first
               // and notifyOnNetworkStatusChange
-              void useQueryResult.observable.reobserve();
+              void useQueryResult.observable.rerun();
             }}
           >
             Reload 1st query
@@ -8164,7 +8164,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      const result = await getCurrentSnapshot().reobserve();
+      const result = await getCurrentSnapshot().observable.rerun();
 
       expect(result).toEqualApolloQueryResult({
         data: { a: "aaa", b: 2 },

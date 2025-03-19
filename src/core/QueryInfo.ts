@@ -86,6 +86,7 @@ export class QueryInfo {
   graphQLErrors?: ReadonlyArray<GraphQLFormattedError>;
   stopped = false;
 
+  private cancelWatch?: () => void;
   private cache: ApolloCache<any>;
 
   constructor(
@@ -128,6 +129,8 @@ export class QueryInfo {
 
     if (!equal(query.variables, this.variables)) {
       this.lastDiff = void 0;
+      // Ensure we don't continue to receive cache updates for old variables
+      this.cancel();
     }
 
     Object.assign(this, {
@@ -308,20 +311,17 @@ export class QueryInfo {
 
       // Cancel the pending notify timeout
       this.reset();
-
       this.cancel();
-      // Revert back to the no-op version of cancel inherited from
-      // QueryInfo.prototype.
-      this.cancel = QueryInfo.prototype.cancel;
 
       const oq = this.observableQuery;
       if (oq) oq.stopPolling();
     }
   }
 
-  // This method is a no-op by default, until/unless overridden by the
-  // updateWatch method.
-  private cancel() {}
+  private cancel() {
+    this.cancelWatch?.();
+    this.cancelWatch = void 0;
+  }
 
   private lastWatch?: Cache.WatchOptions;
 
@@ -342,7 +342,7 @@ export class QueryInfo {
 
     if (!this.lastWatch || !equal(watchOptions, this.lastWatch)) {
       this.cancel();
-      this.cancel = this.cache.watch((this.lastWatch = watchOptions));
+      this.cancelWatch = this.cache.watch((this.lastWatch = watchOptions));
     }
   }
 

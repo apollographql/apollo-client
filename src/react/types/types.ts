@@ -19,7 +19,6 @@ import type {
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client/core";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";

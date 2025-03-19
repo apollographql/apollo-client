@@ -1191,7 +1191,7 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
     });
   }
 
-  return obsQuery["reobserve"]();
+  return obsQuery.rerun();
 }
 
 export function logMissingFieldErrors(

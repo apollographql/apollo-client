@@ -674,12 +674,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
   }
 
+  /**
+   * Reevaluate against a new set of options which might cause a fetch.
+   */
   public setOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     return this.reobserve(newOptions);
   }
 
+  /**
+   * Reevaulate the query against the current set of options.
+   */
   public rerun() {
     return this.reobserve();
   }

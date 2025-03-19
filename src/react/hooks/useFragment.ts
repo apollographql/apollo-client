@@ -36,7 +36,7 @@ export interface UseFragmentOptions<TData, TVars>
    *
    * @docGroup 1. Operation options
    */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
 }
 
 // TODO: Update this to return `null` when there is no data returned from the

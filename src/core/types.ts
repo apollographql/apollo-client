@@ -79,10 +79,7 @@ export type InternalRefetchQueriesInclude =
 
 // Used by ApolloClient["refetchQueries"]
 // TODO Improve documentation comments for this public type.
-export interface RefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
-  TResult,
-> {
+export interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
   updateCache?: (cache: TCache) => void;
   // The client.refetchQueries method discourages passing QueryOptions, by
   // restricting the public type of options.include to exclude QueryOptions as
@@ -142,7 +139,7 @@ export interface RefetchQueriesResult<TResult>
 
 // Used by QueryManager["refetchQueries"]
 export interface InternalRefetchQueriesOptions<
-  TCache extends ApolloCache<any>,
+  TCache extends ApolloCache,
   TResult,
 > extends Omit<RefetchQueriesOptions<TCache, TResult>, "include"> {
   // Just like the refetchQueries option for a mutation, an array of strings,
@@ -214,7 +211,7 @@ export type MutationUpdaterFn<T = { [key: string]: any }> = (
   // The MutationUpdaterFn type is broken because it mistakenly uses the same
   // type parameter T for both the cache and the mutationResult. Do not use this
   // type unless you absolutely need it for backwards compatibility.
-  cache: ApolloCache<T>,
+  cache: ApolloCache,
   mutationResult: FetchResult<T>
 ) => void;
 
@@ -222,7 +219,7 @@ export type MutationUpdaterFunction<
   TData,
   TVariables,
   TContext,
-  TCache extends ApolloCache<any>,
+  TCache extends ApolloCache,
 > = (
   cache: TCache,
   result: Omit<FetchResult<Unmasked<TData>>, "context">,

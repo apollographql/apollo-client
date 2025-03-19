@@ -39,7 +39,7 @@ import type { Cache } from "./types/Cache.js";
 import type { MissingTree } from "./types/common.js";
 import type { DataProxy } from "./types/DataProxy.js";
 
-export type Transaction<T> = (c: ApolloCache<T>) => void;
+export type Transaction = (c: ApolloCache) => void;
 
 /**
  * Watched fragment options.
@@ -101,7 +101,7 @@ export type WatchFragmentResult<TData> =
       missing: MissingTree;
     };
 
-export abstract class ApolloCache<TSerialized> implements DataProxy {
+export abstract class ApolloCache implements DataProxy {
   public readonly assumeImmutableResults: boolean = false;
 
   // required to implement
@@ -148,14 +148,12 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
    * Called when hydrating a cache (server side rendering, or offline storage),
    * and also (potentially) during hot reloads.
    */
-  public abstract restore(
-    serializedState: TSerialized
-  ): ApolloCache<TSerialized>;
+  public abstract restore(serializedState: unknown): this;
 
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public abstract extract(optimistic?: boolean): TSerialized;
+  public abstract extract(optimistic?: boolean): unknown;
 
   // Optimistic API
 
@@ -202,7 +200,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   }
 
   public abstract performTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction,
     // Although subclasses may implement recordOptimisticTransaction
     // however they choose, the default implementation simply calls
     // performTransaction with a string as the second argument, allowing
@@ -214,7 +212,7 @@ export abstract class ApolloCache<TSerialized> implements DataProxy {
   ): void;
 
   public recordOptimisticTransaction(
-    transaction: Transaction<TSerialized>,
+    transaction: Transaction,
     optimisticId: string
   ) {
     this.performTransaction(transaction, optimisticId);

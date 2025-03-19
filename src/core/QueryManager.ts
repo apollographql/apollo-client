@@ -137,8 +137,8 @@ interface MaskOperationOptions<TData> {
   fetchPolicy?: WatchQueryFetchPolicy;
 }
 
-interface QueryManagerOptions<TStore> {
-  cache: ApolloCache<TStore>;
+interface QueryManagerOptions {
+  cache: ApolloCache;
   link: ApolloLink;
   defaultOptions: DefaultOptions;
   documentTransform: DocumentTransform | null | undefined;
@@ -146,14 +146,14 @@ interface QueryManagerOptions<TStore> {
   onBroadcast: undefined | (() => void);
   ssrMode: boolean;
   clientAwareness: Record<string, string>;
-  localState: LocalState<TStore>;
+  localState: LocalState;
   assumeImmutableResults: boolean;
   defaultContext: Partial<DefaultContext> | undefined;
   dataMasking: boolean;
 }
 
-export class QueryManager<TStore> {
-  public cache: ApolloCache<TStore>;
+export class QueryManager {
+  public cache: ApolloCache;
   public link: ApolloLink;
   public defaultOptions: DefaultOptions;
 
@@ -165,7 +165,7 @@ export class QueryManager<TStore> {
 
   private queryDeduplication: boolean;
   private clientAwareness: Record<string, string> = {};
-  private localState: LocalState<TStore>;
+  private localState: LocalState;
 
   private onBroadcast?: () => void;
   public mutationStore?: {
@@ -182,7 +182,7 @@ export class QueryManager<TStore> {
   // @apollo/experimental-nextjs-app-support can access type info.
   protected fetchCancelFns = new Map<string, (error: any) => any>();
 
-  constructor(options: QueryManagerOptions<TStore>) {
+  constructor(options: QueryManagerOptions) {
     const defaultDocumentTransform = new DocumentTransform(
       (document) => this.cache.transformDocument(document),
       // Allow the apollo cache to manage its own transform caches
@@ -239,7 +239,7 @@ export class QueryManager<TStore> {
     TData,
     TVariables extends OperationVariables,
     TContext extends Record<string, any>,
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
   >({
     mutation,
     variables,
@@ -413,7 +413,7 @@ export class QueryManager<TStore> {
     TData,
     TVariables,
     TContext,
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
   >(
     mutation: {
       mutationId: string;
@@ -624,7 +624,7 @@ export class QueryManager<TStore> {
     TData,
     TVariables,
     TContext,
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
   >(
     optimisticResponse: any,
     mutation: {
@@ -1106,7 +1106,7 @@ export class QueryManager<TStore> {
     this.queries.forEach((info) => info.notify());
   }
 
-  public getLocalState(): LocalState<TStore> {
+  public getLocalState() {
     return this.localState;
   }
 
@@ -1399,7 +1399,7 @@ export class QueryManager<TStore> {
     removeOptimistic = optimistic ? makeUniqueId("refetchQueries") : void 0,
     onQueryUpdated,
   }: InternalRefetchQueriesOptions<
-    ApolloCache<TStore>,
+    ApolloCache,
     TResult
   >): InternalRefetchQueriesMap<TResult> {
     const includedQueriesById = new Map<

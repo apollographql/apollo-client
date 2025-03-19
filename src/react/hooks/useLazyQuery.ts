@@ -73,7 +73,7 @@ export interface LazyQueryHookOptions<
   skipPollAttempt?: () => boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
@@ -117,7 +117,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
     }
   ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-  client: ApolloClient<any>;
+  client: ApolloClient;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */

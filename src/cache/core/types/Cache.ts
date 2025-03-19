@@ -64,7 +64,7 @@ export namespace Cache {
   }
 
   export interface BatchOptions<
-    TCache extends ApolloCache<any>,
+    TCache extends ApolloCache,
     TUpdateResult = void,
   > {
     // Same as the first parameter of performTransaction, except the cache

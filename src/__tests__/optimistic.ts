@@ -3,7 +3,11 @@ import { assign, cloneDeep } from "lodash";
 import { firstValueFrom, from, lastValueFrom, Observable } from "rxjs";
 import { map, take, toArray } from "rxjs/operators";
 
-import { Cache, InMemoryCache } from "@apollo/client/cache";
+import {
+  Cache,
+  InMemoryCache,
+  NormalizedCacheObject,
+} from "@apollo/client/cache";
 import {
   ApolloCache,
   ApolloClient,
@@ -19,7 +23,6 @@ import {
 } from "@apollo/client/testing";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 
-import { QueryManager } from "../core/QueryManager.js";
 import { ObservableStream } from "../testing/internal/index.js";
 
 describe("optimistic mutation results", () => {
@@ -228,7 +231,9 @@ describe("optimistic mutation results", () => {
         });
 
         {
-          const dataInStore = client.cache.extract(true);
+          const dataInStore = client.cache.extract(
+            true
+          ) as NormalizedCacheObject;
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(4);
           expect((dataInStore["Todo99"] as any).text).toBe(
             "Optimistically generated"
@@ -240,7 +245,9 @@ describe("optimistic mutation results", () => {
         );
 
         {
-          const dataInStore = client.cache.extract(true);
+          const dataInStore = client.cache.extract(
+            true
+          ) as NormalizedCacheObject;
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
           expect(dataInStore).not.toHaveProperty("Todo99");
         }
@@ -345,7 +352,7 @@ describe("optimistic mutation results", () => {
 
         await expect(stream).toEmitNext();
 
-        const queryManager: QueryManager<any> = (client as any).queryManager;
+        const queryManager = client["queryManager"];
 
         const promise = client
           .mutate({
@@ -919,7 +926,9 @@ describe("optimistic mutation results", () => {
         "todos" in initialList &&
         Array.isArray(initialList.todos);
 
-      const initialList = client.cache.extract(true)[id];
+      const initialList = (client.cache.extract(true) as NormalizedCacheObject)[
+        id
+      ];
 
       if (!isTodoList(initialList)) {
         throw new Error("Expected TodoList");
@@ -960,7 +969,7 @@ describe("optimistic mutation results", () => {
         },
       });
 
-      const list = client.cache.extract(true)[id];
+      const list = (client.cache.extract(true) as NormalizedCacheObject)[id];
 
       if (!isTodoList(list)) {
         throw new Error("Expected TodoList");
@@ -1910,7 +1919,7 @@ describe("optimistic mutation results", () => {
       type Item = ReturnType<typeof makeItem>;
       type Data = { items: Item[] };
 
-      function append(cache: ApolloCache<any>, item: Item) {
+      function append(cache: ApolloCache, item: Item) {
         const data = cache.readQuery<Data>({ query });
         cache.writeQuery({
           query,

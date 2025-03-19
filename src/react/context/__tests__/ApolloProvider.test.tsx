@@ -31,7 +31,7 @@ describe("<ApolloProvider /> Component", () => {
 
   it("should support the 2.0", () => {
     render(
-      <ApolloProvider client={{} as ApolloClient<any>}>
+      <ApolloProvider client={{} as ApolloClient}>
         <div className="unique">Test</div>
       </ApolloProvider>
     );
@@ -114,8 +114,8 @@ describe("<ApolloProvider /> Component", () => {
   describe.each<
     [
       string,
-      Omit<ApolloProviderProps<any>, "children">,
-      Omit<ApolloProviderProps<any>, "children">,
+      Omit<ApolloProviderProps, "children">,
+      Omit<ApolloProviderProps, "children">,
     ]
   >([["client", { client }, { client: anotherClient }]])(
     "context value stability, %s prop",

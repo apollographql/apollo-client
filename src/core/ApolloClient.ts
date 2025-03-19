@@ -69,7 +69,7 @@ interface DevtoolsOptions {
 
 let hasSuggestedDevtools = false;
 
-export interface ApolloClientOptions<TCacheShape> {
+export interface ApolloClientOptions {
   /**
    * The URI of the GraphQL endpoint that Apollo Client will communicate with.
    *
@@ -94,7 +94,7 @@ export interface ApolloClientOptions<TCacheShape> {
    *
    * For more information, see [Configuring the cache](https://www.apollographql.com/docs/react/caching/cache-configuration/).
    */
-  cache: ApolloCache<TCacheShape>;
+  cache: ApolloCache;
   /**
    * The time interval (in milliseconds) before Apollo Client force-fetches queries after a server-side render.
    *
@@ -175,21 +175,21 @@ export { mergeOptions };
  * receive results from the server and cache the results in a store. It also delivers updates
  * to GraphQL queries through `Observable` instances.
  */
-export class ApolloClient<TCacheShape> implements DataProxy {
+export class ApolloClient implements DataProxy {
   public link: ApolloLink;
-  public cache: ApolloCache<TCacheShape>;
+  public cache: ApolloCache;
   public disableNetworkFetches: boolean;
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
-  public readonly typeDefs: ApolloClientOptions<TCacheShape>["typeDefs"];
+  public readonly typeDefs: ApolloClientOptions["typeDefs"];
   public readonly devtoolsConfig: DevtoolsOptions;
 
-  private queryManager: QueryManager<TCacheShape>;
+  private queryManager: QueryManager;
   private devToolsHookCb?: Function;
   private resetStoreCallbacks: Array<() => Promise<any>> = [];
   private clearStoreCallbacks: Array<() => Promise<any>> = [];
-  private localState: LocalState<TCacheShape>;
+  private localState: LocalState;
 
   /**
    * Constructs an instance of `ApolloClient`.
@@ -217,7 +217,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * });
    * ```
    */
-  constructor(options: ApolloClientOptions<TCacheShape>) {
+  constructor(options: ApolloClientOptions) {
     if (!options.cache) {
       throw newInvariantError(
         "To initialize Apollo Client, you must specify a 'cache' property " +
@@ -330,11 +330,11 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     }
 
     type DevToolsConnector = {
-      push(client: ApolloClient<any>): void;
+      push(client: ApolloClient): void;
     };
     const windowWithDevTools = window as Window & {
       [devtoolsSymbol]?: DevToolsConnector;
-      __APOLLO_CLIENT__?: ApolloClient<any>;
+      __APOLLO_CLIENT__?: ApolloClient;
     };
     const devtoolsSymbol = Symbol.for("apollo.devtools");
     (windowWithDevTools[devtoolsSymbol] =
@@ -483,7 +483,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
     TData = any,
     TVariables extends OperationVariables = OperationVariables,
     TContext extends Record<string, any> = DefaultContext,
-    TCache extends ApolloCache<any> = ApolloCache<any>,
+    TCache extends ApolloCache = ApolloCache,
   >(
     options: MutationOptions<TData, TVariables, TContext>
   ): Promise<FetchResult<MaybeMasked<TData>>> {
@@ -735,13 +735,13 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * active queries.
    */
   public refetchQueries<
-    TCache extends ApolloCache<any> = ApolloCache<TCacheShape>,
+    TCache extends ApolloCache = ApolloCache,
     TResult = Promise<ApolloQueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {
     const map = this.queryManager.refetchQueries(
-      options as RefetchQueriesOptions<ApolloCache<TCacheShape>, TResult>
+      options as RefetchQueriesOptions<ApolloCache, TResult>
     );
     const queries: ObservableQuery<any>[] = [];
     const results: InternalRefetchQueriesResult<TResult>[] = [];
@@ -793,7 +793,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
   /**
    * Exposes the cache's complete state, in a serializable format for later restoration.
    */
-  public extract(optimistic?: boolean): TCacheShape {
+  public extract(optimistic?: boolean) {
     return this.cache.extract(optimistic);
   }
 
@@ -804,7 +804,7 @@ export class ApolloClient<TCacheShape> implements DataProxy {
    * Called when hydrating a cache (server side rendering, or offline storage),
    * and also (potentially) during hot reloads.
    */
-  public restore(serializedState: TCacheShape): ApolloCache<TCacheShape> {
+  public restore(serializedState: unknown) {
     return this.cache.restore(serializedState);
   }
 

@@ -320,7 +320,7 @@ function createSubscription<
   TData = any,
   TVariables extends OperationVariables = OperationVariables,
 >(
-  client: ApolloClient<any>,
+  client: ApolloClient,
   query: TypedDocumentNode<TData, TVariables>,
   variables: TVariables | undefined,
   fetchPolicy: FetchPolicy | undefined,

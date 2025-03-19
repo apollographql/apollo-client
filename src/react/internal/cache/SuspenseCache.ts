@@ -56,7 +56,7 @@ export class SuspenseCache {
 
   getFragmentRef<TData, TVariables>(
     cacheKey: FragmentCacheKey,
-    client: ApolloClient<any>,
+    client: ApolloClient,
     options: WatchFragmentOptions<TData, TVariables> & { from: string }
   ) {
     const ref = this.fragmentRefs.lookupArray(cacheKey) as {

@@ -1544,7 +1544,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -1560,7 +1559,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { user: { __typename: "User", id: 1, name: "User 1" } },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -1572,7 +1570,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
@@ -1589,7 +1586,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { user: { __typename: "User", id: 2, name: "User 2" } },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { user: { __typename: "User", id: 1, name: "User 1" } },

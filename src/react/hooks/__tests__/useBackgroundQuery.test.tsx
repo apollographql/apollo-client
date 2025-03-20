@@ -68,7 +68,7 @@ import {
   setupMaskedVariablesCase,
   UnmaskedVariablesCaseData,
 } from "../../../testing/internal/scenarios/index.js";
-import { SuspenseQueryHookFetchPolicy } from "../../types/types.js";
+import { BackgroundQueryHookFetchPolicy } from "../../types/types.js";
 import { skipToken } from "../constants.js";
 import { useBackgroundQuery } from "../useBackgroundQuery.js";
 import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
@@ -2956,7 +2956,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
 
   function App() {
     const [fetchPolicy, setFetchPolicy] =
-      React.useState<SuspenseQueryHookFetchPolicy>("cache-first");
+      React.useState<BackgroundQueryHookFetchPolicy>("cache-first");
 
     const [queryRef, { refetch }] = useBackgroundQuery(query, {
       fetchPolicy,
@@ -3848,7 +3848,7 @@ it('does not suspend deferred queries with partial data in the cache and using a
   await expect(renderStream).not.toRerender({ timeout: 50 });
 });
 
-it.each<SuspenseQueryHookFetchPolicy>([
+it.each<BackgroundQueryHookFetchPolicy>([
   "cache-first",
   "network-only",
   "cache-and-network",

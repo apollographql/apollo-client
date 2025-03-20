@@ -3,21 +3,11 @@ import type * as ReactTypes from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
-  ApolloClient,
-  DefaultContext,
   DocumentNode,
   ObservableQuery,
   OperationVariables,
-  RefetchWritePolicy,
-  TypedDocumentNode,
-  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
-
-import type {
-  ErrorPolicy,
-  NextFetchPolicyContext,
-} from "../../core/watchQueryOptions.js";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
@@ -26,59 +16,9 @@ interface QueryData {
   fetchData(): Promise<void>;
 }
 
-interface QueryDataOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: WatchQueryFetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
-  nextFetchPolicy?:
-    | WatchQueryFetchPolicy
-    | ((
-        this: WatchQueryOptions<TVariables, TData>,
-        currentFetchPolicy: WatchQueryFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVariables>
-      ) => WatchQueryFetchPolicy);
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
-  initialFetchPolicy?: WatchQueryFetchPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  pollInterval?: number;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  notifyOnNetworkStatusChange?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
-  skipPollAttempt?: () => boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
-  ssr?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
-  skip?: boolean;
-
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+interface LookupOptions {
+  query: DocumentNode;
+  variables?: OperationVariables;
 }
 
 type QueryInfo = {
@@ -97,7 +37,7 @@ function makeQueryInfoTrie() {
 
 export class RenderPromises {
   // Map from Query component instances to pending fetchData promises.
-  private queryPromises = new Map<QueryDataOptions<any, any>, Promise<any>>();
+  private queryPromises = new Map<WatchQueryOptions<any, any>, Promise<any>>();
 
   // Two-layered map from (query document, stringified variables) to QueryInfo
   // objects. These QueryInfo objects are intended to survive through the whole
@@ -124,8 +64,8 @@ export class RenderPromises {
 
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables extends OperationVariables>(
-    props: QueryDataOptions<TData, TVariables>
-  ): ObservableQuery<any, TVariables> | null {
+    props: LookupOptions
+  ): ObservableQuery<TData, TVariables> | null {
     return this.lookupQueryInfo(props).observable;
   }
 
@@ -202,9 +142,7 @@ export class RenderPromises {
     return Promise.all(promises);
   }
 
-  private lookupQueryInfo<TData, TVariables extends OperationVariables>(
-    props: QueryDataOptions<TData, TVariables>
-  ): QueryInfo {
+  private lookupQueryInfo(props: LookupOptions): QueryInfo {
     return this.queryInfoTrie.lookup(
       props.query,
       canonicalStringify(props.variables)

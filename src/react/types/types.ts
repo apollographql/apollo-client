@@ -126,8 +126,6 @@ export interface QueryResult<
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#called:member} */
-  called: boolean;
 }
 
 export interface QueryDataOptions<

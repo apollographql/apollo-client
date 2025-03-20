@@ -84,16 +84,13 @@ export interface UseBackgroundQueryOptions<
   skip?: boolean;
 }
 
-type BackgroundQueryHookOptionsNoInfer<TVariables extends OperationVariables> =
-  UseBackgroundQueryOptions<NoInfer<TVariables>>;
-
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
   TOptions extends Omit<UseBackgroundQueryOptions, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: BackgroundQueryHookOptionsNoInfer<TVariables> & TOptions
+  options?: UseBackgroundQueryOptions<NoInfer<TVariables>> & TOptions
 ): [
   (
     | QueryRef<
@@ -115,7 +112,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TVariables> & {
+  options: UseBackgroundQueryOptions<NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
@@ -129,7 +126,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TVariables> & {
+  options: UseBackgroundQueryOptions<NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
 ): [
@@ -142,7 +139,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TVariables> & {
+  options: UseBackgroundQueryOptions<NoInfer<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
   }
@@ -156,7 +153,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TVariables> & {
+  options: UseBackgroundQueryOptions<NoInfer<TVariables>> & {
     returnPartialData: true;
   }
 ): [
@@ -169,7 +166,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: BackgroundQueryHookOptionsNoInfer<TVariables> & {
+  options: UseBackgroundQueryOptions<NoInfer<TVariables>> & {
     skip: boolean;
   }
 ): [
@@ -182,7 +179,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: BackgroundQueryHookOptionsNoInfer<TVariables>
+  options?: UseBackgroundQueryOptions<NoInfer<TVariables>>
 ): [QueryRef<TData, TVariables>, UseBackgroundQueryResult<TData, TVariables>];
 
 export function useBackgroundQuery<
@@ -200,7 +197,7 @@ export function useBackgroundQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (BackgroundQueryHookOptionsNoInfer<TVariables> & {
+    | (UseBackgroundQueryOptions<NoInfer<TVariables>> & {
         returnPartialData: true;
       })
 ): [
@@ -213,7 +210,7 @@ export function useBackgroundQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TVariables>
+  options?: SkipToken | UseBackgroundQueryOptions<NoInfer<TVariables>>
 ): [
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
@@ -225,8 +222,8 @@ export function useBackgroundQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<BackgroundQueryHookOptionsNoInfer<TVariables>>)
-    | BackgroundQueryHookOptionsNoInfer<TVariables> = {}
+    | (SkipToken & Partial<UseBackgroundQueryOptions<NoInfer<TVariables>>>)
+    | UseBackgroundQueryOptions<NoInfer<TVariables>> = {}
 ): [
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,
@@ -245,8 +242,8 @@ function useBackgroundQuery_<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<BackgroundQueryHookOptionsNoInfer<TVariables>>)
-    | BackgroundQueryHookOptionsNoInfer<TVariables>
+    | (SkipToken & Partial<UseBackgroundQueryOptions<NoInfer<TVariables>>>)
+    | UseBackgroundQueryOptions<NoInfer<TVariables>>
 ): [
   QueryRef<TData, TVariables> | undefined,
   UseBackgroundQueryResult<TData, TVariables>,

@@ -468,68 +468,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    it("should set called to true by default", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query),
-        { wrapper }
-      );
-
-      const { called } = await takeSnapshot();
-
-      expect(called).toBe(true);
-    });
-
-    it("should set called to false when skip option is true", async () => {
-      const query = gql`
-        {
-          hello
-        }
-      `;
-      const mocks = [
-        {
-          request: { query },
-          result: { data: { hello: "world" } },
-        },
-      ];
-
-      const cache = new InMemoryCache();
-      const wrapper = ({ children }: any) => (
-        <MockedProvider mocks={mocks} cache={cache}>
-          {children}
-        </MockedProvider>
-      );
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => useQuery(query, { skip: true }),
-        { wrapper }
-      );
-
-      const { called } = await takeSnapshot();
-
-      expect(called).toBe(false);
-    });
-
     // TODO: Remove this test after PR is reviewed since this is basically a
     // duplicate of "useQuery produces the expected frames when variables change"
     it("should work with variables", async () => {

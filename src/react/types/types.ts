@@ -168,7 +168,7 @@ export interface BackgroundQueryHookOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > extends Pick<
-    QueryHookOptions<TData, TVariables>,
+    QueryFunctionOptions<TData, TVariables>,
     | "client"
     | "variables"
     | "errorPolicy"

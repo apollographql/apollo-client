@@ -82,7 +82,6 @@ describe("useQuery Hook", () => {
           data: undefined,
           loading: true,
           networkStatus: NetworkStatus.loading,
-          called: true,
           previousData: undefined,
           variables: {},
         });
@@ -95,7 +94,6 @@ describe("useQuery Hook", () => {
           data: { hello: "world" },
           loading: false,
           networkStatus: NetworkStatus.ready,
-          called: true,
           previousData: undefined,
           variables: {},
         });
@@ -133,7 +131,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -148,7 +145,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -163,7 +159,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -205,7 +200,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -218,7 +212,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -233,7 +226,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -275,7 +267,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -288,7 +279,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -303,7 +293,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { hello: "world 1" },
@@ -316,7 +305,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -361,7 +349,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -374,7 +361,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -389,7 +375,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -439,7 +424,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -506,7 +490,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -519,7 +502,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -534,7 +516,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { hello: "world 1" },
@@ -547,7 +528,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -592,7 +572,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -605,7 +584,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -620,7 +598,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { hello: "world 1" },
@@ -633,7 +610,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -648,7 +624,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -697,7 +672,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -710,7 +684,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { names: ["Alice", "Bob", "Eve"] },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -725,7 +698,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { names: ["Alice", "Bob", "Eve"] },
@@ -738,7 +710,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { names: [] },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { names: ["Alice", "Bob", "Eve"] },
@@ -753,7 +724,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { names: [] },
@@ -766,7 +736,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { names: [] },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { names: [] },
@@ -854,7 +823,6 @@ describe("useQuery Hook", () => {
 
         expect(useQueryResult).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -867,7 +835,6 @@ describe("useQuery Hook", () => {
 
         expect(useQueryResult).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -886,7 +853,6 @@ describe("useQuery Hook", () => {
 
           expect(useQueryResult).toEqualQueryResult({
             data: { hello: "world 1" },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: undefined,
@@ -899,7 +865,6 @@ describe("useQuery Hook", () => {
 
           expect(useQueryResult).toEqualQueryResult({
             data: undefined,
-            called: true,
             loading: true,
             networkStatus: NetworkStatus.setVariables,
             previousData: { hello: "world 1" },
@@ -913,7 +878,6 @@ describe("useQuery Hook", () => {
 
         expect(useQueryResult).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { hello: "world 1" },
@@ -926,7 +890,6 @@ describe("useQuery Hook", () => {
 
         expect(useQueryResult).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -939,7 +902,6 @@ describe("useQuery Hook", () => {
 
         expect(useQueryResult).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -1076,7 +1038,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1089,7 +1050,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1161,7 +1121,6 @@ describe("useQuery Hook", () => {
 
         expect(result0).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1170,7 +1129,6 @@ describe("useQuery Hook", () => {
 
         expect(result1).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1183,7 +1141,6 @@ describe("useQuery Hook", () => {
 
         expect(result0).toEqualQueryResult({
           data: allPeopleData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1192,7 +1149,6 @@ describe("useQuery Hook", () => {
 
         expect(result1).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1205,7 +1161,6 @@ describe("useQuery Hook", () => {
 
         expect(result0).toEqualQueryResult({
           data: allPeopleData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1214,7 +1169,6 @@ describe("useQuery Hook", () => {
 
         expect(result1).toEqualQueryResult({
           data: allThingsData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1229,7 +1183,6 @@ describe("useQuery Hook", () => {
 
         expect(result0).toEqualQueryResult({
           data: allPeopleData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1238,7 +1191,6 @@ describe("useQuery Hook", () => {
 
         expect(result1).toEqualQueryResult({
           data: allThingsData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1300,7 +1252,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1315,7 +1266,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1328,7 +1278,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: mocks[1].result.data,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1377,7 +1326,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "from cache" },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1390,7 +1338,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "from link" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "from cache" },
@@ -1437,7 +1384,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1450,7 +1396,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "from link" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1496,7 +1441,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "from cache" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1540,7 +1484,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1553,7 +1496,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "from link" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1602,7 +1544,6 @@ describe("useQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -1615,7 +1556,6 @@ describe("useQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: { hello: "from link" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -1676,7 +1616,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1689,7 +1628,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { linkCount: 1 },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1741,7 +1679,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { linkCount: 1 },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: { linkCount: 1 },
@@ -1754,7 +1691,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { linkCount: 2 },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { linkCount: 1 },
@@ -1809,7 +1745,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1822,7 +1757,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1835,7 +1769,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -1848,7 +1781,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 3" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
@@ -1905,7 +1837,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -1918,7 +1849,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -1934,8 +1864,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           // TODO: wut?
           data: undefined,
-          // TODO: wut?
-          called: false,
           // TODO: wut?
           error: undefined,
           loading: false,
@@ -1954,7 +1882,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -1967,7 +1894,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -1980,7 +1906,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 3" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
@@ -2031,7 +1956,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2044,7 +1968,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2102,7 +2025,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2115,7 +2037,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2209,7 +2130,6 @@ describe("useQuery Hook", () => {
 
         await expect(promise).resolves.toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2225,7 +2145,6 @@ describe("useQuery Hook", () => {
 
         await expect(promise).resolves.toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2243,7 +2162,6 @@ describe("useQuery Hook", () => {
 
         await expect(promise).resolves.toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2310,7 +2228,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2323,7 +2240,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2408,7 +2324,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2421,7 +2336,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2437,7 +2351,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2504,7 +2417,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2517,7 +2429,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2530,7 +2441,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2552,7 +2462,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 3" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
@@ -2565,7 +2474,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 4" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 3" },
@@ -2615,7 +2523,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2628,7 +2535,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -2694,7 +2600,6 @@ describe("useQuery Hook", () => {
 
         expect(result.current).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2705,7 +2610,6 @@ describe("useQuery Hook", () => {
           () => {
             expect(result.current).toEqualQueryResult({
               data: { hello: "world 1" },
-              called: true,
               loading: false,
               networkStatus: NetworkStatus.ready,
               previousData: undefined,
@@ -2718,7 +2622,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2730,7 +2633,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2740,7 +2642,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2750,7 +2651,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2762,7 +2662,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 3" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
@@ -2811,7 +2710,6 @@ describe("useQuery Hook", () => {
 
         expect(result.current).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2822,7 +2720,6 @@ describe("useQuery Hook", () => {
           () => {
             expect(result.current).toEqualQueryResult({
               data: { hello: "world 1" },
-              called: true,
               loading: false,
               networkStatus: NetworkStatus.ready,
               previousData: undefined,
@@ -2835,7 +2732,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2847,7 +2743,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2857,7 +2752,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2867,7 +2761,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -2879,7 +2772,6 @@ describe("useQuery Hook", () => {
         await jest.advanceTimersByTimeAsync(12);
         expect(result.current).toEqualQueryResult({
           data: { hello: "world 3" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
@@ -2926,7 +2818,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2940,7 +2831,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -2983,7 +2873,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -2999,7 +2888,6 @@ describe("useQuery Hook", () => {
           error: new CombinedGraphQLErrors([
             { message: 'Could not fetch "hello"' },
           ]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3044,7 +2932,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3057,7 +2944,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: null },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -3102,7 +2988,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3118,7 +3003,6 @@ describe("useQuery Hook", () => {
           error: new CombinedGraphQLErrors([
             { message: 'Could not fetch "hello"' },
           ]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3163,7 +3047,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3177,7 +3060,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3193,7 +3075,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3477,7 +3358,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3491,7 +3371,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3506,7 +3385,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: undefined,
@@ -3519,7 +3397,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -3534,7 +3411,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: { hello: "world 2" },
@@ -3547,7 +3423,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 2" },
@@ -3599,7 +3474,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3613,7 +3487,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error 1" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3630,7 +3503,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3644,7 +3516,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error 2" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3696,7 +3567,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3710,7 +3580,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error 1" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3728,7 +3597,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "error 2" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3780,7 +3648,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3794,7 +3661,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "same error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3811,7 +3677,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3825,7 +3690,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "same error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3884,7 +3748,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -3897,7 +3760,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: undefined,
           error: new CombinedGraphQLErrors([{ message: "same error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,
@@ -3912,7 +3774,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: undefined,
@@ -3924,7 +3785,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -3940,7 +3800,6 @@ describe("useQuery Hook", () => {
         const result = await takeSnapshot();
         expect(result).toEqualQueryResult({
           data: { hello: "world" },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world" },
@@ -3954,7 +3813,6 @@ describe("useQuery Hook", () => {
           // TODO: Is this correct behavior here?
           data: { hello: "world" },
           error: new CombinedGraphQLErrors([{ message: "same error" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: { hello: "world" },
@@ -4023,7 +3881,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -4036,7 +3893,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -4063,7 +3919,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab.concat(cd) },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { letters: ab },
@@ -4095,7 +3950,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -4108,7 +3962,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -4135,7 +3988,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.fetchMore,
           previousData: { letters: ab },
@@ -4148,7 +4000,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab.concat(cd) },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { letters: ab },
@@ -4188,7 +4039,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -4201,7 +4051,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -4225,7 +4074,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab.concat(cd) },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { letters: ab },
@@ -4269,7 +4117,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -4282,7 +4129,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -4306,7 +4152,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.fetchMore,
           previousData: { letters: ab },
@@ -4319,7 +4164,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { letters: ab.concat(cd) },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { letters: ab },
@@ -4412,7 +4256,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -4430,7 +4273,6 @@ describe("useQuery Hook", () => {
               { __typename: "Letter", letter: "B", position: 2 },
             ],
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -4457,7 +4299,6 @@ describe("useQuery Hook", () => {
               { __typename: "Letter", letter: "B", position: 2 },
             ],
           },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.fetchMore,
           previousData: {
@@ -4482,7 +4323,6 @@ describe("useQuery Hook", () => {
               { __typename: "Letter", letter: "D", position: 4 },
             ],
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
@@ -4536,7 +4376,6 @@ describe("useQuery Hook", () => {
               { __typename: "Letter", letter: "D", position: 4 },
             ],
           },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.fetchMore,
           previousData: {
@@ -4561,7 +4400,6 @@ describe("useQuery Hook", () => {
               { __typename: "Letter", letter: "F", position: 6 },
             ],
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
@@ -4774,7 +4612,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -4787,7 +4624,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { countries },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -4912,7 +4748,6 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -4936,7 +4771,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -4962,7 +4796,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -4985,7 +4818,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5021,7 +4853,6 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -5044,7 +4875,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5186,7 +5016,6 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -5210,7 +5039,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5236,7 +5064,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5262,7 +5089,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5297,7 +5123,6 @@ describe("useQuery Hook", () => {
             firstName: "John",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -5434,7 +5259,6 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -5458,7 +5282,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5484,7 +5307,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5507,7 +5329,6 @@ describe("useQuery Hook", () => {
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
         error: new CombinedGraphQLErrors([{ message: "Intentional error" }]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: undefined,
@@ -5598,7 +5419,6 @@ describe("useQuery Hook", () => {
 
       expect(result).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -5622,7 +5442,6 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -5765,7 +5584,6 @@ describe("useQuery Hook", () => {
 
       expect(snapshot.useQueryResult!).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -5789,7 +5607,6 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -5816,7 +5633,6 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -5844,7 +5660,6 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -5908,7 +5723,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -5920,7 +5734,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -5935,7 +5748,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
@@ -5947,7 +5759,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -6004,7 +5815,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -6016,7 +5826,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -6033,7 +5842,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
@@ -6047,7 +5855,6 @@ describe("useQuery Hook", () => {
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
           error: new Error("This is an error!"),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: { hello: "world 1" },
@@ -6069,7 +5876,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 1" },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: { hello: "world 1" },
@@ -6081,7 +5887,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: { hello: "world 2" },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: { hello: "world 1" },
@@ -6167,7 +5972,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: undefined,
-            called: true,
             loading: true,
             networkStatus: NetworkStatus.loading,
             previousData: undefined,
@@ -6180,7 +5984,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: { primes: [2, 3, 5, 7, 11] },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: undefined,
@@ -6205,7 +6008,6 @@ describe("useQuery Hook", () => {
           expect(result).toEqualQueryResult({
             // We get the stale data because we configured keyArgs: false.
             data: { primes: [2, 3, 5, 7, 11] },
-            called: true,
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
@@ -6220,7 +6022,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: { primes: [13, 17, 19, 23, 29] },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: { primes: [2, 3, 5, 7, 11] },
@@ -6278,7 +6079,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: undefined,
-            called: true,
             loading: true,
             networkStatus: NetworkStatus.loading,
             previousData: undefined,
@@ -6291,7 +6091,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: { primes: [2, 3, 5, 7, 11] },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: undefined,
@@ -6316,7 +6115,6 @@ describe("useQuery Hook", () => {
           expect(result).toEqualQueryResult({
             // We get the stale data because we configured keyArgs: false.
             data: { primes: [2, 3, 5, 7, 11] },
-            called: true,
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
@@ -6331,7 +6129,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: { primes: [2, 3, 5, 7, 11] },
@@ -6389,7 +6186,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: undefined,
-            called: true,
             loading: true,
             networkStatus: NetworkStatus.loading,
             previousData: undefined,
@@ -6401,7 +6197,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: { primes: [2, 3, 5, 7, 11] },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: undefined,
@@ -6427,7 +6222,6 @@ describe("useQuery Hook", () => {
               // We get the stale data because we configured keyArgs: false.
               primes: [2, 3, 5, 7, 11],
             },
-            called: true,
             loading: true,
             // This networkStatus is setVariables instead of refetch because we
             // called refetch with new variables.
@@ -6442,7 +6236,6 @@ describe("useQuery Hook", () => {
 
           expect(result).toEqualQueryResult({
             data: { primes: [13, 17, 19, 23, 29] },
-            called: true,
             loading: false,
             networkStatus: NetworkStatus.ready,
             previousData: { primes: [2, 3, 5, 7, 11] },
@@ -6541,7 +6334,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -6560,7 +6352,6 @@ describe("useQuery Hook", () => {
               model: "A4",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -6581,7 +6372,6 @@ describe("useQuery Hook", () => {
               model: "A4",
             },
           },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.refetch,
           previousData: {
@@ -6603,7 +6393,6 @@ describe("useQuery Hook", () => {
 
         expect(result).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.setVariables,
           previousData: {
@@ -6628,7 +6417,6 @@ describe("useQuery Hook", () => {
               model: "RS8",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
@@ -6761,7 +6549,6 @@ describe("useQuery Hook", () => {
 
         expect(query).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -6774,7 +6561,6 @@ describe("useQuery Hook", () => {
 
         expect(query).toEqualQueryResult({
           data: carsData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -6800,7 +6586,6 @@ describe("useQuery Hook", () => {
         expect(mutation[1].loading).toBe(true);
         expect(query).toEqualQueryResult({
           data: allCarsData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: carsData,
@@ -6816,7 +6601,6 @@ describe("useQuery Hook", () => {
         expect(mutation[1].loading).toBe(true);
         expect(query).toEqualQueryResult({
           data: carsData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: allCarsData,
@@ -6831,7 +6615,6 @@ describe("useQuery Hook", () => {
         expect(mutation[1].loading).toBe(false);
         expect(query).toEqualQueryResult({
           data: carsData,
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: allCarsData,
@@ -6921,7 +6704,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -6937,7 +6719,6 @@ describe("useQuery Hook", () => {
             __typename: "ClientData",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -6961,7 +6742,6 @@ describe("useQuery Hook", () => {
             __typename: "ClientData",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -7028,7 +6808,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7039,7 +6818,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7048,7 +6826,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "world" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7081,7 +6858,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7090,7 +6866,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "world" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7102,9 +6877,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        // TODO: It seems odd to flip this back to false after it was already
-        // set to true
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world" },
@@ -7161,7 +6933,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7172,7 +6943,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7181,7 +6951,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "world" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7224,7 +6993,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7290,7 +7058,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
         error: undefined,
-        called: false,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7314,7 +7081,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7323,7 +7089,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: 1 },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7356,7 +7121,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: 1 },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: { hello: 1 },
@@ -7365,7 +7129,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: 2 },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: 1 },
@@ -7453,7 +7216,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7462,7 +7224,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "from link" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7500,7 +7261,6 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         // TODO: Shouldn't this be undefined?
         data: { hello: "from link" },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: { hello: "from link" },
@@ -7509,7 +7269,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "from link2" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "from link" },
@@ -7584,7 +7343,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7593,7 +7351,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: carData,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7692,7 +7449,6 @@ describe("useQuery Hook", () => {
             },
           ],
         },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7764,7 +7520,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7850,7 +7605,6 @@ describe("useQuery Hook", () => {
             model: "Pinto",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7861,7 +7615,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: {
@@ -7925,7 +7678,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -7934,7 +7686,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data1,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -7945,7 +7696,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data1,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
         previousData: data1,
@@ -7954,7 +7704,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data2,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: data1,
@@ -8037,7 +7786,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8046,7 +7794,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data1,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8057,7 +7804,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data1,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
         previousData: data1,
@@ -8066,7 +7812,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data2,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: data1,
@@ -8077,7 +7822,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.refetch,
         previousData: data2,
@@ -8086,7 +7830,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: data3,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: data2,
@@ -8183,7 +7926,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8192,7 +7934,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { a: "a" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8203,7 +7944,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { a: "a" },
@@ -8212,7 +7952,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { a: "aa", b: 1 },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { a: "a" },
@@ -8230,7 +7969,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { a: "aa", b: 1 },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { a: "aa", b: 1 },
@@ -8239,7 +7977,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { a: "aaa", b: 2 },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { a: "aa", b: 1 },
@@ -8250,7 +7987,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { b: 2 },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: { a: "aaa", b: 2 },
@@ -8259,7 +7995,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { b: 3 },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { b: 2 },
@@ -8340,7 +8075,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8351,7 +8085,6 @@ describe("useQuery Hook", () => {
         data: {
           people: peopleData.map(({ gender, ...person }) => person),
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8362,7 +8095,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.setVariables,
         previousData: {
@@ -8377,7 +8109,6 @@ describe("useQuery Hook", () => {
             .filter((person) => person.gender === "female")
             .map(({ gender, ...person }) => person),
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -8435,7 +8166,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8444,7 +8174,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "world 1" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8453,7 +8182,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "world 2" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 1" },
@@ -8462,7 +8190,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: { hello: "world 3" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: { hello: "world 2" },
@@ -8559,7 +8286,6 @@ describe("useQuery Hook", () => {
 
       expect(result.current.a).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8567,7 +8293,6 @@ describe("useQuery Hook", () => {
       });
       expect(result.current.b).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8581,7 +8306,6 @@ describe("useQuery Hook", () => {
 
       expect(result.current.a).toEqualQueryResult({
         data: aData,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8589,7 +8313,6 @@ describe("useQuery Hook", () => {
       });
       expect(result.current.b).toEqualQueryResult({
         data: bData,
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8740,7 +8463,6 @@ describe("useQuery Hook", () => {
 
       expect(result.current).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8753,7 +8475,6 @@ describe("useQuery Hook", () => {
 
       expect(result.current).toEqualQueryResult({
         data: { hello: "hello 1" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8772,7 +8493,6 @@ describe("useQuery Hook", () => {
 
       expect(result.current).toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8785,7 +8505,6 @@ describe("useQuery Hook", () => {
 
       expect(result.current).toEqualQueryResult({
         data: { hello: "hello 2" },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8830,7 +8549,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8858,7 +8576,6 @@ describe("useQuery Hook", () => {
             __typename: "Greeting",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -8896,7 +8613,6 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -8944,7 +8660,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -8972,7 +8687,6 @@ describe("useQuery Hook", () => {
             { message: "Hello again", __typename: "Greeting" },
           ],
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -9010,7 +8724,6 @@ describe("useQuery Hook", () => {
             { message: "Hello again", __typename: "Greeting" },
           ],
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9057,7 +8770,6 @@ describe("useQuery Hook", () => {
             },
           ],
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9112,7 +8824,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -9168,7 +8879,6 @@ describe("useQuery Hook", () => {
             },
           ],
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -9226,7 +8936,6 @@ describe("useQuery Hook", () => {
             },
           ],
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9286,7 +8995,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -9314,7 +9022,6 @@ describe("useQuery Hook", () => {
             __typename: "Greeting",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -9352,7 +9059,6 @@ describe("useQuery Hook", () => {
             },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9402,7 +9108,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -9448,7 +9153,6 @@ describe("useQuery Hook", () => {
             name: "R2-D2",
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -9506,7 +9210,6 @@ describe("useQuery Hook", () => {
             path: ["hero", "heroFriends", 0, "homeWorld"],
           },
         ]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: {
@@ -9565,7 +9268,6 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
         data: undefined,
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -9611,7 +9313,6 @@ describe("useQuery Hook", () => {
             ],
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -9683,7 +9384,6 @@ describe("useQuery Hook", () => {
             path: ["hero", "heroFriends", 0, "homeWorld"],
           },
         ]),
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.error,
         previousData: {
@@ -9754,7 +9454,6 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -9778,7 +9477,6 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9814,7 +9512,6 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Alice" },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9884,7 +9581,6 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        called: true,
         loading: true,
         networkStatus: NetworkStatus.loading,
         previousData: undefined,
@@ -9908,7 +9604,6 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Cached Alice" },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -9943,7 +9638,6 @@ describe("useQuery Hook", () => {
             recipient: { __typename: "Person", name: "Alice" },
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: {
@@ -10073,7 +9767,6 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
@@ -10087,7 +9780,6 @@ describe("useQuery Hook", () => {
       error: new InvariantError(
         "Store reset while query was in flight (not completed in link chain)"
       ),
-      called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
@@ -10137,7 +9829,6 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      called: true,
       loading: true,
       networkStatus: NetworkStatus.loading,
       previousData: undefined,
@@ -10147,7 +9838,6 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
       error: new CombinedGraphQLErrors([graphQLError]),
-      called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
@@ -10161,7 +9851,6 @@ describe("useQuery Hook", () => {
 
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
-      called: true,
       loading: true,
       networkStatus: NetworkStatus.refetch,
       previousData: undefined,
@@ -10171,7 +9860,6 @@ describe("useQuery Hook", () => {
     await expect(takeSnapshot()).resolves.toEqualQueryResult({
       data: undefined,
       error: new CombinedGraphQLErrors([graphQLError]),
-      called: true,
       loading: false,
       networkStatus: NetworkStatus.error,
       previousData: undefined,
@@ -10255,7 +9943,6 @@ describe("useQuery Hook", () => {
 
         expect(snapshot).toEqualQueryResult({
           data: undefined,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -10274,7 +9961,6 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -10373,7 +10059,6 @@ describe("useQuery Hook", () => {
             age: 30,
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -10469,7 +10154,6 @@ describe("useQuery Hook", () => {
             age: 30,
           },
         },
-        called: true,
         loading: false,
         networkStatus: NetworkStatus.ready,
         previousData: undefined,
@@ -10559,7 +10243,6 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -10590,7 +10273,6 @@ describe("useQuery Hook", () => {
               name: "Test User (updated)",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
@@ -10687,7 +10369,6 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -10811,7 +10492,6 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: undefined,
@@ -10912,7 +10592,6 @@ describe("useQuery Hook", () => {
               name: "Test User",
             },
           },
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -10931,7 +10610,6 @@ describe("useQuery Hook", () => {
               name: "Test User (server)",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
@@ -11041,7 +10719,6 @@ describe("useQuery Hook", () => {
               id: 1,
             },
           } as Query,
-          called: true,
           loading: true,
           networkStatus: NetworkStatus.loading,
           previousData: undefined,
@@ -11060,7 +10737,6 @@ describe("useQuery Hook", () => {
               name: "Test User (server)",
             },
           },
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.ready,
           previousData: {
@@ -11159,7 +10835,6 @@ describe("useQuery Hook", () => {
             },
           },
           error: new CombinedGraphQLErrors([{ message: "Couldn't get name" }]),
-          called: true,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,

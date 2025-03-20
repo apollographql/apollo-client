@@ -37,11 +37,7 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { concatPagination } from "@apollo/client/utilities";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import {
-  useFragment,
-  UseFragmentOptions,
-  UseFragmentResult,
-} from "../useFragment.js";
+import { useFragment } from "../useFragment.js";
 import { useQuery } from "../useQuery.js";
 
 describe("useFragment", () => {
@@ -1719,7 +1715,7 @@ describe("useFragment", () => {
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ from }) => useFragment({ fragment, from }),
       {
-        initialProps: { from: null as UseFragmentOptions<any, never>["from"] },
+        initialProps: { from: null as useFragment.Options<any, never>["from"] },
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
@@ -2068,8 +2064,8 @@ describe("data masking", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        parent: null as UseFragmentResult<ParentFragment> | null,
-        child: null as UseFragmentResult<ChildFragment> | null,
+        parent: null as useFragment.Result<ParentFragment> | null,
+        child: null as useFragment.Result<ChildFragment> | null,
       },
     });
 

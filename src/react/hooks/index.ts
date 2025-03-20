@@ -4,7 +4,6 @@ export { useMutation } from "./useMutation.js";
 export { useQuery } from "./useQuery.js";
 export { useSubscription } from "./useSubscription.js";
 export { useReactiveVar } from "./useReactiveVar.js";
-export type { UseFragmentOptions, UseFragmentResult } from "./useFragment.js";
 export { useFragment } from "./useFragment.js";
 export type {
   UseSuspenseQueryFetchPolicy,

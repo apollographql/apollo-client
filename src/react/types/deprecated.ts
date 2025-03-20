@@ -10,6 +10,7 @@ import type {
   useLoadableQuery,
   useMutation,
   useQuery,
+  useQueryRefHandlers,
   useSubscription,
   useSuspenseFragment,
   useSuspenseQuery,
@@ -167,3 +168,9 @@ export type UseLoadableQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = useLoadableQuery.Result<TData, TVariables>;
+
+/** @deprecated Use `useQueryRefHandlers.Result` instead */
+export type UseQueryRefHandlersResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useQueryRefHandlers.Result<TData, TVariables>;

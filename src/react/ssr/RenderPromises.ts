@@ -26,7 +26,7 @@ interface QueryData {
   fetchData(): Promise<void>;
 }
 
-export interface QueryDataOptions<
+interface QueryDataOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {

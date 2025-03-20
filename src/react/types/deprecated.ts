@@ -7,6 +7,7 @@ import type {
   useLazyQuery,
   useMutation,
   useQuery,
+  useSubscription,
 } from "@apollo/client/react/hooks";
 
 /** @deprecated Use `useQuery.Options` instead */
@@ -76,3 +77,23 @@ export type MutationTuple<
   TContext = DefaultContext,
   TCache extends ApolloCache = ApolloCache,
 > = useMutation.ResultTuple<TData, TVariables, TContext, TCache>;
+
+/** @deprecated Use `useSubscription.Result` instead */
+export type SubscriptionResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useSubscription.Result<TData, TVariables>;
+
+/** @deprecated Use `useSubscription.Options` instead */
+export type SubscriptionHookOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useSubscription.Options<TData, TVariables>;
+
+/** @deprecated Use `useSubscription.OnDataOptions` instead */
+export type OnDataOptions<TData = unknown> =
+  useSubscription.OnDataOptions<TData>;
+
+/** @deprecated Use `useSubscription.OnSubscriptionDataOptions` instead */
+export type OnSubscriptionDataOptions<TData = unknown> =
+  useSubscription.OnSubscriptionDataOptions<TData>;

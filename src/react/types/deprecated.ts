@@ -4,6 +4,7 @@ import type {
   OperationVariables,
 } from "@apollo/client/core";
 import type {
+  useBackgroundQuery,
   useFragment,
   useLazyQuery,
   useMutation,
@@ -123,3 +124,18 @@ export type UseSuspenseQueryResult<
 
 /** @deprecated Use `useSuspenseQuery.FetchPolicy` instead */
 export type SuspenseQueryHookFetchPolicy = useSuspenseQuery.FetchPolicy;
+
+/** @deprecated Use `useBackgroundQuery.Options` instead */
+export type BackgroundQueryHookOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useBackgroundQuery.Options<TVariables>;
+
+/** @deprecated Use `useBackgroundQuery.Result` instead */
+export type UseBackgroundQueryResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useBackgroundQuery.Result<TData, TVariables>;
+
+/** @deprecated Use `useBackgroundQuery.FetchPolicy` instead */
+export type BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;

@@ -1,5 +1,13 @@
-import type { OperationVariables } from "@apollo/client/core";
-import type { useLazyQuery, useQuery } from "@apollo/client/react/hooks";
+import type {
+  ApolloCache,
+  DefaultContext,
+  OperationVariables,
+} from "@apollo/client/core";
+import type {
+  useLazyQuery,
+  useMutation,
+  useQuery,
+} from "@apollo/client/react/hooks";
 
 /** @deprecated Use `useQuery.Options` instead */
 export type QueryHookOptions<
@@ -41,3 +49,30 @@ export type LazyQueryExecFunction<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = useLazyQuery.ExecFunction<TData, TVariables>;
+
+/** @deprecated Use `useMutation.Options` instead */
+export type MutationHookOptions<
+  TData = unknown,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache = ApolloCache,
+> = useMutation.Options<TData, TVariables, TContext, TCache>;
+
+/** @deprecated Use `useMutation.Result` instead */
+export type MutationResult<TData = unknown> = useMutation.Result<TData>;
+
+/** @deprecated Use `useMutation.MutationFunctionOptions` instead */
+export type MutationFunctionOptions<
+  TData = unknown,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache = ApolloCache,
+> = useMutation.MutationFunctionOptions<TData, TVariables, TContext, TCache>;
+
+/** @deprecated Use `useMutation.ResultTuple` instead */
+export type MutationTuple<
+  TData,
+  TVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache = ApolloCache,
+> = useMutation.ResultTuple<TData, TVariables, TContext, TCache>;

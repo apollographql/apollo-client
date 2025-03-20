@@ -1,6 +1,7 @@
 export * from "./useApolloClient.js";
 export * from "./useLazyQuery.js";
 export * from "./useMutation.js";
+export type { UseQueryResult } from "./useQuery.js";
 export { useQuery } from "./useQuery.js";
 export * from "./useSubscription.js";
 export * from "./useReactiveVar.js";

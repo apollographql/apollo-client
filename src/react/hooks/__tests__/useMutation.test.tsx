@@ -38,9 +38,9 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { MutationTuple, QueryResult } from "../../types/types.js";
+import { MutationTuple } from "../../types/types.js";
 import { useMutation } from "../useMutation.js";
-import { useQuery } from "../useQuery.js";
+import { useQuery, UseQueryResult } from "../useQuery.js";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -2352,7 +2352,7 @@ describe("useMutation Hook", () => {
 
       const renderStream = createRenderStream({
         initialSnapshot: {
-          useQueryResult: null as QueryResult<TNumbersQuery> | null,
+          useQueryResult: null as UseQueryResult<TNumbersQuery> | null,
           useMutationResult: null as MutationTuple<any, any> | null,
         },
       });

@@ -7,10 +7,6 @@ export { useReactiveVar } from "./useReactiveVar.js";
 export { useFragment } from "./useFragment.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
-export type {
-  UseSuspenseFragmentOptions,
-  UseSuspenseFragmentResult,
-} from "./useSuspenseFragment.js";
 export { useSuspenseFragment } from "./useSuspenseFragment.js";
 export type {
   LoadQueryFunction,

@@ -19,7 +19,6 @@ import type {
   NoInfer,
   OnDataOptions,
   OnSubscriptionDataOptions,
-  SubscriptionResult,
 } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { invariant } from "@apollo/client/utilities/invariant";
@@ -79,6 +78,28 @@ export interface UseSubscriptionOptions<
    * @defaultValue `false`
    */
   ignoreResults?: boolean;
+}
+
+export interface UseSubscriptionResult<
+  TData = unknown,
+  TVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
+  loading: boolean;
+
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#data:member} */
+  data?: MaybeMasked<TData>;
+
+  /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  // This was added by the legacy useSubscription type, and is tested in unit
+  // tests, but probably shouldn’t be added to the result.
+  /**
+   * @internal
+   */
+  // TODO: Remove this
+  variables?: TVariables;
 }
 
 /**
@@ -250,7 +271,9 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<SubscriptionResult<TData, TVariables>>(
+  const fallbackResult = React.useMemo<
+    UseSubscriptionResult<TData, TVariables>
+  >(
     () => ({
       loading: fallbackLoading,
       error: void 0,
@@ -273,7 +296,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<SubscriptionResult<TData, TVariables>>(
+  const ret = useSyncExternalStore<UseSubscriptionResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -398,8 +421,8 @@ function createSubscription<
       data: void 0,
       error: void 0,
       variables,
-    } as SubscriptionResult<TData, TVariables>,
-    setResult(result: SubscriptionResult<TData, TVariables>) {
+    } as UseSubscriptionResult<TData, TVariables>,
+    setResult(result: UseSubscriptionResult<TData, TVariables>) {
       __.result = result;
     },
   };

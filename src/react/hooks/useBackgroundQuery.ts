@@ -2,14 +2,21 @@ import * as React from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
+  ApolloClient,
+  DefaultContext,
   DocumentNode,
+  ErrorPolicy,
   FetchMoreQueryOptions,
   OperationVariables,
+  RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import type { BackgroundQueryHookOptions, NoInfer } from "@apollo/client/react";
+import type {
+  BackgroundQueryHookFetchPolicy,
+  NoInfer,
+} from "@apollo/client/react";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   getSuspenseCache,
@@ -37,15 +44,53 @@ export type UseBackgroundQueryResult<
   refetch: RefetchFunction<TData, TVariables>;
 };
 
+export interface UseBackgroundQueryOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  fetchPolicy?: BackgroundQueryHookFetchPolicy;
+  queryKey?: string | number | any[];
+
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+   *
+   * @example Recommended usage of `skipToken`:
+   * ```ts
+   * import { skipToken, useBackgroundQuery } from '@apollo/client';
+   *
+   * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
+   * ```
+   */
+  skip?: boolean;
+}
+
 type BackgroundQueryHookOptionsNoInfer<
   TData,
   TVariables extends OperationVariables,
-> = BackgroundQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>;
+> = UseBackgroundQueryOptions<NoInfer<TData>, NoInfer<TVariables>>;
 
 export function useBackgroundQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<BackgroundQueryHookOptions<TData>, "variables">,
+  TOptions extends Omit<UseBackgroundQueryOptions<TData>, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions

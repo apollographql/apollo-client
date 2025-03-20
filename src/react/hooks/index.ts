@@ -1,5 +1,12 @@
-export * from "./useApolloClient.js";
-export * from "./useLazyQuery.js";
+export { useApolloClient } from "./useApolloClient.js";
+export type {
+  UseLazyQueryExecFunction,
+  UseLazyQueryExecOptions,
+  UseLazyQueryOptions,
+  UseLazyQueryResult,
+  UseLazyQueryResultTuple,
+} from "./useLazyQuery.js";
+export { useLazyQuery } from "./useLazyQuery.js";
 export type {
   MutationFunctionOptions,
   UseMutationOptions,
@@ -16,8 +23,9 @@ export type {
   UseSubscriptionResult,
 } from "./useSubscription.js";
 export { useSubscription } from "./useSubscription.js";
-export * from "./useReactiveVar.js";
-export * from "./useFragment.js";
+export { useReactiveVar } from "./useReactiveVar.js";
+export type { UseFragmentOptions, UseFragmentResult } from "./useFragment.js";
+export { useFragment } from "./useFragment.js";
 export type {
   UseSuspenseQueryFetchPolicy,
   UseSuspenseQueryOptions,

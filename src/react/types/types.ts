@@ -108,26 +108,6 @@ export interface ObservableQueryFields<
   ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
 }
 
-export interface QueryResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> extends ObservableQueryFields<TData, TVariables> {
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-  client: ApolloClient;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
-  observable: ObservableQuery<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-  data: MaybeMasked<TData> | undefined;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
-  previousData?: MaybeMasked<TData>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: ErrorLike;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
-  loading: boolean;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-  networkStatus: NetworkStatus;
-}
-
 export interface QueryDataOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,

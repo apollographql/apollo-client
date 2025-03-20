@@ -7,7 +7,12 @@ import type {
   Reference,
   StoreObject,
 } from "@apollo/client/cache";
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type {
+  ApolloClient,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client/core";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
 import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 
@@ -15,18 +20,41 @@ import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-export interface UseFragmentOptions<TData, TVariables>
-  extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVariables>>,
-      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
-    >,
-    Omit<
-      Cache.ReadFragmentOptions<TData, TVariables>,
-      "id" | "variables" | "returnPartialData"
-    > {
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
-  // Override this field to make it optional (default: true).
+export interface UseFragmentOptions<TData, TVariables> {
+  /**
+   * A GraphQL document created using the `gql` template string tag from
+   * `graphql-tag` with one or more fragments which will be used to determine
+   * the shape of data to read. If you provide more than one fragment in this
+   * document then you must also specify `fragmentName` to select a single.
+   */
+  fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+
+  /**
+   * The name of the fragment in your GraphQL document to be used. If you do
+   * not provide a `fragmentName` and there is only one fragment in your
+   * `fragment` document then that fragment will be used.
+   */
+  fragmentName?: string;
+
+  /**
+   * Any variables that the GraphQL query may depend on.
+   */
+  variables?: TVariables;
+
+  /**
+   * Whether to return incomplete data rather than null.
+   * Defaults to false.
+   */
+  returnPartialData?: boolean;
+  /**
+   * Whether to read from optimistic or non-optimistic cache data. If
+   * this named option is provided, the optimistic parameter of the
+   * readQuery method can be omitted. Defaults to false.
+   */
   optimistic?: boolean;
+
+  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
+
   /**
    * The instance of `ApolloClient` to use to look up the fragment.
    *

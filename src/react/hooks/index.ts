@@ -9,7 +9,8 @@ export type {
 export { useMutation } from "./useMutation.js";
 export type { UseQueryOptions, UseQueryResult } from "./useQuery.js";
 export { useQuery } from "./useQuery.js";
-export * from "./useSubscription.js";
+export type { UseSubscriptionOptions } from "./useSubscription.js";
+export { useSubscription } from "./useSubscription.js";
 export * from "./useReactiveVar.js";
 export * from "./useFragment.js";
 export type {

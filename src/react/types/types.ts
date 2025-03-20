@@ -99,14 +99,6 @@ export interface ObservableQueryFields<
   ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
 }
 
-export interface QueryDataOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> extends QueryFunctionOptions<TData, TVariables> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
 /* Subscription types */
 
 export interface OnDataOptions<TData = unknown> {

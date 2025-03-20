@@ -9,6 +9,7 @@ import type {
   useMutation,
   useQuery,
   useSubscription,
+  useSuspenseQuery,
 } from "@apollo/client/react/hooks";
 
 /** @deprecated Use `useQuery.Options` instead */
@@ -107,3 +108,18 @@ export type UseFragmentOptions<TData, TVariables> = useFragment.Options<
 
 /** @deprecated Use `useFragment.Result` instead */
 export type UseFragmentResult<TData> = useFragment.Result<TData>;
+
+/** @deprecated Use `useSuspenseQuery.Options` instead */
+export type SuspenseQueryHookOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useSuspenseQuery.Options<TVariables>;
+
+/** @deprecated Use `useSuspenseQuery.Result` instead */
+export type UseSuspenseQueryResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useSuspenseQuery.Result<TData, TVariables>;
+
+/** @deprecated Use `useSuspenseQuery.FetchPolicy` instead */
+export type SuspenseQueryHookFetchPolicy = useSuspenseQuery.FetchPolicy;

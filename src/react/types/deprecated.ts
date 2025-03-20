@@ -4,6 +4,7 @@ import type {
   OperationVariables,
 } from "@apollo/client/core";
 import type {
+  useFragment,
   useLazyQuery,
   useMutation,
   useQuery,
@@ -97,3 +98,12 @@ export type OnDataOptions<TData = unknown> =
 /** @deprecated Use `useSubscription.OnSubscriptionDataOptions` instead */
 export type OnSubscriptionDataOptions<TData = unknown> =
   useSubscription.OnSubscriptionDataOptions<TData>;
+
+/** @deprecated Use `useFragment.Options` instead */
+export type UseFragmentOptions<TData, TVariables> = useFragment.Options<
+  TData,
+  TVariables
+>;
+
+/** @deprecated Use `useFragment.Result` instead */
+export type UseFragmentResult<TData> = useFragment.Result<TData>;

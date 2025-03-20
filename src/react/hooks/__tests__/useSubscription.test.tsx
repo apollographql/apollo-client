@@ -28,8 +28,7 @@ import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { SubscriptionHookOptions } from "../../types/types.js";
-import { useSubscription } from "../useSubscription.js";
+import { useSubscription, UseSubscriptionOptions } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -1214,7 +1213,7 @@ followed by new in-flight setup", async () => {
 
   describe("errorPolicy", () => {
     async function setup(
-      initialProps: SubscriptionHookOptions<{ totalLikes: number }, {}>
+      initialProps: UseSubscriptionOptions<{ totalLikes: number }, {}>
     ) {
       const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
         subscription ($id: ID!) {
@@ -1235,7 +1234,7 @@ followed by new in-flight setup", async () => {
         </ApolloProvider>
       );
       const { takeSnapshot } = await renderHookToSnapshotStream(
-        (options: SubscriptionHookOptions<{ totalLikes: number }, {}>) =>
+        (options: UseSubscriptionOptions<{ totalLikes: number }, {}>) =>
           useSubscription(subscription, options),
         {
           initialProps,
@@ -1405,10 +1404,7 @@ followed by new in-flight setup", async () => {
 
 describe("`restart` callback", () => {
   async function setup(
-    initialProps: SubscriptionHookOptions<
-      { totalLikes: number },
-      { id: string }
-    >
+    initialProps: UseSubscriptionOptions<{ totalLikes: number }, { id: string }>
   ) {
     const subscription: TypedDocumentNode<
       { totalLikes: number },
@@ -1430,7 +1426,7 @@ describe("`restart` callback", () => {
     const { takeSnapshot, getCurrentSnapshot, rerender } =
       await renderHookToSnapshotStream(
         (
-          options: SubscriptionHookOptions<
+          options: UseSubscriptionOptions<
             { totalLikes: number },
             { id: string }
           >
@@ -1794,10 +1790,10 @@ describe("ignoreResults", () => {
       cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onData = jest.fn((() => {}) as UseSubscriptionOptions["onData"]);
+    const onError = jest.fn((() => {}) as UseSubscriptionOptions["onError"]);
     const onComplete = jest.fn(
-      (() => {}) as SubscriptionHookOptions["onComplete"]
+      (() => {}) as UseSubscriptionOptions["onComplete"]
     );
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1868,10 +1864,10 @@ describe("ignoreResults", () => {
       cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
-    const onError = jest.fn((() => {}) as SubscriptionHookOptions["onError"]);
+    const onData = jest.fn((() => {}) as UseSubscriptionOptions["onData"]);
+    const onError = jest.fn((() => {}) as UseSubscriptionOptions["onError"]);
     const onComplete = jest.fn(
-      (() => {}) as SubscriptionHookOptions["onComplete"]
+      (() => {}) as UseSubscriptionOptions["onComplete"]
     );
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot } = await renderHookToSnapshotStream(
@@ -1936,7 +1932,7 @@ describe("ignoreResults", () => {
       cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onData = jest.fn((() => {}) as UseSubscriptionOptions["onData"]);
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>
@@ -2010,7 +2006,7 @@ describe("ignoreResults", () => {
       cache: new Cache(),
     });
 
-    const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
+    const onData = jest.fn((() => {}) as UseSubscriptionOptions["onData"]);
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ ignoreResults }: { ignoreResults: boolean }) =>

@@ -43,11 +43,6 @@ export declare namespace useFragment {
     variables?: TVariables;
 
     /**
-     * Whether to return incomplete data rather than null.
-     * Defaults to false.
-     */
-    returnPartialData?: boolean;
-    /**
      * Whether to read from optimistic or non-optimistic cache data. If
      * this named option is provided, the optimistic parameter of the
      * readQuery method can be omitted. Defaults to false.

@@ -90,14 +90,6 @@ export interface QueryOptions<
 export interface WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = unknown,
-> extends SharedWatchQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-export interface SharedWatchQueryOptions<
-  TVariables extends OperationVariables,
-  TData,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: WatchQueryFetchPolicy;
@@ -137,6 +129,9 @@ export interface SharedWatchQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
   skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface NextFetchPolicyContext<

@@ -8,7 +8,7 @@ import type {
 import type {
   LazyQueryResult,
   QueryRef,
-  QueryResult,
+  UseQueryResult,
 } from "../../react/index.js";
 import { NextRenderOptions, ObservableStream } from "../internal/index.js";
 import { RenderStreamMatchers } from "@testing-library/react-render-stream/expect";
@@ -102,10 +102,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (expected: CheckedLazyQueryResult<TData, TVariables>) => R
   : { error: "matchers needs to be called on a LazyQueryResult" };
 
-  toEqualQueryResult: T extends QueryResult<infer TData, infer TVariables> ?
-    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
-  : T extends Promise<QueryResult<infer TData, infer TVariables>> ?
-    (expected: Pick<QueryResult<TData, TVariables>, CheckedKeys>) => R
+  toEqualQueryResult: T extends UseQueryResult<infer TData, infer TVariables> ?
+    (expected: Pick<UseQueryResult<TData, TVariables>, CheckedKeys>) => R
+  : T extends Promise<UseQueryResult<infer TData, infer TVariables>> ?
+    (expected: Pick<UseQueryResult<TData, TVariables>, CheckedKeys>) => R
   : { error: "matchers needs to be called on a QueryResult" };
 
   toEqualFetchResult: T extends (

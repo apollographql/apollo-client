@@ -2227,7 +2227,7 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-// @internal (undocumented)
+// @public (undocumented)
 type VariablesOption<TVariables extends OperationVariables> = [
 TVariables
 ] extends [never] ? {

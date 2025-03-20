@@ -39,7 +39,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
 import { useMutation, UseMutationResultTuple } from "../useMutation.js";
-import { useQuery, UseQueryResult } from "../useQuery.js";
+import { useQuery } from "../useQuery.js";
 
 describe("useMutation Hook", () => {
   interface Todo {
@@ -2351,7 +2351,7 @@ describe("useMutation Hook", () => {
 
       const renderStream = createRenderStream({
         initialSnapshot: {
-          useQueryResult: null as UseQueryResult<TNumbersQuery> | null,
+          useQueryResult: null as useQuery.Result<TNumbersQuery> | null,
           useMutationResult: null as UseMutationResultTuple<any, any> | null,
         },
       });

@@ -14,7 +14,6 @@ export type {
   UseMutationResultTuple,
 } from "./useMutation.js";
 export { useMutation } from "./useMutation.js";
-export type { UseQueryOptions, UseQueryResult } from "./useQuery.js";
 export { useQuery } from "./useQuery.js";
 export type {
   OnDataOptions,

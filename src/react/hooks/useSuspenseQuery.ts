@@ -38,16 +38,22 @@ export interface UseSuspenseQueryResult<
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client: ApolloClient;
+
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: MaybeMasked<TData>;
+
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error: ErrorLike | undefined;
+
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
+
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: RefetchFunction<TData, TVariables>;
+
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
@@ -63,18 +69,25 @@ export interface UseSuspenseQueryOptions<
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
   variables?: TVariables;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
   refetchWritePolicy?: RefetchWritePolicy;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: UseSuspenseQueryFetchPolicy;
+
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
   queryKey?: string | number | any[];
 

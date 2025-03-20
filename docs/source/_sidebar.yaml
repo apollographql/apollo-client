@@ -35,6 +35,8 @@ items:
         href: ./data/error-handling
       - label: Document transforms
         href: ./data/document-transforms
+      - label: Deferring response data
+        href: ./data/defer
       - label: Best practices
         href: ./data/operation-best-practices
   - label: Caching

@@ -1959,7 +1959,7 @@ describe("useMutation Hook", () => {
         void createTodo({
           variables,
           async onQueryUpdated(obsQuery, diff) {
-            const result = await obsQuery.rerun();
+            const result = await obsQuery.reobserve();
             finishedReobserving = true;
             resolveOnUpdate({ obsQuery, diff, result });
             return result;

@@ -90,7 +90,7 @@ describe("ObservableQuery", () => {
   ]);
   const wrappedError = new CombinedGraphQLErrors([error]);
 
-  describe("setOptions", () => {
+  describe("reobserve", () => {
     describe("to change pollInterval", () => {
       it("starts polling if goes from 0 -> something", async () => {
         const client = new ApolloClient({
@@ -126,7 +126,7 @@ describe("ObservableQuery", () => {
           partial: false,
         });
 
-        await observable.setOptions({ query, pollInterval: 10 });
+        await observable.reobserve({ query, pollInterval: 10 });
 
         await expect(stream).toEmitApolloQueryResult({
           data: dataTwo,
@@ -174,7 +174,7 @@ describe("ObservableQuery", () => {
           partial: false,
         });
 
-        await observable.setOptions({ query, pollInterval: 0 });
+        await observable.reobserve({ query, pollInterval: 0 });
 
         await expect(stream).not.toEmitAnything();
       });
@@ -214,7 +214,7 @@ describe("ObservableQuery", () => {
           partial: false,
         });
 
-        await observable.setOptions({ query, pollInterval: 10 });
+        await observable.reobserve({ query, pollInterval: 10 });
 
         await expect(stream).toEmitApolloQueryResult({
           data: dataTwo,
@@ -413,7 +413,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setOptions({
+      await observable.reobserve({
         variables: variables2,
         notifyOnNetworkStatusChange: true,
       });
@@ -433,7 +433,7 @@ describe("ObservableQuery", () => {
       });
 
       // go back to first set of variables
-      const current = await observable.setOptions({ variables });
+      const current = await observable.reobserve({ variables });
       expect(current).toEqualApolloQueryResult({
         data,
         loading: false,
@@ -533,7 +533,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      await observable.setOptions({ fetchPolicy: "network-only" });
+      await observable.reobserve({ fetchPolicy: "network-only" });
 
       await expect(stream).toEmitApolloQueryResult({
         data: dataTwo,
@@ -591,7 +591,7 @@ describe("ObservableQuery", () => {
 
       expect(timesFired).toBe(1);
 
-      await observable.setOptions({ fetchPolicy: "cache-only" });
+      await observable.reobserve({ fetchPolicy: "cache-only" });
       await client.resetStore();
 
       await expect(stream).toEmitApolloQueryResult({
@@ -654,7 +654,7 @@ describe("ObservableQuery", () => {
       });
       expect(timesFired).toBe(0);
 
-      await observable.setOptions({ fetchPolicy: "cache-first" });
+      await observable.reobserve({ fetchPolicy: "cache-first" });
 
       await expect(stream).toEmitApolloQueryResult({
         data,
@@ -714,7 +714,7 @@ describe("ObservableQuery", () => {
       expect(timesFired).toBe(1);
 
       await expect(
-        observable.setOptions({ query, fetchPolicy: "standby" })
+        observable.reobserve({ query, fetchPolicy: "standby" })
       ).rejects.toThrow(new EmptyError());
 
       // make sure the query didn't get fired again.
@@ -774,7 +774,7 @@ describe("ObservableQuery", () => {
       expect(timesFired).toBe(1);
 
       await expect(
-        observable.setOptions({ query, fetchPolicy: "standby" })
+        observable.reobserve({ query, fetchPolicy: "standby" })
         // TODO: Dertermine how we want to handle this. We likely should swallow
         // the error since standby currently does not emit a value but completes
         // instead.
@@ -809,7 +809,7 @@ describe("ObservableQuery", () => {
         partial: false,
       });
 
-      const res = await observable.setOptions({
+      const res = await observable.reobserve({
         fetchPolicy: "cache-and-network",
       });
 
@@ -1711,7 +1711,7 @@ describe("ObservableQuery", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
       {
-        const result = await observable.setOptions({ variables: variables1 });
+        const result = await observable.reobserve({ variables: variables1 });
 
         expect(result).toEqualApolloQueryResult({
           data,
@@ -1739,7 +1739,7 @@ describe("ObservableQuery", () => {
       expect(observable.options.fetchPolicy).toBe("cache-first");
 
       {
-        const result = await observable.setOptions({ variables: variables2 });
+        const result = await observable.reobserve({ variables: variables2 });
 
         expect(result).toEqualApolloQueryResult({
           data: data2,
@@ -3481,7 +3481,7 @@ describe("ObservableQuery", () => {
       expect(observable.query).toBe(result);
     });
 
-    it("is updated with transformed query when `setOptions` changes the query", async () => {
+    it("is updated with transformed query when `reobserve` changes the query", async () => {
       const query = gql`
         query {
           currentUser {
@@ -3514,7 +3514,7 @@ describe("ObservableQuery", () => {
         }
       `);
 
-      await observable.setOptions({ query: updatedQuery });
+      await observable.reobserve({ query: updatedQuery });
 
       expect(observable.query).toMatchDocument(gql`
         query {
@@ -3897,9 +3897,9 @@ test("handles changing variables in rapid succession before other request is com
     });
   });
 
-  void observable.setOptions({ variables: { department: "HR" } });
+  void observable.reobserve({ variables: { department: "HR" } });
   await wait(10);
-  void observable.setOptions({ variables: { department: null } });
+  void observable.reobserve({ variables: { department: null } });
 
   // Wait for request to finish
   await wait(50);

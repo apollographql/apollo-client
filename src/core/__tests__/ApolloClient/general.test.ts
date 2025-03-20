@@ -546,7 +546,7 @@ describe("ApolloClient", () => {
 
     // Kick off another request while the other is still pending
     await wait(10);
-    void observableQuery.setOptions({ variables: { offset: 20 } });
+    void observableQuery.reobserve({ variables: { offset: 20 } });
 
     expect(onRequestSubscribe).toHaveBeenCalledTimes(2);
 
@@ -618,7 +618,7 @@ describe("ApolloClient", () => {
 
     // Kick off another request while the other is still pending
     await wait(10);
-    void observableQuery.setOptions({ variables: { id: 2 } });
+    void observableQuery.reobserve({ variables: { id: 2 } });
 
     await expect(stream).toEmitApolloQueryResult({
       data: {
@@ -3114,7 +3114,7 @@ describe("ApolloClient", () => {
       // fetchQueryByPolicy, but it should just read from cache and not
       // update "queryInfo.lastRequestId". For more information, see
       // https://github.com/apollographql/apollo-client/pull/7956#issue-610298427
-      await observable.setOptions({
+      await observable.reobserve({
         ...queryOptions,
         fetchPolicy: "cache-first",
       });
@@ -6345,7 +6345,7 @@ describe("ApolloClient", () => {
 
         onQueryUpdated(obsQuery) {
           expect(obsQuery.options.query).toBe(query);
-          return obsQuery.setOptions({
+          return obsQuery.reobserve({
             fetchPolicy: "network-only",
             context: {
               ...obsQuery.options.context,

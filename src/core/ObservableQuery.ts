@@ -802,7 +802,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // requests to be triggered only if the cache result is incomplete. To
         // that end, the options.nextFetchPolicy option provides an easy way to
         // update options.fetchPolicy after the initial network request, without
-        // having to call observableQuery.setOptions.
+        // having to call observableQuery.reobserve.
         options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
           reason,
           options,
@@ -1166,7 +1166,7 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
   const { fetchPolicy, nextFetchPolicy } = obsQuery.options;
 
   if (fetchPolicy === "cache-and-network" || fetchPolicy === "network-only") {
-    return obsQuery.setOptions({
+    return obsQuery.reobserve({
       fetchPolicy: "cache-first",
       // Use a temporary nextFetchPolicy function that replaces itself with the
       // previous nextFetchPolicy value and returns the original fetchPolicy.
@@ -1189,7 +1189,7 @@ export function reobserveCacheFirst<TData, TVars extends OperationVariables>(
     });
   }
 
-  return obsQuery.rerun();
+  return obsQuery.reobserve();
 }
 
 export function logMissingFieldErrors(

@@ -13,10 +13,7 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import type {
-  BackgroundQueryHookFetchPolicy,
-  NoInfer,
-} from "@apollo/client/react";
+import type { NoInfer } from "@apollo/client/react";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   getSuspenseCache,
@@ -44,6 +41,12 @@ export type UseBackgroundQueryResult<
   refetch: RefetchFunction<TData, TVariables>;
 };
 
+export type UseBackgroundQueryFetchPolicy =
+  | "cache-first"
+  | "network-only"
+  | "no-cache"
+  | "cache-and-network";
+
 export interface UseBackgroundQueryOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -66,7 +69,7 @@ export interface UseBackgroundQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
   returnPartialData?: boolean;
 
-  fetchPolicy?: BackgroundQueryHookFetchPolicy;
+  fetchPolicy?: UseBackgroundQueryFetchPolicy;
   queryKey?: string | number | any[];
 
   /**

@@ -2388,7 +2388,7 @@ export interface UseSuspenseQueryResult<TData = unknown, TVariables extends Oper
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-// @internal (undocumented)
+// @public (undocumented)
 type VariablesOption<TVariables extends OperationVariables> = [
 TVariables
 ] extends [never] ? {
@@ -2460,7 +2460,7 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/react/hooks/useBackgroundQuery.ts:43:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useLoadableQuery.ts:67:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:74:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
-// src/react/query-preloader/createQueryPreloader.ts:43:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:45:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

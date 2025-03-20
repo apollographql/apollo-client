@@ -11,6 +11,7 @@ import type {
   useMutation,
   useQuery,
   useQueryRefHandlers,
+  useReadQuery,
   useSubscription,
   useSuspenseFragment,
   useSuspenseQuery,
@@ -174,3 +175,6 @@ export type UseQueryRefHandlersResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > = useQueryRefHandlers.Result<TData, TVariables>;
+
+/** @deprecated Use `useReadQuery.Result` instead */
+export type UseReadQueryResult<TData = unknown> = useReadQuery.Result<TData>;

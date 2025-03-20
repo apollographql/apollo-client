@@ -42,7 +42,7 @@ import {
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import { useLazyQuery, UseLazyQueryResult } from "../useLazyQuery.js";
+import { useLazyQuery } from "../useLazyQuery.js";
 import { useMutation } from "../useMutation.js";
 import { useQuery } from "../useQuery.js";
 
@@ -4876,7 +4876,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as useQuery.Result<Query1, Variables> | null,
-        useLazyQueryResult: null as UseLazyQueryResult<
+        useLazyQueryResult: null as useLazyQuery.Result<
           Query2,
           Variables
         > | null,
@@ -5153,7 +5153,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as useQuery.Result<Query1, Variables> | null,
-        useLazyQueryResult: null as UseLazyQueryResult<
+        useLazyQueryResult: null as useLazyQuery.Result<
           Query2,
           Variables
         > | null,
@@ -5399,7 +5399,7 @@ describe("useQuery Hook", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         useQueryResult: null as useQuery.Result<Query1, Variables> | null,
-        useLazyQueryResult: null as UseLazyQueryResult<
+        useLazyQueryResult: null as useLazyQuery.Result<
           Query2,
           Variables
         > | null,

@@ -34,127 +34,134 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-export interface UseLazyQueryOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: WatchQueryFetchPolicy;
+export declare namespace useLazyQuery {
+  export interface Options<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: WatchQueryFetchPolicy;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
-  nextFetchPolicy?:
-    | WatchQueryFetchPolicy
-    | ((
-        this: WatchQueryOptions<TVariables, TData>,
-        currentFetchPolicy: WatchQueryFetchPolicy,
-        context: NextFetchPolicyContext<TData, TVariables>
-      ) => WatchQueryFetchPolicy);
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TVariables, TData>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
-  pollInterval?: number;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  notifyOnNetworkStatusChange?: boolean;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
-  skipPollAttempt?: () => boolean;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+    client?: ApolloClient;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+  }
+
+  export interface Result<TData, TVariables extends OperationVariables> {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+    startPolling: (pollInterval: number) => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+    stopPolling: () => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+    refetch: (
+      variables?: Partial<TVariables>
+    ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+    variables: TVariables | undefined;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+
+    fetchMore: <
+      TFetchData = TData,
+      TFetchVars extends OperationVariables = TVariables,
+    >(
+      fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+        updateQuery?: (
+          previousQueryResult: Unmasked<TData>,
+          options: {
+            fetchMoreResult: Unmasked<TFetchData>;
+            variables: TFetchVars;
+          }
+        ) => Unmasked<TData>;
+      }
+    ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
+    client: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
+    observable: ObservableQuery<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+    data: MaybeMasked<TData> | undefined;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
+    previousData?: MaybeMasked<TData>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+    loading: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+    networkStatus: NetworkStatus;
+
+    /**
+     * If `true`, the associated lazy query has been executed.
+     *
+     * @docGroup 2. Network info
+     */
+    called: boolean;
+  }
+
+  export type ExecOptions<
+    TVariables extends OperationVariables = OperationVariables,
+  > = {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+  } & VariablesOption<TVariables>;
+
+  export type ResultTuple<TData, TVariables extends OperationVariables> = [
+    execute: ExecFunction<TData, TVariables>,
+    result: useLazyQuery.Result<TData, TVariables>,
+  ];
+
+  export type ExecFunction<TData, TVariables extends OperationVariables> = (
+    ...args: [TVariables] extends [never] ?
+      [options?: useLazyQuery.ExecOptions<TVariables>]
+    : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
+      [options?: useLazyQuery.ExecOptions<TVariables>]
+    : [options: useLazyQuery.ExecOptions<TVariables>]
+  ) => Promise<ApolloQueryResult<TData>>;
 }
-
-export type UseLazyQueryExecOptions<
-  TVariables extends OperationVariables = OperationVariables,
-> = {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-} & VariablesOption<TVariables>;
-
-export interface UseLazyQueryResult<
-  TData,
-  TVariables extends OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
-  startPolling: (pollInterval: number) => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
-  stopPolling: () => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-  refetch: (
-    variables?: Partial<TVariables>
-  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-  variables: TVariables | undefined;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-  fetchMore: <
-    TFetchData = TData,
-    TFetchVars extends OperationVariables = TVariables,
-  >(
-    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-      updateQuery?: (
-        previousQueryResult: Unmasked<TData>,
-        options: {
-          fetchMoreResult: Unmasked<TFetchData>;
-          variables: TFetchVars;
-        }
-      ) => Unmasked<TData>;
-    }
-  ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-  client: ApolloClient;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
-  observable: ObservableQuery<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-  data: MaybeMasked<TData> | undefined;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
-  previousData?: MaybeMasked<TData>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error?: ErrorLike;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
-  loading: boolean;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-  networkStatus: NetworkStatus;
-  /**
-   * If `true`, the associated lazy query has been executed.
-   *
-   * @docGroup 2. Network info
-   */
-  called: boolean;
-}
-
-export type UseLazyQueryResultTuple<
-  TData,
-  TVariables extends OperationVariables,
-> = [
-  execute: UseLazyQueryExecFunction<TData, TVariables>,
-  result: UseLazyQueryResult<TData, TVariables>,
-];
-
-export type UseLazyQueryExecFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = (
-  ...args: [TVariables] extends [never] ?
-    [options?: UseLazyQueryExecOptions<TVariables>]
-  : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-    [options?: UseLazyQueryExecOptions<TVariables>]
-  : [options: UseLazyQueryExecOptions<TVariables>]
-) => Promise<ApolloQueryResult<TData>>;
 
 // The following methods, when called will execute the query, regardless of
 // whether the useLazyQuery execute function was called before.
@@ -207,8 +214,8 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: UseLazyQueryOptions<NoInfer<TData>, NoInfer<TVariables>>
-): UseLazyQueryResultTuple<TData, TVariables> {
+  options?: useLazyQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
+): useLazyQuery.ResultTuple<TData, TVariables> {
   const client = useApolloClient(options?.client);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
@@ -288,7 +295,7 @@ export function useLazyQuery<
     }
 
     return eagerMethods as Pick<
-      UseLazyQueryResult<TData, TVariables>,
+      useLazyQuery.Result<TData, TVariables>,
       (typeof EAGER_METHODS)[number]
     >;
   }, [observable]);
@@ -327,7 +334,7 @@ export function useLazyQuery<
     options?.skipPollAttempt,
   ]);
 
-  const execute: UseLazyQueryExecFunction<TData, TVariables> =
+  const execute: useLazyQuery.ExecFunction<TData, TVariables> =
     React.useCallback(
       (...args) => {
         invariant(

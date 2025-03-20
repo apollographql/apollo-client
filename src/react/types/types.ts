@@ -165,15 +165,6 @@ export interface MutationResult<TData = unknown> {
   reset: () => void;
 }
 
-export declare type MutationFunction<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> = (
-  options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-) => Promise<FetchResult<MaybeMasked<TData>>>;
-
 /* Subscription types */
 
 export interface OnDataOptions<TData = unknown> {

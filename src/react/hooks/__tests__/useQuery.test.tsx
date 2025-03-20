@@ -1620,6 +1620,99 @@ describe("useQuery Hook", () => {
 
       await expect(takeSnapshot).not.toRerender();
     });
+
+    // https://github.com/apollographql/apollo-client/issues/12458
+    it("returns correct result when cache updates after changing variables and skipping query", async () => {
+      interface Data {
+        user: {
+          __typename: "User";
+          id: number;
+          name: string;
+        };
+      }
+
+      const query: TypedDocumentNode<Data, { id: number }> = gql`
+        query ($id: ID!) {
+          user(id: $id) {
+            id
+            name
+          }
+        }
+      `;
+
+      const client = new ApolloClient({
+        link: ApolloLink.empty(),
+        cache: new InMemoryCache(),
+      });
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
+        ({ id, skip }) => useQuery(query, { skip, variables: { id } }),
+        {
+          initialProps: { id: 1, skip: true },
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      client.writeQuery({
+        query,
+        variables: { id: 1 },
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+      });
+      await rerender({ id: 1, skip: false });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { user: { __typename: "User", id: 1, name: "User 1" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: undefined,
+        variables: { id: 1 },
+      });
+
+      await rerender({ id: 2, skip: true });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: undefined,
+        error: undefined,
+        called: false,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
+
+      client.writeQuery({
+        query,
+        variables: { id: 2 },
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+      });
+
+      await rerender({ id: 2, skip: false });
+
+      await expect(takeSnapshot()).resolves.toEqualQueryResult({
+        data: { user: { __typename: "User", id: 2, name: "User 2" } },
+        called: true,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        previousData: { user: { __typename: "User", id: 1, name: "User 1" } },
+        variables: { id: 2 },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+    });
   });
 
   describe("options.defaultOptions", () => {

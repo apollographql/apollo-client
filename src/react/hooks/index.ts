@@ -13,6 +13,7 @@ export type {
 } from "./useSuspenseQuery.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export type {
+  UseBackgroundQueryFetchPolicy,
   UseBackgroundQueryOptions,
   UseBackgroundQueryResult,
 } from "./useBackgroundQuery.js";

@@ -2438,7 +2438,7 @@ describe.skip("Type Tests", () => {
       fragmentName?: string;
       optimistic?: boolean;
       variables?: TVars;
-      client?: ApolloClient<any>;
+      client?: ApolloClient;
     }>();
   });
 });

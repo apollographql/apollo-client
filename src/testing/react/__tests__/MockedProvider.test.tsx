@@ -1210,7 +1210,7 @@ describe("@client testing", () => {
     });
 
     function Component() {
-      const { loading, data } = useQuery(gql`
+      const { loading, data } = useQuery<any>(gql`
         {
           networkStatus @client {
             isOnline
@@ -1254,7 +1254,7 @@ describe("@client testing", () => {
     });
 
     function Component() {
-      const { loading, data } = useQuery(gql`
+      const { loading, data } = useQuery<any>(gql`
         {
           networkStatus @client {
             isOnline

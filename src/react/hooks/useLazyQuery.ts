@@ -39,7 +39,7 @@ import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
 export interface LazyQueryHookOptions<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
@@ -73,7 +73,7 @@ export interface LazyQueryHookOptions<
   skipPollAttempt?: () => boolean;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
@@ -117,7 +117,7 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
     }
   ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
-  client: ApolloClient<any>;
+  client: ApolloClient;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
   observable: ObservableQuery<TData, TVariables>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
@@ -200,7 +200,7 @@ const EAGER_METHODS = [
  * @returns A tuple in the form of `[execute, result]`
  */
 export function useLazyQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,

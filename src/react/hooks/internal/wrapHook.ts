@@ -37,7 +37,7 @@ export type HookWrappers = {
   ) => WrappableHooks[K];
 };
 
-interface QueryManagerWithWrappers<T> extends QueryManager<T> {
+interface QueryManagerWithWrappers extends QueryManager {
   [wrapperSymbol]?: HookWrappers;
 }
 
@@ -79,13 +79,13 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
 export function wrapHook<Hook extends (...args: any[]) => any>(
   hookName: keyof WrappableHooks,
   useHook: Hook,
-  clientOrObsQuery: ObservableQuery<any> | ApolloClient<any>
+  clientOrObsQuery: ObservableQuery<any> | ApolloClient
 ): Hook {
   const queryManager = (
     clientOrObsQuery as unknown as {
       // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
       // but they're both `private`, so we have to cast around for a bit here.
-      queryManager: QueryManagerWithWrappers<any>;
+      queryManager: QueryManagerWithWrappers;
     }
   )["queryManager"];
   const wrappers = queryManager && queryManager[wrapperSymbol];

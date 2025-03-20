@@ -2895,7 +2895,14 @@ describe("writing to the store", () => {
       },
     });
 
-    const query = gql`
+    type Data = {
+      counter: {
+        __typename: "Counter";
+        count: number;
+      };
+    };
+
+    const query: TypedDocumentNode<Data> = gql`
       query {
         counter {
           count
@@ -2903,14 +2910,14 @@ describe("writing to the store", () => {
       }
     `;
 
-    const results: number[] = [];
+    const results: Data[] = [];
 
     const promise = new Promise<void>((resolve) => {
       cache.watch({
         query,
         optimistic: true,
         callback(diff) {
-          results.push(diff.result);
+          results.push(diff.result as Data);
           expect(diff.result).toEqual({
             counter: {
               __typename: "Counter",

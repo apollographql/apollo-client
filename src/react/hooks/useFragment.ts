@@ -16,13 +16,13 @@ import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-export interface UseFragmentOptions<TData, TVars>
+export interface UseFragmentOptions<TData, TVariables>
   extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVars>>,
+      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVariables>>,
       "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
     >,
     Omit<
-      Cache.ReadFragmentOptions<TData, TVars>,
+      Cache.ReadFragmentOptions<TData, TVariables>,
       "id" | "variables" | "returnPartialData"
     > {
   from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
@@ -36,7 +36,7 @@ export interface UseFragmentOptions<TData, TVars>
    *
    * @docGroup 1. Operation options
    */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
 }
 
 // TODO: Update this to return `null` when there is no data returned from the
@@ -53,9 +53,10 @@ export type UseFragmentResult<TData> =
       missing?: MissingTree;
     };
 
-export function useFragment<TData = any, TVars = OperationVariables>(
-  options: UseFragmentOptions<TData, TVars>
-): UseFragmentResult<TData> {
+export function useFragment<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+>(options: UseFragmentOptions<TData, TVariables>): UseFragmentResult<TData> {
   return wrapHook(
     "useFragment",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -64,8 +65,8 @@ export function useFragment<TData = any, TVars = OperationVariables>(
   )(options);
 }
 
-function useFragment_<TData = any, TVars = OperationVariables>(
-  options: UseFragmentOptions<TData, TVars>
+function useFragment_<TData, TVariables extends OperationVariables>(
+  options: UseFragmentOptions<TData, TVariables>
 ): UseFragmentResult<TData> {
   const client = useApolloClient(options.client);
   const { cache } = client;
@@ -100,7 +101,7 @@ function useFragment_<TData = any, TVars = OperationVariables>(
     }
 
     const { cache } = client;
-    const diff = cache.diff<TData>({
+    const diff = cache.diff<TData, TVariables>({
       ...stableOptions,
       returnPartialData: true,
       id: from,

@@ -24,10 +24,10 @@ export const enum CacheWriteBehavior {
   MERGE,
 }
 
-const destructiveMethodCounts = new WeakMap<ApolloCache<any>, number>();
+const destructiveMethodCounts = new WeakMap<ApolloCache, number>();
 
 function wrapDestructiveCacheMethod(
-  cache: ApolloCache<any>,
+  cache: ApolloCache,
   methodName: "evict" | "modify" | "reset"
 ) {
   const original = cache[methodName];
@@ -74,10 +74,10 @@ export class QueryInfo {
   variables?: Record<string, any>;
   stopped = false;
 
-  private cache: ApolloCache<any>;
+  private cache: ApolloCache;
 
   constructor(
-    queryManager: QueryManager<any>,
+    queryManager: QueryManager,
     public readonly queryId = queryManager.generateQueryId()
   ) {
     const cache = (this.cache = queryManager.cache);

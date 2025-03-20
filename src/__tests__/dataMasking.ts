@@ -12,11 +12,12 @@ import {
   gql,
   InMemoryCache,
   NetworkStatus,
+  OperationVariables,
   Reference,
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { MaskedDocumentNode } from "@apollo/client/masking";
+import { MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
 import {
   MockedResponse,
   MockLink,
@@ -5888,8 +5889,8 @@ describe("client.mutate", () => {
   });
 });
 
-class TestCache extends ApolloCache<unknown> {
-  public diff<T>(query: Cache.DiffOptions): DataProxy.DiffResult<T> {
+class TestCache extends ApolloCache {
+  public diff<T>(query: Cache.DiffOptions<T>): DataProxy.DiffResult<T> {
     return { result: null, complete: false };
   }
 
@@ -5901,15 +5902,13 @@ class TestCache extends ApolloCache<unknown> {
     return undefined;
   }
 
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
+  public performTransaction(transaction: (c: ApolloCache) => void): void {
     transaction(this);
   }
 
-  public read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>
-  ): T | null {
+  public read<T = unknown, TVariables = OperationVariables>(
+    query: Cache.ReadOptions<TVariables, T>
+  ): Unmasked<T> | null {
     return null;
   }
 
@@ -5919,15 +5918,17 @@ class TestCache extends ApolloCache<unknown> {
     return new Promise<void>(() => null);
   }
 
-  public restore(serializedState: unknown): ApolloCache<unknown> {
+  public restore(serializedState: unknown): this {
     return this;
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<T, TVariables>(
+    watch: Cache.WatchOptions<T, TVariables>
+  ): () => void {
     return function () {};
   }
 
-  public write<TResult = any, TVariables = any>(
+  public write<TResult = unknown, TVariables = OperationVariables>(
     _: Cache.WriteOptions<TResult, TVariables>
   ): Reference | undefined {
     return;

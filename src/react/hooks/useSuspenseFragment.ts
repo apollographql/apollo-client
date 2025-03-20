@@ -55,7 +55,7 @@ export type UseSuspenseFragmentOptions<
    *
    * @docGroup 1. Operation options
    */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
 } & VariablesOption<NoInfer<TVariables>>;
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };

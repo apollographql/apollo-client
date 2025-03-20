@@ -892,7 +892,7 @@ describe("useQuery Hook", () => {
             setName = setName1;
             return [
               useQuery(query, { variables: { name } }),
-              useMutation(mutation, {
+              useMutation<any>(mutation, {
                 update(cache, { data }) {
                   cache.writeQuery({
                     query,
@@ -1624,489 +1624,6 @@ describe("useQuery Hook", () => {
       }
 
       await expect(takeSnapshot).not.toRerender();
-    });
-  });
-
-  describe("options.defaultOptions", () => {
-    it("can provide a default fetchPolicy", async () => {
-      const query = gql`
-        query {
-          hello
-        }
-      `;
-      const link = mockSingleLink({
-        request: { query },
-        result: { data: { hello: "from link" } },
-        delay: 20,
-      });
-
-      const client = new ApolloClient({
-        link,
-        cache: new InMemoryCache(),
-      });
-
-      let defaultFetchPolicy: WatchQueryFetchPolicy = "cache-and-network";
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () => {
-          const result = useQuery(query, {
-            defaultOptions: {
-              fetchPolicy: defaultFetchPolicy,
-            },
-          });
-          return {
-            result,
-            fetchPolicy: result.observable.options.fetchPolicy,
-            defaultFetchPolicy,
-          };
-        },
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-
-      {
-        const { result, fetchPolicy, defaultFetchPolicy } =
-          await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-
-        expect(fetchPolicy).toBe("cache-and-network");
-        expect(defaultFetchPolicy).toBe("cache-and-network");
-      }
-
-      // Change the default fetchPolicy to verify that it is not used the second
-      // time useQuery is called.
-      defaultFetchPolicy = "network-only";
-
-      {
-        const { result, fetchPolicy, defaultFetchPolicy } =
-          await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: { hello: "from link" },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-
-        expect(fetchPolicy).toBe("cache-and-network");
-        expect(defaultFetchPolicy).toBe("network-only");
-      }
-    });
-
-    it("can provide individual default variables", async () => {
-      const query: TypedDocumentNode<
-        {
-          vars: OperationVariables;
-        },
-        OperationVariables
-      > = gql`
-        query VarsQuery {
-          vars
-        }
-      `;
-
-      const client = new ApolloClient({
-        link: new ApolloLink(
-          (request) =>
-            new Observable((observer) => {
-              setTimeout(() => {
-                observer.next({
-                  data: {
-                    vars: request.variables,
-                  },
-                });
-                observer.complete();
-              }, 20);
-            })
-        ),
-
-        cache: new InMemoryCache(),
-
-        defaultOptions: {
-          watchQuery: {
-            variables: {
-              sourceOfVar: "global",
-              isGlobal: true,
-            },
-          },
-        },
-      });
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => {
-            const result = useQuery(query, {
-              defaultOptions: {
-                fetchPolicy: "cache-and-network",
-                variables: {
-                  sourceOfVar: "local",
-                  isGlobal: false,
-                } as OperationVariables,
-              },
-              variables: {
-                mandatory: true,
-              },
-            });
-
-            return {
-              result,
-              // Provide a snapshot of these values for this render, rather
-              // than checking the mutable value on result.observable.
-              fetchPolicy: result.observable.options.fetchPolicy,
-              variables: result.observable.variables,
-            };
-          },
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            ),
-          }
-        );
-
-      {
-        const { result, fetchPolicy, variables } = await takeSnapshot();
-        const { observable } = result;
-
-        expect(result).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {
-            sourceOfVar: "local",
-            isGlobal: false,
-            mandatory: true,
-          },
-        });
-
-        expect(variables).toEqual({
-          sourceOfVar: "local",
-          isGlobal: false,
-          mandatory: true,
-        });
-        expect(fetchPolicy).toBe("cache-and-network");
-        expect(
-          // The defaultOptions field is for useQuery options (QueryHookOptions),
-          // not the more general WatchQueryOptions that ObservableQuery sees.
-          "defaultOptions" in observable.options
-        ).toBe(false);
-      }
-
-      {
-        const { result, fetchPolicy, variables } = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: {
-            vars: { sourceOfVar: "local", isGlobal: false, mandatory: true },
-          },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {
-            sourceOfVar: "local",
-            isGlobal: false,
-            mandatory: true,
-          },
-        });
-
-        expect(variables).toEqual({
-          sourceOfVar: "local",
-          isGlobal: false,
-          mandatory: true,
-        });
-        expect(fetchPolicy).toBe("cache-and-network");
-      }
-
-      const {
-        result: { observable },
-      } = getCurrentSnapshot();
-      const finalResult = await observable.reobserve({
-        fetchPolicy: "network-only",
-        nextFetchPolicy: "cache-first",
-        variables: {
-          // Since reobserve replaces the variables object rather than merging
-          // the individual variables together, we need to include the current
-          // variables manually if we want them to show up in the output below.
-          ...observable.variables,
-          sourceOfVar: "reobserve",
-        },
-      });
-
-      expect(finalResult).toEqualApolloQueryResult({
-        data: {
-          vars: {
-            sourceOfVar: "reobserve",
-            isGlobal: false,
-            mandatory: true,
-          },
-        },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
-      {
-        const { result, fetchPolicy, variables } = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: {
-            vars: {
-              sourceOfVar: "reobserve",
-              isGlobal: false,
-              mandatory: true,
-            },
-          },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: {
-            vars: { sourceOfVar: "local", isGlobal: false, mandatory: true },
-          },
-          variables: {
-            sourceOfVar: "reobserve",
-            isGlobal: false,
-            mandatory: true,
-          },
-        });
-
-        expect(variables).toEqual({
-          sourceOfVar: "reobserve",
-          isGlobal: false,
-          mandatory: true,
-        });
-        expect(fetchPolicy).toBe("cache-first");
-      }
-
-      const finalResultNoVarMerge =
-        await getCurrentSnapshot().result.observable.reobserve({
-          fetchPolicy: "network-only",
-          nextFetchPolicy: "cache-first",
-          variables: {
-            // This reobservation is like the one above, with no variable merging.
-            // ...result.current.observable.variables,
-            sourceOfVar: "reobserve without variable merge",
-          },
-        });
-
-      expect(finalResultNoVarMerge).toEqualApolloQueryResult({
-        // Since we didn't merge in result.current.observable.variables, we
-        // don't see these variables anymore:
-        // isGlobal: false,
-        // mandatory: true,
-        data: { vars: { sourceOfVar: "reobserve without variable merge" } },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
-
-      {
-        const { result, fetchPolicy, variables } = await takeSnapshot();
-
-        expect(result).toEqualQueryResult({
-          data: {
-            vars: {
-              sourceOfVar: "reobserve without variable merge",
-            },
-          },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: {
-            vars: {
-              sourceOfVar: "reobserve",
-              isGlobal: false,
-              mandatory: true,
-            },
-          },
-          variables: {
-            sourceOfVar: "reobserve without variable merge",
-          },
-        });
-
-        expect(variables).toEqual({
-          sourceOfVar: "reobserve without variable merge",
-        });
-        expect(fetchPolicy).toBe("cache-first");
-      }
-
-      await expect(takeSnapshot).not.toRerender();
-    });
-
-    it("defaultOptions do not confuse useQuery when unskipping a query (issue #9635)", async () => {
-      const query: TypedDocumentNode<{
-        counter: number;
-      }> = gql`
-        query GetCounter {
-          counter
-        }
-      `;
-
-      let count = 0;
-      const client = new ApolloClient({
-        cache: new InMemoryCache(),
-        link: new ApolloLink(
-          (request) =>
-            new Observable((observer) => {
-              if (request.operationName === "GetCounter") {
-                setTimeout(() => {
-                  observer.next({
-                    data: {
-                      counter: ++count,
-                    },
-                  });
-                  observer.complete();
-                }, 10);
-              } else {
-                observer.error(
-                  new Error(
-                    `Unknown query: ${request.operationName || request.query}`
-                  )
-                );
-              }
-            })
-        ),
-      });
-
-      const defaultFetchPolicy = "network-only";
-
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot, getCurrentSnapshot } =
-        await renderHookToSnapshotStream(
-          () => {
-            const [skip, setSkip] = useState(true);
-            const result = useQuery(query, {
-              skip,
-              defaultOptions: {
-                fetchPolicy: defaultFetchPolicy,
-              },
-            });
-
-            return {
-              setSkip,
-              query: result,
-              fetchPolicy: result.observable.options.fetchPolicy,
-            };
-          },
-          {
-            wrapper: ({ children }) => (
-              <ApolloProvider client={client}>{children}</ApolloProvider>
-            ),
-          }
-        );
-
-      {
-        const { query } = await takeSnapshot();
-
-        expect(query).toEqualQueryResult({
-          data: undefined,
-          error: undefined,
-          called: false,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      getCurrentSnapshot().setSkip(false);
-
-      {
-        const { query } = await takeSnapshot();
-
-        expect(query).toEqualQueryResult({
-          data: undefined,
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: undefined,
-          variables: {},
-        });
-      }
-
-      {
-        const { query, fetchPolicy } = await takeSnapshot();
-
-        expect(query).toEqualQueryResult({
-          data: { counter: 1 },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: undefined,
-          variables: {},
-        });
-
-        expect(fetchPolicy).toBe(defaultFetchPolicy);
-      }
-
-      getCurrentSnapshot().setSkip(true);
-
-      {
-        const { query, fetchPolicy } = await takeSnapshot();
-
-        expect(query).toEqualQueryResult({
-          // TODO: wut?
-          data: undefined,
-          // TODO: wut?
-          called: false,
-          error: undefined,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { counter: 1 },
-          variables: {},
-        });
-
-        expect(fetchPolicy).toBe("standby");
-      }
-
-      getCurrentSnapshot().setSkip(false);
-
-      {
-        const { query, fetchPolicy } = await takeSnapshot();
-
-        expect(query).toEqualQueryResult({
-          // TODO: wut?
-          data: { counter: 1 },
-          called: true,
-          loading: true,
-          networkStatus: NetworkStatus.loading,
-          previousData: { counter: 1 },
-          variables: {},
-        });
-
-        expect(fetchPolicy).toBe(defaultFetchPolicy);
-      }
-
-      {
-        const { query, fetchPolicy } = await takeSnapshot();
-
-        expect(query).toEqualQueryResult({
-          data: { counter: 2 },
-          called: true,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          previousData: { counter: 1 },
-          variables: {},
-        });
-
-        expect(fetchPolicy).toBe(defaultFetchPolicy);
-      }
     });
   });
 
@@ -4672,7 +4189,7 @@ describe("useQuery Hook", () => {
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
-          () => useQuery(query, { variables: { limit: 2 } }),
+          () => useQuery<any>(query, { variables: { limit: 2 } }),
           { wrapper }
         );
 
@@ -4741,7 +4258,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () =>
-            useQuery(query, {
+            useQuery<any>(query, {
               variables: { limit: 2 },
               notifyOnNetworkStatusChange: true,
             }),
@@ -7376,7 +6893,7 @@ describe("useQuery Hook", () => {
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
           () => ({
-            mutation: useMutation(mutation, {
+            mutation: useMutation<any>(mutation, {
               optimisticResponse: { addCar: carData },
               update(cache, { data }) {
                 cache.modify({
@@ -9287,7 +8804,10 @@ describe("useQuery Hook", () => {
     // TODO: See if we can rewrite this with renderHookToSnapshotStream and
     // check output of hook to ensure its a stable object
     it("should handle a simple query", async () => {
-      const query = gql`
+      const query: TypedDocumentNode<
+        { hello: string },
+        Record<string, never>
+      > = gql`
         {
           hello
         }
@@ -9299,7 +8819,11 @@ describe("useQuery Hook", () => {
         },
       ];
 
-      const Component = ({ query }: any) => {
+      const Component = ({
+        query,
+      }: {
+        query: TypedDocumentNode<{ hello: string }, Record<string, never>>;
+      }) => {
         const [counter, setCounter] = useState(0);
         const result = useQuery(query);
 
@@ -9319,7 +8843,7 @@ describe("useQuery Hook", () => {
 
         return (
           <div>
-            {result.data.hello}
+            {result.data!.hello}
             {counter}
           </div>
         );

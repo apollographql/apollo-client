@@ -45,7 +45,7 @@ import type {
 const { assign, hasOwnProperty } = Object;
 
 export interface FetchMoreOptions<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
 > {
   updateQuery?: (
@@ -64,7 +64,7 @@ interface Last<TData, TVariables> {
 }
 
 export class ObservableQuery<
-    TData = any,
+    TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
   >
   implements
@@ -99,7 +99,7 @@ export class ObservableQuery<
   private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
 
   private isTornDown: boolean;
-  private queryManager: QueryManager<any>;
+  private queryManager: QueryManager;
   private subscriptions = new Set<Subscription>();
 
   private waitForOwnResult: boolean;
@@ -123,7 +123,7 @@ export class ObservableQuery<
     queryInfo,
     options,
   }: {
-    queryManager: QueryManager<any>;
+    queryManager: QueryManager;
     queryInfo: QueryInfo;
     options: WatchQueryOptions<TVariables, TData>;
   }) {

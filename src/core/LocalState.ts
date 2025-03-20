@@ -66,16 +66,16 @@ type ExecContext = {
   selectionsToResolve: Set<SelectionNode>;
 };
 
-type LocalStateOptions<TCacheShape> = {
-  cache: ApolloCache<TCacheShape>;
-  client?: ApolloClient<TCacheShape>;
+type LocalStateOptions = {
+  cache: ApolloCache;
+  client?: ApolloClient;
   resolvers?: Resolvers | Resolvers[];
   fragmentMatcher?: FragmentMatcher;
 };
 
-export class LocalState<TCacheShape> {
-  private cache: ApolloCache<TCacheShape>;
-  private client?: ApolloClient<TCacheShape>;
+export class LocalState {
+  private cache: ApolloCache;
+  private client?: ApolloClient;
   private resolvers?: Resolvers;
   private fragmentMatcher?: FragmentMatcher;
   private selectionsToResolveCache = new WeakMap<
@@ -88,7 +88,7 @@ export class LocalState<TCacheShape> {
     client,
     resolvers,
     fragmentMatcher,
-  }: LocalStateOptions<TCacheShape>) {
+  }: LocalStateOptions) {
     this.cache = cache;
 
     if (client) {

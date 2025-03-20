@@ -19,12 +19,7 @@ import { equal } from "@wry/equality";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
-import type {
-  ApolloClient,
-  DefaultOptions,
-  OperationVariables,
-  WatchQueryFetchPolicy,
-} from "@apollo/client/core";
+import type { ApolloClient, OperationVariables } from "@apollo/client/core";
 import type {
   ApolloQueryResult,
   DocumentNode,
@@ -111,7 +106,7 @@ interface InternalState<TData, TVariables extends OperationVariables> {
  * @returns Query result object
  */
 export function useQuery<
-  TData = any,
+  TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
@@ -125,10 +120,7 @@ export function useQuery<
   )(query, options);
 }
 
-function useQuery_<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
+function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
@@ -144,13 +136,9 @@ function useQuery_<
   );
 }
 
-function useInternalState<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
-  client: ApolloClient<object>,
+function useInternalState<TData, TVariables extends OperationVariables>(
+  client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<any, any>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   renderPromises: RenderPromises | undefined,
   makeWatchQueryOptions: () => WatchQueryOptions<TVariables, TData>
 ) {
@@ -167,7 +155,7 @@ function useInternalState<
         (renderPromises &&
           renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
         client.watchQuery(
-          getObsQueryOptions(void 0, client, options, makeWatchQueryOptions())
+          getObsQueryOptions(void 0, client, makeWatchQueryOptions())
         ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
@@ -197,10 +185,7 @@ function useInternalState<
   return internalState;
 }
 
-function useQueryInternals<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
->(
+function useQueryInternals<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
 ) {
@@ -221,7 +206,6 @@ function useQueryInternals<
   const { observable, resultData } = useInternalState(
     client,
     query,
-    options,
     renderPromises,
     makeWatchQueryOptions
   );
@@ -233,7 +217,6 @@ function useQueryInternals<
     resultData, // might get mutated during render
     observable, // might get mutated during render
     client,
-    options,
     watchQueryOptions
   );
 
@@ -253,12 +236,12 @@ function useQueryInternals<
 }
 
 function useObservableSubscriptionResult<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
 >(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>,
+  client: ApolloClient,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   disableNetworkFetches: boolean,
@@ -374,15 +357,14 @@ function useRegisterSSRObservable(
 // this hook is not compatible with any rules of React, and there's no good way to rewrite it.
 // it should stay a separate hook that will not be optimized by the compiler
 function useResubscribeIfNecessary<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
 >(
   /** this hook will mutate properties on `resultData` */
   resultData: InternalResult<TData, TVariables>,
   /** this hook will mutate properties on `observable` */
   observable: ObsQueryWithMeta<TData, TVariables>,
-  client: ApolloClient<object>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  client: ApolloClient,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
   if (
@@ -398,7 +380,7 @@ function useResubscribeIfNecessary<
     // (potentially) kicks off a network request (for example, when the
     // variables have changed), which is technically a side-effect.
     observable.reobserve(
-      getObsQueryOptions(observable, client, options, watchQueryOptions)
+      getObsQueryOptions(observable, client, watchQueryOptions)
     );
 
     // Make sure getCurrentResult returns a fresh ApolloQueryResult<TData>,
@@ -417,15 +399,14 @@ function useResubscribeIfNecessary<
  * but the `observable` might differ between calls to `make`.
  */
 function createMakeWatchQueryOptions<
-  TData = any,
-  TVariables extends OperationVariables = OperationVariables,
+  TData,
+  TVariables extends OperationVariables,
 >(
-  client: ApolloClient<object>,
+  client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   {
     skip,
     ssr,
-    defaultOptions,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
@@ -462,12 +443,11 @@ function createMakeWatchQueryOptions<
       watchQueryOptions.initialFetchPolicy =
         watchQueryOptions.initialFetchPolicy ||
         watchQueryOptions.fetchPolicy ||
-        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+        client.defaultOptions?.watchQuery?.fetchPolicy ||
+        "cache-first";
       watchQueryOptions.fetchPolicy = "standby";
     } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy =
-        observable?.options.initialFetchPolicy ||
-        getDefaultFetchPolicy(defaultOptions, client.defaultOptions);
+      watchQueryOptions.fetchPolicy = observable?.options.initialFetchPolicy;
     }
 
     return watchQueryOptions;
@@ -476,18 +456,13 @@ function createMakeWatchQueryOptions<
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables> | undefined,
-  client: ApolloClient<object>,
-  queryHookOptions: QueryHookOptions<TData, TVariables>,
+  client: ApolloClient,
   watchQueryOptions: Partial<WatchQueryOptions<TVariables, TData>>
 ): WatchQueryOptions<TVariables, TData> {
   const toMerge: Array<Partial<WatchQueryOptions<TVariables, TData>>> = [];
 
   const globalDefaults = client.defaultOptions.watchQuery;
   if (globalDefaults) toMerge.push(globalDefaults);
-
-  if (queryHookOptions.defaultOptions) {
-    toMerge.push(queryHookOptions.defaultOptions);
-  }
 
   // We use compact rather than mergeOptions for this part of the merge,
   // because we want watchQueryOptions.variables (if defined) to replace
@@ -508,7 +483,7 @@ function setResult<TData, TVariables extends OperationVariables>(
   nextResult: ApolloQueryResult<MaybeMasked<TData>>,
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>,
+  client: ApolloClient,
   forceUpdate: () => void
 ) {
   const previousResult = resultData.current;
@@ -530,7 +505,7 @@ function setResult<TData, TVariables extends OperationVariables>(
 function getCurrentResult<TData, TVariables extends OperationVariables>(
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>
+  client: ApolloClient
 ): InternalQueryResult<TData, TVariables> {
   // Using this.result as a cache ensures getCurrentResult continues returning
   // the same (===) result object, unless state.setResult has been called, or
@@ -547,22 +522,11 @@ function getCurrentResult<TData, TVariables extends OperationVariables>(
   return resultData.current!;
 }
 
-function getDefaultFetchPolicy<TData, TVariables extends OperationVariables>(
-  queryHookDefaultOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-  clientDefaultOptions?: DefaultOptions
-): WatchQueryFetchPolicy {
-  return (
-    queryHookDefaultOptions?.fetchPolicy ||
-    clientDefaultOptions?.watchQuery?.fetchPolicy ||
-    "cache-first"
-  );
-}
-
 function toQueryResult<TData, TVariables extends OperationVariables>(
   result: ApolloQueryResult<MaybeMasked<TData>>,
   previousData: MaybeMasked<TData> | undefined,
   observable: ObservableQuery<TData, TVariables>,
-  client: ApolloClient<object>
+  client: ApolloClient
 ): InternalQueryResult<TData, TVariables> {
   const { data, partial, ...resultWithoutPartial } = result;
   const queryResult: InternalQueryResult<TData, TVariables> = {

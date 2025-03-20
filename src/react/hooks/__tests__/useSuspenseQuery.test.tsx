@@ -72,13 +72,13 @@ import {
 
 const IS_REACT_19 = React.version.startsWith("19");
 
-type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
+type RenderSuspenseHookOptions<Props> = Omit<
   RenderHookOptions<Props>,
   "wrapper"
 > & {
-  client?: ApolloClient<TSerializedCache>;
+  client?: ApolloClient;
   link?: ApolloLink;
-  cache?: ApolloCache<TSerializedCache>;
+  cache?: ApolloCache;
   mocks?: MockedResponse[];
   strictMode?: boolean;
 };
@@ -9284,7 +9284,7 @@ describe("useSuspenseQuery", () => {
       partial: false,
     });
 
-    cache.updateQuery({ query }, (data) => ({
+    cache.updateQuery<any>({ query }, (data) => ({
       hero: {
         ...data.hero,
         name: "C3PO",

@@ -519,7 +519,7 @@ describe("fetchMore on an observable query", () => {
     `;
 
     function makeClient(): {
-      client: ApolloClient<any>;
+      client: ApolloClient;
       linkRequests: Array<{
         operationName: string;
         offset: number;
@@ -573,7 +573,7 @@ describe("fetchMore on an observable query", () => {
       };
     }
 
-    function checkCacheExtract1234678(cache: ApolloCache<any>) {
+    function checkCacheExtract1234678(cache: ApolloCache) {
       expect(cache.extract()).toEqual({
         ROOT_QUERY: {
           __typename: "Query",

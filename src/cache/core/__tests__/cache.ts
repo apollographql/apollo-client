@@ -2,11 +2,12 @@ import { expectTypeOf } from "expect-type";
 import { gql } from "graphql-tag";
 
 import { Cache, DataProxy } from "@apollo/client/cache";
+import { OperationVariables, Unmasked } from "@apollo/client/core";
 
 import { Reference } from "../../../utilities/graphql/storeUtils.js";
 import { ApolloCache } from "../cache.js";
 
-class TestCache extends ApolloCache<unknown> {
+class TestCache extends ApolloCache {
   constructor() {
     super();
   }
@@ -23,20 +24,18 @@ class TestCache extends ApolloCache<unknown> {
     return undefined;
   }
 
-  public performTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void
-  ): void {
+  public performTransaction(transaction: (c: ApolloCache) => void): void {
     transaction(this);
   }
 
-  public read<T, TVariables = any>(
-    query: Cache.ReadOptions<TVariables>
-  ): T | null {
+  public read<T = unknown, TVariables = OperationVariables>(
+    query: Cache.ReadOptions<TVariables, T>
+  ): Unmasked<T> | null {
     return null;
   }
 
   public recordOptimisticTransaction(
-    transaction: <TSerialized>(c: ApolloCache<TSerialized>) => void,
+    transaction: (c: ApolloCache) => void,
     id: string
   ): void {}
 
@@ -46,15 +45,17 @@ class TestCache extends ApolloCache<unknown> {
     return new Promise<void>(() => null);
   }
 
-  public restore(serializedState: unknown): ApolloCache<unknown> {
+  public restore(serializedState: unknown) {
     return this;
   }
 
-  public watch(watch: Cache.WatchOptions): () => void {
+  public watch<T = unknown, TVariables = OperationVariables>(
+    watch: Cache.WatchOptions<T, TVariables>
+  ): () => void {
     return function () {};
   }
 
-  public write<TResult = any, TVariables = any>(
+  public write<TResult = unknown, TVariables = OperationVariables>(
     _: Cache.WriteOptions<TResult, TVariables>
   ): Reference | undefined {
     return;

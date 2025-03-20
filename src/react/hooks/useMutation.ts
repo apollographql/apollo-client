@@ -71,10 +71,10 @@ import { useApolloClient } from "./useApolloClient.js";
  * @returns A tuple in the form of `[mutate, result]`
  */
 export function useMutation<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<
@@ -86,7 +86,9 @@ export function useMutation<
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
-  const [result, setResult] = React.useState<Omit<MutationResult, "reset">>({
+  const [result, setResult] = React.useState<
+    Omit<MutationResult<TData>, "reset">
+  >({
     called: false,
     loading: false,
     client,
@@ -147,10 +149,7 @@ export function useMutation<
               executeOptions.onError || ref.current.options?.onError;
 
             if (error && onError) {
-              onError(
-                error,
-                clientOptions as MutationOptions<TData, OperationVariables>
-              );
+              onError(error, clientOptions);
             }
 
             if (mutationId === ref.current.mutationId) {
@@ -171,10 +170,7 @@ export function useMutation<
               executeOptions.onCompleted || ref.current.options?.onCompleted;
 
             if (!error) {
-              onCompleted?.(
-                response.data!,
-                clientOptions as MutationOptions<TData, OperationVariables>
-              );
+              onCompleted?.(response.data!, clientOptions);
             }
 
             return response;
@@ -201,10 +197,7 @@ export function useMutation<
               executeOptions.onError || ref.current.options?.onError;
 
             if (onError) {
-              onError(
-                error,
-                clientOptions as MutationOptions<TData, OperationVariables>
-              );
+              onError(error, clientOptions);
 
               // TODO(brian): why are we returning this here???
               return { data: void 0, errors: error };

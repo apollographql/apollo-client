@@ -38,9 +38,9 @@ import {
 // This was originally imported from the ObservableQuery test, but the import
 // causes that test file to run when trying to run just this file so this is now
 // inlined.
-const mockFetchQuery = (queryManager: QueryManager<any>) => {
+const mockFetchQuery = (queryManager: QueryManager) => {
   const fetchObservableWithInfo = queryManager["fetchObservableWithInfo"];
-  const fetchQueryByPolicy: QueryManager<any>["fetchQueryByPolicy"] = (
+  const fetchQueryByPolicy: QueryManager["fetchQueryByPolicy"] = (
     queryManager as any
   ).fetchQueryByPolicy;
 
@@ -1803,10 +1803,12 @@ describe("ApolloClient", () => {
       },
     };
 
+    const cache = new InMemoryCache({
+      dataIdFromObject: getIdField,
+    });
+
     const client = new ApolloClient({
-      cache: new InMemoryCache({
-        dataIdFromObject: getIdField,
-      }),
+      cache,
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1820,7 +1822,7 @@ describe("ApolloClient", () => {
     expect(result).toEqualFetchResult({ data });
 
     // Make sure we updated the store with the new data
-    expect(client.cache.extract()["5"]).toEqual({
+    expect(cache.extract()["5"]).toEqual({
       id: "5",
       isPrivate: true,
     });
@@ -1841,10 +1843,11 @@ describe("ApolloClient", () => {
         isPrivate: true,
       },
     };
+    const cache = new InMemoryCache({
+      dataIdFromObject: getIdField,
+    });
     const client = new ApolloClient({
-      cache: new InMemoryCache({
-        dataIdFromObject: getIdField,
-      }),
+      cache,
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1858,7 +1861,7 @@ describe("ApolloClient", () => {
     expect(result).toEqualFetchResult({ data });
 
     // Make sure we updated the store with the new data
-    expect(client.cache.extract()["5"]).toEqual({
+    expect(cache.extract()["5"]).toEqual({
       id: "5",
       isPrivate: true,
     });
@@ -1881,10 +1884,11 @@ describe("ApolloClient", () => {
       },
     };
 
+    const cache = new InMemoryCache({
+      dataIdFromObject: getIdField,
+    });
     const client = new ApolloClient({
-      cache: new InMemoryCache({
-        dataIdFromObject: getIdField,
-      }),
+      cache,
       link: new MockLink([
         {
           request: { query: mutation },
@@ -1898,7 +1902,7 @@ describe("ApolloClient", () => {
     expect(result).toEqualFetchResult({ data });
 
     // Make sure we updated the store with the new data
-    expect(client.cache.extract()["5"]).toEqual({
+    expect(cache.extract()["5"]).toEqual({
       id: "5",
       isPrivate: true,
     });
@@ -2225,8 +2229,9 @@ describe("ApolloClient", () => {
         lastName: "Pandya",
       },
     };
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
-      cache: new InMemoryCache(),
+      cache,
       link: new MockLink([
         {
           request: { query },
@@ -2251,7 +2256,7 @@ describe("ApolloClient", () => {
       client.query({ query, fetchPolicy: "network-only" })
     ).rejects.toThrow();
 
-    expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
+    expect(cache.extract().ROOT_QUERY!.author).toEqual(data.author);
   });
 
   it("should be able to unsubscribe from a polling query subscription", async () => {
@@ -2315,8 +2320,9 @@ describe("ApolloClient", () => {
         lastName: "Smith",
       },
     };
+    const cache = new InMemoryCache();
     const client = new ApolloClient({
-      cache: new InMemoryCache(),
+      cache,
       link: new MockLink([
         {
           request: { query },
@@ -2341,7 +2347,7 @@ describe("ApolloClient", () => {
       networkStatus: NetworkStatus.ready,
       partial: false,
     });
-    expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
+    expect(cache.extract().ROOT_QUERY!.author).toEqual(data.author);
 
     await expect(stream).toEmitApolloQueryResult({
       data,
@@ -2350,7 +2356,7 @@ describe("ApolloClient", () => {
       networkStatus: NetworkStatus.error,
       partial: false,
     });
-    expect(client.cache.extract().ROOT_QUERY!.author).toEqual(data.author);
+    expect(cache.extract().ROOT_QUERY!.author).toEqual(data.author);
   });
 
   it("should not fire next on an observer if there is no change in the result", async () => {
@@ -3089,7 +3095,7 @@ describe("ApolloClient", () => {
 
     const mocks = mockFetchQuery(queryManager);
     const queryId = "1";
-    const getQuery: QueryManager<any>["getQuery"] = (
+    const getQuery: QueryManager["getQuery"] = (
       queryManager as any
     ).getQuery.bind(queryManager);
 

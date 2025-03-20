@@ -63,7 +63,7 @@ async function renderDefaultTestApp<TData>({
   client,
   queryRef,
 }: {
-  client: ApolloClient<any>;
+  client: ApolloClient;
   queryRef: QueryRef<TData>;
 }) {
   const renderStream = createRenderStream({

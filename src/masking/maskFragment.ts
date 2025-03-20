@@ -21,7 +21,7 @@ import { warnOnImproperCacheImplementation } from "./utils.js";
 export function maskFragment<TData = unknown>(
   data: TData,
   document: TypedDocumentNode<TData> | DocumentNode,
-  cache: ApolloCache<unknown>,
+  cache: ApolloCache,
   fragmentName?: string
 ): TData {
   if (!cache.fragmentMatches) {

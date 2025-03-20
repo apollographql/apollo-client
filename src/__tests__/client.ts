@@ -16,6 +16,7 @@ import {
   createFragmentRegistry,
   InMemoryCache,
   makeVar,
+  NormalizedCacheObject,
   PossibleTypesMap,
 } from "@apollo/client/cache";
 import {
@@ -696,7 +697,7 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    return client.query({ query }).then((result: FormattedExecutionResult) => {
+    return client.query({ query }).then((result) => {
       expect(result.data).toEqual(data);
     });
   });
@@ -3882,7 +3883,7 @@ describe("custom document transforms", () => {
       ],
     });
 
-    const cache = client.cache.extract();
+    const cache = client.cache.extract() as NormalizedCacheObject;
 
     expect(cache["Dog:1"]).toEqual({
       id: 1,
@@ -4374,7 +4375,7 @@ describe("custom document transforms", () => {
       },
     });
 
-    const cache = client.cache.extract();
+    const cache = client.cache.extract() as NormalizedCacheObject;
 
     expect(cache["User:1"]).toEqual({
       __typename: "User",
@@ -4605,7 +4606,7 @@ describe("custom document transforms", () => {
       },
     });
 
-    const cache = client.cache.extract();
+    const cache = client.cache.extract() as NormalizedCacheObject;
 
     expect(cache["Profile:1"]).toEqual({
       __typename: "Profile",

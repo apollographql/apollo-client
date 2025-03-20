@@ -16,7 +16,7 @@ import { schemaLink } from "./schemaLink.ts";
 
 export const APOLLO_STATE_PROP_NAME = "__APOLLO_STATE__";
 
-let apolloClient: ApolloClient<NormalizedCacheObject>;
+let apolloClient: ApolloClient;
 
 const errorLink = onError(({ graphQLErrors, networkError }) => {
   if (graphQLErrors)
@@ -64,7 +64,7 @@ export function initializeApollo(
   //  the initial state gets hydrated here
   if (initialState) {
     // Get existing cache, loaded during client side data fetching
-    const existingCache = _apolloClient.extract();
+    const existingCache = _apolloClient.extract() as NormalizedCacheObject;
 
     // Merge the initialState from getStaticProps/getServerSideProps
     // in the existing cache
@@ -92,20 +92,21 @@ interface ApolloProps {
 }
 
 export function addApolloState(
-  client: ApolloClient<NormalizedCacheObject>,
+  client: ApolloClient,
   pageProps: GetServerSidePropsResult<Partial<ApolloProps>> & {
     props: Partial<ApolloProps>;
   }
 ) {
   if (pageProps?.props) {
-    pageProps.props[APOLLO_STATE_PROP_NAME] = client.cache.extract();
+    pageProps.props[APOLLO_STATE_PROP_NAME] =
+      client.cache.extract() as NormalizedCacheObject;
   }
   return pageProps;
 }
 
 export function useApollo(pageProps?: ApolloProps) {
   const state = pageProps?.[APOLLO_STATE_PROP_NAME];
-  const storeRef = React.useRef<ApolloClient<NormalizedCacheObject>>();
+  const storeRef = React.useRef<ApolloClient>();
   if (!storeRef.current) {
     storeRef.current = initializeApollo(state);
   }

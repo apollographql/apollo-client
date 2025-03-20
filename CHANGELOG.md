@@ -1,5 +1,27 @@
 # @apollo/client
 
+## 4.0.0-alpha.2
+
+### Major Changes
+
+- [#12450](https://github.com/apollographql/apollo-client/pull/12450) [`876d070`](https://github.com/apollographql/apollo-client/commit/876d07042cf3348b3769b2bb415aa5f70ce9844c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `TSerialized` generic argument to `ApolloCache`. The `ApolloCache` base cache abstraction now returns `unknown` for `cache.extract` which can be overridden by a cache subclass.
+
+- [#12450](https://github.com/apollographql/apollo-client/pull/12450) [`876d070`](https://github.com/apollographql/apollo-client/commit/876d07042cf3348b3769b2bb415aa5f70ce9844c) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `TCacheShape` generic argument to `ApolloClient`. `client.extract()` now returns `unknown` by default. You will either need to type-cast this to the expected serialized shape, or use the `cache.extract()` directly from the subclass to get more specific types.
+
+- [#12446](https://github.com/apollographql/apollo-client/pull/12446) [`ab920d2`](https://github.com/apollographql/apollo-client/commit/ab920d2701aa276482dbc78b44a1c25c76467bc9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Removes the `defaultOptions` option from `useQuery`. Use options directly or use the global `ApolloClient` `defaultOptions`.
+
+- [#12442](https://github.com/apollographql/apollo-client/pull/12442) [`c5ead08`](https://github.com/apollographql/apollo-client/commit/c5ead08d0f10ddd6232b742defe9620533bf41e6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the deprecated `canonizeResults` option. It was prone to memory leaks. As such, some results that were referentially equal when `canonizeResults` option was set to `true` no longer retain the same object identity.
+
+- [#12442](https://github.com/apollographql/apollo-client/pull/12442) [`c5ead08`](https://github.com/apollographql/apollo-client/commit/c5ead08d0f10ddd6232b742defe9620533bf41e6) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove `resetResultIdentities` option from `InMemoryCache.gc()`. This affected object canonization which has been removed.
+
+- [#12451](https://github.com/apollographql/apollo-client/pull/12451) [`77e1b13`](https://github.com/apollographql/apollo-client/commit/77e1b133bdba32c67b5a840090dbacb16282dee9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Default the `TData` generic type to `unknown` in all APIs that use a `TData` generic argument such as `useQuery`, `client.query`, etc.
+
+### Patch Changes
+
+- [#12451](https://github.com/apollographql/apollo-client/pull/12451) [`77e1b13`](https://github.com/apollographql/apollo-client/commit/77e1b133bdba32c67b5a840090dbacb16282dee9) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Default `TVariables` generic type to `OperationVariables` instead of `any` throughout the client in areas that did not yet have the default as such.
+
+- [#12454](https://github.com/apollographql/apollo-client/pull/12454) [`925548a`](https://github.com/apollographql/apollo-client/commit/925548a9baadb19b7bb78ee84c6f9e64b55c39e9) Thanks [@phryneas](https://github.com/phryneas)! - Fix up the 4.0 CommonJS build
+
 ## 4.0.0-alpha.1
 
 ### Major Changes

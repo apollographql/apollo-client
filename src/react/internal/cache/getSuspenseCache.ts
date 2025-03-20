@@ -14,7 +14,7 @@ declare module "@apollo/client/core" {
 const suspenseCacheSymbol = Symbol.for("apollo.suspenseCache");
 
 export function getSuspenseCache(
-  client: ApolloClient<object> & {
+  client: ApolloClient & {
     [suspenseCacheSymbol]?: SuspenseCache;
   }
 ) {

@@ -19,9 +19,7 @@ import { invariant } from "@apollo/client/utilities/invariant";
  * @since 3.0.0
  * @returns The `ApolloClient` instance being used by the application.
  */
-export function useApolloClient(
-  override?: ApolloClient<object>
-): ApolloClient<object> {
+export function useApolloClient(override?: ApolloClient): ApolloClient {
   const context = React.useContext(getApolloContext());
   const client = override || context.client;
   invariant(

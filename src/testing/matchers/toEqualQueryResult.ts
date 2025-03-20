@@ -9,7 +9,6 @@ const CHECKED_KEYS = [
   "data",
   "variables",
   "networkStatus",
-  "called",
   "previousData",
 ] as const;
 

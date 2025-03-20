@@ -3727,29 +3727,32 @@ describe("useSuspenseQuery", () => {
     expect(error).toEqual(new CombinedGraphQLErrors(graphQLErrors));
   });
 
-  it('throws network errors when errorPolicy is set to "ignore"', async () => {
+  it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
     using _consoleSpy = spyOnConsole("error");
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
+      expect(result.current).toMatchObject({
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
     });
 
-    expect(renders.errors.length).toBe(1);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors;
-
-    expect(error).toBeInstanceOf(Error);
-    expect(error).toEqual(networkError);
+    expect(renders.frames).toMatchObject([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+    ]);
   });
 
   it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
@@ -3896,27 +3899,38 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it('throws network errors when errorPolicy is set to "all"', async () => {
+  it('does not throw and returns network errors when errorPolicy is set to "all"', async () => {
     using _consoleSpy = spyOnConsole("error");
 
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
+      expect(result.current).toMatchObject({
+        data: undefined,
+        error: networkError,
+      });
     });
 
-    expect(renders.errors.length).toBe(1);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
+    expect(renders.frames).toMatchObject([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: networkError,
+      },
+    ]);
 
-    const [error] = renders.errors;
+    const { error } = result.current;
 
     expect(error).toBeInstanceOf(Error);
     expect(error).toEqual(networkError);

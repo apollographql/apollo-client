@@ -1783,12 +1783,6 @@ describe("useLazyQuery Hook", () => {
       });
     }
 
-    // TODO: Determine if this is the correct behavior. This is different than
-    // 3.x where this resolves with an `ApolloQueryResult`.
-    // https://github.com/apollographql/apollo-client/issues/10787 wants this
-    // behavior
-    // https://github.com/apollographql/apollo-client/issues/9142#issuecomment-1118972947
-    // justifies the old behavior
     await expect(execute()).rejects.toEqual(
       new CombinedGraphQLErrors([{ message: "error 1" }])
     );
@@ -2721,9 +2715,6 @@ describe("useLazyQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    // If there was any data to report, errorPolicy:"all" would report both
-    // result.data and result.error, but there is no GraphQL data when we
-    // encounter a network error, so the test again captures desired behavior.
     it('handles errorPolicy:"all" appropriately', async () => {
       const networkError = new Error("from the network");
 
@@ -2768,7 +2759,13 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(networkError);
+      await expect(execute()).resolves.toEqualApolloQueryResult({
+        data: undefined,
+        error: networkError,
+        loading: false,
+        networkStatus: NetworkStatus.error,
+        partial: true,
+      });
 
       {
         const [, result] = await takeSnapshot();
@@ -2787,9 +2784,6 @@ describe("useLazyQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
-    // Technically errorPolicy:"ignore" is supposed to throw away result.error,
-    // but in the case of network errors, since there's no actual data to
-    // report, it's useful/important that we report result.error anyway.
     it('handles errorPolicy:"ignore" appropriately', async () => {
       const networkError = new Error("from the network");
 
@@ -2834,17 +2828,21 @@ describe("useLazyQuery Hook", () => {
 
       const [execute] = getCurrentSnapshot();
 
-      await expect(execute()).rejects.toEqual(networkError);
+      await expect(execute()).resolves.toEqualApolloQueryResult({
+        data: undefined,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
+        partial: true,
+      });
 
       {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualLazyQueryResult({
           data: undefined,
-          error: networkError,
           called: true,
           loading: false,
-          networkStatus: NetworkStatus.error,
+          networkStatus: NetworkStatus.ready,
           previousData: undefined,
           variables: {},
         });

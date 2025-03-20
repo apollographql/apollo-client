@@ -2954,6 +2954,60 @@ describe("useQuery Hook", () => {
       await expect(takeSnapshot).not.toRerender();
     });
 
+    it('returns no data and discards network errors when using an `errorPolicy` set to "ignore"', async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const networkError = new Error("Could not fetch");
+      const mocks = [
+        {
+          request: { query },
+          error: networkError,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { errorPolicy: "ignore" }),
+        { wrapper }
+      );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
     it('returns partial data when returning GraphQL errors while using an `errorPolicy` set to "all"', async () => {
       const query = gql`
         {
@@ -3003,6 +3057,61 @@ describe("useQuery Hook", () => {
           error: new CombinedGraphQLErrors([
             { message: 'Could not fetch "hello"' },
           ]),
+          loading: false,
+          networkStatus: NetworkStatus.error,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+    });
+
+    it('returns no data when returning network errors while using an `errorPolicy` set to "all"', async () => {
+      const query = gql`
+        {
+          hello
+        }
+      `;
+      const networkError = new Error("Could not fetch");
+      const mocks = [
+        {
+          request: { query },
+          error: networkError,
+        },
+      ];
+
+      const cache = new InMemoryCache();
+      const wrapper = ({ children }: any) => (
+        <MockedProvider mocks={mocks} cache={cache}>
+          {children}
+        </MockedProvider>
+      );
+
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useQuery(query, { errorPolicy: "all" }),
+        { wrapper }
+      );
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+      }
+
+      {
+        const result = await takeSnapshot();
+
+        expect(result).toEqualQueryResult({
+          data: undefined,
+          error: networkError,
           loading: false,
           networkStatus: NetworkStatus.error,
           previousData: undefined,

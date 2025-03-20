@@ -1537,14 +1537,74 @@ test("returns error when error policy is 'all'", async () => {
   }
 });
 
-test("discards error when error policy is 'ignore'", async () => {
+test("returns network error when error policy is 'all'", async () => {
   // Disable error messages shown by React when an error is thrown to an error
   // boundary
   using _consoleSpy = spyOnConsole("error");
   const { query } = setupSimpleCase();
+  const mocks = [{ request: { query }, error: new Error("Oops") }];
+  const client = createDefaultClient(mocks);
+
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(query, { errorPolicy: "all" });
+
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: undefined,
+      error: new Error("Oops"),
+      networkStatus: NetworkStatus.error,
+    });
+    expect(snapshot.error).toEqual(null);
+  }
+});
+
+test("discards error when error policy is 'ignore'", async () => {
+  const { query } = setupSimpleCase();
   const mocks = [
     { request: { query }, result: { errors: [new GraphQLError("Oops")] } },
   ];
+  const client = createDefaultClient(mocks);
+
+  const preloadQuery = createQueryPreloader(client);
+  const queryRef = preloadQuery(query, { errorPolicy: "ignore" });
+
+  using _disabledAct = disableActEnvironment();
+  const { renderStream } = await renderDefaultTestApp({ client, queryRef });
+
+  {
+    const { renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["App", "SuspenseFallback"]);
+  }
+
+  {
+    const { snapshot, renderedComponents } = await renderStream.takeRender();
+
+    expect(renderedComponents).toStrictEqual(["ReadQueryHook"]);
+    expect(snapshot.result).toEqual({
+      data: undefined,
+      error: undefined,
+      networkStatus: NetworkStatus.ready,
+    });
+    expect(snapshot.error).toEqual(null);
+  }
+});
+
+test("discards network errors when error policy is 'ignore'", async () => {
+  const { query } = setupSimpleCase();
+  const mocks = [{ request: { query }, error: new Error("Oops") }];
   const client = createDefaultClient(mocks);
 
   const preloadQuery = createQueryPreloader(client);

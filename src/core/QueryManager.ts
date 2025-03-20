@@ -1210,6 +1210,7 @@ export class QueryManager {
     >
   ): Observable<ApolloQueryResult<TData>> {
     const requestId = (queryInfo.lastRequestId = this.generateRequestId());
+    const { errorPolicy } = options;
 
     // Performing transformForLink here gives this.cache a chance to fill in
     // missing fragment definitions (for example) before sending this document
@@ -1221,21 +1222,9 @@ export class QueryManager {
       options.context,
       options.variables
     ).pipe(
-      catchError((error) => {
-        error = maybeWrapError(error);
-
-        // Avoid storing errors from older interrupted queries.
-        if (requestId >= queryInfo.lastRequestId) {
-          queryInfo.resetLastWrite();
-          queryInfo.reset();
-        }
-
-        throw error;
-      }),
       map((result) => {
         const graphQLErrors = getGraphQLErrorsFromResult(result);
         const hasErrors = graphQLErrors.length > 0;
-        const { errorPolicy } = options;
 
         // If we interrupted this request by calling getResultsFromLink again
         // with the same QueryInfo object, we ignore the old results.
@@ -1278,6 +1267,30 @@ export class QueryManager {
         }
 
         return aqr;
+      }),
+      catchError((error) => {
+        error = maybeWrapError(error);
+
+        // Avoid storing errors from older interrupted queries.
+        if (requestId >= queryInfo.lastRequestId && errorPolicy === "none") {
+          queryInfo.resetLastWrite();
+          queryInfo.reset();
+          throw error;
+        }
+
+        const aqr: ApolloQueryResult<TData> = {
+          data: undefined,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        };
+
+        if (errorPolicy !== "ignore") {
+          aqr.error = error;
+          aqr.networkStatus = NetworkStatus.error;
+        }
+
+        return of(aqr);
       })
     );
   }

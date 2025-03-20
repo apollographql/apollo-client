@@ -7,6 +7,7 @@ import {
   print,
   visit,
 } from "graphql";
+import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
 import { EMPTY, EmptyError, Observable, of, Subscription } from "rxjs";
@@ -2634,6 +2635,152 @@ describe("client", () => {
     await expect(client.query({ query })).rejects.toThrow(
       'Cannot query field "foo" on type "Post".'
     );
+  });
+
+  it("rejects network errors", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const error = new Error("Oops");
+    const link = mockSingleLink({
+      request: { query },
+      error,
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(client.query({ query })).rejects.toThrow(error);
+  });
+
+  it("resolves partial data and GraphQL errors when errorPolicy is 'all'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const errors: GraphQLFormattedError[] = [
+      { message: 'Cannot query field "foo" on type "Post".' },
+    ];
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { posts: null }, errors },
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "all" })
+    ).resolves.toEqualApolloQueryResult({
+      data: { posts: null },
+      error: new CombinedGraphQLErrors([
+        { message: 'Cannot query field "foo" on type "Post".' },
+      ]),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: false,
+    });
+  });
+
+  it("resolves with network error when errorPolicy is 'all'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const error = new Error("Oops");
+    const link = mockSingleLink({
+      request: { query },
+      error,
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "all" })
+    ).resolves.toEqualApolloQueryResult({
+      data: undefined,
+      error,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+  });
+
+  it("resolves partial data and strips errors when errorPolicy is 'ignore'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const errors: GraphQLFormattedError[] = [
+      { message: 'Cannot query field "foo" on type "Post".' },
+    ];
+    const link = mockSingleLink({
+      request: { query },
+      result: { data: { posts: null }, errors },
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "ignore" })
+    ).resolves.toEqualApolloQueryResult({
+      data: { posts: null },
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: false,
+    });
+  });
+
+  it("resolves with no data or errors for network error when errorPolicy is 'ignore'", async () => {
+    const query = gql`
+      query {
+        posts {
+          foo
+          __typename
+        }
+      }
+    `;
+    const error = new Error("Oops");
+    const link = mockSingleLink({
+      request: { query },
+      error,
+    });
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    await expect(
+      client.query({ query, errorPolicy: "ignore" })
+    ).resolves.toEqualApolloQueryResult({
+      data: undefined,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
   });
 
   it("should warn if server returns wrong data", async () => {

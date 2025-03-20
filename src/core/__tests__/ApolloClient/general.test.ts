@@ -280,6 +280,61 @@ describe("ApolloClient", () => {
     await expect(stream).not.toEmitAnything();
   });
 
+  it("handles network errors with errorPolicy: 'all'", async () => {
+    const stream = getObservableStream({
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      queryOptions: {
+        errorPolicy: "all",
+      },
+      error: new Error("Network error"),
+    });
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      error: new Error("Network error"),
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
+  it("handles network errors with errorPolicy: 'ignore'", async () => {
+    const stream = getObservableStream({
+      query: gql`
+        query people {
+          allPeople(first: 1) {
+            people {
+              name
+            }
+          }
+        }
+      `,
+      queryOptions: {
+        errorPolicy: "ignore",
+      },
+      error: new Error("Network error"),
+    });
+
+    await expect(stream).toEmitApolloQueryResult({
+      data: undefined,
+      loading: false,
+      networkStatus: NetworkStatus.ready,
+      partial: true,
+    });
+
+    await expect(stream).not.toEmitAnything();
+  });
+
   // Determine how/if we want to change this at all. ObservableQuery no longer
   // emits errors to its observers and instead emits a `next` event with an
   // `error` property.

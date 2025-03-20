@@ -68,6 +68,7 @@ export interface UseQueryResult<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+  networkStatus: NetworkStatus;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
   startPolling: (pollInterval: number) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */

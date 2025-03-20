@@ -2108,29 +2108,53 @@ type UseFragmentResult<TData> = {
     missing?: MissingTree;
 };
 
-// Warning: (ae-forgotten-export) The symbol "UseQueryOptions" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "UseQueryResult" needs to be exported by the entry point index.d.ts
-//
 // @public
-function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: UseQueryOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): UseQueryResult<TData, TVariables>;
+function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
-interface UseQueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client?: ApolloClient;
-    context?: DefaultContext;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: WatchQueryFetchPolicy;
-    initialFetchPolicy?: WatchQueryFetchPolicy;
-    // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-    skip?: boolean;
-    skipPollAttempt?: () => boolean;
-    ssr?: boolean;
-    variables?: TVariables;
+namespace useQuery {
+    // (undocumented)
+    interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: WatchQueryFetchPolicy;
+        initialFetchPolicy?: WatchQueryFetchPolicy;
+        // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+        notifyOnNetworkStatusChange?: boolean;
+        pollInterval?: number;
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+        skip?: boolean;
+        skipPollAttempt?: () => boolean;
+        ssr?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client: ApolloClient;
+        data: MaybeMasked<TData> | undefined;
+        error?: ErrorLike;
+        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+            updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+                fetchMoreResult: Unmasked<TFetchData>;
+                variables: TFetchVars;
+            }) => Unmasked<TData>;
+        }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+        loading: boolean;
+        networkStatus: NetworkStatus;
+        observable: ObservableQuery<TData, TVariables>;
+        previousData?: MaybeMasked<TData>;
+        refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        // @internal (undocumented)
+        reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        startPolling: (pollInterval: number) => void;
+        stopPolling: () => void;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+        updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+        variables: TVariables | undefined;
+    }
 }
 
 // Warning: (ae-forgotten-export) The symbol "UseQueryRefHandlersResult" needs to be exported by the entry point index.d.ts
@@ -2143,31 +2167,6 @@ interface UseQueryRefHandlersResult<TData = unknown, TVariables extends Operatio
     fetchMore: FetchMoreFunction<TData, TVariables>;
     refetch: RefetchFunction<TData, TVariables>;
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-}
-
-// @public (undocumented)
-interface UseQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client: ApolloClient;
-    data: MaybeMasked<TData> | undefined;
-    error?: ErrorLike;
-    fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-        }) => Unmasked<TData>;
-    }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
-    loading: boolean;
-    networkStatus: NetworkStatus;
-    observable: ObservableQuery<TData, TVariables>;
-    previousData?: MaybeMasked<TData>;
-    refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // @internal (undocumented)
-    reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    startPolling: (pollInterval: number) => void;
-    stopPolling: () => void;
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-    variables: TVariables | undefined;
 }
 
 // Warning: (ae-forgotten-export) The symbol "UseReadQueryResult" needs to be exported by the entry point index.d.ts

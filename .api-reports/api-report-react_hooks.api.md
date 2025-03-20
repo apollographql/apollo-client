@@ -2018,25 +2018,55 @@ result: UseMutationResult<TData>
 ];
 
 // @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: UseQueryOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): UseQueryResult<TData, TVariables>;
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
-export interface UseQueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client?: ApolloClient;
-    context?: DefaultContext;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: WatchQueryFetchPolicy;
-    initialFetchPolicy?: WatchQueryFetchPolicy;
-    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-    skip?: boolean;
-    skipPollAttempt?: () => boolean;
-    ssr?: boolean;
-    variables?: TVariables;
+export namespace useQuery {
+    // (undocumented)
+    export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: WatchQueryFetchPolicy;
+        initialFetchPolicy?: WatchQueryFetchPolicy;
+        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+        notifyOnNetworkStatusChange?: boolean;
+        pollInterval?: number;
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+        skip?: boolean;
+        skipPollAttempt?: () => boolean;
+        ssr?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client: ApolloClient;
+        data: MaybeMasked<TData> | undefined;
+        error?: ErrorLike;
+        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+            updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+                fetchMoreResult: Unmasked<TFetchData>;
+                variables: TFetchVars;
+            }) => Unmasked<TData>;
+        }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+        loading: boolean;
+        networkStatus: NetworkStatus;
+        observable: ObservableQuery<TData, TVariables>;
+        previousData?: MaybeMasked<TData>;
+        refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        // @internal (undocumented)
+        reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        startPolling: (pollInterval: number) => void;
+        stopPolling: () => void;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+        updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+        variables: TVariables | undefined;
+    }
 }
+
+// @public @deprecated (undocumented)
+export type UseQueryOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQuery.Options<TData, TVariables>;
 
 // @public
 export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
@@ -2048,30 +2078,8 @@ export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends O
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-// @public (undocumented)
-export interface UseQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client: ApolloClient;
-    data: MaybeMasked<TData> | undefined;
-    error?: ErrorLike;
-    fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-        }) => Unmasked<TData>;
-    }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
-    loading: boolean;
-    networkStatus: NetworkStatus;
-    observable: ObservableQuery<TData, TVariables>;
-    previousData?: MaybeMasked<TData>;
-    refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // @internal (undocumented)
-    reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    startPolling: (pollInterval: number) => void;
-    stopPolling: () => void;
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-    variables: TVariables | undefined;
-}
+// @public @deprecated (undocumented)
+export type UseQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQuery.Result<TData, TVariables>;
 
 // Warning: (ae-forgotten-export) The symbol "ReactiveVar" needs to be exported by the entry point index.d.ts
 //

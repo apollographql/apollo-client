@@ -140,16 +140,6 @@ export interface BaseMutationOptions<
   ) => void;
 }
 
-export interface MutationFunctionOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-  mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
 export interface MutationResult<TData = unknown> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
   data?: MaybeMasked<TData> | null;

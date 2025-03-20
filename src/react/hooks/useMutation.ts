@@ -23,7 +23,6 @@ import type {
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type {
   BaseMutationOptions,
-  MutationFunctionOptions,
   MutationResult,
   NoInfer,
 } from "@apollo/client/react";
@@ -112,6 +111,16 @@ export interface UseMutationOptions<
     error: ErrorLike,
     clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
   ) => void;
+}
+
+export interface MutationFunctionOptions<
+  TData = unknown,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache = ApolloCache,
+> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+  mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 /**

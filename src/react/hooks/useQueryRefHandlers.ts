@@ -5,7 +5,11 @@ import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import type { FetchMoreQueryOptions } from "@apollo/client/core";
 import type { ApolloClient } from "@apollo/client/core";
 import type { ObservableQuery } from "@apollo/client/core";
-import type { QueryRef } from "@apollo/client/react/internal";
+import type {
+  FetchMoreFunction,
+  QueryRef,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getWrappedPromise,
@@ -16,7 +20,6 @@ import {
 
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 
 export interface UseQueryRefHandlersResult<
   TData = unknown,

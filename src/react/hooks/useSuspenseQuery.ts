@@ -8,8 +8,6 @@ import type {
   DocumentNode,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreQueryOptions,
-  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -18,8 +16,13 @@ import type {
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type {
+  CacheKey,
+  FetchMoreFunction,
+  QueryKey,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
@@ -101,23 +104,6 @@ export interface UseSuspenseQueryOptions<
    */
   skip?: boolean;
 }
-
-export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
-  fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
-    updateQuery?: (
-      previousQueryResult: Unmasked<TData>,
-      options: {
-        fetchMoreResult: Unmasked<TData>;
-        variables: TVariables;
-      }
-    ) => Unmasked<TData>;
-  }
-) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-
-export type RefetchFunction<
-  TData,
-  TVariables extends OperationVariables,
-> = ObservableQuery<TData, TVariables>["refetch"];
 
 export function useSuspenseQuery<
   TData,

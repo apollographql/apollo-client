@@ -14,7 +14,12 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
+import type {
+  CacheKey,
+  FetchMoreFunction,
+  QueryRef,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
 import {
   getSuspenseCache,
   unwrapQueryRef,
@@ -26,7 +31,6 @@ import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 import type { SkipToken } from "./constants.js";
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
 
 export type UseBackgroundQueryResult<

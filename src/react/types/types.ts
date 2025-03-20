@@ -140,21 +140,6 @@ export interface BaseMutationOptions<
   ) => void;
 }
 
-export interface MutationResult<TData = unknown> {
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-  data?: MaybeMasked<TData> | null;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-  error?: ErrorLike;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
-  loading: boolean;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
-  called: boolean;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
-  client: ApolloClient;
-  /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
-  reset: () => void;
-}
-
 /* Subscription types */
 
 export interface OnDataOptions<TData = unknown> {

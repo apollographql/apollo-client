@@ -2,14 +2,83 @@ import { Trie } from "@wry/trie";
 import type * as ReactTypes from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
-import type { ObservableQuery, OperationVariables } from "@apollo/client/core";
-import type { QueryDataOptions } from "@apollo/client/react";
+import type {
+  ApolloClient,
+  DefaultContext,
+  DocumentNode,
+  ObservableQuery,
+  OperationVariables,
+  RefetchWritePolicy,
+  TypedDocumentNode,
+  WatchQueryFetchPolicy,
+  WatchQueryOptions,
+} from "@apollo/client/core";
+
+import type {
+  ErrorPolicy,
+  NextFetchPolicyContext,
+} from "../../core/watchQueryOptions.js";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
 interface QueryData {
   getOptions(): any;
   fetchData(): Promise<void>;
+}
+
+export interface QueryDataOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+  nextFetchPolicy?:
+    | WatchQueryFetchPolicy
+    | ((
+        this: WatchQueryOptions<TVariables, TData>,
+        currentFetchPolicy: WatchQueryFetchPolicy,
+        context: NextFetchPolicyContext<TData, TVariables>
+      ) => WatchQueryFetchPolicy);
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+  initialFetchPolicy?: WatchQueryFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+  pollInterval?: number;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+  skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+  ssr?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
+  skip?: boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 type QueryInfo = {

@@ -6,6 +6,8 @@ import * as React from "react";
 import type {
   ApolloCache,
   DefaultContext,
+  FetchResult,
+  MaybeMasked,
   MutationOptions,
   OperationVariables,
 } from "@apollo/client/core";
@@ -14,7 +16,6 @@ import type {
   MutationFunctionOptions,
   MutationHookOptions,
   MutationResult,
-  MutationTuple,
   NoInfer,
 } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
@@ -22,6 +23,20 @@ import { mergeOptions } from "@apollo/client/utilities";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
+
+export type UseMutationResultTuple<
+  TData,
+  TVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache = ApolloCache,
+> = [
+  mutate: (
+    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
+    // TODO This FetchResult<TData> seems strange here, as opposed to an
+    // ApolloQueryResult<TData>
+  ) => Promise<FetchResult<MaybeMasked<TData>>>,
+  result: MutationResult<TData>,
+];
 
 /**
  *
@@ -83,7 +98,7 @@ export function useMutation<
     TContext,
     TCache
   >
-): MutationTuple<TData, TVariables, TContext, TCache> {
+): UseMutationResultTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<

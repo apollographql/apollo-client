@@ -63,6 +63,7 @@ export declare namespace useQuery {
   > {
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
     fetchPolicy?: WatchQueryFetchPolicy;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
     nextFetchPolicy?:
       | WatchQueryFetchPolicy
@@ -72,27 +73,39 @@ export declare namespace useQuery {
           context: NextFetchPolicyContext<TData, TVariables>
         ) => WatchQueryFetchPolicy);
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+
     initialFetchPolicy?: WatchQueryFetchPolicy;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
     refetchWritePolicy?: RefetchWritePolicy;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
     variables?: TVariables;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
     errorPolicy?: ErrorPolicy;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
     pollInterval?: number;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
     notifyOnNetworkStatusChange?: boolean;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
     returnPartialData?: boolean;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
     skipPollAttempt?: () => boolean;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
     ssr?: boolean;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
     client?: ApolloClient;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
     context?: DefaultContext;
+
     /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
     skip?: boolean;
   }
@@ -103,38 +116,52 @@ export declare namespace useQuery {
   > {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
     client: ApolloClient;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
     observable: ObservableQuery<TData, TVariables>;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
     data: MaybeMasked<TData> | undefined;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
     previousData?: MaybeMasked<TData>;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
     error?: ErrorLike;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
     loading: boolean;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
     networkStatus: NetworkStatus;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
     startPolling: (pollInterval: number) => void;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
     stopPolling: () => void;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
     subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
     updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: (
       variables?: Partial<TVariables>
     ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+
     /** @internal */
     reobserve: (
       newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
       newNetworkStatus?: NetworkStatus
     ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
     variables: TVariables | undefined;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+
     fetchMore: <
       TFetchData = TData,
       TFetchVars extends OperationVariables = TVariables,

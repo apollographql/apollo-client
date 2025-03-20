@@ -8,12 +8,6 @@ export { useFragment } from "./useFragment.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
 export { useSuspenseFragment } from "./useSuspenseFragment.js";
-export type {
-  LoadQueryFunction,
-  UseLoadableQueryFetchPolicy,
-  UseLoadableQueryOptions,
-  UseLoadableQueryResult,
-} from "./useLoadableQuery.js";
 export { useLoadableQuery } from "./useLoadableQuery.js";
 export type { UseQueryRefHandlersResult } from "./useQueryRefHandlers.js";
 export { useQueryRefHandlers } from "./useQueryRefHandlers.js";

@@ -55,13 +55,10 @@ import {
   SimpleCaseData,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import {
-  useLoadableQuery,
-  UseLoadableQueryFetchPolicy,
-} from "../useLoadableQuery.js";
+import { FetchMoreFunction, RefetchFunction } from "../../internal/types.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
 import type { UseReadQueryResult } from "../useReadQuery.js";
 import { useReadQuery } from "../useReadQuery.js";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {
@@ -2282,7 +2279,7 @@ it("applies updated `fetchPolicy` on next fetch when it changes between renders"
   function App() {
     useTrackRenders();
     const [fetchPolicy, setFetchPolicy] =
-      React.useState<UseLoadableQueryFetchPolicy>("cache-first");
+      React.useState<useLoadableQuery.FetchPolicy>("cache-first");
 
     const [loadQuery, queryRef, { refetch }] = useLoadableQuery(query, {
       fetchPolicy,

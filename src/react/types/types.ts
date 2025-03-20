@@ -13,14 +13,6 @@ import type {
 import type { MaybeMasked } from "@apollo/client/masking";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
-/* QueryReference type */
-
-export type {
-  PreloadedQueryRef,
-  QueryRef,
-  QueryReference,
-} from "../internal/index.js";
-
 /* Common types */
 
 export type { DefaultContext as Context } from "../../core/index.js";

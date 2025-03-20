@@ -17,4 +17,10 @@ export type {
 } from "./query-preloader/createQueryPreloader.js";
 export { createQueryPreloader } from "./query-preloader/createQueryPreloader.js";
 
+export type {
+  PreloadedQueryRef,
+  QueryRef,
+  QueryReference,
+} from "./internal/index.js";
+
 export type * from "./types/types.js";

@@ -10,6 +10,7 @@ import type {
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
+  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type {
@@ -67,11 +68,10 @@ export type UseLoadableQueryResult<
   },
 ];
 
-export type UseLoadableQueryFetchPolicy =
-  | "cache-first"
-  | "network-only"
-  | "no-cache"
-  | "cache-and-network";
+export type UseLoadableQueryFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
 
 export interface UseLoadableQueryOptions {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */

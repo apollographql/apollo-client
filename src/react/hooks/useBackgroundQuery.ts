@@ -10,6 +10,7 @@ import type {
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
+  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
@@ -43,11 +44,10 @@ export type UseBackgroundQueryResult<
   refetch: RefetchFunction<TData, TVariables>;
 };
 
-export type UseBackgroundQueryFetchPolicy =
-  | "cache-first"
-  | "network-only"
-  | "no-cache"
-  | "cache-and-network";
+export type UseBackgroundQueryFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
 
 export interface UseBackgroundQueryOptions<
   TVariables extends OperationVariables = OperationVariables,

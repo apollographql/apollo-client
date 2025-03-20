@@ -35,7 +35,7 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
-import { skipToken, SuspenseQueryHookFetchPolicy } from "@apollo/client/react";
+import { skipToken, UseSuspenseQueryFetchPolicy } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import {
   MockedResponse,
@@ -2780,7 +2780,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -2826,7 +2826,7 @@ describe("useSuspenseQuery", () => {
     expect(cachedData).toBeNull();
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -2921,7 +2921,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -2976,7 +2976,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3055,7 +3055,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3105,7 +3105,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3152,7 +3152,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -6452,7 +6452,7 @@ describe("useSuspenseQuery", () => {
         cache,
         mocks,
         initialProps: {
-          fetchPolicy: "cache-first" as SuspenseQueryHookFetchPolicy,
+          fetchPolicy: "cache-first" as UseSuspenseQueryFetchPolicy,
         },
       }
     );
@@ -6817,7 +6817,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<UseSuspenseQueryFetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",

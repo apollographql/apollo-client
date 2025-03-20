@@ -115,39 +115,6 @@ export interface QueryDataOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type BackgroundQueryHookFetchPolicy = Extract<
-  WatchQueryFetchPolicy,
-  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
->;
-
-export interface BackgroundQueryHookOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> extends Pick<
-    QueryFunctionOptions<TData, TVariables>,
-    | "client"
-    | "variables"
-    | "errorPolicy"
-    | "context"
-    | "returnPartialData"
-    | "refetchWritePolicy"
-  > {
-  fetchPolicy?: BackgroundQueryHookFetchPolicy;
-  queryKey?: string | number | any[];
-
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
-   *
-   * @example Recommended usage of `skipToken`:
-   * ```ts
-   * import { skipToken, useBackgroundQuery } from '@apollo/client';
-   *
-   * const [queryRef] = useBackgroundQuery(query, id ? { variables: { id } } : skipToken);
-   * ```
-   */
-  skip?: boolean;
-}
-
 export type LoadableQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"

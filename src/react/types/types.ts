@@ -177,13 +177,6 @@ export declare type MutationFunction<
   options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
 ) => Promise<FetchResult<MaybeMasked<TData>>>;
 
-export interface MutationHookOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {}
-
 export interface MutationDataOptions<
   TData = unknown,
   TVariables = OperationVariables,

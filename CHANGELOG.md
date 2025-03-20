@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.14.0-alpha.0
+
+### Minor Changes
+
+- [#12459](https://github.com/apollographql/apollo-client/pull/12459) [`1c5a031`](https://github.com/apollographql/apollo-client/commit/1c5a0313d388945aeda93b2c1992ad77f4416fa1) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Reset `addTypenameTransform` and `fragments` caches when calling `cache.gc()` only when `resetResultCache` is `true`.
+
 ## 3.13.4
 
 ### Patch Changes

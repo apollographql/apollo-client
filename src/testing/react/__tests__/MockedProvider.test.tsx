@@ -6,10 +6,10 @@ import { Observable } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { UseQueryResult } from "@apollo/client/react";
 import { useQuery } from "@apollo/client/react/hooks";
 import { MockedResponse, MockLink } from "@apollo/client/testing/core";
 
-import { QueryResult } from "../../../react/types/types.js";
 import { MockedProvider } from "../MockedProvider.js";
 
 const variables = {
@@ -59,7 +59,7 @@ interface Data {
 }
 
 interface Result {
-  current: QueryResult<any, any> | null;
+  current: UseQueryResult<any, any> | null;
 }
 
 interface Variables {

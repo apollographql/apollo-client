@@ -58,11 +58,10 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
-export type UseSuspenseQueryFetchPolicy =
-  | "cache-first"
-  | "network-only"
-  | "no-cache"
-  | "cache-and-network";
+export type UseSuspenseQueryFetchPolicy = Extract<
+  WatchQueryFetchPolicy,
+  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+>;
 
 export interface UseSuspenseQueryOptions<
   TVariables extends OperationVariables = OperationVariables,

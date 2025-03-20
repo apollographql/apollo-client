@@ -21,11 +21,7 @@ import type {
   Unmasked,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type {
-  BaseMutationOptions,
-  MutationResult,
-  NoInfer,
-} from "@apollo/client/react";
+import type { BaseMutationOptions, NoInfer } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { mergeOptions } from "@apollo/client/utilities";
 
@@ -45,8 +41,23 @@ export type UseMutationResultTuple<
     // TODO This FetchResult<TData> seems strange here, as opposed to an
     // ApolloQueryResult<TData>
   ) => Promise<FetchResult<MaybeMasked<TData>>>,
-  result: MutationResult<TData>,
+  result: UseMutationResult<TData>,
 ];
+
+export interface UseMutationResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  data?: MaybeMasked<TData> | null;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+  error?: ErrorLike;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
+  loading: boolean;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
+  called: boolean;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
+  client: ApolloClient;
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
+  reset: () => void;
+}
 
 export interface UseMutationOptions<
   TData = unknown,
@@ -187,7 +198,7 @@ export function useMutation<
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<
-    Omit<MutationResult<TData>, "reset">
+    Omit<UseMutationResult<TData>, "reset">
   >({
     called: false,
     loading: false,

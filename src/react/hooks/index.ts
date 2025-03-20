@@ -3,6 +3,7 @@ export * from "./useLazyQuery.js";
 export type {
   MutationFunctionOptions,
   UseMutationOptions,
+  UseMutationResult,
   UseMutationResultTuple,
 } from "./useMutation.js";
 export { useMutation } from "./useMutation.js";

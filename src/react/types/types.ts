@@ -31,48 +31,6 @@ export type {
 
 export type { DefaultContext as Context } from "../../core/index.js";
 
-/* Query types */
-
-export interface ObservableQueryFields<
-  TData,
-  TVariables extends OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
-  startPolling: (pollInterval: number) => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
-  stopPolling: () => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
-  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-  refetch: (
-    variables?: Partial<TVariables>
-  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-  /** @internal */
-  reobserve: (
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus
-  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
-  variables: TVariables | undefined;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-  fetchMore: <
-    TFetchData = TData,
-    TFetchVars extends OperationVariables = TVariables,
-  >(
-    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-      updateQuery?: (
-        previousQueryResult: Unmasked<TData>,
-        options: {
-          fetchMoreResult: Unmasked<TFetchData>;
-          variables: TFetchVars;
-        }
-      ) => Unmasked<TData>;
-    }
-  ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
-}
-
 /* Subscription types */
 
 export interface OnDataOptions<TData = unknown> {

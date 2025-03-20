@@ -15,3 +15,4 @@ export {
 } from "./cache/QueryReference.js";
 export type { SuspenseCacheOptions } from "./cache/SuspenseCache.js";
 export type { HookWrappers } from "../hooks/internal/wrapHook.js";
+export type { VariablesOption } from "./types.js";

@@ -193,20 +193,6 @@ export interface MutationDataOptions<
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type MutationTuple<
-  TData,
-  TVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> = [
-  mutate: (
-    options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
-    // TODO This FetchResult<TData> seems strange here, as opposed to an
-    // ApolloQueryResult<TData>
-  ) => Promise<FetchResult<MaybeMasked<TData>>>,
-  result: MutationResult<TData>,
-];
-
 /* Subscription types */
 
 export interface OnDataOptions<TData = unknown> {

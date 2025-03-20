@@ -40,7 +40,7 @@ import type {
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer, ObservableQueryFields } from "@apollo/client/react";
+import type { NoInfer } from "@apollo/client/react";
 import { getApolloContext } from "@apollo/client/react/context";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { RenderPromises } from "@apollo/client/react/ssr";
@@ -149,7 +149,13 @@ export interface UseQueryOptions<
 
 type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
   UseQueryResult<TData, TVariables>,
-  Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
+  | "startPolling"
+  | "stopPolling"
+  | "subscribeToMore"
+  | "updateQuery"
+  | "refetch"
+  | "reobserve"
+  | "fetchMore"
 >;
 
 const lastWatchOptions = Symbol();
@@ -660,7 +666,7 @@ const skipStandbyResult = maybeDeepFreeze({
 
 function bindObservableMethods<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>
-): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
+) {
   return {
     refetch: observable.refetch.bind(observable),
     reobserve: observable.reobserve.bind(observable),

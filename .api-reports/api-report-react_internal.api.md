@@ -1746,7 +1746,6 @@ type QueryRefPromise<TData> = PromiseWithState<ApolloQueryResult<MaybeMasked<TDa
 //
 // @public (undocumented)
 interface QueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends ObservableQueryFields<TData, TVariables> {
-    called: boolean;
     client: ApolloClient;
     data: MaybeMasked<TData> | undefined;
     error?: ErrorLike;

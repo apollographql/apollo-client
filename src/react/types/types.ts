@@ -19,7 +19,6 @@ import type {
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
   WatchQueryFetchPolicy,
-  WatchQueryOptions,
 } from "@apollo/client/core";
 import type { FetchResult } from "@apollo/client/link/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
@@ -83,11 +82,6 @@ export interface ObservableQueryFields<
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: (
     variables?: Partial<TVariables>
-  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-  /** @internal */
-  reobserve: (
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus
   ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
   variables: TVariables | undefined;

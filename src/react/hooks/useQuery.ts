@@ -561,7 +561,6 @@ function bindObservableMethods<TData, TVariables extends OperationVariables>(
 ): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
   return {
     refetch: observable.refetch.bind(observable),
-    reobserve: observable.reobserve.bind(observable),
     fetchMore: observable.fetchMore.bind(observable),
     updateQuery: observable.updateQuery.bind(observable),
     startPolling: observable.startPolling.bind(observable),

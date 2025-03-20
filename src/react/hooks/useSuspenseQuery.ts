@@ -34,85 +34,87 @@ import { skipToken } from "./constants.js";
 import { __use, useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
-export interface UseSuspenseQueryResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client: ApolloClient;
+export declare namespace useSuspenseQuery {
+  export type FetchPolicy = Extract<
+    WatchQueryFetchPolicy,
+    "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+  >;
 
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
-  data: MaybeMasked<TData>;
+  export interface Options<
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+    client?: ApolloClient;
 
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
-  error: ErrorLike | undefined;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
 
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-  fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+    variables?: TVariables;
 
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
-  networkStatus: NetworkStatus;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
 
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-  refetch: RefetchFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
 
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
-  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-}
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
 
-export type UseSuspenseQueryFetchPolicy = Extract<
-  WatchQueryFetchPolicy,
-  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
->;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
 
-export interface UseSuspenseQueryOptions<
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient;
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+    queryKey?: string | number | any[];
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
+    /**
+     * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+     *
+     * @example Recommended usage of `skipToken`:
+     * ```ts
+     * import { skipToken, useSuspenseQuery } from '@apollo/client';
+     *
+     * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
+     * ```
+     */
+    skip?: boolean;
+  }
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
+  export interface Result<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+    client: ApolloClient;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+    data: MaybeMasked<TData>;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error: ErrorLike | undefined;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+    fetchMore: FetchMoreFunction<TData, TVariables>;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: UseSuspenseQueryFetchPolicy;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+    networkStatus: NetworkStatus;
 
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
-  queryKey?: string | number | any[];
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+    refetch: RefetchFunction<TData, TVariables>;
 
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
-   *
-   * @example Recommended usage of `skipToken`:
-   * ```ts
-   * import { skipToken, useSuspenseQuery } from '@apollo/client';
-   *
-   * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
-   * ```
-   */
-  skip?: boolean;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  }
 }
 
 export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<UseSuspenseQueryOptions, "variables">,
+  TOptions extends Omit<useSuspenseQuery.Options, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: UseSuspenseQueryOptions<NoInfer<TVariables>> & TOptions
-): UseSuspenseQueryResult<
+  options?: useSuspenseQuery.Options<NoInfer<TVariables>> & TOptions
+): useSuspenseQuery.Result<
   TOptions["errorPolicy"] extends "ignore" | "all" ?
     TOptions["returnPartialData"] extends true ?
       DeepPartial<TData> | undefined
@@ -131,60 +133,60 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: UseSuspenseQueryOptions<NoInfer<TVariables>> & {
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
-): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: UseSuspenseQueryOptions<NoInfer<TVariables>> & {
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
-): UseSuspenseQueryResult<TData | undefined, TVariables>;
+): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: UseSuspenseQueryOptions<NoInfer<TVariables>> & {
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
   }
-): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: UseSuspenseQueryOptions<NoInfer<TVariables>> & {
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     returnPartialData: true;
   }
-): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
+): useSuspenseQuery.Result<DeepPartial<TData>, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: UseSuspenseQueryOptions<NoInfer<TVariables>> & {
+  options: useSuspenseQuery.Options<NoInfer<TVariables>> & {
     skip: boolean;
   }
-): UseSuspenseQueryResult<TData | undefined, TVariables>;
+): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: UseSuspenseQueryOptions<NoInfer<TVariables>>
-): UseSuspenseQueryResult<TData, TVariables>;
+  options?: useSuspenseQuery.Options<NoInfer<TVariables>>
+): useSuspenseQuery.Result<TData, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -193,18 +195,18 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (UseSuspenseQueryOptions<NoInfer<TVariables>> & {
+    | (useSuspenseQuery.Options<NoInfer<TVariables>> & {
         returnPartialData: true;
       })
-): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SkipToken | UseSuspenseQueryOptions<NoInfer<TVariables>>
-): UseSuspenseQueryResult<TData | undefined, TVariables>;
+  options?: SkipToken | useSuspenseQuery.Options<NoInfer<TVariables>>
+): useSuspenseQuery.Result<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
   TData = unknown,
@@ -212,9 +214,9 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<UseSuspenseQueryOptions<TVariables>>)
-    | UseSuspenseQueryOptions<TVariables> = {}
-): UseSuspenseQueryResult<TData | undefined, TVariables> {
+    | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
+    | useSuspenseQuery.Options<TVariables> = {}
+): useSuspenseQuery.Result<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -229,9 +231,9 @@ function useSuspenseQuery_<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<UseSuspenseQueryOptions<TVariables>>)
-    | UseSuspenseQueryOptions<TVariables>
-): UseSuspenseQueryResult<TData | undefined, TVariables> {
+    | (SkipToken & Partial<useSuspenseQuery.Options<TVariables>>)
+    | useSuspenseQuery.Options<TVariables>
+): useSuspenseQuery.Result<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions<any, any>({
@@ -324,7 +326,7 @@ function useSuspenseQuery_<
     .subscribeToMore as SubscribeToMoreFunction<TData | undefined, TVariables>;
 
   return React.useMemo<
-    UseSuspenseQueryResult<TData | undefined, TVariables>
+    useSuspenseQuery.Result<TData | undefined, TVariables>
   >(() => {
     return {
       client,
@@ -380,7 +382,7 @@ interface UseWatchQueryOptionsHookOptions<
 > {
   client: ApolloClient;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  options: SkipToken | UseSuspenseQueryOptions<TVariables>;
+  options: SkipToken | useSuspenseQuery.Options<TVariables>;
 }
 
 export function useWatchQueryOptions<

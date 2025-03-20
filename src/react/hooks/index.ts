@@ -5,11 +5,6 @@ export { useQuery } from "./useQuery.js";
 export { useSubscription } from "./useSubscription.js";
 export { useReactiveVar } from "./useReactiveVar.js";
 export { useFragment } from "./useFragment.js";
-export type {
-  UseSuspenseQueryFetchPolicy,
-  UseSuspenseQueryOptions,
-  UseSuspenseQueryResult,
-} from "./useSuspenseQuery.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export type {
   UseBackgroundQueryFetchPolicy,

@@ -63,9 +63,7 @@ interface Last<TData, TVariables> {
   error?: ErrorLike;
 }
 
-const newNetworkStatusSymbol: any = Symbol.for(
-  "apollo.observableQuery.newNetworkStatus"
-);
+const newNetworkStatusSymbol: any = Symbol();
 
 export class ObservableQuery<
     TData = unknown,

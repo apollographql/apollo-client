@@ -15,8 +15,8 @@ import type {
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import type { NoInfer } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useDeepMemo } from "./internal/useDeepMemo.js";

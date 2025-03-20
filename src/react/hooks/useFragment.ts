@@ -9,8 +9,7 @@ import type {
 } from "@apollo/client/cache";
 import type { ApolloClient, OperationVariables } from "@apollo/client/core";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/react";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";

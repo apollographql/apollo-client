@@ -14,7 +14,6 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
-import type { NoInfer } from "@apollo/client/react";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   getSuspenseCache,
@@ -22,7 +21,7 @@ import {
   updateWrappedQueryRef,
   wrapQueryRef,
 } from "@apollo/client/react/internal";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 
 import type { SkipToken } from "./constants.js";
 import { wrapHook } from "./internal/index.js";

@@ -9,7 +9,7 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import type { NoInfer, VariablesOption } from "@apollo/client/react";
+import type { VariablesOption } from "@apollo/client/react";
 import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
   InternalQueryReference,
@@ -17,6 +17,7 @@ import {
 } from "@apollo/client/react/internal";
 import type {
   DeepPartial,
+  NoInfer,
   OnlyRequiredProperties,
 } from "@apollo/client/utilities";
 

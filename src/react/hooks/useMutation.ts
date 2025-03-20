@@ -5,21 +5,32 @@ import * as React from "react";
 
 import type {
   ApolloCache,
+  ApolloClient,
   DefaultContext,
+  ErrorLike,
+  ErrorPolicy,
   FetchResult,
+  InternalRefetchQueriesInclude,
   MaybeMasked,
+  MutationFetchPolicy,
   MutationOptions,
+  MutationQueryReducersMap,
+  MutationUpdaterFunction,
+  OnQueryUpdated,
   OperationVariables,
+  Unmasked,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type {
+  BaseMutationOptions,
   MutationFunctionOptions,
-  MutationHookOptions,
   MutationResult,
   NoInfer,
 } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { mergeOptions } from "@apollo/client/utilities";
+
+import type { IgnoreModifier } from "../../cache/core/types/common.js";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
@@ -37,6 +48,71 @@ export type UseMutationResultTuple<
   ) => Promise<FetchResult<MaybeMasked<TData>>>,
   result: MutationResult<TData>,
 ];
+
+export interface UseMutationOptions<
+  TData = unknown,
+  TVariables = OperationVariables,
+  TContext = DefaultContext,
+  TCache extends ApolloCache = ApolloCache,
+> {
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
+  optimisticResponse?:
+    | Unmasked<NoInfer<TData>>
+    | ((
+        vars: TVariables,
+        { IGNORE }: { IGNORE: IgnoreModifier }
+      ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
+  updateQueries?: MutationQueryReducersMap<TData>;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
+  refetchQueries?:
+    | ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude)
+    | InternalRefetchQueriesInclude;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
+  awaitRefetchQueries?: boolean;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
+  update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
+  onQueryUpdated?: OnQueryUpdated<any>;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
+  context?: TContext;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: MutationFetchPolicy;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
+  keepRootFields?: boolean;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
+  client?: ApolloClient;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+  notifyOnNetworkStatusChange?: boolean;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
+  onCompleted?: (
+    data: MaybeMasked<TData>,
+    clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
+  ) => void;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
+  onError?: (
+    error: ErrorLike,
+    clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
+  ) => void;
+}
 
 /**
  *
@@ -92,7 +168,7 @@ export function useMutation<
   TCache extends ApolloCache = ApolloCache,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<
+  options?: UseMutationOptions<
     NoInfer<TData>,
     NoInfer<TVariables>,
     TContext,

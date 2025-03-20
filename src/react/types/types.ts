@@ -13,7 +13,6 @@ import type {
   FetchPolicy,
   InternalRefetchQueriesInclude,
   NetworkStatus,
-  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   SubscribeToMoreFunction,

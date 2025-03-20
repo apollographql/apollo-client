@@ -19,8 +19,6 @@ import type {
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
-import type { SharedWatchQueryOptions } from "../../core/watchQueryOptions.js";
-
 /* QueryReference type */
 
 export type {
@@ -38,26 +36,6 @@ export type CommonOptions<TOptions> = TOptions & {
 };
 
 /* Query types */
-
-export interface BaseQueryOptions<
-  TVariables extends OperationVariables = OperationVariables,
-  TData = unknown,
-> extends SharedWatchQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
-  ssr?: boolean;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-}
-
-export interface QueryFunctionOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> extends BaseQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
-  skip?: boolean;
-}
 
 export interface ObservableQueryFields<
   TData,

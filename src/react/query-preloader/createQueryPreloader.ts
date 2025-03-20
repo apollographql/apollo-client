@@ -9,7 +9,6 @@ import type {
   WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
-import type { VariablesOption } from "@apollo/client/react";
 import type { PreloadedQueryRef } from "@apollo/client/react/internal";
 import {
   InternalQueryReference,
@@ -22,6 +21,7 @@ import type {
 } from "@apollo/client/utilities";
 
 import { wrapHook } from "../hooks/internal/index.js";
+import type { VariablesOption } from "../types/types.js";
 
 export type PreloadQueryFetchPolicy = Extract<
   WatchQueryFetchPolicy,

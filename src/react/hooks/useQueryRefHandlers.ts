@@ -21,16 +21,18 @@ import {
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 
-export interface UseQueryRefHandlersResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
-  refetch: RefetchFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
-  fetchMore: FetchMoreFunction<TData, TVariables>;
-  /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
-  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+export declare namespace useQueryRefHandlers {
+  export interface Result<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
+    refetch: RefetchFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
+    fetchMore: FetchMoreFunction<TData, TVariables>;
+    /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  }
 }
 
 /**
@@ -57,7 +59,7 @@ export function useQueryRefHandlers<
   TVariables extends OperationVariables = OperationVariables,
 >(
   queryRef: QueryRef<TData, TVariables>
-): UseQueryRefHandlersResult<TData, TVariables> {
+): useQueryRefHandlers.Result<TData, TVariables> {
   const unwrapped = unwrapQueryRef(queryRef);
   const clientOrObsQuery = useApolloClient(
     unwrapped ?
@@ -80,7 +82,7 @@ function useQueryRefHandlers_<
   TVariables extends OperationVariables = OperationVariables,
 >(
   queryRef: QueryRef<TData, TVariables>
-): UseQueryRefHandlersResult<TData, TVariables> {
+): useQueryRefHandlers.Result<TData, TVariables> {
   assertWrappedQueryRef(queryRef);
   const [previousQueryRef, setPreviousQueryRef] = React.useState(queryRef);
   const [wrappedQueryRef, setWrappedQueryRef] = React.useState(queryRef);

@@ -25,6 +25,7 @@ export type {
 export { useSuspenseFragment } from "./useSuspenseFragment.js";
 export type {
   LoadQueryFunction,
+  UseLoadableQueryFetchPolicy,
   UseLoadableQueryOptions,
   UseLoadableQueryResult,
 } from "./useLoadableQuery.js";

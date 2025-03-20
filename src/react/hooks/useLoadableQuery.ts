@@ -16,7 +16,6 @@ import type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
 } from "@apollo/client/core";
-import type { LoadableQueryHookFetchPolicy } from "@apollo/client/react";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
@@ -68,6 +67,12 @@ export type UseLoadableQueryResult<
   },
 ];
 
+export type UseLoadableQueryFetchPolicy =
+  | "cache-first"
+  | "network-only"
+  | "no-cache"
+  | "cache-and-network";
+
 export interface UseLoadableQueryOptions {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client?: ApolloClient;
@@ -76,7 +81,7 @@ export interface UseLoadableQueryOptions {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
   errorPolicy?: ErrorPolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: LoadableQueryHookFetchPolicy;
+  fetchPolicy?: UseLoadableQueryFetchPolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
   queryKey?: string | number | any[];
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */

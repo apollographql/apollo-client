@@ -264,7 +264,7 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-interface MutationBaseOptions<
+export interface MutationOptions<
   TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
@@ -303,26 +303,13 @@ interface MutationBaseOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
   context?: TContext;
-}
 
-export interface MutationOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-export interface MutationSharedOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: MutationFetchPolicy;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
   keepRootFields?: boolean;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }

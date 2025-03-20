@@ -22,3 +22,6 @@ export type {
   QueryRef,
   QueryReference,
 } from "./internal/index.js";
+
+// These types will be removed with v5
+export type * from "./types/deprecated.js";

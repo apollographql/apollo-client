@@ -120,40 +120,6 @@ export type SuspenseQueryHookFetchPolicy = Extract<
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
-export interface SuspenseQueryHookOptions<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
-  variables?: TVariables;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: SuspenseQueryHookFetchPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
-  queryKey?: string | number | any[];
-
-  /**
-   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
-   *
-   * @example Recommended usage of `skipToken`:
-   * ```ts
-   * import { skipToken, useSuspenseQuery } from '@apollo/client';
-   *
-   * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
-   * ```
-   */
-  skip?: boolean;
-}
-
 export type BackgroundQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"

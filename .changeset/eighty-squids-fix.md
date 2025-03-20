@@ -2,18 +2,14 @@
 "@apollo/client": major
 ---
 
-Make `ObservableQuery.reobserve` a private API. As a result, `reobserve` has been removed from `useQuery` as well. Instead prefer to use `ObservableQuery.setOptions(newOptions)` to reevaluate the query against a new set of options.
-
-`ObservableQuery.rerun` has been introduced to reevaluate the query against the current set of options. If you previously used `reobserve` with no arguments, use `rerun` instead.
+`ObservableQuery.setOptions` has been removed as it was an alias of `reobserve`. Prefer using `reobserve` directly instead.
 
 ```diff
 const observable = client.watchQuery(options);
 
-// Use setOptions to set new options and reevaluate the query
-- observable.reobserve(newOptions);
-+ observable.setOptions(newOptions);
-
-// Use rerun to reevaluate the query against the current set of options
-- observable.reobserve();
-+ observable.rerun();
+// Use reobserve to set new options and reevaluate the query
+- observable.setOptions(newOptions);
++ observable.reobserve(newOptions);
 ```
+
+As a result of this change, `reobserve` has been marked for public use and is no longer considered an internal API. The `newNetworkStatus` argument has been removed to facilitate this change.

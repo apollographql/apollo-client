@@ -40,14 +40,7 @@ export declare namespace useFragment {
     /**
      * Any variables that the GraphQL query may depend on.
      */
-    variables?: TVariables;
-
-    /**
-     * Whether to read from optimistic or non-optimistic cache data. If
-     * this named option is provided, the optimistic parameter of the
-     * readQuery method can be omitted. Defaults to false.
-     */
-    optimistic?: boolean;
+    variables?: NoInfer<TVariables>;
 
     from:
       | StoreObject
@@ -55,6 +48,15 @@ export declare namespace useFragment {
       | FragmentType<NoInfer<TData>>
       | string
       | null;
+
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted.
+     *
+     * @default true
+     */
+    optimistic?: boolean;
 
     /**
      * The instance of `ApolloClient` to use to look up the fragment.

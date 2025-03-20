@@ -120,23 +120,6 @@ export type LoadableQueryHookFetchPolicy = Extract<
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"
 >;
 
-export interface LoadableQueryHookOptions {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
-  client?: ApolloClient;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
-  context?: DefaultContext;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
-  errorPolicy?: ErrorPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: LoadableQueryHookFetchPolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
-  queryKey?: string | number | any[];
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
-  refetchWritePolicy?: RefetchWritePolicy;
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
-  returnPartialData?: boolean;
-}
-
 /* Mutation types */
 
 export type RefetchQueriesFunction = (

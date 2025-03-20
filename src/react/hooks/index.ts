@@ -10,6 +10,8 @@ export { useMutation } from "./useMutation.js";
 export type { UseQueryOptions, UseQueryResult } from "./useQuery.js";
 export { useQuery } from "./useQuery.js";
 export type {
+  OnDataOptions,
+  OnSubscriptionDataOptions,
   UseSubscriptionOptions,
   UseSubscriptionResult,
 } from "./useSubscription.js";

@@ -15,11 +15,7 @@ import type {
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
-import type {
-  NoInfer,
-  OnDataOptions,
-  OnSubscriptionDataOptions,
-} from "@apollo/client/react";
+import type { NoInfer } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import { invariant } from "@apollo/client/utilities/invariant";
 
@@ -100,6 +96,16 @@ export interface UseSubscriptionResult<
    */
   // TODO: Remove this
   variables?: TVariables;
+}
+
+export interface OnDataOptions<TData = unknown> {
+  client: ApolloClient;
+  data: UseSubscriptionResult<TData>;
+}
+
+export interface OnSubscriptionDataOptions<TData = unknown> {
+  client: ApolloClient;
+  subscriptionData: UseSubscriptionResult<TData>;
 }
 
 /**

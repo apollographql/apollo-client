@@ -3,7 +3,6 @@ import type { DocumentNode } from "graphql";
 import type * as ReactTypes from "react";
 
 import type {
-  ApolloCache,
   ApolloClient,
   ApolloQueryResult,
   DefaultContext,
@@ -11,7 +10,6 @@ import type {
   ErrorPolicy,
   FetchMoreQueryOptions,
   FetchPolicy,
-  InternalRefetchQueriesInclude,
   NetworkStatus,
   OperationVariables,
   SubscribeToMoreFunction,
@@ -21,10 +19,7 @@ import type {
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
-import type {
-  MutationSharedOptions,
-  SharedWatchQueryOptions,
-} from "../../core/watchQueryOptions.js";
+import type { SharedWatchQueryOptions } from "../../core/watchQueryOptions.js";
 
 /* QueryReference type */
 

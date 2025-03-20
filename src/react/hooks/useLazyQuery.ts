@@ -38,7 +38,7 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-export interface LazyQueryHookOptions<
+export interface UseLazyQueryOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
@@ -79,14 +79,17 @@ export interface LazyQueryHookOptions<
   context?: DefaultContext;
 }
 
-export type LazyQueryHookExecOptions<
+export type UseLazyQueryExecOptions<
   TVariables extends OperationVariables = OperationVariables,
 > = {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
   context?: DefaultContext;
 } & VariablesOption<TVariables>;
 
-export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
+export interface UseLazyQueryResult<
+  TData,
+  TVariables extends OperationVariables,
+> {
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
   startPolling: (pollInterval: number) => void;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
@@ -138,23 +141,23 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   called: boolean;
 }
 
-export type LazyQueryResultTuple<
+export type UseLazyQueryResultTuple<
   TData,
   TVariables extends OperationVariables,
 > = [
-  execute: LazyQueryExecFunction<TData, TVariables>,
-  result: LazyQueryResult<TData, TVariables>,
+  execute: UseLazyQueryExecFunction<TData, TVariables>,
+  result: UseLazyQueryResult<TData, TVariables>,
 ];
 
-export type LazyQueryExecFunction<
+export type UseLazyQueryExecFunction<
   TData,
   TVariables extends OperationVariables,
 > = (
   ...args: [TVariables] extends [never] ?
-    [options?: LazyQueryHookExecOptions<TVariables>]
+    [options?: UseLazyQueryExecOptions<TVariables>]
   : Record<string, never> extends OnlyRequiredProperties<TVariables> ?
-    [options?: LazyQueryHookExecOptions<TVariables>]
-  : [options: LazyQueryHookExecOptions<TVariables>]
+    [options?: UseLazyQueryExecOptions<TVariables>]
+  : [options: UseLazyQueryExecOptions<TVariables>]
 ) => Promise<ApolloQueryResult<TData>>;
 
 // The following methods, when called will execute the query, regardless of
@@ -208,8 +211,8 @@ export function useLazyQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LazyQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
-): LazyQueryResultTuple<TData, TVariables> {
+  options?: UseLazyQueryOptions<NoInfer<TData>, NoInfer<TVariables>>
+): UseLazyQueryResultTuple<TData, TVariables> {
   const client = useApolloClient(options?.client);
   const previousDataRef = React.useRef<TData>(undefined);
   const resultRef = React.useRef<ApolloQueryResult<TData>>(undefined);
@@ -328,36 +331,37 @@ export function useLazyQuery<
     options?.skipPollAttempt,
   ]);
 
-  const execute: LazyQueryExecFunction<TData, TVariables> = React.useCallback(
-    (...args) => {
-      invariant(
-        !calledDuringRender(),
-        "useLazyQuery: 'execute' should not be called during render. To start a query during render, use the 'useQuery' hook."
-      );
+  const execute: UseLazyQueryExecFunction<TData, TVariables> =
+    React.useCallback(
+      (...args) => {
+        invariant(
+          !calledDuringRender(),
+          "useLazyQuery: 'execute' should not be called during render. To start a query during render, use the 'useQuery' hook."
+        );
 
-      const [executeOptions] = args;
+        const [executeOptions] = args;
 
-      const options: Partial<WatchQueryOptions<TVariables, TData>> = {
-        ...executeOptions,
-        // TODO: Figure out a better way to reset variables back to empty
-        variables: (executeOptions?.variables ?? {}) as TVariables,
-      };
+        const options: Partial<WatchQueryOptions<TVariables, TData>> = {
+          ...executeOptions,
+          // TODO: Figure out a better way to reset variables back to empty
+          variables: (executeOptions?.variables ?? {}) as TVariables,
+        };
 
-      if (observable.options.fetchPolicy === "standby") {
-        options.fetchPolicy = observable.options.initialFetchPolicy;
-      }
+        if (observable.options.fetchPolicy === "standby") {
+          options.fetchPolicy = observable.options.initialFetchPolicy;
+        }
 
-      const promise = observable.setOptions(options);
+        const promise = observable.setOptions(options);
 
-      // TODO: This should be fixed in core
-      if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
-        updateResult(observable.getCurrentResult(), forceUpdateState);
-      }
+        // TODO: This should be fixed in core
+        if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {
+          updateResult(observable.getCurrentResult(), forceUpdateState);
+        }
 
-      return promise;
-    },
-    [observable, stableOptions, updateResult, calledDuringRender]
-  );
+        return promise;
+      },
+      [observable, stableOptions, updateResult, calledDuringRender]
+    );
 
   const executeRef = React.useRef(execute);
   useIsomorphicLayoutEffect(() => {

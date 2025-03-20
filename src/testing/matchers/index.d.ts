@@ -6,7 +6,7 @@ import type {
   OperationVariables,
 } from "../../core/index.js";
 import type {
-  LazyQueryResult,
+  UseLazyQueryResult,
   QueryRef,
   UseQueryResult,
 } from "../../react/index.js";
@@ -95,10 +95,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   : { error: "matchers needs to be called on an ApolloQueryResult" };
 
   toEqualLazyQueryResult: T extends (
-    LazyQueryResult<infer TData, infer TVariables>
+    UseLazyQueryResult<infer TData, infer TVariables>
   ) ?
     (expected: CheckedLazyQueryResult<TData, TVariables>) => R
-  : T extends Promise<LazyQueryResult<infer TData, infer TVariables>> ?
+  : T extends Promise<UseLazyQueryResult<infer TData, infer TVariables>> ?
     (expected: CheckedLazyQueryResult<TData, TVariables>) => R
   : { error: "matchers needs to be called on a LazyQueryResult" };
 

@@ -1,15 +1,17 @@
-import { wrap } from "optimism";
+import { WeakCache } from "@wry/caches";
 import type { DocumentNode, TypeNode } from "graphql";
 import { Kind, visit } from "graphql";
-import { ApolloLink } from "../core/index.js";
+import { wrap } from "optimism";
+
+import type { OperationVariables } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
 import {
-  stripTypename,
-  isPlainObject,
   cacheSizes,
   defaultCacheSizes,
-} from "../../utilities/index.js";
-import type { OperationVariables } from "../../core/index.js";
-import { WeakCache } from "@wry/caches";
+  isPlainObject,
+  stripTypename,
+} from "@apollo/client/utilities";
+import { __DEV__ } from "@apollo/client/utilities/environment";
 
 export const KEEP = "__KEEP";
 
@@ -22,7 +24,7 @@ export interface RemoveTypenameFromVariablesOptions {
 }
 
 export function removeTypenameFromVariables(
-  options: RemoveTypenameFromVariablesOptions = Object.create(null)
+  options: RemoveTypenameFromVariablesOptions = {}
 ) {
   return Object.assign(
     new ApolloLink((operation, forward) => {

@@ -1,26 +1,27 @@
-import * as React from "rehackt";
-import type { DocumentNode } from "graphql";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import type {
-  MutationFunctionOptions,
-  MutationHookOptions,
-  MutationResult,
-  MutationTuple,
-  NoInfer,
-} from "../types/types.js";
+import { equal } from "@wry/equality";
+import type { DocumentNode } from "graphql";
+import * as React from "react";
 
 import type {
   ApolloCache,
   DefaultContext,
   MutationOptions,
   OperationVariables,
-} from "../../core/index.js";
-import { mergeOptions } from "../../utilities/index.js";
-import { equal } from "@wry/equality";
-import { DocumentType, verifyDocumentType } from "../parser/index.js";
-import { ApolloError } from "../../errors/index.js";
-import { useApolloClient } from "./useApolloClient.js";
+} from "@apollo/client/core";
+import { CombinedGraphQLErrors } from "@apollo/client/errors";
+import type {
+  MutationFunctionOptions,
+  MutationHookOptions,
+  MutationResult,
+  MutationTuple,
+  NoInfer,
+} from "@apollo/client/react";
+import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import { mergeOptions } from "@apollo/client/utilities";
+
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 /**
  *
@@ -70,10 +71,10 @@ import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.
  * @returns A tuple in the form of `[mutate, result]`
  */
 export function useMutation<
-  TData = any,
+  TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
-  TCache extends ApolloCache<any> = ApolloCache<any>,
+  TCache extends ApolloCache = ApolloCache,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?: MutationHookOptions<
@@ -85,7 +86,9 @@ export function useMutation<
 ): MutationTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
-  const [result, setResult] = React.useState<Omit<MutationResult, "reset">>({
+  const [result, setResult] = React.useState<
+    Omit<MutationResult<TData>, "reset">
+  >({
     called: false,
     loading: false,
     client,
@@ -117,11 +120,7 @@ export function useMutation<
       const baseOptions = { ...options, mutation };
       const client = executeOptions.client || ref.current.client;
 
-      if (
-        !ref.current.result.loading &&
-        !baseOptions.ignoreResults &&
-        ref.current.isMounted
-      ) {
+      if (!ref.current.result.loading && ref.current.isMounted) {
         setResult(
           (ref.current.result = {
             loading: true,
@@ -143,23 +142,17 @@ export function useMutation<
             const { data, errors } = response;
             const error =
               errors && errors.length > 0 ?
-                new ApolloError({ graphQLErrors: errors })
+                new CombinedGraphQLErrors(errors)
               : void 0;
 
             const onError =
               executeOptions.onError || ref.current.options?.onError;
 
             if (error && onError) {
-              onError(
-                error,
-                clientOptions as MutationOptions<TData, OperationVariables>
-              );
+              onError(error, clientOptions);
             }
 
-            if (
-              mutationId === ref.current.mutationId &&
-              !clientOptions.ignoreResults
-            ) {
+            if (mutationId === ref.current.mutationId) {
               const result = {
                 called: true,
                 loading: false,
@@ -177,10 +170,7 @@ export function useMutation<
               executeOptions.onCompleted || ref.current.options?.onCompleted;
 
             if (!error) {
-              onCompleted?.(
-                response.data!,
-                clientOptions as MutationOptions<TData, OperationVariables>
-              );
+              onCompleted?.(response.data!, clientOptions);
             }
 
             return response;
@@ -207,10 +197,7 @@ export function useMutation<
               executeOptions.onError || ref.current.options?.onError;
 
             if (onError) {
-              onError(
-                error,
-                clientOptions as MutationOptions<TData, OperationVariables>
-              );
+              onError(error, clientOptions);
 
               // TODO(brian): why are we returning this here???
               return { data: void 0, errors: error };
@@ -237,7 +224,6 @@ export function useMutation<
 
   React.useEffect(() => {
     const current = ref.current;
-    // eslint-disable-next-line react-compiler/react-compiler
     current.isMounted = true;
 
     return () => {

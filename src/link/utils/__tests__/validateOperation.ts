@@ -1,5 +1,6 @@
-import { validateOperation } from "../validateOperation";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+
+import { validateOperation } from "../validateOperation.js";
 
 describe("validateOperation", () => {
   it("should throw when invalid field in operation", () => {

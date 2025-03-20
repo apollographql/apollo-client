@@ -1,11 +1,12 @@
-import type { MaybeMasked, Unmasked } from "../index.js";
 import { attest, bench } from "@ark/attest";
-import { expectTypeOf } from "expect-type";
-import type { DeepPartial } from "../../utilities/index.js";
-
 import { setup } from "@ark/attest";
+import { expectTypeOf } from "expect-type";
+
+import type { TypedDocumentNode } from "@apollo/client";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { DeepPartial } from "@apollo/client/utilities";
+
 import type { ContainsFragmentsRefs } from "../internal/types.js";
-import type { TypedDocumentNode } from "../../index.js";
 
 setup({
   updateSnapshots: !process.env.CI,

@@ -1,31 +1,35 @@
-import React from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import gql from "graphql-tag";
-
-import {
-  ApolloClient,
-  ApolloError,
-  ApolloLink,
-  concat,
-  TypedDocumentNode,
-} from "../../../core";
-import { PROTOCOL_ERRORS_SYMBOL } from "../../../errors";
-import { InMemoryCache as Cache } from "../../../cache";
-import { ApolloProvider } from "../../context";
-import { MockSubscriptionLink, wait } from "../../../testing";
-import { useSubscription } from "../useSubscription";
-import { spyOnConsole } from "../../../testing/internal";
-import { SubscriptionHookOptions } from "../../types/types";
-import { ErrorBoundary } from "react-error-boundary";
-import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
-import { Masked, MaskedDocumentNode } from "../../../masking";
-import { expectTypeOf } from "expect-type";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import { gql } from "graphql-tag";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
+
+import { InMemoryCache as Cache } from "@apollo/client/cache";
+import {
+  ApolloClient,
+  ApolloLink,
+  concat,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import {
+  CombinedGraphQLErrors,
+  CombinedProtocolErrors,
+  PROTOCOL_ERRORS_SYMBOL,
+} from "@apollo/client/errors";
+import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
+import { ApolloProvider } from "@apollo/client/react/context";
+import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
+import { spyOnConsole } from "../../../testing/internal/index.js";
+import { SubscriptionHookOptions } from "../../types/types.js";
+import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 
@@ -46,7 +50,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(() => useSubscription(subscription), {
@@ -106,14 +110,14 @@ describe("useSubscription Hook", () => {
     }));
 
     const errorResult = {
-      error: new ApolloError({ errorMessage: "test" }),
+      error: new Error("test"),
       result: { data: { car: { make: null } } },
     };
 
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onError = jest.fn();
@@ -165,7 +169,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onComplete = jest.fn();
@@ -204,7 +208,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -260,7 +264,7 @@ describe("useSubscription Hook", () => {
     link.onSetup(onSetup);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -324,7 +328,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
     const { result, rerender } = renderHook(
       ({ skip }) => useSubscription(subscription, { skip }),
@@ -420,7 +424,7 @@ describe("useSubscription Hook", () => {
     });
     const client = new ApolloClient({
       link: concat(contextLink, link),
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -488,7 +492,7 @@ describe("useSubscription Hook", () => {
     });
     const client = new ApolloClient({
       link: concat(extensionsLink, link),
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -551,7 +555,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -620,7 +624,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(() => useSubscription(subscription), {
@@ -651,7 +655,7 @@ describe("useSubscription Hook", () => {
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 
@@ -668,7 +672,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result } = renderHook(
@@ -719,17 +723,17 @@ describe("useSubscription Hook", () => {
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
     expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
       "Missing field '%s' while writing result %o",
       "car",
-      Object.create(null),
+      {},
     ]);
   });
 
@@ -746,7 +750,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     renderHook(
@@ -789,7 +793,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn();
@@ -837,7 +841,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onSubscriptionData = jest.fn();
@@ -876,7 +880,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { rerender } = renderHook(
@@ -909,7 +913,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     renderHook(
@@ -952,7 +956,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onComplete = jest.fn();
@@ -1002,7 +1006,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onSubscriptionComplete = jest.fn();
@@ -1043,7 +1047,7 @@ describe("useSubscription Hook", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { rerender } = renderHook(
@@ -1081,16 +1085,14 @@ describe("useSubscription Hook", () => {
           result: {
             data: null,
             extensions: {
-              [PROTOCOL_ERRORS_SYMBOL]: [
+              [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
                 {
                   message: "cannot read message from websocket",
-                  extensions: [
-                    {
-                      code: "WEBSOCKET_MESSAGE_ERROR",
-                    },
-                  ],
+                  extensions: {
+                    code: "WEBSOCKET_MESSAGE_ERROR",
+                  },
                 },
-              ],
+              ]),
             },
           },
         },
@@ -1098,7 +1100,7 @@ describe("useSubscription Hook", () => {
       const link = new MockSubscriptionLink();
       const client = new ApolloClient({
         link,
-        cache: new Cache({ addTypename: false }),
+        cache: new Cache(),
       });
       let renderCount = 0;
 
@@ -1120,12 +1122,19 @@ describe("useSubscription Hook", () => {
       expect(renderCount).toBe(1);
       await waitFor(
         () => {
-          expect(result.current.error).toBeInstanceOf(ApolloError);
+          expect(result.current.error).toBeInstanceOf(CombinedProtocolErrors);
         },
         { interval: 1 }
       );
-      expect(result.current.error!.protocolErrors[0].message).toBe(
-        "cannot read message from websocket"
+      expect(result.current.error).toEqual(
+        new CombinedProtocolErrors([
+          {
+            message: "cannot read message from websocket",
+            extensions: {
+              code: "WEBSOCKET_MESSAGE_ERROR",
+            },
+          },
+        ])
       );
     });
   });
@@ -1147,7 +1156,7 @@ followed by new in-flight setup", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const { result, unmount, rerender } = renderHook(
@@ -1236,7 +1245,7 @@ followed by new in-flight setup", async () => {
       const graphQlErrorResult: MockedSubscriptionResult = {
         result: {
           data: { totalLikes: 42 },
-          errors: [{ message: "test" } as any],
+          errors: [{ message: "test" }],
         },
       };
       const protocolErrorResult: MockedSubscriptionResult = {
@@ -1271,22 +1280,18 @@ followed by new in-flight setup", async () => {
             const snapshot = await takeSnapshot();
             expect(snapshot).toStrictEqual({
               loading: false,
-              error: new ApolloError({
-                graphQLErrors: graphQlErrorResult.result!.errors as any,
-              }),
+              error: new CombinedGraphQLErrors(
+                graphQlErrorResult.result!.errors as any
+              ),
               data: undefined,
               restart: expect.any(Function),
               variables: undefined,
             });
-            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(
-            new ApolloError({
-              graphQLErrors: graphQlErrorResult.result!.errors as any,
-            })
+            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors as any)
           );
-          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
@@ -1304,25 +1309,19 @@ followed by new in-flight setup", async () => {
           const snapshot = await takeSnapshot();
           expect(snapshot).toStrictEqual({
             loading: false,
-            error: new ApolloError({
-              errorMessage: "test",
-              graphQLErrors: graphQlErrorResult.result!.errors as any,
-            }),
+            error: new CombinedGraphQLErrors(
+              graphQlErrorResult.result!.errors!
+            ),
             data: { totalLikes: 42 },
             restart: expect.any(Function),
             variables: undefined,
           });
-          expect(snapshot.error).toBeInstanceOf(ApolloError);
         }
 
         expect(onError).toHaveBeenCalledTimes(1);
         expect(onError).toHaveBeenCalledWith(
-          new ApolloError({
-            errorMessage: "test",
-            graphQLErrors: graphQlErrorResult.result!.errors as any,
-          })
+          new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
         );
-        expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
         expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
@@ -1365,6 +1364,8 @@ followed by new in-flight setup", async () => {
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
     });
+    // TODO: Need to rewrite this to actually simulate a protocol error, not
+    // just a plain error. The underlying setup does not use the PROTOCOL_ERRORS_SYMBOL.
     describe("protocol error", () => {
       it.each([undefined, "none", "all", "ignore"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
@@ -1385,23 +1386,15 @@ followed by new in-flight setup", async () => {
             const snapshot = await takeSnapshot();
             expect(snapshot).toStrictEqual({
               loading: false,
-              error: new ApolloError({
-                protocolErrors: [protocolErrorResult.error!],
-              }),
+              error: protocolErrorResult.error,
               data: undefined,
               restart: expect.any(Function),
               variables: undefined,
             });
-            expect(snapshot.error).toBeInstanceOf(ApolloError);
           }
 
           expect(onError).toHaveBeenCalledTimes(1);
-          expect(onError).toHaveBeenCalledWith(expect.any(ApolloError));
-          expect(onError).toHaveBeenCalledWith(
-            new ApolloError({
-              protocolErrors: [protocolErrorResult.error!],
-            })
-          );
+          expect(onError).toHaveBeenCalledWith(protocolErrorResult.error);
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
@@ -1715,7 +1708,7 @@ describe("`restart` callback", () => {
       expect(snapshot).toStrictEqual({
         loading: false,
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [error] }),
+        error: new CombinedGraphQLErrors([error]),
         restart: expect.any(Function),
         variables: { id: "1" },
       });
@@ -1798,7 +1791,7 @@ describe("ignoreResults", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
@@ -1872,7 +1865,7 @@ describe("ignoreResults", () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
@@ -1927,9 +1920,7 @@ describe("ignoreResults", () => {
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(
-        new ApolloError({ protocolErrors: [error] })
-      );
+      expect(onError).toHaveBeenLastCalledWith(error);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
@@ -1942,7 +1933,7 @@ describe("ignoreResults", () => {
     link.onSetup(subscriptionCreated);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);
@@ -2016,7 +2007,7 @@ describe("ignoreResults", () => {
     link.onSetup(subscriptionCreated);
     const client = new ApolloClient({
       link,
-      cache: new Cache({ addTypename: false }),
+      cache: new Cache(),
     });
 
     const onData = jest.fn((() => {}) as SubscriptionHookOptions["onData"]);

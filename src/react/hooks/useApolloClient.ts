@@ -1,7 +1,8 @@
-import { invariant } from "../../utilities/globals/index.js";
-import * as React from "rehackt";
-import type { ApolloClient } from "../../core/index.js";
-import { getApolloContext } from "../context/index.js";
+import * as React from "react";
+
+import type { ApolloClient } from "@apollo/client/core";
+import { getApolloContext } from "@apollo/client/react/context";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 /**
  * @example
@@ -18,9 +19,7 @@ import { getApolloContext } from "../context/index.js";
  * @since 3.0.0
  * @returns The `ApolloClient` instance being used by the application.
  */
-export function useApolloClient(
-  override?: ApolloClient<object>
-): ApolloClient<object> {
+export function useApolloClient(override?: ApolloClient): ApolloClient {
   const context = React.useContext(getApolloContext());
   const client = override || context.client;
   invariant(

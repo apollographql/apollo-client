@@ -1,25 +1,25 @@
-import gql from "graphql-tag";
+import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { expectTypeOf } from "expect-type";
+import { Kind } from "graphql";
+import { gql } from "graphql-tag";
+import { EMPTY, Observable, of } from "rxjs";
 
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
 import {
   ApolloClient,
-  ApolloError,
   ApolloQueryResult,
   DefaultOptions,
+  makeReference,
   ObservableQuery,
   QueryOptions,
-  makeReference,
-} from "../core";
-import { Kind } from "graphql";
+} from "@apollo/client/core";
+import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { HttpLink } from "@apollo/client/link/http";
+import { Masked } from "@apollo/client/masking";
+import { DeepPartial } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
-import { DeepPartial, Observable } from "../utilities";
-import { ApolloLink, FetchResult } from "../link/core";
-import { HttpLink } from "../link/http";
-import { createFragmentRegistry, InMemoryCache } from "../cache";
-import { ObservableStream, spyOnConsole } from "../testing/internal";
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import { invariant } from "../utilities/globals";
-import { expectTypeOf } from "expect-type";
-import { Masked } from "../masking";
+import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -1155,7 +1155,7 @@ describe("ApolloClient", () => {
         },
       };
       const link = new ApolloLink(() => {
-        return Observable.of({ data });
+        return of({ data });
       });
       function newClient() {
         return new ApolloClient({
@@ -1178,7 +1178,6 @@ describe("ApolloClient", () => {
                 return result.__typename + result.id;
               }
             },
-            addTypename: true,
           }),
         });
       }
@@ -1612,9 +1611,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1832,9 +1829,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if id is present and __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1881,9 +1876,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if _id is present but __typename is not present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -1930,9 +1923,7 @@ describe("ApolloClient", () => {
     it("will not use a default id getter if either _id or id is present when __typename is not also present", () => {
       const client = new ApolloClient({
         link: ApolloLink.empty(),
-        cache: new InMemoryCache({
-          addTypename: false,
-        }),
+        cache: new InMemoryCache(),
       });
 
       client.writeQuery({
@@ -2738,7 +2729,6 @@ describe("ApolloClient", () => {
             pollInterval: 100,
             notifyOnNetworkStatusChange: true,
             returnPartialData: true,
-            partialRefetch: true,
           },
         },
       });
@@ -2795,7 +2785,7 @@ describe("ApolloClient", () => {
 
       client.setLink(newLink);
 
-      const { data } = await client.query({
+      const { data } = await client.query<any>({
         query: gql`
           {
             widgets
@@ -2818,8 +2808,8 @@ describe("ApolloClient", () => {
       invariantDebugSpy.mockRestore();
     });
 
-    it("should catch refetchQueries error when not caught explicitly", (done) => {
-      expect.assertions(2);
+    it("should emit error from refetchQueries when not caught explicitly", (done) => {
+      expect.assertions(3);
       const linkFn = jest
         .fn(
           () =>
@@ -2831,7 +2821,7 @@ describe("ApolloClient", () => {
         )
         .mockImplementationOnce(() => {
           setTimeout(refetchQueries);
-          return Observable.of();
+          return EMPTY;
         });
 
       const client = new ApolloClient({
@@ -2860,14 +2850,21 @@ describe("ApolloClient", () => {
         });
 
         result.queries[0].subscribe({
-          error() {
+          next(result) {
+            // Skip checking initial result
+            if (!result.error) {
+              return;
+            }
+
+            const expectedError = new Error("refetch failed");
+
+            expect(result.error).toEqual(expectedError);
+
             setTimeout(() => {
               expect(invariantDebugSpy).toHaveBeenCalledTimes(1);
               expect(invariantDebugSpy).toHaveBeenCalledWith(
                 "In client.refetchQueries, Promise.all promise rejected with error %o",
-                new ApolloError({
-                  networkError: new Error("refetch failed"),
-                })
+                new Error("refetch failed")
               );
               done();
             });
@@ -3168,7 +3165,7 @@ describe("ApolloClient", () => {
 
       observableQuery.subscribe({
         next: (result) => {
-          expectTypeOf(result.data).toMatchTypeOf<Query>();
+          expectTypeOf(result.data).toMatchTypeOf<Query | undefined>();
           expectTypeOf(result.data).not.toMatchTypeOf<UnmaskedQuery>();
         },
       });
@@ -3192,12 +3189,12 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(fetchMoreResult.data).toMatchTypeOf<Query | undefined>();
       expectTypeOf(fetchMoreResult.data).not.toMatchTypeOf<UnmaskedQuery>();
 
       const refetchResult = await observableQuery.refetch();
 
-      expectTypeOf(refetchResult.data).toMatchTypeOf<Query>();
+      expectTypeOf(refetchResult.data).toMatchTypeOf<Query | undefined>();
       expectTypeOf(refetchResult.data).not.toMatchTypeOf<UnmaskedQuery>();
 
       const setVariablesResult = await observableQuery.setVariables({

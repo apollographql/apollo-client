@@ -1,6 +1,11 @@
-import type { FetchResult, NextLink, Operation } from "../core/index.js";
-import type { ObservableSubscription } from "../../utilities/index.js";
-import { Observable } from "../../utilities/index.js";
+import type { Subscription } from "rxjs";
+import { EMPTY, Observable } from "rxjs";
+
+import type {
+  FetchResult,
+  NextLink,
+  Operation,
+} from "@apollo/client/link/core";
 
 export type BatchHandler = (
   operations: Operation[],
@@ -23,7 +28,7 @@ type QueuedRequest = BatchableRequest & {
 // Batches are primarily a Set<QueuedRequest>, but may have other optional
 // properties, such as batch.subscription.
 type RequestBatch = Set<QueuedRequest> & {
-  subscription?: ObservableSubscription;
+  subscription?: Subscription;
 };
 
 // QueryBatcher doesn't fire requests immediately. Requests that were enqueued within
@@ -166,8 +171,7 @@ export class OperationBatcher {
       completes.push(request.complete);
     });
 
-    const batchedObservable =
-      this.batchHandler(operations, forwards) || Observable.of();
+    const batchedObservable = this.batchHandler(operations, forwards) || EMPTY;
 
     const onError = (error: Error) => {
       //each callback list in batch

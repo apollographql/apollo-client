@@ -1,19 +1,18 @@
 import { equal } from "@wry/equality";
+import type { Observable, Subscription } from "rxjs";
+
 import type {
   WatchFragmentOptions,
   WatchFragmentResult,
-} from "../../../cache/index.js";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
-import type { MaybeMasked } from "../../../masking/index.js";
+} from "@apollo/client/cache";
+import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type { MaybeMasked } from "@apollo/client/masking";
+import type { PromiseWithState } from "@apollo/client/utilities";
 import {
   createFulfilledPromise,
   wrapPromiseWithState,
-} from "../../../utilities/index.js";
-import type {
-  Observable,
-  ObservableSubscription,
-  PromiseWithState,
-} from "../../../utilities/index.js";
+} from "@apollo/client/utilities";
+
 import type { FragmentKey } from "./types.js";
 
 type FragmentRefPromise<TData> = PromiseWithState<TData>;
@@ -26,7 +25,7 @@ interface FragmentReferenceOptions {
 
 export class FragmentReference<
   TData = unknown,
-  TVariables = Record<string, unknown>,
+  TVariables extends OperationVariables = OperationVariables,
 > {
   public readonly observable: Observable<WatchFragmentResult<TData>>;
   public readonly key: FragmentKey = {};
@@ -35,14 +34,14 @@ export class FragmentReference<
   private resolve: ((result: MaybeMasked<TData>) => void) | undefined;
   private reject: ((error: unknown) => void) | undefined;
 
-  private subscription!: ObservableSubscription;
+  private subscription!: Subscription;
   private listeners = new Set<Listener<MaybeMasked<TData>>>();
   private autoDisposeTimeoutId?: NodeJS.Timeout;
 
   private references = 0;
 
   constructor(
-    client: ApolloClient<any>,
+    client: ApolloClient,
     watchFragmentOptions: WatchFragmentOptions<TData, TVariables> & {
       from: string;
     },
@@ -173,14 +172,14 @@ export class FragmentReference<
     );
   }
 
-  private getDiff<TData, TVariables>(
-    client: ApolloClient<any>,
+  private getDiff<TData, TVariables extends OperationVariables>(
+    client: ApolloClient,
     options: WatchFragmentOptions<TData, TVariables> & { from: string }
   ) {
     const { cache } = client;
     const { from, fragment, fragmentName } = options;
 
-    const diff = cache.diff({
+    const diff = cache.diff<TData, TVariables>({
       ...options,
       query: cache["getFragmentDoc"](fragment, fragmentName),
       returnPartialData: true,

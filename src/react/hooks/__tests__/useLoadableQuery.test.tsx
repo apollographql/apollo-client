@@ -1,62 +1,65 @@
-import React, { Suspense, useState } from "react";
-import { act, screen, renderHook, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+import { act, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  AsyncRenderFn,
+  createRenderStream,
+  disableActEnvironment,
+  RenderStream,
+  useTrackRenders,
+} from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
+import React, { Suspense, useState } from "react";
+import { ErrorBoundary as ReactErrorBoundary } from "react-error-boundary";
+import { Observable } from "rxjs";
+
+import { InMemoryCache } from "@apollo/client/cache";
 import {
-  gql,
-  ApolloError,
   ApolloClient,
-  ErrorPolicy,
-  NetworkStatus,
-  TypedDocumentNode,
   ApolloLink,
-  Observable,
+  CombinedGraphQLErrors,
+  ErrorPolicy,
+  gql,
+  NetworkStatus,
   OperationVariables,
   RefetchWritePolicy,
-  SubscribeToMoreOptions,
   split,
-} from "../../../core";
-import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions";
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { QueryRef } from "@apollo/client/react";
+import { ApolloProvider } from "@apollo/client/react/context";
 import {
-  MockedProvider,
-  MockedProviderProps,
   MockedResponse,
   MockLink,
   MockSubscriptionLink,
   wait,
-} from "../../../testing";
+} from "@apollo/client/testing";
+import {
+  MockedProvider,
+  MockedProviderProps,
+} from "@apollo/client/testing/react";
 import {
   concatPagination,
-  offsetLimitPagination,
   DeepPartial,
   getMainDefinition,
-} from "../../../utilities";
-import { useLoadableQuery } from "../useLoadableQuery";
-import type { UseReadQueryResult } from "../useReadQuery";
-import { useReadQuery } from "../useReadQuery";
-import { ApolloProvider } from "../../context";
-import { InMemoryCache } from "../../../cache";
-import { LoadableQueryHookFetchPolicy } from "../../types/types";
-import { QueryRef } from "../../../react";
-import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery";
-import invariant, { InvariantError } from "ts-invariant";
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { invariant, InvariantError } from "@apollo/client/utilities/invariant";
+
+import { SubscribeToMoreFunction } from "../../../core/watchQueryOptions.js";
 import {
-  SimpleCaseData,
+  renderAsync,
   setupPaginatedCase,
   setupSimpleCase,
+  SimpleCaseData,
   spyOnConsole,
-  renderAsync,
-} from "../../../testing/internal";
-
-import {
-  RenderStream,
-  createRenderStream,
-  disableActEnvironment,
-  useTrackRenders,
-  AsyncRenderFn,
-} from "@testing-library/react-render-stream";
+} from "../../../testing/internal/index.js";
+import { LoadableQueryHookFetchPolicy } from "../../types/types.js";
+import { useLoadableQuery } from "../useLoadableQuery.js";
+import type { UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
+import { FetchMoreFunction, RefetchFunction } from "../useSuspenseQuery.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
 afterEach(() => {
@@ -237,7 +240,7 @@ async function renderWithMocks(
 
 async function renderWithClient(
   ui: React.ReactElement,
-  options: { client: ApolloClient<any> },
+  options: { client: ApolloClient },
   { render: doRender }: { render: AsyncRenderFn | typeof renderAsync }
 ) {
   const { client } = options;
@@ -990,188 +993,6 @@ it("passes context to the link", async () => {
     networkStatus: NetworkStatus.ready,
     error: undefined,
   });
-});
-
-it('enables canonical results when canonizeResults is "true"', async () => {
-  interface Result {
-    __typename: string;
-    value: number;
-  }
-
-  interface QueryData {
-    results: Result[];
-  }
-
-  const cache = new InMemoryCache({
-    typePolicies: {
-      Result: {
-        keyFields: false,
-      },
-    },
-  });
-
-  const query: TypedDocumentNode<QueryData, never> = gql`
-    query {
-      results {
-        value
-      }
-    }
-  `;
-
-  const results: Result[] = [
-    { __typename: "Result", value: 0 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 2 },
-    { __typename: "Result", value: 3 },
-    { __typename: "Result", value: 5 },
-  ];
-
-  cache.writeQuery({
-    query,
-    data: { results },
-  });
-
-  const client = new ApolloClient({
-    cache,
-    link: new MockLink([]),
-  });
-
-  using _disabledAct = disableActEnvironment();
-  const renderStream = createDefaultProfiler<QueryData>();
-
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(renderStream);
-
-  function App() {
-    useTrackRenders();
-    const [loadQuery, queryRef] = useLoadableQuery(query, {
-      canonizeResults: true,
-    });
-
-    return (
-      <>
-        <button onClick={() => loadQuery()}>Load query</button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <ReadQueryHook queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  const { user } = await renderWithClient(
-    <App />,
-    {
-      client,
-    },
-    renderStream
-  );
-
-  // initial render
-  await renderStream.takeRender();
-
-  await user.click(screen.getByText("Load query"));
-
-  const { snapshot } = await renderStream.takeRender();
-  const resultSet = new Set(snapshot.result?.data.results);
-  const values = Array.from(resultSet).map((item) => item.value);
-
-  expect(snapshot.result).toEqual({
-    data: { results },
-    networkStatus: NetworkStatus.ready,
-    error: undefined,
-  });
-
-  expect(resultSet.size).toBe(5);
-  expect(values).toEqual([0, 1, 2, 3, 5]);
-});
-
-it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-  interface Result {
-    __typename: string;
-    value: number;
-  }
-
-  interface QueryData {
-    results: Result[];
-  }
-
-  const cache = new InMemoryCache({
-    canonizeResults: true,
-    typePolicies: {
-      Result: {
-        keyFields: false,
-      },
-    },
-  });
-
-  const query: TypedDocumentNode<{ results: Result[] }, never> = gql`
-    query {
-      results {
-        value
-      }
-    }
-  `;
-
-  const results: Result[] = [
-    { __typename: "Result", value: 0 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 2 },
-    { __typename: "Result", value: 3 },
-    { __typename: "Result", value: 5 },
-  ];
-
-  cache.writeQuery({
-    query,
-    data: { results },
-  });
-
-  using _disabledAct = disableActEnvironment();
-  const renderStream = createDefaultProfiler<QueryData>();
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(renderStream);
-
-  function App() {
-    useTrackRenders();
-    const [loadQuery, queryRef] = useLoadableQuery(query, {
-      canonizeResults: false,
-    });
-
-    return (
-      <>
-        <button onClick={() => loadQuery()}>Load query</button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <ReadQueryHook queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  const { user } = await renderWithMocks(
-    <App />,
-    {
-      cache,
-    },
-    renderStream
-  );
-
-  // initial render
-  await renderStream.takeRender();
-
-  await user.click(screen.getByText("Load query"));
-
-  const { snapshot } = await renderStream.takeRender();
-  const resultSet = new Set(snapshot.result!.data.results);
-  const values = Array.from(resultSet).map((item) => item.value);
-
-  expect(snapshot.result).toEqual({
-    data: { results },
-    networkStatus: NetworkStatus.ready,
-    error: undefined,
-  });
-  expect(resultSet.size).toBe(6);
-  expect(values).toEqual([0, 1, 1, 2, 3, 5]);
 });
 
 it("returns initial cache data followed by network data when the fetch policy is `cache-and-network`", async () => {
@@ -1985,7 +1806,7 @@ it("applies `errorPolicy` on next fetch when it changes between renders", async 
     expect(renderedComponents).not.toContain(ErrorFallback);
     expect(snapshot.result).toEqual({
       data: { greeting: "Hello" },
-      error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+      error: new CombinedGraphQLErrors([{ message: "oops" }]),
       networkStatus: NetworkStatus.error,
     });
   }
@@ -2078,117 +1899,6 @@ it("applies `context` on next fetch when it changes between renders", async () =
     expect(snapshot.result!.data).toEqual({
       phase: "rerender",
     });
-  }
-});
-
-// NOTE: We only test the `false` -> `true` path here. If the option changes
-// from `true` -> `false`, the data has already been canonized, so it has no
-// effect on the output.
-it("returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders", async () => {
-  interface Result {
-    __typename: string;
-    value: number;
-  }
-
-  interface Data {
-    results: Result[];
-  }
-
-  const cache = new InMemoryCache({
-    typePolicies: {
-      Result: {
-        keyFields: false,
-      },
-    },
-  });
-
-  const query: TypedDocumentNode<Data> = gql`
-    query {
-      results {
-        value
-      }
-    }
-  `;
-
-  const results: Result[] = [
-    { __typename: "Result", value: 0 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 1 },
-    { __typename: "Result", value: 2 },
-    { __typename: "Result", value: 3 },
-    { __typename: "Result", value: 5 },
-  ];
-
-  cache.writeQuery({
-    query,
-    data: { results },
-  });
-
-  const client = new ApolloClient({
-    link: new MockLink([]),
-    cache,
-  });
-
-  using _disabledAct = disableActEnvironment();
-  const renderStream = createDefaultProfiler<Data>();
-  const { SuspenseFallback, ReadQueryHook } =
-    createDefaultProfiledComponents(renderStream);
-
-  function App() {
-    useTrackRenders();
-    const [canonizeResults, setCanonizeResults] = React.useState(false);
-    const [loadQuery, queryRef] = useLoadableQuery(query, {
-      canonizeResults,
-    });
-
-    return (
-      <>
-        <button onClick={() => loadQuery()}>Load query</button>
-        <button onClick={() => setCanonizeResults(true)}>
-          Canonize results
-        </button>
-        <Suspense fallback={<SuspenseFallback />}>
-          {queryRef && <ReadQueryHook queryRef={queryRef} />}
-        </Suspense>
-      </>
-    );
-  }
-
-  const { user } = await renderWithClient(
-    <App />,
-    {
-      client,
-    },
-    renderStream
-  );
-
-  // initial render
-  await renderStream.takeRender();
-
-  await user.click(screen.getByText("Load query"));
-
-  {
-    const { snapshot } = await renderStream.takeRender();
-    const { data } = snapshot.result!;
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data.results.length).toBe(6);
-    expect(resultSet.size).toBe(6);
-    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-  }
-
-  await user.click(screen.getByText("Canonize results"));
-
-  {
-    const { snapshot } = await renderStream.takeRender();
-    const { data } = snapshot.result!;
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data.results.length).toBe(6);
-    expect(resultSet.size).toBe(5);
-    expect(values).toEqual([0, 1, 2, 3, 5]);
   }
 });
 
@@ -3015,9 +2725,7 @@ it("throws errors when errors are returned after calling `refetch`", async () =>
 
     expect(renderedComponents).toStrictEqual([ErrorFallback]);
     expect(snapshot.error).toEqual(
-      new ApolloError({
-        graphQLErrors: [new GraphQLError("Something went wrong")],
-      })
+      new CombinedGraphQLErrors([{ message: "Something went wrong" }])
     );
   }
 });
@@ -3189,9 +2897,7 @@ it('returns errors after calling `refetch` when errorPolicy is set to "all"', as
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: "Captain Marvel" } },
-      error: new ApolloError({
-        graphQLErrors: [new GraphQLError("Something went wrong")],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
       networkStatus: NetworkStatus.error,
     });
   }
@@ -3279,9 +2985,7 @@ it('handles partial data results after calling `refetch` when errorPolicy is set
     expect(snapshot.error).toBeNull();
     expect(snapshot.result).toEqual({
       data: { character: { id: "1", name: null } },
-      error: new ApolloError({
-        graphQLErrors: [new GraphQLError("Something went wrong")],
-      }),
+      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
       networkStatus: NetworkStatus.error,
     });
   }

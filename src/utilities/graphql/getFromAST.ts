@@ -1,11 +1,14 @@
-import { invariant, newInvariantError } from "../globals/index.js";
-
 import type {
   DocumentNode,
-  OperationDefinitionNode,
   FragmentDefinitionNode,
+  OperationDefinitionNode,
   ValueNode,
 } from "graphql";
+
+import {
+  invariant,
+  newInvariantError,
+} from "@apollo/client/utilities/invariant";
 
 import { valueToObjectRepresentation } from "./storeUtils.js";
 
@@ -150,7 +153,7 @@ export function getMainDefinition(
 export function getDefaultValues(
   definition: OperationDefinitionNode | undefined
 ): Record<string, any> {
-  const defaultValues = Object.create(null);
+  const defaultValues = {};
   const defs = definition && definition.variableDefinitions;
   if (defs && defs.length) {
     defs.forEach((def) => {

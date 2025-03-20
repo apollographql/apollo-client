@@ -1,13 +1,24 @@
+//@ts-ignore
+globalThis.__DEV__ = true;
+
+import { TextDecoder, TextEncoder } from "util";
+
 import gql from "graphql-tag";
-import { TextEncoder, TextDecoder } from "util";
+
 global.TextEncoder ??= TextEncoder;
 // @ts-ignore
 global.TextDecoder ??= TextDecoder;
 import "@testing-library/jest-dom";
-import { loadErrorMessageHandler } from "../../dev/loadErrorMessageHandler.js";
 import "../../testing/matchers/index.js";
-import { areApolloErrorsEqual } from "./areApolloErrorsEqual.js";
+import { setLogVerbosity } from "@apollo/client";
+import { loadErrorMessageHandler } from "@apollo/client/dev";
+
+import { areCombinedGraphQLErrorsEqual } from "./areCombinedGraphQLErrorsEqual.js";
+import { areCombinedProtocolErrorsEqual } from "./areCombinedProtocolErrorsEqual.js";
 import { areGraphQLErrorsEqual } from "./areGraphQlErrorsEqual.js";
+import { areMissingFieldErrorsEqual } from "./areMissingFieldErrorsEqual.js";
+
+setLogVerbosity("log");
 
 // Turn off warnings for repeated fragment names
 gql.disableFragmentWarnings();
@@ -35,7 +46,12 @@ if (!Symbol.asyncDispose) {
 }
 
 // @ts-ignore
-expect.addEqualityTesters([areApolloErrorsEqual, areGraphQLErrorsEqual]);
+expect.addEqualityTesters([
+  areCombinedGraphQLErrorsEqual,
+  areCombinedProtocolErrorsEqual,
+  areGraphQLErrorsEqual,
+  areMissingFieldErrorsEqual,
+]);
 
 // not available in JSDOM 🙄
 global.structuredClone = (val) => JSON.parse(JSON.stringify(val));

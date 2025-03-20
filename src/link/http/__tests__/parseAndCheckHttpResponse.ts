@@ -1,8 +1,8 @@
-import gql from "graphql-tag";
 import fetchMock from "fetch-mock";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
-import { parseAndCheckHttpResponse } from "../parseAndCheckHttpResponse";
+import { createOperation } from "../../utils/createOperation.js";
+import { parseAndCheckHttpResponse } from "../parseAndCheckHttpResponse.js";
 
 const query = gql`
   query SampleQuery {

@@ -1,9 +1,9 @@
 import type { ASTNode } from "graphql";
-import { print } from "../../utilities/index.js";
 
-import type { Operation } from "../core/index.js";
+import type { Operation } from "@apollo/client/link/core";
+import { print } from "@apollo/client/utilities";
 
-export interface Printer {
+interface Printer {
   (node: ASTNode, originalPrint: typeof print): string;
 }
 
@@ -84,13 +84,13 @@ export interface HttpOptions {
   print?: Printer;
 }
 
-export interface HttpQueryOptions {
+interface HttpQueryOptions {
   includeQuery?: boolean;
   includeExtensions?: boolean;
   preserveHeaderCase?: boolean;
 }
 
-export interface HttpConfig {
+interface HttpConfig {
   http?: HttpQueryOptions;
   options?: any;
   headers?: Record<string, string>;
@@ -105,7 +105,7 @@ const defaultHttpOptions: HttpQueryOptions = {
 
 const defaultHeaders = {
   // headers are case insensitive (https://stackoverflow.com/a/5259004)
-  accept: "*/*",
+  accept: "application/graphql-response+json",
   // The content-type header describes the type of the body of the request, and
   // so it typically only is sent with requests that actually have bodies. One
   // could imagine that Apollo Client would remove this header when constructing

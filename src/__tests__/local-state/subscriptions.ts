@@ -1,10 +1,11 @@
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { of } from "rxjs";
 
-import { Observable } from "../../utilities";
-import { ApolloLink } from "../../link/core";
-import { ApolloClient } from "../../core";
-import { InMemoryCache } from "../../cache";
-import { ObservableStream } from "../../testing/internal";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { ApolloLink } from "@apollo/client/link/core";
+
+import { ObservableStream } from "../../testing/internal/index.js";
 
 describe("Basic functionality", () => {
   it("should not break subscriptions", async () => {
@@ -15,7 +16,7 @@ describe("Basic functionality", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 1 } }, { data: { field: 2 } })
+      of({ data: { field: 1 } }, { data: { field: 2 } })
     );
 
     const client = new ApolloClient({
@@ -44,7 +45,7 @@ describe("Basic functionality", () => {
     `;
 
     const link = new ApolloLink(() =>
-      Observable.of({ data: { field: 1 } }, { data: { field: 2 } })
+      of({ data: { field: 1 } }, { data: { field: 2 } })
     );
 
     let subCounter = 0;

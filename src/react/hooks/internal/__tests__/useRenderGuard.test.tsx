@@ -1,7 +1,8 @@
 /* eslint-disable testing-library/render-result-naming-convention */
-import * as React from "rehackt";
-import { useRenderGuard } from "../useRenderGuard";
 import { render, waitFor } from "@testing-library/react";
+import * as React from "react";
+
+import { useRenderGuard } from "../useRenderGuard.js";
 
 const UNDEF = {};
 const IS_REACT_19 = React.version.startsWith("19");

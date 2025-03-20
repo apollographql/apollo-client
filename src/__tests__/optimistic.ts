@@ -1,26 +1,29 @@
-import { from, ObservableInput } from "rxjs";
-import { take, toArray, map } from "rxjs/operators";
+import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import gql from "graphql-tag";
+import { firstValueFrom, from, lastValueFrom, Observable } from "rxjs";
+import { map, take, toArray } from "rxjs/operators";
 
 import {
-  ApolloClient,
-  makeReference,
-  ApolloLink,
+  Cache,
+  InMemoryCache,
+  NormalizedCacheObject,
+} from "@apollo/client/cache";
+import {
   ApolloCache,
+  ApolloClient,
+  ApolloLink,
+  makeReference,
   MutationQueryReducersMap,
   TypedDocumentNode,
-  ApolloError,
-} from "../core";
+} from "@apollo/client/core";
+import {
+  MockedResponse,
+  MockLink,
+  mockSingleLink,
+} from "@apollo/client/testing";
+import { addTypenameToDocument } from "@apollo/client/utilities";
 
-import { QueryManager } from "../core/QueryManager";
-
-import { Cache, InMemoryCache } from "../cache";
-
-import { Observable, addTypenameToDocument } from "../utilities";
-
-import { MockedResponse, mockSingleLink } from "../testing";
-import { ObservableStream } from "../testing/internal";
+import { ObservableStream } from "../testing/internal/index.js";
 
 describe("optimistic mutation results", () => {
   const query = gql`
@@ -142,7 +145,14 @@ describe("optimistic mutation results", () => {
     });
 
     const obsHandle = client.watchQuery({ query });
-    await obsHandle.result();
+    // We can't use firstValueFrom here because we need to unsubscribe in the
+    // setTimeout
+    await new Promise((resolve) => {
+      const subscription = obsHandle.subscribe((value) => {
+        resolve(value);
+        setTimeout(() => subscription.unsubscribe());
+      });
+    });
 
     return client;
   }
@@ -221,7 +231,9 @@ describe("optimistic mutation results", () => {
         });
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(
+            true
+          ) as NormalizedCacheObject;
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(4);
           expect((dataInStore["Todo99"] as any).text).toBe(
             "Optimistically generated"
@@ -229,11 +241,13 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {
-          const dataInStore = (client.cache as InMemoryCache).extract(true);
+          const dataInStore = client.cache.extract(
+            true
+          ) as NormalizedCacheObject;
           expect((dataInStore["TodoList5"] as any).todos.length).toBe(3);
           expect(dataInStore).not.toHaveProperty("Todo99");
         }
@@ -338,7 +352,7 @@ describe("optimistic mutation results", () => {
 
         await expect(stream).toEmitNext();
 
-        const queryManager: QueryManager<any> = (client as any).queryManager;
+        const queryManager = client["queryManager"];
 
         const promise = client
           .mutate({
@@ -455,7 +469,7 @@ describe("optimistic mutation results", () => {
         }
 
         await expect(promise).rejects.toThrow(
-          new ApolloError({ networkError: new Error("forbidden (test error)") })
+          new Error("forbidden (test error)")
         );
 
         {
@@ -912,7 +926,9 @@ describe("optimistic mutation results", () => {
         "todos" in initialList &&
         Array.isArray(initialList.todos);
 
-      const initialList = client.cache.extract(true)[id];
+      const initialList = (client.cache.extract(true) as NormalizedCacheObject)[
+        id
+      ];
 
       if (!isTodoList(initialList)) {
         throw new Error("Expected TodoList");
@@ -953,7 +969,7 @@ describe("optimistic mutation results", () => {
         },
       });
 
-      const list = client.cache.extract(true)[id];
+      const list = (client.cache.extract(true) as NormalizedCacheObject)[id];
 
       if (!isTodoList(list)) {
         throw new Error("Expected TodoList");
@@ -963,7 +979,7 @@ describe("optimistic mutation results", () => {
 
       await promise;
 
-      const result = await client.query({ query });
+      const result = await client.query<any>({ query });
 
       stream.unsubscribe();
 
@@ -1068,11 +1084,44 @@ describe("optimistic mutation results", () => {
     };
 
     it("will insert a single itemAsync to the beginning", async () => {
-      expect.assertions(8);
-      const client = await setup({
-        request: { query: mutation },
-        result: mutationResult,
+      expect.assertions(7);
+      const link = new MockLink([
+        {
+          request: { query },
+          result,
+        },
+        {
+          request: { query: mutation },
+          result: mutationResult,
+        },
+      ]);
+
+      const client = new ApolloClient({
+        link,
+        cache: new InMemoryCache({
+          typePolicies: {
+            TodoList: {
+              fields: {
+                todos: {
+                  // Deliberately silence "Cache data may be lost..."
+                  // warnings by favoring the incoming data, rather than
+                  // (say) concatenating the arrays together.
+                  merge: false,
+                },
+              },
+            },
+          },
+          dataIdFromObject: (obj: any) => {
+            if (obj.id && obj.__typename) {
+              return obj.__typename + obj.id;
+            }
+            return null;
+          },
+        }),
+        // Enable client.queryManager.mutationStore tracking.
+        connectToDevTools: true,
       });
+
       const stream = new ObservableStream(client.watchQuery({ query }));
 
       await expect(stream).toEmitNext();
@@ -1279,7 +1328,6 @@ describe("optimistic mutation results", () => {
     });
 
     it("will handle dependent updates", async () => {
-      expect.assertions(1);
       const link = mockSingleLink(
         {
           request: { query },
@@ -1344,15 +1392,13 @@ describe("optimistic mutation results", () => {
       });
 
       // wrap the QueryObservable with an rxjs observable
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
+      const promise = lastValueFrom(
+        client.watchQuery<any>({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
         )
-        .toPromise();
+      );
 
       // Mutations will not trigger a watchQuery with the results of an optimistic response
       // if set in the same tick of the event loop.
@@ -1497,7 +1543,7 @@ describe("optimistic mutation results", () => {
         "Optimistically generated"
       );
       await promise;
-      const newResult = await client.query({ query });
+      const newResult = await client.query<any>({ query });
 
       stream.unsubscribe();
       // There should be one more todo item than before
@@ -1792,15 +1838,13 @@ describe("optimistic mutation results", () => {
         }),
       });
 
-      const promise = from(
-        client.watchQuery({ query }) as any as ObservableInput<any>
-      )
-        .pipe(
+      const promise = lastValueFrom(
+        client.watchQuery<any>({ query }).pipe(
           map((value) => value.data.todoList.todos),
           take(5),
           toArray()
         )
-        .toPromise();
+      );
 
       await new Promise((resolve) => setTimeout(resolve));
 
@@ -1856,7 +1900,7 @@ describe("optimistic mutation results", () => {
         ),
       });
 
-      const query = gql`
+      const query: TypedDocumentNode<Data> = gql`
         query {
           items {
             text
@@ -1875,8 +1919,8 @@ describe("optimistic mutation results", () => {
       type Item = ReturnType<typeof makeItem>;
       type Data = { items: Item[] };
 
-      function append(cache: ApolloCache<any>, item: Item) {
-        const data = cache.readQuery<Data>({ query });
+      function append(cache: ApolloCache, item: Item) {
+        const data = cache.readQuery({ query });
         cache.writeQuery({
           query,
           data: {
@@ -1945,8 +1989,8 @@ describe("optimistic mutation results", () => {
       expect(realisticDiffs).toEqual([
         {
           complete: false,
-          missing: [expect.anything()],
-          result: {},
+          missing: expect.anything(),
+          result: null,
         },
       ]);
 
@@ -2136,8 +2180,8 @@ describe("optimistic mutation results", () => {
       expect(realisticDiffs).toEqual([
         {
           complete: false,
-          missing: [expect.anything()],
-          result: {},
+          missing: expect.anything(),
+          result: null,
         },
         {
           complete: true,
@@ -2239,7 +2283,7 @@ describe("optimistic mutation - githunt comments", () => {
       variables,
     });
 
-    await obsHandle.result();
+    await firstValueFrom(from(obsHandle));
 
     return client;
   }

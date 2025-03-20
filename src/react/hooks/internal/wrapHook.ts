@@ -1,16 +1,17 @@
+import type { ApolloClient } from "@apollo/client/core";
+import type { ObservableQuery } from "@apollo/client/core";
+import type { createQueryPreloader } from "@apollo/client/react";
 import type {
-  useQuery,
-  useSuspenseQuery,
   useBackgroundQuery,
-  useReadQuery,
   useFragment,
+  useQuery,
   useQueryRefHandlers,
+  useReadQuery,
   useSuspenseFragment,
-} from "../index.js";
+  useSuspenseQuery,
+} from "@apollo/client/react/hooks";
+
 import type { QueryManager } from "../../../core/QueryManager.js";
-import type { ApolloClient } from "../../../core/ApolloClient.js";
-import type { ObservableQuery } from "../../../core/ObservableQuery.js";
-import type { createQueryPreloader } from "../../query-preloader/createQueryPreloader.js";
 
 const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
 
@@ -36,7 +37,7 @@ export type HookWrappers = {
   ) => WrappableHooks[K];
 };
 
-interface QueryManagerWithWrappers<T> extends QueryManager<T> {
+interface QueryManagerWithWrappers extends QueryManager {
   [wrapperSymbol]?: HookWrappers;
 }
 
@@ -78,13 +79,13 @@ interface QueryManagerWithWrappers<T> extends QueryManager<T> {
 export function wrapHook<Hook extends (...args: any[]) => any>(
   hookName: keyof WrappableHooks,
   useHook: Hook,
-  clientOrObsQuery: ObservableQuery<any> | ApolloClient<any>
+  clientOrObsQuery: ObservableQuery<any> | ApolloClient
 ): Hook {
   const queryManager = (
     clientOrObsQuery as unknown as {
       // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
       // but they're both `private`, so we have to cast around for a bit here.
-      queryManager: QueryManagerWithWrappers<any>;
+      queryManager: QueryManagerWithWrappers;
     }
   )["queryManager"];
   const wrappers = queryManager && queryManager[wrapperSymbol];

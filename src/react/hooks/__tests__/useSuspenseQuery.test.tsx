@@ -1,81 +1,84 @@
-import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
 import {
   act,
+  renderHook,
+  RenderHookOptions,
   screen,
   waitFor,
-  RenderHookOptions,
-  renderHook,
 } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ErrorBoundary, FallbackProps } from "react-error-boundary";
-import { GraphQLError } from "graphql";
-import { InvariantError } from "ts-invariant";
-import { equal } from "@wry/equality";
-import { expectTypeOf } from "expect-type";
-
-import {
-  gql,
-  ApolloCache,
-  ApolloClient,
-  ApolloError,
-  ApolloLink,
-  DocumentNode,
-  InMemoryCache,
-  Observable,
-  OperationVariables,
-  SubscribeToMoreOptions,
-  TypedDocumentNode,
-  split,
-  NetworkStatus,
-  ApolloQueryResult,
-  ErrorPolicy,
-} from "../../../core";
-import {
-  DeepPartial,
-  compact,
-  concatPagination,
-  getMainDefinition,
-  offsetLimitPagination,
-} from "../../../utilities";
-import {
-  MockedProvider,
-  MockedResponse,
-  MockSubscriptionLink,
-  MockLink,
-} from "../../../testing";
-import { ApolloProvider } from "../../context";
-import { SuspenseQueryHookFetchPolicy, skipToken } from "../../../react";
-import { UseSuspenseQueryResult, useSuspenseQuery } from "../useSuspenseQuery";
-import {
-  RefetchWritePolicy,
-  WatchQueryFetchPolicy,
-} from "../../../core/watchQueryOptions";
-import {
-  PaginatedCaseData,
-  PaginatedCaseVariables,
-  setupPaginatedCase,
-  spyOnConsole,
-  actAsync,
-  renderAsync,
-  renderHookAsync,
-} from "../../../testing/internal";
-import { Masked, MaskedDocumentNode, Unmasked } from "../../../masking";
-
 import {
   createRenderStream,
   disableActEnvironment,
   useTrackRenders,
 } from "@testing-library/react-render-stream";
+import { userEvent } from "@testing-library/user-event";
+import { equal } from "@wry/equality";
+import { expectTypeOf } from "expect-type";
+import { GraphQLError } from "graphql";
+import React, { Fragment, StrictMode, Suspense, useTransition } from "react";
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
+import { Observable, of } from "rxjs";
+
+import {
+  ApolloCache,
+  ApolloClient,
+  ApolloLink,
+  ApolloQueryResult,
+  CombinedGraphQLErrors,
+  DocumentNode,
+  ErrorPolicy,
+  gql,
+  InMemoryCache,
+  NetworkStatus,
+  OperationVariables,
+  split,
+  SubscribeToMoreOptions,
+  TypedDocumentNode,
+} from "@apollo/client/core";
+import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
+import { skipToken, SuspenseQueryHookFetchPolicy } from "@apollo/client/react";
+import { ApolloProvider } from "@apollo/client/react/context";
+import {
+  MockedResponse,
+  MockLink,
+  MockSubscriptionLink,
+} from "@apollo/client/testing";
+import { MockedProvider } from "@apollo/client/testing/react";
+import {
+  compact,
+  concatPagination,
+  DeepPartial,
+  getMainDefinition,
+  offsetLimitPagination,
+} from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
+
+import {
+  RefetchWritePolicy,
+  WatchQueryFetchPolicy,
+} from "../../../core/watchQueryOptions.js";
+import {
+  actAsync,
+  PaginatedCaseData,
+  PaginatedCaseVariables,
+  renderAsync,
+  renderHookAsync,
+  setupPaginatedCase,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
+import {
+  useSuspenseQuery,
+  UseSuspenseQueryResult,
+} from "../useSuspenseQuery.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
-type RenderSuspenseHookOptions<Props, TSerializedCache = {}> = Omit<
+type RenderSuspenseHookOptions<Props> = Omit<
   RenderHookOptions<Props>,
   "wrapper"
 > & {
-  client?: ApolloClient<TSerializedCache>;
+  client?: ApolloClient;
   link?: ApolloLink;
-  cache?: ApolloCache<TSerializedCache>;
+  cache?: ApolloCache;
   mocks?: MockedResponse[];
   strictMode?: boolean;
 };
@@ -94,7 +97,7 @@ interface SimpleQueryData {
 
 async function renderSuspenseHook<Result, Props>(
   render: (initialProps: Props) => Result,
-  options: RenderSuspenseHookOptions<Props> = Object.create(null)
+  options: RenderSuspenseHookOptions<Props> = {}
 ) {
   function SuspenseFallback() {
     renders.suspenseCount++;
@@ -229,17 +232,15 @@ interface ErrorCaseData {
   };
 }
 
-function useErrorCase<TData extends ErrorCaseData>(
-  {
-    data,
-    networkError,
-    graphQLErrors,
-  }: {
-    data?: Unmasked<TData>;
-    networkError?: Error;
-    graphQLErrors?: GraphQLError[];
-  } = Object.create(null)
-) {
+function useErrorCase<TData extends ErrorCaseData>({
+  data,
+  networkError,
+  graphQLErrors,
+}: {
+  data?: Unmasked<TData>;
+  networkError?: Error;
+  graphQLErrors?: GraphQLError[];
+} = {}) {
   const query: TypedDocumentNode<TData, never> = gql`
     query MyQuery {
       currentUser {
@@ -593,9 +594,11 @@ describe("useSuspenseQuery", () => {
 
     const previousResult = result.current;
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated cache greeting" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated cache greeting" },
+      });
     });
 
     await waitFor(() => {
@@ -609,114 +612,11 @@ describe("useSuspenseQuery", () => {
     expect(result.current.subscribeToMore).toBe(previousResult.subscribeToMore);
   });
 
-  it('enables canonical results when canonizeResults is "true"', async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: "Result", value: 0 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 2 },
-      { __typename: "Result", value: 3 },
-      { __typename: "Result", value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    const { result } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { canonizeResults: true }),
-      { cache }
-    );
-
-    const { data } = result.current;
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data).toEqual({ results });
-    expect(data.results.length).toBe(6);
-    expect(resultSet.size).toBe(5);
-    expect(values).toEqual([0, 1, 2, 3, 5]);
-  });
-
-  it("can disable canonical results when the cache's canonizeResults setting is true", async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    const cache = new InMemoryCache({
-      canonizeResults: true,
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<{ results: Result[] }> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: "Result", value: 0 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 2 },
-      { __typename: "Result", value: 3 },
-      { __typename: "Result", value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    const { result } = await renderSuspenseHook(
-      () => useSuspenseQuery(query, { canonizeResults: false }),
-      { cache }
-    );
-
-    const { data } = result.current;
-    const resultSet = new Set(data.results);
-    const values = Array.from(resultSet).map((item) => item.value);
-
-    expect(data).toEqual({ results });
-    expect(data.results.length).toBe(6);
-    expect(resultSet.size).toBe(6);
-    expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-  });
-
   it("tears down the query on unmount", async () => {
     const { query, mocks } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() => Observable.of(mocks[0].result)),
+      link: new ApolloLink(() => of(mocks[0].result)),
       cache: new InMemoryCache(),
     });
 
@@ -1073,16 +973,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1108,16 +1004,12 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const globalClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "global hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "global hello" } })),
       cache: new InMemoryCache(),
     });
 
     const localClient = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "local hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "local hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1150,9 +1042,7 @@ describe("useSuspenseQuery", () => {
     const { query } = useSimpleQueryCase();
 
     const client = new ApolloClient({
-      link: new ApolloLink(() =>
-        Observable.of({ data: { greeting: "hello" } })
-      ),
+      link: new ApolloLink(() => of({ data: { greeting: "hello" } })),
       cache: new InMemoryCache(),
     });
 
@@ -1649,10 +1539,12 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "2" },
-      data: { character: { id: "2", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "2" },
+        data: { character: { id: "2", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {
@@ -2116,10 +2008,12 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      variables: { id: "1" },
-      data: { character: { id: "1", name: "Cached hero" } },
+    act(() => {
+      client.writeQuery({
+        query,
+        variables: { id: "1" },
+        data: { character: { id: "1", name: "Cached hero" } },
+      });
     });
 
     await waitFor(() => {
@@ -2955,9 +2849,11 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {
@@ -3279,9 +3175,11 @@ describe("useSuspenseQuery", () => {
         expect(result.current.data).toEqual(mocks[0].result.data);
       });
 
-      client.writeQuery({
-        query,
-        data: { greeting: "Updated hello" },
+      act(() => {
+        client.writeQuery({
+          query,
+          data: { greeting: "Updated hello" },
+        });
       });
 
       await waitFor(() => {
@@ -3322,9 +3220,11 @@ describe("useSuspenseQuery", () => {
     // updated value.
     await wait(0);
 
-    client.writeQuery({
-      query,
-      data: { greeting: "Updated hello" },
+    act(() => {
+      client.writeQuery({
+        query,
+        data: { greeting: "Updated hello" },
+      });
     });
 
     await waitFor(() => {
@@ -3629,11 +3529,10 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error("Could not fetch"));
-    expect(error.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(new Error("Could not fetch"));
   });
 
   it("throws graphql errors by default", async () => {
@@ -3656,13 +3555,12 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("`id` should not be null"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors([{ message: "`id` should not be null" }])
+    );
   });
 
   it("tears down subscription when throwing an error", async () => {
@@ -3770,11 +3668,10 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error("Could not fetch"));
-    expect(error.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(new Error("Could not fetch"));
   });
 
   it('throws graphql errors when errorPolicy is set to "none"', async () => {
@@ -3795,13 +3692,12 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("`id` should not be null"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors([{ message: "`id` should not be null" }])
+    );
   });
 
   it('handles multiple graphql errors when errorPolicy is set to "none"', async () => {
@@ -3825,37 +3721,38 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toBeNull();
-    expect(error!.graphQLErrors).toEqual(graphQLErrors);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(new CombinedGraphQLErrors(graphQLErrors));
   });
 
-  it('throws network errors when errorPolicy is set to "ignore"', async () => {
+  it('does not throw or return network errors when errorPolicy is set to "ignore"', async () => {
     using _consoleSpy = spyOnConsole("error");
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "ignore" }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
+      expect(result.current).toMatchObject({
+        data: undefined,
+        networkStatus: NetworkStatus.ready,
+        error: undefined,
+      });
     });
 
-    expect(renders.errors.length).toBe(1);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
-
-    const [error] = renders.errors as ApolloError[];
-
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toEqual(networkError);
-    expect(error!.graphQLErrors).toEqual([]);
+    expect(renders.frames).toMatchObject([
+      { data: undefined, networkStatus: NetworkStatus.ready, error: undefined },
+    ]);
   });
 
   it('does not throw or return graphql errors when errorPolicy is set to "ignore"', async () => {
@@ -3962,14 +3859,16 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {
@@ -4000,31 +3899,41 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it('throws network errors when errorPolicy is set to "all"', async () => {
+  it('does not throw and returns network errors when errorPolicy is set to "all"', async () => {
     using _consoleSpy = spyOnConsole("error");
 
     const networkError = new Error("Could not fetch");
 
     const { query, mocks } = useErrorCase({ networkError });
 
-    const { renders } = await renderSuspenseHook(
+    const { result, renders } = await renderSuspenseHook(
       () => useSuspenseQuery(query, { errorPolicy: "all" }),
       { mocks }
     );
 
     await waitFor(() => {
-      expect(renders.errorCount).toBe(1);
+      expect(result.current).toMatchObject({
+        data: undefined,
+        error: networkError,
+      });
     });
 
-    expect(renders.errors.length).toBe(1);
+    expect(renders.errorCount).toBe(0);
+    expect(renders.errors).toEqual([]);
+    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
     expect(renders.suspenseCount).toBe(1);
-    expect(renders.frames).toEqual([]);
+    expect(renders.frames).toMatchObject([
+      {
+        data: undefined,
+        networkStatus: NetworkStatus.error,
+        error: networkError,
+      },
+    ]);
 
-    const [error] = renders.errors as ApolloError[];
+    const { error } = result.current;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toEqual(networkError);
-    expect(error!.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(networkError);
   });
 
   it('does not throw and returns graphql errors when errorPolicy is set to "all"', async () => {
@@ -4040,7 +3949,7 @@ describe("useSuspenseQuery", () => {
     await waitFor(() => {
       expect(result.current).toMatchObject({
         data: undefined,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors([graphQLError]),
       });
     });
 
@@ -4052,15 +3961,14 @@ describe("useSuspenseQuery", () => {
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors([graphQLError]),
       },
     ]);
 
     const { error } = result.current;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toBeNull();
-    expect(error!.graphQLErrors).toEqual([graphQLError]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(new CombinedGraphQLErrors([graphQLError]));
   });
 
   it('responds to cache updates and clears errors after an error returns when errorPolicy is set to "all"', async () => {
@@ -4082,18 +3990,20 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toMatchObject({
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors([graphQLError]),
       });
     });
 
-    client.writeQuery({
-      query,
-      data: {
-        currentUser: {
-          id: "1",
-          name: "Cache User",
+    act(() => {
+      client.writeQuery({
+        query,
+        data: {
+          currentUser: {
+            id: "1",
+            name: "Cache User",
+          },
         },
-      },
+      });
     });
 
     await waitFor(() => {
@@ -4114,7 +4024,7 @@ describe("useSuspenseQuery", () => {
       {
         data: undefined,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [graphQLError] }),
+        error: new CombinedGraphQLErrors([graphQLError]),
       },
       {
         data: { currentUser: { id: "1", name: "Cache User" } },
@@ -4137,7 +4047,7 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors });
+    const expectedError = new CombinedGraphQLErrors(graphQLErrors);
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4160,9 +4070,8 @@ describe("useSuspenseQuery", () => {
 
     const { error } = result.current;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error!.networkError).toBeNull();
-    expect(error!.graphQLErrors).toEqual(graphQLErrors);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(expectedError);
   });
 
   it('returns partial data and keeps errors when errorPolicy is set to "all"', async () => {
@@ -4178,7 +4087,7 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
+    const expectedError = new CombinedGraphQLErrors([graphQLError]);
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4209,7 +4118,7 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors: [graphQLError] });
+    const expectedError = new CombinedGraphQLErrors([graphQLError]);
 
     await waitFor(() => {
       expect(result.current.error).toEqual(expectedError);
@@ -4255,7 +4164,7 @@ describe("useSuspenseQuery", () => {
       { mocks, initialProps: { id: "1" } }
     );
 
-    const expectedError = new ApolloError({ graphQLErrors });
+    const expectedError = new CombinedGraphQLErrors(graphQLErrors);
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4670,9 +4579,7 @@ describe("useSuspenseQuery", () => {
     });
 
     expect(renders.errors).toEqual([
-      new ApolloError({
-        graphQLErrors: [new GraphQLError("Something went wrong")],
-      }),
+      new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
     ]);
     expect(renders.frames).toMatchObject([
       {
@@ -4783,9 +4690,9 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
-    });
+    const expectedError = new CombinedGraphQLErrors([
+      { message: "Something went wrong" },
+    ]);
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -4860,9 +4767,9 @@ describe("useSuspenseQuery", () => {
       { mocks }
     );
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("Something went wrong")],
-    });
+    const expectedError = new CombinedGraphQLErrors([
+      { message: "Something went wrong" },
+    ]);
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -6174,7 +6081,7 @@ describe("useSuspenseQuery", () => {
       expect(result.current).toMatchObject({
         ...successMock.result,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors([{ message: "oops" }]),
       });
     });
 
@@ -6199,7 +6106,7 @@ describe("useSuspenseQuery", () => {
       {
         ...successMock.result,
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({ graphQLErrors: [new GraphQLError("oops")] }),
+        error: new CombinedGraphQLErrors([{ message: "oops" }]),
       },
     ]);
   });
@@ -6212,7 +6119,7 @@ describe("useSuspenseQuery", () => {
     `;
 
     const link = new ApolloLink((operation) => {
-      return Observable.of({
+      return of({
         data: {
           context: operation.getContext(),
         },
@@ -6270,79 +6177,6 @@ describe("useSuspenseQuery", () => {
         error: undefined,
       },
     ]);
-  });
-
-  // NOTE: We only test the `false` -> `true` path here. If the option changes
-  // from `true` -> `false`, the data has already been canonized, so it has no
-  // effect on the output.
-  it("returns canonical results immediately when `canonizeResults` changes from `false` to `true` between renders", async () => {
-    interface Result {
-      __typename: string;
-      value: number;
-    }
-
-    interface Data {
-      results: Result[];
-    }
-
-    const cache = new InMemoryCache({
-      typePolicies: {
-        Result: {
-          keyFields: false,
-        },
-      },
-    });
-
-    const query: TypedDocumentNode<Data> = gql`
-      query {
-        results {
-          value
-        }
-      }
-    `;
-
-    const results: Result[] = [
-      { __typename: "Result", value: 0 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 1 },
-      { __typename: "Result", value: 2 },
-      { __typename: "Result", value: 3 },
-      { __typename: "Result", value: 5 },
-    ];
-
-    cache.writeQuery({
-      query,
-      data: { results },
-    });
-
-    function verifyCanonicalResults(data: Data, canonized: boolean) {
-      const resultSet = new Set(data.results);
-      const values = Array.from(resultSet).map((item) => item.value);
-
-      expect(data).toEqual({ results });
-
-      if (canonized) {
-        expect(data.results.length).toBe(6);
-        expect(resultSet.size).toBe(5);
-        expect(values).toEqual([0, 1, 2, 3, 5]);
-      } else {
-        expect(data.results.length).toBe(6);
-        expect(resultSet.size).toBe(6);
-        expect(values).toEqual([0, 1, 1, 2, 3, 5]);
-      }
-    }
-
-    const { result, rerenderAsync, renders } = await renderSuspenseHook(
-      ({ canonizeResults }) => useSuspenseQuery(query, { canonizeResults }),
-      { cache, initialProps: { canonizeResults: false } }
-    );
-
-    verifyCanonicalResults(result.current.data, false);
-
-    await rerenderAsync({ canonizeResults: true });
-
-    verifyCanonicalResults(result.current.data, true);
-    expect(renders.count).toBe(2 + (IS_REACT_19 ? renders.suspenseCount : 0));
   });
 
   it("applies changed `refetchWritePolicy` to next fetch when changing between renders", async () => {
@@ -6810,9 +6644,7 @@ describe("useSuspenseQuery", () => {
       void result.current.refetch();
     });
 
-    const expectedError = new ApolloError({
-      graphQLErrors: [new GraphQLError("oops")],
-    });
+    const expectedError = new CombinedGraphQLErrors([{ message: "oops" }]);
 
     await waitFor(() => {
       expect(result.current).toMatchObject({
@@ -7888,7 +7720,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -7901,7 +7733,7 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      partial: false,
     });
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -8269,7 +8101,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(fetchMorePromise!).resolves.toEqual({
+    await expect(fetchMorePromise!).resolves.toEqualApolloQueryResult({
       data: {
         greetings: [
           {
@@ -8284,7 +8116,7 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      partial: false,
     });
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -8684,11 +8516,10 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toEqual(new Error("Could not fetch"));
-    expect(error.graphQLErrors).toEqual([]);
+    expect(error).toBeInstanceOf(Error);
+    expect(error).toEqual(new Error("Could not fetch"));
   });
 
   it("throws graphql errors returned by deferred queries", async () => {
@@ -8728,13 +8559,12 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("Could not fetch greeting"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors([{ message: "Could not fetch greeting" }])
+    );
   });
 
   it("throws errors returned by deferred queries that include partial data", async () => {
@@ -8775,13 +8605,12 @@ describe("useSuspenseQuery", () => {
     expect(renders.suspenseCount).toBe(1);
     expect(renders.frames).toEqual([]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError("Could not fetch greeting"),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors([{ message: "Could not fetch greeting" }])
+    );
   });
 
   it("discards partial data and throws errors returned in incremental chunks", async () => {
@@ -8907,16 +8736,17 @@ describe("useSuspenseQuery", () => {
       },
     ]);
 
-    const [error] = renders.errors as ApolloError[];
+    const [error] = renders.errors;
 
-    expect(error).toBeInstanceOf(ApolloError);
-    expect(error.networkError).toBeNull();
-    expect(error.graphQLErrors).toEqual([
-      new GraphQLError(
-        "homeWorld for character with ID 1000 could not be fetched.",
-        { path: ["hero", "heroFriends", 0, "homeWorld"] }
-      ),
-    ]);
+    expect(error).toBeInstanceOf(CombinedGraphQLErrors);
+    expect(error).toEqual(
+      new CombinedGraphQLErrors([
+        {
+          message: "homeWorld for character with ID 1000 could not be fetched.",
+          path: ["hero", "heroFriends", 0, "homeWorld"],
+        },
+      ])
+    );
   });
 
   it("adds partial data and does not throw errors returned in incremental chunks but returns them in `error` property with errorPolicy set to `all`", async () => {
@@ -9033,14 +8863,13 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
+        error: new CombinedGraphQLErrors([
+          {
+            message:
               "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
-          ],
-        }),
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ]),
       });
     });
 
@@ -9085,14 +8914,13 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
+        error: new CombinedGraphQLErrors([
+          {
+            message:
               "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
-          ],
-        }),
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ]),
       },
     ]);
   });
@@ -9356,14 +9184,13 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
+        error: new CombinedGraphQLErrors([
+          {
+            message:
               "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
-          ],
-        }),
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ]),
       });
     });
 
@@ -9442,7 +9269,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqual({
+    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
       data: {
         hero: {
           heroFriends: [
@@ -9454,10 +9281,10 @@ describe("useSuspenseQuery", () => {
       },
       loading: false,
       networkStatus: NetworkStatus.ready,
-      error: undefined,
+      partial: false,
     });
 
-    cache.updateQuery({ query }, (data) => ({
+    cache.updateQuery<any>({ query }, (data) => ({
       hero: {
         ...data.hero,
         name: "C3PO",
@@ -9507,14 +9334,13 @@ describe("useSuspenseQuery", () => {
           },
         },
         networkStatus: NetworkStatus.error,
-        error: new ApolloError({
-          graphQLErrors: [
-            new GraphQLError(
+        error: new CombinedGraphQLErrors([
+          {
+            message:
               "homeWorld for character with ID 1000 could not be fetched.",
-              { path: ["hero", "heroFriends", 0, "homeWorld"] }
-            ),
-          ],
-        }),
+            path: ["hero", "heroFriends", 0, "homeWorld"],
+          },
+        ]),
       },
       {
         data: {
@@ -10752,7 +10578,7 @@ describe("useSuspenseQuery", () => {
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
-        error: null as ApolloError | null,
+        error: null as Error | null,
       },
     });
 
@@ -10826,9 +10652,7 @@ describe("useSuspenseQuery", () => {
 
       expect(renderedComponents).toStrictEqual([ErrorFallback]);
       expect(snapshot.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [{ message: "Could not fetch letters" }],
-        })
+        new CombinedGraphQLErrors([{ message: "Could not fetch letters" }])
       );
     }
 
@@ -11769,9 +11593,7 @@ describe("useSuspenseQuery", () => {
       });
 
       expect(result?.error).toEqual(
-        new ApolloError({
-          graphQLErrors: [new GraphQLError("Couldn't get name")],
-        })
+        new CombinedGraphQLErrors([{ message: "Couldn't get name" }])
       );
     }
   });
@@ -12785,7 +12607,7 @@ describe("useSuspenseQuery", () => {
         const result = await refetch();
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12797,7 +12619,9 @@ describe("useSuspenseQuery", () => {
 
         const result = await refetch();
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();
@@ -12829,7 +12653,7 @@ describe("useSuspenseQuery", () => {
         });
 
         expectTypeOf(result.data).toEqualTypeOf<
-          Masked<MaskedVariablesCaseData>
+          Masked<MaskedVariablesCaseData> | undefined
         >();
         expectTypeOf(
           result.data
@@ -12857,7 +12681,9 @@ describe("useSuspenseQuery", () => {
           },
         });
 
-        expectTypeOf(result.data).toEqualTypeOf<MaskedVariablesCaseData>();
+        expectTypeOf(result.data).toEqualTypeOf<
+          MaskedVariablesCaseData | undefined
+        >();
         expectTypeOf(
           result.data
         ).not.toEqualTypeOf<UnmaskedVariablesCaseData>();

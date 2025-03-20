@@ -1,11 +1,12 @@
-import { SubscriptionClient } from "subscriptions-transport-ws";
 import { ExecutionResult } from "graphql";
-import gql from "graphql-tag";
+import { gql } from "graphql-tag";
+import { Observable, of } from "rxjs";
+import { SubscriptionClient } from "subscriptions-transport-ws";
 
-import { Observable } from "../../../utilities";
-import { execute } from "../../core";
-import { WebSocketLink } from "..";
-import { ObservableStream } from "../../../testing/internal";
+import { execute } from "@apollo/client/link/core";
+import { WebSocketLink } from "@apollo/client/link/ws";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 const query = gql`
   query SampleQuery {
@@ -46,7 +47,7 @@ describe("WebSocketLink", () => {
   it("should call request on the client for a query", async () => {
     const result = { data: { data: "result" } };
     const client: any = {};
-    const observable = Observable.of(result);
+    const observable = of(result);
     client.__proto__ = SubscriptionClient.prototype;
     client.request = jest.fn();
     client.request.mockReturnValueOnce(observable);
@@ -64,7 +65,7 @@ describe("WebSocketLink", () => {
   it("should call query on the client for a mutation", async () => {
     const result = { data: { data: "result" } };
     const client: any = {};
-    const observable = Observable.of(result);
+    const observable = of(result);
     client.__proto__ = SubscriptionClient.prototype;
     client.request = jest.fn();
     client.request.mockReturnValueOnce(observable);
@@ -82,7 +83,7 @@ describe("WebSocketLink", () => {
   it("should call request on the subscriptions client for subscription", async () => {
     const result = { data: { data: "result" } };
     const client: any = {};
-    const observable = Observable.of(result);
+    const observable = of(result);
     client.__proto__ = SubscriptionClient.prototype;
     client.request = jest.fn();
     client.request.mockReturnValueOnce(observable);

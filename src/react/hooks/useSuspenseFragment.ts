@@ -1,3 +1,6 @@
+import * as React from "react";
+
+import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   DocumentNode,
@@ -5,16 +8,16 @@ import type {
   Reference,
   StoreObject,
   TypedDocumentNode,
-} from "../../core/index.js";
-import { canonicalStringify } from "../../cache/index.js";
-import { useApolloClient } from "./useApolloClient.js";
-import { getSuspenseCache } from "../internal/index.js";
-import * as React from "rehackt";
+} from "@apollo/client/core";
+import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
+import type { NoInfer, VariablesOption } from "@apollo/client/react";
+import { getSuspenseCache } from "@apollo/client/react/internal";
+
 import type { FragmentKey } from "../internal/cache/types.js";
+
 import { __use } from "./internal/__use.js";
 import { wrapHook } from "./internal/index.js";
-import type { FragmentType, MaybeMasked } from "../../masking/index.js";
-import type { NoInfer, VariablesOption } from "../types/types.js";
+import { useApolloClient } from "./useApolloClient.js";
 
 type From<TData> =
   | StoreObject
@@ -52,7 +55,7 @@ export type UseSuspenseFragmentOptions<
    *
    * @docGroup 1. Operation options
    */
-  client?: ApolloClient<any>;
+  client?: ApolloClient;
 } & VariablesOption<NoInfer<TVariables>>;
 
 export type UseSuspenseFragmentResult<TData> = { data: MaybeMasked<TData> };

@@ -1,12 +1,12 @@
-import gql from "graphql-tag";
 import { ASTNode, print, stripIgnoredCharacters } from "graphql";
+import { gql } from "graphql-tag";
 
-import { createOperation } from "../../utils/createOperation";
+import { createOperation } from "../../utils/createOperation.js";
 import {
+  fallbackHttpConfig,
   selectHttpOptionsAndBody,
   selectHttpOptionsAndBodyInternal,
-  fallbackHttpConfig,
-} from "../selectHttpOptionsAndBody";
+} from "../selectHttpOptionsAndBody.js";
 
 const query = gql`
   query SampleQuery {
@@ -36,7 +36,7 @@ describe("selectHttpOptionsAndBody", () => {
 
   it("the fallbackConfig is used if no other configs are specified", () => {
     const defaultHeaders = {
-      accept: "*/*",
+      accept: "application/graphql-response+json",
       "content-type": "application/json",
     };
 

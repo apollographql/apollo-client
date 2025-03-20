@@ -1,7 +1,15 @@
-import { ApolloClient, ApolloLink, gql, NetworkStatus } from "../../../core";
-import { getFragmentDefinitions, Observable } from "../../../utilities";
-import { InMemoryCache, createFragmentRegistry } from "../../index";
-import { ObservableStream } from "../../../testing/internal";
+import { Observable } from "rxjs";
+
+import { createFragmentRegistry, InMemoryCache } from "@apollo/client/cache";
+import {
+  ApolloClient,
+  ApolloLink,
+  gql,
+  NetworkStatus,
+} from "@apollo/client/core";
+import { getFragmentDefinitions } from "@apollo/client/utilities";
+
+import { ObservableStream } from "../../../testing/internal/index.js";
 
 describe("FragmentRegistry", () => {
   it("can be passed to InMemoryCache", () => {
@@ -62,13 +70,16 @@ describe("FragmentRegistry", () => {
               "SourceFragment",
             ]);
 
-            observer.next({
-              data: {
-                source: "link",
-              },
-            });
+            // Emit value async so we can observe the loading state
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  source: "link",
+                },
+              });
 
-            observer.complete();
+              observer.complete();
+            });
           })
       ),
     });
@@ -90,22 +101,24 @@ describe("FragmentRegistry", () => {
       client.watchQuery({ query, fetchPolicy: "cache-and-network" })
     );
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: true,
       networkStatus: NetworkStatus.loading,
       data: {
         __typename: "Query",
         source: "local",
       },
+      partial: false,
     });
 
-    await expect(stream).toEmitValue({
+    await expect(stream).toEmitApolloQueryResult({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: {
         __typename: "Query",
         source: "link",
       },
+      partial: false,
     });
 
     expect(cache.readQuery({ query })).toEqual({

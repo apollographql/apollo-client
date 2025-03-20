@@ -16,7 +16,6 @@ import type {
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
 import type {
-  BaseSubscriptionOptions,
   NoInfer,
   OnDataOptions,
   OnSubscriptionDataOptions,
@@ -46,7 +45,7 @@ export interface UseSubscriptionOptions<
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#shouldResubscribe:member} */
   shouldResubscribe?:
     | boolean
-    | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
+    | ((options: UseSubscriptionOptions<TData, TVariables>) => boolean);
 
   /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#client:member} */
   client?: ApolloClient;

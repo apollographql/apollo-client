@@ -217,14 +217,6 @@ export interface QueryResultDocumentation {
    */
   networkStatus: unknown;
   /**
-   * If `true`, the associated lazy query has been executed.
-   *
-   * This field is only present on the result object returned by [`useLazyQuery`](/react/data/queries/#executing-queries-manually).
-   *
-   * @docGroup 2. Network info
-   */
-  called: unknown;
-  /**
    * An object containing the variables that were provided for the query.
    *
    * @docGroup 1. Operation data

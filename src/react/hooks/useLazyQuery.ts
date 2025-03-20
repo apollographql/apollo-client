@@ -130,7 +130,11 @@ export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
   loading: boolean;
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#called:member} */
+  /**
+   * If `true`, the associated lazy query has been executed.
+   *
+   * @docGroup 2. Network info
+   */
   called: boolean;
 }
 

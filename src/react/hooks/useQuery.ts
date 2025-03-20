@@ -535,7 +535,6 @@ function toQueryResult<TData, TVariables extends OperationVariables>(
     client: client,
     observable: observable,
     variables: observable.variables,
-    called: result !== ssrDisabledResult && result !== skipStandbyResult,
     previousData,
   };
   return queryResult;

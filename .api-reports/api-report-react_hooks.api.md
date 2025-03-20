@@ -1660,7 +1660,6 @@ interface QueryRef<TData = unknown, TVariables = unknown> {
 //
 // @public (undocumented)
 interface QueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends ObservableQueryFields<TData, TVariables> {
-    called: boolean;
     client: ApolloClient;
     data: MaybeMasked<TData> | undefined;
     error?: ErrorLike;

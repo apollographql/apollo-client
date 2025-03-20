@@ -115,11 +115,6 @@ export interface QueryDataOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type LoadableQueryHookFetchPolicy = Extract<
-  WatchQueryFetchPolicy,
-  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
->;
-
 /* Mutation types */
 
 export type RefetchQueriesFunction = (

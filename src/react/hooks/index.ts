@@ -1,11 +1,5 @@
 export { useApolloClient } from "./useApolloClient.js";
 export { useLazyQuery } from "./useLazyQuery.js";
-export type {
-  MutationFunctionOptions,
-  UseMutationOptions,
-  UseMutationResult,
-  UseMutationResultTuple,
-} from "./useMutation.js";
 export { useMutation } from "./useMutation.js";
 export { useQuery } from "./useQuery.js";
 export type {

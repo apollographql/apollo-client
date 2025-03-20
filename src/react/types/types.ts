@@ -115,11 +115,6 @@ export interface QueryDataOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-export type SuspenseQueryHookFetchPolicy = Extract<
-  WatchQueryFetchPolicy,
-  "cache-first" | "network-only" | "no-cache" | "cache-and-network"
->;
-
 export type BackgroundQueryHookFetchPolicy = Extract<
   WatchQueryFetchPolicy,
   "cache-first" | "network-only" | "no-cache" | "cache-and-network"

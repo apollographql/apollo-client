@@ -57,7 +57,6 @@ import {
 } from "../../../testing/internal/index.js";
 import { FetchMoreFunction, RefetchFunction } from "../../internal/types.js";
 import { useLoadableQuery } from "../useLoadableQuery.js";
-import type { UseReadQueryResult } from "../useReadQuery.js";
 import { useReadQuery } from "../useReadQuery.js";
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -169,7 +168,7 @@ function createDefaultProfiler<TData>() {
   return createRenderStream({
     initialSnapshot: {
       error: null as Error | null,
-      result: null as UseReadQueryResult<TData> | null,
+      result: null as useReadQuery.Result<TData> | null,
     },
     skipNonTrackingRenders: true,
   });
@@ -177,10 +176,10 @@ function createDefaultProfiler<TData>() {
 
 function createDefaultProfiledComponents<
   Snapshot extends {
-    result: UseReadQueryResult<any> | null;
+    result: useReadQuery.Result<any> | null;
     error?: Error | null;
   },
-  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
+  TData = Snapshot["result"] extends useReadQuery.Result<infer TData> | null ?
     TData
   : unknown,
 >(profiler: RenderStream<Snapshot>) {
@@ -1656,7 +1655,7 @@ it("reacts to cache updates", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleQueryData> | null,
+      result: null as useReadQuery.Result<SimpleQueryData> | null,
     },
   });
 
@@ -4711,7 +4710,7 @@ it("can subscribe to subscriptions and react to cache updates via `subscribeToMo
         SimpleCaseData,
         Record<string, never>
       > | null,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -4848,7 +4847,7 @@ it("throws when calling `subscribeToMore` before loading the query", async () =>
         SimpleCaseData,
         Record<string, never>
       > | null,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 

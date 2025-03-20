@@ -10,7 +10,6 @@ export { useBackgroundQuery } from "./useBackgroundQuery.js";
 export { useSuspenseFragment } from "./useSuspenseFragment.js";
 export { useLoadableQuery } from "./useLoadableQuery.js";
 export { useQueryRefHandlers } from "./useQueryRefHandlers.js";
-export type { UseReadQueryResult } from "./useReadQuery.js";
 export { useReadQuery } from "./useReadQuery.js";
 export { skipToken } from "./constants.js";
 export type { SkipToken } from "./constants.js";

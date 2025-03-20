@@ -70,15 +70,15 @@ import {
 } from "../../../testing/internal/scenarios/index.js";
 import { skipToken } from "../constants.js";
 import { useBackgroundQuery } from "../useBackgroundQuery.js";
-import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
 
 afterEach(() => {
   jest.useRealTimers();
 });
 
 function createDefaultTrackedComponents<
-  Snapshot extends { result: UseReadQueryResult<any> | null },
-  TData = Snapshot["result"] extends UseReadQueryResult<infer TData> | null ?
+  Snapshot extends { result: useReadQuery.Result<any> | null },
+  TData = Snapshot["result"] extends useReadQuery.Result<infer TData> | null ?
     TData
   : unknown,
 >(renderStream: RenderStream<Snapshot>) {
@@ -124,7 +124,7 @@ function createErrorProfiler<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
       error: null as Error | null,
-      result: null as UseReadQueryResult<TData> | null,
+      result: null as useReadQuery.Result<TData> | null,
     },
   });
 }
@@ -132,7 +132,7 @@ function createErrorProfiler<TData = unknown>() {
 function createDefaultProfiler<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<TData> | null,
+      result: null as useReadQuery.Result<TData> | null,
     },
   });
 }
@@ -584,7 +584,7 @@ it("does not recreate queryRef or execute a network request when rerendering use
   const renderStream = createRenderStream({
     initialSnapshot: {
       queryRef: null as QueryRef<SimpleCaseData> | null,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
   const { SuspenseFallback, ReadQueryHook } =
@@ -1250,7 +1250,7 @@ it("works with startTransition to change variables", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<Data> | null,
+      result: null as useReadQuery.Result<Data> | null,
     },
   });
 
@@ -2266,7 +2266,7 @@ it("does not make network requests when using `skip` option in strict mode", asy
 it("result is referentially stable", async () => {
   const { query, mocks } = setupSimpleCase();
 
-  let result: UseReadQueryResult<SimpleCaseData> | null = null;
+  let result: useReadQuery.Result<SimpleCaseData> | null = null;
 
   const renderStream = createDefaultProfiler<SimpleCaseData>();
   const { SuspenseFallback, ReadQueryHook } =
@@ -2322,7 +2322,7 @@ it("`skip` option works with `startTransition`", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
   const { SuspenseFallback, ReadQueryHook } =
@@ -2401,7 +2401,7 @@ it("`skipToken` works with `startTransition`", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -5806,7 +5806,7 @@ describe("refetch", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         isPending: false,
-        result: null as UseReadQueryResult<Data> | null,
+        result: null as useReadQuery.Result<Data> | null,
       },
     });
 
@@ -6465,7 +6465,7 @@ describe("fetchMore", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         isPending: false,
-        result: null as UseReadQueryResult<Data> | null,
+        result: null as useReadQuery.Result<Data> | null,
       },
     });
     const { SuspenseFallback, ReadQueryHook } =
@@ -6675,7 +6675,7 @@ describe("fetchMore", () => {
     const renderStream = createRenderStream({
       initialSnapshot: {
         isPending: false,
-        result: null as UseReadQueryResult<Data> | null,
+        result: null as useReadQuery.Result<Data> | null,
       },
     });
 
@@ -6865,7 +6865,7 @@ describe("fetchMore", () => {
           SimpleCaseData,
           Record<string, never>
         > | null,
-        result: null as UseReadQueryResult<SimpleCaseData> | null,
+        result: null as useReadQuery.Result<SimpleCaseData> | null,
       },
     });
 

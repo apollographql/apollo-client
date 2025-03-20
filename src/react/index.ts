@@ -22,5 +22,3 @@ export type {
   QueryRef,
   QueryReference,
 } from "./internal/index.js";
-
-export type * from "./types/types.js";

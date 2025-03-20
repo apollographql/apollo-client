@@ -131,6 +131,8 @@ export interface MutationFunctionOptions<
   TCache extends ApolloCache = ApolloCache,
 > extends UseMutationOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+  // TODO: Remove this option. We shouldn't allow the mutation to be overridden
+  // in the mutation function
   mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 

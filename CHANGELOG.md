@@ -1,5 +1,11 @@
 # @apollo/client
 
+## 3.13.5
+
+### Patch Changes
+
+- [#12461](https://github.com/apollographql/apollo-client/pull/12461) [`12c8d06`](https://github.com/apollographql/apollo-client/commit/12c8d06f1ef7cfbece8e3a63b7ad09d91334f663) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where a `cache-first` query would return the result for previous variables when a cache update is issued after simultaneously changing variables and skipping the query.
+
 ## 3.13.4
 
 ### Patch Changes

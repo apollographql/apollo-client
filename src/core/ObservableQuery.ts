@@ -690,6 +690,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve();
   }
 
+  /** @internal */
   public silentSetOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ) {

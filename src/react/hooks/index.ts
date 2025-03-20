@@ -1,6 +1,7 @@
 export * from "./useApolloClient.js";
 export * from "./useLazyQuery.js";
 export type {
+  MutationFunctionOptions,
   UseMutationOptions,
   UseMutationResultTuple,
 } from "./useMutation.js";

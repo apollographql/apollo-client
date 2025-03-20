@@ -2194,22 +2194,6 @@ interface ServerParseErrorOptions {
 export function setLogVerbosity(level: VerbosityLevel): VerbosityLevel;
 
 // @public (undocumented)
-interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> {
-    context?: DefaultContext;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: WatchQueryFetchPolicy;
-    initialFetchPolicy?: WatchQueryFetchPolicy;
-    // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-    skipPollAttempt?: () => boolean;
-    variables?: TVariables;
-}
-
-// @public (undocumented)
 export interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
@@ -2433,11 +2417,21 @@ export type WatchFragmentResult<TData> = {
 // @public (undocumented)
 export type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
-// Warning: (ae-forgotten-export) The symbol "SharedWatchQueryOptions" needs to be exported by the entry point index.d.ts
-//
 // @public
-export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> extends SharedWatchQueryOptions<TVariables, TData> {
+export interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> {
+    context?: DefaultContext;
+    errorPolicy?: ErrorPolicy;
+    fetchPolicy?: WatchQueryFetchPolicy;
+    initialFetchPolicy?: WatchQueryFetchPolicy;
+    // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+    notifyOnNetworkStatusChange?: boolean;
+    pollInterval?: number;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    refetchWritePolicy?: RefetchWritePolicy;
+    returnPartialData?: boolean;
+    skipPollAttempt?: () => boolean;
+    variables?: TVariables;
 }
 
 // @public (undocumented)

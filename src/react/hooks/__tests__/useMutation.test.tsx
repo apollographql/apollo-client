@@ -38,8 +38,7 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { spyOnConsole } from "../../../testing/internal/index.js";
-import { MutationTuple } from "../../types/types.js";
-import { useMutation } from "../useMutation.js";
+import { useMutation, UseMutationResultTuple } from "../useMutation.js";
 import { useQuery, UseQueryResult } from "../useQuery.js";
 
 describe("useMutation Hook", () => {
@@ -2353,7 +2352,7 @@ describe("useMutation Hook", () => {
       const renderStream = createRenderStream({
         initialSnapshot: {
           useQueryResult: null as UseQueryResult<TNumbersQuery> | null,
-          useMutationResult: null as MutationTuple<any, any> | null,
+          useMutationResult: null as UseMutationResultTuple<any, any> | null,
         },
       });
 

@@ -4,19 +4,13 @@ import type * as ReactTypes from "react";
 
 import type {
   ApolloClient,
-  ApolloQueryResult,
   DefaultContext,
   ErrorLike,
   ErrorPolicy,
-  FetchMoreQueryOptions,
   FetchPolicy,
-  NetworkStatus,
   OperationVariables,
-  SubscribeToMoreFunction,
-  UpdateQueryMapFn,
-  WatchQueryOptions,
 } from "@apollo/client/core";
-import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
+import type { MaybeMasked } from "@apollo/client/masking";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
 /* QueryReference type */

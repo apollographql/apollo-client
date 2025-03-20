@@ -1,5 +1,13 @@
 # @apollo/client
 
+## 4.0.0-alpha.3
+
+### Major Changes
+
+- [#12457](https://github.com/apollographql/apollo-client/pull/12457) [`32e85ea`](https://github.com/apollographql/apollo-client/commit/32e85ea9eb93c1ffb10d6f70e9e2775e1326e9aa) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Network errors triggered by queries now adhere to the `errorPolicy`. This means that GraphQL errors and network errors now behave the same way. Previously promise-based APIs, such as `client.query`, would reject the promise with the network error even if `errorPolicy` was set to `ignore`. The promise is now resolved with the `error` property set to the network error instead.
+
+- [#12464](https://github.com/apollographql/apollo-client/pull/12464) [`0595f39`](https://github.com/apollographql/apollo-client/commit/0595f39deba52ac43fa0780b742564134ec7ab89) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Remove the `called` property from `useQuery`.
+
 ## 4.0.0-alpha.2
 
 ### Major Changes

@@ -10,6 +10,7 @@ import type {
   useMutation,
   useQuery,
   useSubscription,
+  useSuspenseFragment,
   useSuspenseQuery,
 } from "@apollo/client/react/hooks";
 
@@ -139,3 +140,13 @@ export type UseBackgroundQueryResult<
 
 /** @deprecated Use `useBackgroundQuery.FetchPolicy` instead */
 export type BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;
+
+/** @deprecated Use `useSuspenseFragment.Options` instead */
+export type UseSuspenseFragmentOptions<
+  TData,
+  TVariables extends OperationVariables,
+> = useSuspenseFragment.Options<TData, TVariables>;
+
+/** @deprecated Use `useSuspenseFragment.Result` instead */
+export type UseSuspenseFragmentResult<TData> =
+  useSuspenseFragment.Result<TData>;

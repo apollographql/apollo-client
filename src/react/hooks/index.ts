@@ -7,6 +7,7 @@ export * from "./useSubscription.js";
 export * from "./useReactiveVar.js";
 export * from "./useFragment.js";
 export type {
+  UseSuspenseQueryFetchPolicy,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "./useSuspenseQuery.js";

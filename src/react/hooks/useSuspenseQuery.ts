@@ -18,11 +18,7 @@ import type {
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type {
-  NoInfer,
-  ObservableQueryFields,
-  SuspenseQueryHookFetchPolicy,
-} from "@apollo/client/react";
+import type { NoInfer, ObservableQueryFields } from "@apollo/client/react";
 import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
@@ -55,6 +51,12 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
+export type UseSuspenseQueryFetchPolicy =
+  | "cache-first"
+  | "network-only"
+  | "no-cache"
+  | "cache-and-network";
+
 export interface UseSuspenseQueryOptions<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -72,7 +74,7 @@ export interface UseSuspenseQueryOptions<
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
   refetchWritePolicy?: RefetchWritePolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
-  fetchPolicy?: SuspenseQueryHookFetchPolicy;
+  fetchPolicy?: UseSuspenseQueryFetchPolicy;
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
   queryKey?: string | number | any[];
 

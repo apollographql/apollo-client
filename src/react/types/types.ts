@@ -31,10 +31,6 @@ export type {
 
 export type { DefaultContext as Context } from "../../core/index.js";
 
-export type CommonOptions<TOptions> = TOptions & {
-  client?: ApolloClient;
-};
-
 /* Query types */
 
 export interface ObservableQueryFields<

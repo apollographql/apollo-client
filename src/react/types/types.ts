@@ -114,10 +114,6 @@ export interface QueryDataOptions<
 
 /* Mutation types */
 
-export type RefetchQueriesFunction = (
-  ...args: any[]
-) => InternalRefetchQueriesInclude;
-
 export interface BaseMutationOptions<
   TData = unknown,
   TVariables = OperationVariables,

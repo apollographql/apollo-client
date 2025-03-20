@@ -4,10 +4,13 @@ import { canonicalStringify } from "@apollo/client/cache";
 import type {
   ApolloClient,
   ApolloQueryResult,
+  DefaultContext,
   DocumentNode,
   ErrorLike,
+  ErrorPolicy,
   FetchMoreQueryOptions,
   OperationVariables,
+  RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryFetchPolicy,
   WatchQueryOptions,
@@ -18,7 +21,7 @@ import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
   NoInfer,
   ObservableQueryFields,
-  SuspenseQueryHookOptions,
+  SuspenseQueryHookFetchPolicy,
 } from "@apollo/client/react";
 import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
@@ -52,6 +55,40 @@ export interface UseSuspenseQueryResult<
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 
+export interface UseSuspenseQueryOptions<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+  variables?: TVariables;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy_suspense:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: SuspenseQueryHookFetchPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+  queryKey?: string | number | any[];
+
+  /**
+   * {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip_deprecated:member}
+   *
+   * @example Recommended usage of `skipToken`:
+   * ```ts
+   * import { skipToken, useSuspenseQuery } from '@apollo/client';
+   *
+   * const { data } = useSuspenseQuery(query, id ? { variables: { id } } : skipToken);
+   * ```
+   */
+  skip?: boolean;
+}
+
 export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
   fetchMoreOptions: FetchMoreQueryOptions<TVariables, TData> & {
     updateQuery?: (
@@ -72,10 +109,10 @@ export type RefetchFunction<
 export function useSuspenseQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">,
+  TOptions extends Omit<UseSuspenseQueryOptions<TData>, "variables">,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> &
+  options?: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> &
     TOptions
 ): UseSuspenseQueryResult<
   TOptions["errorPolicy"] extends "ignore" | "all" ?
@@ -96,7 +133,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
@@ -107,7 +144,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     errorPolicy: "ignore" | "all";
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
@@ -117,7 +154,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
   }
@@ -128,7 +165,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     returnPartialData: true;
   }
 ): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
@@ -138,7 +175,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+  options: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
     skip: boolean;
   }
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
@@ -148,7 +185,7 @@ export function useSuspenseQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options?: UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData, TVariables>;
 
 export function useSuspenseQuery<
@@ -158,7 +195,7 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
     | SkipToken
-    | (SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> & {
+    | (UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>> & {
         returnPartialData: true;
       })
 ): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
@@ -170,7 +207,7 @@ export function useSuspenseQuery<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options?:
     | SkipToken
-    | SuspenseQueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+    | UseSuspenseQueryOptions<NoInfer<TData>, NoInfer<TVariables>>
 ): UseSuspenseQueryResult<TData | undefined, TVariables>;
 
 export function useSuspenseQuery<
@@ -179,8 +216,8 @@ export function useSuspenseQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables> = {}
+    | (SkipToken & Partial<UseSuspenseQueryOptions<TData, TVariables>>)
+    | UseSuspenseQueryOptions<TData, TVariables> = {}
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   return wrapHook(
     "useSuspenseQuery",
@@ -196,8 +233,8 @@ function useSuspenseQuery_<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options:
-    | (SkipToken & Partial<SuspenseQueryHookOptions<TData, TVariables>>)
-    | SuspenseQueryHookOptions<TData, TVariables>
+    | (SkipToken & Partial<UseSuspenseQueryOptions<TData, TVariables>>)
+    | UseSuspenseQueryOptions<TData, TVariables>
 ): UseSuspenseQueryResult<TData | undefined, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
@@ -347,7 +384,7 @@ interface UseWatchQueryOptionsHookOptions<
 > {
   client: ApolloClient;
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-  options: SkipToken | SuspenseQueryHookOptions<TData, TVariables>;
+  options: SkipToken | UseSuspenseQueryOptions<TData, TVariables>;
 }
 
 export function useWatchQueryOptions<

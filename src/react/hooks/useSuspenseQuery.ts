@@ -36,12 +36,19 @@ export interface UseSuspenseQueryResult<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 > {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
   client: ApolloClient;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
   data: MaybeMasked<TData>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error: ErrorLike | undefined;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
   networkStatus: NetworkStatus;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
   refetch: RefetchFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
 }
 

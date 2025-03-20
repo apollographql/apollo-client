@@ -2,9 +2,13 @@ import * as React from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
+  ApolloClient,
+  DefaultContext,
   DocumentNode,
+  ErrorPolicy,
   FetchMoreQueryOptions,
   OperationVariables,
+  RefetchWritePolicy,
   TypedDocumentNode,
   WatchQueryOptions,
 } from "@apollo/client/core";
@@ -12,7 +16,7 @@ import type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
 } from "@apollo/client/core";
-import type { LoadableQueryHookOptions } from "@apollo/client/react";
+import type { LoadableQueryHookFetchPolicy } from "@apollo/client/react";
 import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
@@ -64,13 +68,30 @@ export type UseLoadableQueryResult<
   },
 ];
 
+export interface UseLoadableQueryOptions {
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+  client?: ApolloClient;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+  context?: DefaultContext;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+  errorPolicy?: ErrorPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+  fetchPolicy?: LoadableQueryHookFetchPolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+  queryKey?: string | number | any[];
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+  refetchWritePolicy?: RefetchWritePolicy;
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+  returnPartialData?: boolean;
+}
+
 export function useLoadableQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends LoadableQueryHookOptions,
+  TOptions extends UseLoadableQueryOptions,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LoadableQueryHookOptions & TOptions
+  options?: UseLoadableQueryOptions & TOptions
 ): UseLoadableQueryResult<
   TOptions["errorPolicy"] extends "ignore" | "all" ?
     TOptions["returnPartialData"] extends true ?
@@ -86,7 +107,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions & {
+  options: UseLoadableQueryOptions & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
@@ -97,7 +118,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions & {
+  options: UseLoadableQueryOptions & {
     errorPolicy: "ignore" | "all";
   }
 ): UseLoadableQueryResult<TData | undefined, TVariables>;
@@ -107,7 +128,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions & {
+  options: UseLoadableQueryOptions & {
     returnPartialData: true;
   }
 ): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
@@ -162,7 +183,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LoadableQueryHookOptions
+  options?: UseLoadableQueryOptions
 ): UseLoadableQueryResult<TData, TVariables>;
 
 export function useLoadableQuery<
@@ -170,7 +191,7 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions = {}
+  options: UseLoadableQueryOptions = {}
 ): UseLoadableQueryResult<TData, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);

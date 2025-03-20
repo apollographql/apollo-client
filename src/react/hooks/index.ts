@@ -6,7 +6,10 @@ export { useQuery } from "./useQuery.js";
 export * from "./useSubscription.js";
 export * from "./useReactiveVar.js";
 export * from "./useFragment.js";
-export type { UseSuspenseQueryResult } from "./useSuspenseQuery.js";
+export type {
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
+} from "./useSuspenseQuery.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export type { UseBackgroundQueryResult } from "./useBackgroundQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";

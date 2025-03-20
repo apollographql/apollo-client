@@ -21,12 +21,12 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
+import type { VariablesOption } from "@apollo/client/react/internal";
 import type { NoInfer, OnlyRequiredProperties } from "@apollo/client/utilities";
 import { maybeDeepFreeze } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
-import type { VariablesOption } from "../types/types.js";
 
 import { useRenderGuard } from "./internal/index.js";
 import { useDeepMemo } from "./internal/useDeepMemo.js";

@@ -3,8 +3,6 @@ import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
 /* Common types */
 
-export type { DefaultContext as Context } from "../../core/index.js";
-
 export type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
     {

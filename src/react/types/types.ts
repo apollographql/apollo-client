@@ -112,30 +112,6 @@ export interface QueryDataOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
-/* Mutation types */
-
-export interface BaseMutationOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
-  client?: ApolloClient;
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
-  notifyOnNetworkStatusChange?: boolean;
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
-  onCompleted?: (
-    data: MaybeMasked<TData>,
-    clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
-  ) => void;
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
-  onError?: (
-    error: ErrorLike,
-    clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>
-  ) => void;
-}
-
 /* Subscription types */
 
 export interface OnDataOptions<TData = unknown> {

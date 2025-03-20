@@ -1,8 +1,7 @@
 import type { OperationVariables } from "@apollo/client/core";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
 
-/* Common types */
-
+/** @internal */
 export type VariablesOption<TVariables extends OperationVariables> =
   [TVariables] extends [never] ?
     {

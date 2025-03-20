@@ -7,6 +7,7 @@ import type {
   useBackgroundQuery,
   useFragment,
   useLazyQuery,
+  useLoadableQuery,
   useMutation,
   useQuery,
   useSubscription,
@@ -150,3 +151,19 @@ export type UseSuspenseFragmentOptions<
 /** @deprecated Use `useSuspenseFragment.Result` instead */
 export type UseSuspenseFragmentResult<TData> =
   useSuspenseFragment.Result<TData>;
+
+/** @deprecated Use `useLoadableQuery.LoadQueryFunction` instead */
+export type LoadQueryFunction<TVariables extends OperationVariables> =
+  useLoadableQuery.LoadQueryFunction<TVariables>;
+
+/** @deprecated Use `useLoadableQuery.FetchPolicy` instead */
+export type UseLoadableQueryFetchPolicy = useLoadableQuery.FetchPolicy;
+
+/** @deprecated Use `useLoadableQuery.Options` instead */
+export type UseLoadableQueryOptions = useLoadableQuery.Options;
+
+/** @deprecated Use `useLoadableQuery.Result` instead */
+export type UseLoadableQueryResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> = useLoadableQuery.Result<TData, TVariables>;

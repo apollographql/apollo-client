@@ -19,7 +19,14 @@ import { equal } from "@wry/equality";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type {
+  ApolloClient,
+  ErrorLike,
+  FetchMoreQueryOptions,
+  OperationVariables,
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
+} from "@apollo/client/core";
 import type {
   ApolloQueryResult,
   DocumentNode,
@@ -28,12 +35,11 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
-import type { MaybeMasked } from "@apollo/client/masking";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import type {
   NoInfer,
   ObservableQueryFields,
   QueryHookOptions,
-  QueryResult,
 } from "@apollo/client/react";
 import { getApolloContext } from "@apollo/client/react/context";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
@@ -45,8 +51,61 @@ import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
+export interface UseQueryResult<
+  TData = unknown,
+  TVariables extends OperationVariables = OperationVariables,
+> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
+  client: ApolloClient;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
+  observable: ObservableQuery<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+  data: MaybeMasked<TData> | undefined;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
+  previousData?: MaybeMasked<TData>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+  error?: ErrorLike;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+  loading: boolean;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+  startPolling: (pollInterval: number) => void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+  stopPolling: () => void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+  subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+  updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+  refetch: (
+    variables?: Partial<TVariables>
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  /** @internal */
+  reobserve: (
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+    newNetworkStatus?: NetworkStatus
+  ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+  variables: TVariables | undefined;
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+  fetchMore: <
+    TFetchData = TData,
+    TFetchVars extends OperationVariables = TVariables,
+  >(
+    fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+      updateQuery?: (
+        previousQueryResult: Unmasked<TData>,
+        options: {
+          fetchMoreResult: Unmasked<TFetchData>;
+          variables: TFetchVars;
+        }
+      ) => Unmasked<TData>;
+    }
+  ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+}
+
 type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
-  QueryResult<TData, TVariables>,
+  UseQueryResult<TData, TVariables>,
   Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
 >;
 
@@ -111,7 +170,7 @@ export function useQuery<
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
-): QueryResult<TData, TVariables> {
+): UseQueryResult<TData, TVariables> {
   return wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler

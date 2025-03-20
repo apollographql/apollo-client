@@ -9,6 +9,7 @@ import type {
   ErrorLike,
   ErrorPolicy,
   FetchMoreQueryOptions,
+  ObservableQuery,
   OperationVariables,
   RefetchWritePolicy,
   TypedDocumentNode,
@@ -18,7 +19,7 @@ import type {
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer, ObservableQueryFields } from "@apollo/client/react";
+import type { NoInfer } from "@apollo/client/react";
 import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
@@ -105,7 +106,7 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
 export type RefetchFunction<
   TData,
   TVariables extends OperationVariables,
-> = ObservableQueryFields<TData, TVariables>["refetch"];
+> = ObservableQuery<TData, TVariables>["refetch"];
 
 export function useSuspenseQuery<
   TData,

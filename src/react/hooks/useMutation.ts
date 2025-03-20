@@ -21,8 +21,8 @@ import type {
   Unmasked,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type { NoInfer } from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import type { NoInfer } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
 
 import type { IgnoreModifier } from "../../cache/core/types/common.js";

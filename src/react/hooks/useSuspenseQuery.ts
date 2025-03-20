@@ -19,11 +19,10 @@ import type {
 import type { SubscribeToMoreFunction } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/react";
 import type { CacheKey, QueryKey } from "@apollo/client/react/internal";
 import { getSuspenseCache } from "@apollo/client/react/internal";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
 import { invariant } from "@apollo/client/utilities/invariant";
 

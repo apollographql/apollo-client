@@ -10,8 +10,9 @@ import type {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer, VariablesOption } from "@apollo/client/react";
+import type { VariablesOption } from "@apollo/client/react";
 import { getSuspenseCache } from "@apollo/client/react/internal";
+import type { NoInfer } from "@apollo/client/utilities";
 
 import type { FragmentKey } from "../internal/cache/types.js";
 

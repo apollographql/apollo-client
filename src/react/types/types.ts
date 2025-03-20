@@ -20,5 +20,3 @@ export type VariablesOption<TVariables extends OperationVariables> =
       /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
       variables: TVariables;
     };
-
-export type { NoInfer } from "../../utilities/index.js";

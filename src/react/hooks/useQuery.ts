@@ -40,12 +40,15 @@ import type {
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/react";
 import { getApolloContext } from "@apollo/client/react/context";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { RenderPromises } from "@apollo/client/react/ssr";
-import { compact, maybeDeepFreeze } from "@apollo/client/utilities";
-import { mergeOptions } from "@apollo/client/utilities";
+import type { NoInfer } from "@apollo/client/utilities";
+import {
+  compact,
+  maybeDeepFreeze,
+  mergeOptions,
+} from "@apollo/client/utilities";
 
 import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 

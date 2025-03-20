@@ -4925,7 +4925,7 @@ describe("useQuery Hook", () => {
           </button>
           <button
             onClick={() => {
-              // Intentionally use rerun here as opposed to refetch to
+              // Intentionally use reobserve here as opposed to refetch to
               // ensure we check against reported cache results with cache-first
               // and notifyOnNetworkStatusChange
               void useQueryResult.observable.reobserve();

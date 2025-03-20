@@ -35,8 +35,10 @@ export type UseBackgroundQueryResult<
 > = {
   /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
   subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+
   /** {@inheritDoc @apollo/client!ObservableQuery#fetchMore:member(1)} */
   fetchMore: FetchMoreFunction<TData, TVariables>;
+
   /** {@inheritDoc @apollo/client!ObservableQuery#refetch:member(1)} */
   refetch: RefetchFunction<TData, TVariables>;
 };
@@ -69,6 +71,7 @@ export interface UseBackgroundQueryOptions<
   returnPartialData?: boolean;
 
   fetchPolicy?: UseBackgroundQueryFetchPolicy;
+
   queryKey?: string | number | any[];
 
   /**

@@ -1722,7 +1722,7 @@ describe("client.watchQuery", () => {
     );
   });
 
-  test("masks result of setOptions", async () => {
+  test("masks result of reobserve", async () => {
     type UserFieldsFragment = {
       age: number;
     } & { " $fragmentName"?: "UserFieldsFragment" };
@@ -1803,7 +1803,7 @@ describe("client.watchQuery", () => {
       });
     }
 
-    const result = await observable.setOptions({ variables: { id: 2 } });
+    const result = await observable.reobserve({ variables: { id: 2 } });
 
     expect(result?.data).toEqual({
       user: {

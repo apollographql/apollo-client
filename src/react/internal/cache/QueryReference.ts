@@ -354,7 +354,7 @@ export class InternalQueryReference<TData = unknown> {
       currentFetchPolicy === "standby" &&
       currentFetchPolicy !== watchQueryOptions.fetchPolicy
     ) {
-      this.initiateFetch(this.observable.setOptions(watchQueryOptions));
+      this.initiateFetch(this.observable.reobserve(watchQueryOptions));
     } else {
       this.observable.silentSetOptions(watchQueryOptions);
     }

@@ -354,7 +354,7 @@ export function useLazyQuery<
           options.fetchPolicy = observable.options.initialFetchPolicy;
         }
 
-        const promise = observable.setOptions(options);
+        const promise = observable.reobserve(options);
 
         // TODO: This should be fixed in core
         if (!resultRef.current && stableOptions?.notifyOnNetworkStatusChange) {

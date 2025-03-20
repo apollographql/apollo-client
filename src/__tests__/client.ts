@@ -1893,7 +1893,7 @@ describe("client", () => {
       await expect(stream).toEmitMatchedValue({ data });
 
       await expect(
-        obs.setOptions({ query, fetchPolicy: "standby" })
+        obs.reobserve({ query, fetchPolicy: "standby" })
         // TODO: Update this behavior
       ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
@@ -1923,13 +1923,13 @@ describe("client", () => {
       await expect(stream).toEmitMatchedValue({ data });
 
       await expect(
-        obs.setOptions({ query, fetchPolicy: "standby" })
+        obs.reobserve({ query, fetchPolicy: "standby" })
         // TODO: Update this behavior
       ).rejects.toThrow(new EmptyError());
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {
-        void obs.setOptions({ query, fetchPolicy: "cache-first" });
+        void obs.reobserve({ query, fetchPolicy: "cache-first" });
       }, 10);
 
       await expect(stream).toEmitMatchedValue({ data: data2 });
@@ -3639,7 +3639,7 @@ describe("@connection", () => {
       });
       expect(fetchPolicyRecord).toEqual(["cache-first", "network-only"]);
 
-      const finalResult = await observable.setOptions({
+      const finalResult = await observable.reobserve({
         // Allow delivery of loading:true result.
         notifyOnNetworkStatusChange: true,
         // Force a network request in addition to loading:true cache result.
@@ -5454,7 +5454,7 @@ describe("custom document transforms", () => {
     });
   });
 
-  it("re-runs custom document transforms when calling `setOptions`", async () => {
+  it("re-runs custom document transforms when calling `reobserve`", async () => {
     const query = gql`
       query TestQuery($id: ID!) {
         product(id: $id) {
@@ -5550,7 +5550,7 @@ describe("custom document transforms", () => {
 
     enabled = false;
 
-    const { data } = await observable.setOptions({ variables: { id: 2 } });
+    const { data } = await observable.reobserve({ variables: { id: 2 } });
 
     expect(document!).toMatchDocument(disabledQuery);
     expect(observable.options.query).toMatchDocument(query);
@@ -5570,7 +5570,7 @@ describe("custom document transforms", () => {
     });
   });
 
-  it("runs custom document transforms when passing a new query to `setOptions`", async () => {
+  it("runs custom document transforms when passing a new query to `reobserve`", async () => {
     const query = gql`
       query TestQuery($id: ID!) {
         product(id: $id) {
@@ -5673,7 +5673,7 @@ describe("custom document transforms", () => {
       expect(observable.query).toMatchDocument(transformedQuery);
     });
 
-    const { data } = await observable.setOptions({ query: updatedQuery });
+    const { data } = await observable.reobserve({ query: updatedQuery });
 
     expect(document!).toMatchDocument(transformedUpdatedQuery);
     expect(observable.options.query).toMatchDocument(updatedQuery);

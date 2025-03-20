@@ -42,10 +42,9 @@ import {
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import { QueryResult } from "../../types/types.js";
 import { LazyQueryResult, useLazyQuery } from "../useLazyQuery.js";
 import { useMutation } from "../useMutation.js";
-import { useQuery } from "../useQuery.js";
+import { useQuery, UseQueryResult } from "../useQuery.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
 const IS_REACT_18 = React.version.startsWith("18");
@@ -138,7 +137,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      let oldResult: QueryResult<any, OperationVariables>;
+      let oldResult: UseQueryResult<any, OperationVariables>;
 
       {
         const result = (oldResult = await takeSnapshot());
@@ -4876,7 +4875,7 @@ describe("useQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
-        useQueryResult: null as QueryResult<Query1, Variables> | null,
+        useQueryResult: null as UseQueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
@@ -5150,7 +5149,7 @@ describe("useQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
-        useQueryResult: null as QueryResult<Query1, Variables> | null,
+        useQueryResult: null as UseQueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
@@ -5393,7 +5392,7 @@ describe("useQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
-        useQueryResult: null as QueryResult<Query1, Variables> | null,
+        useQueryResult: null as UseQueryResult<Query1, Variables> | null,
         useLazyQueryResult: null as LazyQueryResult<Query2, Variables> | null,
       },
     });
@@ -5683,7 +5682,7 @@ describe("useQuery Hook", () => {
     using _disabledAct = disableActEnvironment();
     const renderStream = createRenderStream({
       initialSnapshot: {
-        useQueryResult: null as QueryResult | null,
+        useQueryResult: null as UseQueryResult | null,
       },
     });
 
@@ -10119,7 +10118,7 @@ describe("useQuery Hook", () => {
       });
 
       const renderStream =
-        createRenderStream<QueryResult<Query, Record<string, never>>>();
+        createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
@@ -10225,7 +10224,7 @@ describe("useQuery Hook", () => {
 
       const renderStream =
         createRenderStream<
-          QueryResult<Unmasked<Query>, Record<string, never>>
+          UseQueryResult<Unmasked<Query>, Record<string, never>>
         >();
 
       function App() {
@@ -10320,7 +10319,7 @@ describe("useQuery Hook", () => {
 
       const renderStream =
         createRenderStream<
-          QueryResult<Unmasked<Query>, Record<string, never>>
+          UseQueryResult<Unmasked<Query>, Record<string, never>>
         >();
 
       function App() {
@@ -10410,7 +10409,7 @@ describe("useQuery Hook", () => {
       });
 
       const renderStream =
-        createRenderStream<QueryResult<Query, Record<string, never>>>();
+        createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
@@ -10536,7 +10535,7 @@ describe("useQuery Hook", () => {
       });
 
       const renderStream =
-        createRenderStream<QueryResult<Query, Record<string, never>>>();
+        createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query);
@@ -10663,7 +10662,7 @@ describe("useQuery Hook", () => {
         });
 
         const renderStream =
-          createRenderStream<QueryResult<Query, Record<string, never>>>();
+          createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
         function App() {
           const result = useQuery(query, { fetchPolicy });
@@ -10762,7 +10761,7 @@ describe("useQuery Hook", () => {
       });
 
       const renderStream =
-        createRenderStream<QueryResult<Query, Record<string, never>>>();
+        createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query, { fetchPolicy: "cache-and-network" });
@@ -10890,7 +10889,7 @@ describe("useQuery Hook", () => {
       }
 
       const renderStream =
-        createRenderStream<QueryResult<Query, Record<string, never>>>();
+        createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query, { returnPartialData: true });
@@ -11001,7 +11000,7 @@ describe("useQuery Hook", () => {
       });
 
       const renderStream =
-        createRenderStream<QueryResult<Query, Record<string, never>>>();
+        createRenderStream<UseQueryResult<Query, Record<string, never>>>();
 
       function App() {
         const result = useQuery(query, { errorPolicy: "all" });

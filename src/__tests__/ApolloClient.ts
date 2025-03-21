@@ -10,10 +10,11 @@ import {
   ApolloQueryResult,
   DefaultOptions,
   makeReference,
+  MutateResult,
   ObservableQuery,
   QueryOptions,
 } from "@apollo/client/core";
-import { ApolloLink, FetchResult } from "@apollo/client/link/core";
+import { ApolloLink } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { Masked } from "@apollo/client/masking";
 import { DeepPartial } from "@apollo/client/utilities";
@@ -2911,7 +2912,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<any>>>();
+      expectTypeOf(promise).branded.toEqualTypeOf<Promise<MutateResult<any>>>();
     });
 
     test("client.mutate uses TData type when using plain TypedDocumentNode", () => {
@@ -2971,7 +2972,9 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(promise).toMatchTypeOf<Promise<FetchResult<Mutation>>>();
+      expectTypeOf(promise).branded.toEqualTypeOf<
+        Promise<MutateResult<Mutation>>
+      >();
     });
 
     test("client.mutate uses masked/unmasked type when using Masked<TData>", async () => {
@@ -3043,7 +3046,7 @@ describe("ApolloClient", () => {
         },
       });
 
-      expectTypeOf(result.data).toMatchTypeOf<Mutation | null | undefined>();
+      expectTypeOf(result.data).toEqualTypeOf<Masked<Mutation> | undefined>();
     });
 
     test("client.query uses correct masked/unmasked types", async () => {

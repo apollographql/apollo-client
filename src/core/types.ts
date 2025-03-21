@@ -233,3 +233,14 @@ export interface Resolvers {
     [field: string]: Resolver;
   };
 }
+
+export interface MutateResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
+  extensions?: Record<string, unknown>;
+}

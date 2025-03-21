@@ -967,6 +967,7 @@ describe("useMutation Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
+  // TODO: Do we want to keep this variable merge behavior?
   it("should merge provided variables", async () => {
     const CREATE_TODO_DATA = {
       createTodo: {

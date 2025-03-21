@@ -1528,42 +1528,82 @@ describe("useMutation Hook", () => {
           result: {
             errors,
           },
+          delay: 20,
         },
       ];
 
       const onCompleted = jest.fn();
       const onError = jest.fn();
 
-      const { result, rerender } = renderHook(
-        ({ onCompleted, onError }) => {
-          return useMutation<
-            { createTodo: Todo },
-            { priority: string; description: string }
-          >(CREATE_TODO_MUTATION, { onCompleted, onError });
-        },
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-          initialProps: { onCompleted, onError },
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ onCompleted, onError }) => {
+            return useMutation<
+              { createTodo: Todo },
+              { priority: string; description: string }
+            >(CREATE_TODO_MUTATION, { onCompleted, onError });
+          },
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+            initialProps: { onCompleted, onError },
+          }
+        );
 
-      const createTodo = result.current[0];
-      let fetchResult: any;
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
 
       const onError1 = jest.fn();
-      rerender({ onCompleted, onError: onError1 });
-      await act(async () => {
-        fetchResult = await createTodo({
-          variables,
-        });
-      });
+      await rerender({ onCompleted, onError: onError1 });
 
-      expect(fetchResult).toEqual({
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: undefined,
+        // @ts-expect-error
         errors: new CombinedGraphQLErrors(errors),
       });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: new CombinedGraphQLErrors(errors),
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
 
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(0);

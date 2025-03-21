@@ -391,35 +391,45 @@ describe("useMutation Hook", () => {
           },
           result: {
             data: CREATE_TODO_RESULT,
-            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            errors: [{ message: CREATE_TODO_ERROR }],
           },
+          delay: 20,
         },
       ];
 
       const onError = jest.fn();
-      const { result } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION, { onError }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { onError }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const createTodo = result.current[0];
-      let fetchResult: any;
-      await act(async () => {
-        fetchResult = await createTodo({ variables });
-      });
+      {
+        const [, result] = await takeSnapshot();
 
-      expect(fetchResult.data).toBe(undefined);
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
       // TODO: This should either be an `error` property or it should be the
       // raw error array. This value is a lie against the TypeScript type.
       // This will be fixed by https://github.com/apollographql/apollo-client/issues/7167
       // when we address the issue with onError.
-      expect(fetchResult.errors).toEqual(
-        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
-      );
+      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
+        data: undefined,
+        // @ts-expect-error
+        errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+      });
+
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
         new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),

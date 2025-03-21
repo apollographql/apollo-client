@@ -371,7 +371,7 @@ describe("useMutation Hook", () => {
 
     await act(async () => {
       await result.current.createTodo({ variables });
-      await result.current.reset();
+      result.current.reset();
     });
 
     expect(consoleSpies.error).not.toHaveBeenCalled();

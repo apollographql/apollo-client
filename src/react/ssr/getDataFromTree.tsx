@@ -5,6 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { getApolloContext } from "@apollo/client/react/context";
 
 import { RenderPromises } from "./RenderPromises.js";
+import { ApolloClient } from "@apollo/client/core";
 
 export function getDataFromTree(
   tree: ReactTypes.ReactNode,
@@ -36,6 +37,8 @@ export function getMarkupFromTree({
   renderFunction = renderToStaticMarkup,
 }: GetMarkupFromTreeOptions): Promise<string> {
   const renderPromises = new RenderPromises();
+  let client: ApolloClient | undefined,
+    initialDisableNetworkFetches: boolean | undefined;
 
   function process(): Promise<string> {
     // Always re-render from the rootElement, even though it might seem
@@ -46,11 +49,24 @@ export function getMarkupFromTree({
     const ApolloContext = getApolloContext();
 
     return new Promise<string>((resolve) => {
-      const element = React.createElement(
-        ApolloContext.Provider,
-        { value: { ...context, renderPromises } },
-        tree
+      const element = (
+        <ApolloContext.Consumer>
+          {(value) => {
+            if (value.client && !client) {
+              client = value.client;
+              initialDisableNetworkFetches = value.client.disableNetworkFetches;
+              client.disableNetworkFetches = true;
+            }
+            return (
+              <ApolloContext.Provider
+                value={{ ...value, renderPromises }}
+                children={tree}
+              />
+            );
+          }}
+        </ApolloContext.Consumer>
       );
+
       resolve(renderFunction(element));
     })
       .then((html) => {
@@ -60,6 +76,9 @@ export function getMarkupFromTree({
       })
       .finally(() => {
         renderPromises.stop();
+        if (client) {
+          client.disableNetworkFetches = initialDisableNetworkFetches!;
+        }
       });
   }
 

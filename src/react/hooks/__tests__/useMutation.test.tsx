@@ -437,7 +437,7 @@ describe("useMutation Hook", () => {
       );
     });
 
-    it("should reject when there’s only an error and no error policy is set", async () => {
+    it("should reject when there’s an error and no error policy is set", async () => {
       const variables = {
         description: "Get milk!",
       };
@@ -451,32 +451,59 @@ describe("useMutation Hook", () => {
           result: {
             errors: [{ message: CREATE_TODO_ERROR }],
           },
+          delay: 20,
         },
       ];
 
-      const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const createTodo = result.current[0];
-      let fetchError: any;
-      await act(async () => {
-        // need to call createTodo this way to get “act” warnings to go away.
-        try {
-          await createTodo({ variables });
-        } catch (err) {
-          fetchError = err;
-          return;
-        }
+      {
+        const [, result] = await takeSnapshot();
 
-        throw new Error("function did not error");
-      });
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
 
-      expect(fetchError).toEqual(
+      const [createTodo] = getCurrentSnapshot();
+
+      await expect(createTodo({ variables })).rejects.toThrow(
         new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
       );
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it(`should reject when errorPolicy is 'none'`, async () => {

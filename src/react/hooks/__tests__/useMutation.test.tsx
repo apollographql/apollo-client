@@ -1742,40 +1742,80 @@ describe("useMutation Hook", () => {
           result: {
             data: CREATE_TODO_DATA,
           },
+          delay: 20,
         },
       ];
 
       const onCompleted = jest.fn();
 
-      const { result, rerender } = renderHook(
-        ({ onCompleted }) => {
-          return useMutation<
-            { createTodo: Todo },
-            { priority: string; description: string }
-          >(CREATE_TODO_MUTATION, { onCompleted });
-        },
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-          initialProps: { onCompleted },
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot, rerender } =
+        await renderHookToSnapshotStream(
+          ({ onCompleted }) => {
+            return useMutation<
+              { createTodo: Todo },
+              { priority: string; description: string }
+            >(CREATE_TODO_MUTATION, { onCompleted });
+          },
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+            initialProps: { onCompleted },
+          }
+        );
 
-      const createTodo = result.current[0];
-      let fetchResult: any;
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
 
       const onCompleted1 = jest.fn();
-      rerender({ onCompleted: onCompleted1 });
+      await rerender({ onCompleted: onCompleted1 });
 
-      await act(async () => {
-        fetchResult = await createTodo({
-          variables,
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
         });
+      }
+
+      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
+        data: CREATE_TODO_DATA,
       });
 
-      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
-      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: CREATE_TODO_DATA,
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onCompleted1).toHaveBeenCalledTimes(1);
       expect(onCompleted1).toHaveBeenCalledWith(

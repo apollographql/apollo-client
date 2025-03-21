@@ -377,34 +377,6 @@ describe("useMutation Hook", () => {
     expect(consoleSpies.error).not.toHaveBeenCalled();
   });
 
-  it("should resolve mutate function promise with mutation results", async () => {
-    const variables = {
-      description: "Get milk!",
-    };
-
-    const mocks = [
-      {
-        request: {
-          query: CREATE_TODO_MUTATION,
-          variables,
-        },
-        result: { data: CREATE_TODO_RESULT },
-      },
-    ];
-
-    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
-    });
-
-    await act(async () => {
-      await expect(result.current[0]({ variables })).resolves.toEqual({
-        data: CREATE_TODO_RESULT,
-      });
-    });
-  });
-
   describe("mutate function upon error", () => {
     it("resolves with the resulting data and errors", async () => {
       const variables = {

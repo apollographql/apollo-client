@@ -2,18 +2,27 @@ import * as React from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
 import type {
+  ApolloClient,
+  DefaultContext,
   DocumentNode,
+  ErrorPolicy,
   FetchMoreQueryOptions,
   OperationVariables,
+  RefetchWritePolicy,
   TypedDocumentNode,
+  WatchQueryFetchPolicy,
   WatchQueryOptions,
 } from "@apollo/client/core";
 import type {
   SubscribeToMoreFunction,
   SubscribeToMoreOptions,
 } from "@apollo/client/core";
-import type { LoadableQueryHookOptions } from "@apollo/client/react";
-import type { CacheKey, QueryRef } from "@apollo/client/react/internal";
+import type {
+  CacheKey,
+  FetchMoreFunction,
+  QueryRef,
+  RefetchFunction,
+} from "@apollo/client/react/internal";
 import {
   assertWrappedQueryRef,
   getSuspenseCache,
@@ -29,49 +38,78 @@ import { invariant } from "@apollo/client/utilities/invariant";
 
 import { __use, useRenderGuard } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
-import type { FetchMoreFunction, RefetchFunction } from "./useSuspenseQuery.js";
 import { useWatchQueryOptions } from "./useSuspenseQuery.js";
-
-export type LoadQueryFunction<TVariables extends OperationVariables> = (
-  // Use variadic args to handle cases where TVariables is type `never`, in
-  // which case we don't want to allow a variables argument. In other
-  // words, we don't want to allow variables to be passed as an argument to this
-  // function if the query does not expect variables in the document.
-  ...args: [TVariables] extends [never] ? []
-  : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables]
-  : [variables: TVariables]
-) => void;
 
 type ResetFunction = () => void;
 
-export type UseLoadableQueryResult<
-  TData = unknown,
-  TVariables extends OperationVariables = OperationVariables,
-> = [
-  loadQuery: LoadQueryFunction<TVariables>,
-  queryRef: QueryRef<TData, TVariables> | null,
-  handlers: {
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
-    refetch: RefetchFunction<TData, TVariables>;
-    /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    /**
-     * A function that resets the `queryRef` back to `null`.
-     */
-    reset: ResetFunction;
-  },
-];
+export declare namespace useLoadableQuery {
+  export type LoadQueryFunction<TVariables extends OperationVariables> = (
+    // Use variadic args to handle cases where TVariables is type `never`, in
+    // which case we don't want to allow a variables argument. In other
+    // words, we don't want to allow variables to be passed as an argument to this
+    // function if the query does not expect variables in the document.
+    ...args: [TVariables] extends [never] ? []
+    : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables]
+    : [variables: TVariables]
+  ) => void;
+
+  export type Result<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > = [
+    loadQuery: LoadQueryFunction<TVariables>,
+    queryRef: QueryRef<TData, TVariables> | null,
+    handlers: {
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+      fetchMore: FetchMoreFunction<TData, TVariables>;
+      /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+      refetch: RefetchFunction<TData, TVariables>;
+      /** {@inheritDoc @apollo/client!ObservableQuery#subscribeToMore:member(1)} */
+      subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+      /**
+       * A function that resets the `queryRef` back to `null`.
+       */
+      reset: ResetFunction;
+    },
+  ];
+
+  export type FetchPolicy = Extract<
+    WatchQueryFetchPolicy,
+    "cache-first" | "network-only" | "no-cache" | "cache-and-network"
+  >;
+
+  export interface Options {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+    client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: FetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#queryKey:member} */
+    queryKey?: string | number | any[];
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+  }
+}
 
 export function useLoadableQuery<
   TData,
   TVariables extends OperationVariables,
-  TOptions extends LoadableQueryHookOptions,
+  TOptions extends useLoadableQuery.Options,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LoadableQueryHookOptions & TOptions
-): UseLoadableQueryResult<
+  options?: useLoadableQuery.Options & TOptions
+): useLoadableQuery.Result<
   TOptions["errorPolicy"] extends "ignore" | "all" ?
     TOptions["returnPartialData"] extends true ?
       DeepPartial<TData> | undefined
@@ -86,31 +124,31 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions & {
+  options: useLoadableQuery.Options & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
   }
-): UseLoadableQueryResult<DeepPartial<TData> | undefined, TVariables>;
+): useLoadableQuery.Result<DeepPartial<TData> | undefined, TVariables>;
 
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions & {
+  options: useLoadableQuery.Options & {
     errorPolicy: "ignore" | "all";
   }
-): UseLoadableQueryResult<TData | undefined, TVariables>;
+): useLoadableQuery.Result<TData | undefined, TVariables>;
 
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions & {
+  options: useLoadableQuery.Options & {
     returnPartialData: true;
   }
-): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
+): useLoadableQuery.Result<DeepPartial<TData>, TVariables>;
 
 /**
  * A hook for imperatively loading a query, such as responding to a user
@@ -162,16 +200,16 @@ export function useLoadableQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: LoadableQueryHookOptions
-): UseLoadableQueryResult<TData, TVariables>;
+  options?: useLoadableQuery.Options
+): useLoadableQuery.Result<TData, TVariables>;
 
 export function useLoadableQuery<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: LoadableQueryHookOptions = {}
-): UseLoadableQueryResult<TData, TVariables> {
+  options: useLoadableQuery.Options = {}
+): useLoadableQuery.Result<TData, TVariables> {
   const client = useApolloClient(options.client);
   const suspenseCache = getSuspenseCache(client);
   const watchQueryOptions = useWatchQueryOptions({ client, query, options });
@@ -229,39 +267,40 @@ export function useLoadableQuery<
     [internalQueryRef]
   );
 
-  const loadQuery: LoadQueryFunction<TVariables> = React.useCallback(
-    (...args) => {
-      invariant(
-        !calledDuringRender(),
-        "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
-      );
+  const loadQuery: useLoadableQuery.LoadQueryFunction<TVariables> =
+    React.useCallback(
+      (...args) => {
+        invariant(
+          !calledDuringRender(),
+          "useLoadableQuery: 'loadQuery' should not be called during render. To start a query during render, use the 'useBackgroundQuery' hook."
+        );
 
-      const [variables] = args;
+        const [variables] = args;
 
-      const cacheKey: CacheKey = [
+        const cacheKey: CacheKey = [
+          query,
+          canonicalStringify(variables),
+          ...([] as any[]).concat(queryKey),
+        ];
+
+        const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
+          client.watchQuery({
+            ...watchQueryOptions,
+            variables,
+          } as WatchQueryOptions<any, any>)
+        );
+
+        setQueryRef(wrapQueryRef(queryRef));
+      },
+      [
         query,
-        canonicalStringify(variables),
-        ...([] as any[]).concat(queryKey),
-      ];
-
-      const queryRef = suspenseCache.getQueryRef(cacheKey, () =>
-        client.watchQuery({
-          ...watchQueryOptions,
-          variables,
-        } as WatchQueryOptions<any, any>)
-      );
-
-      setQueryRef(wrapQueryRef(queryRef));
-    },
-    [
-      query,
-      queryKey,
-      suspenseCache,
-      watchQueryOptions,
-      calledDuringRender,
-      client,
-    ]
-  );
+        queryKey,
+        suspenseCache,
+        watchQueryOptions,
+        calledDuringRender,
+        client,
+      ]
+    );
 
   const subscribeToMore: SubscribeToMoreFunction<TData, TVariables> =
     React.useCallback(

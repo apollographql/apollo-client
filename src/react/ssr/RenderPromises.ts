@@ -2,14 +2,23 @@ import { Trie } from "@wry/trie";
 import type * as ReactTypes from "react";
 
 import { canonicalStringify } from "@apollo/client/cache";
-import type { ObservableQuery, OperationVariables } from "@apollo/client/core";
-import type { QueryDataOptions } from "@apollo/client/react";
+import type {
+  DocumentNode,
+  ObservableQuery,
+  OperationVariables,
+  WatchQueryOptions,
+} from "@apollo/client/core";
 
 // TODO: A vestigial interface from when hooks were implemented with utility
 // classes, which should be deleted in the future.
 interface QueryData {
   getOptions(): any;
   fetchData(): Promise<void>;
+}
+
+interface LookupOptions {
+  query: DocumentNode;
+  variables?: OperationVariables;
 }
 
 type QueryInfo = {
@@ -28,7 +37,7 @@ function makeQueryInfoTrie() {
 
 export class RenderPromises {
   // Map from Query component instances to pending fetchData promises.
-  private queryPromises = new Map<QueryDataOptions<any, any>, Promise<any>>();
+  private queryPromises = new Map<WatchQueryOptions<any, any>, Promise<any>>();
 
   // Two-layered map from (query document, stringified variables) to QueryInfo
   // objects. These QueryInfo objects are intended to survive through the whole
@@ -55,8 +64,8 @@ export class RenderPromises {
 
   // Get's the cached observable that matches the SSR Query instances query and variables.
   public getSSRObservable<TData, TVariables extends OperationVariables>(
-    props: QueryDataOptions<TData, TVariables>
-  ): ObservableQuery<any, TVariables> | null {
+    props: LookupOptions
+  ): ObservableQuery<TData, TVariables> | null {
     return this.lookupQueryInfo(props).observable;
   }
 
@@ -133,9 +142,7 @@ export class RenderPromises {
     return Promise.all(promises);
   }
 
-  private lookupQueryInfo<TData, TVariables extends OperationVariables>(
-    props: QueryDataOptions<TData, TVariables>
-  ): QueryInfo {
+  private lookupQueryInfo(props: LookupOptions): QueryInfo {
     return this.queryInfoTrie.lookup(
       props.query,
       canonicalStringify(props.variables)

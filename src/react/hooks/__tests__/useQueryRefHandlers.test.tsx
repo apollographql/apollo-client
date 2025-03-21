@@ -39,7 +39,7 @@ import { createQueryPreloader } from "../../query-preloader/createQueryPreloader
 import { useBackgroundQuery } from "../useBackgroundQuery.js";
 import { useLoadableQuery } from "../useLoadableQuery.js";
 import { useQueryRefHandlers } from "../useQueryRefHandlers.js";
-import { useReadQuery, UseReadQueryResult } from "../useReadQuery.js";
+import { useReadQuery } from "../useReadQuery.js";
 
 test("does not interfere with updates from useReadQuery", async () => {
   const { query, mocks } = setupSimpleCase();
@@ -52,7 +52,7 @@ test("does not interfere with updates from useReadQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -153,7 +153,7 @@ test("refetches and resuspends when calling refetch", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -275,7 +275,7 @@ test('honors refetchWritePolicy set to "merge"', async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
+      result: null as useReadQuery.Result<QueryData> | null,
     },
   });
 
@@ -402,7 +402,7 @@ test('honors refetchWritePolicy set to "overwrite"', async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
+      result: null as useReadQuery.Result<QueryData> | null,
     },
   });
 
@@ -526,7 +526,7 @@ test('defaults refetchWritePolicy to "overwrite"', async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<QueryData> | null,
+      result: null as useReadQuery.Result<QueryData> | null,
     },
   });
 
@@ -646,7 +646,7 @@ test("`refetch` works with startTransition", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<Data> | null,
+      result: null as useReadQuery.Result<Data> | null,
     },
   });
 
@@ -783,7 +783,7 @@ test("`refetch` works with startTransition from useBackgroundQuery and usePreloa
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
       usePreloadedQueryHandlersIsPending: false,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -947,7 +947,7 @@ test("refetches from queryRefs produced by useBackgroundQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -1035,7 +1035,7 @@ test("refetches from queryRefs produced by useLoadableQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 
@@ -1129,7 +1129,7 @@ test("resuspends when calling `fetchMore`", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1222,7 +1222,7 @@ test("properly uses `updateQuery` when calling `fetchMore`", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1335,7 +1335,7 @@ test("properly uses cache field policies when calling `fetchMore` without `updat
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1439,7 +1439,7 @@ test("paginates from queryRefs produced by useBackgroundQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1543,7 +1543,7 @@ test("paginates from queryRefs produced by useLoadableQuery", async () => {
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1657,7 +1657,7 @@ test("`fetchMore` works with startTransition", async () => {
   const renderStream = createRenderStream({
     initialSnapshot: {
       isPending: false,
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -1788,7 +1788,7 @@ test("`fetchMore` works with startTransition from useBackgroundQuery and useQuer
     initialSnapshot: {
       useBackgroundQueryIsPending: false,
       useQueryRefHandlersIsPending: false,
-      result: null as UseReadQueryResult<PaginatedCaseData> | null,
+      result: null as useReadQuery.Result<PaginatedCaseData> | null,
     },
   });
 
@@ -2009,7 +2009,7 @@ test("can subscribe to subscriptions and react to cache updates via `subscribeTo
         SimpleCaseData,
         Record<string, never>
       > | null,
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
 

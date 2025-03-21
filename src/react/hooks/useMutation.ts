@@ -5,23 +5,145 @@ import * as React from "react";
 
 import type {
   ApolloCache,
+  ApolloClient,
   DefaultContext,
+  ErrorLike,
+  ErrorPolicy,
+  FetchResult,
+  InternalRefetchQueriesInclude,
+  MaybeMasked,
+  MutationFetchPolicy,
   MutationOptions,
+  MutationQueryReducersMap,
+  MutationUpdaterFunction,
+  OnQueryUpdated,
   OperationVariables,
+  Unmasked,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import type {
-  MutationFunctionOptions,
-  MutationHookOptions,
-  MutationResult,
-  MutationTuple,
-  NoInfer,
-} from "@apollo/client/react";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
+import type { NoInfer } from "@apollo/client/utilities";
 import { mergeOptions } from "@apollo/client/utilities";
+
+import type { IgnoreModifier } from "../../cache/core/types/common.js";
 
 import { useIsomorphicLayoutEffect } from "./internal/useIsomorphicLayoutEffect.js";
 import { useApolloClient } from "./useApolloClient.js";
+
+export declare namespace useMutation {
+  export interface Options<
+    TData = unknown,
+    TVariables = OperationVariables,
+    TContext = DefaultContext,
+    TCache extends ApolloCache = ApolloCache,
+  > {
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#optimisticResponse:member} */
+    optimisticResponse?:
+      | Unmasked<NoInfer<TData>>
+      | ((
+          vars: TVariables,
+          { IGNORE }: { IGNORE: IgnoreModifier }
+        ) => Unmasked<NoInfer<TData>> | IgnoreModifier);
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#updateQueries:member} */
+    updateQueries?: MutationQueryReducersMap<TData>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#refetchQueries:member} */
+    refetchQueries?:
+      | ((
+          result: FetchResult<Unmasked<TData>>
+        ) => InternalRefetchQueriesInclude)
+      | InternalRefetchQueriesInclude;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#awaitRefetchQueries:member} */
+    awaitRefetchQueries?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#update:member} */
+    update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onQueryUpdated:member} */
+    onQueryUpdated?: OnQueryUpdated<any>;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#variables:member} */
+    variables?: TVariables;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
+    context?: TContext;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: MutationFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
+    keepRootFields?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#client:member} */
+    client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onCompleted:member} */
+    onCompleted?: (
+      data: MaybeMasked<TData>,
+      clientOptions?: Options<TData, TVariables, TContext, TCache>
+    ) => void;
+
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#onError:member} */
+    onError?: (
+      error: ErrorLike,
+      clientOptions?: Options<TData, TVariables, TContext, TCache>
+    ) => void;
+  }
+
+  export interface Result<TData = unknown> {
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
+    data?: MaybeMasked<TData> | null;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
+    loading: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#called:member} */
+    called: boolean;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#client:member} */
+    client: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!MutationResultDocumentation#reset:member} */
+    reset: () => void;
+  }
+
+  export type ResultTuple<
+    TData,
+    TVariables,
+    TContext = DefaultContext,
+    TCache extends ApolloCache = ApolloCache,
+  > = [
+    mutate: (
+      options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>
+      // TODO This FetchResult<TData> seems strange here, as opposed to an
+      // ApolloQueryResult<TData>
+    ) => Promise<FetchResult<MaybeMasked<TData>>>,
+    result: Result<TData>,
+  ];
+
+  export interface MutationFunctionOptions<
+    TData = unknown,
+    TVariables = OperationVariables,
+    TContext = DefaultContext,
+    TCache extends ApolloCache = ApolloCache,
+  > extends Options<TData, TVariables, TContext, TCache> {
+    /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+    // TODO: Remove this option. We shouldn't allow the mutation to be overridden
+    // in the mutation function
+    mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+  }
+}
 
 /**
  *
@@ -77,17 +199,17 @@ export function useMutation<
   TCache extends ApolloCache = ApolloCache,
 >(
   mutation: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options?: MutationHookOptions<
+  options?: useMutation.Options<
     NoInfer<TData>,
     NoInfer<TVariables>,
     TContext,
     TCache
   >
-): MutationTuple<TData, TVariables, TContext, TCache> {
+): useMutation.ResultTuple<TData, TVariables, TContext, TCache> {
   const client = useApolloClient(options?.client);
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<
-    Omit<MutationResult<TData>, "reset">
+    Omit<useMutation.Result<TData>, "reset">
   >({
     called: false,
     loading: false,
@@ -109,7 +231,7 @@ export function useMutation<
 
   const execute = React.useCallback(
     (
-      executeOptions: MutationFunctionOptions<
+      executeOptions: useMutation.MutationFunctionOptions<
         TData,
         TVariables,
         TContext,

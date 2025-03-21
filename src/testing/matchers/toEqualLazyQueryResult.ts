@@ -2,7 +2,7 @@ import { iterableEquality } from "@jest/expect-utils";
 import type { MatcherFunction } from "expect";
 
 import type { OperationVariables } from "@apollo/client/core";
-import type { LazyQueryResult } from "@apollo/client/react";
+import type { useLazyQuery } from "@apollo/client/react";
 
 const CHECKED_KEYS = [
   "loading",
@@ -17,7 +17,7 @@ const CHECKED_KEYS = [
 export type CheckedLazyQueryResult<
   TData,
   TVariables extends OperationVariables,
-> = Pick<LazyQueryResult<TData, TVariables>, (typeof CHECKED_KEYS)[number]>;
+> = Pick<useLazyQuery.Result<TData, TVariables>, (typeof CHECKED_KEYS)[number]>;
 
 const hasOwnProperty = (obj: Record<string, any>, key: string) =>
   Object.prototype.hasOwnProperty.call(obj, key);
@@ -25,7 +25,7 @@ const hasOwnProperty = (obj: Record<string, any>, key: string) =>
 export const toEqualLazyQueryResult: MatcherFunction<
   [lazyQueryResult: CheckedLazyQueryResult<any, any>]
 > = function (actual, expected) {
-  const lazyQueryResult = actual as LazyQueryResult<any, any>;
+  const lazyQueryResult = actual as useLazyQuery.Result<any, any>;
   const hint = this.utils.matcherHint(
     this.isNot ? ".not.toEqualLazyQueryResult" : "toEqualLazyQueryResult",
     "lazyQueryResult",
@@ -41,7 +41,7 @@ export const toEqualLazyQueryResult: MatcherFunction<
 
       return memo;
     },
-    {} as Partial<LazyQueryResult<any, any>>
+    {} as Partial<useLazyQuery.Result<any, any>>
   );
 
   const pass = this.equals(

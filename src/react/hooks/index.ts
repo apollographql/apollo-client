@@ -1,10 +1,10 @@
-export * from "./useApolloClient.js";
-export * from "./useLazyQuery.js";
-export * from "./useMutation.js";
+export { useApolloClient } from "./useApolloClient.js";
+export { useLazyQuery } from "./useLazyQuery.js";
+export { useMutation } from "./useMutation.js";
 export { useQuery } from "./useQuery.js";
-export * from "./useSubscription.js";
-export * from "./useReactiveVar.js";
-export * from "./useFragment.js";
+export { useSubscription } from "./useSubscription.js";
+export { useReactiveVar } from "./useReactiveVar.js";
+export { useFragment } from "./useFragment.js";
 export { useSuspenseQuery } from "./useSuspenseQuery.js";
 export { useBackgroundQuery } from "./useBackgroundQuery.js";
 export { useSuspenseFragment } from "./useSuspenseFragment.js";

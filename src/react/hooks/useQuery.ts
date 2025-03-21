@@ -192,7 +192,6 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
 
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
-  const disableNetworkFetches = client.disableNetworkFetches;
   const ssrAllowed = options.ssr !== false && !options.skip;
 
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
@@ -225,8 +224,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     observable,
     client,
     options,
-    watchQueryOptions,
-    disableNetworkFetches
+    watchQueryOptions
   );
 
   return result;
@@ -240,14 +238,21 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  disableNetworkFetches: boolean
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
+  // If SSR has been explicitly disabled, and this function has been called
+  // on the server side or during hydration, return the default loading state.
+  // In that case, this will cause an immediate re-render, because after ensuring
+  // a smooth hydration, we have to render the actual value returned by the
+  // ObservableQuery.
+  const useSSRDisabledResult = useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => options.ssr === false && !options.skip
+  );
+
   const resultOverride =
-    disableNetworkFetches && options.ssr === false && !options.skip ?
-      // If SSR has been explicitly disabled, and this function has been called
-      // on the server side, return the default loading state.
-      ssrDisabledResult
+    useSSRDisabledResult ? ssrDisabledResult
     : options.skip || watchQueryOptions.fetchPolicy === "standby" ?
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is

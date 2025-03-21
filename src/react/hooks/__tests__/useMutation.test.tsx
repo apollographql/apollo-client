@@ -69,176 +69,288 @@ describe("useMutation Hook", () => {
 
   const CREATE_TODO_ERROR = "Failed to create item";
 
-  describe("General use", () => {
-    it("should handle a simple mutation properly", async () => {
-      const variables = {
-        description: "Get milk!",
-      };
+  it("should handle a simple mutation properly", async () => {
+    const variables = {
+      description: "Get milk!",
+    };
 
-      const mocks = [
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables,
-          },
-          result: { data: CREATE_TODO_RESULT },
+    const mocks = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables,
         },
-      ];
+        result: { data: CREATE_TODO_RESULT },
+      },
+    ];
 
-      const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-      expect(result.current[1].loading).toBe(false);
-      expect(result.current[1].data).toBe(undefined);
-      const createTodo = result.current[0];
-      act(() => void createTodo({ variables }));
-      expect(result.current[1].loading).toBe(true);
-      expect(result.current[1].data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
+    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
     });
 
-    it("should be able to call mutations as an effect", async () => {
-      const variables = {
-        description: "Get milk!",
-      };
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+    const createTodo = result.current[0];
+    act(() => void createTodo({ variables }));
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
 
-      const mocks = [
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables,
-          },
-          result: { data: CREATE_TODO_RESULT },
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(false);
+      },
+      { interval: 1 }
+    );
+    expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
+  });
+
+  it("should be able to call mutations as an effect", async () => {
+    const variables = {
+      description: "Get milk!",
+    };
+
+    const mocks = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables,
         },
-      ];
+        result: { data: CREATE_TODO_RESULT },
+      },
+    ];
 
-      const useCreateTodo = () => {
-        const [createTodo, { loading, data }] =
-          useMutation(CREATE_TODO_MUTATION);
-        useEffect(() => {
-          void createTodo({ variables });
-        }, [variables]);
+    const useCreateTodo = () => {
+      const [createTodo, { loading, data }] = useMutation(CREATE_TODO_MUTATION);
+      useEffect(() => {
+        void createTodo({ variables });
+      }, [variables]);
 
-        return { loading, data };
-      };
+      return { loading, data };
+    };
 
-      const { result } = renderHook(() => useCreateTodo(), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.data).toEqual(CREATE_TODO_RESULT);
+    const { result } = renderHook(() => useCreateTodo(), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
     });
 
-    it("should ensure the mutation callback function has a stable identity no matter what", async () => {
-      const variables1 = {
-        description: "Get milk",
-      };
+    expect(result.current.loading).toBe(true);
+    expect(result.current.data).toBe(undefined);
 
-      const data1 = {
-        createTodo: {
-          id: 1,
-          description: "Get milk!",
-          priority: "High",
-          __typename: "Todo",
-        },
-      };
+    await waitFor(
+      () => {
+        expect(result.current.loading).toBe(false);
+      },
+      { interval: 1 }
+    );
+    expect(result.current.data).toEqual(CREATE_TODO_RESULT);
+  });
 
-      const variables2 = {
+  it("should ensure the mutation callback function has a stable identity no matter what", async () => {
+    const variables1 = {
+      description: "Get milk",
+    };
+
+    const data1 = {
+      createTodo: {
+        id: 1,
+        description: "Get milk!",
+        priority: "High",
+        __typename: "Todo",
+      },
+    };
+
+    const variables2 = {
+      description: "Write blog post",
+    };
+
+    const data2 = {
+      createTodo: {
+        id: 1,
         description: "Write blog post",
-      };
+        priority: "High",
+        __typename: "Todo",
+      },
+    };
 
-      const data2 = {
-        createTodo: {
-          id: 1,
-          description: "Write blog post",
-          priority: "High",
-          __typename: "Todo",
+    const mocks = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables: variables1,
         },
+        result: { data: data1 },
+      },
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables: variables2,
+        },
+        result: { data: data2 },
+      },
+    ];
+
+    const { result, rerender } = renderHook(
+      ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+        initialProps: {
+          variables: variables1,
+        },
+      }
+    );
+
+    const createTodo = result.current[0];
+    expect(result.current[1].loading).toBe(false);
+    expect(result.current[1].data).toBe(undefined);
+
+    act(() => void createTodo());
+    expect(createTodo).toBe(result.current[0]);
+    expect(result.current[1].loading).toBe(true);
+    expect(result.current[1].data).toBe(undefined);
+
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(false);
+      },
+      { interval: 1 }
+    );
+    expect(result.current[0]).toBe(createTodo);
+    expect(result.current[1].data).toEqual(data1);
+
+    rerender({ variables: variables2 });
+    act(() => void createTodo());
+
+    await waitFor(
+      () => {
+        expect(result.current[1].loading).toBe(false);
+      },
+      { interval: 1 }
+    );
+    expect(result.current[0]).toBe(createTodo);
+    expect(result.current[1].data).toEqual(data2);
+  });
+
+  it("should not call setResult on an unmounted component", async () => {
+    using consoleSpies = spyOnConsole("error");
+    const variables = {
+      description: "Get milk!",
+    };
+
+    const mocks = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables,
+        },
+        result: { data: CREATE_TODO_RESULT },
+      },
+    ];
+
+    const useCreateTodo = () => {
+      const [createTodo, { reset }] = useMutation(CREATE_TODO_MUTATION);
+      return { reset, createTodo };
+    };
+
+    const { result, unmount } = renderHook(() => useCreateTodo(), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
+    });
+
+    unmount();
+
+    await act(async () => {
+      await result.current.createTodo({ variables });
+      await result.current.reset();
+    });
+
+    expect(consoleSpies.error).not.toHaveBeenCalled();
+  });
+
+  it("should resolve mutate function promise with mutation results", async () => {
+    const variables = {
+      description: "Get milk!",
+    };
+
+    const mocks = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables,
+        },
+        result: { data: CREATE_TODO_RESULT },
+      },
+    ];
+
+    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
+      wrapper: ({ children }) => (
+        <MockedProvider mocks={mocks}>{children}</MockedProvider>
+      ),
+    });
+
+    await act(async () => {
+      await expect(result.current[0]({ variables })).resolves.toEqual({
+        data: CREATE_TODO_RESULT,
+      });
+    });
+  });
+
+  describe("mutate function upon error", () => {
+    it("resolves with the resulting data and errors", async () => {
+      const variables = {
+        description: "Get milk!",
       };
 
       const mocks = [
         {
           request: {
             query: CREATE_TODO_MUTATION,
-            variables: variables1,
+            variables,
           },
-          result: { data: data1 },
-        },
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables: variables2,
+          result: {
+            data: CREATE_TODO_RESULT,
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
           },
-          result: { data: data2 },
         },
       ];
 
-      const { result, rerender } = renderHook(
-        ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
+      const onError = jest.fn();
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { onError }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>
           ),
-          initialProps: {
-            variables: variables1,
-          },
         }
       );
 
       const createTodo = result.current[0];
-      expect(result.current[1].loading).toBe(false);
-      expect(result.current[1].data).toBe(undefined);
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
 
-      act(() => void createTodo());
-      expect(createTodo).toBe(result.current[0]);
-      expect(result.current[1].loading).toBe(true);
-      expect(result.current[1].data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(false);
-        },
-        { interval: 1 }
+      expect(fetchResult.data).toBe(undefined);
+      // TODO: This should either be an `error` property or it should be the
+      // raw error array. This value is a lie against the TypeScript type.
+      // This will be fixed by https://github.com/apollographql/apollo-client/issues/7167
+      // when we address the issue with onError.
+      expect(fetchResult.errors).toEqual(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
       );
-      expect(result.current[0]).toBe(createTodo);
-      expect(result.current[1].data).toEqual(data1);
-
-      rerender({ variables: variables2 });
-      act(() => void createTodo());
-
-      await waitFor(
-        () => {
-          expect(result.current[1].loading).toBe(false);
-        },
-        { interval: 1 }
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenLastCalledWith(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        expect.anything()
       );
-      expect(result.current[0]).toBe(createTodo);
-      expect(result.current[1].data).toEqual(data2);
     });
 
-    it("should not call setResult on an unmounted component", async () => {
-      using consoleSpies = spyOnConsole("error");
+    it("should reject when there’s only an error and no error policy is set", async () => {
       const variables = {
         description: "Get milk!",
       };
@@ -248,423 +360,225 @@ describe("useMutation Hook", () => {
           request: {
             query: CREATE_TODO_MUTATION,
             variables,
-          },
-          result: { data: CREATE_TODO_RESULT },
-        },
-      ];
-
-      const useCreateTodo = () => {
-        const [createTodo, { reset }] = useMutation(CREATE_TODO_MUTATION);
-        return { reset, createTodo };
-      };
-
-      const { result, unmount } = renderHook(() => useCreateTodo(), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-      unmount();
-
-      await act(async () => {
-        await result.current.createTodo({ variables });
-        await result.current.reset();
-      });
-
-      expect(consoleSpies.error).not.toHaveBeenCalled();
-    });
-
-    it("should resolve mutate function promise with mutation results", async () => {
-      const variables = {
-        description: "Get milk!",
-      };
-
-      const mocks = [
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables,
-          },
-          result: { data: CREATE_TODO_RESULT },
-        },
-      ];
-
-      const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      });
-
-      await act(async () => {
-        await expect(result.current[0]({ variables })).resolves.toEqual({
-          data: CREATE_TODO_RESULT,
-        });
-      });
-    });
-
-    describe("mutate function upon error", () => {
-      it("resolves with the resulting data and errors", async () => {
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              data: CREATE_TODO_RESULT,
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
-            },
-          },
-        ];
-
-        const onError = jest.fn();
-        const { result } = renderHook(
-          () => useMutation(CREATE_TODO_MUTATION, { onError }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks}>{children}</MockedProvider>
-            ),
-          }
-        );
-
-        const createTodo = result.current[0];
-        let fetchResult: any;
-        await act(async () => {
-          fetchResult = await createTodo({ variables });
-        });
-
-        expect(fetchResult.data).toBe(undefined);
-        // TODO: This should either be an `error` property or it should be the
-        // raw error array. This value is a lie against the TypeScript type.
-        // This will be fixed by https://github.com/apollographql/apollo-client/issues/7167
-        // when we address the issue with onError.
-        expect(fetchResult.errors).toEqual(
-          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
-        );
-        expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError).toHaveBeenLastCalledWith(
-          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
-          expect.anything()
-        );
-      });
-
-      it("should reject when there’s only an error and no error policy is set", async () => {
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              errors: [{ message: CREATE_TODO_ERROR }],
-            },
-          },
-        ];
-
-        const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        });
-
-        const createTodo = result.current[0];
-        let fetchError: any;
-        await act(async () => {
-          // need to call createTodo this way to get “act” warnings to go away.
-          try {
-            await createTodo({ variables });
-          } catch (err) {
-            fetchError = err;
-            return;
-          }
-
-          throw new Error("function did not error");
-        });
-
-        expect(fetchError).toEqual(
-          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
-        );
-      });
-
-      it(`should reject when errorPolicy is 'none'`, async () => {
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              data: CREATE_TODO_RESULT,
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
-            },
-          },
-        ];
-
-        const { result } = renderHook(
-          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "none" }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks}>{children}</MockedProvider>
-            ),
-          }
-        );
-
-        const createTodo = result.current[0];
-        await act(async () => {
-          await expect(createTodo({ variables })).rejects.toThrow(
-            CREATE_TODO_ERROR
-          );
-        });
-      });
-
-      it(`should resolve with 'data' and 'error' properties when errorPolicy is 'all'`, async () => {
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              data: CREATE_TODO_RESULT,
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
-            },
-          },
-        ];
-
-        const { result } = renderHook(
-          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "all" }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks}>{children}</MockedProvider>
-            ),
-          }
-        );
-
-        const createTodo = result.current[0];
-
-        let fetchResult: any;
-        await act(async () => {
-          fetchResult = await createTodo({ variables });
-        });
-
-        expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
-        expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
-      });
-
-      it(`should call onError when errorPolicy is 'all'`, async () => {
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              data: CREATE_TODO_RESULT,
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
-            },
-          },
-        ];
-
-        const onError = jest.fn();
-        const onCompleted = jest.fn();
-
-        const { result } = renderHook(
-          () =>
-            useMutation(CREATE_TODO_MUTATION, {
-              errorPolicy: "all",
-              onError,
-              onCompleted,
-            }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks}>{children}</MockedProvider>
-            ),
-          }
-        );
-
-        const createTodo = result.current[0];
-
-        let fetchResult: any;
-        await act(async () => {
-          fetchResult = await createTodo({ variables });
-        });
-
-        expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
-        expect(fetchResult.errors).toEqual([{ message: CREATE_TODO_ERROR }]);
-        expect(onError).toHaveBeenCalledTimes(1);
-        expect(onError).toHaveBeenLastCalledWith(
-          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
-          expect.anything()
-        );
-        expect(onCompleted).not.toHaveBeenCalled();
-      });
-
-      it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
-        using consoleSpy = spyOnConsole("error");
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
-            },
-          },
-        ];
-
-        const { result } = renderHook(
-          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "ignore" }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks}>{children}</MockedProvider>
-            ),
-          }
-        );
-
-        const createTodo = result.current[0];
-        let fetchResult: any;
-        await act(async () => {
-          fetchResult = await createTodo({ variables });
-        });
-
-        expect(fetchResult).toEqual({});
-        expect(consoleSpy.error).toHaveBeenCalledTimes(1);
-        expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
-      });
-
-      it(`should not call onError when errorPolicy is 'ignore'`, async () => {
-        const variables = {
-          description: "Get milk!",
-        };
-
-        const mocks = [
-          {
-            request: {
-              query: CREATE_TODO_MUTATION,
-              variables,
-            },
-            result: {
-              errors: [new GraphQLError(CREATE_TODO_ERROR)],
-            },
-          },
-        ];
-
-        const onError = jest.fn();
-
-        const { result } = renderHook(
-          () =>
-            useMutation(CREATE_TODO_MUTATION, {
-              errorPolicy: "ignore",
-              onError,
-            }),
-          {
-            wrapper: ({ children }) => (
-              <MockedProvider mocks={mocks}>{children}</MockedProvider>
-            ),
-          }
-        );
-
-        const createTodo = result.current[0];
-        let fetchResult: any;
-        await act(async () => {
-          fetchResult = await createTodo({ variables });
-        });
-
-        expect(fetchResult).toEqual({});
-        expect(onError).not.toHaveBeenCalled();
-      });
-    });
-
-    it("should return the current client instance in the result object", async () => {
-      const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-        wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
-      });
-      expect(result.current[1].client).toBeInstanceOf(ApolloClient);
-    });
-
-    it("should call client passed to execute function", async () => {
-      const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-        wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
-      });
-
-      const link = mockSingleLink();
-      const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link,
-      });
-
-      const mutateSpy = jest.spyOn(client, "mutate").mockImplementation(
-        () =>
-          new Promise((resolve) => {
-            resolve({ data: CREATE_TODO_RESULT });
-          })
-      );
-
-      const createTodo = result.current[0];
-      await act(async () => {
-        await createTodo({ client });
-      });
-
-      expect(mutateSpy).toHaveBeenCalledTimes(1);
-    });
-
-    it("should merge provided variables", async () => {
-      const CREATE_TODO_DATA = {
-        createTodo: {
-          id: 1,
-          description: "Get milk!",
-          priority: "Low",
-          __typename: "Todo",
-        },
-      };
-      const mocks = [
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: "Low",
-              description: "Get milk.",
-            },
           },
           result: {
-            data: CREATE_TODO_DATA,
+            errors: [{ message: CREATE_TODO_ERROR }],
+          },
+        },
+      ];
+
+      const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      });
+
+      const createTodo = result.current[0];
+      let fetchError: any;
+      await act(async () => {
+        // need to call createTodo this way to get “act” warnings to go away.
+        try {
+          await createTodo({ variables });
+        } catch (err) {
+          fetchError = err;
+          return;
+        }
+
+        throw new Error("function did not error");
+      });
+
+      expect(fetchError).toEqual(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
+      );
+    });
+
+    it(`should reject when errorPolicy is 'none'`, async () => {
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_RESULT,
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
           },
         },
       ];
 
       const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "none" }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      const createTodo = result.current[0];
+      await act(async () => {
+        await expect(createTodo({ variables })).rejects.toThrow(
+          CREATE_TODO_ERROR
+        );
+      });
+    });
+
+    it(`should resolve with 'data' and 'error' properties when errorPolicy is 'all'`, async () => {
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_RESULT,
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+          },
+        },
+      ];
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "all" }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      const createTodo = result.current[0];
+
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
+
+      expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
+      expect(fetchResult.errors[0].message).toEqual(CREATE_TODO_ERROR);
+    });
+
+    it(`should call onError when errorPolicy is 'all'`, async () => {
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            data: CREATE_TODO_RESULT,
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+          },
+        },
+      ];
+
+      const onError = jest.fn();
+      const onCompleted = jest.fn();
+
+      const { result } = renderHook(
         () =>
-          useMutation<
-            { createTodo: Todo },
-            { priority?: string; description?: string }
-          >(CREATE_TODO_MUTATION, {
-            variables: { priority: "Low" },
+          useMutation(CREATE_TODO_MUTATION, {
+            errorPolicy: "all",
+            onError,
+            onCompleted,
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      const createTodo = result.current[0];
+
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
+
+      expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
+      expect(fetchResult.errors).toEqual([{ message: CREATE_TODO_ERROR }]);
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenLastCalledWith(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        expect.anything()
+      );
+      expect(onCompleted).not.toHaveBeenCalled();
+    });
+
+    it(`should ignore errors when errorPolicy is 'ignore'`, async () => {
+      using consoleSpy = spyOnConsole("error");
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+          },
+        },
+      ];
+
+      const { result } = renderHook(
+        () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "ignore" }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+      const createTodo = result.current[0];
+      let fetchResult: any;
+      await act(async () => {
+        fetchResult = await createTodo({ variables });
+      });
+
+      expect(fetchResult).toEqual({});
+      expect(consoleSpy.error).toHaveBeenCalledTimes(1);
+      expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
+    });
+
+    it(`should not call onError when errorPolicy is 'ignore'`, async () => {
+      const variables = {
+        description: "Get milk!",
+      };
+
+      const mocks = [
+        {
+          request: {
+            query: CREATE_TODO_MUTATION,
+            variables,
+          },
+          result: {
+            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+          },
+        },
+      ];
+
+      const onError = jest.fn();
+
+      const { result } = renderHook(
+        () =>
+          useMutation(CREATE_TODO_MUTATION, {
+            errorPolicy: "ignore",
+            onError,
           }),
         {
           wrapper: ({ children }) => (
@@ -676,153 +590,236 @@ describe("useMutation Hook", () => {
       const createTodo = result.current[0];
       let fetchResult: any;
       await act(async () => {
-        fetchResult = await createTodo({
-          variables: { description: "Get milk." },
-        });
+        fetchResult = await createTodo({ variables });
       });
 
-      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+      expect(fetchResult).toEqual({});
+      expect(onError).not.toHaveBeenCalled();
+    });
+  });
+
+  it("should return the current client instance in the result object", async () => {
+    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
+      wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
+    });
+    expect(result.current[1].client).toBeInstanceOf(ApolloClient);
+  });
+
+  it("should call client passed to execute function", async () => {
+    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
+      wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
     });
 
-    it("should be possible to reset the mutation", async () => {
-      const CREATE_TODO_DATA = {
-        createTodo: {
-          id: 1,
-          priority: "Low",
-          description: "Get milk!",
-          __typename: "Todo",
-        },
-      };
-
-      const mocks = [
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: "Low",
-              description: "Get milk.",
-            },
-          },
-          result: {
-            data: CREATE_TODO_DATA,
-          },
-        },
-      ];
-
-      const { result } = renderHook(
-        () =>
-          useMutation<
-            { createTodo: Todo },
-            { priority: string; description: string }
-          >(CREATE_TODO_MUTATION),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
-
-      const createTodo = result.current[0];
-      let fetchResult: any;
-      await act(async () => {
-        fetchResult = await createTodo({
-          variables: { priority: "Low", description: "Get milk." },
-        });
-      });
-
-      expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
-      expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
-      setTimeout(() => {
-        result.current[1].reset();
-      });
-
-      await waitFor(
-        () => {
-          expect(result.current[1].data).toBe(undefined);
-        },
-        { interval: 1 }
-      );
+    const link = mockSingleLink();
+    const cache = new InMemoryCache();
+    const client = new ApolloClient({
+      cache,
+      link,
     });
 
-    it("resetting while a mutation is running: ensure that the result doesn't end up in the hook", async () => {
-      const CREATE_TODO_DATA = {
-        createTodo: {
-          id: 1,
-          priority: "Low",
-          description: "Get milk!",
-          __typename: "Todo",
-        },
-      };
+    const mutateSpy = jest.spyOn(client, "mutate").mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolve({ data: CREATE_TODO_RESULT });
+        })
+    );
 
-      const mocks: MockedResponse[] = [
-        {
-          request: {
-            query: CREATE_TODO_MUTATION,
-            variables: {
-              priority: "Low",
-              description: "Get milk.",
-            },
-          },
-          result: {
-            data: CREATE_TODO_DATA,
-          },
-          delay: 20,
-        },
-      ];
+    const createTodo = result.current[0];
+    await act(async () => {
+      await createTodo({ client });
+    });
 
-      using _disabledAct = disableActEnvironment();
-      const { takeSnapshot } = await renderHookToSnapshotStream(
-        () =>
-          useMutation<
-            { createTodo: Todo },
-            { priority: string; description: string }
-          >(CREATE_TODO_MUTATION),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+    expect(mutateSpy).toHaveBeenCalledTimes(1);
+  });
 
-      let createTodo: Awaited<ReturnType<typeof takeSnapshot>>[0];
-      let reset: Awaited<ReturnType<typeof takeSnapshot>>[1]["reset"];
-
+  it("should merge provided variables", async () => {
+    const CREATE_TODO_DATA = {
+      createTodo: {
+        id: 1,
+        description: "Get milk!",
+        priority: "Low",
+        __typename: "Todo",
+      },
+    };
+    const mocks = [
       {
-        const [mutate, result] = await takeSnapshot();
-        createTodo = mutate;
-        reset = result.reset;
-        //initial value
-        expect(result.data).toBe(undefined);
-        expect(result.loading).toBe(false);
-        expect(result.called).toBe(false);
-      }
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables: {
+            priority: "Low",
+            description: "Get milk.",
+          },
+        },
+        result: {
+          data: CREATE_TODO_DATA,
+        },
+      },
+    ];
 
-      let fetchResult = createTodo({
+    const { result } = renderHook(
+      () =>
+        useMutation<
+          { createTodo: Todo },
+          { priority?: string; description?: string }
+        >(CREATE_TODO_MUTATION, {
+          variables: { priority: "Low" },
+        }),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const createTodo = result.current[0];
+    let fetchResult: any;
+    await act(async () => {
+      fetchResult = await createTodo({
+        variables: { description: "Get milk." },
+      });
+    });
+
+    expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+  });
+
+  it("should be possible to reset the mutation", async () => {
+    const CREATE_TODO_DATA = {
+      createTodo: {
+        id: 1,
+        priority: "Low",
+        description: "Get milk!",
+        __typename: "Todo",
+      },
+    };
+
+    const mocks = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables: {
+            priority: "Low",
+            description: "Get milk.",
+          },
+        },
+        result: {
+          data: CREATE_TODO_DATA,
+        },
+      },
+    ];
+
+    const { result } = renderHook(
+      () =>
+        useMutation<
+          { createTodo: Todo },
+          { priority: string; description: string }
+        >(CREATE_TODO_MUTATION),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    const createTodo = result.current[0];
+    let fetchResult: any;
+    await act(async () => {
+      fetchResult = await createTodo({
         variables: { priority: "Low", description: "Get milk." },
       });
-
-      {
-        const [, result] = await takeSnapshot();
-        // started loading
-        expect(result.data).toBe(undefined);
-        expect(result.loading).toBe(true);
-        expect(result.called).toBe(true);
-      }
-
-      reset();
-
-      {
-        const [, result] = await takeSnapshot();
-        // reset to initial value
-        expect(result.data).toBe(undefined);
-        expect(result.loading).toBe(false);
-        expect(result.called).toBe(false);
-      }
-
-      expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
-
-      await expect(takeSnapshot).not.toRerender();
     });
+
+    expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+    expect(result.current[1].data).toEqual(CREATE_TODO_DATA);
+    setTimeout(() => {
+      result.current[1].reset();
+    });
+
+    await waitFor(
+      () => {
+        expect(result.current[1].data).toBe(undefined);
+      },
+      { interval: 1 }
+    );
+  });
+
+  it("resetting while a mutation is running: ensure that the result doesn't end up in the hook", async () => {
+    const CREATE_TODO_DATA = {
+      createTodo: {
+        id: 1,
+        priority: "Low",
+        description: "Get milk!",
+        __typename: "Todo",
+      },
+    };
+
+    const mocks: MockedResponse[] = [
+      {
+        request: {
+          query: CREATE_TODO_MUTATION,
+          variables: {
+            priority: "Low",
+            description: "Get milk.",
+          },
+        },
+        result: {
+          data: CREATE_TODO_DATA,
+        },
+        delay: 20,
+      },
+    ];
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () =>
+        useMutation<
+          { createTodo: Todo },
+          { priority: string; description: string }
+        >(CREATE_TODO_MUTATION),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    let createTodo: Awaited<ReturnType<typeof takeSnapshot>>[0];
+    let reset: Awaited<ReturnType<typeof takeSnapshot>>[1]["reset"];
+
+    {
+      const [mutate, result] = await takeSnapshot();
+      createTodo = mutate;
+      reset = result.reset;
+      //initial value
+      expect(result.data).toBe(undefined);
+      expect(result.loading).toBe(false);
+      expect(result.called).toBe(false);
+    }
+
+    let fetchResult = createTodo({
+      variables: { priority: "Low", description: "Get milk." },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+      // started loading
+      expect(result.data).toBe(undefined);
+      expect(result.loading).toBe(true);
+      expect(result.called).toBe(true);
+    }
+
+    reset();
+
+    {
+      const [, result] = await takeSnapshot();
+      // reset to initial value
+      expect(result.data).toBe(undefined);
+      expect(result.loading).toBe(false);
+      expect(result.called).toBe(false);
+    }
+
+    expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   describe("Callbacks", () => {

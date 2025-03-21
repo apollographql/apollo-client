@@ -892,30 +892,79 @@ describe("useMutation Hook", () => {
   });
 
   it("should call client passed to execute function", async () => {
-    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-      wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
+    using _disabledAct = disableActEnvironment();
+
+    const defaultClient = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new MockLink([
+        {
+          request: { query: CREATE_TODO_MUTATION },
+          result: { errors: [{ message: "Oops wrong client" }] },
+          delay: 20,
+        },
+      ]),
     });
 
-    const link = mockSingleLink();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useMutation(CREATE_TODO_MUTATION),
+        {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={defaultClient}>{children}</ApolloProvider>
+          ),
+        }
+      );
+
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       cache,
-      link,
+      link: new MockLink([
+        {
+          request: { query: CREATE_TODO_MUTATION },
+          result: { data: CREATE_TODO_RESULT },
+          delay: 20,
+        },
+      ]),
     });
 
-    const mutateSpy = jest.spyOn(client, "mutate").mockImplementation(
-      () =>
-        new Promise((resolve) => {
-          resolve({ data: CREATE_TODO_RESULT });
-        })
-    );
+    {
+      const [, result] = await takeSnapshot();
 
-    const createTodo = result.current[0];
-    await act(async () => {
-      await createTodo({ client });
+      expect(result).toEqualStrictTyped({
+        loading: false,
+        called: false,
+      });
+    }
+
+    const [createTodo] = getCurrentSnapshot();
+
+    await expect(createTodo({ client })).resolves.toEqualStrictTyped({
+      data: CREATE_TODO_RESULT,
     });
 
-    expect(mutateSpy).toHaveBeenCalledTimes(1);
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        called: true,
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: CREATE_TODO_RESULT,
+        error: undefined,
+        loading: false,
+        called: true,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should merge provided variables", async () => {

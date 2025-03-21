@@ -1447,6 +1447,30 @@ describe("useMutation Hook", () => {
         errors: new CombinedGraphQLErrors(errors),
       });
 
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: new CombinedGraphQLErrors(errors),
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+
       expect(onCompleted).toHaveBeenCalledTimes(0);
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(
@@ -1469,6 +1493,7 @@ describe("useMutation Hook", () => {
           result: {
             errors: [{ message: CREATE_TODO_ERROR }],
           },
+          delay: 20,
         },
       ];
 
@@ -1504,6 +1529,28 @@ describe("useMutation Hook", () => {
         // @ts-expect-error
         errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
       });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          loading: false,
+          called: true,
+        });
+      }
 
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledWith(

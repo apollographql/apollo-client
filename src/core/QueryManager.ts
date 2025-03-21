@@ -83,6 +83,7 @@ import type {
   InternalRefetchQueriesMap,
   InternalRefetchQueriesOptions,
   InternalRefetchQueriesResult,
+  MutateResult,
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
@@ -254,7 +255,7 @@ export class QueryManager {
     keepRootFields,
     context,
   }: MutationOptions<TData, TVariables, TContext>): Promise<
-    FetchResult<MaybeMasked<TData>>
+    MutateResult<MaybeMasked<TData>>
   > {
     invariant(
       mutation,

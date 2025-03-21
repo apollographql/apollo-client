@@ -10,6 +10,7 @@ import {
   ApolloQueryResult,
   DefaultOptions,
   makeReference,
+  NetworkStatus,
   ObservableQuery,
   QueryOptions,
 } from "@apollo/client/core";
@@ -20,6 +21,7 @@ import { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
+import { MockLink, MockSubscriptionLink } from "../testing/index.js";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {
@@ -2045,71 +2047,177 @@ describe("ApolloClient", () => {
     });
   });
 
-  describe("watchQuery", () => {
-    it(
-      "should change the `fetchPolicy` to `cache-first` if network fetching " +
-        "is disabled, and the incoming `fetchPolicy` is set to " +
-        "`network-only` or `cache-and-network`",
-      () => {
+  describe("watchQuery & disableNetworkFetches", () => {
+    it.each([
+      [true, "cache-first"],
+      [true, "cache-and-network"],
+      [true, "network-only"],
+      [true, "cache-only"],
+      [true, "no-cache"],
+      [false, "cache-first"],
+      [false, "cache-and-network"],
+      [false, "network-only"],
+      [false, "cache-only"],
+      [false, "no-cache"],
+    ] as const)(
+      "should not change the `fetchPolicy` (`disableNetworkFetches`: %s, `fetchPolicy`: %s)",
+      async (disableNetworkFetches, fetchPolicy) => {
         const client = new ApolloClient({
           link: ApolloLink.empty(),
+          cache: new InMemoryCache(),
+        });
+        client.disableNetworkFetches = disableNetworkFetches;
+
+        const observable = client.watchQuery({
+          query: gql`
+            query {
+              foo
+            }
+          `,
+          fetchPolicy,
+        });
+        expect(observable.options.fetchPolicy).toEqual(fetchPolicy);
+      }
+    );
+
+    it.each([
+      ["network-only"],
+      ["cache-and-network"],
+      ["cache-first"],
+    ] as const)(
+      "should not make a network request if the cache can fulfill the query (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      async (fetchPolicy) => {
+        const query = gql`
+          query someData {
+            source
+          }
+        `;
+        const client = new ApolloClient({
+          link: new MockLink([
+            { request: { query }, result: { data: { source: "network" } } },
+          ]),
+          cache: new InMemoryCache(),
+        });
+        client.disableNetworkFetches = true;
+        client.writeQuery({ query, data: { source: "cache" } });
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy,
+          notifyOnNetworkStatusChange: true,
+        });
+        const stream = new ObservableStream(observable);
+        await expect(stream).toEmitApolloQueryResult({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+          data: { source: "cache" },
+        });
+        await expect(stream).not.toEmitAnything();
+      }
+    );
+
+    it.each([
+      ["network-only"],
+      ["cache-and-network"],
+      ["cache-first"],
+    ] as const)(
+      "should make a network request if the cache cannot fulfill the query (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      async (fetchPolicy) => {
+        const query = gql`
+          query someData {
+            source
+          }
+        `;
+        const client = new ApolloClient({
+          link: new MockLink([
+            { request: { query }, result: { data: { source: "network" } } },
+          ]),
           cache: new InMemoryCache(),
         });
         client.disableNetworkFetches = true;
 
-        const query = gql`
-          query someData {
-            foo {
-              bar
-            }
-          }
-        `;
-
-        (["network-only", "cache-and-network"] as const).forEach(
-          (fetchPolicy) => {
-            const observable = client.watchQuery({
-              query,
-              fetchPolicy,
-            });
-            expect(observable.options.fetchPolicy).toEqual("cache-first");
-          }
-        );
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy,
+          notifyOnNetworkStatusChange: true,
+        });
+        const stream = new ObservableStream(observable);
+        await expect(stream).toEmitApolloQueryResult({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+          data: { source: "network" },
+        });
+        await expect(stream).not.toEmitAnything();
       }
     );
 
-    it(
-      "should not change the incoming `fetchPolicy` if network fetching " +
-        "is enabled",
-      () => {
-        const client = new ApolloClient({
-          link: ApolloLink.empty(),
-          cache: new InMemoryCache(),
-        });
-        client.disableNetworkFetches = false;
-
+    it.each([["no-cache"]] as const)(
+      "should make a network request (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      async (fetchPolicy) => {
         const query = gql`
           query someData {
-            foo {
-              bar
-            }
+            source
           }
         `;
-
-        (
-          [
-            "cache-first",
-            "cache-and-network",
-            "network-only",
-            "cache-only",
-            "no-cache",
-          ] as const
-        ).forEach((fetchPolicy) => {
-          const observable = client.watchQuery({
-            query,
-            fetchPolicy,
-          });
-          expect(observable.options.fetchPolicy).toEqual(fetchPolicy);
+        const client = new ApolloClient({
+          link: new MockLink([
+            { request: { query }, result: { data: { source: "network" } } },
+          ]),
+          cache: new InMemoryCache(),
         });
+        client.disableNetworkFetches = true;
+        client.writeQuery({ query, data: { source: "cache" } });
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy,
+          notifyOnNetworkStatusChange: true,
+        });
+        const stream = new ObservableStream(observable);
+        // not really part of this test case but I decided to leave it here to highlight this
+        // in the case of a network request, `no-cache` emits a `loading` state while `network-only` etc. do not?
+        await expect(stream).toEmitApolloQueryResult({
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          partial: true,
+          data: undefined,
+        });
+        await expect(stream).toEmitApolloQueryResult({
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: false,
+          data: { source: "network" },
+        });
+        await expect(stream).not.toEmitAnything();
+      }
+    );
+
+    it.each([["standby"]] as const)(
+      "should not emit anything (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      async (fetchPolicy) => {
+        const query = gql`
+          query someData {
+            source
+          }
+        `;
+        const client = new ApolloClient({
+          link: new MockLink([
+            { request: { query }, result: { data: { source: "network" } } },
+          ]),
+          cache: new InMemoryCache(),
+        });
+        client.disableNetworkFetches = true;
+        client.writeQuery({ query, data: { source: "cache" } });
+
+        const observable = client.watchQuery({
+          query,
+          fetchPolicy,
+          notifyOnNetworkStatusChange: true,
+        });
+        const stream = new ObservableStream(observable);
+        await expect(stream).not.toEmitAnything();
       }
     );
   });

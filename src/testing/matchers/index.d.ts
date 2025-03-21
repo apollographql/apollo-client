@@ -95,12 +95,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEqualStrictTyped` instead */
   toEqualApolloQueryResult: T extends ApolloQueryResult<infer TData> ?
     (expected: ApolloQueryResult<TData>) => R
   : T extends Promise<ApolloQueryResult<infer TData>> ?
     (expected: ApolloQueryResult<TData>) => R
   : { error: "matchers needs to be called on an ApolloQueryResult" };
 
+  /** @deprecated Use `toEqualStrictTyped` instead */
   toEqualLazyQueryResult: T extends (
     useLazyQuery.Result<infer TData, infer TVariables>
   ) ?
@@ -109,12 +111,14 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (expected: CheckedLazyQueryResult<TData, TVariables>) => R
   : { error: "matchers needs to be called on a LazyQueryResult" };
 
+  /** @deprecated Use `toEqualStrictTyped` instead */
   toEqualQueryResult: T extends useQuery.Result<infer TData, infer TVariables> ?
     (expected: Pick<useQuery.Result<TData, TVariables>, CheckedKeys>) => R
   : T extends Promise<useQuery.Result<infer TData, infer TVariables>> ?
     (expected: Pick<useQuery.Result<TData, TVariables>, CheckedKeys>) => R
   : { error: "matchers needs to be called on a QueryResult" };
 
+  /** @deprecated Use `toEqualStrictTyped` instead */
   toEqualFetchResult: T extends (
     FetchResult<infer TData, infer TContext, infer TExtensions>
   ) ?

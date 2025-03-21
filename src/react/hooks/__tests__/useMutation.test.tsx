@@ -744,27 +744,62 @@ describe("useMutation Hook", () => {
             variables,
           },
           result: {
-            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            errors: [{ message: CREATE_TODO_ERROR }],
           },
+          delay: 20,
         },
       ];
 
-      const { result } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "ignore" }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "ignore" }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const createTodo = result.current[0];
-      let fetchResult: any;
-      await act(async () => {
-        fetchResult = await createTodo({ variables });
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
+      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
+        data: undefined,
       });
 
-      expect(fetchResult).toEqual({});
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
+
       expect(consoleSpy.error).toHaveBeenCalledTimes(1);
       expect(consoleSpy.error.mock.calls[0][0]).toMatch("Missing field");
     });

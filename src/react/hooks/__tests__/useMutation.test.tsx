@@ -519,26 +519,61 @@ describe("useMutation Hook", () => {
           },
           result: {
             data: CREATE_TODO_RESULT,
-            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            errors: [{ message: CREATE_TODO_ERROR }],
           },
+          delay: 20,
         },
       ];
 
-      const { result } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "none" }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { errorPolicy: "none" }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
+      await expect(createTodo({ variables })).rejects.toThrow(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
       );
 
-      const createTodo = result.current[0];
-      await act(async () => {
-        await expect(createTodo({ variables })).rejects.toThrow(
-          CREATE_TODO_ERROR
-        );
-      });
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it(`should resolve with 'data' and 'error' properties when errorPolicy is 'all'`, async () => {

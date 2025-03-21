@@ -2,10 +2,10 @@ import type * as ReactTypes from "react";
 import * as React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import type { ApolloClient } from "@apollo/client/core";
 import { getApolloContext } from "@apollo/client/react/context";
 
 import { RenderPromises } from "./RenderPromises.js";
-import { ApolloClient } from "@apollo/client/core";
 
 export function getDataFromTree(
   tree: ReactTypes.ReactNode,

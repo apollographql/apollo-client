@@ -334,7 +334,8 @@ export class QueryManager {
       )
         .pipe(
           mergeMap((result) => {
-            if (graphQLResultHasError(result) && errorPolicy === "none") {
+            const hasErrors = graphQLResultHasError(result);
+            if (hasErrors && errorPolicy === "none") {
               throw new CombinedGraphQLErrors(
                 getGraphQLErrorsFromResult(result)
               );
@@ -353,10 +354,7 @@ export class QueryManager {
               );
             }
 
-            if (
-              errorPolicy === "ignore" &&
-              graphQLResultHasError(storeResult)
-            ) {
+            if (errorPolicy === "ignore" && hasErrors) {
               delete storeResult.errors;
             }
 
@@ -408,11 +406,11 @@ export class QueryManager {
           },
 
           error: (err) => {
-            err = maybeWrapError(err);
+            const error = maybeWrapError(err);
 
             if (mutationStoreValue) {
               mutationStoreValue.loading = false;
-              mutationStoreValue.error = err;
+              mutationStoreValue.error = error;
             }
 
             if (isOptimistic) {
@@ -421,7 +419,15 @@ export class QueryManager {
 
             this.broadcastQueries();
 
-            reject(err);
+            if (errorPolicy === "ignore") {
+              return resolve({ data: undefined });
+            }
+
+            if (errorPolicy === "all") {
+              return resolve({ data: undefined, error });
+            }
+
+            reject(error);
           },
         });
     });

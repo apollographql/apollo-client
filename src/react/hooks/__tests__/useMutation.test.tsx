@@ -881,10 +881,14 @@ describe("useMutation Hook", () => {
   });
 
   it("should return the current client instance in the result object", async () => {
+    const client = new ApolloClient({ cache: new InMemoryCache() });
+
     const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-      wrapper: ({ children }) => <MockedProvider>{children}</MockedProvider>,
+      wrapper: ({ children }) => (
+        <ApolloProvider client={client}>{children}</ApolloProvider>
+      ),
     });
-    expect(result.current[1].client).toBeInstanceOf(ApolloClient);
+    expect(result.current[1].client).toBe(client);
   });
 
   it("should call client passed to execute function", async () => {

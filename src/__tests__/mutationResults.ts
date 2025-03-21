@@ -358,7 +358,7 @@ describe("mutation results", () => {
       },
     });
 
-    expect(ignoreErrorsResult).toEqual({
+    expect(ignoreErrorsResult).toEqualStrictTyped({
       data: {
         newPerson: {
           __typename: "Person",
@@ -377,14 +377,14 @@ describe("mutation results", () => {
       },
     });
 
-    expect(allErrorsResult).toEqual({
+    expect(allErrorsResult).toEqualStrictTyped({
       data: {
         newPerson: {
           __typename: "Person",
           name: "Ellen Shapiro",
         },
       },
-      errors: [expectedFakeError],
+      error: new CombinedGraphQLErrors([expectedFakeError]),
     });
 
     expect(client.cache.extract()).toMatchSnapshot();

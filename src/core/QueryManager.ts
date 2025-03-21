@@ -167,6 +167,18 @@ export class QueryManager {
   private clientAwareness: Record<string, string> = {};
   private localState: LocalState;
 
+  /**
+   * Whether to prioritize cache values over network results when
+   * `fetchObservableWithInfo` is called.
+   * This will essentially turn a `"network-only"` or `"cache-and-network"`
+   * fetchPolicy into a `"cache-first"` fetchPolicy, but without influencing
+   * the `fetchPolicy` of the `ObservableQuery`.
+   *
+   * This can e.g. be used to prioritize the cache during the first render after
+   * SSR.
+   */
+  public prioritizeCacheValues: boolean = false;
+
   private onBroadcast?: () => void;
   public mutationStore?: {
     [mutationId: string]: MutationStoreValue;
@@ -1316,6 +1328,13 @@ export class QueryManager {
       notifyOnNetworkStatusChange = false,
       context = {},
     } = options;
+
+    if (
+      this.prioritizeCacheValues &&
+      (fetchPolicy === "network-only" || fetchPolicy === "cache-and-network")
+    ) {
+      fetchPolicy = "cache-first";
+    }
 
     const normalized = Object.assign({}, options, {
       query,

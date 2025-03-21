@@ -660,37 +660,69 @@ describe("useMutation Hook", () => {
           },
           result: {
             data: CREATE_TODO_RESULT,
-            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            errors: [{ message: CREATE_TODO_ERROR }],
           },
+          delay: 20,
         },
       ];
 
       const onError = jest.fn();
       const onCompleted = jest.fn();
 
-      const { result } = renderHook(
-        () =>
-          useMutation(CREATE_TODO_MUTATION, {
-            errorPolicy: "all",
-            onError,
-            onCompleted,
-          }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useMutation(CREATE_TODO_MUTATION, {
+              errorPolicy: "all",
+              onError,
+              onCompleted,
+            }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const createTodo = result.current[0];
+      {
+        const [, result] = await takeSnapshot();
 
-      let fetchResult: any;
-      await act(async () => {
-        fetchResult = await createTodo({ variables });
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
+      await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
+        data: CREATE_TODO_RESULT,
+        errors: [{ message: CREATE_TODO_ERROR }],
       });
 
-      expect(fetchResult.data).toEqual(CREATE_TODO_RESULT);
-      expect(fetchResult.errors).toEqual([{ message: CREATE_TODO_ERROR }]);
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: CREATE_TODO_RESULT,
+          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          loading: false,
+          called: true,
+        });
+      }
+
       expect(onError).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenLastCalledWith(
         new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),

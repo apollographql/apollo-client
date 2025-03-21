@@ -178,7 +178,12 @@ export { mergeOptions };
 export class ApolloClient implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache;
-  public disableNetworkFetches: boolean;
+  public set disableNetworkFetches(value: boolean) {
+    this.queryManager.prioritizeCacheValues = value;
+  }
+  public get disableNetworkFetches() {
+    return this.queryManager.prioritizeCacheValues;
+  }
   public version: string;
   public queryDeduplication: boolean;
   public defaultOptions: DefaultOptions;
@@ -260,7 +265,6 @@ export class ApolloClient implements DataProxy {
 
     this.link = link;
     this.cache = cache;
-    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     this.queryDeduplication = queryDeduplication;
     this.defaultOptions = defaultOptions || {};
     this.typeDefs = typeDefs;
@@ -271,13 +275,6 @@ export class ApolloClient implements DataProxy {
 
     if (this.devtoolsConfig.enabled === undefined) {
       this.devtoolsConfig.enabled = __DEV__;
-    }
-
-    if (ssrForceFetchDelay) {
-      setTimeout(
-        () => (this.disableNetworkFetches = false),
-        ssrForceFetchDelay
-      );
     }
 
     this.watchQuery = this.watchQuery.bind(this);
@@ -320,6 +317,14 @@ export class ApolloClient implements DataProxy {
           }
         : void 0,
     });
+
+    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
+    if (ssrForceFetchDelay) {
+      setTimeout(
+        () => (this.disableNetworkFetches = false),
+        ssrForceFetchDelay
+      );
+    }
 
     if (this.devtoolsConfig.enabled) this.connectToDevTools();
   }
@@ -427,15 +432,6 @@ export class ApolloClient implements DataProxy {
       options = mergeOptions(this.defaultOptions.watchQuery, options);
     }
 
-    // XXX Overwriting options is probably not the best way to do this long term...
-    if (
-      this.disableNetworkFetches &&
-      (options.fetchPolicy === "network-only" ||
-        options.fetchPolicy === "cache-and-network")
-    ) {
-      options = { ...options, fetchPolicy: "cache-first" };
-    }
-
     return this.queryManager.watchQuery<TData, TVariables>(options);
   }
 
@@ -465,10 +461,6 @@ export class ApolloClient implements DataProxy {
         "to receive multiple results from the cache and the network, or consider " +
         "using a different fetchPolicy, such as cache-first or network-only."
     );
-
-    if (this.disableNetworkFetches && options.fetchPolicy === "network-only") {
-      options = { ...options, fetchPolicy: "cache-first" };
-    }
 
     return this.queryManager.query<TData, TVariables>(options);
   }

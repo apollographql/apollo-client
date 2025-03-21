@@ -16,7 +16,7 @@ import { CheckedLazyQueryResult } from "./toEqualLazyQueryResult.js";
 // Unfortunately TypeScript does not have a way to determine if a generic
 // argument is a class or not, so we need to manually keep track of known class
 // intances that we filter out.
-type KnownClassInstances = ApolloClient | ObservableQuery;
+type KnownClassInstances = ApolloClient | ObservableQuery<any, any>;
 type FilterUnserializableProperties<T extends Record<string, any>> = {
   [K in keyof T as T[K] extends (...args: any[]) => any ? never
   : T[K] extends KnownClassInstances ? never

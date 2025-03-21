@@ -1467,29 +1467,49 @@ describe("useMutation Hook", () => {
             variables,
           },
           result: {
-            errors: [new GraphQLError(CREATE_TODO_ERROR)],
+            errors: [{ message: CREATE_TODO_ERROR }],
           },
         },
       ];
 
       const hookOnError = jest.fn();
 
-      const { result } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION, { onError: hookOnError }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { onError: hookOnError }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const [createTodo] = result.current;
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
       const onError = jest.fn();
-      await act(async () => {
-        await createTodo({ variables, onError });
+      // TODO: Fix this when fixing issue with onError
+      await expect(
+        createTodo({ variables, onError })
+      ).resolves.toEqualStrictTyped({
+        data: undefined,
+        // @ts-expect-error
+        errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
       });
 
       expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        expect.objectContaining({ variables })
+      );
       expect(hookOnError).not.toHaveBeenCalled();
     });
 

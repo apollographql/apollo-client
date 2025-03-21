@@ -225,6 +225,7 @@ describe("useMutation Hook", () => {
           variables: variables1,
         },
         result: { data: data1 },
+        delay: 20,
       },
       {
         request: {
@@ -232,50 +233,111 @@ describe("useMutation Hook", () => {
           variables: variables2,
         },
         result: { data: data2 },
+        delay: 20,
       },
     ];
 
-    const { result, rerender } = renderHook(
-      ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-        initialProps: {
-          variables: variables1,
-        },
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        ({ variables }) => useMutation(CREATE_TODO_MUTATION, { variables }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+          initialProps: {
+            variables: variables1,
+          },
+        }
+      );
 
-    const createTodo = result.current[0];
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
+    {
+      const [, result] = await takeSnapshot();
 
-    act(() => void createTodo());
-    expect(createTodo).toBe(result.current[0]);
-    expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toBe(undefined);
+      expect(result).toEqualStrictTyped({
+        loading: false,
+        called: false,
+      });
+    }
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[0]).toBe(createTodo);
-    expect(result.current[1].data).toEqual(data1);
+    const [createTodo] = getCurrentSnapshot();
 
-    rerender({ variables: variables2 });
-    act(() => void createTodo());
+    await expect(createTodo()).resolves.toEqualStrictTyped({
+      data: data1,
+    });
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[0]).toBe(createTodo);
-    expect(result.current[1].data).toEqual(data2);
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        called: true,
+      });
+    }
+
+    expect(getCurrentSnapshot()[0]).toBe(createTodo);
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: data1,
+        error: undefined,
+        loading: false,
+        called: true,
+      });
+    }
+
+    expect(getCurrentSnapshot()[0]).toBe(createTodo);
+
+    await rerender({ variables: variables2 });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: data1,
+        error: undefined,
+        loading: false,
+        called: true,
+      });
+    }
+
+    expect(getCurrentSnapshot()[0]).toBe(createTodo);
+
+    await expect(createTodo()).resolves.toEqualStrictTyped({
+      data: data2,
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        called: true,
+      });
+    }
+
+    expect(getCurrentSnapshot()[0]).toBe(createTodo);
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: data2,
+        error: undefined,
+        loading: false,
+        called: true,
+      });
+    }
+
+    expect(getCurrentSnapshot()[0]).toBe(createTodo);
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should not call setResult on an unmounted component", async () => {

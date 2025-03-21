@@ -150,6 +150,7 @@ describe("useMutation Hook", () => {
           variables,
         },
         result: { data: CREATE_TODO_RESULT },
+        delay: 20,
       },
     ];
 
@@ -162,22 +163,32 @@ describe("useMutation Hook", () => {
       return { loading, data };
     };
 
-    const { result } = renderHook(() => useCreateTodo(), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useCreateTodo(),
+      {
+        wrapper: ({ children }) => (
+          <MockedProvider mocks={mocks}>{children}</MockedProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      loading: false,
     });
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBe(undefined);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      loading: true,
+    });
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.data).toEqual(CREATE_TODO_RESULT);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: CREATE_TODO_RESULT,
+      loading: false,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should ensure the mutation callback function has a stable identity no matter what", async () => {

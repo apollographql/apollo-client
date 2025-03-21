@@ -54,7 +54,7 @@ export declare namespace useFragment {
      * this named option is provided, the optimistic parameter of the
      * readQuery method can be omitted.
      *
-     * @default true
+     * @defaultValue true
      */
     optimistic?: boolean;
 

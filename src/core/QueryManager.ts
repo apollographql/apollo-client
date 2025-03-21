@@ -390,15 +390,20 @@ export class QueryManager {
             // ExecutionPatchResult has arrived and we have assembled the
             // multipart response into a single result.
             if (!("hasNext" in storeResult) || storeResult.hasNext === false) {
-              resolve({
-                ...storeResult,
+              const result: MutateResult<TData> = {
                 data: this.maskOperation({
                   document: mutation,
                   data: storeResult.data,
                   fetchPolicy,
                   id: mutationId,
                 }) as any,
-              });
+              };
+
+              if (storeResult.errors) {
+                result.error = new CombinedGraphQLErrors(storeResult.errors);
+              }
+
+              resolve(result);
             }
           },
 

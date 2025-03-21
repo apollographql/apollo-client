@@ -1405,36 +1405,45 @@ describe("useMutation Hook", () => {
           result: {
             errors,
           },
+          delay: 20,
         },
       ];
 
-      const { result } = renderHook(
-        () =>
-          useMutation<
-            { createTodo: Todo },
-            { priority: string; description: string }
-          >(CREATE_TODO_MUTATION),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useMutation<
+              { createTodo: Todo },
+              { priority: string; description: string }
+            >(CREATE_TODO_MUTATION),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const createTodo = result.current[0];
-      let fetchResult: any;
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
       const onCompleted = jest.fn();
       const onError = jest.fn();
-      await act(async () => {
-        fetchResult = await createTodo({
-          variables,
-          onCompleted,
-          onError,
-        });
-      });
 
-      expect(fetchResult).toEqual({
+      // TODO: Ensure this rejects when fixing issue with onError
+      await expect(
+        createTodo({ variables, onCompleted, onError })
+      ).resolves.toEqualStrictTyped({
         data: undefined,
+        // @ts-expect-error needs to be fixed
         errors: new CombinedGraphQLErrors(errors),
       });
 

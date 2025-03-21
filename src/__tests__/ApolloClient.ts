@@ -17,11 +17,11 @@ import {
 import { ApolloLink, FetchResult } from "@apollo/client/link/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { Masked } from "@apollo/client/masking";
+import { MockLink } from "@apollo/client/testing";
 import { DeepPartial } from "@apollo/client/utilities";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
-import { MockLink, MockSubscriptionLink } from "../testing/index.js";
 
 describe("ApolloClient", () => {
   describe("constructor", () => {

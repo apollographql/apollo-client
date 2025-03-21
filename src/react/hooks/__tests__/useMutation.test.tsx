@@ -1194,34 +1194,43 @@ describe("useMutation Hook", () => {
       createTodo = mutate;
       reset = result.reset;
       //initial value
-      expect(result.data).toBe(undefined);
-      expect(result.loading).toBe(false);
-      expect(result.called).toBe(false);
+      expect(result).toEqualStrictTyped({
+        loading: false,
+        called: false,
+      });
     }
 
-    let fetchResult = createTodo({
+    const fetchResult = createTodo({
       variables: { priority: "Low", description: "Get milk." },
     });
 
     {
       const [, result] = await takeSnapshot();
+
       // started loading
-      expect(result.data).toBe(undefined);
-      expect(result.loading).toBe(true);
-      expect(result.called).toBe(true);
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        called: true,
+      });
     }
 
     reset();
 
     {
       const [, result] = await takeSnapshot();
+
       // reset to initial value
-      expect(result.data).toBe(undefined);
-      expect(result.loading).toBe(false);
-      expect(result.called).toBe(false);
+      expect(result).toEqualStrictTyped({
+        loading: false,
+        called: false,
+      });
     }
 
-    expect(await fetchResult).toEqual({ data: CREATE_TODO_DATA });
+    await expect(fetchResult).resolves.toEqualStrictTyped({
+      data: CREATE_TODO_DATA,
+    });
 
     await expect(takeSnapshot).not.toRerender();
   });

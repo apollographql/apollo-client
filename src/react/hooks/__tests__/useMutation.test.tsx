@@ -81,29 +81,61 @@ describe("useMutation Hook", () => {
           variables,
         },
         result: { data: CREATE_TODO_RESULT },
+        delay: 20,
       },
     ];
 
-    const { result } = renderHook(() => useMutation(CREATE_TODO_MUTATION), {
-      wrapper: ({ children }) => (
-        <MockedProvider mocks={mocks}>{children}</MockedProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () => useMutation(CREATE_TODO_MUTATION),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        // TODO: Include data and make it a required property
+        loading: false,
+        called: false,
+      });
+    }
+
+    const [createTodo] = getCurrentSnapshot();
+
+    await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
+      data: CREATE_TODO_RESULT,
     });
 
-    expect(result.current[1].loading).toBe(false);
-    expect(result.current[1].data).toBe(undefined);
-    const createTodo = result.current[0];
-    act(() => void createTodo({ variables }));
-    expect(result.current[1].loading).toBe(true);
-    expect(result.current[1].data).toBe(undefined);
+    {
+      const [, result] = await takeSnapshot();
 
-    await waitFor(
-      () => {
-        expect(result.current[1].loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current[1].data).toEqual(CREATE_TODO_RESULT);
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        // TODO: Remove error field when there is no error
+        error: undefined,
+        loading: true,
+        called: true,
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: CREATE_TODO_RESULT,
+        error: undefined,
+        loading: false,
+        called: true,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should be able to call mutations as an effect", async () => {

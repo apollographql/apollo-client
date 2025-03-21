@@ -390,6 +390,60 @@ describe("mutation results", () => {
     expect(client.cache.extract()).toMatchSnapshot();
   });
 
+  it("returns correct results for network errors with each errorPolicy option", async () => {
+    const networkError = new Error("Oops");
+
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            setTimeout(() => observer.error(networkError));
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+      })
+    ).rejects.toThrow(networkError);
+
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "ignore",
+        variables: {
+          newName: "Jenn Creighton",
+        },
+      })
+    ).resolves.toEqualStrictTyped({ data: undefined });
+
+    await expect(
+      client.mutate({
+        mutation,
+        errorPolicy: "all",
+        variables: {
+          newName: "Ellen Shapiro",
+        },
+      })
+    ).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: networkError,
+    });
+  });
+
   it("should warn when the result fields don't match the query fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     let handle: any;

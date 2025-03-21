@@ -51,6 +51,12 @@ export class RenderPromises {
   ) {
     if (this.stopped) return;
     this.lookupQueryInfo(observable.options).observable = observable;
+    if (
+      observable.options.fetchPolicy === "network-only" ||
+      observable.options.fetchPolicy === "cache-and-network"
+    ) {
+      observable.options.fetchPolicy = "cache-first";
+    }
   }
 
   // Get's the cached observable that matches the SSR Query instances query and variables.

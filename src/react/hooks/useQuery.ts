@@ -192,15 +192,12 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
 
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
-  const isSyncSSR = !!renderPromises;
-  const disableNetworkFetches = client.disableNetworkFetches;
   const ssrAllowed = options.ssr !== false && !options.skip;
 
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
     client,
     query,
-    options,
-    isSyncSSR
+    options
   );
 
   const { observable, resultData } = useInternalState(
@@ -227,9 +224,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     observable,
     client,
     options,
-    watchQueryOptions,
-    disableNetworkFetches,
-    isSyncSSR
+    watchQueryOptions
   );
 
   return result;
@@ -243,19 +238,21 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
   options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  disableNetworkFetches: boolean,
-  isSyncSSR: boolean
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
+  // If SSR has been explicitly disabled, and this function has been called
+  // on the server side or during hydration, return the default loading state.
+  // In that case, this will cause an immediate re-render, because after ensuring
+  // a smooth hydration, we have to render the actual value returned by the
+  // ObservableQuery.
+  const useSSRDisabledResult = useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => options.ssr === false && !options.skip
+  );
+
   const resultOverride =
-    (
-      (isSyncSSR || disableNetworkFetches) &&
-      options.ssr === false &&
-      !options.skip
-    ) ?
-      // If SSR has been explicitly disabled, and this function has been called
-      // on the server side, return the default loading state.
-      ssrDisabledResult
+    useSSRDisabledResult ? ssrDisabledResult
     : options.skip || watchQueryOptions.fetchPolicy === "standby" ?
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is
@@ -281,14 +278,6 @@ function useObservableSubscriptionResult<
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
-        // reference `disableNetworkFetches` here to ensure that the rules of hooks
-        // keep it as a dependency of this effect, even though it's not used
-        disableNetworkFetches;
-
-        if (isSyncSSR) {
-          return () => {};
-        }
-
         const subscription = observable
           // We use the asapScheduler here to prevent issues with trying to
           // update in the middle of a render. `reobserve` is kicked off in the
@@ -330,7 +319,7 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [disableNetworkFetches, isSyncSSR, observable, resultData, client]
+      [observable, resultData, client]
     ),
     () =>
       currentResultOverride || getCurrentResult(resultData, observable, client),
@@ -411,8 +400,7 @@ function createMakeWatchQueryOptions<
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
     ...otherOptions
-  }: QueryHookOptions<TData, TVariables> = {},
-  isSyncSSR: boolean
+  }: QueryHookOptions<TData, TVariables> = {}
 ) {
   return (
     observable?: ObservableQuery<TData, TVariables>
@@ -421,16 +409,6 @@ function createMakeWatchQueryOptions<
     // that did not exist until just now, so modifications are still allowed.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
       Object.assign(otherOptions, { query });
-
-    if (
-      isSyncSSR &&
-      (watchQueryOptions.fetchPolicy === "network-only" ||
-        watchQueryOptions.fetchPolicy === "cache-and-network")
-    ) {
-      // this behavior was added to react-apollo without explanation in this PR
-      // https://github.com/apollographql/react-apollo/pull/1579
-      watchQueryOptions.fetchPolicy = "cache-first";
-    }
 
     if (!watchQueryOptions.variables) {
       watchQueryOptions.variables = {} as TVariables;

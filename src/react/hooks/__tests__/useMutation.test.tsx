@@ -2358,58 +2358,69 @@ describe("useMutation Hook", () => {
             variables,
           },
           result: { data: CREATE_TODO_RESULT },
+          delay: 20,
         },
       ];
 
-      const link = mockSingleLink(...mocks);
       const cache = new InMemoryCache();
-      const client = new ApolloClient({
-        cache,
-        link,
-      });
+      const client = new ApolloClient({ cache, link: new MockLink(mocks) });
 
       let renderCount = 0;
-      const Component = () => {
-        const [createTodo, { loading, data }] = useMutation(
-          CREATE_TODO_MUTATION,
-          { optimisticResponse }
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION, { optimisticResponse }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
         );
 
-        switch (renderCount) {
-          case 0:
-            expect(loading).toBeFalsy();
-            expect(data).toBeUndefined();
-            void createTodo({ variables });
+      {
+        const [, result] = await takeSnapshot();
 
-            const dataInStore = cache.extract(true);
-            expect(dataInStore["Todo:1"]).toEqual(
-              optimisticResponse.createTodo
-            );
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
 
-            break;
-          case 1:
-            expect(loading).toBeTruthy();
-            expect(data).toBeUndefined();
-            break;
-          case 2:
-            expect(loading).toBeFalsy();
-            expect(data).toEqual(CREATE_TODO_RESULT);
-            break;
-          default:
-        }
-        renderCount += 1;
-        return null;
-      };
+      const [createTodo] = getCurrentSnapshot();
 
-      render(
-        <ApolloProvider client={client}>
-          <Component />
-        </ApolloProvider>
+      const promise = createTodo({ variables });
+
+      expect(cache.extract(true)["Todo:1"]).toEqual(
+        optimisticResponse.createTodo
       );
 
-      await waitFor(() => {
-        expect(renderCount).toBe(3);
+      await expect(promise).resolves.toEqualStrictTyped({
+        data: CREATE_TODO_RESULT,
       });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: CREATE_TODO_RESULT,
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("should be called with the provided context", async () => {

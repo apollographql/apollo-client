@@ -1932,16 +1932,18 @@ describe("useMutation Hook", () => {
     const link = new ApolloLink(
       (operation) =>
         new Observable((observer) => {
-          observer.next({
-            data: {
-              __typename: "Mutation",
-              doSomething: {
-                __typename: "MutationPayload",
-                time: startTime,
+          setTimeout(() => {
+            observer.next({
+              data: {
+                __typename: "Mutation",
+                doSomething: {
+                  __typename: "MutationPayload",
+                  time: startTime,
+                },
               },
-            },
-          });
-          observer.complete();
+            });
+            observer.complete();
+          }, 20);
         })
     );
 
@@ -1979,31 +1981,35 @@ describe("useMutation Hook", () => {
         }),
       });
 
-      const { result } = renderHook(() => useMutation(mutation), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(() => useMutation(mutation), {
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        });
 
-      expect(result.current[1].loading).toBe(false);
-      expect(result.current[1].called).toBe(false);
-      expect(result.current[1].data).toBe(undefined);
-      const mutate = result.current[0];
+      {
+        const [, result] = await takeSnapshot();
 
-      let mutationResult: any;
-      act(() => {
-        mutationResult = mutate({
-          update(
-            cache,
-            {
-              data: {
-                doSomething: { __typename, time },
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [mutate] = getCurrentSnapshot();
+
+      await expect(
+        mutate({
+          update(cache, { data }) {
+            expect(data).toEqualStrictTyped({
+              doSomething: {
+                __typename: "MutationPayload",
+                time: new Date(startTime),
               },
-            }
-          ) {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).toBeInstanceOf(Date);
-            expect(time.getTime()).toBe(startTime);
+            });
+
             expect(timeReadCount).toBe(1);
             expect(timeMergeCount).toBe(1);
             // The contents of the ROOT_MUTATION object exist only briefly,
@@ -2019,48 +2025,55 @@ describe("useMutation Hook", () => {
               },
             });
           },
-        }).then(
-          ({
-            data: {
-              doSomething: { __typename, time },
+        })
+      ).resolves.toEqualStrictTyped({
+        data: {
+          doSomething: {
+            __typename: "MutationPayload",
+            time: new Date(startTime),
+          },
+        },
+      });
+
+      expect(timeReadCount).toBe(1);
+      expect(timeMergeCount).toBe(1);
+      // The contents of the ROOT_MUTATION object exist only briefly,
+      // for the duration of the mutation update, and are removed after
+      // the mutation write is finished.
+      expect(client.cache.extract()).toEqual({
+        ROOT_MUTATION: {
+          __typename: "Mutation",
+        },
+      });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: {
+            doSomething: {
+              __typename: "MutationPayload",
+              time: new Date(startTime),
             },
-          }) => {
-            expect(__typename).toBe("MutationPayload");
-            expect(time).toBeInstanceOf(Date);
-            expect(time.getTime()).toBe(startTime);
-            expect(timeReadCount).toBe(1);
-            expect(timeMergeCount).toBe(1);
-            // The contents of the ROOT_MUTATION object exist only briefly,
-            // for the duration of the mutation update, and are removed after
-            // the mutation write is finished.
-            expect(client.cache.extract()).toEqual({
-              ROOT_MUTATION: {
-                __typename: "Mutation",
-              },
-            });
-          }
-        );
-        mutationResult.catch(() => {});
-      });
+          },
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
 
-      expect(result.current[1].loading).toBe(true);
-      expect(result.current[1].called).toBe(true);
-      expect(result.current[1].data).toBe(undefined);
-
-      await waitFor(() => {
-        expect(result.current[1].loading).toBe(false);
-      });
-      expect(result.current[1].called).toBe(true);
-      expect(result.current[1].data).toBeDefined();
-
-      const {
-        doSomething: { __typename, time },
-      } = result.current[1].data;
-      expect(__typename).toBe("MutationPayload");
-      expect(time).toBeInstanceOf(Date);
-      expect(time.getTime()).toBe(startTime);
-
-      await expect(mutationResult).resolves.toBe(undefined);
+      await expect(takeSnapshot).not.toRerender();
     });
 
     it("can be preserved by passing keepRootFields: true", async () => {

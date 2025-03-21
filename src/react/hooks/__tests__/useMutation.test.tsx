@@ -988,33 +988,67 @@ describe("useMutation Hook", () => {
         result: {
           data: CREATE_TODO_DATA,
         },
+        delay: 20,
       },
     ];
 
-    const { result } = renderHook(
-      () =>
-        useMutation<
-          { createTodo: Todo },
-          { priority?: string; description?: string }
-        >(CREATE_TODO_MUTATION, {
-          variables: { priority: "Low" },
-        }),
-      {
-        wrapper: ({ children }) => (
-          <MockedProvider mocks={mocks}>{children}</MockedProvider>
-        ),
-      }
-    );
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(
+        () =>
+          useMutation<
+            { createTodo: Todo },
+            { priority?: string; description?: string }
+          >(CREATE_TODO_MUTATION, {
+            variables: { priority: "Low" },
+          }),
+        {
+          wrapper: ({ children }) => (
+            <MockedProvider mocks={mocks}>{children}</MockedProvider>
+          ),
+        }
+      );
 
-    const createTodo = result.current[0];
-    let fetchResult: any;
-    await act(async () => {
-      fetchResult = await createTodo({
-        variables: { description: "Get milk." },
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        loading: false,
+        called: false,
       });
+    }
+
+    const [createTodo] = getCurrentSnapshot();
+
+    await expect(
+      createTodo({ variables: { description: "Get milk." } })
+    ).resolves.toEqualStrictTyped({
+      data: CREATE_TODO_DATA,
     });
 
-    expect(fetchResult).toEqual({ data: CREATE_TODO_DATA });
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        called: true,
+      });
+    }
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: CREATE_TODO_DATA,
+        error: undefined,
+        loading: false,
+        called: true,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should be possible to reset the mutation", async () => {

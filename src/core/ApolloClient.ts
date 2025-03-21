@@ -320,10 +320,9 @@ export class ApolloClient implements DataProxy {
 
     this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
     if (ssrForceFetchDelay) {
-      setTimeout(
-        () => (this.disableNetworkFetches = false),
-        ssrForceFetchDelay
-      );
+      setTimeout(() => {
+        this.disableNetworkFetches = false;
+      }, ssrForceFetchDelay);
     }
 
     if (this.devtoolsConfig.enabled) this.connectToDevTools();

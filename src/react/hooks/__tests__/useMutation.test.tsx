@@ -1352,26 +1352,39 @@ describe("useMutation Hook", () => {
           result: {
             data: CREATE_TODO_DATA,
           },
+          delay: 20,
         },
       ];
 
       const hookOnCompleted = jest.fn();
 
-      const { result } = renderHook(
-        () =>
-          useMutation(CREATE_TODO_MUTATION, { onCompleted: hookOnCompleted }),
-        {
-          wrapper: ({ children }) => (
-            <MockedProvider mocks={mocks}>{children}</MockedProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () =>
+            useMutation(CREATE_TODO_MUTATION, { onCompleted: hookOnCompleted }),
+          {
+            wrapper: ({ children }) => (
+              <MockedProvider mocks={mocks}>{children}</MockedProvider>
+            ),
+          }
+        );
 
-      const [createTodo] = result.current;
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
       const onCompleted = jest.fn();
-      await act(async () => {
-        await createTodo({ variables, onCompleted });
-      });
+
+      await expect(
+        createTodo({ variables, onCompleted })
+      ).resolves.toEqualStrictTyped({ data: CREATE_TODO_DATA });
 
       expect(onCompleted).toHaveBeenCalledTimes(1);
       expect(hookOnCompleted).not.toHaveBeenCalled();

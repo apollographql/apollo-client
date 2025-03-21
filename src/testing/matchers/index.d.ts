@@ -3,6 +3,7 @@ import type {
   ApolloQueryResult,
   DocumentNode,
   FetchResult,
+  ObservableQuery,
   OperationVariables,
 } from "../../core/index.js";
 import type { useQuery, useLazyQuery, QueryRef } from "../../react/index.js";
@@ -11,6 +12,16 @@ import { RenderStreamMatchers } from "@testing-library/react-render-stream/expec
 import { TakeOptions } from "../internal/ObservableStream.js";
 import { CheckedKeys } from "./toEqualQueryResult.js";
 import { CheckedLazyQueryResult } from "./toEqualLazyQueryResult.js";
+
+// Unfortunately TypeScript does not have a way to determine if a generic
+// argument is a class or not, so we need to manually keep track of known class
+// intances that we filter out.
+type KnownClassInstances = ApolloClient | ObservableQuery;
+type FilterUnserializableProperties<T extends Record<string, any>> = {
+  [K in keyof T as T[K] extends (...args: any[]) => any ? never
+  : T[K] extends KnownClassInstances ? never
+  : K]: T[K];
+};
 
 interface ApolloCustomMatchers<R = void, T = {}> {
   /**
@@ -113,6 +124,10 @@ interface ApolloCustomMatchers<R = void, T = {}> {
   ) ?
     (expected: FetchResult<TData, TContext, TExtensions>) => R
   : { error: "matchers needs to be called on a FetchResult" };
+
+  toEqualStrictTyped: T extends Promise<infer TResult> ?
+    (expected: FilterUnserializableProperties<TResult>) => R
+  : (expected: FilterUnserializableProperties<T>) => R;
 }
 
 declare global {

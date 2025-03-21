@@ -166,6 +166,7 @@ export class ObservableQuery<
             this.options.notifyOnNetworkStatusChange) ||
           // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
           (this.options.fetchPolicy === "network-only" &&
+            !this.queryManager.prioritizeCacheValues &&
             this.queryInfo.getDiff().complete) ||
           result !== this.initialResult
       )

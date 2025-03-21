@@ -41,6 +41,10 @@ import { spyOnConsole } from "../../../testing/internal/index.js";
 import { useMutation } from "../useMutation.js";
 import { useQuery } from "../useQuery.js";
 
+const IS_REACT_17 = React.version.startsWith("17");
+const IS_REACT_18 = React.version.startsWith("18");
+const IS_REACT_19 = React.version.startsWith("19");
+
 describe("useMutation Hook", () => {
   interface Todo {
     id: number;
@@ -2365,7 +2369,6 @@ describe("useMutation Hook", () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({ cache, link: new MockLink(mocks) });
 
-      let renderCount = 0;
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, getCurrentSnapshot } =
         await renderHookToSnapshotStream(
@@ -2591,14 +2594,13 @@ describe("useMutation Hook", () => {
       const onUpdatePromise = new Promise<OnQueryUpdatedResults>((resolve) => {
         resolveOnUpdate = resolve;
       }).then((onUpdateResult) => {
-        expect(finishedReobserving).toBe(true);
         expect(onUpdateResult.diff).toEqual({
           complete: true,
           result: {
             todoCount: 1,
           },
         });
-        expect(onUpdateResult.result).toEqualApolloQueryResult({
+        expect(onUpdateResult.result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -2608,77 +2610,134 @@ describe("useMutation Hook", () => {
         });
       });
 
-      onUpdatePromise.catch(() => {});
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => ({
+            query: useQuery(countQuery),
+            mutation: useMutation(CREATE_TODO_MUTATION, {
+              optimisticResponse,
+              update(cache) {
+                const result = cache.readQuery({ query: countQuery });
 
-      let finishedReobserving = false;
-      const { result } = renderHook(
-        () => ({
-          query: useQuery(countQuery),
-          mutation: useMutation(CREATE_TODO_MUTATION, {
-            optimisticResponse,
-            update(cache) {
-              const result = cache.readQuery({ query: countQuery });
-
-              cache.writeQuery({
-                query: countQuery,
-                data: {
-                  todoCount: (result ? result.todoCount : 0) + 1,
-                },
-              });
-            },
+                cache.writeQuery({
+                  query: countQuery,
+                  data: {
+                    todoCount: (result ? result.todoCount : 0) + 1,
+                  },
+                });
+              },
+            }),
           }),
-        }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual({ todoCount: 0 });
-      expect(result.current.mutation[1].loading).toBe(false);
-      expect(result.current.mutation[1].data).toBe(undefined);
-      const createTodo = result.current.mutation[0];
-      act(() => {
-        void createTodo({
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toEqualStrictTyped({
+          data: { todoCount: 0 },
+          networkStatus: NetworkStatus.ready,
+          loading: false,
+          previousData: undefined,
+          variables: {},
+        });
+        expect(mutation).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const {
+        mutation: [createTodo],
+      } = getCurrentSnapshot();
+
+      await expect(
+        createTodo({
           variables,
           async onQueryUpdated(obsQuery, diff) {
             const result = await obsQuery.reobserve();
-            finishedReobserving = true;
             resolveOnUpdate({ obsQuery, diff, result });
             return result;
           },
+        })
+      ).resolves.toEqualStrictTyped({ data: CREATE_TODO_RESULT });
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        if (IS_REACT_17) {
+          expect(query).toEqualStrictTyped({
+            data: { todoCount: 0 },
+            networkStatus: NetworkStatus.ready,
+            loading: false,
+            previousData: undefined,
+            variables: {},
+          });
+
+          expect(mutation).toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            called: true,
+          });
+        } else {
+          expect(query).toEqualStrictTyped({
+            data: { todoCount: 1 },
+            networkStatus: NetworkStatus.ready,
+            loading: false,
+            previousData: { todoCount: 0 },
+            variables: {},
+          });
+        }
+
+        if (IS_REACT_18) {
+          expect(mutation).toEqualStrictTyped({
+            loading: false,
+            called: false,
+          });
+        } else {
+          expect(mutation).toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            called: true,
+          });
+        }
+      }
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toEqualStrictTyped({
+          data: { todoCount: 1 },
+          networkStatus: NetworkStatus.ready,
+          loading: false,
+          previousData: { todoCount: 0 },
+          variables: {},
         });
-      });
+        expect(mutation).toEqualStrictTyped({
+          data: CREATE_TODO_RESULT,
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
 
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual({ todoCount: 0 });
-      expect(result.current.mutation[1].loading).toBe(true);
-      expect(result.current.mutation[1].data).toBe(undefined);
-      expect(finishedReobserving).toBe(false);
-
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toEqual({ todoCount: 1 });
-        },
-        { interval: 1 }
-      );
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.mutation[1].loading).toBe(true);
-      expect(result.current.mutation[1].data).toBe(undefined);
-
-      await waitFor(
-        () => {
-          expect(result.current.mutation[1].loading).toBe(false);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.query.loading).toBe(false);
-      expect(result.current.query.data).toEqual({ todoCount: 1 });
-      expect(result.current.mutation[1].data).toEqual(CREATE_TODO_RESULT);
-      expect(finishedReobserving).toBe(true);
-
+      await expect(takeSnapshot).not.toRerender();
       await expect(onUpdatePromise).resolves.toBe(undefined);
     });
 

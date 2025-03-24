@@ -3894,75 +3894,98 @@ describe("useMutation Hook", () => {
       });
 
       const onError = jest.fn();
-      const { result } = renderHook(
-        () => useMutation(CREATE_TODO_MUTATION_DEFER, { onError }),
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION_DEFER, { onError }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
+      const promise = createTodo({ variables });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      link.simulateResult({
+        result: {
+          data: {
+            createTodo: {
+              id: 1,
+              __typename: "Todo",
+            },
+          },
+          hasNext: true,
+        },
+      });
+
+      await expect(takeSnapshot).not.toRerender();
+
+      link.simulateResult(
         {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
+          result: {
+            incremental: [
+              {
+                data: null,
+                errors: [{ message: CREATE_TODO_ERROR }],
+                path: ["createTodo"],
+              },
+            ],
+            hasNext: false,
+          },
+        },
+        true
       );
 
-      const createTodo = result.current[0];
+      await expect(promise).resolves.toEqualStrictTyped({
+        data: undefined,
+        // @ts-expect-error
+        errors: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+      });
 
-      let fetchResult: any;
+      {
+        const [, result] = await takeSnapshot();
 
-      setTimeout(() => {
-        link.simulateResult({
-          result: {
-            data: {
-              createTodo: {
-                id: 1,
-                __typename: "Todo",
-              },
-            },
-            hasNext: true,
-          },
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+          loading: false,
+          called: true,
         });
-      });
+      }
 
-      setTimeout(() => {
-        link.simulateResult(
-          {
-            result: {
-              incremental: [
-                {
-                  data: null,
-                  errors: [new GraphQLError(CREATE_TODO_ERROR)],
-                  path: ["createTodo"],
-                },
-              ],
-              hasNext: false,
-            },
-          },
-          true
-        );
-      });
-      await act(async () => {
-        fetchResult = await createTodo({ variables });
-      });
+      await expect(takeSnapshot).not.toRerender();
 
-      await waitFor(() => {
-        expect(fetchResult.errors).toEqual(
-          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }])
-        );
-      });
-      await waitFor(() => {
-        expect(fetchResult.data).toBe(undefined);
-      });
-      await waitFor(() => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      });
-      await waitFor(() => {
-        expect(onError).toHaveBeenLastCalledWith(
-          new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
-          expect.anything()
-        );
-      });
-      await waitFor(() => {
-        expect(consoleSpies.error).not.toHaveBeenCalled();
-      });
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenLastCalledWith(
+        new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
+        expect.anything()
+      );
+      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
+
     it("calls the update function with the final merged result data", async () => {
       using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();

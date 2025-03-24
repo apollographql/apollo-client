@@ -159,10 +159,10 @@ export type LoadQueryFunction<TVariables extends OperationVariables> =
   useLoadableQuery.LoadQueryFunction<TVariables>;
 
 /** @deprecated Use `useLoadableQuery.FetchPolicy` instead */
-export type UseLoadableQueryFetchPolicy = useLoadableQuery.FetchPolicy;
+export type LoadableQueryFetchPolicy = useLoadableQuery.FetchPolicy;
 
 /** @deprecated Use `useLoadableQuery.Options` instead */
-export type UseLoadableQueryOptions = useLoadableQuery.Options;
+export type LoadableQueryHookOptions = useLoadableQuery.Options;
 
 /** @deprecated Use `useLoadableQuery.Result` instead */
 export type UseLoadableQueryResult<

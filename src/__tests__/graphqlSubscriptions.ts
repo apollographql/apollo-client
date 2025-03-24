@@ -61,7 +61,7 @@ describe("GraphQL Subscriptions", () => {
     const stream = new ObservableStream(client.subscribe(defaultOptions));
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitFetchResult(results[0].result);
+    await expect(stream).toEmitStrictTyped(results[0].result);
 
     stream.unsubscribe();
   });
@@ -78,7 +78,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitFetchResult(results[0].result);
+    await expect(stream).toEmitStrictTyped(results[0].result);
 
     stream.unsubscribe();
   });
@@ -96,8 +96,8 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream1).toEmitFetchResult(results[0].result);
-    await expect(stream2).toEmitFetchResult(results[0].result);
+    await expect(stream1).toEmitStrictTyped(results[0].result);
+    await expect(stream2).toEmitStrictTyped(results[0].result);
   });
 
   it("should receive multiple results for a subscription", async () => {
@@ -113,10 +113,10 @@ describe("GraphQL Subscriptions", () => {
       link.simulateResult(results[i]);
     }
 
-    await expect(stream).toEmitFetchResult(results[0].result);
-    await expect(stream).toEmitFetchResult(results[1].result);
-    await expect(stream).toEmitFetchResult(results[2].result);
-    await expect(stream).toEmitFetchResult(results[3].result);
+    await expect(stream).toEmitStrictTyped(results[0].result);
+    await expect(stream).toEmitStrictTyped(results[1].result);
+    await expect(stream).toEmitStrictTyped(results[2].result);
+    await expect(stream).toEmitStrictTyped(results[3].result);
     await expect(stream).not.toEmitAnything();
   });
 
@@ -214,7 +214,7 @@ describe("GraphQL Subscriptions", () => {
       true
     );
 
-    await expect(stream).toEmitFetchResult({
+    await expect(stream).toEmitStrictTyped({
       data: null,
       errors: [new GraphQLError("This is an error")],
     });
@@ -308,7 +308,7 @@ describe("GraphQL Subscriptions", () => {
       true
     );
 
-    await expect(stream).toEmitFetchResult({ data: null });
+    await expect(stream).toEmitStrictTyped({ data: null });
     await expect(stream).toComplete();
   });
 
@@ -392,7 +392,7 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult(results[0]);
 
-    await expect(stream).toEmitFetchResult(results[0].result);
+    await expect(stream).toEmitStrictTyped(results[0].result);
 
     expect(link.operation?.getContext().someVar).toEqual(
       options.context.someVar

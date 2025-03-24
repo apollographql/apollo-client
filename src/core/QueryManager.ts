@@ -397,8 +397,10 @@ export class QueryManager {
                 }) as any,
               };
 
-              if (storeResult.errors) {
-                result.error = new CombinedGraphQLErrors(storeResult.errors);
+              if (graphQLResultHasError(storeResult)) {
+                result.error = new CombinedGraphQLErrors(
+                  getGraphQLErrorsFromResult(storeResult)
+                );
               }
 
               resolve(result);

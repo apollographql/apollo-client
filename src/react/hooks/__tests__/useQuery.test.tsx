@@ -8164,7 +8164,7 @@ describe("useQuery Hook", () => {
         variables: {},
       });
 
-      const result = await getCurrentSnapshot().reobserve();
+      const result = await getCurrentSnapshot().observable.reobserve();
 
       expect(result).toEqualApolloQueryResult({
         data: { a: "aaa", b: 2 },

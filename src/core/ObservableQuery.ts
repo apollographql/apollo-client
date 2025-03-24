@@ -63,6 +63,8 @@ interface Last<TData, TVariables> {
   error?: ErrorLike;
 }
 
+const newNetworkStatusSymbol: any = Symbol();
+
 export class ObservableQuery<
     TData = unknown,
     TVariables extends OperationVariables = OperationVariables,
@@ -445,7 +447,10 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     }
 
     this.queryInfo.resetLastWrite();
-    return this.reobserve(reobserveOptions, NetworkStatus.refetch);
+    return this.reobserve({
+      ...reobserveOptions,
+      [newNetworkStatusSymbol]: NetworkStatus.refetch,
+    });
   }
 
   /**
@@ -674,12 +679,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     };
   }
 
-  public setOptions(
-    newOptions: Partial<WatchQueryOptions<TVariables, TData>>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
-    return this.reobserve(newOptions);
-  }
-
+  /** @internal */
   public silentSetOptions(
     newOptions: Partial<WatchQueryOptions<TVariables, TData>>
   ) {
@@ -722,14 +722,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       return this.subject.getValue();
     }
 
-    return this.reobserve(
-      {
-        // Reset options.fetchPolicy to its original value.
-        fetchPolicy: this.options.initialFetchPolicy,
-        variables,
-      },
-      NetworkStatus.setVariables
-    );
+    return this.reobserve({
+      // Reset options.fetchPolicy to its original value.
+      fetchPolicy: this.options.initialFetchPolicy,
+      variables,
+      [newNetworkStatusSymbol]: NetworkStatus.setVariables,
+    });
   }
 
   /**
@@ -807,7 +805,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         // requests to be triggered only if the cache result is incomplete. To
         // that end, the options.nextFetchPolicy option provides an easy way to
         // update options.fetchPolicy after the initial network request, without
-        // having to call observableQuery.setOptions.
+        // having to call observableQuery.reobserve.
         options.fetchPolicy = options.nextFetchPolicy(fetchPolicy, {
           reason,
           options,
@@ -880,19 +878,17 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           !isNetworkRequestInFlight(this.networkStatus) &&
           !this.options.skipPollAttempt?.()
         ) {
-          this.reobserve(
-            {
-              // Most fetchPolicy options don't make sense to use in a polling context, as
-              // users wouldn't want to be polling the cache directly. However, network-only and
-              // no-cache are both useful for when the user wants to control whether or not the
-              // polled results are written to the cache.
-              fetchPolicy:
-                this.options.initialFetchPolicy === "no-cache" ?
-                  "no-cache"
-                : "network-only",
-            },
-            NetworkStatus.poll
-          ).then(poll, poll);
+          this.reobserve({
+            // Most fetchPolicy options don't make sense to use in a polling context, as
+            // users wouldn't want to be polling the cache directly. However, network-only and
+            // no-cache are both useful for when the user wants to control whether or not the
+            // polled results are written to the cache.
+            fetchPolicy:
+              this.options.initialFetchPolicy === "no-cache" ?
+                "no-cache"
+              : "network-only",
+            [newNetworkStatusSymbol]: NetworkStatus.poll,
+          }).then(poll, poll);
         } else {
           poll();
         }
@@ -929,13 +925,23 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     });
   }
 
+  /**
+   * Reevaluate the query, optionally against new options. New options will be
+   * merged with the current options when given.
+   */
   // TODO: catch `EmptyError` and rethrow as network error if `complete`
   // notification is emitted without a value.
   public reobserve(
-    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-    newNetworkStatus?: NetworkStatus
+    newOptions?: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
     this.isTornDown = false;
+    let newNetworkStatus: NetworkStatus | undefined;
+
+    if (newOptions) {
+      newNetworkStatus = (newOptions as any)[newNetworkStatusSymbol];
+      // Avoid setting the symbol option in this.options
+      delete (newOptions as any)[newNetworkStatusSymbol];
+    }
 
     const useDisposableObservable =
       // Refetching uses a disposable Observable to allow refetches using different

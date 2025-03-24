@@ -152,12 +152,6 @@ export declare namespace useQuery {
       variables?: Partial<TVariables>
     ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
 
-    /** @internal */
-    reobserve: (
-      newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
-      newNetworkStatus?: NetworkStatus
-    ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
     variables: TVariables | undefined;
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
@@ -701,7 +695,6 @@ function bindObservableMethods<TData, TVariables extends OperationVariables>(
 ) {
   return {
     refetch: observable.refetch.bind(observable),
-    reobserve: observable.reobserve.bind(observable),
     fetchMore: observable.fetchMore.bind(observable),
     updateQuery: observable.updateQuery.bind(observable),
     startPolling: observable.startPolling.bind(observable),

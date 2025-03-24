@@ -3114,7 +3114,7 @@ describe("ApolloClient", () => {
       // fetchQueryByPolicy, but it should just read from cache and not
       // update "queryInfo.lastRequestId". For more information, see
       // https://github.com/apollographql/apollo-client/pull/7956#issue-610298427
-      await observable.setOptions({
+      await observable.reobserve({
         ...queryOptions,
         fetchPolicy: "cache-first",
       });

@@ -260,11 +260,7 @@ export function useMutation<
         .mutate(clientOptions as MutationOptions<TData, OperationVariables>)
         .then(
           (response) => {
-            const { data, errors } = response;
-            const error =
-              errors && errors.length > 0 ?
-                new CombinedGraphQLErrors(errors)
-              : void 0;
+            const { data, error } = response;
 
             const onError =
               executeOptions.onError || ref.current.options?.onError;

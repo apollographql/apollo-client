@@ -403,6 +403,10 @@ export class QueryManager {
                 );
               }
 
+              if (storeResult.extensions) {
+                result.extensions = storeResult.extensions;
+              }
+
               resolve(result);
             }
           },

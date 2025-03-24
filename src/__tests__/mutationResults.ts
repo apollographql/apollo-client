@@ -444,6 +444,52 @@ describe("mutation results", () => {
     });
   });
 
+  it("returns extensions provided by server", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        (operation) =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: {
+                    __typename: "Person",
+                    name: operation.variables.newName,
+                  },
+                },
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: { __typename: "Person", name: "Hugh Willson" } },
+      extensions: {
+        requestLimit: 10,
+      },
+    });
+  });
+
   it("should warn when the result fields don't match the query fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     let handle: any;

@@ -141,7 +141,7 @@ describe("GraphQL Subscriptions", () => {
     expect(cache.extract()).toEqual({});
   });
 
-  it("emits an error if the result has errors on it", async () => {
+  it("emits an error if the result has GraphQL errors", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
@@ -186,6 +186,21 @@ describe("GraphQL Subscriptions", () => {
     });
   });
 
+  it("emits an error if the result has network errors", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = client.subscribe(options);
+    const stream = new ObservableStream(obs);
+
+    link.simulateResult({ error: new Error("Oops") });
+
+    await expect(stream).toEmitError(new Error("Oops"));
+  });
+
   it('returns errors in next result when `errorPolicy` is "all"', async () => {
     const query = gql`
       subscription UserInfo($name: String) {
@@ -222,6 +237,25 @@ describe("GraphQL Subscriptions", () => {
       error: new CombinedGraphQLErrors([{ message: "This is an error" }]),
     });
 
+    await expect(stream).toComplete();
+  });
+
+  it("emits a result with error and completes when the result has network errors with `errorPolicy: 'all'`", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = client.subscribe({ ...options, errorPolicy: "all" });
+    const stream = new ObservableStream(obs);
+
+    link.simulateResult({ error: new Error("Oops") });
+
+    await expect(stream).toEmitStrictTyped({
+      data: undefined,
+      error: new Error("Oops"),
+    });
     await expect(stream).toComplete();
   });
 
@@ -271,6 +305,8 @@ describe("GraphQL Subscriptions", () => {
         },
       ]),
     });
+
+    await expect(stream).toComplete();
   });
 
   it('does not emit anything for GraphQL errors with no data in next result when `errorPolicy` is "ignore"', async () => {
@@ -304,6 +340,32 @@ describe("GraphQL Subscriptions", () => {
     await expect(stream).not.toEmitAnything();
 
     link.simulateComplete();
+    await expect(stream).toComplete();
+  });
+
+  it('does not emit anything for network errors with no data in next result when `errorPolicy` is "ignore"', async () => {
+    const query = gql`
+      subscription UserInfo($name: String) {
+        user(name: $name) {
+          name
+        }
+      }
+    `;
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = client.subscribe({
+      query,
+      variables: { name: "Iron Man" },
+      errorPolicy: "ignore",
+    });
+    const stream = new ObservableStream(obs);
+
+    link.simulateResult({ error: new Error("Oops") });
+
     await expect(stream).toComplete();
   });
 

@@ -2047,7 +2047,7 @@ describe("ApolloClient", () => {
     });
   });
 
-  describe("watchQuery & disableNetworkFetches", () => {
+  describe("watchQuery & prioritizeCacheValues", () => {
     it.each([
       [true, "cache-first"],
       [true, "cache-and-network"],
@@ -2060,13 +2060,13 @@ describe("ApolloClient", () => {
       [false, "cache-only"],
       [false, "no-cache"],
     ] as const)(
-      "should not change the `fetchPolicy` (`disableNetworkFetches`: %s, `fetchPolicy`: %s)",
-      async (disableNetworkFetches, fetchPolicy) => {
+      "should not change the `fetchPolicy` (`prioritizeCacheValues`: %s, `fetchPolicy`: %s)",
+      async (prioritizeCacheValues, fetchPolicy) => {
         const client = new ApolloClient({
           link: ApolloLink.empty(),
           cache: new InMemoryCache(),
         });
-        client.prioritizeCacheValues = disableNetworkFetches;
+        client.prioritizeCacheValues = prioritizeCacheValues;
 
         const observable = client.watchQuery({
           query: gql`
@@ -2085,7 +2085,7 @@ describe("ApolloClient", () => {
       ["cache-and-network"],
       ["cache-first"],
     ] as const)(
-      "should not make a network request if the cache can fulfill the query (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      "should not make a network request if the cache can fulfill the query (`prioritizeCacheValues`: true, `fetchPolicy`: %s)",
       async (fetchPolicy) => {
         const query = gql`
           query someData {
@@ -2122,7 +2122,7 @@ describe("ApolloClient", () => {
       ["cache-and-network"],
       ["cache-first"],
     ] as const)(
-      "should make a network request if the cache cannot fulfill the query (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      "should make a network request if the cache cannot fulfill the query (`prioritizeCacheValues`: true, `fetchPolicy`: %s)",
       async (fetchPolicy) => {
         const query = gql`
           query someData {
@@ -2154,7 +2154,7 @@ describe("ApolloClient", () => {
     );
 
     it.each([["no-cache"]] as const)(
-      "should make a network request (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      "should make a network request (`prioritizeCacheValues`: true, `fetchPolicy`: %s)",
       async (fetchPolicy) => {
         const query = gql`
           query someData {
@@ -2195,7 +2195,7 @@ describe("ApolloClient", () => {
     );
 
     it.each([["standby"]] as const)(
-      "should not emit anything (`disableNetworkFetches`: true, `fetchPolicy`: %s)",
+      "should not emit anything (`prioritizeCacheValues`: true, `fetchPolicy`: %s)",
       async (fetchPolicy) => {
         const query = gql`
           query someData {

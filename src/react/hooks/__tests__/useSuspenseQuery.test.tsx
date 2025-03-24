@@ -35,7 +35,7 @@ import {
   TypedDocumentNode,
 } from "@apollo/client/core";
 import { Masked, MaskedDocumentNode, Unmasked } from "@apollo/client/masking";
-import { skipToken, SuspenseQueryHookFetchPolicy } from "@apollo/client/react";
+import { skipToken } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
 import {
   MockedResponse,
@@ -65,10 +65,7 @@ import {
   setupPaginatedCase,
   spyOnConsole,
 } from "../../../testing/internal/index.js";
-import {
-  useSuspenseQuery,
-  UseSuspenseQueryResult,
-} from "../useSuspenseQuery.js";
+import { useSuspenseQuery } from "../useSuspenseQuery.js";
 
 const IS_REACT_19 = React.version.startsWith("19");
 
@@ -458,7 +455,7 @@ describe("useSuspenseQuery", () => {
 
     using _disabledAct = disableActEnvironment();
     const { takeRender, replaceSnapshot, render } = await createRenderStream<
-      UseSuspenseQueryResult<SimpleQueryData, OperationVariables>
+      useSuspenseQuery.Result<SimpleQueryData, OperationVariables>
     >({
       snapshotDOM: true,
     });
@@ -2780,7 +2777,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -2826,7 +2823,7 @@ describe("useSuspenseQuery", () => {
     expect(cachedData).toBeNull();
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -2921,7 +2918,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -2976,7 +2973,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3055,7 +3052,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3105,7 +3102,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -3152,7 +3149,7 @@ describe("useSuspenseQuery", () => {
     }
   );
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "cache-and-network",
@@ -6466,7 +6463,7 @@ describe("useSuspenseQuery", () => {
         cache,
         mocks,
         initialProps: {
-          fetchPolicy: "cache-first" as SuspenseQueryHookFetchPolicy,
+          fetchPolicy: "cache-first" as useSuspenseQuery.FetchPolicy,
         },
       }
     );
@@ -6831,7 +6828,7 @@ describe("useSuspenseQuery", () => {
     ]);
   });
 
-  it.each<SuspenseQueryHookFetchPolicy>([
+  it.each<useSuspenseQuery.FetchPolicy>([
     "cache-first",
     "network-only",
     "no-cache",
@@ -10071,7 +10068,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
@@ -10242,7 +10239,7 @@ describe("useSuspenseQuery", () => {
       initialSnapshot: {
         isPending: false,
         result: null as Pick<
-          UseSuspenseQueryResult<Data>,
+          useSuspenseQuery.Result<Data>,
           "data" | "error" | "networkStatus"
         > | null,
       },
@@ -10449,7 +10446,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
@@ -10574,7 +10571,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           PaginatedCaseData,
           PaginatedCaseVariables
         > | null,
@@ -10710,7 +10707,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -10802,7 +10799,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as useSuspenseQuery.Result<Query, never> | null,
       },
     });
 
@@ -10891,7 +10888,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Query, never> | null,
+        result: null as useSuspenseQuery.Result<Query, never> | null,
       },
     });
 
@@ -10981,7 +10978,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11100,7 +11097,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11228,7 +11225,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11327,7 +11324,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<Masked<Query>, never> | null,
+        result: null as useSuspenseQuery.Result<Masked<Query>, never> | null,
       },
     });
 
@@ -11446,7 +11443,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           DeepPartial<Masked<Query>>,
           never
         > | null,
@@ -11550,7 +11547,7 @@ describe("useSuspenseQuery", () => {
 
     const renderStream = createRenderStream({
       initialSnapshot: {
-        result: null as UseSuspenseQueryResult<
+        result: null as useSuspenseQuery.Result<
           Masked<Query> | undefined,
           never
         > | null,

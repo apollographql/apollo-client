@@ -19,7 +19,18 @@ import { equal } from "@wry/equality";
 import * as React from "react";
 import { asapScheduler, observeOn } from "rxjs";
 
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type {
+  ApolloClient,
+  DefaultContext,
+  ErrorLike,
+  ErrorPolicy,
+  FetchMoreQueryOptions,
+  OperationVariables,
+  RefetchWritePolicy,
+  SubscribeToMoreFunction,
+  UpdateQueryMapFn,
+  WatchQueryFetchPolicy,
+} from "@apollo/client/core";
 import type {
   ApolloQueryResult,
   DocumentNode,
@@ -28,26 +39,155 @@ import type {
   WatchQueryOptions,
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
-import type { MaybeMasked } from "@apollo/client/masking";
-import type {
-  NoInfer,
-  ObservableQueryFields,
-  QueryHookOptions,
-  QueryResult,
-} from "@apollo/client/react";
+import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
 import { getApolloContext } from "@apollo/client/react/context";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { RenderPromises } from "@apollo/client/react/ssr";
-import { compact, maybeDeepFreeze } from "@apollo/client/utilities";
-import { mergeOptions } from "@apollo/client/utilities";
+import type { NoInfer } from "@apollo/client/utilities";
+import {
+  compact,
+  maybeDeepFreeze,
+  mergeOptions,
+} from "@apollo/client/utilities";
+
+import type { NextFetchPolicyContext } from "../../core/watchQueryOptions.js";
 
 import { wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
+export declare namespace useQuery {
+  export interface Options<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
+    fetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#nextFetchPolicy:member} */
+    nextFetchPolicy?:
+      | WatchQueryFetchPolicy
+      | ((
+          this: WatchQueryOptions<TVariables, TData>,
+          currentFetchPolicy: WatchQueryFetchPolicy,
+          context: NextFetchPolicyContext<TData, TVariables>
+        ) => WatchQueryFetchPolicy);
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#initialFetchPolicy:member} */
+
+    initialFetchPolicy?: WatchQueryFetchPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#refetchWritePolicy:member} */
+    refetchWritePolicy?: RefetchWritePolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#variables:member} */
+    variables?: TVariables;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#errorPolicy:member} */
+    errorPolicy?: ErrorPolicy;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#pollInterval:member} */
+    pollInterval?: number;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#notifyOnNetworkStatusChange:member} */
+    notifyOnNetworkStatusChange?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#returnPartialData:member} */
+    returnPartialData?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
+    skipPollAttempt?: () => boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#ssr:member} */
+    ssr?: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#client:member} */
+    client?: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#context:member} */
+    context?: DefaultContext;
+
+    /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skip:member} */
+    skip?: boolean;
+  }
+
+  export interface Result<
+    TData = unknown,
+    TVariables extends OperationVariables = OperationVariables,
+  > {
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#client:member} */
+    client: ApolloClient;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#observable:member} */
+    observable: ObservableQuery<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+    data: MaybeMasked<TData> | undefined;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#previousData:member} */
+    previousData?: MaybeMasked<TData>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+    error?: ErrorLike;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#loading:member} */
+    loading: boolean;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#networkStatus:member} */
+    networkStatus: NetworkStatus;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#startPolling:member} */
+    startPolling: (pollInterval: number) => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#stopPolling:member} */
+    stopPolling: () => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#subscribeToMore:member} */
+    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#updateQuery:member} */
+    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
+    refetch: (
+      variables?: Partial<TVariables>
+    ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+
+    /** @internal */
+    reobserve: (
+      newOptions?: Partial<WatchQueryOptions<TVariables, TData>>,
+      newNetworkStatus?: NetworkStatus
+    ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
+    variables: TVariables | undefined;
+    /** {@inheritDoc @apollo/client!QueryResultDocumentation#fetchMore:member} */
+
+    fetchMore: <
+      TFetchData = TData,
+      TFetchVars extends OperationVariables = TVariables,
+    >(
+      fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+        updateQuery?: (
+          previousQueryResult: Unmasked<TData>,
+          options: {
+            fetchMoreResult: Unmasked<TFetchData>;
+            variables: TFetchVars;
+          }
+        ) => Unmasked<TData>;
+      }
+    ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+  }
+}
+
 type InternalQueryResult<TData, TVariables extends OperationVariables> = Omit<
-  QueryResult<TData, TVariables>,
-  Exclude<keyof ObservableQueryFields<TData, TVariables>, "variables">
+  useQuery.Result<TData, TVariables>,
+  | "startPolling"
+  | "stopPolling"
+  | "subscribeToMore"
+  | "updateQuery"
+  | "refetch"
+  | "reobserve"
+  | "fetchMore"
 >;
 
 const lastWatchOptions = Symbol();
@@ -110,8 +250,8 @@ export function useQuery<
   TVariables extends OperationVariables = OperationVariables,
 >(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>> = {}
-): QueryResult<TData, TVariables> {
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
+): useQuery.Result<TData, TVariables> {
   return wrapHook(
     "useQuery",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -122,7 +262,7 @@ export function useQuery<
 
 function useQuery_<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const result = useQueryInternals(query, options);
   const obsQueryFields = React.useMemo(
@@ -187,7 +327,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
 
 function useQueryInternals<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
 
@@ -242,7 +382,7 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
-  options: QueryHookOptions<NoInfer<TData>, NoInfer<TVariables>>,
+  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
   prioritizeCacheValues: boolean,
   isSyncSSR: boolean
@@ -411,7 +551,7 @@ function createMakeWatchQueryOptions<
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
     ...otherOptions
-  }: QueryHookOptions<TData, TVariables> = {},
+  }: useQuery.Options<TData, TVariables> = {},
   isSyncSSR: boolean
 ) {
   return (
@@ -558,7 +698,7 @@ const skipStandbyResult = maybeDeepFreeze({
 
 function bindObservableMethods<TData, TVariables extends OperationVariables>(
   observable: ObservableQuery<TData, TVariables>
-): Omit<ObservableQueryFields<TData, TVariables>, "variables"> {
+) {
   return {
     refetch: observable.refetch.bind(observable),
     reobserve: observable.reobserve.bind(observable),

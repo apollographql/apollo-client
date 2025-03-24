@@ -117,7 +117,7 @@ class ApolloClient implements DataProxy {
     cache: ApolloCache;
     clearStore(): Promise<any[]>;
     // (undocumented)
-    get defaultContext(): Partial<Context>;
+    get defaultContext(): Partial<DefaultContext>;
     // (undocumented)
     defaultOptions: DefaultOptions;
     // Warning: (ae-forgotten-export) The symbol "DevtoolsOptions" needs to be exported by the entry point index.d.ts
@@ -138,9 +138,10 @@ class ApolloClient implements DataProxy {
     //
     // (undocumented)
     link: ApolloLink;
+    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MutationOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "FetchResult" needs to be exported by the entry point index.d.ts
-    mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = Context, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
+    mutate<TData = unknown, TVariables extends OperationVariables = OperationVariables, TContext extends Record<string, any> = DefaultContext, TCache extends ApolloCache = ApolloCache>(options: MutationOptions<TData, TVariables, TContext>): Promise<FetchResult<MaybeMasked<TData>>>;
     onClearStore(cb: () => Promise<any>): () => void;
     onResetStore(cb: () => Promise<any>): () => void;
     set prioritizeCacheValues(value: boolean);
@@ -190,7 +191,7 @@ interface ApolloClientOptions {
     credentials?: string;
     dataMasking?: boolean;
     // (undocumented)
-    defaultContext?: Partial<Context>;
+    defaultContext?: Partial<DefaultContext>;
     defaultOptions?: DefaultOptions;
     devtools?: DevtoolsOptions;
     // (undocumented)
@@ -308,64 +309,11 @@ type AsStoreObject<T extends {
     [K in keyof T]: T[K];
 };
 
-// Warning: (ae-forgotten-export) The symbol "WatchQueryFetchPolicy" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type BackgroundQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+// @public @deprecated (undocumented)
+export type BackgroundQueryHookFetchPolicy = useBackgroundQuery.FetchPolicy;
 
-// @public (undocumented)
-export interface BackgroundQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends Pick<QueryHookOptions<TData, TVariables>, "client" | "variables" | "errorPolicy" | "context" | "returnPartialData" | "refetchWritePolicy"> {
-    // (undocumented)
-    fetchPolicy?: BackgroundQueryHookFetchPolicy;
-    // (undocumented)
-    queryKey?: string | number | any[];
-    // @deprecated
-    skip?: boolean;
-}
-
-// @public (undocumented)
-type BackgroundQueryHookOptionsNoInfer<TData, TVariables extends OperationVariables> = BackgroundQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>;
-
-// Warning: (ae-forgotten-export) The symbol "MutationSharedOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export interface BaseMutationOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-    client?: ApolloClient;
-    notifyOnNetworkStatusChange?: boolean;
-    onCompleted?: (data: MaybeMasked<TData>, clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>) => void;
-    onError?: (error: ErrorLike, clientOptions?: BaseMutationOptions<TData, TVariables, TContext, TCache>) => void;
-}
-
-// Warning: (ae-forgotten-export) The symbol "SharedWatchQueryOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export interface BaseQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> extends SharedWatchQueryOptions<TVariables, TData> {
-    client?: ApolloClient;
-    context?: Context;
-    ssr?: boolean;
-}
-
-// @public (undocumented)
-export interface BaseSubscriptionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client?: ApolloClient;
-    context?: Context;
-    // Warning: (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
-    errorPolicy?: ErrorPolicy;
-    extensions?: Record<string, any>;
-    // Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
-    fetchPolicy?: FetchPolicy;
-    ignoreResults?: boolean;
-    onComplete?: () => void;
-    onData?: (options: OnDataOptions<TData>) => any;
-    onError?: (error: ErrorLike) => void;
-    // @deprecated
-    onSubscriptionComplete?: () => void;
-    // @deprecated
-    onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
-    shouldResubscribe?: boolean | ((options: BaseSubscriptionOptions<TData, TVariables>) => boolean);
-    skip?: boolean;
-    variables?: TVariables;
-}
+// @public @deprecated (undocumented)
+export type BackgroundQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useBackgroundQuery.Options<TVariables>;
 
 // @public (undocumented)
 namespace Cache_2 {
@@ -497,21 +445,12 @@ type CombineIntersection<T> = Exclude<T, {
     __typename?: string;
 }>>;
 
-// @public (undocumented)
-export type CommonOptions<TOptions> = TOptions & {
-    client?: ApolloClient;
-};
-
 // Warning: (ae-forgotten-export) The symbol "IsAny" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "Exact" needs to be exported by the entry point index.d.ts
 // Warning: (ae-forgotten-export) The symbol "RemoveIndexSignature" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 type ContainsFragmentsRefs<TData, Seen = never> = true extends (IsAny<TData>) ? false : TData extends object ? Exact<TData> extends Seen ? false : " $fragmentRefs" extends keyof RemoveIndexSignature<TData> ? true : ContainsFragmentsRefs<TData[keyof TData], Seen | Exact<TData>> : false;
-
-// @public (undocumented)
-export interface Context extends Record<string, any> {
-}
 
 // @public
 export function createQueryPreloader(client: ApolloClient): PreloadQueryFunction;
@@ -628,6 +567,10 @@ type DeepPartialReadonlySet<T> = {} & ReadonlySet<DeepPartial<T>>;
 
 // @public (undocumented)
 type DeepPartialSet<T> = {} & Set<DeepPartial<T>>;
+
+// @public (undocumented)
+interface DefaultContext extends Record<string, any> {
+}
 
 // @public (undocumented)
 interface DefaultOptions {
@@ -777,7 +720,7 @@ type FetchMoreFunction<TData, TVariables extends OperationVariables> = (fetchMor
 // @public (undocumented)
 interface FetchMoreQueryOptions<TVariables, TData = unknown> {
     // (undocumented)
-    context?: Context;
+    context?: DefaultContext;
     query?: DocumentNode | TypedDocumentNode<TData, TVariables>;
     variables?: Partial<TVariables>;
 }
@@ -826,6 +769,7 @@ TData
 } : never : never;
 
 // Warning: (ae-forgotten-export) The symbol "FragmentType" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "NoInfer_2" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 type From<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
@@ -878,7 +822,7 @@ export function getApolloContext(): ReactTypes.Context<ApolloContextValue>;
 // @public (undocumented)
 interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
-    context?: Context;
+    context?: DefaultContext;
     // (undocumented)
     extensions?: Record<string, any>;
     // (undocumented)
@@ -974,84 +918,29 @@ function isReference(obj: any): obj is Reference;
 // @public (undocumented)
 type IsStrictlyAny<T> = UnionToIntersection<UnionForAny<T>> extends never ? true : false;
 
-// Warning: (ae-forgotten-export) The symbol "OnlyRequiredProperties" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export type LazyQueryExecFunction<TData, TVariables extends OperationVariables> = (...args: [TVariables] extends [never] ? [
-options?: LazyQueryHookExecOptions<TVariables>
-] : Record<string, never> extends OnlyRequiredProperties<TVariables> ? [
-options?: LazyQueryHookExecOptions<TVariables>
-] : [options: LazyQueryHookExecOptions<TVariables>]) => Promise<ApolloQueryResult<TData>>;
+// @public @deprecated (undocumented)
+export type LazyQueryExecFunction<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLazyQuery.ExecFunction<TData, TVariables>;
 
-// @public (undocumented)
-export type LazyQueryHookExecOptions<TVariables extends OperationVariables = OperationVariables> = {
-    context?: Context;
-} & VariablesOption<TVariables>;
+// @public @deprecated (undocumented)
+export type LazyQueryHookExecOptions<TVariables extends OperationVariables = OperationVariables> = useLazyQuery.ExecOptions<TVariables>;
 
-// @public (undocumented)
-export interface LazyQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client?: ApolloClient;
-    context?: Context;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: WatchQueryFetchPolicy;
-    // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
-    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
-    // Warning: (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-    skipPollAttempt?: () => boolean;
-}
+// @public @deprecated (undocumented)
+export type LazyQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLazyQuery.Options<TData, TVariables>;
 
-// @public (undocumented)
-export interface LazyQueryResult<TData, TVariables extends OperationVariables> {
-    called: boolean;
-    client: ApolloClient;
-    data: MaybeMasked<TData> | undefined;
-    error?: ErrorLike;
-    fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-        }) => Unmasked<TData>;
-    }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
-    loading: boolean;
-    networkStatus: NetworkStatus;
-    observable: ObservableQuery<TData, TVariables>;
-    previousData?: MaybeMasked<TData>;
-    refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    startPolling: (pollInterval: number) => void;
-    stopPolling: () => void;
-    // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    // Warning: (ae-forgotten-export) The symbol "UpdateQueryMapFn" needs to be exported by the entry point index.d.ts
-    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-    variables: TVariables | undefined;
-}
+// @public @deprecated (undocumented)
+export type LazyQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLazyQuery.Result<TData, TVariables>;
 
-// @public (undocumented)
-export type LazyQueryResultTuple<TData, TVariables extends OperationVariables> = [
-execute: LazyQueryExecFunction<TData, TVariables>,
-result: LazyQueryResult<TData, TVariables>
-];
+// @public @deprecated (undocumented)
+export type LazyQueryResultTuple<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLazyQuery.ResultTuple<TData, TVariables>;
 
-// @public (undocumented)
-export type LoadableQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+// @public @deprecated (undocumented)
+export type LoadableQueryFetchPolicy = useLoadableQuery.FetchPolicy;
 
-// @public (undocumented)
-export interface LoadableQueryHookOptions {
-    client?: ApolloClient;
-    context?: Context;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: LoadableQueryHookFetchPolicy;
-    queryKey?: string | number | any[];
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-}
+// @public @deprecated (undocumented)
+export type LoadableQueryHookOptions = useLoadableQuery.Options;
 
-// @public (undocumented)
-export type LoadQueryFunction<TVariables extends OperationVariables> = (...args: [TVariables] extends [never] ? [] : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables] : [variables: TVariables]) => void;
+// @public @deprecated (undocumented)
+export type LoadQueryFunction<TVariables extends OperationVariables> = useLoadableQuery.LoadQueryFunction<TVariables>;
 
 // @public (undocumented)
 class LocalState {
@@ -1099,6 +988,14 @@ type LocalStateOptions = {
 };
 
 // @public (undocumented)
+interface LookupOptions {
+    // (undocumented)
+    query: DocumentNode;
+    // (undocumented)
+    variables?: OperationVariables;
+}
+
+// @public (undocumented)
 interface MaskFragmentOptions<TData> {
     // (undocumented)
     data: TData;
@@ -1114,6 +1011,8 @@ interface MaskOperationOptions<TData> {
     data: TData;
     // (undocumented)
     document: DocumentNode;
+    // Warning: (ae-forgotten-export) The symbol "WatchQueryFetchPolicy" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     fetchPolicy?: WatchQueryFetchPolicy;
     // (undocumented)
@@ -1208,11 +1107,27 @@ type Modifiers<T extends Record<string, any> = Record<string, unknown>> = Partia
     [FieldName in keyof T]: Modifier<StoreObjectValueMaybeReference<Exclude<T[FieldName], undefined>>>;
 }>;
 
+// Warning: (ae-forgotten-export) The symbol "FetchPolicy" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
-interface MutationBaseOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> {
+type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
+
+// @public @deprecated (undocumented)
+export type MutationFunctionOptions<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = useMutation.MutationFunctionOptions<TData, TVariables, TContext, TCache>;
+
+// @public @deprecated (undocumented)
+export type MutationHookOptions<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = useMutation.Options<TData, TVariables, TContext, TCache>;
+
+// @public (undocumented)
+interface MutationOptions<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> {
     awaitRefetchQueries?: boolean;
     context?: TContext;
+    // Warning: (ae-forgotten-export) The symbol "ErrorPolicy" needs to be exported by the entry point index.d.ts
     errorPolicy?: ErrorPolicy;
+    // Warning: (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
+    fetchPolicy?: MutationFetchPolicy;
+    keepRootFields?: boolean;
+    mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
     // Warning: (ae-forgotten-export) The symbol "OnQueryUpdated" needs to be exported by the entry point index.d.ts
     onQueryUpdated?: OnQueryUpdated<any>;
     // Warning: (ae-forgotten-export) The symbol "IgnoreModifier" needs to be exported by the entry point index.d.ts
@@ -1225,32 +1140,6 @@ interface MutationBaseOptions<TData = unknown, TVariables = OperationVariables, 
     // Warning: (ae-forgotten-export) The symbol "MutationQueryReducersMap" needs to be exported by the entry point index.d.ts
     updateQueries?: MutationQueryReducersMap<TData>;
     variables?: TVariables;
-}
-
-// @public (undocumented)
-export interface MutationDataOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-    // (undocumented)
-    mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-// @public (undocumented)
-type MutationFetchPolicy = Extract<FetchPolicy, "network-only" | "no-cache">;
-
-// @public (undocumented)
-export type MutationFunction<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> = (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult<MaybeMasked<TData>>>;
-
-// @public (undocumented)
-export interface MutationFunctionOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-    mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-// @public (undocumented)
-export interface MutationHookOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> extends BaseMutationOptions<TData, TVariables, TContext, TCache> {
-}
-
-// @public (undocumented)
-interface MutationOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-    mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 // @public (undocumented)
@@ -1267,24 +1156,8 @@ type MutationQueryReducersMap<T = {
     [queryName: string]: MutationQueryReducer<T>;
 };
 
-// @public (undocumented)
-export interface MutationResult<TData = unknown> {
-    called: boolean;
-    client: ApolloClient;
-    data?: MaybeMasked<TData> | null;
-    error?: ErrorLike;
-    loading: boolean;
-    reset: () => void;
-}
-
-// Warning: (ae-forgotten-export) The symbol "MutationBaseOptions" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-interface MutationSharedOptions<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
-    // Warning: (ae-forgotten-export) The symbol "MutationFetchPolicy" needs to be exported by the entry point index.d.ts
-    fetchPolicy?: MutationFetchPolicy;
-    keepRootFields?: boolean;
-}
+// @public @deprecated (undocumented)
+export type MutationResult<TData = unknown> = useMutation.Result<TData>;
 
 // @public (undocumented)
 interface MutationStoreValue {
@@ -1298,11 +1171,8 @@ interface MutationStoreValue {
     variables: Record<string, any>;
 }
 
-// @public (undocumented)
-export type MutationTuple<TData, TVariables, TContext = Context, TCache extends ApolloCache = ApolloCache> = [
-mutate: (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult<MaybeMasked<TData>>>,
-result: MutationResult<TData>
-];
+// @public @deprecated (undocumented)
+export type MutationTuple<TData, TVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = useMutation.ResultTuple<TData, TVariables, TContext, TCache>;
 
 // @public (undocumented)
 type MutationUpdaterFunction<TData, TVariables, TContext, TCache extends ApolloCache> = (cache: TCache, result: Omit<FetchResult<Unmasked<TData>>, "context">, options: {
@@ -1338,7 +1208,6 @@ type NextLink = (operation: Operation) => Observable<FetchResult>;
 
 // @public
 type NoInfer_2<T> = [T][T extends any ? 0 : never];
-export { NoInfer_2 as NoInfer }
 
 // @public (undocumented)
 interface ObservableAndInfo<TData> {
@@ -1403,35 +1272,13 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables = O
     subscribe: (observer: Partial<Observer<ApolloQueryResult<MaybeMasked<TData>>>> | ((value: ApolloQueryResult<MaybeMasked<TData>>) => void)) => Subscription;
     // Warning: (ae-forgotten-export) The symbol "SubscribeToMoreOptions" needs to be exported by the entry point index.d.ts
     subscribeToMore<TSubscriptionData = TData, TSubscriptionVariables extends OperationVariables = TVariables>(options: SubscribeToMoreOptions<TData, TSubscriptionVariables, TSubscriptionData, TVariables>): () => void;
+    // Warning: (ae-forgotten-export) The symbol "UpdateQueryMapFn" needs to be exported by the entry point index.d.ts
     updateQuery(mapFn: UpdateQueryMapFn<TData, TVariables>): void;
     get variables(): TVariables | undefined;
 }
 
-// @public (undocumented)
-export interface ObservableQueryFields<TData, TVariables extends OperationVariables> {
-    fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
-        updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
-            fetchMoreResult: Unmasked<TFetchData>;
-            variables: TFetchVars;
-        }) => Unmasked<TData>;
-    }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
-    refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    // @internal (undocumented)
-    reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    startPolling: (pollInterval: number) => void;
-    stopPolling: () => void;
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
-    variables: TVariables | undefined;
-}
-
-// @public (undocumented)
-export interface OnDataOptions<TData = unknown> {
-    // (undocumented)
-    client: ApolloClient;
-    // (undocumented)
-    data: SubscriptionResult<TData>;
-}
+// @public @deprecated (undocumented)
+export type OnDataOptions<TData = unknown> = useSubscription.OnDataOptions<TData>;
 
 // @public
 type OnlyRequiredProperties<T> = {
@@ -1441,28 +1288,23 @@ type OnlyRequiredProperties<T> = {
 // @public (undocumented)
 type OnQueryUpdated<TResult> = (observableQuery: ObservableQuery<any>, diff: Cache_2.DiffResult<any>, lastDiff: Cache_2.DiffResult<any> | undefined) => boolean | TResult;
 
-// @public (undocumented)
-export interface OnSubscriptionDataOptions<TData = unknown> {
-    // (undocumented)
-    client: ApolloClient;
-    // (undocumented)
-    subscriptionData: SubscriptionResult<TData>;
-}
+// @public @deprecated (undocumented)
+export type OnSubscriptionDataOptions<TData = unknown> = useSubscription.OnSubscriptionDataOptions<TData>;
 
 // @public (undocumented)
 interface Operation {
     // (undocumented)
     extensions: Record<string, any>;
     // (undocumented)
-    getContext: () => Context;
+    getContext: () => DefaultContext;
     // (undocumented)
     operationName: string;
     // (undocumented)
     query: DocumentNode;
     // (undocumented)
     setContext: {
-        (context: Partial<Context>): void;
-        (updateContext: (previousContext: Context) => Partial<Context>): void;
+        (context: Partial<DefaultContext>): void;
+        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
     };
     // (undocumented)
     variables: Record<string, any>;
@@ -1511,15 +1353,19 @@ export interface PreloadQueryFunction {
     <TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, ...[options]: PreloadQueryOptionsArg<NoInfer_2<TVariables>>): PreloadedQueryRef<TData, TVariables>;
 }
 
+// Warning: (ae-forgotten-export) The symbol "VariablesOption" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export type PreloadQueryOptions<TVariables extends OperationVariables = OperationVariables> = {
-    context?: Context;
+    context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: PreloadQueryFetchPolicy;
     returnPartialData?: boolean;
     refetchWritePolicy?: RefetchWritePolicy;
 } & VariablesOption<TVariables>;
 
+// Warning: (ae-forgotten-export) The symbol "OnlyRequiredProperties" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 type PreloadQueryOptionsArg<TVariables extends OperationVariables, TOptions = unknown> = [TVariables] extends [never] ? [
 options?: PreloadQueryOptions<never> & TOptions
@@ -1548,21 +1394,8 @@ interface QueryData {
     getOptions(): any;
 }
 
-// @public (undocumented)
-export interface QueryDataOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends QueryFunctionOptions<TData, TVariables> {
-    // (undocumented)
-    children?: (result: QueryResult<TData, TVariables>) => ReactTypes.ReactNode;
-    query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-// @public (undocumented)
-export interface QueryFunctionOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends BaseQueryOptions<TVariables, TData> {
-    skip?: boolean;
-}
-
-// @public (undocumented)
-export interface QueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends QueryFunctionOptions<TData, TVariables> {
-}
+// @public @deprecated (undocumented)
+export type QueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQuery.Options<TData, TVariables>;
 
 // @public (undocumented)
 class QueryInfo {
@@ -1630,7 +1463,7 @@ class QueryManager {
     // (undocumented)
     readonly dataMasking: boolean;
     // (undocumented)
-    readonly defaultContext: Partial<Context>;
+    readonly defaultContext: Partial<DefaultContext>;
     // Warning: (ae-forgotten-export) The symbol "DefaultOptions" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -1748,7 +1581,7 @@ interface QueryManagerOptions {
     // (undocumented)
     dataMasking: boolean;
     // (undocumented)
-    defaultContext: Partial<Context> | undefined;
+    defaultContext: Partial<DefaultContext> | undefined;
     // (undocumented)
     defaultOptions: DefaultOptions;
     // (undocumented)
@@ -1767,7 +1600,7 @@ interface QueryManagerOptions {
 
 // @public
 interface QueryOptions<TVariables = OperationVariables, TData = unknown> {
-    context?: Context;
+    context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
     fetchPolicy?: FetchPolicy;
     notifyOnNetworkStatusChange?: boolean;
@@ -1789,16 +1622,8 @@ export interface QueryReference<TData = unknown, TVariables = unknown> extends Q
     toPromise?: unknown;
 }
 
-// @public (undocumented)
-export interface QueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends ObservableQueryFields<TData, TVariables> {
-    client: ApolloClient;
-    data: MaybeMasked<TData> | undefined;
-    error?: ErrorLike;
-    loading: boolean;
-    networkStatus: NetworkStatus;
-    observable: ObservableQuery<TData, TVariables>;
-    previousData?: MaybeMasked<TData>;
-}
+// @public @deprecated (undocumented)
+export type QueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
 type ReactiveListener<T> = (value: T) => any;
@@ -1843,10 +1668,7 @@ interface Reference {
 }
 
 // @public (undocumented)
-type RefetchFunction<TData, TVariables extends OperationVariables> = ObservableQueryFields<TData, TVariables>["refetch"];
-
-// @public (undocumented)
-export type RefetchQueriesFunction = (...args: any[]) => InternalRefetchQueriesInclude;
+type RefetchFunction<TData, TVariables extends OperationVariables> = ObservableQuery<TData, TVariables>["refetch"];
 
 // @public (undocumented)
 type RefetchQueriesInclude = RefetchQueryDescriptor[] | RefetchQueriesIncludeShorthand;
@@ -1908,8 +1730,10 @@ class RenderPromises {
     addQueryPromise(queryInstance: QueryData, finish?: () => ReactTypes.ReactNode): ReactTypes.ReactNode;
     // (undocumented)
     consumeAndAwaitPromises(): Promise<any[]>;
+    // Warning: (ae-forgotten-export) The symbol "LookupOptions" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
-    getSSRObservable<TData, TVariables extends OperationVariables>(props: QueryDataOptions<TData, TVariables>): ObservableQuery<any, TVariables> | null;
+    getSSRObservable<TData, TVariables extends OperationVariables>(props: LookupOptions): ObservableQuery<TData, TVariables> | null;
     // (undocumented)
     hasPromises(): boolean;
     // (undocumented)
@@ -1942,22 +1766,7 @@ interface Resolvers {
 type SafeReadonly<T> = T extends object ? Readonly<T> : T;
 
 // @public (undocumented)
-interface SharedWatchQueryOptions<TVariables extends OperationVariables, TData> {
-    context?: Context;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: WatchQueryFetchPolicy;
-    initialFetchPolicy?: WatchQueryFetchPolicy;
-    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
-    notifyOnNetworkStatusChange?: boolean;
-    pollInterval?: number;
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-    skipPollAttempt?: () => boolean;
-    variables?: TVariables;
-}
-
-// @public (undocumented)
-interface SingleExecutionResult<TData = Record<string, any>, TContext = Context, TExtensions = Record<string, any>> {
+interface SingleExecutionResult<TData = Record<string, any>, TContext = DefaultContext, TExtensions = Record<string, any>> {
     // (undocumented)
     context?: TContext;
     // (undocumented)
@@ -2004,7 +1813,7 @@ interface SubscribeToMoreFunction<TData, TVariables extends OperationVariables =
 // @public (undocumented)
 interface SubscribeToMoreOptions<TData = unknown, TSubscriptionVariables extends OperationVariables = OperationVariables, TSubscriptionData = TData, TVariables extends OperationVariables = TSubscriptionVariables> {
     // (undocumented)
-    context?: Context;
+    context?: DefaultContext;
     // (undocumented)
     document: DocumentNode | TypedDocumentNode<TSubscriptionData, TSubscriptionVariables>;
     // (undocumented)
@@ -2028,20 +1837,11 @@ type SubscribeToMoreUpdateQueryFn<TData = unknown, TVariables extends OperationV
 };
 
 // @public @deprecated (undocumented)
-export interface SubscriptionDataOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
-    // (undocumented)
-    children?: null | ((result: SubscriptionResult<TData>) => ReactTypes.ReactNode);
-    // (undocumented)
-    subscription: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-// @public (undocumented)
-export interface SubscriptionHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> extends BaseSubscriptionOptions<TData, TVariables> {
-}
+export type SubscriptionHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useSubscription.Options<TData, TVariables>;
 
 // @public (undocumented)
 interface SubscriptionOptions<TVariables = OperationVariables, TData = unknown> {
-    context?: Context;
+    context?: DefaultContext;
     errorPolicy?: ErrorPolicy;
     extensions?: Record<string, any>;
     fetchPolicy?: FetchPolicy;
@@ -2049,31 +1849,14 @@ interface SubscriptionOptions<TVariables = OperationVariables, TData = unknown> 
     variables?: TVariables;
 }
 
-// @public (undocumented)
-export interface SubscriptionResult<TData = unknown, TVariables = OperationVariables> {
-    data?: MaybeMasked<TData>;
-    error?: ErrorLike;
-    loading: boolean;
-    // @internal (undocumented)
-    variables?: TVariables;
-}
+// @public @deprecated (undocumented)
+export type SubscriptionResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useSubscription.Result<TData, TVariables>;
 
-// @public (undocumented)
-export type SuspenseQueryHookFetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+// @public @deprecated (undocumented)
+export type SuspenseQueryHookFetchPolicy = useSuspenseQuery.FetchPolicy;
 
-// @public (undocumented)
-export interface SuspenseQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    client?: ApolloClient;
-    context?: Context;
-    errorPolicy?: ErrorPolicy;
-    fetchPolicy?: SuspenseQueryHookFetchPolicy;
-    queryKey?: string | number | any[];
-    refetchWritePolicy?: RefetchWritePolicy;
-    returnPartialData?: boolean;
-    // @deprecated
-    skip?: boolean;
-    variables?: TVariables;
-}
+// @public @deprecated (undocumented)
+export type SuspenseQueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useSuspenseQuery.Options<TVariables>;
 
 // Warning: (ae-forgotten-export) The symbol "unionToIntersection" needs to be exported by the entry point index.d.ts
 //
@@ -2162,158 +1945,356 @@ interface UriFunction {
 // @public (undocumented)
 export function useApolloClient(override?: ApolloClient): ApolloClient;
 
-// Warning: (ae-forgotten-export) The symbol "BackgroundQueryHookOptionsNoInfer" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export function useBackgroundQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<BackgroundQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & TOptions): [
+export function useBackgroundQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<useBackgroundQuery.Options, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useBackgroundQuery.Options<NoInfer_2<TVariables>> & TOptions): [
 (QueryRef<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables> | (TOptions["skip"] extends boolean ? undefined : never)),
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
 }): [
 QueryRef<DeepPartial<TData> | undefined, TVariables>,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     errorPolicy: "ignore" | "all";
 }): [
 QueryRef<TData | undefined, TVariables>,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     skip: boolean;
     returnPartialData: true;
 }): [
 QueryRef<DeepPartial<TData>, TVariables> | undefined,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: true;
 }): [
 QueryRef<DeepPartial<TData>, TVariables>,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     skip: boolean;
 }): [
 QueryRef<TData, TVariables> | undefined,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [QueryRef<TData, TVariables>, UseBackgroundQueryResult<TData, TVariables>];
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useBackgroundQuery.Options<NoInfer_2<TVariables>>): [QueryRef<TData, TVariables>, useBackgroundQuery.Result<TData, TVariables>];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken): [undefined, UseBackgroundQueryResult<TData, TVariables>];
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken): [undefined, useBackgroundQuery.Result<TData, TVariables>];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (BackgroundQueryHookOptionsNoInfer<TData, TVariables> & {
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (useBackgroundQuery.Options<NoInfer_2<TVariables>> & {
     returnPartialData: true;
 })): [
 QueryRef<DeepPartial<TData>, TVariables> | undefined,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | BackgroundQueryHookOptionsNoInfer<TData, TVariables>): [
+export function useBackgroundQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | useBackgroundQuery.Options<NoInfer_2<TVariables>>): [
 QueryRef<TData, TVariables> | undefined,
-UseBackgroundQueryResult<TData, TVariables>
+useBackgroundQuery.Result<TData, TVariables>
 ];
 
 // @public (undocumented)
-export type UseBackgroundQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: RefetchFunction<TData, TVariables>;
-};
+export namespace useBackgroundQuery {
+    // (undocumented)
+    export type FetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+    // (undocumented)
+    export interface Options<TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: FetchPolicy;
+        queryKey?: string | number | any[];
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+        // @deprecated
+        skip?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> = {
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+        fetchMore: FetchMoreFunction<TData, TVariables>;
+        refetch: RefetchFunction<TData, TVariables>;
+    };
+}
+
+// @public @deprecated (undocumented)
+export type UseBackgroundQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useBackgroundQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
-export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: UseFragmentOptions<TData, TVariables>): UseFragmentResult<TData>;
+export function useFragment<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData>;
 
 // @public (undocumented)
-export interface UseFragmentOptions<TData, TVariables> extends Omit<Cache_2.DiffOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>, "id" | "query" | "optimistic" | "previousResult" | "returnPartialData">, Omit<Cache_2.ReadFragmentOptions<TData, TVariables>, "id" | "variables" | "returnPartialData"> {
-    client?: ApolloClient;
+export namespace useFragment {
     // (undocumented)
-    from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
+    export interface Options<TData, TVariables> {
+        client?: ApolloClient;
+        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        // (undocumented)
+        from: StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
+        optimistic?: boolean;
+        variables?: NoInfer_2<TVariables>;
+    }
     // (undocumented)
-    optimistic?: boolean;
+    export type Result<TData> = {
+        data: MaybeMasked<TData>;
+        complete: true;
+        missing?: never;
+    } | {
+        data: DeepPartial<MaybeMasked<TData>>;
+        complete: false;
+        missing?: MissingTree;
+    };
+}
+
+// @public @deprecated (undocumented)
+export type UseFragmentOptions<TData, TVariables> = useFragment.Options<TData, TVariables>;
+
+// @public @deprecated (undocumented)
+export type UseFragmentResult<TData> = useFragment.Result<TData>;
+
+// @public
+export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLazyQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useLazyQuery.ResultTuple<TData, TVariables>;
+
+// @public (undocumented)
+export namespace useLazyQuery {
+    // (undocumented)
+    export type ExecFunction<TData, TVariables extends OperationVariables> = (...args: [TVariables] extends [never] ? [
+    options?: useLazyQuery.ExecOptions<TVariables>
+    ] : Record<string, never> extends OnlyRequiredProperties<TVariables> ? [
+    options?: useLazyQuery.ExecOptions<TVariables>
+    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => Promise<ApolloQueryResult<TData>>;
+    // (undocumented)
+    export type ExecOptions<TVariables extends OperationVariables = OperationVariables> = {
+        context?: DefaultContext;
+    } & VariablesOption<TVariables>;
+    // (undocumented)
+    export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: WatchQueryFetchPolicy;
+        // Warning: (ae-forgotten-export) The symbol "NextFetchPolicyContext" needs to be exported by the entry point index.d.ts
+        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+        notifyOnNetworkStatusChange?: boolean;
+        pollInterval?: number;
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+        skipPollAttempt?: () => boolean;
+    }
+    // (undocumented)
+    export interface Result<TData, TVariables extends OperationVariables> {
+        called: boolean;
+        client: ApolloClient;
+        data: MaybeMasked<TData> | undefined;
+        error?: ErrorLike;
+        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+            updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+                fetchMoreResult: Unmasked<TFetchData>;
+                variables: TFetchVars;
+            }) => Unmasked<TData>;
+        }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+        loading: boolean;
+        networkStatus: NetworkStatus;
+        observable: ObservableQuery<TData, TVariables>;
+        previousData?: MaybeMasked<TData>;
+        refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        startPolling: (pollInterval: number) => void;
+        stopPolling: () => void;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+        updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+        variables: TVariables | undefined;
+    }
+    // (undocumented)
+    export type ResultTuple<TData, TVariables extends OperationVariables> = [
+    execute: ExecFunction<TData, TVariables>,
+    result: useLazyQuery.Result<TData, TVariables>
+    ];
 }
 
 // @public (undocumented)
-export type UseFragmentResult<TData> = {
-    data: MaybeMasked<TData>;
-    complete: true;
-    missing?: never;
-} | {
-    data: DeepPartial<MaybeMasked<TData>>;
-    complete: false;
-    missing?: MissingTree;
-};
-
-// @public
-export function useLazyQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LazyQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): LazyQueryResultTuple<TData, TVariables>;
+export function useLoadableQuery<TData, TVariables extends OperationVariables, TOptions extends useLoadableQuery.Options>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLoadableQuery.Options & TOptions): useLoadableQuery.Result<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables>;
 
 // @public (undocumented)
-export function useLoadableQuery<TData, TVariables extends OperationVariables, TOptions extends LoadableQueryHookOptions>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions & TOptions): UseLoadableQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? DeepPartial<TData> : TData, TVariables>;
-
-// @public (undocumented)
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: LoadableQueryHookOptions & {
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLoadableQuery.Options & {
     returnPartialData: true;
     errorPolicy: "ignore" | "all";
-}): UseLoadableQueryResult<DeepPartial<TData> | undefined, TVariables>;
+}): useLoadableQuery.Result<DeepPartial<TData> | undefined, TVariables>;
 
 // @public (undocumented)
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: LoadableQueryHookOptions & {
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLoadableQuery.Options & {
     errorPolicy: "ignore" | "all";
-}): UseLoadableQueryResult<TData | undefined, TVariables>;
+}): useLoadableQuery.Result<TData | undefined, TVariables>;
 
 // @public (undocumented)
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: LoadableQueryHookOptions & {
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useLoadableQuery.Options & {
     returnPartialData: true;
-}): UseLoadableQueryResult<DeepPartial<TData>, TVariables>;
+}): useLoadableQuery.Result<DeepPartial<TData>, TVariables>;
 
 // @public
-export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: LoadableQueryHookOptions): UseLoadableQueryResult<TData, TVariables>;
+export function useLoadableQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useLoadableQuery.Options): useLoadableQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
-export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
-loadQuery: LoadQueryFunction<TVariables>,
-queryRef: QueryRef<TData, TVariables> | null,
-handlers: {
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: RefetchFunction<TData, TVariables>;
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
-    reset: ResetFunction;
+export namespace useLoadableQuery {
+    // (undocumented)
+    export type FetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+    // (undocumented)
+    export type LoadQueryFunction<TVariables extends OperationVariables> = (...args: [TVariables] extends [never] ? [] : {} extends OnlyRequiredProperties<TVariables> ? [variables?: TVariables] : [variables: TVariables]) => void;
+    // (undocumented)
+    export interface Options {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: FetchPolicy;
+        queryKey?: string | number | any[];
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+    }
+    // (undocumented)
+    export type Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> = [
+    loadQuery: LoadQueryFunction<TVariables>,
+    queryRef: QueryRef<TData, TVariables> | null,
+    handlers: {
+        fetchMore: FetchMoreFunction<TData, TVariables>;
+        refetch: RefetchFunction<TData, TVariables>;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+        reset: ResetFunction;
+    }
+    ];
 }
-];
+
+// @public @deprecated (undocumented)
+export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLoadableQuery.Result<TData, TVariables>;
 
 // @public
-export function useMutation<TData = unknown, TVariables = OperationVariables, TContext = Context, TCache extends ApolloCache = ApolloCache>(mutation: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: MutationHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>, TContext, TCache>): MutationTuple<TData, TVariables, TContext, TCache>;
-
-// @public
-export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: QueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): QueryResult<TData, TVariables>;
-
-// @public
-export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): UseQueryRefHandlersResult<TData, TVariables>;
+export function useMutation<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache>(mutation: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useMutation.Options<NoInfer_2<TData>, NoInfer_2<TVariables>, TContext, TCache>): useMutation.ResultTuple<TData, TVariables, TContext, TCache>;
 
 // @public (undocumented)
-export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    refetch: RefetchFunction<TData, TVariables>;
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+export namespace useMutation {
+    // (undocumented)
+    export interface MutationFunctionOptions<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> extends Options<TData, TVariables, TContext, TCache> {
+        mutation?: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    }
+    // (undocumented)
+    export interface Options<TData = unknown, TVariables = OperationVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> {
+        awaitRefetchQueries?: boolean;
+        client?: ApolloClient;
+        context?: TContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: MutationFetchPolicy;
+        keepRootFields?: boolean;
+        notifyOnNetworkStatusChange?: boolean;
+        onCompleted?: (data: MaybeMasked<TData>, clientOptions?: Options<TData, TVariables, TContext, TCache>) => void;
+        onError?: (error: ErrorLike, clientOptions?: Options<TData, TVariables, TContext, TCache>) => void;
+        onQueryUpdated?: OnQueryUpdated<any>;
+        optimisticResponse?: Unmasked<NoInfer_2<TData>> | ((vars: TVariables, { IGNORE }: {
+            IGNORE: IgnoreModifier;
+        }) => Unmasked<NoInfer_2<TData>> | IgnoreModifier);
+        refetchQueries?: ((result: FetchResult<Unmasked<TData>>) => InternalRefetchQueriesInclude) | InternalRefetchQueriesInclude;
+        update?: MutationUpdaterFunction<TData, TVariables, TContext, TCache>;
+        updateQueries?: MutationQueryReducersMap<TData>;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    export interface Result<TData = unknown> {
+        called: boolean;
+        client: ApolloClient;
+        data?: MaybeMasked<TData> | null;
+        error?: ErrorLike;
+        loading: boolean;
+        reset: () => void;
+    }
+    // (undocumented)
+    export type ResultTuple<TData, TVariables, TContext = DefaultContext, TCache extends ApolloCache = ApolloCache> = [
+    mutate: (options?: MutationFunctionOptions<TData, TVariables, TContext, TCache>) => Promise<FetchResult<MaybeMasked<TData>>>,
+    result: Result<TData>
+    ];
 }
+
+// @public
+export function useQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useQuery.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useQuery.Result<TData, TVariables>;
+
+// @public (undocumented)
+export namespace useQuery {
+    // (undocumented)
+    export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: WatchQueryFetchPolicy;
+        initialFetchPolicy?: WatchQueryFetchPolicy;
+        nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+        notifyOnNetworkStatusChange?: boolean;
+        pollInterval?: number;
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+        skip?: boolean;
+        skipPollAttempt?: () => boolean;
+        ssr?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client: ApolloClient;
+        data: MaybeMasked<TData> | undefined;
+        error?: ErrorLike;
+        fetchMore: <TFetchData = TData, TFetchVars extends OperationVariables = TVariables>(fetchMoreOptions: FetchMoreQueryOptions<TFetchVars, TFetchData> & {
+            updateQuery?: (previousQueryResult: Unmasked<TData>, options: {
+                fetchMoreResult: Unmasked<TFetchData>;
+                variables: TFetchVars;
+            }) => Unmasked<TData>;
+        }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+        loading: boolean;
+        networkStatus: NetworkStatus;
+        observable: ObservableQuery<TData, TVariables>;
+        previousData?: MaybeMasked<TData>;
+        refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        // @internal (undocumented)
+        reobserve: (newOptions?: Partial<WatchQueryOptions<TVariables, TData>>, newNetworkStatus?: NetworkStatus) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        startPolling: (pollInterval: number) => void;
+        stopPolling: () => void;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+        updateQuery: (mapFn: UpdateQueryMapFn<TData, TVariables>) => void;
+        variables: TVariables | undefined;
+    }
+}
+
+// @public
+export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): useQueryRefHandlers.Result<TData, TVariables>;
+
+// @public (undocumented)
+export namespace useQueryRefHandlers {
+    // (undocumented)
+    export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        fetchMore: FetchMoreFunction<TData, TVariables>;
+        refetch: RefetchFunction<TData, TVariables>;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    }
+}
+
+// @public @deprecated (undocumented)
+export type UseQueryRefHandlersResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQueryRefHandlers.Result<TData, TVariables>;
 
 // Warning: (ae-forgotten-export) The symbol "ReactiveVar" needs to be exported by the entry point index.d.ts
 //
@@ -2321,17 +2302,23 @@ export interface UseQueryRefHandlersResult<TData = unknown, TVariables extends O
 export function useReactiveVar<T>(rv: ReactiveVar<T>): T;
 
 // @public (undocumented)
-export function useReadQuery<TData>(queryRef: QueryRef<TData>): UseReadQueryResult<TData>;
+export function useReadQuery<TData>(queryRef: QueryRef<TData>): useReadQuery.Result<TData>;
 
 // @public (undocumented)
-export interface UseReadQueryResult<TData = unknown> {
-    data: MaybeMasked<TData>;
-    error: ErrorLike | undefined;
-    networkStatus: NetworkStatus;
+export namespace useReadQuery {
+    // (undocumented)
+    export interface Result<TData = unknown> {
+        data: MaybeMasked<TData>;
+        error: ErrorLike | undefined;
+        networkStatus: NetworkStatus;
+    }
 }
 
+// @public @deprecated (undocumented)
+export type UseReadQueryResult<TData = unknown> = useReadQuery.Result<TData>;
+
 // @public
-export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SubscriptionHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
+export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
     restart: () => void;
     loading: boolean;
     data?: TData | undefined;
@@ -2340,98 +2327,165 @@ export function useSubscription<TData = unknown, TVariables extends OperationVar
 };
 
 // @public (undocumented)
-export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: NonNullable<From<TData>>;
-}): UseSuspenseFragmentResult<TData>;
-
-// @public (undocumented)
-export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: null;
-}): UseSuspenseFragmentResult<null>;
-
-// @public (undocumented)
-export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables> & {
-    from: From<TData>;
-}): UseSuspenseFragmentResult<TData | null>;
-
-// @public (undocumented)
-export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: UseSuspenseFragmentOptions<TData, TVariables>): UseSuspenseFragmentResult<TData>;
-
-// @public (undocumented)
-export type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariables> = {
-    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
-    fragmentName?: string;
-    from: From<TData>;
-    optimistic?: boolean;
-    client?: ApolloClient;
-} & VariablesOption<NoInfer_2<TVariables>>;
-
-// @public (undocumented)
-export type UseSuspenseFragmentResult<TData> = {
-    data: MaybeMasked<TData>;
-};
-
-// @public (undocumented)
-export function useSuspenseQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<SuspenseQueryHookOptions<TData>, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & TOptions): UseSuspenseQueryResult<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? TOptions["skip"] extends boolean ? DeepPartial<TData> | undefined : DeepPartial<TData> : TOptions["skip"] extends boolean ? TData | undefined : TData, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: true;
-    errorPolicy: "ignore" | "all";
-}): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    errorPolicy: "ignore" | "all";
-}): UseSuspenseQueryResult<TData | undefined, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    skip: boolean;
-    returnPartialData: true;
-}): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: true;
-}): UseSuspenseQueryResult<DeepPartial<TData>, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    skip: boolean;
-}): UseSuspenseQueryResult<TData | undefined, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): UseSuspenseQueryResult<TData, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>> & {
-    returnPartialData: true;
-})): UseSuspenseQueryResult<DeepPartial<TData> | undefined, TVariables>;
-
-// @public (undocumented)
-export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | SuspenseQueryHookOptions<NoInfer_2<TData>, NoInfer_2<TVariables>>): UseSuspenseQueryResult<TData | undefined, TVariables>;
-
-// @public (undocumented)
-export interface UseSuspenseQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+export namespace useSubscription {
     // (undocumented)
-    client: ApolloClient;
+    export interface OnDataOptions<TData = unknown> {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        data: Result<TData>;
+    }
     // (undocumented)
-    data: MaybeMasked<TData>;
+    export interface OnSubscriptionDataOptions<TData = unknown> {
+        // (undocumented)
+        client: ApolloClient;
+        // (undocumented)
+        subscriptionData: Result<TData>;
+    }
     // (undocumented)
-    error: ErrorLike | undefined;
+    export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        extensions?: Record<string, any>;
+        fetchPolicy?: FetchPolicy;
+        ignoreResults?: boolean;
+        onComplete?: () => void;
+        onData?: (options: OnDataOptions<TData>) => any;
+        onError?: (error: ErrorLike) => void;
+        // @deprecated
+        onSubscriptionComplete?: () => void;
+        // @deprecated
+        onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
+        shouldResubscribe?: boolean | ((options: Options<TData, TVariables>) => boolean);
+        skip?: boolean;
+        variables?: TVariables;
+    }
     // (undocumented)
-    fetchMore: FetchMoreFunction<TData, TVariables>;
-    // (undocumented)
-    networkStatus: NetworkStatus;
-    // (undocumented)
-    refetch: RefetchFunction<TData, TVariables>;
-    // (undocumented)
-    subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    export interface Result<TData = unknown, TVariables = OperationVariables> {
+        data?: MaybeMasked<TData>;
+        error?: ErrorLike;
+        loading: boolean;
+        // @internal (undocumented)
+        variables?: TVariables;
+    }
 }
 
 // @public (undocumented)
-export type VariablesOption<TVariables extends OperationVariables> = [
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: NonNullable<From<TData>>;
+}): useSuspenseFragment.Result<TData>;
+
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: null;
+}): useSuspenseFragment.Result<null>;
+
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables> & {
+    from: From<TData>;
+}): useSuspenseFragment.Result<TData | null>;
+
+// @public (undocumented)
+export function useSuspenseFragment<TData, TVariables extends OperationVariables = OperationVariables>(options: useSuspenseFragment.Options<TData, TVariables>): useSuspenseFragment.Result<TData>;
+
+// @public (undocumented)
+export namespace useSuspenseFragment {
+    // (undocumented)
+    export type Options<TData, TVariables extends OperationVariables> = {
+        fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
+        fragmentName?: string;
+        from: From<TData>;
+        optimistic?: boolean;
+        client?: ApolloClient;
+    } & VariablesOption<NoInfer_2<TVariables>>;
+    // (undocumented)
+    export type Result<TData> = {
+        data: MaybeMasked<TData>;
+    };
+}
+
+// @public @deprecated (undocumented)
+export type UseSuspenseFragmentOptions<TData, TVariables extends OperationVariables> = useSuspenseFragment.Options<TData, TVariables>;
+
+// @public @deprecated (undocumented)
+export type UseSuspenseFragmentResult<TData> = useSuspenseFragment.Result<TData>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData, TVariables extends OperationVariables, TOptions extends Omit<useSuspenseQuery.Options, "variables">>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSuspenseQuery.Options<NoInfer_2<TVariables>> & TOptions): useSuspenseQuery.Result<TOptions["errorPolicy"] extends "ignore" | "all" ? TOptions["returnPartialData"] extends true ? DeepPartial<TData> | undefined : TData | undefined : TOptions["returnPartialData"] extends true ? TOptions["skip"] extends boolean ? DeepPartial<TData> | undefined : DeepPartial<TData> : TOptions["skip"] extends boolean ? TData | undefined : TData, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    returnPartialData: true;
+    errorPolicy: "ignore" | "all";
+}): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    errorPolicy: "ignore" | "all";
+}): useSuspenseQuery.Result<TData | undefined, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    skip: boolean;
+    returnPartialData: true;
+}): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    returnPartialData: true;
+}): useSuspenseQuery.Result<DeepPartial<TData>, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    skip: boolean;
+}): useSuspenseQuery.Result<TData | undefined, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSuspenseQuery.Options<NoInfer_2<TVariables>>): useSuspenseQuery.Result<TData, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options: SkipToken | (useSuspenseQuery.Options<NoInfer_2<TVariables>> & {
+    returnPartialData: true;
+})): useSuspenseQuery.Result<DeepPartial<TData> | undefined, TVariables>;
+
+// @public (undocumented)
+export function useSuspenseQuery<TData = unknown, TVariables extends OperationVariables = OperationVariables>(query: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: SkipToken | useSuspenseQuery.Options<NoInfer_2<TVariables>>): useSuspenseQuery.Result<TData | undefined, TVariables>;
+
+// @public (undocumented)
+export namespace useSuspenseQuery {
+    // (undocumented)
+    export type FetchPolicy = Extract<WatchQueryFetchPolicy, "cache-first" | "network-only" | "no-cache" | "cache-and-network">;
+    // (undocumented)
+    export interface Options<TVariables extends OperationVariables = OperationVariables> {
+        client?: ApolloClient;
+        context?: DefaultContext;
+        errorPolicy?: ErrorPolicy;
+        fetchPolicy?: FetchPolicy;
+        queryKey?: string | number | any[];
+        refetchWritePolicy?: RefetchWritePolicy;
+        returnPartialData?: boolean;
+        // @deprecated
+        skip?: boolean;
+        variables?: TVariables;
+    }
+    // (undocumented)
+    export interface Result<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
+        client: ApolloClient;
+        data: MaybeMasked<TData>;
+        error: ErrorLike | undefined;
+        fetchMore: FetchMoreFunction<TData, TVariables>;
+        networkStatus: NetworkStatus;
+        refetch: RefetchFunction<TData, TVariables>;
+        subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
+    }
+}
+
+// @public @deprecated (undocumented)
+export type UseSuspenseQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useSuspenseQuery.Result<TData, TVariables>;
+
+// @public (undocumented)
+type VariablesOption<TVariables extends OperationVariables> = [
 TVariables
 ] extends [never] ? {
     variables?: Record<string, never>;
@@ -2465,8 +2519,19 @@ type WatchFragmentResult<TData> = {
 type WatchQueryFetchPolicy = FetchPolicy | "cache-and-network";
 
 // @public
-interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> extends SharedWatchQueryOptions<TVariables, TData> {
+interface WatchQueryOptions<TVariables extends OperationVariables = OperationVariables, TData = unknown> {
+    context?: DefaultContext;
+    errorPolicy?: ErrorPolicy;
+    fetchPolicy?: WatchQueryFetchPolicy;
+    initialFetchPolicy?: WatchQueryFetchPolicy;
+    nextFetchPolicy?: WatchQueryFetchPolicy | ((this: WatchQueryOptions<TVariables, TData>, currentFetchPolicy: WatchQueryFetchPolicy, context: NextFetchPolicyContext<TData, TVariables>) => WatchQueryFetchPolicy);
+    notifyOnNetworkStatusChange?: boolean;
+    pollInterval?: number;
     query: DocumentNode | TypedDocumentNode<TData, TVariables>;
+    refetchWritePolicy?: RefetchWritePolicy;
+    returnPartialData?: boolean;
+    skipPollAttempt?: () => boolean;
+    variables?: TVariables;
 }
 
 // Warnings were encountered during analysis:
@@ -2485,11 +2550,13 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
 // src/core/QueryManager.ts:438:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:233:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
-// src/core/watchQueryOptions.ts:200:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:35:3 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useBackgroundQuery.ts:37:3 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
-// src/react/hooks/useLoadableQuery.ts:63:5 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
+// src/core/watchQueryOptions.ts:195:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:87:5 - (ae-forgotten-export) The symbol "SubscribeToMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:90:5 - (ae-forgotten-export) The symbol "FetchMoreFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useBackgroundQuery.ts:93:5 - (ae-forgotten-export) The symbol "RefetchFunction" needs to be exported by the entry point index.d.ts
+// src/react/hooks/useLoadableQuery.ts:72:7 - (ae-forgotten-export) The symbol "ResetFunction" needs to be exported by the entry point index.d.ts
 // src/react/hooks/useSuspenseFragment.ts:73:5 - (ae-forgotten-export) The symbol "From" needs to be exported by the entry point index.d.ts
+// src/react/query-preloader/createQueryPreloader.ts:45:3 - (ae-forgotten-export) The symbol "RefetchWritePolicy" needs to be exported by the entry point index.d.ts
 
 // (No @packageDocumentation comment for this package)
 

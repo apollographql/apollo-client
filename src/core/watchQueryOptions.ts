@@ -90,14 +90,6 @@ export interface QueryOptions<
 export interface WatchQueryOptions<
   TVariables extends OperationVariables = OperationVariables,
   TData = unknown,
-> extends SharedWatchQueryOptions<TVariables, TData> {
-  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-
-export interface SharedWatchQueryOptions<
-  TVariables extends OperationVariables,
-  TData,
 > {
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: WatchQueryFetchPolicy;
@@ -137,6 +129,9 @@ export interface SharedWatchQueryOptions<
 
   /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#skipPollAttempt:member} */
   skipPollAttempt?: () => boolean;
+
+  /** {@inheritDoc @apollo/client!QueryOptionsDocumentation#query:member} */
+  query: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }
 
 export interface NextFetchPolicyContext<
@@ -269,7 +264,7 @@ export interface SubscriptionOptions<
   extensions?: Record<string, any>;
 }
 
-interface MutationBaseOptions<
+export interface MutationOptions<
   TData = unknown,
   TVariables = OperationVariables,
   TContext = DefaultContext,
@@ -308,26 +303,13 @@ interface MutationBaseOptions<
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#context:member} */
   context?: TContext;
-}
 
-export interface MutationOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends MutationSharedOptions<TData, TVariables, TContext, TCache> {
-  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
-  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
-}
-export interface MutationSharedOptions<
-  TData = unknown,
-  TVariables = OperationVariables,
-  TContext = DefaultContext,
-  TCache extends ApolloCache = ApolloCache,
-> extends MutationBaseOptions<TData, TVariables, TContext, TCache> {
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#fetchPolicy:member} */
   fetchPolicy?: MutationFetchPolicy;
 
   /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#keepRootFields:member} */
   keepRootFields?: boolean;
+
+  /** {@inheritDoc @apollo/client!MutationOptionsDocumentation#mutation:member} */
+  mutation: DocumentNode | TypedDocumentNode<TData, TVariables>;
 }

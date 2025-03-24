@@ -23,7 +23,7 @@ import {
 } from "@apollo/client/core";
 import { Masked } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
-import { useReadQuery, UseReadQueryResult } from "@apollo/client/react/hooks";
+import { useReadQuery } from "@apollo/client/react/hooks";
 import {
   PreloadedQueryRef,
   QueryRef,
@@ -68,7 +68,7 @@ async function renderDefaultTestApp<TData>({
 }) {
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<TData> | null,
+      result: null as useReadQuery.Result<TData> | null,
       error: null as Error | null,
     },
   });
@@ -275,7 +275,7 @@ test("useReadQuery auto-resubscribes the query after its disposed", async () => 
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
   const user = userEvent.setup();
@@ -469,7 +469,9 @@ test("useReadQuery handles auto-resubscribe with returnPartialData", async () =>
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<DeepPartial<VariablesCaseData>> | null,
+      result: null as useReadQuery.Result<
+        DeepPartial<VariablesCaseData>
+      > | null,
     },
   });
   const user = userEvent.setup();
@@ -731,7 +733,7 @@ test("useReadQuery handles auto-resubscribe on network-only fetch policy", async
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
   const user = userEvent.setup();
@@ -913,7 +915,7 @@ test("useReadQuery handles auto-resubscribe on cache-and-network fetch policy", 
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
   const user = userEvent.setup();
@@ -1095,7 +1097,7 @@ test("useReadQuery handles auto-resubscribe on no-cache fetch policy", async () 
   using _disabledAct = disableActEnvironment();
   const renderStream = createRenderStream({
     initialSnapshot: {
-      result: null as UseReadQueryResult<SimpleCaseData> | null,
+      result: null as useReadQuery.Result<SimpleCaseData> | null,
     },
   });
   const user = userEvent.setup();

@@ -17,4 +17,11 @@ export type {
 } from "./query-preloader/createQueryPreloader.js";
 export { createQueryPreloader } from "./query-preloader/createQueryPreloader.js";
 
-export type * from "./types/types.js";
+export type {
+  PreloadedQueryRef,
+  QueryRef,
+  QueryReference,
+} from "./internal/index.js";
+
+// These types will be removed with v5
+export type * from "./types/deprecated.js";

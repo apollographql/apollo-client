@@ -7,56 +7,87 @@ import type {
   Reference,
   StoreObject,
 } from "@apollo/client/cache";
-import type { ApolloClient, OperationVariables } from "@apollo/client/core";
+import type {
+  ApolloClient,
+  DocumentNode,
+  OperationVariables,
+  TypedDocumentNode,
+} from "@apollo/client/core";
 import type { FragmentType, MaybeMasked } from "@apollo/client/masking";
-import type { NoInfer } from "@apollo/client/react";
-import type { DeepPartial } from "@apollo/client/utilities";
+import type { DeepPartial, NoInfer } from "@apollo/client/utilities";
 
 import { useDeepMemo, wrapHook } from "./internal/index.js";
 import { useApolloClient } from "./useApolloClient.js";
 import { useSyncExternalStore } from "./useSyncExternalStore.js";
 
-export interface UseFragmentOptions<TData, TVariables>
-  extends Omit<
-      Cache.DiffOptions<NoInfer<TData>, NoInfer<TVariables>>,
-      "id" | "query" | "optimistic" | "previousResult" | "returnPartialData"
-    >,
-    Omit<
-      Cache.ReadFragmentOptions<TData, TVariables>,
-      "id" | "variables" | "returnPartialData"
-    > {
-  from: StoreObject | Reference | FragmentType<NoInfer<TData>> | string | null;
-  // Override this field to make it optional (default: true).
-  optimistic?: boolean;
-  /**
-   * The instance of `ApolloClient` to use to look up the fragment.
-   *
-   * By default, the instance that's passed down via context is used, but you
-   * can provide a different instance here.
-   *
-   * @docGroup 1. Operation options
-   */
-  client?: ApolloClient;
-}
+export declare namespace useFragment {
+  export interface Options<TData, TVariables> {
+    /**
+     * A GraphQL document created using the `gql` template string tag from
+     * `graphql-tag` with one or more fragments which will be used to determine
+     * the shape of data to read. If you provide more than one fragment in this
+     * document then you must also specify `fragmentName` to select a single.
+     */
+    fragment: DocumentNode | TypedDocumentNode<TData, TVariables>;
 
-// TODO: Update this to return `null` when there is no data returned from the
-// fragment.
-export type UseFragmentResult<TData> =
-  | {
-      data: MaybeMasked<TData>;
-      complete: true;
-      missing?: never;
-    }
-  | {
-      data: DeepPartial<MaybeMasked<TData>>;
-      complete: false;
-      missing?: MissingTree;
-    };
+    /**
+     * The name of the fragment in your GraphQL document to be used. If you do
+     * not provide a `fragmentName` and there is only one fragment in your
+     * `fragment` document then that fragment will be used.
+     */
+    fragmentName?: string;
+
+    /**
+     * Any variables that the GraphQL query may depend on.
+     */
+    variables?: NoInfer<TVariables>;
+
+    from:
+      | StoreObject
+      | Reference
+      | FragmentType<NoInfer<TData>>
+      | string
+      | null;
+
+    /**
+     * Whether to read from optimistic or non-optimistic cache data. If
+     * this named option is provided, the optimistic parameter of the
+     * readQuery method can be omitted.
+     *
+     * @defaultValue true
+     */
+    optimistic?: boolean;
+
+    /**
+     * The instance of `ApolloClient` to use to look up the fragment.
+     *
+     * By default, the instance that's passed down via context is used, but you
+     * can provide a different instance here.
+     *
+     * @docGroup 1. Operation options
+     */
+    client?: ApolloClient;
+  }
+
+  // TODO: Update this to return `null` when there is no data returned from the
+  // fragment.
+  export type Result<TData> =
+    | {
+        data: MaybeMasked<TData>;
+        complete: true;
+        missing?: never;
+      }
+    | {
+        data: DeepPartial<MaybeMasked<TData>>;
+        complete: false;
+        missing?: MissingTree;
+      };
+}
 
 export function useFragment<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
->(options: UseFragmentOptions<TData, TVariables>): UseFragmentResult<TData> {
+>(options: useFragment.Options<TData, TVariables>): useFragment.Result<TData> {
   return wrapHook(
     "useFragment",
     // eslint-disable-next-line react-compiler/react-compiler
@@ -66,8 +97,8 @@ export function useFragment<
 }
 
 function useFragment_<TData, TVariables extends OperationVariables>(
-  options: UseFragmentOptions<TData, TVariables>
-): UseFragmentResult<TData> {
+  options: useFragment.Options<TData, TVariables>
+): useFragment.Result<TData> {
   const client = useApolloClient(options.client);
   const { cache } = client;
   const { from, ...rest } = options;
@@ -166,11 +197,11 @@ function useFragment_<TData, TVariables extends OperationVariables>(
 
 function diffToResult<TData>(
   diff: Cache.DiffResult<TData>
-): UseFragmentResult<TData> {
+): useFragment.Result<TData> {
   const result = {
     data: diff.result,
     complete: !!diff.complete,
-  } as UseFragmentResult<TData>; // TODO: Remove assertion once useFragment returns null
+  } as useFragment.Result<TData>; // TODO: Remove assertion once useFragment returns null
 
   if (diff.missing) {
     result.missing = diff.missing.missing;

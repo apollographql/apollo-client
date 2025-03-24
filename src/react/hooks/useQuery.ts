@@ -10,7 +10,7 @@
  * watchQueryOptions
  * makeWatchQueryOptions
  * isSSRAllowed
- * disableNetworkFetches
+ * prioritizeCacheValues
  * renderPromises
  * isSyncSSR
  */
@@ -333,7 +333,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
 
   const renderPromises = React.useContext(getApolloContext()).renderPromises;
   const isSyncSSR = !!renderPromises;
-  const disableNetworkFetches = client.disableNetworkFetches;
+  const prioritizeCacheValues = client.prioritizeCacheValues;
   const ssrAllowed = options.ssr !== false && !options.skip;
 
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
@@ -368,7 +368,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     client,
     options,
     watchQueryOptions,
-    disableNetworkFetches,
+    prioritizeCacheValues,
     isSyncSSR
   );
 
@@ -384,12 +384,12 @@ function useObservableSubscriptionResult<
   client: ApolloClient,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
   watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  disableNetworkFetches: boolean,
+  prioritizeCacheValues: boolean,
   isSyncSSR: boolean
 ) {
   const resultOverride =
     (
-      (isSyncSSR || disableNetworkFetches) &&
+      (isSyncSSR || prioritizeCacheValues) &&
       options.ssr === false &&
       !options.skip
     ) ?
@@ -421,9 +421,9 @@ function useObservableSubscriptionResult<
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
-        // reference `disableNetworkFetches` here to ensure that the rules of hooks
+        // reference `prioritizeCacheValues` here to ensure that the rules of hooks
         // keep it as a dependency of this effect, even though it's not used
-        disableNetworkFetches;
+        prioritizeCacheValues;
 
         if (isSyncSSR) {
           return () => {};
@@ -470,7 +470,7 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [disableNetworkFetches, isSyncSSR, observable, resultData, client]
+      [prioritizeCacheValues, isSyncSSR, observable, resultData, client]
     ),
     () =>
       currentResultOverride || getCurrentResult(resultData, observable, client),

@@ -9860,7 +9860,7 @@ describe("useQuery Hook", () => {
     });
   });
 
-  describe("interaction with `disableNetworkFetches`", () => {
+  describe("interaction with `prioritizeCacheValues`", () => {
     const cacheData = { something: "foo" };
     const emptyData = undefined;
     type TestQueryValue = typeof cacheData;
@@ -9886,7 +9886,7 @@ describe("useQuery Hook", () => {
       [`standby`, emptyData, false, false],
       [`standby`, cacheData, false, false],
     ])(
-      "fetchPolicy %s, cache: %p should fetch during `disableNetworkFetches`: %p and after `disableNetworkFetches` has been disabled: %p",
+      "fetchPolicy %s, cache: %p should fetch during `prioritizeCacheValues`: %p and after `prioritizeCacheValues` has been disabled: %p",
       async (
         policy,
         initialQueryValue,
@@ -9912,7 +9912,7 @@ describe("useQuery Hook", () => {
         if (initialQueryValue) {
           client.writeQuery({ query, data: initialQueryValue });
         }
-        client.disableNetworkFetches = true;
+        client.prioritizeCacheValues = true;
 
         const { rerender } = renderHook(
           () =>
@@ -9934,7 +9934,7 @@ describe("useQuery Hook", () => {
         await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
 
         requestSpy.mockClear();
-        client.disableNetworkFetches = false;
+        client.prioritizeCacheValues = false;
 
         rerender();
         expect(requestSpy).toHaveBeenCalledTimes(

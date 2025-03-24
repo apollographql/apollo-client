@@ -166,6 +166,7 @@ export class ObservableQuery<
             this.options.notifyOnNetworkStatusChange) ||
           // TODO: Remove this behavior when unifying loading state for notifyOnNetworkStatusChange
           (this.options.fetchPolicy === "network-only" &&
+            !this.queryManager.prioritizeCacheValues &&
             this.queryInfo.getDiff().complete) ||
           result !== this.initialResult
       )
@@ -259,7 +260,11 @@ export class ObservableQuery<
       networkStatus,
     };
 
-    const { fetchPolicy = "cache-first" } = this.options;
+    let { fetchPolicy = "cache-first" } = this.options;
+    const { prioritizeCacheValues } = this.queryManager;
+    if (prioritizeCacheValues) {
+      fetchPolicy = "cache-first";
+    }
     if (
       // These fetch policies should never deliver data from the cache, unless
       // redelivering a previously delivered result.
@@ -271,7 +276,7 @@ export class ObservableQuery<
       this.queryManager.getDocumentInfo(this.query).hasForcedResolvers
     ) {
       // Fall through.
-    } else if (this.waitForOwnResult) {
+    } else if (this.waitForOwnResult && !prioritizeCacheValues) {
       // This would usually be a part of `QueryInfo.getDiff()`.
       // which we skip in the waitForOwnResult case since we are not
       // interested in the diff.

@@ -59,6 +59,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitApolloQueryResult: T extends ObservableStream<infer QueryResult> ?
     QueryResult extends ApolloQueryResult<infer TData> ?
       (value: ApolloQueryResult<TData>, options?: TakeOptions) => Promise<R>
@@ -73,6 +74,7 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (error?: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitFetchResult: T extends ObservableStream<FetchResult<infer TData>> ?
     (value: FetchResult<TData>, options?: TakeOptions) => Promise<R>
   : {
@@ -87,14 +89,17 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitValueStrict: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };
 
+  /** @deprecated Use `toEmitStrictTyped` instead */
   toEmitMatchedValue: T extends ObservableStream<any> ?
     (value: any, options?: TakeOptions) => Promise<R>
   : { error: "matcher needs to be called on an ObservableStream instance" };

@@ -104,7 +104,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
-        // TODO: Include data and make it a required property
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -259,6 +260,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -417,6 +420,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -468,6 +473,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -538,6 +545,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -608,6 +617,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -687,6 +698,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -763,6 +776,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -841,6 +856,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -929,6 +946,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1012,6 +1031,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1095,6 +1116,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1136,6 +1159,8 @@ describe("useMutation Hook", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1193,6 +1218,8 @@ describe("useMutation Hook", () => {
       reset = result.reset;
       //initial value
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1221,6 +1248,8 @@ describe("useMutation Hook", () => {
 
       // reset to initial value
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -1281,6 +1310,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1372,6 +1403,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1426,6 +1459,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1507,6 +1542,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1591,6 +1628,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1605,6 +1644,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1697,6 +1738,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1709,6 +1752,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1802,6 +1847,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1816,6 +1863,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -1979,6 +2028,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2107,6 +2158,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2366,6 +2419,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2632,6 +2687,8 @@ describe("useMutation Hook", () => {
           variables: {},
         });
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2685,6 +2742,8 @@ describe("useMutation Hook", () => {
 
         if (IS_REACT_18) {
           expect(mutation).toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
             loading: false,
             called: false,
           });
@@ -2832,6 +2891,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -2852,6 +2913,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3005,6 +3068,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3025,6 +3090,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3178,6 +3245,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3198,6 +3267,8 @@ describe("useMutation Hook", () => {
         });
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3765,6 +3836,8 @@ describe("useMutation Hook", () => {
         const [, mutation] = await takeSnapshot();
 
         expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3879,6 +3952,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -3978,6 +4053,8 @@ describe("useMutation Hook", () => {
         const [, result] = await takeSnapshot();
 
         expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
           loading: false,
           called: false,
         });
@@ -4147,6 +4224,8 @@ describe("data masking", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });
@@ -4254,6 +4333,8 @@ describe("data masking", () => {
       const [, result] = await takeSnapshot();
 
       expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
         loading: false,
         called: false,
       });

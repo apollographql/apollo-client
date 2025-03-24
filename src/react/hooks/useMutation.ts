@@ -100,10 +100,10 @@ export declare namespace useMutation {
 
   export interface Result<TData = unknown> {
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#data:member} */
-    data?: MaybeMasked<TData> | null;
+    data: MaybeMasked<TData> | null | undefined;
 
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#error:member} */
-    error?: ErrorLike;
+    error: ErrorLike | undefined;
 
     /** {@inheritDoc @apollo/client!MutationResultDocumentation#loading:member} */
     loading: boolean;
@@ -208,11 +208,7 @@ export function useMutation<
   verifyDocumentType(mutation, DocumentType.Mutation);
   const [result, setResult] = React.useState<
     Omit<useMutation.Result<TData>, "reset">
-  >({
-    called: false,
-    loading: false,
-    client,
-  });
+  >(() => createInitialResult(client));
 
   const ref = React.useRef({
     result,
@@ -244,8 +240,8 @@ export function useMutation<
         setResult(
           (ref.current.result = {
             loading: true,
-            error: void 0,
-            data: void 0,
+            error: undefined,
+            data: undefined,
             called: true,
             client,
           })
@@ -325,11 +321,7 @@ export function useMutation<
 
   const reset = React.useCallback(() => {
     if (ref.current.isMounted) {
-      const result = {
-        called: false,
-        loading: false,
-        client: ref.current.client,
-      };
+      const result = createInitialResult(ref.current.client);
       Object.assign(ref.current, { mutationId: 0, result });
       setResult(result);
     }
@@ -345,4 +337,14 @@ export function useMutation<
   }, []);
 
   return [execute, { reset, ...result }];
+}
+
+function createInitialResult(client: ApolloClient) {
+  return {
+    data: undefined,
+    error: undefined,
+    called: false,
+    loading: false,
+    client,
+  };
 }

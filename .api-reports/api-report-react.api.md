@@ -932,6 +932,12 @@ export type LazyQueryResult<TData = unknown, TVariables extends OperationVariabl
 export type LazyQueryResultTuple<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLazyQuery.ResultTuple<TData, TVariables>;
 
 // @public @deprecated (undocumented)
+export type LoadableQueryFetchPolicy = useLoadableQuery.FetchPolicy;
+
+// @public @deprecated (undocumented)
+export type LoadableQueryHookOptions = useLoadableQuery.Options;
+
+// @public @deprecated (undocumented)
 export type LoadQueryFunction<TVariables extends OperationVariables> = useLoadableQuery.LoadQueryFunction<TVariables>;
 
 // @public (undocumented)
@@ -2174,12 +2180,6 @@ export namespace useLoadableQuery {
     }
     ];
 }
-
-// @public @deprecated (undocumented)
-export type UseLoadableQueryFetchPolicy = useLoadableQuery.FetchPolicy;
-
-// @public @deprecated (undocumented)
-export type UseLoadableQueryOptions = useLoadableQuery.Options;
 
 // @public @deprecated (undocumented)
 export type UseLoadableQueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useLoadableQuery.Result<TData, TVariables>;

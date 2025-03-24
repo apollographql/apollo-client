@@ -5,6 +5,7 @@ import {
   catchError,
   concat,
   EMPTY,
+  filter,
   from,
   lastValueFrom,
   map,
@@ -1105,6 +1106,7 @@ export class QueryManager {
 
           return result;
         }),
+        filter((result) => !!(result.data || result.error)),
         catchError((error) => {
           throw maybeWrapError(error);
         })

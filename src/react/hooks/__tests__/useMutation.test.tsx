@@ -2716,7 +2716,7 @@ describe("useMutation Hook", () => {
         }
       }
 
-      {
+      if (IS_REACT_19) {
         const {
           query,
           mutation: [, mutation],
@@ -2729,12 +2729,57 @@ describe("useMutation Hook", () => {
           previousData: { todoCount: 0 },
           variables: {},
         });
+
         expect(mutation).toEqualStrictTyped({
           data: CREATE_TODO_RESULT,
           error: undefined,
           loading: false,
           called: true,
         });
+      } else {
+        {
+          const {
+            query,
+            mutation: [, mutation],
+          } = await takeSnapshot();
+
+          expect(query).toEqualStrictTyped({
+            data: { todoCount: 1 },
+            networkStatus: NetworkStatus.ready,
+            loading: false,
+            previousData: { todoCount: 0 },
+            variables: {},
+          });
+
+          expect(mutation).toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            called: true,
+          });
+        }
+
+        {
+          const {
+            query,
+            mutation: [, mutation],
+          } = await takeSnapshot();
+
+          expect(query).toEqualStrictTyped({
+            data: { todoCount: 1 },
+            networkStatus: NetworkStatus.ready,
+            loading: false,
+            previousData: { todoCount: 0 },
+            variables: {},
+          });
+
+          expect(mutation).toEqualStrictTyped({
+            data: CREATE_TODO_RESULT,
+            error: undefined,
+            loading: false,
+            called: true,
+          });
+        }
       }
 
       await expect(takeSnapshot).not.toRerender();

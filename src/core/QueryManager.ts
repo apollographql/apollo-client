@@ -87,6 +87,7 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  SubscribeResult,
 } from "./types.js";
 import type {
   ErrorPolicy,
@@ -1040,7 +1041,7 @@ export class QueryManager {
 
   public startGraphQLSubscription<TData = unknown>(
     options: SubscriptionOptions
-  ): Observable<FetchResult<TData>> {
+  ): Observable<SubscribeResult<TData>> {
     let { query, variables } = options;
     const {
       fetchPolicy,
@@ -1059,14 +1060,14 @@ export class QueryManager {
         variables,
         extensions
       ).pipe(
-        map((result) => {
+        map((rawResult): SubscribeResult<TData> => {
           if (fetchPolicy !== "no-cache") {
             // the subscription interface should handle not sending us results we no longer subscribe to.
             // XXX I don't think we ever send in an object with errors, but we might in the future...
-            if (shouldWriteResult(result, errorPolicy)) {
+            if (shouldWriteResult(rawResult, errorPolicy)) {
               this.cache.write({
                 query,
-                result: result.data,
+                result: rawResult.data,
                 dataId: "ROOT_SUBSCRIPTION",
                 variables: variables,
               });
@@ -1075,22 +1076,26 @@ export class QueryManager {
             this.broadcastQueries();
           }
 
-          const hasErrors = graphQLResultHasError(result);
-          const hasProtocolErrors = graphQLResultHasProtocolErrors(result);
+          const result: SubscribeResult<TData> = {
+            data: rawResult.data ?? undefined,
+          };
 
-          if (hasErrors && errorPolicy === "none") {
-            throw new CombinedGraphQLErrors(result.errors!);
+          if (rawResult.extensions) {
+            result.extensions = rawResult.extensions;
           }
 
-          if (hasProtocolErrors) {
-            // `errorPolicy` is a mechanism for handling GraphQL errors, according
-            // to our documentation, so we throw protocol errors regardless of the
-            // set error policy.
-            throw result.extensions[PROTOCOL_ERRORS_SYMBOL];
+          if (graphQLResultHasError(rawResult)) {
+            result.error = new CombinedGraphQLErrors(rawResult.errors!);
+          } else if (graphQLResultHasProtocolErrors(rawResult)) {
+            result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+          }
+
+          if (result.error && errorPolicy === "none") {
+            result.data = undefined;
           }
 
           if (errorPolicy === "ignore") {
-            delete result.errors;
+            delete result.error;
           }
 
           return result;
@@ -1105,7 +1110,7 @@ export class QueryManager {
         .addExportedVariables(query, variables, context)
         .then(makeObservable);
 
-      return new Observable<FetchResult<TData>>((observer) => {
+      return new Observable<SubscribeResult<TData>>((observer) => {
         let sub: Subscription | null = null;
         observablePromise.then(
           (observable) => (sub = observable.subscribe(observer)),

@@ -26,15 +26,12 @@ import { MockedProvider } from "@apollo/client/testing/react";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { renderAsync, spyOnConsole } from "../../../testing/internal/index.js";
-import {
-  useSuspenseFragment,
-  UseSuspenseFragmentResult,
-} from "../useSuspenseFragment.js";
+import { useSuspenseFragment } from "../useSuspenseFragment.js";
 
 function createDefaultRenderStream<TData = unknown>() {
   return createRenderStream({
     initialSnapshot: {
-      result: null as UseSuspenseFragmentResult<MaybeMasked<TData>> | null,
+      result: null as useSuspenseFragment.Result<MaybeMasked<TData>> | null,
     },
   });
 }
@@ -1370,8 +1367,8 @@ test("updates child fragments for cache updates to masked fields", async () => {
 
   const { render, mergeSnapshot, takeRender } = createRenderStream({
     initialSnapshot: {
-      parent: null as UseSuspenseFragmentResult<Masked<Post>> | null,
-      child: null as UseSuspenseFragmentResult<Masked<PostFields>> | null,
+      parent: null as useSuspenseFragment.Result<Masked<Post>> | null,
+      child: null as useSuspenseFragment.Result<Masked<PostFields>> | null,
     },
   });
 

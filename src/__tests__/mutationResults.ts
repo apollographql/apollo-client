@@ -490,6 +490,97 @@ describe("mutation results", () => {
     });
   });
 
+  it("returns extensions with GraphQL errors with errorPolicy: 'all'", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: null,
+                },
+                errors: [{ message: "Oops" }],
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+        errorPolicy: "all",
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: null },
+      error: new CombinedGraphQLErrors([{ message: "Oops" }]),
+      extensions: {
+        requestLimit: 10,
+      },
+    });
+  });
+
+  it("returns extensions with GraphQL errors with errorPolicy: 'ignore'", async () => {
+    const client = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: new ApolloLink(
+        () =>
+          new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({
+                data: {
+                  newPerson: null,
+                },
+                errors: [{ message: "Oops" }],
+                extensions: {
+                  requestLimit: 10,
+                },
+              });
+            }, 10);
+          })
+      ),
+    });
+
+    const mutation = gql`
+      mutation AddNewPerson($newName: String!) {
+        newPerson(name: $newName) {
+          name
+        }
+      }
+    `;
+
+    await expect(
+      client.mutate({
+        mutation,
+        variables: {
+          newName: "Hugh Willson",
+        },
+        errorPolicy: "ignore",
+      })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: null },
+      extensions: {
+        requestLimit: 10,
+      },
+    });
+  });
+
   it("should warn when the result fields don't match the query fields", async () => {
     using _consoleSpies = spyOnConsole.takeSnapshots("error");
     let handle: any;

@@ -315,9 +315,6 @@ export function useMutation<
 
             if (onError) {
               onError(error, clientOptions);
-
-              // TODO(brian): why are we returning this here???
-              return { data: void 0, errors: error };
             }
 
             throw error;

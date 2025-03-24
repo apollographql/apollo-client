@@ -623,7 +623,7 @@ describe("useMutation Hook", () => {
 
       await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: CREATE_TODO_RESULT,
-        errors: [{ message: CREATE_TODO_ERROR }],
+        error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
       });
 
       {
@@ -702,7 +702,7 @@ describe("useMutation Hook", () => {
 
       await expect(createTodo({ variables })).resolves.toEqualStrictTyped({
         data: CREATE_TODO_RESULT,
-        errors: [{ message: CREATE_TODO_ERROR }],
+        error: new CombinedGraphQLErrors([{ message: CREATE_TODO_ERROR }]),
       });
 
       {

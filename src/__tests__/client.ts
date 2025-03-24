@@ -2109,7 +2109,7 @@ describe("client", () => {
         lastName: "Smith",
       },
     };
-    const errors = [new Error("Some kind of GraphQL error.")];
+    const errors = [{ message: "Some kind of GraphQL error." }];
     const client = new ApolloClient({
       link: mockSingleLink({
         request: { query: mutation },
@@ -2123,13 +2123,11 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    const result = await client.mutate({ mutation, errorPolicy: "all" });
-
-    expect(result.errors).toBeDefined();
-    expect(result.errors!.length).toBe(1);
-    expect(result.errors![0].message).toBe(errors[0].message);
-    expect(result.data).toEqual({
-      newPerson: data,
+    await expect(
+      client.mutate({ mutation, errorPolicy: "all" })
+    ).resolves.toEqualStrictTyped({
+      data: { newPerson: data },
+      error: new CombinedGraphQLErrors(errors),
     });
   });
 
@@ -2161,10 +2159,9 @@ describe("client", () => {
       cache: new InMemoryCache(),
     });
 
-    const result = await client.mutate({ mutation, errorPolicy: "ignore" });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data).toEqual(data);
+    await expect(
+      client.mutate({ mutation, errorPolicy: "ignore" })
+    ).resolves.toEqualStrictTyped({ data });
   });
 
   it("should rollback optimistic after mutation got a GraphQL error", async () => {

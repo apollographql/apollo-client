@@ -1107,17 +1107,11 @@ export class QueryManager {
           return result;
         }),
         catchError((error) => {
-          error = maybeWrapError(error);
-
-          if (errorPolicy === "none") {
-            throw error;
-          }
-
           if (errorPolicy === "ignore") {
             return of({ data: undefined } as SubscribeResult<TData>);
           }
 
-          return of({ data: undefined, error });
+          return of({ data: undefined, error: maybeWrapError(error) });
         }),
         filter((result) => !!(result.data || result.error))
       );

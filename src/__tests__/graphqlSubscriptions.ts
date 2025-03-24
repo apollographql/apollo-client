@@ -186,7 +186,7 @@ describe("GraphQL Subscriptions", () => {
     });
   });
 
-  it("emits an error if the result has network errors", async () => {
+  it("emits a result with error if the result has network errors", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
@@ -198,7 +198,12 @@ describe("GraphQL Subscriptions", () => {
 
     link.simulateResult({ error: new Error("Oops") });
 
-    await expect(stream).toEmitError(new Error("Oops"));
+    await expect(stream).toEmitStrictTyped({
+      data: undefined,
+      error: new Error("Oops"),
+    });
+
+    await expect(stream).toComplete();
   });
 
   it('returns errors in next result when `errorPolicy` is "all"', async () => {

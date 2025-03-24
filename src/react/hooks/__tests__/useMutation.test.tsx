@@ -3858,7 +3858,6 @@ describe("useMutation Hook", () => {
         });
       }
 
-      // @ts-expect-error `incremental` should be stripped out
       await expect(promise).resolves.toEqualStrictTyped({
         data: {
           createTodo: {
@@ -3868,17 +3867,6 @@ describe("useMutation Hook", () => {
             __typename: "Todo",
           },
         },
-        hasNext: false,
-        incremental: [
-          {
-            data: {
-              description: "Get milk!",
-              priority: "High",
-              __typename: "Todo",
-            },
-            path: ["createTodo"],
-          },
-        ],
       });
 
       expect(consoleSpies.error).not.toHaveBeenCalled();

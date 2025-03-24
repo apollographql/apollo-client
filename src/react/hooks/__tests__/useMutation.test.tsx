@@ -4168,54 +4168,60 @@ describe("data masking", () => {
     });
 
     using _disabledAct = disableActEnvironment();
-    const { takeSnapshot } = await renderHookToSnapshotStream(
-      () => useMutation(mutation),
-      {
+    const { takeSnapshot, getCurrentSnapshot } =
+      await renderHookToSnapshotStream(() => useMutation(mutation), {
         wrapper: ({ children }) => (
           <ApolloProvider client={client}>{children}</ApolloProvider>
         ),
-      }
-    );
-
-    const [mutate, result] = await takeSnapshot();
-
-    expect(result.loading).toBe(false);
-    expect(result.data).toBeUndefined();
-    expect(result.error).toBeUndefined();
+      });
 
     {
-      const { data, errors } = await mutate();
+      const [, result] = await takeSnapshot();
 
-      expect(data).toEqual({
+      expect(result).toEqualStrictTyped({
+        loading: false,
+        called: false,
+      });
+    }
+
+    const [mutate] = getCurrentSnapshot();
+
+    await expect(mutate()).resolves.toEqualStrictTyped({
+      data: {
         updateUser: {
           __typename: "User",
           id: 1,
           name: "Test User",
         },
+      },
+    });
+
+    {
+      const [, result] = await takeSnapshot();
+
+      expect(result).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        called: true,
       });
-      expect(errors).toBeUndefined();
     }
 
     {
       const [, result] = await takeSnapshot();
 
-      expect(result.loading).toBe(true);
-      expect(result.data).toBeUndefined();
-      expect(result.error).toBeUndefined();
-    }
-
-    {
-      const [, result] = await takeSnapshot();
-
-      expect(result.loading).toBe(false);
-      expect(result.data).toEqual({
-        updateUser: {
-          __typename: "User",
-          id: 1,
-          name: "Test User",
+      expect(result).toEqualStrictTyped({
+        data: {
+          updateUser: {
+            __typename: "User",
+            id: 1,
+            name: "Test User",
+          },
         },
+        error: undefined,
+        loading: false,
+        called: true,
       });
-      expect(result.error).toBeUndefined();
     }
 
     await expect(takeSnapshot).not.toRerender();

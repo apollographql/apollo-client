@@ -4388,11 +4388,10 @@ describe("client.subscribe", () => {
       },
     });
 
-    const error = await stream.takeError();
-
-    expect(error).toEqual(
-      new CombinedGraphQLErrors([{ message: "Something went wrong" }])
-    );
+    await expect(stream).toEmitStrictTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
+    });
   });
 
   test("handles errors returned from the subscription when errorPolicy is `all`", async () => {
@@ -4433,10 +4432,10 @@ describe("client.subscribe", () => {
       },
     });
 
-    const { data, errors } = await stream.takeNext();
-
-    expect(data).toEqual({ addedComment: null });
-    expect(errors).toEqual([{ message: "Something went wrong" }]);
+    await expect(stream).toEmitStrictTyped({
+      data: { addedComment: null },
+      error: new CombinedGraphQLErrors([{ message: "Something went wrong" }]),
+    });
   });
 
   test("masks partial data for errors returned from the subscription when errorPolicy is `all`", async () => {
@@ -4482,10 +4481,10 @@ describe("client.subscribe", () => {
       },
     });
 
-    const { data, errors } = await stream.takeNext();
-
-    expect(data).toEqual({ addedComment: { __typename: "Comment", id: 1 } });
-    expect(errors).toEqual([{ message: "Could not get author" }]);
+    await expect(stream).toEmitStrictTyped({
+      data: { addedComment: { __typename: "Comment", id: 1 } },
+      error: new CombinedGraphQLErrors([{ message: "Could not get author" }]),
+    });
   });
 
   test("warns and returns masked result when used with no-cache fetch policy", async () => {

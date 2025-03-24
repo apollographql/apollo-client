@@ -3995,21 +3995,40 @@ describe("useMutation Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const { result } = renderHook(
-        () => useMutation<any>(CREATE_TODO_MUTATION_DEFER, { update }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
-      const [createTodo] = result.current;
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation<any>(CREATE_TODO_MUTATION_DEFER, { update }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      let promiseReturnedByMutate: Promise<FetchResult>;
+      {
+        const [, result] = await takeSnapshot();
 
-      await act(async () => {
-        promiseReturnedByMutate = createTodo({ variables });
-      });
+        expect(result).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const [createTodo] = getCurrentSnapshot();
+
+      const promiseReturnedByMutate = createTodo({ variables });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
 
       link.simulateResult({
         result: {
@@ -4022,6 +4041,8 @@ describe("useMutation Hook", () => {
           hasNext: true,
         },
       });
+
+      await expect(takeSnapshot).not.toRerender();
 
       link.simulateResult(
         {
@@ -4042,9 +4063,36 @@ describe("useMutation Hook", () => {
         true
       );
 
-      await act(async () => {
-        await promiseReturnedByMutate;
+      await expect(promiseReturnedByMutate).resolves.toEqualStrictTyped({
+        data: {
+          createTodo: {
+            id: 1,
+            description: "Get milk!",
+            priority: "High",
+            __typename: "Todo",
+          },
+        },
       });
+
+      {
+        const [, result] = await takeSnapshot();
+
+        expect(result).toEqualStrictTyped({
+          data: {
+            createTodo: {
+              id: 1,
+              description: "Get milk!",
+              priority: "High",
+              __typename: "Todo",
+            },
+          },
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
 
       expect(update).toHaveBeenCalledTimes(1);
       expect(update).toHaveBeenCalledWith(
@@ -4066,9 +4114,8 @@ describe("useMutation Hook", () => {
         // but we only care about variables here
         expect.objectContaining({ variables })
       );
-      await waitFor(() => {
-        expect(consoleSpies.error).not.toHaveBeenCalled();
-      });
+
+      expect(consoleSpies.error).not.toHaveBeenCalled();
     });
   });
 });

@@ -2794,6 +2794,7 @@ describe("useMutation Hook", () => {
             query: GET_TODOS_QUERY,
           },
           result: { data: GET_TODOS_RESULT_1 },
+          delay: 20,
         },
         {
           request: {
@@ -2803,12 +2804,14 @@ describe("useMutation Hook", () => {
           result: {
             data: CREATE_TODO_RESULT,
           },
+          delay: 20,
         },
         {
           request: {
             query: GET_TODOS_QUERY,
           },
           result: { data: GET_TODOS_RESULT_2 },
+          delay: 20,
         },
       ];
 
@@ -2818,43 +2821,138 @@ describe("useMutation Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const { result } = renderHook(
-        () => ({
-          query: useQuery(GET_TODOS_QUERY),
-          mutation: useMutation(CREATE_TODO_MUTATION),
-        }),
-        {
-          wrapper: ({ children }) => (
-            <ApolloProvider client={client}>{children}</ApolloProvider>
-          ),
-        }
-      );
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => ({
+            query: useQuery(GET_TODOS_QUERY),
+            mutation: useMutation(CREATE_TODO_MUTATION),
+          }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
 
-      expect(result.current.query.loading).toBe(true);
-      expect(result.current.query.data).toBe(undefined);
-      await waitFor(
-        () => {
-          expect(result.current.query.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
 
-      expect(result.current.query.data).toEqual(mocks[0].result.data);
-      const mutate = result.current.mutation[0];
-      await act(async () => {
-        await mutate({
+        expect(query).toEqualStrictTyped({
+          data: undefined,
+          loading: true,
+          networkStatus: NetworkStatus.loading,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(mutation).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toEqualStrictTyped({
+          data: GET_TODOS_RESULT_1,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(mutation).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
+
+      const {
+        mutation: [mutate],
+      } = getCurrentSnapshot();
+
+      await expect(
+        mutate({
           variables,
           refetchQueries: ["getTodos"],
-        });
-      });
+        })
+      ).resolves.toEqualStrictTyped({ data: CREATE_TODO_RESULT });
 
-      await waitFor(
-        () => {
-          expect(result.current.query.data).toEqual(mocks[2].result.data);
-        },
-        { interval: 1 }
-      );
-      expect(result.current.query.loading).toBe(false);
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toEqualStrictTyped({
+          data: GET_TODOS_RESULT_1,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toEqualStrictTyped({
+          data: GET_TODOS_RESULT_1,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: undefined,
+          variables: {},
+        });
+
+        expect(mutation).toEqualStrictTyped({
+          data: CREATE_TODO_RESULT,
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      {
+        const {
+          query,
+          mutation: [, mutation],
+        } = await takeSnapshot();
+
+        expect(query).toEqualStrictTyped({
+          data: GET_TODOS_RESULT_2,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          previousData: GET_TODOS_RESULT_1,
+          variables: {},
+        });
+
+        expect(mutation).toEqualStrictTyped({
+          data: CREATE_TODO_RESULT,
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      await expect(takeSnapshot).not.toRerender();
 
       expect(client.readQuery({ query: GET_TODOS_QUERY })).toEqual(
         mocks[2].result.data

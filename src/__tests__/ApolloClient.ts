@@ -2066,7 +2066,7 @@ describe("ApolloClient", () => {
           link: ApolloLink.empty(),
           cache: new InMemoryCache(),
         });
-        client.disableNetworkFetches = disableNetworkFetches;
+        client.prioritizeCacheValues = disableNetworkFetches;
 
         const observable = client.watchQuery({
           query: gql`
@@ -2098,7 +2098,7 @@ describe("ApolloClient", () => {
           ]),
           cache: new InMemoryCache(),
         });
-        client.disableNetworkFetches = true;
+        client.prioritizeCacheValues = true;
         client.writeQuery({ query, data: { source: "cache" } });
 
         const observable = client.watchQuery({
@@ -2135,7 +2135,7 @@ describe("ApolloClient", () => {
           ]),
           cache: new InMemoryCache(),
         });
-        client.disableNetworkFetches = true;
+        client.prioritizeCacheValues = true;
 
         const observable = client.watchQuery({
           query,
@@ -2167,7 +2167,7 @@ describe("ApolloClient", () => {
           ]),
           cache: new InMemoryCache(),
         });
-        client.disableNetworkFetches = true;
+        client.prioritizeCacheValues = true;
         client.writeQuery({ query, data: { source: "cache" } });
 
         const observable = client.watchQuery({
@@ -2208,7 +2208,7 @@ describe("ApolloClient", () => {
           ]),
           cache: new InMemoryCache(),
         });
-        client.disableNetworkFetches = true;
+        client.prioritizeCacheValues = true;
         client.writeQuery({ query, data: { source: "cache" } });
 
         const observable = client.watchQuery({

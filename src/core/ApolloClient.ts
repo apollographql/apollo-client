@@ -178,10 +178,25 @@ export { mergeOptions };
 export class ApolloClient implements DataProxy {
   public link: ApolloLink;
   public cache: ApolloCache;
-  public set disableNetworkFetches(value: boolean) {
+  /**
+   * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`.
+   */
+  public disableNetworkFetches!: never;
+  /**
+   * {@inheritDoc @apollo/client!ApolloClient#prioritizeCacheValues:member}
+   */
+  public set prioritizeCacheValues(value: boolean) {
     this.queryManager.prioritizeCacheValues = value;
   }
-  public get disableNetworkFetches() {
+
+  /**
+   * Whether to prioritize cache values over network results when `query` or `watchQuery` is called.
+   * This will essentially turn a `"network-only"` or `"cache-and-network"` fetchPolicy into a `"cache-first"` fetchPolicy,
+   * but without influencing the `fetchPolicy` of the created `ObservableQuery` long-term.
+   *
+   * This can e.g. be used to prioritize the cache during the first render after SSR.
+   */
+  public get prioritizeCacheValues() {
     return this.queryManager.prioritizeCacheValues;
   }
   public version: string;
@@ -318,10 +333,10 @@ export class ApolloClient implements DataProxy {
         : void 0,
     });
 
-    this.disableNetworkFetches = ssrMode || ssrForceFetchDelay > 0;
+    this.prioritizeCacheValues = ssrMode || ssrForceFetchDelay > 0;
     if (ssrForceFetchDelay) {
       setTimeout(() => {
-        this.disableNetworkFetches = false;
+        this.prioritizeCacheValues = false;
       }, ssrForceFetchDelay);
     }
 

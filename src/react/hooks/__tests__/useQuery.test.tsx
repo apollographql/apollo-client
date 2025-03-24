@@ -9904,7 +9904,7 @@ describe("useQuery Hook", () => {
         if (initialQueryValue) {
           client.writeQuery({ query, data: initialQueryValue });
         }
-        client.disableNetworkFetches = true;
+        client.prioritizeCacheValues = true;
 
         const { rerender } = renderHook(
           () =>
@@ -9926,7 +9926,7 @@ describe("useQuery Hook", () => {
         await act(() => new Promise((resolve) => setTimeout(resolve, 10)));
 
         requestSpy.mockClear();
-        client.disableNetworkFetches = false;
+        client.prioritizeCacheValues = false;
 
         rerender();
         expect(requestSpy).toHaveBeenCalledTimes(

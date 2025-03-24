@@ -1,5 +1,5 @@
 ---
-"@apollo/client": minor
+"@apollo/client": major
 ---
 
 `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been reworked:
@@ -12,3 +12,5 @@ even long after `disableNetworkFetches` would have been deactivated.
 Now, the `ObservableQuery` will keep their original `fetchPolicy`, but queries
 made during `disableNetworkFetches` will just apply the `fetchPolicy` replacement
 at request time, just for that one request.
+
+`ApolloClient.disableNetworkFetches` has been renamed to `ApolloClient.prioritizeCacheValues` to better reflect this behaviour.

@@ -1106,10 +1106,10 @@ export class QueryManager {
 
           return result;
         }),
-        filter((result) => !!(result.data || result.error)),
         catchError((error) => {
           throw maybeWrapError(error);
-        })
+        }),
+        filter((result) => !!(result.data || result.error))
       );
 
     if (this.getDocumentInfo(query).hasClientExports) {

@@ -8,7 +8,7 @@ import {
   CombinedProtocolErrors,
   PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
-import { mockObservableLink } from "@apollo/client/testing";
+import { MockSubscriptionLink } from "@apollo/client/testing";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
@@ -51,7 +51,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should start a subscription on network interface and unsubscribe", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
@@ -67,7 +67,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should subscribe with default values", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     // This test calls directly through Apollo Client
     const client = new ApolloClient({
       link,
@@ -84,7 +84,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should multiplex subscriptions", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -101,7 +101,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should receive multiple results for a subscription", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -121,7 +121,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should not cache subscription data if a `no-cache` fetch policy is used", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const cache = new InMemoryCache();
     const client = new ApolloClient({
       link,
@@ -140,7 +140,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should throw an error if the result has errors on it", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -191,7 +191,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -230,7 +230,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -285,7 +285,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -320,7 +320,7 @@ describe("GraphQL Subscriptions", () => {
         }
       }
     `;
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -368,7 +368,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should call complete handler when the subscription completes", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),
@@ -382,7 +382,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should pass a context object through the link execution chain", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       cache: new InMemoryCache(),
       link,
@@ -400,7 +400,7 @@ describe("GraphQL Subscriptions", () => {
   });
 
   it("should throw an error if the result has protocolErrors on it", async () => {
-    const link = mockObservableLink();
+    const link = new MockSubscriptionLink();
     const client = new ApolloClient({
       link,
       cache: new InMemoryCache(),

@@ -3768,26 +3768,40 @@ describe("useMutation Hook", () => {
         cache: new InMemoryCache(),
       });
 
-      const useCreateTodo = () => {
-        const [createTodo, { loading, data }] = useMutation(
-          CREATE_TODO_MUTATION_DEFER
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot, getCurrentSnapshot } =
+        await renderHookToSnapshotStream(
+          () => useMutation(CREATE_TODO_MUTATION_DEFER),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
         );
 
-        useEffect(() => {
-          void createTodo({ variables });
-        }, [variables]);
+      {
+        const [, mutation] = await takeSnapshot();
 
-        return { loading, data };
-      };
+        expect(mutation).toEqualStrictTyped({
+          loading: false,
+          called: false,
+        });
+      }
 
-      const { result } = renderHook(() => useCreateTodo(), {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      });
+      const [mutate] = getCurrentSnapshot();
 
-      expect(result.current.loading).toBe(true);
-      expect(result.current.data).toBe(undefined);
+      const promise = mutate({ variables });
+
+      {
+        const [, mutation] = await takeSnapshot();
+
+        expect(mutation).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          called: true,
+        });
+      }
 
       setTimeout(() => {
         link.simulateResult({
@@ -3802,6 +3816,8 @@ describe("useMutation Hook", () => {
           },
         });
       });
+
+      await expect(takeSnapshot).not.toRerender();
 
       setTimeout(() => {
         link.simulateResult(
@@ -3824,25 +3840,50 @@ describe("useMutation Hook", () => {
         );
       });
 
-      // When defer is used in a mutation, the final value resolves
-      // in a single result
-      await waitFor(
-        () => {
-          expect(result.current.loading).toBe(false);
-        },
-        { interval: 1 }
-      );
+      {
+        const [, mutation] = await takeSnapshot();
 
-      expect(result.current.data).toEqual({
-        createTodo: {
-          id: 1,
-          description: "Get milk!",
-          priority: "High",
-          __typename: "Todo",
+        expect(mutation).toEqualStrictTyped({
+          data: {
+            createTodo: {
+              id: 1,
+              description: "Get milk!",
+              priority: "High",
+              __typename: "Todo",
+            },
+          },
+          error: undefined,
+          loading: false,
+          called: true,
+        });
+      }
+
+      // @ts-expect-error `incremental` should be stripped out
+      await expect(promise).resolves.toEqualStrictTyped({
+        data: {
+          createTodo: {
+            id: 1,
+            description: "Get milk!",
+            priority: "High",
+            __typename: "Todo",
+          },
         },
+        hasNext: false,
+        incremental: [
+          {
+            data: {
+              description: "Get milk!",
+              priority: "High",
+              __typename: "Todo",
+            },
+            path: ["createTodo"],
+          },
+        ],
       });
+
       expect(consoleSpies.error).not.toHaveBeenCalled();
     });
+
     it("resolves with resulting errors and calls onError callback", async () => {
       using consoleSpies = spyOnConsole("error");
       const link = new MockSubscriptionLink();

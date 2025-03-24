@@ -48,7 +48,9 @@ const packageJsonFullPath = path.resolve(
 
 process.exitCode = 0;
 
-const tempDir = fs.mkdtempSync("api-model");
+const tempDir = fs.mkdtempSync(
+  path.join(import.meta.dirname, "..", "dist", "api-model")
+);
 try {
   if (parsed.values.generate?.includes("docModel")) {
     console.log(

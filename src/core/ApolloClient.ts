@@ -182,9 +182,7 @@ export class ApolloClient implements DataProxy {
    * @deprecated `disableNetworkFetches` has been renamed to `prioritizeCacheValues`.
    */
   public disableNetworkFetches!: never;
-  /**
-   * {@inheritDoc @apollo/client!ApolloClient#prioritizeCacheValues:member}
-   */
+
   public set prioritizeCacheValues(value: boolean) {
     this.queryManager.prioritizeCacheValues = value;
   }

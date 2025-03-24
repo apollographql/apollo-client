@@ -15,6 +15,7 @@ import { toEqualApolloQueryResult } from "./toEqualApolloQueryResult.js";
 import { toEqualFetchResult } from "./toEqualFetchResult.js";
 import { toEqualLazyQueryResult } from "./toEqualLazyQueryResult.js";
 import { toEqualQueryResult } from "./toEqualQueryResult.js";
+import { toEqualStrictTyped } from "./toEqualStrictTyped.js";
 import { toHaveSuspenseCacheEntryUsing } from "./toHaveSuspenseCacheEntryUsing.js";
 import { toMatchDocument } from "./toMatchDocument.js";
 
@@ -32,6 +33,7 @@ expect.extend({
   toEqualFetchResult,
   toEqualLazyQueryResult,
   toEqualQueryResult,
+  toEqualStrictTyped,
   toBeDisposed,
   toHaveSuspenseCacheEntryUsing,
   toMatchDocument,

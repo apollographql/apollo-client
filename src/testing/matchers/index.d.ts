@@ -133,6 +133,13 @@ interface ApolloCustomMatchers<R = void, T = {}> {
     (expected: FetchResult<TData, TContext, TExtensions>) => R
   : { error: "matchers needs to be called on a FetchResult" };
 
+  toEmitStrictTyped: T extends ObservableStream<infer TResult> ?
+    (
+      expected: FilterUnserializableProperties<TResult>,
+      options?: TakeOptions
+    ) => Promise<R>
+  : { error: "toEmitStrictTyped needs to be called on an ObservableStream" };
+
   toEqualStrictTyped: T extends Promise<infer TResult> ?
     (expected: FilterUnserializableProperties<TResult>) => R
   : (expected: FilterUnserializableProperties<T>) => R;

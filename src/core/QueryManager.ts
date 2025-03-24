@@ -1080,14 +1080,19 @@ export class QueryManager {
             data: rawResult.data ?? undefined,
           };
 
-          if (rawResult.extensions) {
-            result.extensions = rawResult.extensions;
-          }
-
           if (graphQLResultHasError(rawResult)) {
             result.error = new CombinedGraphQLErrors(rawResult.errors!);
           } else if (graphQLResultHasProtocolErrors(rawResult)) {
             result.error = rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+            // Don't emit protocol errors added by HttpLink
+            delete rawResult.extensions[PROTOCOL_ERRORS_SYMBOL];
+          }
+
+          if (
+            rawResult.extensions &&
+            Object.keys(rawResult.extensions).length
+          ) {
+            result.extensions = rawResult.extensions;
           }
 
           if (result.error && errorPolicy === "none") {

@@ -1,5 +1,49 @@
 # @apollo/client
 
+## 4.0.0-alpha.4
+
+### Major Changes
+
+- [#12463](https://github.com/apollographql/apollo-client/pull/12463) [`3868df8`](https://github.com/apollographql/apollo-client/commit/3868df81f973dc7b5a79fadf4dc1b0e291003b7f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `ObservableQuery.setOptions` has been removed as it was an alias of `reobserve`. Prefer using `reobserve` directly instead.
+
+  ```diff
+  const observable = client.watchQuery(options);
+
+  // Use reobserve to set new options and reevaluate the query
+  - observable.setOptions(newOptions);
+  + observable.reobserve(newOptions);
+  ```
+
+  As a result of this change, `reobserve` has been marked for public use and is no longer considered an internal API. The `newNetworkStatus` argument has been removed to facilitate this change.
+
+- [#12470](https://github.com/apollographql/apollo-client/pull/12470) [`d32902f`](https://github.com/apollographql/apollo-client/commit/d32902f26a4c5dea30421ee52aeea52df3e5334e) Thanks [@phryneas](https://github.com/phryneas)! - `ssrMode`, `ssrForceFetchDelay` and `disableNetworkFetches` have been reworked:
+
+  Previously, a `ObservableQuery` created by `client.query` or `client.watchQuery`
+  while one of those were active would permanently be changed from a `fetchPolicy`
+  of `"network-only"` or `"cache-and-network"` to `"cache-first"`, and stay that way
+  even long after `disableNetworkFetches` would have been deactivated.
+
+  Now, the `ObservableQuery` will keep their original `fetchPolicy`, but queries
+  made during `disableNetworkFetches` will just apply the `fetchPolicy` replacement
+  at request time, just for that one request.
+
+  `ApolloClient.disableNetworkFetches` has been renamed to `ApolloClient.prioritizeCacheValues` to better reflect this behaviour.
+
+- [#12465](https://github.com/apollographql/apollo-client/pull/12465) [`a132163`](https://github.com/apollographql/apollo-client/commit/a1321637cafb4023d6df416e9467294114d8346b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Flatten out React hook types. As a result, the base types have been removed. Prefer using the hook types instead. Removed types include:
+
+  - `BaseMutationOptions`
+  - `BaseQueryOptions`
+  - `BaseSubscriptionOptions`
+  - `ObservableQueryFields`
+  - `MutationSharedOptions`
+  - `QueryFunctionOptions`
+
+- [#12463](https://github.com/apollographql/apollo-client/pull/12463) [`3868df8`](https://github.com/apollographql/apollo-client/commit/3868df81f973dc7b5a79fadf4dc1b0e291003b7f) Thanks [@jerelmiller](https://github.com/jerelmiller)! - `useQuery` no longer returns `reobserve` as part of its result. It was possible to use `reobserve` to set new options on the underlying `ObservableQuery` instance which differed from the options passed to the hook. This could result in unexpected results. Instead prefer to rerender the hook with new options.
+
+### Patch Changes
+
+- [#12465](https://github.com/apollographql/apollo-client/pull/12465) [`a132163`](https://github.com/apollographql/apollo-client/commit/a1321637cafb4023d6df416e9467294114d8346b) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Rename all React hook result types and options. These types have all moved under a namespace that matches the hook name. For example, `useQuery` exports `useQuery.Options` and `useQuery.Result` types. As such, the old hook types have been deprecated and will be removed in v5.
+
 ## 4.0.0-alpha.3
 
 ### Major Changes

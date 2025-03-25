@@ -112,7 +112,7 @@ export type RefetchQueriesPromiseResults<TResult> =
   // query (false). Since refetching produces an ApolloQueryResult<any>, and
   // skipping produces nothing, the fully-resolved array of all results produced
   // will be an ApolloQueryResult<any>[], when TResult extends boolean.
-  TResult extends boolean ? ApolloQueryResult<any>[]
+  TResult extends boolean ? QueryResult<any>[]
   : // If onQueryUpdated returns a PromiseLike<U>, that thenable will be passed as
   // an array element to Promise.all, so we infer/unwrap the array type U here.
   TResult extends PromiseLike<infer U> ? U[]
@@ -155,7 +155,7 @@ export type InternalRefetchQueriesResult<TResult> =
   // If onQueryUpdated returns a boolean, that's equivalent to refetching the
   // query when the boolean is true and skipping the query when false, so the
   // internal type of refetched results is Promise<ApolloQueryResult<any>>.
-  TResult extends boolean ? Promise<ApolloQueryResult<any>>
+  TResult extends boolean ? Promise<QueryResult<any>>
   : // Otherwise, onQueryUpdated returns whatever it returns. If onQueryUpdated is
     // not provided, TResult defaults to Promise<ApolloQueryResult<any>> (see the
     // generic type parameters of client.refetchQueries).

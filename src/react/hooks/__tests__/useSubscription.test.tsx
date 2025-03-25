@@ -968,163 +968,6 @@ describe("useSubscription Hook", () => {
     await expect(takeSnapshot).not.toRerender();
   });
 
-  test("should warn when using 'onSubscriptionData' and 'onData' together", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onData: jest.fn(),
-          onSubscriptionData: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "supports only the 'onSubscriptionData' or 'onData' option"
-      )
-    );
-  });
-
-  test("prefers 'onData' when using 'onSubscriptionData' and 'onData' together", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => {});
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Pagani" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onData = jest.fn();
-    const onSubscriptionData = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onData,
-          onSubscriptionData,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0]);
-    await tick();
-
-    expect(onData).toHaveBeenCalledTimes(1);
-    expect(onSubscriptionData).toHaveBeenCalledTimes(0);
-  });
-
-  test("uses 'onSubscriptionData' when 'onData' is absent", async () => {
-    using _consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Pagani" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onSubscriptionData = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionData,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0]);
-    await tick();
-
-    expect(onSubscriptionData).toHaveBeenCalledTimes(1);
-  });
-
-  test("only warns once using `onSubscriptionData`", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const { rerender } = renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionData: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    rerender();
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-  });
-
   test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
     using consoleSpy = spyOnConsole("warn");
     const subscription = gql`
@@ -2751,11 +2594,6 @@ describe.skip("Type Tests", () => {
           Masked<Subscription> | undefined
         >();
       },
-      onSubscriptionData: ({ subscriptionData }) => {
-        expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          Masked<Subscription> | undefined
-        >();
-      },
     });
 
     expectTypeOf(data).toEqualTypeOf<Masked<Subscription> | undefined>();
@@ -2780,11 +2618,6 @@ describe.skip("Type Tests", () => {
     const { data } = useSubscription(subscription, {
       onData: ({ data }) => {
         expectTypeOf(data.data).toEqualTypeOf<Subscription | undefined>();
-      },
-      onSubscriptionData: ({ subscriptionData }) => {
-        expectTypeOf(subscriptionData.data).toEqualTypeOf<
-          Subscription | undefined
-        >();
       },
     });
 

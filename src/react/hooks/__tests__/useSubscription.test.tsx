@@ -321,38 +321,40 @@ describe("useSubscription Hook", () => {
 
     const onData = jest.fn();
 
-    const { result, unmount, rerender } = renderHook(
-      ({ variables }) =>
-        useSubscription(subscription, {
-          variables,
-          skip: true,
-          onData,
-        }),
-      {
-        initialProps: {
-          variables: {
-            foo: "bar",
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, unmount, rerender } =
+      await renderHookToSnapshotStream(
+        ({ variables }) =>
+          useSubscription(subscription, { variables, skip: true, onData }),
+        {
+          initialProps: {
+            variables: {
+              foo: "bar",
+            },
           },
-        },
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
+          wrapper: ({ children }) => (
+            <ApolloProvider client={client}>{children}</ApolloProvider>
+          ),
+        }
+      );
 
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: { foo: "bar" },
+    });
 
-    rerender({ variables: { foo: "bar2" } });
-    await expect(
-      waitFor(
-        () => {
-          expect(result.current.data).not.toBe(undefined);
-        },
-        { interval: 1, timeout: 20 }
-      )
-    ).rejects.toThrow();
+    await rerender({ variables: { foo: "bar2" } });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: { foo: "bar2" },
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(onSetup).toHaveBeenCalledTimes(0);
     expect(onData).toHaveBeenCalledTimes(0);

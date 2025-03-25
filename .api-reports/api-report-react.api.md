@@ -147,18 +147,18 @@ class ApolloClient implements DataProxy {
     set prioritizeCacheValues(value: boolean);
     get prioritizeCacheValues(): boolean;
     // Warning: (ae-forgotten-export) The symbol "QueryOptions" needs to be exported by the entry point index.d.ts
-    // Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "QueryResult_2" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "MaybeMasked" needs to be exported by the entry point index.d.ts
-    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, TData>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    query<TData = unknown, TVariables extends OperationVariables = OperationVariables>(options: QueryOptions<TVariables, TData>): Promise<QueryResult_2<MaybeMasked<TData>>>;
     // (undocumented)
     queryDeduplication: boolean;
     readFragment<T = unknown, TVariables = OperationVariables>(options: DataProxy.Fragment<TVariables, T>, optimistic?: boolean): Unmasked<T> | null;
     readQuery<TData = unknown, TVariables = OperationVariables>(options: DataProxy.Query<TVariables, TData>, optimistic?: boolean): Unmasked<TData> | null;
-    reFetchObservableQueries(includeStandby?: boolean): Promise<ApolloQueryResult<any>[]>;
+    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult_2<any>[]>;
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "RefetchQueriesResult" needs to be exported by the entry point index.d.ts
-    refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<ApolloQueryResult<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
-    resetStore(): Promise<ApolloQueryResult<any>[] | null>;
+    refetchQueries<TCache extends ApolloCache = ApolloCache, TResult = Promise<QueryResult_2<any>>>(options: RefetchQueriesOptions<TCache, TResult>): RefetchQueriesResult<TResult>;
+    resetStore(): Promise<QueryResult_2<any>[] | null>;
     restore(serializedState: unknown): ApolloCache;
     setLink(newLink: ApolloLink): void;
     // Warning: (ae-forgotten-export) The symbol "FragmentMatcher" needs to be exported by the entry point index.d.ts
@@ -718,7 +718,7 @@ type FetchMoreFunction<TData, TVariables extends OperationVariables> = (fetchMor
         fetchMoreResult: Unmasked<TData>;
         variables: TVariables;
     }) => Unmasked<TData>;
-}) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+}) => Promise<QueryResult_2<MaybeMasked<TData>>>;
 
 // @public (undocumented)
 interface FetchMoreQueryOptions<TVariables, TData = unknown> {
@@ -903,7 +903,7 @@ interface InternalRefetchQueriesOptions<TCache extends ApolloCache, TResult> ext
 }
 
 // @public (undocumented)
-type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Promise<ApolloQueryResult<any>> : TResult;
+type InternalRefetchQueriesResult<TResult> = TResult extends boolean ? Promise<QueryResult_2<any>> : TResult;
 
 // Warning: (ae-forgotten-export) The symbol "RefetchQueryDescriptor" needs to be exported by the entry point index.d.ts
 //
@@ -1225,6 +1225,8 @@ type NoInfer_2<T> = [T][T extends any ? 0 : never];
 interface ObservableAndInfo<TData> {
     // (undocumented)
     fromLink: boolean;
+    // Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
+    //
     // (undocumented)
     observable: Observable<ApolloQueryResult<TData>>;
 }
@@ -1245,7 +1247,7 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables = O
             fetchMoreResult: Unmasked<TFetchData>;
             variables: TFetchVars;
         }) => Unmasked<TData>;
-    }): Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+    }): Promise<QueryResult_2<TFetchData>>;
     // (undocumented)
     getCurrentResult(saveAsLastResult?: boolean): ApolloQueryResult<MaybeMasked<TData>>;
     // (undocumented)
@@ -1266,13 +1268,13 @@ class ObservableQuery<TData = unknown, TVariables extends OperationVariables = O
     readonly queryId: string;
     // (undocumented)
     readonly queryName?: string;
-    refetch(variables?: Partial<TVariables>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
-    reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    refetch(variables?: Partial<TVariables>): Promise<QueryResult_2<TData>>;
+    reobserve(newOptions?: Partial<WatchQueryOptions<TVariables, TData>>): Promise<QueryResult_2<MaybeMasked<TData>>>;
     // @internal (undocumented)
     resetDiff(): void;
     // (undocumented)
     resetLastResults(): void;
-    setVariables(variables: TVariables): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    setVariables(variables: TVariables): Promise<QueryResult_2<TData>>;
     // @internal (undocumented)
     silentSetOptions(newOptions: Partial<WatchQueryOptions<TVariables, TData>>): void;
     startPolling(pollInterval: number): void;
@@ -1546,9 +1548,9 @@ class QueryManager {
     };
     prioritizeCacheValues: boolean;
     // (undocumented)
-    query<TData, TVars extends OperationVariables = OperationVariables>(options: QueryOptions<TVars, TData>, queryId?: string): Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    query<TData, TVars extends OperationVariables = OperationVariables>(options: QueryOptions<TVars, TData>, queryId?: string): Promise<QueryResult_2<MaybeMasked<TData>>>;
     // (undocumented)
-    reFetchObservableQueries(includeStandby?: boolean): Promise<ApolloQueryResult<any>[]>;
+    reFetchObservableQueries(includeStandby?: boolean): Promise<QueryResult_2<any>[]>;
     // Warning: (ae-forgotten-export) The symbol "InternalRefetchQueriesOptions" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "InternalRefetchQueriesMap" needs to be exported by the entry point index.d.ts
     //
@@ -1627,6 +1629,12 @@ export interface QueryReference<TData = unknown, TVariables = unknown> extends Q
 export type QueryResult<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQuery.Result<TData, TVariables>;
 
 // @public (undocumented)
+interface QueryResult_2<TData = unknown> {
+    data: TData | undefined;
+    error?: ErrorLike;
+}
+
+// @public (undocumented)
 type ReactiveListener<T> = (value: T) => any;
 
 // @public (undocumented)
@@ -1692,7 +1700,7 @@ interface RefetchQueriesOptions<TCache extends ApolloCache, TResult> {
 // Warning: (ae-forgotten-export) The symbol "IsStrictlyAny" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
-type RefetchQueriesPromiseResults<TResult> = IsStrictlyAny<TResult> extends true ? any[] : TResult extends boolean ? ApolloQueryResult<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
+type RefetchQueriesPromiseResults<TResult> = IsStrictlyAny<TResult> extends true ? any[] : TResult extends boolean ? QueryResult_2<any>[] : TResult extends PromiseLike<infer U> ? U[] : TResult[];
 
 // Warning: (ae-forgotten-export) The symbol "RefetchQueriesPromiseResults" needs to be exported by the entry point index.d.ts
 //
@@ -2070,7 +2078,7 @@ export namespace useLazyQuery {
     options?: useLazyQuery.ExecOptions<TVariables>
     ] : Record<string, never> extends OnlyRequiredProperties<TVariables> ? [
     options?: useLazyQuery.ExecOptions<TVariables>
-    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => Promise<ApolloQueryResult<TData>>;
+    ] : [options: useLazyQuery.ExecOptions<TVariables>]) => Promise<QueryResult_2<TData>>;
     // (undocumented)
     export type ExecOptions<TVariables extends OperationVariables = OperationVariables> = {
         context?: DefaultContext;
@@ -2100,12 +2108,12 @@ export namespace useLazyQuery {
                 fetchMoreResult: Unmasked<TFetchData>;
                 variables: TFetchVars;
             }) => Unmasked<TData>;
-        }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+        }) => Promise<QueryResult_2<MaybeMasked<TFetchData>>>;
         loading: boolean;
         networkStatus: NetworkStatus;
         observable: ObservableQuery<TData, TVariables>;
         previousData?: MaybeMasked<TData>;
-        refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        refetch: (variables?: Partial<TVariables>) => Promise<QueryResult_2<MaybeMasked<TData>>>;
         startPolling: (pollInterval: number) => void;
         stopPolling: () => void;
         subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
@@ -2250,12 +2258,12 @@ export namespace useQuery {
                 fetchMoreResult: Unmasked<TFetchData>;
                 variables: TFetchVars;
             }) => Unmasked<TData>;
-        }) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+        }) => Promise<QueryResult_2<MaybeMasked<TFetchData>>>;
         loading: boolean;
         networkStatus: NetworkStatus;
         observable: ObservableQuery<TData, TVariables>;
         previousData?: MaybeMasked<TData>;
-        refetch: (variables?: Partial<TVariables>) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+        refetch: (variables?: Partial<TVariables>) => Promise<QueryResult_2<MaybeMasked<TData>>>;
         startPolling: (pollInterval: number) => void;
         stopPolling: () => void;
         subscribeToMore: SubscribeToMoreFunction<TData, TVariables>;
@@ -2565,10 +2573,10 @@ const wrapperSymbol: unique symbol;
 // src/cache/core/types/common.ts:104:3 - (ae-forgotten-export) The symbol "ToReferenceFunction" needs to be exported by the entry point index.d.ts
 // src/cache/core/types/common.ts:105:3 - (ae-forgotten-export) The symbol "StorageType" needs to be exported by the entry point index.d.ts
 // src/core/LocalState.ts:46:5 - (ae-forgotten-export) The symbol "FragmentMap" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:128:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
-// src/core/ObservableQuery.ts:129:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:187:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
-// src/core/QueryManager.ts:458:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:131:5 - (ae-forgotten-export) The symbol "QueryManager" needs to be exported by the entry point index.d.ts
+// src/core/ObservableQuery.ts:132:5 - (ae-forgotten-export) The symbol "QueryInfo" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:188:5 - (ae-forgotten-export) The symbol "MutationStoreValue" needs to be exported by the entry point index.d.ts
+// src/core/QueryManager.ts:459:7 - (ae-forgotten-export) The symbol "UpdateQueries" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:204:3 - (ae-forgotten-export) The symbol "MutationQueryReducer" needs to be exported by the entry point index.d.ts
 // src/core/types.ts:233:5 - (ae-forgotten-export) The symbol "Resolver" needs to be exported by the entry point index.d.ts
 // src/core/watchQueryOptions.ts:195:3 - (ae-forgotten-export) The symbol "UpdateQueryOptions" needs to be exported by the entry point index.d.ts

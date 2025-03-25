@@ -6,6 +6,32 @@
 
 import { Observable } from 'rxjs';
 
+// @public (undocumented)
+interface ApolloQueryResult<T> {
+    // (undocumented)
+    data: T | undefined;
+    // Warning: (ae-forgotten-export) The symbol "ErrorLike" needs to be exported by the entry point index.d.ts
+    error?: ErrorLike;
+    // (undocumented)
+    loading: boolean;
+    // Warning: (ae-forgotten-export) The symbol "NetworkStatus" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    networkStatus: NetworkStatus;
+    // @deprecated
+    partial: boolean;
+}
+
+// @public
+interface ErrorLike {
+    // (undocumented)
+    message: string;
+    // (undocumented)
+    name: string;
+    // (undocumented)
+    stack?: string;
+}
+
 // @internal
 export const getApolloCacheMemoryInternals: (() => {
     cache: {
@@ -75,6 +101,17 @@ const globalCaches: {
     canonicalStringify?: () => number;
 };
 
+// @public
+enum NetworkStatus {
+    error = 8,
+    fetchMore = 3,
+    loading = 1,
+    poll = 6,
+    ready = 7,
+    refetch = 4,
+    setVariables = 2
+}
+
 // @public (undocumented)
 type ObservableEvent<T> = {
     type: "complete";
@@ -91,10 +128,22 @@ type ObservableEvent<T> = {
 // @internal (undocumented)
 export function onAnyEvent<T>(handleEvent: (event: ObservableEvent<T>) => void): (observable: Observable<T>) => Observable<T>;
 
+// @public (undocumented)
+interface QueryResult<TData = unknown> {
+    data: TData | undefined;
+    error?: ErrorLike;
+}
+
 // Warning: (ae-forgotten-export) The symbol "globalCaches" needs to be exported by the entry point index.d.ts
 //
 // @public (undocumented)
 export function registerGlobalCache(name: keyof typeof globalCaches, getSize: () => number): void;
+
+// Warning: (ae-forgotten-export) The symbol "ApolloQueryResult" needs to be exported by the entry point index.d.ts
+// Warning: (ae-forgotten-export) The symbol "QueryResult" needs to be exported by the entry point index.d.ts
+//
+// @public (undocumented)
+export function toQueryResult<TData = unknown>(value: ApolloQueryResult<TData>): QueryResult<TData>;
 
 // (No @packageDocumentation comment for this package)
 

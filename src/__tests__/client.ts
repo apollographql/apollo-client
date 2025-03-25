@@ -6277,7 +6277,7 @@ describe("unconventional errors", () => {
 
     const stream = new ObservableStream(client.watchQuery({ query }));
 
-    await expect(stream).toEmitApolloQueryResult({
+    await expect(stream).toEmitStrictTyped({
       data: undefined,
       error: expectedError,
       loading: false,
@@ -6332,7 +6332,7 @@ describe("unconventional errors", () => {
 
       const stream = new ObservableStream(client.watchQuery({ query }));
 
-      await expect(stream).toEmitApolloQueryResult({
+      await expect(stream).toEmitStrictTyped({
         data: undefined,
         error: expectedError,
         loading: false,

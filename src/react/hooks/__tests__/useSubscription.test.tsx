@@ -1338,7 +1338,8 @@ followed by new in-flight setup", async () => {
       cache: new Cache(),
     });
 
-    const { result, unmount, rerender } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ coin }) => {
         const heads = useSubscription(subscription, {
           variables: {},
@@ -1362,33 +1363,107 @@ followed by new in-flight setup", async () => {
       }
     );
 
-    rerender({ coin: "tails" });
+    {
+      const { heads, tails } = await takeSnapshot();
 
-    await new Promise((resolve) => setTimeout(() => resolve("wait"), 20));
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
+
+    await rerender({ coin: "tails" });
+
+    {
+      const { heads, tails } = await takeSnapshot();
+
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: {},
+      });
+    }
+
+    await wait(20);
 
     link.simulateResult(results[0]);
 
-    await waitFor(
-      () => {
-        expect(result.current.tails.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.heads.data).toBeUndefined();
+    {
+      const { heads, tails } = await takeSnapshot();
 
-    rerender({ coin: "heads" });
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
+
+    await rerender({ coin: "heads" });
+
+    {
+      const { heads, tails } = await takeSnapshot();
+
+      expect(heads).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
 
     link.simulateResult(results[1]);
 
-    await waitFor(
-      () => {
-        expect(result.current.heads.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.tails.data).toBeUndefined();
+    {
+      const { heads, tails } = await takeSnapshot();
 
-    unmount();
+      expect(heads).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+
+      expect(tails).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: false,
+        variables: {},
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   describe("errorPolicy", () => {

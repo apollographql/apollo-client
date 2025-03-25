@@ -7,7 +7,7 @@ import type {
   WatchFragmentOptions,
   WatchFragmentResult,
 } from "@apollo/client/cache";
-import type { FetchResult, GraphQLRequest } from "@apollo/client/link/core";
+import type { GraphQLRequest } from "@apollo/client/link/core";
 import { ApolloLink, execute } from "@apollo/client/link/core";
 import type { UriFunction } from "@apollo/client/link/http";
 import { HttpLink } from "@apollo/client/link/http";

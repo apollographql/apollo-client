@@ -451,16 +451,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve({
       ...reobserveOptions,
       [newNetworkStatusSymbol]: NetworkStatus.refetch,
-    }).then((value) => {
-      const result: QueryResult<MaybeMasked<TData>> = {
-        data: value.data,
-      };
-
-      if (value.error) {
-        result.error = value.error;
-      }
-
-      return result;
     });
   }
 

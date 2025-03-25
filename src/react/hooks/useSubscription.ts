@@ -97,14 +97,16 @@ export declare namespace useSubscription {
     variables?: TVariables;
   }
 
+  export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
+
   export interface OnDataOptions<TData = unknown> {
     client: ApolloClient;
-    data: Omit<Result<TData>, "restart">;
+    data: OnDataResult<TData>;
   }
 
   export interface OnSubscriptionDataOptions<TData = unknown> {
     client: ApolloClient;
-    subscriptionData: Omit<Result<TData>, "restart">;
+    subscriptionData: OnDataResult<TData>;
   }
 }
 

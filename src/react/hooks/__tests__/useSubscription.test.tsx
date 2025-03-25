@@ -2330,11 +2330,8 @@ describe("ignoreResults", () => {
     const onData = jest.fn((() => {}) as useSubscription.Options["onData"]);
     using _disabledAct = disableActEnvironment();
     const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-      ({ ignoreResults }: { ignoreResults: boolean }) =>
-        useSubscription(subscription, {
-          ignoreResults,
-          onData,
-        }),
+      ({ ignoreResults }) =>
+        useSubscription(subscription, { ignoreResults, onData }),
       {
         initialProps: { ignoreResults: false },
         wrapper: ({ children }) => (
@@ -2342,6 +2339,7 @@ describe("ignoreResults", () => {
         ),
       }
     );
+
     if (!IS_REACT_17) {
       await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
@@ -2349,45 +2347,47 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         error: undefined,
         data: undefined,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
+
     link.simulateResult(results[0]);
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         data: results[0].result.data,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
 
     await rerender({ ignoreResults: true });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         // switching back to the default `ignoreResults: true` return value
         data: undefined,
         variables: undefined,
-        restart: expect.any(Function),
       });
       // `onData` should not be called again
       expect(onData).toHaveBeenCalledTimes(1);
     }
 
     link.simulateResult(results[1]);
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(2);
 

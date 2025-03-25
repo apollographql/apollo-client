@@ -1765,25 +1765,26 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
@@ -1792,29 +1793,30 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
   });
+
   it("will use the most recently passed in options", async () => {
     using _disabledAct = disableActEnvironment();
     const {

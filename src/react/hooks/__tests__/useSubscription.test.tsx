@@ -488,7 +488,8 @@ describe("useSubscription Hook", () => {
       cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           context: { make: "Audi" },
@@ -500,34 +501,32 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => {
-      link.simulateResult(results[0]);
-    }, 100);
-
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
-
-    setTimeout(() => {
-      link.simulateResult(results[1]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.error).toBe(undefined);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(context!).toBe("Audi");
   });

@@ -33,6 +33,7 @@ import type {
   InternalRefetchQueriesResult,
   MutateResult,
   OperationVariables,
+  QueryResult,
   RefetchQueriesInclude,
   RefetchQueriesOptions,
   RefetchQueriesResult,
@@ -463,7 +464,7 @@ export class ApolloClient implements DataProxy {
     TVariables extends OperationVariables = OperationVariables,
   >(
     options: QueryOptions<TVariables, TData>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<QueryResult<MaybeMasked<TData>>> {
     if (this.defaultOptions.query) {
       options = mergeOptions(this.defaultOptions.query, options);
     }

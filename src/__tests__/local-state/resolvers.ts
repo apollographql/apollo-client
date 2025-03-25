@@ -397,7 +397,7 @@ describe("Basic resolver capabilities", () => {
 
     const result = await client.query({ query, fetchPolicy: "network-only" });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { isInCart: false },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -606,7 +606,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { field: 1 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -664,7 +664,7 @@ describe("Writing cache data from resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { obj: { __typename: "Object", field: 2 } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -729,7 +729,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: {
         obj: {
           __typename: "Object",
@@ -775,7 +775,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: {
         foo: { bar: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
@@ -809,7 +809,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query: aliasedQuery });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { fie: { bar: true, __typename: "Foo" } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -848,7 +848,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query: aliasedQuery });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: {
         fie: { fum: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
@@ -894,7 +894,7 @@ describe("Resolving field aliases", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { fie: { bar: "yo", __typename: "Foo" } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -957,7 +957,7 @@ describe("Resolving field aliases", () => {
 
     // `isInCart` resolver is fired, returning `true` (which is then
     // stored in the cache).
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -966,7 +966,7 @@ describe("Resolving field aliases", () => {
 
     // When the same query fires again, `isInCart` should be pulled from
     // the cache and have a value of `true`.
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1006,7 +1006,7 @@ describe("Force local resolvers", () => {
 
     // When the resolver isn't defined, there isn't anything to force, so
     // make sure the query resolves from the cache properly.
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: {
         author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
       },
@@ -1026,7 +1026,7 @@ describe("Force local resolvers", () => {
     // A resolver is defined, so make sure it's forced, and the result
     // resolves properly as a combination of cache and local resolver
     // data.
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: {
         author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
       },
@@ -1071,7 +1071,7 @@ describe("Force local resolvers", () => {
       },
     });
 
-    await expect(client.query({ query })).resolves.toEqualApolloQueryResult({
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: {
         author: {
           __typename: "Author",
@@ -1209,7 +1209,7 @@ describe("Force local resolvers", () => {
 
     const result = await client.query({ query });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: {
         userData: {
           __typename: "User",
@@ -1246,7 +1246,7 @@ describe("Async resolvers", () => {
 
     const result = await client.query({ query })!;
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { isLoggedIn: true },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -1299,7 +1299,7 @@ describe("Async resolvers", () => {
 
     const result = await client.query({ query })!;
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: {
         member: {
           name: testMember.name,

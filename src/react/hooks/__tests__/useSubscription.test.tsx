@@ -177,6 +177,112 @@ describe("useSubscription Hook", () => {
     );
   });
 
+  it("can continue to receive new results after an error", async () => {
+    const subscription = gql`
+      subscription {
+        car {
+          make
+        }
+      }
+    `;
+
+    const results = ["Audi", "BMW", "Mercedes", "Hyundai"].map((make) => ({
+      result: { data: { car: { make } } },
+    }));
+
+    const errorResult = {
+      result: { data: { car: { make: null } }, errors: [{ message: "test" }] },
+    };
+
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new Cache(),
+    });
+
+    const onError = jest.fn();
+    const onData = jest.fn();
+    const onComplete = jest.fn();
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onError, onData, onComplete }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
+    });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(0);
+
+    link.simulateResult(errorResult);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors([{ message: "test" }]),
+      loading: false,
+      variables: undefined,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenLastCalledWith(
+      new CombinedGraphQLErrors([{ message: "test" }])
+    );
+    expect(onComplete).toHaveBeenCalledTimes(0);
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(2);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
+    });
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledTimes(0);
+
+    await expect(takeSnapshot).not.toRerender();
+  });
+
   it("should call onComplete after subscription is complete", async () => {
     const subscription = gql`
       subscription {

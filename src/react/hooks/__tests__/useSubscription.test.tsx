@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
@@ -19,7 +19,6 @@ import {
 import {
   CombinedGraphQLErrors,
   CombinedProtocolErrors,
-  PROTOCOL_ERRORS_SYMBOL,
 } from "@apollo/client/errors";
 import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";

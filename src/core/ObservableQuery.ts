@@ -726,14 +726,14 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // If we have no observers, then we don't actually want to make a network
       // request. As soon as someone observes the query, the request will kick
       // off. For now, we just store any changes. (See #1077)
-      return this.subject.getValue();
+      return toQueryResult(this.subject.getValue());
     }
 
     this.options.variables = variables;
 
     // See comment above
     if (!this.hasObservers()) {
-      return this.subject.getValue();
+      return toQueryResult(this.subject.getValue());
     }
 
     return this.reobserve({

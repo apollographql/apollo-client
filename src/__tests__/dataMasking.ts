@@ -3869,7 +3869,7 @@ describe("client.query", () => {
 
     const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: { currentUser: null },
       error: new CombinedGraphQLErrors([{ message: "User not logged in" }]),
       loading: false,
@@ -3918,7 +3918,7 @@ describe("client.query", () => {
 
     const result = await client.query({ query, errorPolicy: "all" });
 
-    expect(result).toEqualApolloQueryResult({
+    expect(result).toEqualStrictTyped({
       data: {
         currentUser: {
           __typename: "User",

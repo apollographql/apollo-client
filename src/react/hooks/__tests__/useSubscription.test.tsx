@@ -2264,6 +2264,7 @@ describe("ignoreResults", () => {
         ),
       }
     );
+
     if (!IS_REACT_17) {
       await wait(0);
       expect(subscriptionCreated).toHaveBeenCalledTimes(1);
@@ -2271,49 +2272,52 @@ describe("ignoreResults", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         data: undefined,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
+
     link.simulateResult(results[0]);
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onData).toHaveBeenCalledTimes(1);
 
     await rerender({ ignoreResults: false });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         // `data` appears immediately after changing to `ignoreResults: false`
         data: results[0].result.data,
         variables: undefined,
-        restart: expect.any(Function),
       });
       // `onData` should not be called again for the same result
       expect(onData).toHaveBeenCalledTimes(1);
     }
 
     link.simulateResult(results[1]);
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         error: undefined,
         data: results[1].result.data,
         variables: undefined,
-        restart: expect.any(Function),
       });
       expect(onData).toHaveBeenCalledTimes(2);
     }
+
     // a second subscription should not have been started
     expect(subscriptionCreated).toHaveBeenCalledTimes(1);
   });
+
   it("can switch from `ignoreResults: false` to `ignoreResults: true` and will stop rerendering, without creating a new subscription", async () => {
     const subscriptionCreated = jest.fn();
     const link = new MockSubscriptionLink();

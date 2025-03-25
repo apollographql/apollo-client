@@ -197,21 +197,36 @@ describe("useSubscription Hook", () => {
     });
 
     const onComplete = jest.fn();
-    renderHook(() => useSubscription(subscription, { onComplete }), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription, { onComplete }),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
     link.simulateResult(results[0]);
 
-    setTimeout(() => link.simulateComplete());
-    await waitFor(
-      () => {
-        expect(onComplete).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateComplete();
+
+    await expect(takeSnapshot).not.toRerender();
+    expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
   it("should cleanup after the subscription component has been unmounted", async () => {

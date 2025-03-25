@@ -1638,39 +1638,64 @@ followed by new in-flight setup", async () => {
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
     });
-    // TODO: Need to rewrite this to actually simulate a protocol error, not
-    // just a plain error. The underlying setup does not use the PROTOCOL_ERRORS_SYMBOL.
+
     describe("protocol error", () => {
       it.each([undefined, "none", "all", "ignore"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
         async (errorPolicy) => {
+          const { httpLink, enqueueProtocolErrors } =
+            mockMultipartSubscriptionStream();
+
+          const subscription: TypedDocumentNode<{ totalLikes: number }, {}> =
+            gql`
+              subscription ($id: ID!) {
+                totalLikes
+              }
+            `;
+          const client = new ApolloClient({
+            link: httpLink,
+            cache: new Cache(),
+          });
+
           const onData = jest.fn();
           const onError = jest.fn();
-          using _disabledAct = disableActEnvironment();
-          const {
-            takeSnapshot,
-            link,
-            protocolErrorResult,
-            errorBoundaryOnError,
-          } = await setup({ errorPolicy, onError, onData });
 
-          await takeSnapshot();
-          link.simulateResult(protocolErrorResult);
-          {
-            const snapshot = await takeSnapshot();
-            expect(snapshot).toStrictEqual({
-              loading: false,
-              error: protocolErrorResult.error,
-              data: undefined,
-              restart: expect.any(Function),
-              variables: undefined,
-            });
-          }
+          using _disabledAct = disableActEnvironment();
+          const { takeSnapshot } = await renderHookToSnapshotStream(
+            () =>
+              useSubscription(subscription, { errorPolicy, onError, onData }),
+            {
+              wrapper: ({ children }) => (
+                <ApolloProvider client={client}>{children}</ApolloProvider>
+              ),
+            }
+          );
+
+          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            variables: undefined,
+          });
+
+          enqueueProtocolErrors([
+            { message: "Socket closed with event -1: I'm a test!" },
+          ]);
+
+          const expectedError = new CombinedProtocolErrors([
+            { message: "Socket closed with event -1: I'm a test!" },
+          ]);
+
+          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+            data: undefined,
+            error: expectedError,
+            loading: false,
+            variables: undefined,
+          });
 
           expect(onError).toHaveBeenCalledTimes(1);
-          expect(onError).toHaveBeenCalledWith(protocolErrorResult.error);
+          expect(onError).toHaveBeenCalledWith(expectedError);
           expect(onData).toHaveBeenCalledTimes(0);
-          expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
         }
       );
     });

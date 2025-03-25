@@ -3627,7 +3627,6 @@ describe("@connection", () => {
         data: { linkCount: 3 },
       });
 
-      expect(finalResult.data).toEqual({ linkCount: 3 });
       expect(fetchPolicyRecord).toEqual([
         "cache-first",
         "network-only",

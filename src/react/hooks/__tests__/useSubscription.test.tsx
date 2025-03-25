@@ -1528,23 +1528,30 @@ followed by new in-flight setup", async () => {
             errorBoundaryOnError,
           } = await setup({ errorPolicy, onError, onData });
 
-          await takeSnapshot();
+          await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+            data: undefined,
+            error: undefined,
+            loading: true,
+            variables: undefined,
+          });
+
           link.simulateResult(graphQlErrorResult);
+
           {
             const snapshot = await takeSnapshot();
-            expect(snapshot).toStrictEqual({
+            expect(snapshot).toEqualStrictTyped({
               loading: false,
               error: new CombinedGraphQLErrors(
                 graphQlErrorResult.result!.errors as any
               ),
               data: undefined,
-              restart: expect.any(Function),
               variables: undefined,
             });
           }
+
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(
-            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors as any)
+            new CombinedGraphQLErrors(graphQlErrorResult.result!.errors!)
           );
           expect(onData).toHaveBeenCalledTimes(0);
           expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);

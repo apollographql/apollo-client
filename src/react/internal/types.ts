@@ -1,9 +1,9 @@
 import type {
-  ApolloQueryResult,
   FetchMoreQueryOptions,
   MaybeMasked,
   ObservableQuery,
   OperationVariables,
+  QueryResult,
   Unmasked,
 } from "@apollo/client/core";
 import type { OnlyRequiredProperties } from "@apollo/client/utilities";
@@ -39,4 +39,4 @@ export type FetchMoreFunction<TData, TVariables extends OperationVariables> = (
       }
     ) => Unmasked<TData>;
   }
-) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+) => Promise<QueryResult<MaybeMasked<TData>>>;

@@ -30,6 +30,7 @@ import type {
   ApolloQueryResult,
   ErrorLike,
   OperationVariables,
+  QueryResult,
   TypedDocumentNode,
 } from "./types.js";
 import type {
@@ -409,7 +410,7 @@ export class ObservableQuery<
    */
   public refetch(
     variables?: Partial<TVariables>
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<QueryResult<MaybeMasked<TData>>> {
     const reobserveOptions: Partial<WatchQueryOptions<TVariables, TData>> = {
       // Always disable polling for refetches.
       pollInterval: 0,
@@ -450,6 +451,16 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.reobserve({
       ...reobserveOptions,
       [newNetworkStatusSymbol]: NetworkStatus.refetch,
+    }).then((value) => {
+      const result: QueryResult<MaybeMasked<TData>> = {
+        data: value.data,
+      };
+
+      if (value.error) {
+        result.error = value.error;
+      }
+
+      return result;
     });
   }
 

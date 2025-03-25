@@ -3604,8 +3604,7 @@ describe("@connection", () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0]).toMatchObject({
-        loading: false,
+      expect(results[0]).toEqualStrictTyped({
         data: { linkCount: 2 },
       });
 
@@ -3624,7 +3623,10 @@ describe("@connection", () => {
         fetchPolicy: "cache-and-network",
       });
 
-      expect(finalResult.loading).toBe(false);
+      expect(finalResult).toEqualStrictTyped({
+        data: { linkCount: 3 },
+      });
+
       expect(finalResult.data).toEqual({ linkCount: 3 });
       expect(fetchPolicyRecord).toEqual([
         "cache-first",

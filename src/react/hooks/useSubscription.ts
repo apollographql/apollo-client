@@ -13,7 +13,6 @@ import type {
   OperationVariables,
   SubscribeResult,
 } from "@apollo/client/core";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
 import type { NoInfer } from "@apollo/client/utilities";
@@ -312,22 +311,18 @@ export function useSubscription<
         const variables = observable.__.variables;
         const client = observable.__.client;
         const subscription = observable.subscribe({
-          next(fetchResult) {
+          next(value) {
             if (subscriptionStopped) {
               return;
             }
 
-            const result = {
+            const result: useSubscription.Result<TData, TVariables> = {
               loading: false,
-              // TODO: fetchResult.data can be null but SubscriptionResult.data
-              // expects TData | undefined only
-              data: fetchResult.data!,
-              error:
-                fetchResult.errors ?
-                  new CombinedGraphQLErrors(fetchResult.errors)
-                : undefined,
+              data: value.data,
+              error: value.error,
               variables,
             };
+
             observable.__.setResult(result);
             if (!ignoreResultsRef.current) update();
 

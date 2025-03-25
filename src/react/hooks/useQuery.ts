@@ -22,6 +22,7 @@ import type {
   ErrorPolicy,
   FetchMoreQueryOptions,
   OperationVariables,
+  QueryResult,
   RefetchWritePolicy,
   SubscribeToMoreFunction,
   UpdateQueryMapFn,
@@ -144,7 +145,7 @@ export declare namespace useQuery {
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#refetch:member} */
     refetch: (
       variables?: Partial<TVariables>
-    ) => Promise<ApolloQueryResult<MaybeMasked<TData>>>;
+    ) => Promise<QueryResult<MaybeMasked<TData>>>;
 
     /** {@inheritDoc @apollo/client!QueryResultDocumentation#variables:member} */
     variables: TVariables | undefined;

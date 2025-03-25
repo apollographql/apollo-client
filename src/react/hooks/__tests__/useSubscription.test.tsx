@@ -4,7 +4,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { expectTypeOf } from "expect-type";
-import { GraphQLError, GraphQLFormattedError } from "graphql";
+import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";

@@ -28,7 +28,6 @@ import { LocalState } from "./LocalState.js";
 import type { ObservableQuery } from "./ObservableQuery.js";
 import { QueryManager } from "./QueryManager.js";
 import type {
-  ApolloQueryResult,
   DefaultContext,
   InternalRefetchQueriesResult,
   MutateResult,
@@ -765,7 +764,7 @@ export class ApolloClient implements DataProxy {
    */
   public refetchQueries<
     TCache extends ApolloCache = ApolloCache,
-    TResult = Promise<ApolloQueryResult<any>>,
+    TResult = Promise<QueryResult<any>>,
   >(
     options: RefetchQueriesOptions<TCache, TResult>
   ): RefetchQueriesResult<TResult> {

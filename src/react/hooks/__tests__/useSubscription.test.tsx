@@ -744,29 +744,34 @@ describe("useSubscription Hook", () => {
       cache: new Cache(),
     });
 
-    const { result } = renderHook(() => useSubscription(subscription), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
-    });
-
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-
-    await act(async () => {
-      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-      link.simulateResult({ result: { data: null } }, /* complete */ true);
-    });
-
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
     );
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(null);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    link.simulateResult({ result: { data: null } }, /* complete */ true);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: null,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(consoleSpy.error).toHaveBeenCalledTimes(1);
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([

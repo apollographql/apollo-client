@@ -3660,7 +3660,7 @@ describe("type policies", function () {
 
       let result = await client.query({ query: firstQuery });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -3694,7 +3694,7 @@ describe("type policies", function () {
         variables: secondVariables,
       });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -3711,7 +3711,7 @@ describe("type policies", function () {
       expect(cache.extract()).toMatchSnapshot();
 
       result = await client.query({ query: thirdQuery });
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -4146,7 +4146,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4174,7 +4174,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(5);
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4201,7 +4201,7 @@ describe("type policies", function () {
       {
         const result = await stream.takeNext();
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4235,7 +4235,7 @@ describe("type policies", function () {
 
         expect(result.data.search.edges.length).toBe(7);
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4270,7 +4270,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4333,7 +4333,7 @@ describe("type policies", function () {
           },
         });
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -4367,7 +4367,7 @@ describe("type policies", function () {
         });
         const snapshot = cache.extract();
 
-        expect(result).toEqualApolloQueryResult({
+        expect(result).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {

@@ -2203,33 +2203,33 @@ describe("ignoreResults", () => {
     );
 
     const snapshot = await takeSnapshot();
-    expect(snapshot).toStrictEqual({
+    expect(snapshot).toEqualStrictTyped({
       loading: false,
       error: undefined,
       data: undefined,
       variables: undefined,
-      restart: expect.any(Function),
     });
+
     link.simulateResult(results[0]);
 
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            data: results[0].result.data,
-            error: undefined,
-            loading: false,
-            variables: undefined,
-          },
-        })
-      );
+      expect(onData).toHaveBeenLastCalledWith({
+        client,
+        data: {
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        },
+      });
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
     const error = new Error("test");
     link.simulateResult({ error });
+
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
       expect(onError).toHaveBeenCalledTimes(1);

@@ -2351,12 +2351,7 @@ describe("ObservableQuery", () => {
 
       const result = await client.query({ query, variables });
 
-      expect(result).toEqualStrictTyped({
-        data: dataOne,
-        loading: false,
-        networkStatus: 7,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data: dataOne });
 
       const observable = client.watchQuery({ query, variables });
 
@@ -2665,12 +2660,7 @@ describe("ObservableQuery", () => {
 
       const result = await client.query({ query, variables });
 
-      expect(result).toEqualStrictTyped({
-        data: dataOne,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data: dataOne });
 
       const observable = client.watchQuery({
         query,

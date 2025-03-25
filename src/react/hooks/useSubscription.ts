@@ -86,6 +86,8 @@ export declare namespace useSubscription {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#error:member} */
     error?: ErrorLike;
 
+    restart: () => void;
+
     // This was added by the legacy useSubscription type, and is tested in unit
     // tests, but probably shouldn’t be added to the result.
     /**
@@ -97,14 +99,19 @@ export declare namespace useSubscription {
 
   export interface OnDataOptions<TData = unknown> {
     client: ApolloClient;
-    data: Result<TData>;
+    data: Omit<Result<TData>, "restart">;
   }
 
   export interface OnSubscriptionDataOptions<TData = unknown> {
     client: ApolloClient;
-    subscriptionData: Result<TData>;
+    subscriptionData: Omit<Result<TData>, "restart">;
   }
 }
+
+type StateResult<TData, TVariables> = Omit<
+  useSubscription.Result<TData, TVariables>,
+  "restart"
+>;
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -193,7 +200,7 @@ export function useSubscription<
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
-) {
+): useSubscription.Result<TData, TVariables> {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
@@ -275,9 +282,7 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<
-    useSubscription.Result<TData, TVariables>
-  >(
+  const fallbackResult = React.useMemo<StateResult<TData, TVariables>>(
     () => ({
       loading: fallbackLoading,
       error: void 0,
@@ -300,7 +305,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<useSubscription.Result<TData, TVariables>>(
+  const ret = useSyncExternalStore<StateResult<TData, TVariables>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -316,7 +321,7 @@ export function useSubscription<
               return;
             }
 
-            const result: useSubscription.Result<TData, TVariables> = {
+            const result: StateResult<TData, TVariables> = {
               loading: false,
               data: value.data,
               error: value.error,
@@ -409,8 +414,8 @@ function createSubscription<
       data: void 0,
       error: void 0,
       variables,
-    } as useSubscription.Result<TData, TVariables>,
-    setResult(result: useSubscription.Result<TData, TVariables>) {
+    } as StateResult<TData, TVariables>,
+    setResult(result: StateResult<TData, TVariables>) {
       __.result = result;
     },
   };

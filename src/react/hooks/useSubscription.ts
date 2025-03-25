@@ -340,18 +340,6 @@ export function useSubscription<
               });
             }
           },
-          error(error) {
-            if (!subscriptionStopped) {
-              observable.__.setResult({
-                loading: false,
-                data: void 0,
-                error,
-                variables,
-              });
-              if (!ignoreResultsRef.current) update();
-              optionsRef.current.onError?.(error);
-            }
-          },
           complete() {
             if (!subscriptionStopped) {
               if (optionsRef.current.onComplete) {

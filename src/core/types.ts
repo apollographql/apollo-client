@@ -255,3 +255,14 @@ export interface SubscribeResult<TData = unknown> {
   /** {@inheritDoc @apollo/client!MutationResultDocumentation#extensions:member} */
   extensions?: Record<string, unknown>;
 }
+
+export interface QueryResult<TData = unknown> {
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#data:member} */
+  data: TData | undefined;
+
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
+  error?: ErrorLike;
+
+  /** {@inheritDoc @apollo/client!QueryResultDocumentation#extensions:member} */
+  extensions?: Record<string, unknown>;
+}

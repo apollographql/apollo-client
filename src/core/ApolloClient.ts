@@ -477,6 +477,27 @@ export class ApolloClient implements DataProxy {
         "using a different fetchPolicy, such as cache-first or network-only."
     );
 
+    invariant(
+      options.query,
+      "query option is required. You must specify your GraphQL document " +
+        "in the query option."
+    );
+
+    invariant(
+      options.query.kind === "Document",
+      'You must wrap the query string in a "gql" tag.'
+    );
+
+    invariant(
+      !options.returnPartialData,
+      "returnPartialData option only supported on watchQuery."
+    );
+
+    invariant(
+      !options.pollInterval,
+      "pollInterval option only supported on watchQuery."
+    );
+
     return this.queryManager.query<TData, TVariables>(options);
   }
 

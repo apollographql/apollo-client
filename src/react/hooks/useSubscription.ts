@@ -96,8 +96,6 @@ export declare namespace useSubscription {
   }
 }
 
-type StateResult<TData> = Omit<useSubscription.Result<TData>, "restart">;
-
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
  *
@@ -244,7 +242,7 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<StateResult<TData>>(
+  const fallbackResult = React.useMemo(
     () => ({
       loading: fallbackLoading,
       error: void 0,
@@ -266,7 +264,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<StateResult<TData>>(
+  const ret = useSyncExternalStore(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -281,7 +279,7 @@ export function useSubscription<
               return;
             }
 
-            const result: StateResult<TData> = {
+            const result = {
               loading: false,
               data: value.data,
               error: value.error,
@@ -336,6 +334,8 @@ export function useSubscription<
   return React.useMemo(() => ({ ...ret, restart }), [ret, restart]);
 }
 
+type SubscriptionResult<TData> = Omit<useSubscription.Result<TData>, "restart">;
+
 function createSubscription<
   TData = unknown,
   TVariables extends OperationVariables = OperationVariables,
@@ -363,8 +363,8 @@ function createSubscription<
       loading: true,
       data: void 0,
       error: void 0,
-    } as StateResult<TData>,
-    setResult(result: StateResult<TData>) {
+    } as SubscriptionResult<TData>,
+    setResult(result: SubscriptionResult<TData>) {
       __.result = result;
     },
   };

@@ -1829,20 +1829,22 @@ describe("`restart` callback", () => {
     } = await setup({
       variables: { id: "1" },
     });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     // deliberately keeping a reference to a very old `restart` function
     // to show that the most recent options are used even with that
     const restart = getCurrentSnapshot().restart;
     link.simulateResult({ result: { data: { totalLikes: 1 } } });
+
     {
       const snapshot = await takeSnapshot();
       expect(snapshot).toStrictEqual({
@@ -1853,33 +1855,35 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
       });
     }
+
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
     void rerender({ variables: { id: "2" } });
+
     await waitFor(() => expect(onUnsubscribe).toHaveBeenCalledTimes(1));
     expect(onSubscribe).toHaveBeenCalledTimes(2);
     expect(link.operation?.variables).toStrictEqual({ id: "2" });
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1000 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1000 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
@@ -1896,26 +1900,27 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
+
     link.simulateResult({ result: { data: { totalLikes: 1005 } } });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1005 },
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "2" },
       });
     }
   });
+
   it("can restart a subscription that has completed", async () => {
     using _disabledAct = disableActEnvironment();
     const {

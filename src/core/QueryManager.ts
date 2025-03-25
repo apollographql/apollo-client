@@ -58,7 +58,7 @@ import {
 } from "@apollo/client/utilities";
 import { mergeIncrementalData } from "@apollo/client/utilities";
 import { __DEV__ } from "@apollo/client/utilities/environment";
-import { onAnyEvent } from "@apollo/client/utilities/internal";
+import { onAnyEvent, toQueryResult } from "@apollo/client/utilities/internal";
 import {
   invariant,
   newInvariantError,
@@ -854,20 +854,19 @@ export class QueryManager {
         // `value` can be `undefined` when the link chain only emits a complete
         // event with no value which should be an error.
         // https://github.com/apollographql/apollo-client/issues/12482
-        const result: QueryResult<TData> = {
+        if (!value) {
+          return { data: undefined };
+        }
+
+        return toQueryResult({
+          ...value,
           data: this.maskOperation({
             document: query,
             data: value?.data,
             fetchPolicy: options.fetchPolicy,
             id: queryId,
           }),
-        };
-
-        if (value?.error) {
-          result.error = value.error;
-        }
-
-        return result;
+        });
       })
       .finally(() => this.stopQuery(queryId));
   }

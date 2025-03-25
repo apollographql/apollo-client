@@ -2121,12 +2121,7 @@ describe("ApolloClient", () => {
       ]),
     }).query({ query });
 
-    expect(result).toEqualStrictTyped({
-      data: transformedQueryResult,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data: transformedQueryResult });
   });
 
   it("should transform mutations correctly", async () => {
@@ -2242,12 +2237,7 @@ describe("ApolloClient", () => {
     });
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
-      data,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data });
 
     await expect(
       client.query({ query, fetchPolicy: "network-only" })
@@ -2395,12 +2385,7 @@ describe("ApolloClient", () => {
       partial: false,
     });
 
-    await expect(client.query({ query })).resolves.toEqualStrictTyped({
-      data,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    await expect(client.query({ query })).resolves.toEqualStrictTyped({ data });
 
     await expect(stream).not.toEmitAnything();
   });
@@ -3693,12 +3678,7 @@ describe("ApolloClient", () => {
         fetchPolicy: "network-only",
       });
 
-      expect(result).toEqualStrictTyped({
-        data: data2,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data: data2 });
       await expect(stream).toEmitApolloQueryResult({
         data: data2,
         loading: false,
@@ -4914,12 +4894,7 @@ describe("ApolloClient", () => {
         ]),
       }).query({ query });
 
-      expect(result).toEqualStrictTyped({
-        data,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data });
     });
 
     it("should be passed to the observer as true if we are returning partial data", async () => {
@@ -5117,12 +5092,7 @@ describe("ApolloClient", () => {
       });
 
       const result1 = await client.query({ query: query1 });
-      expect(result1).toEqualStrictTyped({
-        data: data1,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result1).toEqualStrictTyped({ data: data1 });
 
       const observable = client.watchQuery({
         query: query2,

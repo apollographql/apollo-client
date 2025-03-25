@@ -10,8 +10,8 @@ import type {
   ErrorLike,
   ErrorPolicy,
   FetchPolicy,
-  FetchResult,
   OperationVariables,
+  SubscribeResult,
 } from "@apollo/client/core";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import type { MaybeMasked } from "@apollo/client/masking";
@@ -432,9 +432,9 @@ function createSubscription<
     },
   };
 
-  let observable: Observable<FetchResult<MaybeMasked<TData>>> | null = null;
+  let observable: Observable<SubscribeResult<MaybeMasked<TData>>> | null = null;
   return Object.assign(
-    new Observable<FetchResult<MaybeMasked<TData>>>((observer) => {
+    new Observable<SubscribeResult<MaybeMasked<TData>>>((observer) => {
       // lazily start the subscription when the first observer subscribes
       // to get around strict mode
       if (!observable) {

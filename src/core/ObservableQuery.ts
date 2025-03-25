@@ -23,7 +23,6 @@ import { __DEV__ } from "@apollo/client/utilities/environment";
 import { toQueryResult } from "@apollo/client/utilities/internal";
 import { invariant } from "@apollo/client/utilities/invariant";
 
-
 import { equalByQuery } from "./equalByQuery.js";
 import { isNetworkRequestInFlight, NetworkStatus } from "./networkStatus.js";
 import type { QueryInfo } from "./QueryInfo.js";
@@ -1067,7 +1066,9 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Note: lastValueFrom will create a separate subscription to the
       // observable which means that terminating this ObservableQuery will not
       // cancel the request from the link chain.
-      lastValueFrom(observable).then(this.maskResult).then(toQueryResult)
+      lastValueFrom(observable).then((result) =>
+        toQueryResult(this.maskResult(result))
+      )
     );
   }
 

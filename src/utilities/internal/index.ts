@@ -5,3 +5,4 @@ export {
   getInMemoryCacheMemoryInternals,
   registerGlobalCache,
 } from "../internal/getMemoryInternals.js";
+export { toQueryResult } from "./toQueryResult.js";

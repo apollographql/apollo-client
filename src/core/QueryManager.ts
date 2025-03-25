@@ -849,18 +849,30 @@ export class QueryManager {
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
-      .then(
-        (result) =>
-          result && {
-            ...result,
-            data: this.maskOperation({
-              document: query,
-              data: result.data,
-              fetchPolicy: options.fetchPolicy,
-              id: queryId,
-            }),
-          }
-      )
+      .then((value) => {
+        // TODO: Update this when we handle emitting errors for empty results.
+        // `value` can be `undefined` when the link chain only emits a complete
+        // event with no value which should be an error.
+        // https://github.com/apollographql/apollo-client/issues/12482
+        const result: QueryResult<TData> = {
+          data: this.maskOperation({
+            document: query,
+            data: value?.data,
+            fetchPolicy: options.fetchPolicy,
+            id: queryId,
+          }),
+        };
+
+        if (value?.error) {
+          result.error = value.error;
+        }
+
+        if ((value as any)?.extensions) {
+          result.extensions = (value as any).extensions;
+        }
+
+        return result;
+      })
       .finally(() => this.stopQuery(queryId));
   }
 

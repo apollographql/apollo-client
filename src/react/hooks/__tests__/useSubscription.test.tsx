@@ -2130,44 +2130,43 @@ describe("ignoreResults", () => {
     );
 
     const snapshot = await takeSnapshot();
-    expect(snapshot).toStrictEqual({
+    expect(snapshot).toEqualStrictTyped({
       loading: false,
       error: undefined,
       data: undefined,
       variables: undefined,
-      restart: expect.any(Function),
     });
+
     link.simulateResult(results[0]);
 
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            data: results[0].result.data,
-            error: undefined,
-            loading: false,
-            variables: undefined,
-          },
-        })
-      );
+      expect(onData).toHaveBeenLastCalledWith({
+        client,
+        data: {
+          data: results[0].result.data,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        },
+      });
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onComplete).toHaveBeenCalledTimes(0);
     });
 
     link.simulateResult(results[1], true);
+
     await waitFor(() => {
       expect(onData).toHaveBeenCalledTimes(2);
-      expect(onData).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          data: {
-            data: results[1].result.data,
-            error: undefined,
-            loading: false,
-            variables: undefined,
-          },
-        })
-      );
+      expect(onData).toHaveBeenLastCalledWith({
+        client,
+        data: {
+          data: results[1].result.data,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        },
+      });
       expect(onError).toHaveBeenCalledTimes(0);
       expect(onComplete).toHaveBeenCalledTimes(1);
     });

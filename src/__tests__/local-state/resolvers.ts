@@ -5,8 +5,8 @@ import { of } from "rxjs";
 import { InMemoryCache, isReference } from "@apollo/client/cache";
 import {
   ApolloClient,
-  ApolloQueryResult,
   NetworkStatus,
+  QueryResult,
   Resolvers,
 } from "@apollo/client/core";
 import { ApolloLink } from "@apollo/client/link/core";
@@ -397,12 +397,7 @@ describe("Basic resolver capabilities", () => {
 
     const result = await client.query({ query, fetchPolicy: "network-only" });
 
-    expect(result).toEqualStrictTyped({
-      data: { isInCart: false },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data: { isInCart: false } });
   });
 
   it("should handle nested asynchronous @client resolvers (issue #4841)", () => {
@@ -481,7 +476,7 @@ describe("Basic resolver capabilities", () => {
       },
     });
 
-    function check(result: ApolloQueryResult<any>) {
+    function check(result: QueryResult<any>) {
       return new Promise<void>((resolve) => {
         expect(result.data.developer.id).toBe(developerId);
         expect(result.data.developer.handle).toBe("@benjamn");
@@ -606,12 +601,7 @@ describe("Writing cache data from resolvers", () => {
     await client.mutate({ mutation });
     const result = await client.query({ query });
 
-    expect(result).toEqualStrictTyped({
-      data: { field: 1 },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data: { field: 1 } });
   });
 
   it("should let you write to the cache with a mutation using an ID", async () => {
@@ -666,9 +656,6 @@ describe("Writing cache data from resolvers", () => {
 
     expect(result).toEqualStrictTyped({
       data: { obj: { __typename: "Object", field: 2 } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 
@@ -737,9 +724,6 @@ describe("Writing cache data from resolvers", () => {
           id: "uniqueId",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 });
@@ -780,9 +764,6 @@ describe("Resolving field aliases", () => {
         foo: { bar: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 
@@ -811,9 +792,6 @@ describe("Resolving field aliases", () => {
 
     expect(result).toEqualStrictTyped({
       data: { fie: { bar: true, __typename: "Foo" } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -853,9 +831,6 @@ describe("Resolving field aliases", () => {
         fie: { fum: true, __typename: "Foo" },
         baz: { foo: true, __typename: "Baz" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
     expect(fie).not.toHaveBeenCalled();
   });
@@ -896,9 +871,6 @@ describe("Resolving field aliases", () => {
 
     expect(result).toEqualStrictTyped({
       data: { fie: { bar: "yo", __typename: "Foo" } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 
@@ -959,18 +931,12 @@ describe("Resolving field aliases", () => {
     // stored in the cache).
     await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     // When the same query fires again, `isInCart` should be pulled from
     // the cache and have a value of `true`.
     await expect(client.query({ query })).resolves.toEqualStrictTyped({
       data: { launch: { __typename: "Launch", id: 1, isInCart: true } },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 });
@@ -1010,9 +976,6 @@ describe("Force local resolvers", () => {
       data: {
         author: { __typename: "Author", isLoggedIn: false, name: "John Smith" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     client.addResolvers({
@@ -1030,9 +993,6 @@ describe("Force local resolvers", () => {
       data: {
         author: { __typename: "Author", isLoggedIn: true, name: "John Smith" },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 
@@ -1079,9 +1039,6 @@ describe("Force local resolvers", () => {
           name: "John Smith",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
     expect(count).toEqual(1);
   });
@@ -1218,9 +1175,6 @@ describe("Force local resolvers", () => {
           fullName: "Ben Newman",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 });
@@ -1248,9 +1202,6 @@ describe("Async resolvers", () => {
 
     expect(result).toEqualStrictTyped({
       data: { isLoggedIn: true },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 
@@ -1308,9 +1259,6 @@ describe("Async resolvers", () => {
           __typename: "Member",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
   });
 });

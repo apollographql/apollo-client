@@ -7740,7 +7740,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
+    await expect(refetchPromise!).resolves.toEqualStrictTyped({
       data: {
         greeting: {
           __typename: "Greeting",
@@ -8121,7 +8121,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(fetchMorePromise!).resolves.toEqualApolloQueryResult({
+    await expect(fetchMorePromise!).resolves.toEqualStrictTyped({
       data: {
         greetings: [
           {
@@ -9289,7 +9289,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    await expect(refetchPromise!).resolves.toEqualApolloQueryResult({
+    await expect(refetchPromise!).resolves.toEqualStrictTyped({
       data: {
         hero: {
           heroFriends: [

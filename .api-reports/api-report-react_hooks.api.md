@@ -2105,7 +2105,7 @@ export namespace useReadQuery {
 }
 
 // @public
-export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useSubscription.Result<TData, TVariables>;
+export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useSubscription.Result<TData>;
 
 // @public (undocumented)
 export namespace useSubscription {
@@ -2136,23 +2136,17 @@ export namespace useSubscription {
         onComplete?: () => void;
         onData?: (options: OnDataOptions<TData>) => any;
         onError?: (error: ErrorLike) => void;
-        // @deprecated
-        onSubscriptionComplete?: () => void;
-        // @deprecated
-        onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
         shouldResubscribe?: boolean | ((options: Options<TData, TVariables>) => boolean);
         skip?: boolean;
         variables?: TVariables;
     }
     // (undocumented)
-    export interface Result<TData = unknown, TVariables = OperationVariables> {
+    export interface Result<TData = unknown> {
         data?: MaybeMasked<TData>;
         error?: ErrorLike;
         loading: boolean;
         // (undocumented)
         restart: () => void;
-        // @internal (undocumented)
-        variables?: TVariables;
     }
 }
 

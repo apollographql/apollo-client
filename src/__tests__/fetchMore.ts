@@ -314,7 +314,6 @@ describe("fetchMore on an observable query", () => {
         });
 
         // This is the server result
-        expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
@@ -365,7 +364,6 @@ describe("fetchMore on an observable query", () => {
         });
 
         // This is the server result
-        expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
@@ -420,7 +418,6 @@ describe("fetchMore on an observable query", () => {
 
         const fetchMoreComments = fetchMoreResult.data!.entry.comments;
 
-        expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreComments).toHaveLength(10);
         fetchMoreComments.forEach((comment, i) => {
           expect(comment.text).toEqual(`comment ${i + 11}`);
@@ -477,7 +474,6 @@ describe("fetchMore on an observable query", () => {
           variables: { start: 10 },
         });
 
-        expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10); // this is the server result
       }
 
@@ -634,12 +630,7 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          data: {
-            TODO: tasks.slice(2, 4),
-          },
-          partial: false,
+          data: { TODO: tasks.slice(2, 4) },
         });
       }
 
@@ -666,12 +657,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
-          partial: false,
         });
       }
 
@@ -733,12 +721,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
-          partial: false,
         });
       }
 
@@ -774,12 +759,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
-          partial: false,
         });
       }
 
@@ -849,12 +831,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
-          partial: false,
         });
       }
 
@@ -881,12 +860,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
-          partial: false,
         });
       }
 
@@ -947,12 +923,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(2, 4),
           },
-          partial: false,
         });
       }
 
@@ -988,12 +961,9 @@ describe("fetchMore on an observable query", () => {
         });
 
         expect(fetchMoreResult).toEqualStrictTyped({
-          loading: false,
-          networkStatus: NetworkStatus.ready,
           data: {
             TODO: tasks.slice(5, 8),
           },
-          partial: false,
         });
       }
 
@@ -1163,12 +1133,9 @@ describe("fetchMore on an observable query", () => {
       });
 
       expect(fetchMoreResult).toEqualStrictTyped({
-        loading: false,
-        networkStatus: NetworkStatus.ready,
         data: {
           groceries: additionalGroceries,
         },
-        partial: false,
       });
 
       expect(observable.options.fetchPolicy).toBe("cache-first");
@@ -1226,7 +1193,6 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
-      expect(fetchMoreResult.loading).toBe(false);
       expect(fetchMoreResult.data!.comments).toHaveLength(10);
     }
 
@@ -1435,10 +1401,7 @@ describe("fetchMore on an observable query", () => {
     });
 
     expect(fetchMoreResult).toEqualStrictTyped({
-      loading: false,
-      networkStatus: NetworkStatus.ready,
       data: { emptyItems: [] },
-      partial: false,
     });
 
     await expect(stream).toEmitApolloQueryResult({
@@ -1623,7 +1586,6 @@ describe("fetchMore on an observable query with connection", () => {
         });
 
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
-        expect(fetchMoreResult.loading).toBe(false);
       }
 
       {
@@ -1675,7 +1637,6 @@ describe("fetchMore on an observable query with connection", () => {
         });
 
         // this is the server result
-        expect(fetchMoreResult.loading).toBe(false);
         expect(fetchMoreResult.data!.entry.comments).toHaveLength(10);
       }
 
@@ -1875,9 +1836,6 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "D", position: 4 },
       ],
     },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   await expect(stream).toEmitApolloQueryResult({
@@ -1935,9 +1893,6 @@ test("uses updateQuery to update the result of the query with no-cache queries",
         { __typename: "Letter", letter: "F", position: 6 },
       ],
     },
-    loading: false,
-    networkStatus: NetworkStatus.ready,
-    partial: false,
   });
 
   await expect(stream).toEmitApolloQueryResult({

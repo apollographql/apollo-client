@@ -6667,7 +6667,6 @@ describe("ApolloClient", () => {
         notifyOnNetworkStatusChange: false,
       });
       const stream = new ObservableStream(observable);
-      let isRefetchErrorCaught = false;
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6676,16 +6675,13 @@ describe("ApolloClient", () => {
         partial: false,
       });
 
-      void client
-        .mutate({
+      await expect(
+        client.mutate({
           mutation,
           refetchQueries: ["getAuthors"],
           awaitRefetchQueries: true,
         })
-        .catch((error) => {
-          expect(error).toBeDefined();
-          isRefetchErrorCaught = true;
-        });
+      ).rejects.toThrow(refetchError);
 
       await expect(stream).toEmitApolloQueryResult({
         data: queryData,
@@ -6694,7 +6690,6 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.error,
         partial: false,
       });
-      expect(isRefetchErrorCaught).toBe(true);
     });
   });
 

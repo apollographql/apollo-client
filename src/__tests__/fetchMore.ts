@@ -633,7 +633,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -665,7 +665,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -732,7 +732,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -773,7 +773,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -848,7 +848,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -880,7 +880,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -946,7 +946,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -987,7 +987,7 @@ describe("fetchMore on an observable query", () => {
           },
         });
 
-        expect(fetchMoreResult).toEqualApolloQueryResult({
+        expect(fetchMoreResult).toEqualStrictTyped({
           loading: false,
           networkStatus: NetworkStatus.ready,
           data: {
@@ -1162,7 +1162,7 @@ describe("fetchMore on an observable query", () => {
         },
       });
 
-      expect(fetchMoreResult).toEqualApolloQueryResult({
+      expect(fetchMoreResult).toEqualStrictTyped({
         loading: false,
         networkStatus: NetworkStatus.ready,
         data: {
@@ -1434,7 +1434,7 @@ describe("fetchMore on an observable query", () => {
       variables,
     });
 
-    expect(fetchMoreResult).toEqualApolloQueryResult({
+    expect(fetchMoreResult).toEqualStrictTyped({
       loading: false,
       networkStatus: NetworkStatus.ready,
       data: { emptyItems: [] },
@@ -1868,7 +1868,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     }),
   });
 
-  expect(fetchMoreResult).toEqualApolloQueryResult({
+  expect(fetchMoreResult).toEqualStrictTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "C", position: 3 },
@@ -1907,7 +1907,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
   });
 
   // Ensure we store the merged result as the last result
-  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
+  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "A", position: 1 },
@@ -1928,7 +1928,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     updateQuery: (_, { fetchMoreResult }) => fetchMoreResult,
   });
 
-  expect(fetchMoreResult).toEqualApolloQueryResult({
+  expect(fetchMoreResult).toEqualStrictTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },
@@ -1966,7 +1966,7 @@ test("uses updateQuery to update the result of the query with no-cache queries",
     partial: false,
   });
 
-  expect(observable.getCurrentResult(false)).toEqualApolloQueryResult({
+  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
     data: {
       letters: [
         { __typename: "Letter", letter: "E", position: 5 },

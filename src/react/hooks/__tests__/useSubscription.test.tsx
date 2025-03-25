@@ -2645,13 +2645,12 @@ describe("data masking", () => {
       }
     );
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(true);
-      expect(data).toBeUndefined();
-      expect(error).toBeUndefined();
-    }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
 
     link.simulateResult({
       result: {
@@ -2666,38 +2665,37 @@ describe("data masking", () => {
       },
     });
 
-    {
-      const { data, loading, error } = await takeSnapshot();
-
-      expect(loading).toBe(false);
-      expect(data).toEqual({
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: {
         addedComment: {
           __typename: "Comment",
           id: 1,
           comment: "Test comment",
           author: "Test User",
         },
-      });
-      expect(error).toBeUndefined();
+      },
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
 
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenCalledWith({
-        client: expect.anything(),
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledWith({
+      client: expect.anything(),
+      data: {
         data: {
-          data: {
-            addedComment: {
-              __typename: "Comment",
-              id: 1,
-              comment: "Test comment",
-              author: "Test User",
-            },
+          addedComment: {
+            __typename: "Comment",
+            id: 1,
+            comment: "Test comment",
+            author: "Test User",
           },
-          loading: false,
-          error: undefined,
-          variables: undefined,
         },
-      });
-    }
+        loading: false,
+        error: undefined,
+        variables: undefined,
+      },
+    });
 
     await expect(takeSnapshot).not.toRerender();
   });

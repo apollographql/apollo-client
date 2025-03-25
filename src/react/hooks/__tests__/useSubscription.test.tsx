@@ -68,7 +68,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -77,7 +76,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -86,7 +84,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[2]);
@@ -95,7 +92,6 @@ describe("useSubscription Hook", () => {
       data: results[2].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[3]);
@@ -104,7 +100,6 @@ describe("useSubscription Hook", () => {
       data: results[3].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -148,7 +143,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -157,7 +151,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(errorResult);
@@ -166,7 +159,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: new CombinedGraphQLErrors([{ message: "test" }]),
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -217,7 +209,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -226,7 +217,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -248,7 +238,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: new CombinedGraphQLErrors([{ message: "test" }]),
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -264,7 +253,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(2);
@@ -319,7 +307,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -328,7 +315,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateComplete();
@@ -376,7 +362,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -385,7 +370,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -450,7 +434,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: { foo: "bar" },
     });
 
     await rerender({ variables: { foo: "bar2" } });
@@ -459,7 +442,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: { foo: "bar2" },
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -508,7 +490,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await rerender({ skip: false });
@@ -517,7 +498,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -526,7 +506,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await rerender({ skip: true });
@@ -535,7 +514,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     // ensure state persists across rerenders
@@ -545,7 +523,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -557,7 +534,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -566,7 +542,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -613,7 +588,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -622,7 +596,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -631,7 +604,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -680,7 +652,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -689,7 +660,6 @@ describe("useSubscription Hook", () => {
       data: results[0].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     link.simulateResult(results[1]);
@@ -698,7 +668,6 @@ describe("useSubscription Hook", () => {
       data: results[1].result.data,
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -745,14 +714,12 @@ describe("useSubscription Hook", () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
     }
 
@@ -765,14 +732,12 @@ describe("useSubscription Hook", () => {
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
     }
 
@@ -783,14 +748,12 @@ describe("useSubscription Hook", () => {
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -803,14 +766,12 @@ describe("useSubscription Hook", () => {
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -821,14 +782,12 @@ describe("useSubscription Hook", () => {
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -864,7 +823,6 @@ describe("useSubscription Hook", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     // Simulating the behavior of HttpLink, which calls next and complete in sequence.
@@ -877,7 +835,6 @@ describe("useSubscription Hook", () => {
       data: { car: { __typename: "Car", make: "Audi" } },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -919,21 +876,18 @@ describe("useSubscription Hook", () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       expect(sub3).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
     }
 
@@ -951,21 +905,18 @@ describe("useSubscription Hook", () => {
           data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
-          variables: undefined,
         });
 
         expect(sub2).toEqualStrictTyped({
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         expect(sub3).toEqualStrictTyped({
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
       }
 
@@ -976,21 +927,18 @@ describe("useSubscription Hook", () => {
           data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
-          variables: undefined,
         });
 
         expect(sub2).toEqualStrictTyped({
           data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
-          variables: undefined,
         });
 
         expect(sub3).toEqualStrictTyped({
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
       }
     }
@@ -1002,21 +950,18 @@ describe("useSubscription Hook", () => {
         data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
         data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
-        variables: undefined,
       });
 
       expect(sub3).toEqualStrictTyped({
         data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
-        variables: undefined,
       });
     }
 
@@ -1373,7 +1318,6 @@ describe("useSubscription Hook", () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: undefined,
       });
 
       enqueueProtocolErrors([
@@ -1396,7 +1340,6 @@ describe("useSubscription Hook", () => {
           },
         ]),
         loading: false,
-        variables: undefined,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -1455,14 +1398,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1475,14 +1416,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: true,
-        variables: {},
       });
     }
 
@@ -1497,14 +1436,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: results[0].result.data,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1517,14 +1454,12 @@ followed by new in-flight setup", async () => {
         data: undefined,
         error: undefined,
         loading: true,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1537,14 +1472,12 @@ followed by new in-flight setup", async () => {
         data: results[1].result.data,
         error: undefined,
         loading: false,
-        variables: {},
       });
 
       expect(tails).toEqualStrictTyped({
         data: undefined,
         error: undefined,
         loading: false,
-        variables: {},
       });
     }
 
@@ -1617,7 +1550,6 @@ followed by new in-flight setup", async () => {
             data: undefined,
             error: undefined,
             loading: true,
-            variables: undefined,
           });
 
           link.simulateResult(graphQlErrorResult);
@@ -1630,7 +1562,6 @@ followed by new in-flight setup", async () => {
                 graphQlErrorResult.result!.errors as any
               ),
               data: undefined,
-              variables: undefined,
             });
           }
 
@@ -1653,7 +1584,6 @@ followed by new in-flight setup", async () => {
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         link.simulateResult(graphQlErrorResult);
@@ -1666,7 +1596,6 @@ followed by new in-flight setup", async () => {
               graphQlErrorResult.result!.errors!
             ),
             data: { totalLikes: 42 },
-            variables: undefined,
           });
         }
 
@@ -1693,7 +1622,6 @@ followed by new in-flight setup", async () => {
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         link.simulateResult(graphQlErrorResult);
@@ -1704,7 +1632,6 @@ followed by new in-flight setup", async () => {
             loading: false,
             error: undefined,
             data: { totalLikes: 42 },
-            variables: undefined,
           });
         }
 
@@ -1766,7 +1693,6 @@ followed by new in-flight setup", async () => {
             data: undefined,
             error: undefined,
             loading: true,
-            variables: undefined,
           });
 
           enqueueProtocolErrors([
@@ -1781,7 +1707,6 @@ followed by new in-flight setup", async () => {
             data: undefined,
             error: expectedError,
             loading: false,
-            variables: undefined,
           });
 
           expect(onError).toHaveBeenCalledTimes(1);
@@ -1829,7 +1754,6 @@ followed by new in-flight setup", async () => {
           data: undefined,
           error: undefined,
           loading: true,
-          variables: undefined,
         });
 
         enqueueProtocolErrors([
@@ -1913,7 +1837,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1925,7 +1848,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1941,7 +1863,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1956,7 +1877,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
   });
@@ -1980,7 +1900,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -1991,12 +1910,10 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        restart: expect.any(Function),
-        variables: { id: "1" },
       });
     }
 
@@ -2016,7 +1933,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "2" },
       });
     }
 
@@ -2028,7 +1944,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1000 },
         error: undefined,
-        variables: { id: "2" },
       });
     }
 
@@ -2048,7 +1963,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "2" },
       });
     }
 
@@ -2060,7 +1974,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1005 },
         error: undefined,
-        variables: { id: "2" },
       });
     }
   });
@@ -2083,7 +1996,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -2095,7 +2007,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 1 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -2107,12 +2018,10 @@ describe("`restart` callback", () => {
 
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: true,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
-        variables: { id: "1" },
       });
     }
 
@@ -2127,7 +2036,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
   });
@@ -2150,7 +2058,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -2165,7 +2072,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: undefined,
         error: new CombinedGraphQLErrors([error]),
-        variables: { id: "1" },
       });
     }
 
@@ -2181,7 +2087,6 @@ describe("`restart` callback", () => {
         loading: true,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -2197,7 +2102,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: { totalLikes: 2 },
         error: undefined,
-        variables: { id: "1" },
       });
     }
   });
@@ -2216,7 +2120,6 @@ describe("`restart` callback", () => {
         loading: false,
         data: undefined,
         error: undefined,
-        variables: { id: "1" },
       });
     }
 
@@ -2279,7 +2182,6 @@ describe("ignoreResults", () => {
       loading: false,
       error: undefined,
       data: undefined,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -2350,7 +2252,6 @@ describe("ignoreResults", () => {
       loading: false,
       error: undefined,
       data: undefined,
-      variables: undefined,
     });
 
     link.simulateResult(results[0]);
@@ -2417,7 +2318,6 @@ describe("ignoreResults", () => {
         loading: false,
         error: undefined,
         data: undefined,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
@@ -2436,7 +2336,6 @@ describe("ignoreResults", () => {
         error: undefined,
         // `data` appears immediately after changing to `ignoreResults: false`
         data: results[0].result.data,
-        variables: undefined,
       });
       // `onData` should not be called again for the same result
       expect(onData).toHaveBeenCalledTimes(1);
@@ -2450,7 +2349,6 @@ describe("ignoreResults", () => {
         loading: false,
         error: undefined,
         data: results[1].result.data,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(2);
     }
@@ -2492,7 +2390,6 @@ describe("ignoreResults", () => {
         loading: true,
         error: undefined,
         data: undefined,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(0);
     }
@@ -2505,7 +2402,6 @@ describe("ignoreResults", () => {
         loading: false,
         error: undefined,
         data: results[0].result.data,
-        variables: undefined,
       });
       expect(onData).toHaveBeenCalledTimes(1);
     }
@@ -2521,7 +2417,6 @@ describe("ignoreResults", () => {
         error: undefined,
         // switching back to the default `ignoreResults: true` return value
         data: undefined,
-        variables: undefined,
       });
       // `onData` should not be called again
       expect(onData).toHaveBeenCalledTimes(1);
@@ -2574,7 +2469,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2599,7 +2493,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -2641,7 +2534,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2668,7 +2560,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
@@ -2711,7 +2602,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2736,7 +2626,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -2790,7 +2679,6 @@ describe("data masking", () => {
       data: undefined,
       error: undefined,
       loading: true,
-      variables: undefined,
     });
 
     link.simulateResult({
@@ -2817,7 +2705,6 @@ describe("data masking", () => {
       },
       error: undefined,
       loading: false,
-      variables: undefined,
     });
 
     expect(onData).toHaveBeenCalledTimes(1);
@@ -2843,20 +2730,6 @@ describe("data masking", () => {
 });
 
 describe.skip("Type Tests", () => {
-  test("NoInfer prevents adding arbitrary additional variables", () => {
-    const typedNode = {} as TypedDocumentNode<{ foo: string }, { bar: number }>;
-    const { variables } = useSubscription(typedNode, {
-      variables: {
-        bar: 4,
-        // @ts-expect-error
-        nonExistingVariable: "string",
-      },
-    });
-    variables?.bar;
-    // @ts-expect-error
-    variables?.nonExistingVariable;
-  });
-
   test("uses masked types when using masked document", async () => {
     type UserFieldsFragment = {
       age: number;

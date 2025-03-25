@@ -493,9 +493,6 @@ describe("ObservableQuery", () => {
 
       await expect(observable.refetch()).resolves.toEqualStrictTyped({
         data: dataOne,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -1216,9 +1213,6 @@ describe("ObservableQuery", () => {
         observable.refetch(differentVariables)
       ).resolves.toEqualStrictTyped({
         data: dataTwo,
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({
@@ -1870,9 +1864,6 @@ describe("ObservableQuery", () => {
           counter: 5,
           name: "Ben",
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(stream).toEmitApolloQueryResult({

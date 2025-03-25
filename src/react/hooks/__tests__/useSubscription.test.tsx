@@ -384,7 +384,9 @@ describe("useSubscription Hook", () => {
       link,
       cache: new Cache(),
     });
-    const { result, rerender } = renderHook(
+
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
       ({ skip }) => useSubscription(subscription, { skip }),
       {
         wrapper: ({ children }) => (
@@ -394,67 +396,72 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    rerender({ skip: false });
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    setTimeout(() => {
-      link.simulateResult(results[0]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.data).toEqual(results[0].result.data);
-    expect(result.current.error).toBe(undefined);
+    await rerender({ skip: false });
 
-    rerender({ skip: true });
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    // ensure state persists across rerenders
-    rerender({ skip: true });
-
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-
-    await expect(
-      waitFor(
-        () => {
-          expect(result.current.data).not.toBe(undefined);
-        },
-        { interval: 1, timeout: 20 }
-      )
-    ).rejects.toThrow();
-
-    // ensure state persists across rerenders
-    rerender({ skip: false });
-
-    expect(result.current.loading).toBe(true);
-    expect(result.current.data).toBe(undefined);
-    expect(result.current.error).toBe(undefined);
-    setTimeout(() => {
-      link.simulateResult(results[1]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.data).toEqual(results[1].result.data);
-    expect(result.current.error).toBe(undefined);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await rerender({ skip: true });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    // ensure state persists across rerenders
+    await rerender({ skip: true });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    // ensure state persists across rerenders
+    await rerender({ skip: false });
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should share context set in options", async () => {

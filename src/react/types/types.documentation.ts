@@ -534,13 +534,6 @@ export interface SubscriptionOptionsDocumentation {
   onData: unknown;
 
   /**
-   * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives data. The callback `options` object param consists of the current Apollo Client instance in `client`, and the received subscription data in `subscriptionData`.
-   *
-   * @deprecated Use `onData` instead
-   */
-  onSubscriptionData: unknown;
-
-  /**
    * Allows the registration of a callback function that will be triggered each time the `useSubscription` Hook / `Subscription` component receives an error.
    *
    * @since 3.7.0

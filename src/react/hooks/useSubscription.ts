@@ -60,9 +60,6 @@ export declare namespace useSubscription {
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onData:member} */
     onData?: (options: OnDataOptions<TData>) => any;
 
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionData:member} */
-    onSubscriptionData?: (options: OnSubscriptionDataOptions<TData>) => any;
-
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
     onError?: (error: ErrorLike) => void;
 
@@ -201,14 +198,6 @@ export function useSubscription<
     // eslint-disable-next-line react-compiler/react-compiler
     hasIssuedDeprecationWarningRef.current = true;
 
-    if (options.onSubscriptionData) {
-      invariant.warn(
-        options.onData ?
-          "'useSubscription' supports only the 'onSubscriptionData' or 'onData' option, but not both. Only the 'onData' option will be used."
-        : "'onSubscriptionData' is deprecated and will be removed in a future major version. Please use the 'onData' option instead."
-      );
-    }
-
     if (options.onSubscriptionComplete) {
       invariant.warn(
         options.onComplete ?
@@ -325,11 +314,6 @@ export function useSubscription<
               optionsRef.current.onData({
                 client,
                 data: result,
-              });
-            } else if (optionsRef.current.onSubscriptionData) {
-              optionsRef.current.onSubscriptionData({
-                client,
-                subscriptionData: result,
               });
             }
           },

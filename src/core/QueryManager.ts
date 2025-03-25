@@ -1022,8 +1022,8 @@ export class QueryManager {
 
   public reFetchObservableQueries(
     includeStandby: boolean = false
-  ): Promise<ApolloQueryResult<any>[]> {
-    const observableQueryPromises: Promise<ApolloQueryResult<any>>[] = [];
+  ): Promise<QueryResult<any>[]> {
+    const observableQueryPromises: Promise<QueryResult<any>>[] = [];
 
     this.getObservableQueries(includeStandby ? "all" : "active").forEach(
       (observableQuery, queryId) => {
@@ -1556,7 +1556,7 @@ export class QueryManager {
               // options.include.
               includedQueriesById.delete(oq.queryId);
 
-              let result: TResult | boolean | Promise<ApolloQueryResult<any>> =
+              let result: TResult | boolean | Promise<QueryResult<any>> =
                 onQueryUpdated(oq, diff, lastDiff);
 
               if (result === true) {
@@ -1592,11 +1592,7 @@ export class QueryManager {
 
     if (includedQueriesById.size) {
       includedQueriesById.forEach(({ oq, lastDiff, diff }, queryId) => {
-        let result:
-          | TResult
-          | boolean
-          | Promise<ApolloQueryResult<any>>
-          | undefined;
+        let result: TResult | boolean | Promise<QueryResult<any>> | undefined;
 
         // If onQueryUpdated is provided, we want to use it for all included
         // queries, even the QueryOptions ones.

@@ -825,27 +825,6 @@ export class QueryManager {
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
   ): Promise<QueryResult<MaybeMasked<TData>>> {
-    invariant(
-      options.query,
-      "query option is required. You must specify your GraphQL document " +
-        "in the query option."
-    );
-
-    invariant(
-      options.query.kind === "Document",
-      'You must wrap the query string in a "gql" tag.'
-    );
-
-    invariant(
-      !(options as any).returnPartialData,
-      "returnPartialData option only supported on watchQuery."
-    );
-
-    invariant(
-      !(options as any).pollInterval,
-      "pollInterval option only supported on watchQuery."
-    );
-
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })

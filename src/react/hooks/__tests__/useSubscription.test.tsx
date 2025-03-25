@@ -2138,38 +2138,36 @@ describe("ignoreResults", () => {
     });
 
     link.simulateResult(results[0]);
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith({
-        client,
-        data: {
-          data: results[0].result.data,
-          error: undefined,
-          loading: false,
-          variables: undefined,
-        },
-      });
-      expect(onError).toHaveBeenCalledTimes(0);
-      expect(onComplete).toHaveBeenCalledTimes(0);
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
     });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(0);
 
     link.simulateResult(results[1], true);
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(2);
-      expect(onData).toHaveBeenLastCalledWith({
-        client,
-        data: {
-          data: results[1].result.data,
-          error: undefined,
-          loading: false,
-          variables: undefined,
-        },
-      });
-      expect(onError).toHaveBeenCalledTimes(0);
-      expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledTimes(2);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
     });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(1);
 
     await expect(takeSnapshot).not.toRerender();
   });
@@ -2211,31 +2209,29 @@ describe("ignoreResults", () => {
     });
 
     link.simulateResult(results[0]);
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onData).toHaveBeenLastCalledWith({
-        client,
-        data: {
-          data: results[0].result.data,
-          error: undefined,
-          loading: false,
-          variables: undefined,
-        },
-      });
-      expect(onError).toHaveBeenCalledTimes(0);
-      expect(onComplete).toHaveBeenCalledTimes(0);
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenLastCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
     });
+    expect(onError).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(0);
 
     const error = new Error("test");
     link.simulateResult({ error });
+    await tick();
 
-    await waitFor(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenCalledTimes(1);
-      expect(onError).toHaveBeenLastCalledWith(error);
-      expect(onComplete).toHaveBeenCalledTimes(0);
-    });
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenLastCalledWith(error);
+    expect(onComplete).toHaveBeenCalledTimes(0);
 
     await expect(takeSnapshot).not.toRerender();
   });

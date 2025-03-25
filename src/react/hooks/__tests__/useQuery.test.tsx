@@ -1755,12 +1755,7 @@ describe("useQuery Hook", () => {
 
       await expect(
         getCurrentSnapshot().observable.reobserve()
-      ).resolves.toEqualStrictTyped({
-        data: { linkCount: 2 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      ).resolves.toEqualStrictTyped({ data: { linkCount: 2 } });
 
       {
         const result = await takeSnapshot();
@@ -4106,9 +4101,6 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4175,9 +4167,6 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4261,9 +4250,6 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4339,9 +4325,6 @@ describe("useQuery Hook", () => {
 
       expect(fetchMoreResult).toEqualStrictTyped({
         data: { letters: cd },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -4549,9 +4532,6 @@ describe("useQuery Hook", () => {
             { __typename: "Letter", letter: "D", position: 4 },
           ],
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -4625,9 +4605,6 @@ describe("useQuery Hook", () => {
             { __typename: "Letter", letter: "F", position: 6 },
           ],
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(takeSnapshot).not.toRerender();
@@ -6070,9 +6047,6 @@ describe("useQuery Hook", () => {
 
       await expect(getCurrentSnapshot().refetch()).resolves.toEqualStrictTyped({
         data: { hello: "world 2" },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       {
@@ -6201,9 +6175,6 @@ describe("useQuery Hook", () => {
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
         ).resolves.toEqualStrictTyped({
           data: { primes: [13, 17, 19, 23, 29] },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: false,
         });
 
         {
@@ -6308,9 +6279,6 @@ describe("useQuery Hook", () => {
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
         ).resolves.toEqualStrictTyped({
           data: { primes: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29] },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: false,
         });
 
         {
@@ -6413,9 +6381,6 @@ describe("useQuery Hook", () => {
           getCurrentSnapshot().refetch({ min: 12, max: 30 })
         ).resolves.toEqualStrictTyped({
           data: { primes: [13, 17, 19, 23, 29] },
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: false,
         });
 
         {
@@ -7207,9 +7172,6 @@ describe("useQuery Hook", () => {
 
       expect(refetchResult).toEqualStrictTyped({
         data: { hello: "world" },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       expect(requestSpy).toHaveBeenCalledTimes(1);
@@ -7315,12 +7277,7 @@ describe("useQuery Hook", () => {
         },
       });
 
-      expect(result).toEqualStrictTyped({
-        data: { hello: 2 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
-      });
+      expect(result).toEqualStrictTyped({ data: { hello: 2 } });
       expect(reasons).toEqual(["variables-changed", "after-fetch"]);
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({
@@ -8166,9 +8123,6 @@ describe("useQuery Hook", () => {
 
       expect(result).toEqualStrictTyped({
         data: { a: "aaa", b: 2 },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       await expect(takeSnapshot()).resolves.toEqualQueryResult({

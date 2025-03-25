@@ -797,7 +797,8 @@ describe("useSubscription Hook", () => {
       cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => ({
         sub1: useSubscription(subscription),
         sub2: useSubscription(subscription),
@@ -810,36 +811,112 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.sub1.loading).toBe(true);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(true);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toBe(undefined);
-    expect(result.current.sub3.loading).toBe(true);
-    expect(result.current.sub3.error).toBe(undefined);
-    expect(result.current.sub3.data).toBe(undefined);
+    {
+      const { sub1, sub2, sub3 } = await takeSnapshot();
 
-    await act(async () => {
-      // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-      link.simulateResult({ result: { data: null } }, /* complete */ true);
-    });
+      expect(sub1).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
 
-    await waitFor(
-      () => {
-        expect(result.current.sub1.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
+      expect(sub2).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
 
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toBe(null);
-    expect(result.current.sub2.loading).toBe(false);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toBe(null);
-    expect(result.current.sub3.loading).toBe(false);
-    expect(result.current.sub3.error).toBe(undefined);
-    expect(result.current.sub3.data).toBe(null);
+      expect(sub3).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+    }
+
+    // Simulating the behavior of HttpLink, which calls next and complete in sequence.
+    link.simulateResult({ result: { data: null } }, /* complete */ true);
+
+    if (IS_REACT_17) {
+      {
+        const { sub1, sub2, sub3 } = await takeSnapshot();
+
+        expect(sub1).toEqualStrictTyped({
+          data: null,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        });
+
+        expect(sub2).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
+        expect(sub3).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+      }
+
+      {
+        const { sub1, sub2, sub3 } = await takeSnapshot();
+
+        expect(sub1).toEqualStrictTyped({
+          data: null,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        });
+
+        expect(sub2).toEqualStrictTyped({
+          data: null,
+          error: undefined,
+          loading: false,
+          variables: undefined,
+        });
+
+        expect(sub3).toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+      }
+    }
+
+    {
+      const { sub1, sub2, sub3 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: null,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: null,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub3).toEqualStrictTyped({
+        data: null,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
 
     expect(consoleSpy.error).toHaveBeenCalledTimes(3);
     expect(consoleSpy.error.mock.calls[0]).toStrictEqual([

@@ -6253,7 +6253,7 @@ describe("custom document transforms", () => {
 });
 
 describe("unconventional errors", () => {
-  test("wraps error mesage in Error type when erroring with a string", async () => {
+  test("wraps error message in Error type when erroring with a string", async () => {
     const query = gql`
       query {
         hello
@@ -6304,7 +6304,10 @@ describe("unconventional errors", () => {
     });
     const subscriptionStream = new ObservableStream(subscription);
 
-    await expect(subscriptionStream).toEmitError(expectedError);
+    await expect(subscriptionStream).toEmitStrictTyped({
+      data: undefined,
+      error: expectedError,
+    });
   });
 
   test("wraps unconventional types in UnconventionalError", async () => {
@@ -6359,7 +6362,10 @@ describe("unconventional errors", () => {
       });
       const subscriptionStream = new ObservableStream(subscription);
 
-      await expect(subscriptionStream).toEmitError(expectedError);
+      await expect(subscriptionStream).toEmitStrictTyped({
+        data: undefined,
+        error: expectedError,
+      });
     }
   });
 });

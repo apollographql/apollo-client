@@ -1564,17 +1564,23 @@ followed by new in-flight setup", async () => {
         const { takeSnapshot, link, graphQlErrorResult, errorBoundaryOnError } =
           await setup({ errorPolicy: "all", onError, onData });
 
-        await takeSnapshot();
+        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
         link.simulateResult(graphQlErrorResult);
+
         {
           const snapshot = await takeSnapshot();
-          expect(snapshot).toStrictEqual({
+          expect(snapshot).toEqualStrictTyped({
             loading: false,
             error: new CombinedGraphQLErrors(
               graphQlErrorResult.result!.errors!
             ),
             data: { totalLikes: 42 },
-            restart: expect.any(Function),
             variables: undefined,
           });
         }

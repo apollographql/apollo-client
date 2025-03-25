@@ -10,7 +10,7 @@ import {
 import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { EMPTY, EmptyError, Observable, of, Subscription } from "rxjs";
+import { EmptyError, Observable, of, Subscription } from "rxjs";
 
 import {
   createFragmentRegistry,
@@ -4165,7 +4165,7 @@ describe("custom document transforms", () => {
     const link = new ApolloLink((operation) => {
       document = operation.query;
 
-      return EMPTY;
+      return of({ data: null });
     });
 
     const client = new ApolloClient({

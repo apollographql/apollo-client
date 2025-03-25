@@ -2064,16 +2064,17 @@ describe("`restart` callback", () => {
         variables: { id: "1" },
         skip: true,
       });
+
     {
       const snapshot = await takeSnapshot();
-      expect(snapshot).toStrictEqual({
+      expect(snapshot).toEqualStrictTyped({
         loading: false,
         data: undefined,
         error: undefined,
-        restart: expect.any(Function),
         variables: { id: "1" },
       });
     }
+
     expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(0);
 

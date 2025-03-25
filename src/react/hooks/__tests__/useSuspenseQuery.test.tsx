@@ -22,7 +22,6 @@ import {
   ApolloCache,
   ApolloClient,
   ApolloLink,
-  ApolloQueryResult,
   CombinedGraphQLErrors,
   DocumentNode,
   ErrorPolicy,
@@ -30,6 +29,7 @@ import {
   InMemoryCache,
   NetworkStatus,
   OperationVariables,
+  QueryResult,
   split,
   SubscribeToMoreOptions,
   TypedDocumentNode,
@@ -7649,7 +7649,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let refetchPromise: Promise<ApolloQueryResult<unknown>>;
+    let refetchPromise: Promise<QueryResult<unknown>>;
     await actAsync(async () => {
       refetchPromise = result.current.refetch();
     });
@@ -7728,9 +7728,6 @@ describe("useSuspenseQuery", () => {
           },
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     expect(renders.count).toBe(6 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -8011,7 +8008,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
+    let fetchMorePromise: Promise<QueryResult<unknown>>;
     await actAsync(() => {
       fetchMorePromise = result.current.fetchMore({ variables: { offset: 1 } });
     });
@@ -8111,9 +8108,6 @@ describe("useSuspenseQuery", () => {
           },
         ],
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     expect(renders.count).toBe(5 + (IS_REACT_19 ? renders.suspenseCount : 0));
@@ -8293,7 +8287,7 @@ describe("useSuspenseQuery", () => {
         });
       });
 
-      let fetchMorePromise: Promise<ApolloQueryResult<unknown>>;
+      let fetchMorePromise: Promise<QueryResult<unknown>>;
       await actAsync(() => {
         fetchMorePromise = result.current.fetchMore({
           variables: { offset: 1 },
@@ -9191,7 +9185,7 @@ describe("useSuspenseQuery", () => {
       });
     });
 
-    let refetchPromise: Promise<ApolloQueryResult<unknown>>;
+    let refetchPromise: Promise<QueryResult<unknown>>;
     await actAsync(async () => {
       refetchPromise = result.current.refetch();
     });
@@ -9276,9 +9270,6 @@ describe("useSuspenseQuery", () => {
           name: "R2-D2",
         },
       },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
     });
 
     cache.updateQuery<any>({ query }, (data) => ({

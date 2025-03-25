@@ -52,47 +52,60 @@ describe("useSubscription Hook", () => {
       cache: new Cache(),
     });
 
-    const { result } = renderHook(() => useSubscription(subscription), {
-      wrapper: ({ children }) => (
-        <ApolloProvider client={client}>{children}</ApolloProvider>
-      ),
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
+      () => useSubscription(subscription),
+      {
+        wrapper: ({ children }) => (
+          <ApolloProvider client={client}>{children}</ApolloProvider>
+        ),
+      }
+    );
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    setTimeout(() => link.simulateResult(results[1]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    setTimeout(() => link.simulateResult(results[2]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[2].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    setTimeout(() => link.simulateResult(results[3]));
-    await waitFor(
-      () => {
-        expect(result.current.data).toEqual(results[3].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[1]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[1].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[2]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[2].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[3]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[3].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should call onError after error results", async () => {

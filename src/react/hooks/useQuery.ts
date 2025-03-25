@@ -160,7 +160,7 @@ export declare namespace useQuery {
           }
         ) => Unmasked<TData>;
       }
-    ) => Promise<ApolloQueryResult<MaybeMasked<TFetchData>>>;
+    ) => Promise<QueryResult<MaybeMasked<TFetchData>>>;
   }
 }
 

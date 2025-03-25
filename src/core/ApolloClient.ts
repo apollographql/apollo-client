@@ -488,11 +488,13 @@ export class ApolloClient implements DataProxy {
       'You must wrap the query string in a "gql" tag.'
     );
 
+    // TODO: Remove returnPartialData as valid option from QueryOptions type
     invariant(
       !options.returnPartialData,
       "returnPartialData option only supported on watchQuery."
     );
 
+    // TODO: Remove pollInterval as valid option from QueryOptions type
     invariant(
       !options.pollInterval,
       "pollInterval option only supported on watchQuery."

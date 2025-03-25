@@ -867,10 +867,6 @@ export class QueryManager {
           result.error = value.error;
         }
 
-        if ((value as any)?.extensions) {
-          result.extensions = (value as any).extensions;
-        }
-
         return result;
       })
       .finally(() => this.stopQuery(queryId));

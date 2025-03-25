@@ -262,7 +262,4 @@ export interface QueryResult<TData = unknown> {
 
   /** {@inheritDoc @apollo/client!QueryResultDocumentation#error:member} */
   error?: ErrorLike;
-
-  /** {@inheritDoc @apollo/client!QueryResultDocumentation#extensions:member} */
-  extensions?: Record<string, unknown>;
 }

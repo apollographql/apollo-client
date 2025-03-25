@@ -1472,13 +1472,7 @@ export namespace useReadQuery {
 export type UseReadQueryResult<TData = unknown> = useReadQuery_2.Result<TData>;
 
 // @public
-export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode_2<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): {
-    restart: () => void;
-    loading: boolean;
-    data?: TData | undefined;
-    error?: ErrorLike_2;
-    variables?: TVariables | undefined;
-};
+export function useSubscription<TData = unknown, TVariables extends OperationVariables = OperationVariables>(subscription: DocumentNode | TypedDocumentNode_2<TData, TVariables>, options?: useSubscription.Options<NoInfer_2<TData>, NoInfer_2<TVariables>>): useSubscription.Result<TData, TVariables>;
 
 // @public (undocumented)
 export namespace useSubscription {
@@ -1487,14 +1481,16 @@ export namespace useSubscription {
         // (undocumented)
         client: ApolloClient;
         // (undocumented)
-        data: Result<TData>;
+        data: OnDataResult<TData>;
     }
+    // (undocumented)
+    export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
     // (undocumented)
     export interface OnSubscriptionDataOptions<TData = unknown> {
         // (undocumented)
         client: ApolloClient;
         // (undocumented)
-        subscriptionData: Result<TData>;
+        subscriptionData: OnDataResult<TData>;
     }
     // (undocumented)
     export interface Options<TData = unknown, TVariables extends OperationVariables = OperationVariables> {
@@ -1520,6 +1516,8 @@ export namespace useSubscription {
         data?: MaybeMasked<TData>;
         error?: ErrorLike_2;
         loading: boolean;
+        // (undocumented)
+        restart: () => void;
         // @internal (undocumented)
         variables?: TVariables;
     }

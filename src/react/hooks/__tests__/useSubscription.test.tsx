@@ -27,7 +27,10 @@ import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import { spyOnConsole } from "../../../testing/internal/index.js";
+import {
+  mockMultipartSubscriptionStream,
+  spyOnConsole,
+} from "../../../testing/internal/index.js";
 import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -1252,6 +1255,9 @@ describe("useSubscription Hook", () => {
 
   describe("multipart subscriptions", () => {
     it("should handle a simple subscription properly", async () => {
+      const { httpLink, enqueueProtocolErrors } =
+        mockMultipartSubscriptionStream();
+
       const subscription = gql`
         subscription ANewDieWasCreated {
           aNewDieWasCreated {
@@ -1263,62 +1269,53 @@ describe("useSubscription Hook", () => {
           }
         }
       `;
-      const results = [
-        {
-          result: {
-            data: null,
-            extensions: {
-              [PROTOCOL_ERRORS_SYMBOL]: new CombinedProtocolErrors([
-                {
-                  message: "cannot read message from websocket",
-                  extensions: {
-                    code: "WEBSOCKET_MESSAGE_ERROR",
-                  },
-                },
-              ]),
-            },
-          },
-        },
-      ];
-      const link = new MockSubscriptionLink();
+
       const client = new ApolloClient({
-        link,
+        link: httpLink,
         cache: new Cache(),
       });
-      let renderCount = 0;
 
-      const { result } = renderHook(
-        () => {
-          renderCount++;
-          return useSubscription(subscription);
-        },
+      using _disabledAct = disableActEnvironment();
+      const { takeSnapshot } = await renderHookToSnapshotStream(
+        () => useSubscription(subscription),
         {
           wrapper: ({ children }) => (
             <ApolloProvider client={client}>{children}</ApolloProvider>
           ),
         }
       );
-      expect(result.current.loading).toBe(true);
-      expect(result.current.error).toBe(undefined);
-      expect(result.current.data).toBe(undefined);
-      link.simulateResult(results[0]);
-      expect(renderCount).toBe(1);
-      await waitFor(
-        () => {
-          expect(result.current.error).toBeInstanceOf(CombinedProtocolErrors);
+
+      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+
+      enqueueProtocolErrors([
+        {
+          message: "cannot read message from websocket",
+          extensions: {
+            code: "WEBSOCKET_MESSAGE_ERROR",
+          },
         },
-        { interval: 1 }
-      );
-      expect(result.current.error).toEqual(
-        new CombinedProtocolErrors([
+      ]);
+
+      await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+        data: undefined,
+        error: new CombinedProtocolErrors([
           {
             message: "cannot read message from websocket",
             extensions: {
               code: "WEBSOCKET_MESSAGE_ERROR",
             },
           },
-        ])
-      );
+        ]),
+        loading: false,
+        variables: undefined,
+      });
+
+      await expect(takeSnapshot).not.toRerender();
     });
   });
 

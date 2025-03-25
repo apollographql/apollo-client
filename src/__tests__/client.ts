@@ -2679,7 +2679,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: { posts: null },
       error: new CombinedGraphQLErrors([
         { message: 'Cannot query field "foo" on type "Post".' },
@@ -2711,7 +2711,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: undefined,
       error,
       loading: false,
@@ -2743,7 +2743,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: { posts: null },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -2772,7 +2772,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualApolloQueryResult({
+    ).resolves.toEqualStrictTyped({
       data: undefined,
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3686,7 +3686,7 @@ describe("@connection", () => {
 
       const result = await client.query({ query });
 
-      expect(result).toEqualApolloQueryResult({
+      expect(result).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors(errors),
         loading: false,

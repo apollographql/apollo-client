@@ -617,7 +617,8 @@ describe("useSubscription Hook", () => {
       cache: new Cache(),
     });
 
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => ({
         sub1: useSubscription(subscription),
         sub2: useSubscription(subscription),
@@ -629,44 +630,101 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.sub1.loading).toBe(true);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub1.data).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(true);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toBe(undefined);
+    {
+      const { sub1, sub2 } = await takeSnapshot();
 
-    setTimeout(() => {
-      link.simulateResult(results[0]);
-    });
+      expect(sub1).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
 
-    await waitFor(
-      () => {
-        expect(result.current.sub1.data).toEqual(results[0].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.sub1.loading).toBe(false);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(false);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toEqual(results[0].result.data);
+      expect(sub2).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+    }
 
-    setTimeout(() => {
-      link.simulateResult(results[1]);
-    });
+    link.simulateResult(results[0]);
 
-    await waitFor(
-      () => {
-        expect(result.current.sub1.data).toEqual(results[1].result.data);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.sub1.loading).toBe(false);
-    expect(result.current.sub1.error).toBe(undefined);
-    expect(result.current.sub2.loading).toBe(false);
-    expect(result.current.sub2.error).toBe(undefined);
-    expect(result.current.sub2.data).toEqual(results[1].result.data);
+    if (IS_REACT_17) {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: undefined,
+        error: undefined,
+        loading: true,
+        variables: undefined,
+      });
+    }
+
+    {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    link.simulateResult(results[1]);
+
+    if (IS_REACT_17) {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    {
+      const { sub1, sub2 } = await takeSnapshot();
+
+      expect(sub1).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+
+      expect(sub2).toEqualStrictTyped({
+        data: results[1].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      });
+    }
+
+    await expect(takeSnapshot).not.toRerender();
   });
 
   it("should handle immediate completions gracefully", async () => {

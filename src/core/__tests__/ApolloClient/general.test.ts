@@ -1184,12 +1184,7 @@ describe("ApolloClient", () => {
 
     const result = await observable.refetch();
 
-    expect(result).toEqualStrictTyped({
-      data: data2,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    expect(result).toEqualStrictTyped({ data: data2 });
   });
 
   it("allows you to refetch queries with new variables", async () => {

@@ -76,7 +76,7 @@ export declare namespace useSubscription {
     ignoreResults?: boolean;
   }
 
-  export interface Result<TData = unknown, TVariables = OperationVariables> {
+  export interface Result<TData = unknown> {
     /** {@inheritDoc @apollo/client!SubscriptionResultDocumentation#loading:member} */
     loading: boolean;
 
@@ -87,14 +87,6 @@ export declare namespace useSubscription {
     error?: ErrorLike;
 
     restart: () => void;
-
-    // This was added by the legacy useSubscription type, and is tested in unit
-    // tests, but probably shouldn’t be added to the result.
-    /**
-     * @internal
-     */
-    // TODO: Remove this
-    variables?: TVariables;
   }
 
   export type OnDataResult<TData = unknown> = Omit<Result<TData>, "restart">;
@@ -110,10 +102,7 @@ export declare namespace useSubscription {
   }
 }
 
-type StateResult<TData, TVariables> = Omit<
-  useSubscription.Result<TData, TVariables>,
-  "restart"
->;
+type StateResult<TData> = Omit<useSubscription.Result<TData>, "restart">;
 
 /**
  * > Refer to the [Subscriptions](https://www.apollographql.com/docs/react/data/subscriptions/) section for a more in-depth overview of `useSubscription`.
@@ -202,7 +191,7 @@ export function useSubscription<
 >(
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
-): useSubscription.Result<TData, TVariables> {
+): useSubscription.Result<TData> {
   const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
@@ -284,14 +273,13 @@ export function useSubscription<
   });
 
   const fallbackLoading = !skip && !ignoreResults;
-  const fallbackResult = React.useMemo<StateResult<TData, TVariables>>(
+  const fallbackResult = React.useMemo<StateResult<TData>>(
     () => ({
       loading: fallbackLoading,
       error: void 0,
       data: void 0,
-      variables,
     }),
-    [fallbackLoading, variables]
+    [fallbackLoading]
   );
 
   const ignoreResultsRef = React.useRef(ignoreResults);
@@ -307,7 +295,7 @@ export function useSubscription<
     ignoreResultsRef.current = ignoreResults;
   });
 
-  const ret = useSyncExternalStore<StateResult<TData, TVariables>>(
+  const ret = useSyncExternalStore<StateResult<TData>>(
     React.useCallback(
       (update) => {
         if (!observable) {
@@ -315,7 +303,6 @@ export function useSubscription<
         }
 
         let subscriptionStopped = false;
-        const variables = observable.__.variables;
         const client = observable.__.client;
         const subscription = observable.subscribe({
           next(value) {
@@ -323,11 +310,10 @@ export function useSubscription<
               return;
             }
 
-            const result: StateResult<TData, TVariables> = {
+            const result: StateResult<TData> = {
               loading: false,
               data: value.data,
               error: value.error,
-              variables,
             };
 
             observable.__.setResult(result);
@@ -415,9 +401,8 @@ function createSubscription<
       loading: true,
       data: void 0,
       error: void 0,
-      variables,
-    } as StateResult<TData, TVariables>,
-    setResult(result: StateResult<TData, TVariables>) {
+    } as StateResult<TData>,
+    setResult(result: StateResult<TData>) {
       __.result = result;
     },
   };

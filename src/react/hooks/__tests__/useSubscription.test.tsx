@@ -1592,6 +1592,7 @@ followed by new in-flight setup", async () => {
         expect(onData).toHaveBeenCalledTimes(0);
         expect(errorBoundaryOnError).toHaveBeenCalledTimes(0);
       });
+
       it("`errorPolicy: 'ignore'`: returns `{ data }`, calls `onData`", async () => {
         const onData = jest.fn();
         const onError = jest.fn();
@@ -1603,15 +1604,21 @@ followed by new in-flight setup", async () => {
             onData,
           });
 
-        await takeSnapshot();
+        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
         link.simulateResult(graphQlErrorResult);
+
         {
           const snapshot = await takeSnapshot();
-          expect(snapshot).toStrictEqual({
+          expect(snapshot).toEqualStrictTyped({
             loading: false,
             error: undefined,
             data: { totalLikes: 42 },
-            restart: expect.any(Function),
             variables: undefined,
           });
         }

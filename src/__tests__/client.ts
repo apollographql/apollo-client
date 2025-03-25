@@ -2684,9 +2684,6 @@ describe("client", () => {
       error: new CombinedGraphQLErrors([
         { message: 'Cannot query field "foo" on type "Post".' },
       ]),
-      loading: false,
-      networkStatus: NetworkStatus.error,
-      partial: false,
     });
   });
 
@@ -2711,13 +2708,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "all" })
-    ).resolves.toEqualStrictTyped({
-      data: undefined,
-      error,
-      loading: false,
-      networkStatus: NetworkStatus.error,
-      partial: true,
-    });
+    ).resolves.toEqualStrictTyped({ data: undefined, error });
   });
 
   it("resolves partial data and strips errors when errorPolicy is 'ignore'", async () => {
@@ -2743,12 +2734,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({
-      data: { posts: null },
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: false,
-    });
+    ).resolves.toEqualStrictTyped({ data: { posts: null } });
   });
 
   it("resolves with no data or errors for network error when errorPolicy is 'ignore'", async () => {
@@ -2772,12 +2758,7 @@ describe("client", () => {
 
     await expect(
       client.query({ query, errorPolicy: "ignore" })
-    ).resolves.toEqualStrictTyped({
-      data: undefined,
-      loading: false,
-      networkStatus: NetworkStatus.ready,
-      partial: true,
-    });
+    ).resolves.toEqualStrictTyped({ data: undefined });
   });
 
   it("should warn if server returns wrong data", async () => {
@@ -3689,9 +3670,6 @@ describe("@connection", () => {
       expect(result).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors(errors),
-        loading: false,
-        networkStatus: NetworkStatus.error,
-        partial: true,
       });
     });
 

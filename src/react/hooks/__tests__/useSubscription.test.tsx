@@ -122,8 +122,7 @@ describe("useSubscription Hook", () => {
     }));
 
     const errorResult = {
-      error: new Error("test"),
-      result: { data: { car: { make: null } } },
+      result: { data: { car: { make: null } }, errors: [{ message: "test" }] },
     };
 
     const link = new MockSubscriptionLink();
@@ -133,7 +132,8 @@ describe("useSubscription Hook", () => {
     });
 
     const onError = jest.fn();
-    const { result } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot } = await renderHookToSnapshotStream(
       () => useSubscription(subscription, { onError }),
       {
         wrapper: ({ children }) => (
@@ -142,24 +142,36 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.loading).toBe(false);
-    expect(result.current.data).toEqual(results[0].result.data);
-    setTimeout(() => link.simulateResult(errorResult));
-    await waitFor(
-      () => {
-        expect(onError).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    link.simulateResult(errorResult);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors([{ message: "test" }]),
+      loading: false,
+      variables: undefined,
+    });
+
+    await expect(takeSnapshot).not.toRerender();
+
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledWith(
+      new CombinedGraphQLErrors([{ message: "test" }])
     );
   });
 

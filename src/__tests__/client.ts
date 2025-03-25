@@ -21,6 +21,7 @@ import {
 } from "@apollo/client/cache";
 import {
   ApolloClient,
+  ApolloQueryResult,
   FetchPolicy,
   NetworkStatus,
   ObservableQuery,
@@ -40,6 +41,7 @@ import {
   offsetLimitPagination,
   removeDirectivesFromDocument,
 } from "@apollo/client/utilities";
+import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { ObservableStream, spyOnConsole } from "../testing/internal/index.js";
 
@@ -700,6 +702,73 @@ describe("client", () => {
     return client.query({ query }).then((result) => {
       expect(result.data).toEqual(data);
     });
+  });
+
+  it("emits InvariantError when link chain completes without emitting a result", async () => {
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => observer.complete(), 10);
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+
+    const expectedError = new InvariantError(
+      "The link chain completed without emitting a value"
+    );
+
+    await expect(
+      client.query({
+        query: gql`
+          query {
+            hello
+          }
+        `,
+      })
+    ).rejects.toThrow(expectedError);
+
+    await expect(
+      client.mutate({
+        mutation: gql`
+          mutation {
+            foo
+          }
+        `,
+      })
+    ).rejects.toThrow(expectedError);
+
+    const observable = client.watchQuery({
+      query: gql`
+        query {
+          hello
+        }
+      `,
+    });
+
+    const stream = new ObservableStream(observable);
+    const emittedValue: ApolloQueryResult<unknown> = {
+      data: undefined,
+      error: expectedError,
+      loading: false,
+      networkStatus: NetworkStatus.error,
+      partial: true,
+    };
+
+    await expect(stream).toEmitStrictTyped(emittedValue);
+
+    await expect(observable.refetch()).rejects.toThrow(expectedError);
+    await expect(stream).toEmitStrictTyped(emittedValue);
+
+    await expect(observable.fetchMore({})).rejects.toThrow(expectedError);
+    await expect(stream).toEmitStrictTyped(emittedValue);
+
+    await expect(observable.setVariables({ ignored: true })).rejects.toThrow(
+      expectedError
+    );
+    await expect(stream).toEmitStrictTyped(emittedValue);
+
+    await expect(observable.reobserve()).rejects.toThrow(expectedError);
+    await expect(stream).toEmitStrictTyped(emittedValue);
   });
 
   it.skip("should surface errors in observer.next as uncaught", async () => {

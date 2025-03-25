@@ -1231,7 +1231,21 @@ export class QueryManager {
       );
     }
 
-    return observable;
+    let didEmitValue = false;
+
+    return observable.pipe(
+      tap({
+        next: () => {
+          didEmitValue = true;
+        },
+        complete: () => {
+          invariant(
+            didEmitValue,
+            "The link chain completed without emitting a value"
+          );
+        },
+      })
+    );
   }
 
   private getResultsFromLink<TData, TVars extends OperationVariables>(

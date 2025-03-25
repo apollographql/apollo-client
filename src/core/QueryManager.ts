@@ -88,6 +88,7 @@ import type {
   MutationUpdaterFunction,
   OnQueryUpdated,
   OperationVariables,
+  QueryResult,
   SubscribeResult,
 } from "./types.js";
 import type {
@@ -823,7 +824,7 @@ export class QueryManager {
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()
-  ): Promise<ApolloQueryResult<MaybeMasked<TData>>> {
+  ): Promise<QueryResult<MaybeMasked<TData>>> {
     invariant(
       options.query,
       "query option is required. You must specify your GraphQL document " +

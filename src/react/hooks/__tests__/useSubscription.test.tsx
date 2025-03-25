@@ -4,7 +4,7 @@ import {
   renderHookToSnapshotStream,
 } from "@testing-library/react-render-stream";
 import { expectTypeOf } from "expect-type";
-import { GraphQLError } from "graphql";
+import { GraphQLError, GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -730,8 +730,6 @@ describe("useSubscription Hook", () => {
   });
 
   it("should handle immediate completions gracefully", async () => {
-    using consoleSpy = spyOnConsole("error");
-
     const subscription = gql`
       subscription {
         car {
@@ -764,27 +762,22 @@ describe("useSubscription Hook", () => {
     });
 
     // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-    link.simulateResult({ result: { data: null } }, /* complete */ true);
+    link.simulateResult(
+      { result: { data: { car: { __typename: "Car", make: "Audi" } } } },
+      /* complete */ true
+    );
 
     await expect(takeSnapshot()).resolves.toEqualStrictTyped({
-      data: null,
+      data: { car: { __typename: "Car", make: "Audi" } },
       error: undefined,
       loading: false,
       variables: undefined,
     });
 
     await expect(takeSnapshot).not.toRerender();
-
-    expect(consoleSpy.error).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
   });
 
   it("should handle immediate completions with multiple subscriptions gracefully", async () => {
-    using consoleSpy = spyOnConsole("error");
     const subscription = gql`
       subscription {
         car {
@@ -839,14 +832,17 @@ describe("useSubscription Hook", () => {
     }
 
     // Simulating the behavior of HttpLink, which calls next and complete in sequence.
-    link.simulateResult({ result: { data: null } }, /* complete */ true);
+    link.simulateResult(
+      { result: { data: { car: { __typename: "Car", make: "Audi" } } } },
+      /* complete */ true
+    );
 
     if (IS_REACT_17) {
       {
         const { sub1, sub2, sub3 } = await takeSnapshot();
 
         expect(sub1).toEqualStrictTyped({
-          data: null,
+          data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
           variables: undefined,
@@ -871,14 +867,14 @@ describe("useSubscription Hook", () => {
         const { sub1, sub2, sub3 } = await takeSnapshot();
 
         expect(sub1).toEqualStrictTyped({
-          data: null,
+          data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
           variables: undefined,
         });
 
         expect(sub2).toEqualStrictTyped({
-          data: null,
+          data: { car: { __typename: "Car", make: "Audi" } },
           error: undefined,
           loading: false,
           variables: undefined,
@@ -897,21 +893,21 @@ describe("useSubscription Hook", () => {
       const { sub1, sub2, sub3 } = await takeSnapshot();
 
       expect(sub1).toEqualStrictTyped({
-        data: null,
+        data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
         variables: undefined,
       });
 
       expect(sub2).toEqualStrictTyped({
-        data: null,
+        data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
         variables: undefined,
       });
 
       expect(sub3).toEqualStrictTyped({
-        data: null,
+        data: { car: { __typename: "Car", make: "Audi" } },
         error: undefined,
         loading: false,
         variables: undefined,
@@ -919,23 +915,6 @@ describe("useSubscription Hook", () => {
     }
 
     await expect(takeSnapshot).not.toRerender();
-
-    expect(consoleSpy.error).toHaveBeenCalledTimes(3);
-    expect(consoleSpy.error.mock.calls[0]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
-    expect(consoleSpy.error.mock.calls[1]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
-    expect(consoleSpy.error.mock.calls[2]).toStrictEqual([
-      "Missing field '%s' while writing result %o",
-      "car",
-      {},
-    ]);
   });
 
   test("should warn when using 'onSubscriptionData' and 'onData' together", () => {
@@ -1640,7 +1619,7 @@ followed by new in-flight setup", async () => {
     });
 
     describe("protocol error", () => {
-      it.each([undefined, "none", "all", "ignore"] as const)(
+      it.each([undefined, "none", "all"] as const)(
         "`errorPolicy: '%s'`: returns `{ error }`, calls `onError`",
         async (errorPolicy) => {
           const { httpLink, enqueueProtocolErrors } =
@@ -1659,11 +1638,17 @@ followed by new in-flight setup", async () => {
 
           const onData = jest.fn();
           const onError = jest.fn();
+          const onComplete = jest.fn();
 
           using _disabledAct = disableActEnvironment();
           const { takeSnapshot } = await renderHookToSnapshotStream(
             () =>
-              useSubscription(subscription, { errorPolicy, onError, onData }),
+              useSubscription(subscription, {
+                errorPolicy,
+                onError,
+                onData,
+                onComplete,
+              }),
             {
               wrapper: ({ children }) => (
                 <ApolloProvider client={client}>{children}</ApolloProvider>
@@ -1696,8 +1681,61 @@ followed by new in-flight setup", async () => {
           expect(onError).toHaveBeenCalledTimes(1);
           expect(onError).toHaveBeenCalledWith(expectedError);
           expect(onData).toHaveBeenCalledTimes(0);
+          expect(onComplete).toHaveBeenCalledTimes(1);
         }
       );
+
+      it("`errorPolicy: 'ignore'`: does not rerender, calls `onComplete`", async () => {
+        const { httpLink, enqueueProtocolErrors } =
+          mockMultipartSubscriptionStream();
+
+        const subscription: TypedDocumentNode<{ totalLikes: number }, {}> = gql`
+          subscription ($id: ID!) {
+            totalLikes
+          }
+        `;
+        const client = new ApolloClient({
+          link: httpLink,
+          cache: new Cache(),
+        });
+
+        const onData = jest.fn();
+        const onError = jest.fn();
+        const onComplete = jest.fn();
+
+        using _disabledAct = disableActEnvironment();
+        const { takeSnapshot } = await renderHookToSnapshotStream(
+          () =>
+            useSubscription(subscription, {
+              errorPolicy: "ignore",
+              onError,
+              onData,
+              onComplete,
+            }),
+          {
+            wrapper: ({ children }) => (
+              <ApolloProvider client={client}>{children}</ApolloProvider>
+            ),
+          }
+        );
+
+        await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+          data: undefined,
+          error: undefined,
+          loading: true,
+          variables: undefined,
+        });
+
+        enqueueProtocolErrors([
+          { message: "Socket closed with event -1: I'm a test!" },
+        ]);
+
+        await expect(takeSnapshot).not.toRerender();
+
+        expect(onError).toHaveBeenCalledTimes(0);
+        expect(onData).toHaveBeenCalledTimes(0);
+        expect(onComplete).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });
@@ -2010,7 +2048,7 @@ describe("`restart` callback", () => {
       });
     }
 
-    const error = new GraphQLError("error");
+    const error: GraphQLFormattedError = { message: "error" };
     link.simulateResult({
       result: { errors: [error] },
     });
@@ -2026,7 +2064,7 @@ describe("`restart` callback", () => {
     }
 
     await expect(takeSnapshot).not.toRerender({ timeout: 20 });
-    expect(onUnsubscribe).toHaveBeenCalledTimes(1);
+    expect(onUnsubscribe).toHaveBeenCalledTimes(0);
     expect(onSubscribe).toHaveBeenCalledTimes(1);
 
     getCurrentSnapshot().restart();
@@ -2042,6 +2080,7 @@ describe("`restart` callback", () => {
     }
 
     await waitFor(() => expect(onSubscribe).toHaveBeenCalledTimes(2));
+    await tick();
     expect(onUnsubscribe).toHaveBeenCalledTimes(1);
 
     link.simulateResult({ result: { data: { totalLikes: 2 } } });
@@ -2231,7 +2270,7 @@ describe("ignoreResults", () => {
     expect(onData).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenCalledTimes(1);
     expect(onError).toHaveBeenLastCalledWith(error);
-    expect(onComplete).toHaveBeenCalledTimes(0);
+    expect(onComplete).toHaveBeenCalledTimes(1);
 
     await expect(takeSnapshot).not.toRerender();
   });

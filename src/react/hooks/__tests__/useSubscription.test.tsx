@@ -23,7 +23,7 @@ import {
 } from "@apollo/client/errors";
 import { Masked, MaskedDocumentNode } from "@apollo/client/masking";
 import { ApolloProvider } from "@apollo/client/react/context";
-import { MockSubscriptionLink, wait } from "@apollo/client/testing";
+import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
@@ -1011,13 +1011,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(onData).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    link.simulateResult(results[0]);
+    await tick();
+
+    expect(onData).toHaveBeenCalledTimes(1);
     expect(onSubscriptionData).toHaveBeenCalledTimes(0);
   });
 
@@ -1057,13 +1054,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(onSubscriptionData).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    link.simulateResult(results[0]);
+    await tick();
+
+    expect(onSubscriptionData).toHaveBeenCalledTimes(1);
   });
 
   test("only warns once using `onSubscriptionData`", () => {
@@ -1174,15 +1168,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    link.simulateResult(results[0]);
+    link.simulateResult(results[0], true);
+    await tick();
 
-    setTimeout(() => link.simulateComplete());
-    await waitFor(
-      () => {
-        expect(onComplete).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
   });
 
@@ -1222,15 +1211,10 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    link.simulateResult(results[0]);
+    link.simulateResult(results[0], true);
+    await tick();
 
-    setTimeout(() => link.simulateComplete());
-    await waitFor(
-      () => {
-        expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
-      },
-      { interval: 1 }
-    );
+    expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
   });
 
   test("only warns once using `onSubscriptionComplete`", () => {

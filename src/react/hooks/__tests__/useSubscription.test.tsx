@@ -251,7 +251,8 @@ describe("useSubscription Hook", () => {
     });
 
     const onData = jest.fn();
-    const { result, unmount } = renderHook(
+    using _disabledAct = disableActEnvironment();
+    const { takeSnapshot, unmount } = await renderHookToSnapshotStream(
       () =>
         useSubscription(subscription, {
           onData,
@@ -263,29 +264,41 @@ describe("useSubscription Hook", () => {
       }
     );
 
-    expect(result.current.loading).toBe(true);
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(undefined);
-    setTimeout(() => link.simulateResult(results[0]));
-    await waitFor(
-      () => {
-        expect(result.current.loading).toBe(false);
-      },
-      { interval: 1 }
-    );
-    expect(result.current.error).toBe(undefined);
-    expect(result.current.data).toBe(results[0].result.data);
-    setTimeout(() => {
-      expect(onData).toHaveBeenCalledTimes(1);
-      // After the component has been unmounted, the internal
-      // ObservableQuery should be stopped, meaning it shouldn't
-      // receive any new data (so the onDataCount should
-      // stay at 1).
-      unmount();
-      link.simulateResult(results[0]);
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: undefined,
+      error: undefined,
+      loading: true,
+      variables: undefined,
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    link.simulateResult(results[0]);
+
+    await expect(takeSnapshot()).resolves.toEqualStrictTyped({
+      data: results[0].result.data,
+      error: undefined,
+      loading: false,
+      variables: undefined,
+    });
+
+    expect(onData).toHaveBeenCalledTimes(1);
+    expect(onData).toHaveBeenCalledWith({
+      client,
+      data: {
+        data: results[0].result.data,
+        error: undefined,
+        loading: false,
+        variables: undefined,
+      },
+    });
+
+    // After the component has been unmounted, the internal
+    // ObservableQuery should be stopped, meaning it shouldn't
+    // receive any new data (so the onDataCount should
+    // stay at 1).
+    unmount();
+    link.simulateResult(results[0]);
+
+    await wait(100);
     expect(onData).toHaveBeenCalledTimes(1);
   });
 

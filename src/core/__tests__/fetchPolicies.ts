@@ -940,9 +940,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -982,9 +979,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       // Changing variables resets the fetchPolicy to its initial value.
@@ -1089,9 +1083,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -1132,9 +1123,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -1261,9 +1249,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
     }
 
@@ -1302,9 +1287,6 @@ describe("nextFetchPolicy", () => {
             },
           },
         },
-        loading: false,
-        networkStatus: NetworkStatus.ready,
-        partial: false,
       });
 
       // The nextFetchPolicy function we provided always returnes cache-first,

@@ -658,7 +658,7 @@ export class ApolloClient implements DataProxy {
    * re-execute any queries then you should make sure to stop watching any
    * active queries.
    */
-  public resetStore(): Promise<ApolloQueryResult<any>[] | null> {
+  public resetStore(): Promise<QueryResult<any>[] | null> {
     return Promise.resolve()
       .then(() =>
         this.queryManager.clearStore({
@@ -725,7 +725,7 @@ export class ApolloClient implements DataProxy {
    */
   public reFetchObservableQueries(
     includeStandby?: boolean
-  ): Promise<ApolloQueryResult<any>[]> {
+  ): Promise<QueryResult<any>[]> {
     return this.queryManager.reFetchObservableQueries(includeStandby);
   }
 

@@ -186,6 +186,55 @@ describe("GraphQL Subscriptions", () => {
     });
   });
 
+  it("can continue receiving results after GraphQL errors when the connection remains open", async () => {
+    const link = new MockSubscriptionLink();
+    const client = new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+    });
+
+    const obs = client.subscribe(options);
+    const stream = new ObservableStream(obs);
+
+    link.simulateResult({
+      result: {
+        data: null,
+        errors: [
+          {
+            message: "This is an error",
+            locations: [
+              {
+                column: 3,
+                line: 2,
+              },
+            ],
+            path: ["result"],
+          },
+        ],
+      },
+    });
+
+    await expect(stream).toEmitStrictTyped({
+      data: undefined,
+      error: new CombinedGraphQLErrors([
+        {
+          message: "This is an error",
+          locations: [
+            {
+              column: 3,
+              line: 2,
+            },
+          ],
+          path: ["result"],
+        },
+      ]),
+    });
+
+    link.simulateResult(results[0]);
+
+    await expect(stream).toEmitStrictTyped({ data: results[0].result.data });
+  });
+
   it("emits a result with error if the result has network errors", async () => {
     const link = new MockSubscriptionLink();
     const client = new ApolloClient({

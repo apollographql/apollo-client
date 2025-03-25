@@ -539,13 +539,6 @@ export interface SubscriptionOptionsDocumentation {
    * @since 3.7.0
    */
   onError: unknown;
-
-  /**
-   * Allows the registration of a callback function that will be triggered when the `useSubscription` Hook / `Subscription` component completes the subscription.
-   *
-   * @deprecated Use `onComplete` instead
-   */
-  onSubscriptionComplete: unknown;
 }
 
 export interface SubscriptionResultDocumentation {

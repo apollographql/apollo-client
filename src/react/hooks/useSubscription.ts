@@ -63,9 +63,6 @@ export declare namespace useSubscription {
     /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onError:member} */
     onError?: (error: ErrorLike) => void;
 
-    /** {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#onSubscriptionComplete:member} */
-    onSubscriptionComplete?: () => void;
-
     /**
      * {@inheritDoc @apollo/client!SubscriptionOptionsDocumentation#ignoreResults:member}
      * @defaultValue `false`
@@ -189,23 +186,8 @@ export function useSubscription<
   subscription: DocumentNode | TypedDocumentNode<TData, TVariables>,
   options: useSubscription.Options<NoInfer<TData>, NoInfer<TVariables>> = {}
 ): useSubscription.Result<TData> {
-  const hasIssuedDeprecationWarningRef = React.useRef(false);
   const client = useApolloClient(options.client);
   verifyDocumentType(subscription, DocumentType.Subscription);
-
-  // eslint-disable-next-line react-compiler/react-compiler
-  if (!hasIssuedDeprecationWarningRef.current) {
-    // eslint-disable-next-line react-compiler/react-compiler
-    hasIssuedDeprecationWarningRef.current = true;
-
-    if (options.onSubscriptionComplete) {
-      invariant.warn(
-        options.onComplete ?
-          "'useSubscription' supports only the 'onSubscriptionComplete' or 'onComplete' option, but not both. Only the 'onComplete' option will be used."
-        : "'onSubscriptionComplete' is deprecated and will be removed in a future major version. Please use the 'onComplete' option instead."
-      );
-    }
-  }
 
   const {
     skip,
@@ -318,12 +300,8 @@ export function useSubscription<
             }
           },
           complete() {
-            if (!subscriptionStopped) {
-              if (optionsRef.current.onComplete) {
-                optionsRef.current.onComplete();
-              } else if (optionsRef.current.onSubscriptionComplete) {
-                optionsRef.current.onSubscriptionComplete();
-              }
+            if (!subscriptionStopped && optionsRef.current.onComplete) {
+              optionsRef.current.onComplete();
             }
           },
         });

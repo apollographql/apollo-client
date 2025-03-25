@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { waitFor } from "@testing-library/react";
 import {
   disableActEnvironment,
   renderHookToSnapshotStream,
@@ -26,10 +26,7 @@ import { MockSubscriptionLink, tick, wait } from "@apollo/client/testing";
 import { InvariantError } from "@apollo/client/utilities/invariant";
 
 import { MockedSubscriptionResult } from "../../../testing/core/mocking/mockSubscriptionLink.js";
-import {
-  mockMultipartSubscriptionStream,
-  spyOnConsole,
-} from "../../../testing/internal/index.js";
+import { mockMultipartSubscriptionStream } from "../../../testing/internal/index.js";
 import { useSubscription } from "../useSubscription.js";
 
 const IS_REACT_17 = React.version.startsWith("17");
@@ -966,163 +963,6 @@ describe("useSubscription Hook", () => {
     }
 
     await expect(takeSnapshot).not.toRerender();
-  });
-
-  test("should warn when using 'onComplete' and 'onSubscriptionComplete' together", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onComplete: jest.fn(),
-          onSubscriptionComplete: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
-    expect(consoleSpy.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        "supports only the 'onSubscriptionComplete' or 'onComplete' option"
-      )
-    );
-  });
-
-  test("prefers 'onComplete' when using 'onComplete' and 'onSubscriptionComplete' together", async () => {
-    using _consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Audi" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onComplete = jest.fn();
-    const onSubscriptionComplete = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onComplete,
-          onSubscriptionComplete,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0], true);
-    await tick();
-
-    expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onSubscriptionComplete).toHaveBeenCalledTimes(0);
-  });
-
-  test("uses 'onSubscriptionComplete' when 'onComplete' is absent", async () => {
-    using _consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const results = [
-      {
-        result: { data: { car: { make: "Audi" } } },
-      },
-    ];
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const onSubscriptionComplete = jest.fn();
-
-    renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionComplete,
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    link.simulateResult(results[0], true);
-    await tick();
-
-    expect(onSubscriptionComplete).toHaveBeenCalledTimes(1);
-  });
-
-  test("only warns once using `onSubscriptionComplete`", () => {
-    using consoleSpy = spyOnConsole("warn");
-    const subscription = gql`
-      subscription {
-        car {
-          make
-        }
-      }
-    `;
-
-    const link = new MockSubscriptionLink();
-    const client = new ApolloClient({
-      link,
-      cache: new Cache(),
-    });
-
-    const { rerender } = renderHook(
-      () =>
-        useSubscription(subscription, {
-          onSubscriptionComplete: jest.fn(),
-        }),
-      {
-        wrapper: ({ children }) => (
-          <ApolloProvider client={client}>{children}</ApolloProvider>
-        ),
-      }
-    );
-
-    rerender();
-
-    expect(consoleSpy.warn).toHaveBeenCalledTimes(1);
   });
 
   describe("multipart subscriptions", () => {

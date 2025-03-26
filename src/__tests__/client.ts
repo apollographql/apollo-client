@@ -712,9 +712,8 @@ describe("client", () => {
     });
 
     const client = new ApolloClient({ link, cache: new InMemoryCache() });
-
     const expectedError = new InvariantError(
-      "The link chain completed without emitting a value"
+      "The link chain completed without emitting a value. This is likely unintentional and should be updated to emit a value before completing."
     );
 
     await expect(

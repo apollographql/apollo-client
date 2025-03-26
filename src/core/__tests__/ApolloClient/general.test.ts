@@ -6417,8 +6417,8 @@ describe("ApolloClient", () => {
 
       expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: queryData,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
         partial: false,
       });
     });
@@ -6505,8 +6505,8 @@ describe("ApolloClient", () => {
 
       expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: queryData,
-        loading: true,
-        networkStatus: NetworkStatus.refetch,
+        loading: false,
+        networkStatus: NetworkStatus.ready,
         partial: false,
       });
     });

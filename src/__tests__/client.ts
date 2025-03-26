@@ -2022,6 +2022,20 @@ describe("client", () => {
       await expect(stream).toEmitMatchedValue({ data: data2 });
       await expect(stream).not.toEmitAnything();
     });
+
+    it("resolves client.query with default value", async () => {
+      const query = gql`
+        query {
+          test
+        }
+      `;
+
+      const client = new ApolloClient({ cache: new InMemoryCache() });
+
+      await expect(
+        client.query({ query, fetchPolicy: "standby" })
+      ).resolves.toEqualStrictTyped({ data: undefined });
+    });
   });
 
   describe("network-only fetchPolicy", () => {

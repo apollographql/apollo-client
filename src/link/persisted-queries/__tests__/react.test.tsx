@@ -18,8 +18,8 @@ import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
-import { getDataFromTree } from "../../../react/ssr/getDataFromTree.js";
 import { createHttpLink } from "../../http/createHttpLink.js";
+import { getMarkupFromTree } from "@apollo/client/react/ssr";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");
@@ -121,7 +121,10 @@ describe("react application", () => {
     );
 
     // preload all the data for client side request (with filter)
-    const result = await getDataFromTree(app);
+    const result = await getMarkupFromTree({
+      tree: app,
+      renderFunction: ReactDOM.renderToStaticMarkup,
+    });
     expect(result).toContain("data was returned");
     const [[, request]] = fetchMock.calls();
     expect(request!.body).toBe(
@@ -153,7 +156,10 @@ describe("react application", () => {
     );
 
     // change filter object to different variables and SSR
-    await getDataFromTree(app2);
+    await getMarkupFromTree({
+      tree: app2,
+      renderFunction: ReactDOM.renderToStaticMarkup,
+    });
     const view = ReactDOM.renderToString(app2);
 
     const [, [, request2]] = fetchMock.calls();

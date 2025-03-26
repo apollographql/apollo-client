@@ -839,14 +839,6 @@ export class QueryManager {
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
       .then((value) => {
-        // TODO: Update this when we handle emitting errors for empty results.
-        // `value` can be `undefined` when the link chain only emits a complete
-        // event with no value which should be an error.
-        // https://github.com/apollographql/apollo-client/issues/12482
-        if (!value) {
-          return { data: undefined };
-        }
-
         return toQueryResult({
           ...value,
           data: this.maskOperation({

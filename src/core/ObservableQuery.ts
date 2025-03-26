@@ -1068,9 +1068,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
       // Note: lastValueFrom will create a separate subscription to the
       // observable which means that terminating this ObservableQuery will not
       // cancel the request from the link chain.
-      lastValueFrom(observable).then((result) =>
-        toQueryResult(this.maskResult(result))
-      )
+      lastValueFrom(observable, {
+        // This default value should only be used when using a `fetchPolicy` of
+        // `standby` since that fetch policy completes without emitting a
+        // result. Since we are converting this to a QueryResult type, we
+        // omit the extra fields from ApolloQueryResult in the default value.
+        defaultValue: { data: undefined } as ApolloQueryResult<TData>,
+      }).then((result) => toQueryResult(this.maskResult(result)))
     );
   }
 

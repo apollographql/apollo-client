@@ -129,5 +129,10 @@ export function getMarkupFromTree({
     });
   }
 
-  return Promise.resolve().then(process);
+  return Promise.resolve()
+    .then(process)
+    .finally(() => {
+      availableObservableQueries.clear();
+      recentlyCreatedObservableQueries.clear();
+    });
 }

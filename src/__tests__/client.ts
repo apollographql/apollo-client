@@ -770,7 +770,7 @@ describe("client", () => {
     await expect(stream).toEmitStrictTyped(emittedValue);
   });
 
-  it("allows subscriptions to to terminate without emitting results", async () => {
+  it("allows subscriptions to terminate without emitting results", async () => {
     const link = new ApolloLink(() => {
       return new Observable((observer) => {
         setTimeout(() => observer.complete(), 10);

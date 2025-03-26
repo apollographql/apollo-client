@@ -7692,7 +7692,14 @@ describe("useQuery Hook", () => {
       const cache = new InMemoryCache();
       const client = new ApolloClient({
         cache,
-        link: ApolloLink.empty(),
+        link: new ApolloLink(() => {
+          return new Observable((observer) => {
+            setTimeout(() => {
+              observer.next({ data: null });
+              observer.complete();
+            }, 10);
+          });
+        }),
       });
 
       const query = gql`

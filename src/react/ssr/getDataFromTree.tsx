@@ -1,10 +1,10 @@
 import { print } from "graphql";
 import type * as ReactTypes from "react";
 import * as React from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { filter, firstValueFrom } from "rxjs";
 
 import type {
+  ApolloClient,
   DocumentNode,
   ObservableQuery,
   OperationVariables,
@@ -15,25 +15,25 @@ import { canonicalStringify } from "@apollo/client/utilities";
 
 import { useSSRQuery } from "./useSSRQuery.js";
 
-export function getDataFromTree(
-  tree: ReactTypes.ReactNode,
-  context: { [key: string]: any } = {}
-) {
-  return getMarkupFromTree({
-    tree,
-    context,
-    // If you need to configure this renderFunction, call getMarkupFromTree
-    // directly instead of getDataFromTree.
-    renderFunction: renderToStaticMarkup,
-  });
-}
+type RenderToString = (element: ReactTypes.ReactNode) => string;
+type RenderToStringPromise = (element: ReactTypes.ReactNode) => Promise<string>;
+
+type PrerenderToWebStream = (reactNode: ReactTypes.ReactNode) => Promise<{
+  prelude: ReadableStream<Uint8Array>; // AsyncIterable<Uint8Array>;
+}>;
+
+type PrerenderToNodeStream = (reactNode: ReactTypes.ReactNode) => Promise<{
+  prelude: AsyncIterable<string | Buffer>;
+}>;
 
 type GetMarkupFromTreeOptions = {
   tree: ReactTypes.ReactNode;
-  context?: { [key: string]: any };
-  renderFunction?: (
-    tree: ReactTypes.ReactElement<any>
-  ) => string | PromiseLike<string>;
+  context?: { client?: ApolloClient };
+  renderFunction:
+    | RenderToString
+    | RenderToStringPromise
+    | PrerenderToWebStream
+    | PrerenderToNodeStream;
 };
 
 type ObservableQueryKey = `${string}|${string}`;
@@ -63,7 +63,7 @@ export function getMarkupFromTree({
   // The rendering function is configurable! We use renderToStaticMarkup as
   // the default, because it's a little less expensive than renderToString,
   // and legacy usage of getDataFromTree ignores the return value anyway.
-  renderFunction = renderToStaticMarkup,
+  renderFunction,
 }: GetMarkupFromTreeOptions): Promise<string> {
   const availableObservableQueries = new Map<
     ObservableQueryKey,
@@ -99,34 +99,36 @@ export function getMarkupFromTree({
     // elements) for a subtree of the original component tree.
     const ApolloContext = getApolloContext();
 
-    return new Promise<string>((resolve) => {
-      const element = (
-        <ApolloContext.Provider
-          value={{
-            ...context,
-            [wrapperSymbol]: {
-              useQuery: () => useSSRQuery.bind(internalContext),
-            },
-          }}
-        >
-          {tree}
-        </ApolloContext.Provider>
-      );
-      resolve(renderFunction(element));
-    }).then((html) => {
-      if (recentlyCreatedObservableQueries.size == 0) {
-        return html;
-      }
-      return Promise.all(
-        Array.from(recentlyCreatedObservableQueries).map(async (observable) => {
-          await firstValueFrom(
-            observable.pipe(filter((result) => result.loading === false))
-          );
+    const element = (
+      <ApolloContext.Provider
+        value={{
+          ...context,
+          [wrapperSymbol]: {
+            useQuery: () => useSSRQuery.bind(internalContext),
+          },
+        }}
+      >
+        {tree}
+      </ApolloContext.Provider>
+    );
+    return Promise.resolve(renderFunction(element))
+      .then(decode)
+      .then((html) => {
+        if (recentlyCreatedObservableQueries.size == 0) {
+          return html;
+        }
+        return Promise.all(
+          Array.from(recentlyCreatedObservableQueries).map(
+            async (observable) => {
+              await firstValueFrom(
+                observable.pipe(filter((result) => result.loading === false))
+              );
 
-          recentlyCreatedObservableQueries.delete(observable);
-        })
-      ).then(process);
-    });
+              recentlyCreatedObservableQueries.delete(observable);
+            }
+          )
+        ).then(process);
+      });
   }
 
   return Promise.resolve()
@@ -135,4 +137,44 @@ export function getMarkupFromTree({
       availableObservableQueries.clear();
       recentlyCreatedObservableQueries.clear();
     });
+}
+
+async function decode(
+  value:
+    | string
+    | {
+        prelude: ReadableStream<Uint8Array>;
+      }
+    | {
+        prelude: AsyncIterable<string | Buffer>;
+      }
+): Promise<string> {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (!value.prelude) {
+    throw new Error(
+      "`getMarkupFromTree` was called with an incompatible render method.\n" +
+        'It is compatible with `renderToStaticMarkup` and `renderToString`  from `"react-dom/server"`\n' +
+        'as well as `prerender` and `prerenderToNodeStrea` } from "react-dom/static"'
+    );
+  }
+  const prelude = value.prelude;
+  let result = "";
+  if ("getReader" in prelude) {
+    const reader = prelude.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      result += Buffer.from(value).toString("utf8");
+    }
+  } else {
+    for await (const chunk of prelude) {
+      result +=
+        typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
+    }
+  }
+  return result;
 }

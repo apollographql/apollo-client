@@ -1,9 +1,11 @@
 import "../../../testing/internal/messageChannelPolyfill.js";
+import { expectTypeOf } from "expect-type";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
-import { InMemoryCache as Cache } from "@apollo/client/cache";
+import { InMemoryCache, InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
@@ -13,24 +15,33 @@ import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
 import { mockSingleLink } from "@apollo/client/testing";
 
-import { getDataFromTree } from "../getDataFromTree.js";
+import { getMarkupFromTree } from "../getDataFromTree.js";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {
     it("should support passing a root context", async () => {
-      type CustomContext = { text: string };
+      const client = new ApolloClient({
+        name: "oyez",
+        cache: new InMemoryCache(),
+      });
       const ApolloContext = getApolloContext();
 
       function App() {
         return (
           <ApolloContext.Consumer>
-            {(context) => <div>{(context as CustomContext).text}</div>}
+            {(context) => (
+              <div>
+                {context?.client?.["queryManager"]["clientAwareness"].name}
+              </div>
+            )}
           </ApolloContext.Consumer>
         );
       }
 
-      const html = await getDataFromTree(<App />, {
-        text: "oyez",
+      const html = await getMarkupFromTree({
+        tree: <App />,
+        context: { client },
+        renderFunction: renderToStaticMarkup,
       });
 
       expect(html).toEqual("<div>oyez</div>");
@@ -77,7 +88,10 @@ describe("SSR", () => {
         </ApolloProvider>
       );
 
-      const markup = await getDataFromTree(app);
+      const markup = await getMarkupFromTree({
+        tree: app,
+        renderFunction: renderToStaticMarkup,
+      });
 
       expect(markup).toMatch(/James/);
     });
@@ -126,11 +140,46 @@ describe("SSR", () => {
         return null;
       }
 
-      await getDataFromTree(
-        <ApolloProvider client={client}>
-          <App />
-        </ApolloProvider>
-      );
+      await getMarkupFromTree({
+        tree: (
+          <ApolloProvider client={client}>
+            <App />
+          </ApolloProvider>
+        ),
+        renderFunction: renderToStaticMarkup,
+      });
     });
   });
+});
+
+it.skip("type tests", async () => {
+  expectTypeOf(
+    await getMarkupFromTree({
+      tree: <div />,
+      renderFunction: renderToStaticMarkup,
+    })
+  ).toBeString();
+  expectTypeOf(
+    await getMarkupFromTree({
+      tree: <div />,
+      renderFunction: renderToString,
+    })
+  ).toBeString();
+  if (React.version.startsWith("19")) {
+    const { prerender, prerenderToNodeStream } =
+      require("react-dom/static") as typeof import("react-dom/static");
+
+    expectTypeOf(
+      await getMarkupFromTree({
+        tree: <div />,
+        renderFunction: prerender,
+      })
+    ).toBeString();
+    expectTypeOf(
+      await getMarkupFromTree({
+        tree: <div />,
+        renderFunction: prerenderToNodeStream,
+      })
+    ).toBeString();
+  }
 });

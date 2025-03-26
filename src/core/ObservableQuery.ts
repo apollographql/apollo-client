@@ -1159,7 +1159,11 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private getInitialResult(): ApolloQueryResult<TData> {
-    const { variables, fetchPolicy, returnPartialData = false } = this.options;
+    const { variables, returnPartialData = false } = this.options;
+    const fetchPolicy =
+      this.queryManager.prioritizeCacheValues ?
+        "cache-first"
+      : this.options.fetchPolicy;
     const defaultResult = {
       data: undefined,
       loading: true,

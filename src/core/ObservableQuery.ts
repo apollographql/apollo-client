@@ -131,7 +131,7 @@ export class ObservableQuery<
   }) {
     this.networkStatus = NetworkStatus.loading;
 
-    const initialResult = getInitialResult(queryInfo, options);
+    const initialResult = getInitialResult(queryManager, options);
 
     this.subject = new BehaviorSubject(initialResult);
     this.observable = this.subject.pipe(
@@ -1156,8 +1156,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 }
 
 function getInitialResult<TData, TVariables extends OperationVariables>(
-  queryInfo: QueryInfo,
-  { fetchPolicy, returnPartialData }: WatchQueryOptions<TVariables, TData>
+  queryManager: QueryManager,
+  {
+    query,
+    variables,
+    fetchPolicy,
+    returnPartialData,
+  }: WatchQueryOptions<TVariables, TData>
 ): ApolloQueryResult<TData> {
   const defaultResult = {
     data: undefined,
@@ -1167,19 +1172,20 @@ function getInitialResult<TData, TVariables extends OperationVariables>(
   };
 
   function cacheResult() {
-    const diff = queryInfo.getDiff();
+    const diff = queryManager.cache.diff({
+      query,
+      variables,
+      returnPartialData,
+      optimistic: true,
+    });
 
-    if (diff.complete || returnPartialData) {
-      return {
-        data: diff.result ?? undefined,
-        loading: !diff.complete,
-        networkStatus:
-          diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
-        partial: !diff.complete,
-      };
-    }
-
-    return defaultResult;
+    return {
+      data: (diff.result as TData) ?? undefined,
+      loading: !diff.complete,
+      networkStatus:
+        diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
+      partial: !diff.complete,
+    };
   }
 
   switch (fetchPolicy) {

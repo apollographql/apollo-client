@@ -65,7 +65,6 @@ import {
 } from "@apollo/client/utilities/invariant";
 
 import type { IgnoreModifier } from "../cache/core/types/common.js";
-import type { TODO } from "../utilities/types/TODO.js";
 
 import type { DefaultOptions } from "./ApolloClient.js";
 import type { LocalState } from "./LocalState.js";

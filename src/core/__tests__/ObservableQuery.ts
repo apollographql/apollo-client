@@ -2526,9 +2526,7 @@ describe("ObservableQuery", () => {
         returnPartialData: true,
       });
 
-      // TODO: Determine why this worked without the `false` argument before
-      // since this updates the last value to be equal to the partial result.
-      expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+      expect(observable.getCurrentResult()).toEqualStrictTyped({
         data: dataOne,
         loading: true,
         networkStatus: NetworkStatus.loading,
@@ -3514,7 +3512,7 @@ describe("ObservableQuery", () => {
       observable.subscribe(jest.fn());
 
       await waitFor(() => {
-        expect(observable.getCurrentResult(false)).toEqual({
+        expect(observable.getCurrentResult()).toEqual({
           data: dataOne,
           loading: false,
           networkStatus: NetworkStatus.ready,
@@ -3807,7 +3805,7 @@ test("handles changing variables in rapid succession before other request is com
   observable.subscribe(jest.fn());
 
   await waitFor(() => {
-    expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+    expect(observable.getCurrentResult()).toEqualStrictTyped({
       data: { userCount: 10 },
       loading: false,
       networkStatus: NetworkStatus.ready,
@@ -3823,7 +3821,7 @@ test("handles changing variables in rapid succession before other request is com
   await wait(50);
 
   expect(observable.options.variables).toEqual({ department: null });
-  expect(observable.getCurrentResult(false)).toEqualStrictTyped({
+  expect(observable.getCurrentResult()).toEqualStrictTyped({
     data: { userCount: 10 },
     loading: false,
     networkStatus: NetworkStatus.ready,

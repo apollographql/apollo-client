@@ -332,10 +332,8 @@ export class ObservableQuery<
     return result;
   }
 
-  public getCurrentResult(
-    saveAsLastResult = true
-  ): ApolloQueryResult<MaybeMasked<TData>> {
-    return this.maskResult(this.getCurrentFullResult(saveAsLastResult));
+  public getCurrentResult() {
+    return this.subject.getValue();
   }
 
   // Compares newResult to the snapshot we took of this.lastResult when it was

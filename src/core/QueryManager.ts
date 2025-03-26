@@ -336,6 +336,7 @@ export class QueryManager {
         false
       )
         .pipe(
+          validateDidEmitValue(),
           mergeMap((result) => {
             const hasErrors = graphQLResultHasError(result);
             if (hasErrors && errorPolicy === "none") {

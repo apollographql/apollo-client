@@ -257,7 +257,11 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ id }) => useQuery(query, { variables: { id } }),
+        ({ id }) =>
+          useQuery(query, {
+            variables: { id },
+            notifyOnNetworkStatusChange: true,
+          }),
         { wrapper, initialProps: { id: 1 } }
       );
 
@@ -478,7 +482,11 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ id }) => useQuery(query, { variables: { id } }),
+        ({ id }) =>
+          useQuery(query, {
+            notifyOnNetworkStatusChange: true,
+            variables: { id },
+          }),
         { wrapper, initialProps: { id: 1 } }
       );
 
@@ -578,7 +586,11 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ name }) => useQuery(query, { variables: { name } }),
+        ({ name }) =>
+          useQuery(query, {
+            notifyOnNetworkStatusChange: true,
+            variables: { name },
+          }),
         { wrapper, initialProps: { name: "" } }
       );
 
@@ -713,7 +725,10 @@ describe("useQuery Hook", () => {
             const [name, setName1] = React.useState("world 1");
             setName = setName1;
             return [
-              useQuery(query, { variables: { name } }),
+              useQuery(query, {
+                notifyOnNetworkStatusChange: true,
+                variables: { name },
+              }),
               useMutation<any>(mutation, {
                 update(cache, { data }) {
                   cache.writeQuery({
@@ -6893,7 +6908,8 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ skip }) => useQuery(query, { skip }),
+        ({ skip }) =>
+          useQuery(query, { skip, notifyOnNetworkStatusChange: true }),
         { wrapper, initialProps: { skip: true } }
       );
 

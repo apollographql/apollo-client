@@ -257,8 +257,8 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        (options) => useQuery(query, options),
-        { wrapper, initialProps: { variables: { id: 1 } } }
+        ({ id }) => useQuery(query, { variables: { id } }),
+        { wrapper, initialProps: { id: 1 } }
       );
 
       {
@@ -285,7 +285,7 @@ describe("useQuery Hook", () => {
         });
       }
 
-      await rerender({ variables: { id: 2 } });
+      await rerender({ id: 2 });
 
       {
         const result = await takeSnapshot();

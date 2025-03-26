@@ -2,12 +2,11 @@ import type * as ReactTypes from "react";
 import * as React from "react";
 
 import type { ApolloClient } from "@apollo/client/core";
-import { invariant } from "@apollo/client/utilities/invariant";
-
 import type {
   HookWrappers,
   wrapperSymbol,
-} from "../hooks/internal/wrapHook.js";
+} from "@apollo/client/react/internal";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 export interface ApolloContextValue {
   client?: ApolloClient;

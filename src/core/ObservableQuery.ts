@@ -131,7 +131,7 @@ export class ObservableQuery<
   }) {
     this.networkStatus = NetworkStatus.loading;
 
-    const initialResult = getInitialResult(queryManager, options);
+    const initialResult = getInitialResult(queryInfo, options);
 
     this.subject = new BehaviorSubject(initialResult);
     this.observable = this.subject.pipe(
@@ -1156,29 +1156,30 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 }
 
 function getInitialResult<TData, TVariables extends OperationVariables>(
-  queryManager: QueryManager,
-  {
-    fetchPolicy,
-    query,
-    variables,
-    returnPartialData,
-  }: WatchQueryOptions<TVariables, TData>
+  queryInfo: QueryInfo,
+  { fetchPolicy, returnPartialData }: WatchQueryOptions<TVariables, TData>
 ): ApolloQueryResult<TData> {
-  function cacheResult() {
-    const diff = queryManager.cache.diff({
-      query,
-      variables,
-      optimistic: true,
-      returnPartialData,
-    });
+  const defaultResult = {
+    data: undefined,
+    loading: true,
+    networkStatus: NetworkStatus.loading,
+    partial: true,
+  };
 
-    return {
-      data: (diff.result as TData) ?? undefined,
-      loading: !diff.complete,
-      networkStatus:
-        diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
-      partial: !diff.complete,
-    };
+  function cacheResult() {
+    const diff = queryInfo.getDiff();
+
+    if (diff.complete || returnPartialData) {
+      return {
+        data: diff.result ?? undefined,
+        loading: !diff.complete,
+        networkStatus:
+          diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
+        partial: !diff.complete,
+      };
+    }
+
+    return defaultResult;
   }
 
   switch (fetchPolicy) {
@@ -1193,12 +1194,7 @@ function getInitialResult<TData, TVariables extends OperationVariables>(
       };
 
     default:
-      return {
-        data: undefined,
-        loading: true,
-        networkStatus: NetworkStatus.loading,
-        partial: true,
-      };
+      return defaultResult;
   }
 }
 

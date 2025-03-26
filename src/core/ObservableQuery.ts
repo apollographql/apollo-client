@@ -100,8 +100,6 @@ export class ObservableQuery<
   private readonly observable: Observable<
     ApolloQueryResult<MaybeMasked<TData>>
   >;
-  private initialResult: ApolloQueryResult<MaybeMasked<TData>>;
-
   private isTornDown: boolean;
   private queryManager: QueryManager;
   private subscriptions = new Set<Subscription>();
@@ -132,14 +130,10 @@ export class ObservableQuery<
     options: WatchQueryOptions<TVariables, TData>;
   }) {
     this.networkStatus = NetworkStatus.loading;
-    this.initialResult = {
-      data: undefined,
-      loading: true,
-      networkStatus: this.networkStatus,
-      partial: true,
-    };
 
-    this.subject = new BehaviorSubject(this.initialResult);
+    const initialResult = getInitialResult(queryManager, options);
+
+    this.subject = new BehaviorSubject(initialResult);
     this.observable = this.subject.pipe(
       tap({
         subscribe: () => {
@@ -172,7 +166,7 @@ export class ObservableQuery<
           (this.options.fetchPolicy === "network-only" &&
             !this.queryManager.prioritizeCacheValues &&
             this.queryInfo.getDiff().complete) ||
-          result !== this.initialResult
+          result !== initialResult
       )
     );
 
@@ -1160,6 +1154,53 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           }),
         }
       : result;
+  }
+}
+
+function getInitialResult<TData, TVariables extends OperationVariables>(
+  queryManager: QueryManager,
+  {
+    fetchPolicy,
+    query,
+    variables,
+    returnPartialData,
+  }: WatchQueryOptions<TVariables, TData>
+): ApolloQueryResult<TData> {
+  function cacheResult() {
+    const diff = queryManager.cache.diff({
+      query,
+      variables,
+      optimistic: true,
+      returnPartialData,
+    });
+
+    return {
+      data: (diff.result as TData) ?? undefined,
+      loading: !diff.complete,
+      networkStatus:
+        diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
+      partial: !diff.complete,
+    };
+  }
+
+  switch (fetchPolicy) {
+    case "cache-only":
+    case "cache-first":
+      return cacheResult();
+    case "cache-and-network":
+      return {
+        ...cacheResult(),
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+      };
+
+    default:
+      return {
+        data: undefined,
+        loading: true,
+        networkStatus: NetworkStatus.loading,
+        partial: true,
+      };
   }
 }
 

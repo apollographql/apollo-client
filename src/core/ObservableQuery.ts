@@ -1190,6 +1190,12 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           loading: true,
           networkStatus: NetworkStatus.loading,
         };
+      case "standby":
+        return {
+          ...defaultResult,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+        };
 
       default:
         return defaultResult;

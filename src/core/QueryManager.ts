@@ -1231,21 +1231,7 @@ export class QueryManager {
       );
     }
 
-    let didEmitValue = false;
-
-    return observable.pipe(
-      tap({
-        next: () => {
-          didEmitValue = true;
-        },
-        complete: () => {
-          invariant(
-            didEmitValue,
-            "The link chain completed without emitting a value"
-          );
-        },
-      })
-    );
+    return observable;
   }
 
   private getResultsFromLink<TData, TVars extends OperationVariables>(
@@ -1781,7 +1767,7 @@ export class QueryManager {
         context,
         fetchPolicy,
         errorPolicy,
-      });
+      }).pipe(validateDidEmitValue());
 
     switch (fetchPolicy) {
       default:
@@ -1898,6 +1884,22 @@ function maybeWrapError(error: unknown) {
   }
 
   return new UnconventionalError(error);
+}
+
+function validateDidEmitValue<T>() {
+  let didEmitValue = false;
+
+  return tap<T>({
+    next() {
+      didEmitValue = true;
+    },
+    complete() {
+      invariant(
+        didEmitValue,
+        "The link chain completed without emitting a value. This is likely unintentional and should be updated to emit a value before completing."
+      );
+    },
+  });
 }
 
 // Return types used by fetchQueryByPolicy and other private methods above.

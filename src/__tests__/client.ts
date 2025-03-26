@@ -10,7 +10,7 @@ import {
 import { GraphQLFormattedError } from "graphql";
 import { gql } from "graphql-tag";
 import { assign, cloneDeep } from "lodash";
-import { EmptyError, Observable, of, Subscription } from "rxjs";
+import { Observable, of, Subscription } from "rxjs";
 
 import {
   createFragmentRegistry,
@@ -1983,8 +1983,7 @@ describe("client", () => {
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
-        // TODO: Update this behavior
-      ).rejects.toThrow(new EmptyError());
+      ).resolves.toEqualStrictTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
 
@@ -2013,8 +2012,7 @@ describe("client", () => {
 
       await expect(
         obs.reobserve({ query, fetchPolicy: "standby" })
-        // TODO: Update this behavior
-      ).rejects.toThrow(new EmptyError());
+      ).resolves.toEqualStrictTyped({ data: undefined });
       // this write should be completely ignored by the standby query
       client.writeQuery({ query, data: data2 });
       setTimeout(() => {

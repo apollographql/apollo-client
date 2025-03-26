@@ -1018,14 +1018,18 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
 
     const variables = options.variables && { ...options.variables };
     const { notifyOnNetworkStatusChange = false } = options;
+
     const { observable, fromLink } = this.fetch(
       options,
       newNetworkStatus,
-      (notifyOnNetworkStatusChange &&
-        oldNetworkStatus !== newNetworkStatus &&
-        isNetworkRequestInFlight(newNetworkStatus)) ||
-        // Emit a loading state immediately if we are no longer skipping the query
-        (oldFetchPolicy === "standby" && options.fetchPolicy !== "standby"),
+      notifyOnNetworkStatusChange &&
+        // Changed networkStatus
+        ((oldNetworkStatus !== newNetworkStatus &&
+          isNetworkRequestInFlight(newNetworkStatus)) ||
+          // No longer skipped query
+          (oldFetchPolicy === "standby" && options.fetchPolicy !== "standby") ||
+          // variables changed
+          !equal(variables, oldVariables)),
       query
     );
     const observer: Partial<Observer<ApolloQueryResult<TData>>> = {

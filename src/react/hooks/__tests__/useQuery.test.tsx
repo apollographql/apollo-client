@@ -3511,8 +3511,9 @@ describe("useQuery Hook", () => {
             variables: { id: 1 },
           },
           result: {
-            errors: [new GraphQLError("error")],
+            errors: [{ message: "error" }],
           },
+          delay: 10,
         },
         {
           request: {
@@ -3522,6 +3523,7 @@ describe("useQuery Hook", () => {
           result: {
             data: { hello: "world 2" },
           },
+          delay: 10,
         },
         {
           request: {
@@ -3531,12 +3533,17 @@ describe("useQuery Hook", () => {
           result: {
             data: { hello: "world 1" },
           },
+          delay: 10,
         },
       ];
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ id }) => useQuery(query, { variables: { id } }),
+        ({ id }) =>
+          useQuery(query, {
+            notifyOnNetworkStatusChange: true,
+            variables: { id },
+          }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>

@@ -1157,7 +1157,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
   }
 
   private getInitialResult(): ApolloQueryResult<TData> {
-    const { variables, fetchPolicy, returnPartialData } = this.options;
+    const { variables, fetchPolicy, returnPartialData = false } = this.options;
     const defaultResult = {
       data: undefined,
       loading: true,

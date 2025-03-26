@@ -99,7 +99,6 @@ export class QueryInfo {
   public init(query: {
     document: DocumentNode;
     variables: Record<string, any> | undefined;
-    observableQuery?: ObservableQuery<any, any>;
     lastRequestId?: number;
   }): this {
     if (!equal(query.variables, this.variables)) {
@@ -113,10 +112,6 @@ export class QueryInfo {
       variables: query.variables,
       networkError: null,
     });
-
-    if (query.observableQuery) {
-      this.setObservableQuery(query.observableQuery);
-    }
 
     if (query.lastRequestId) {
       this.lastRequestId = query.lastRequestId;

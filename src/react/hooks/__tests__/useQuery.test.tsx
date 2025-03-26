@@ -7218,6 +7218,7 @@ describe("useQuery Hook", () => {
               // the initial fetchPolicy (e.g. when variables change).
               skip,
               fetchPolicy: correctInitialFetchPolicy,
+              notifyOnNetworkStatusChange: true,
             }),
           {
             initialProps: {

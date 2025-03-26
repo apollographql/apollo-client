@@ -806,7 +806,12 @@ export class QueryManager {
       options.notifyOnNetworkStatusChange = false;
     }
 
-    const queryInfo = new QueryInfo(this);
+    // We give queryInfo the transformed query to ensure the first cache diff
+    // uses the transformed query instead of the raw query
+    const queryInfo = new QueryInfo(this).init({
+      document: query,
+      variables: options.variables,
+    });
     const observable = new ObservableQuery<T, TVariables>({
       queryManager: this,
       queryInfo,
@@ -815,14 +820,7 @@ export class QueryManager {
     observable["lastQuery"] = query;
 
     this.queries.set(observable.queryId, queryInfo);
-
-    // We give queryInfo the transformed query to ensure the first cache diff
-    // uses the transformed query instead of the raw query
-    queryInfo.init({
-      document: query,
-      observableQuery: observable,
-      variables: observable.variables,
-    });
+    queryInfo.setObservableQuery(observable);
 
     return observable;
   }

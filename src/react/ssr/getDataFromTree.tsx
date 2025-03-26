@@ -100,17 +100,17 @@ export function getMarkupFromTree({
     const ApolloContext = getApolloContext();
 
     return new Promise<string>((resolve) => {
-      const element = React.createElement(
-        ApolloContext.Provider,
-        {
-          value: {
+      const element = (
+        <ApolloContext.Provider
+          value={{
             ...context,
             [wrapperSymbol]: {
               useQuery: () => useSSRQuery.bind(internalContext),
             },
-          },
-        },
-        tree
+          }}
+        >
+          {tree}
+        </ApolloContext.Provider>
       );
       resolve(renderFunction(element));
     }).then((html) => {

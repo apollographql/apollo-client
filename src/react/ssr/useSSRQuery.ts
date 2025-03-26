@@ -65,7 +65,7 @@ export const useSSRQuery = function (
   };
 };
 
-export function withoutObservableAccess<T>(
+function withoutObservableAccess<T>(
   value: T
 ): T & { observable: ObservableQuery<any, any> } {
   Object.defineProperty(value, "observable", {

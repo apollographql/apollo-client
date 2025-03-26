@@ -7041,18 +7041,17 @@ describe("ApolloClient", () => {
 
   describe("missing cache field warnings", () => {
     let verbosity: ReturnType<typeof setVerbosity>;
-    let spy: any;
     beforeEach(() => {
       verbosity = setVerbosity("debug");
-      spy = jest.spyOn(console, "debug").mockImplementation();
     });
 
     afterEach(() => {
       setVerbosity(verbosity);
-      spy.mockRestore();
     });
 
     it("should show missing cache result fields warning when returnPartialData is false", async () => {
+      using _ = spyOnConsole("debug");
+
       const query1 = gql`
         query {
           car {
@@ -7121,10 +7120,12 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: true,
       });
-      expect(spy).toHaveBeenCalledTimes(1);
+      expect(console.debug).toHaveBeenCalledTimes(1);
     });
 
     it("should not show missing cache result fields warning when returnPartialData is true", async () => {
+      using _ = spyOnConsole("debug");
+
       const query1 = gql`
         query {
           car {
@@ -7193,7 +7194,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: true,
       });
-      expect(spy).toHaveBeenCalledTimes(0);
+      expect(console.debug).toHaveBeenCalledTimes(0);
     });
   });
 

@@ -4471,7 +4471,7 @@ describe("useQuery Hook", () => {
         });
 
         // Ensure we store the merged result as the last result
-        expect(result.observable.getCurrentResult(false).data).toEqual({
+        expect(result.observable.getCurrentResult().data).toEqual({
           letters: [
             { __typename: "Letter", letter: "A", position: 1 },
             { __typename: "Letter", letter: "B", position: 2 },
@@ -4546,7 +4546,7 @@ describe("useQuery Hook", () => {
           variables: { limit: 2 },
         });
 
-        expect(result.observable.getCurrentResult(false).data).toEqual({
+        expect(result.observable.getCurrentResult().data).toEqual({
           letters: [
             { __typename: "Letter", letter: "E", position: 5 },
             { __typename: "Letter", letter: "F", position: 6 },
@@ -4969,7 +4969,7 @@ describe("useQuery Hook", () => {
       // ensure we aren't setting a value on the observable query that contains
       // the partial result
       expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)!
+        snapshot.useQueryResult?.observable.getCurrentResult()!
       ).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({
@@ -5032,7 +5032,7 @@ describe("useQuery Hook", () => {
       // ensure we aren't setting a value on the observable query that contains
       // the partial result
       expect(
-        snapshot.useQueryResult?.observable.getCurrentResult(false)!
+        snapshot.useQueryResult?.observable.getCurrentResult()!
       ).toEqualStrictTyped({
         data: undefined,
         error: new CombinedGraphQLErrors({

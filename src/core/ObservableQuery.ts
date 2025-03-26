@@ -1171,13 +1171,13 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
         optimistic: true,
       });
 
-      return {
+      return this.maskResult({
         data: (diff.result as TData) ?? undefined,
         loading: !diff.complete,
         networkStatus:
           diff.complete ? NetworkStatus.ready : NetworkStatus.loading,
         partial: !diff.complete,
-      };
+      });
     };
 
     switch (fetchPolicy) {

@@ -131,6 +131,52 @@ export class ObservableQuery<
   }) {
     this.networkStatus = NetworkStatus.loading;
 
+    this["@@observable"] = () => this;
+    if (Symbol.observable) {
+      this[Symbol.observable] = () => this;
+    }
+
+    // related classes
+    this.queryInfo = queryInfo;
+    this.queryManager = queryManager;
+
+    // active state
+    this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
+    this.isTornDown = false;
+
+    this.subscribeToMore = this.subscribeToMore.bind(this);
+    this.maskResult = this.maskResult.bind(this);
+
+    const {
+      watchQuery: { fetchPolicy: defaultFetchPolicy = "cache-first" } = {},
+    } = queryManager.defaultOptions;
+
+    const {
+      fetchPolicy = defaultFetchPolicy,
+      // Make sure we don't store "standby" as the initialFetchPolicy.
+      initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
+        fetchPolicy
+      ),
+    } = options;
+
+    this.options = {
+      ...options,
+
+      // Remember the initial options.fetchPolicy so we can revert back to this
+      // policy when variables change. This information can also be specified
+      // (or overridden) by providing options.initialFetchPolicy explicitly.
+      initialFetchPolicy,
+
+      // This ensures this.options.fetchPolicy always has a string value, in
+      // case options.fetchPolicy was not provided.
+      fetchPolicy,
+    };
+
+    this.queryId = queryInfo.queryId || queryManager.generateQueryId();
+
+    const opDef = getOperationDefinition(this.query);
+    this.queryName = opDef && opDef.name && opDef.name.value;
+
     const initialResult = getInitialResult(queryManager, options);
 
     this.subject = new BehaviorSubject(initialResult);
@@ -170,54 +216,8 @@ export class ObservableQuery<
       )
     );
 
-    this["@@observable"] = () => this;
-    if (Symbol.observable) {
-      this[Symbol.observable] = () => this;
-    }
     this.pipe = this.observable.pipe.bind(this.observable);
     this.subscribe = this.observable.subscribe.bind(this.observable);
-
-    // related classes
-    this.queryInfo = queryInfo;
-    this.queryManager = queryManager;
-
-    // active state
-    this.waitForOwnResult = skipCacheDataFor(options.fetchPolicy);
-    this.isTornDown = false;
-
-    this.subscribe = this.subscribe.bind(this);
-    this.subscribeToMore = this.subscribeToMore.bind(this);
-    this.maskResult = this.maskResult.bind(this);
-
-    const {
-      watchQuery: { fetchPolicy: defaultFetchPolicy = "cache-first" } = {},
-    } = queryManager.defaultOptions;
-
-    const {
-      fetchPolicy = defaultFetchPolicy,
-      // Make sure we don't store "standby" as the initialFetchPolicy.
-      initialFetchPolicy = fetchPolicy === "standby" ? defaultFetchPolicy : (
-        fetchPolicy
-      ),
-    } = options;
-
-    this.options = {
-      ...options,
-
-      // Remember the initial options.fetchPolicy so we can revert back to this
-      // policy when variables change. This information can also be specified
-      // (or overridden) by providing options.initialFetchPolicy explicitly.
-      initialFetchPolicy,
-
-      // This ensures this.options.fetchPolicy always has a string value, in
-      // case options.fetchPolicy was not provided.
-      fetchPolicy,
-    };
-
-    this.queryId = queryInfo.queryId || queryManager.generateQueryId();
-
-    const opDef = getOperationDefinition(this.query);
-    this.queryName = opDef && opDef.name && opDef.name.value;
   }
 
   // We can't use Observable['subscribe'] here as the type as it conflicts with

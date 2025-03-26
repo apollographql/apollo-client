@@ -706,8 +706,17 @@ export class QueryManager {
   ): Promise<ApolloQueryResult<TData>> {
     return lastValueFrom(
       this.fetchObservableWithInfo(queryId, options, networkStatus).observable,
-      { defaultValue: undefined }
-    ) as TODO;
+      {
+        // This default is needed when a `standby` fetch policy is used to avoid
+        // an EmptyError from rejecting this promise.
+        defaultValue: {
+          data: undefined,
+          loading: false,
+          networkStatus: NetworkStatus.ready,
+          partial: true,
+        },
+      }
+    );
   }
 
   public transform(document: DocumentNode) {

@@ -3,14 +3,7 @@ import { waitFor } from "@testing-library/react";
 import { expectTypeOf } from "expect-type";
 import { GraphQLError } from "graphql";
 import { gql } from "graphql-tag";
-import {
-  EmptyError,
-  from,
-  Observable,
-  ObservedValueOf,
-  of,
-  Subject,
-} from "rxjs";
+import { from, Observable, ObservedValueOf, of, Subject } from "rxjs";
 import { Observer } from "rxjs";
 
 import { InMemoryCache } from "@apollo/client/cache";
@@ -707,7 +700,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.reobserve({ query, fetchPolicy: "standby" })
-      ).rejects.toThrow(new EmptyError());
+      ).resolves.toEqualStrictTyped({ data: undefined });
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();
@@ -767,10 +760,7 @@ describe("ObservableQuery", () => {
 
       await expect(
         observable.reobserve({ query, fetchPolicy: "standby" })
-        // TODO: Dertermine how we want to handle this. We likely should swallow
-        // the error since standby currently does not emit a value but completes
-        // instead.
-      ).rejects.toThrow(new EmptyError());
+      ).resolves.toEqualStrictTyped({ data: undefined });
 
       // make sure the query didn't get fired again.
       await expect(stream).not.toEmitAnything();

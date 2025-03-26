@@ -608,7 +608,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
           );
         }
 
-        return toQueryResult(this.maskResult(fetchMoreResult));
+        return this.maskResult(fetchMoreResult);
       })
       .finally(() => {
         // In case the cache writes above did not generate a broadcast
@@ -1150,9 +1150,7 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
     return this.queryManager.transform(document);
   }
 
-  private maskResult<T = TData>(
-    result: ApolloQueryResult<T>
-  ): ApolloQueryResult<MaybeMasked<T>> {
+  private maskResult<T extends { data: any }>(result: T): T {
     return result && "data" in result ?
         {
           ...result,

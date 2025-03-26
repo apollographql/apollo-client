@@ -703,18 +703,17 @@ export class QueryManager {
     queryId: string,
     options: WatchQueryOptions<TVars, TData>,
     networkStatus?: NetworkStatus
-  ): Promise<ApolloQueryResult<TData>> {
+  ): Promise<QueryResult<TData>> {
     return lastValueFrom(
-      this.fetchObservableWithInfo(queryId, options, networkStatus).observable,
+      this.fetchObservableWithInfo(
+        queryId,
+        options,
+        networkStatus
+      ).observable.pipe(map(toQueryResult)),
       {
         // This default is needed when a `standby` fetch policy is used to avoid
         // an EmptyError from rejecting this promise.
-        defaultValue: {
-          data: undefined,
-          loading: false,
-          networkStatus: NetworkStatus.ready,
-          partial: true,
-        },
+        defaultValue: { data: undefined },
       }
     );
   }
@@ -838,17 +837,15 @@ export class QueryManager {
     const query = this.transform(options.query);
 
     return this.fetchQuery<TData, TVars>(queryId, { ...options, query })
-      .then((value) => {
-        return toQueryResult({
-          ...value,
-          data: this.maskOperation({
-            document: query,
-            data: value?.data,
-            fetchPolicy: options.fetchPolicy,
-            id: queryId,
-          }),
-        });
-      })
+      .then((value) => ({
+        ...value,
+        data: this.maskOperation({
+          document: query,
+          data: value?.data,
+          fetchPolicy: options.fetchPolicy,
+          id: queryId,
+        }),
+      }))
       .finally(() => this.stopQuery(queryId));
   }
 

@@ -2036,6 +2036,26 @@ export namespace useQuery {
     }
 }
 
+// @public (undocumented)
+export namespace useQuery {
+    var // (undocumented)
+    ssrDisabledResult: {
+        loading: boolean;
+        data: any;
+        error: undefined;
+        networkStatus: NetworkStatus;
+        partial: boolean;
+    };
+    var // (undocumented)
+    skipStandbyResult: {
+        loading: boolean;
+        data: any;
+        error: undefined;
+        networkStatus: NetworkStatus;
+        partial: boolean;
+    };
+}
+
 // @public
 export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): useQueryRefHandlers.Result<TData, TVariables>;
 

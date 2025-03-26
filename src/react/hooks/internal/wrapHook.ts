@@ -88,11 +88,10 @@ export function wrapHook<Hook extends (...args: any[]) => any>(
   useHook: Hook,
   clientOrObsQuery: ObservableQuery<any> | ApolloClient
 ): Hook {
+  // Priority-wise, the later entries in this array wrap
+  // previous entries and could prevent them (and in the end,
+  // even the original hook) from running
   const wrapperSources = [
-    hookName.startsWith("use") ?
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      React.useContext(getApolloContext())
-    : undefined,
     (
       clientOrObsQuery as unknown as {
         // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
@@ -100,6 +99,12 @@ export function wrapHook<Hook extends (...args: any[]) => any>(
         queryManager: QueryManagerWithWrappers;
       }
     )["queryManager"],
+    // if we are a hook (not `preloadQuery`), we are guaranteed to be inside of
+    // a React render and can use context
+    hookName.startsWith("use") ?
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      React.useContext(getApolloContext())
+    : undefined,
   ];
 
   let wrapped = useHook;

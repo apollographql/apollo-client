@@ -228,12 +228,12 @@ interface ApolloConsumerProps {
 
 // @public (undocumented)
 export interface ApolloContextValue {
-    // (undocumented)
-    client?: ApolloClient;
-    // Warning: (ae-forgotten-export) The symbol "RenderPromises" needs to be exported by the entry point index.d.ts
+    // Warning: (ae-forgotten-export) The symbol "HookWrappers" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    renderPromises?: RenderPromises;
+    [wrapperSymbol]?: HookWrappers;
+    // (undocumented)
+    client?: ApolloClient;
 }
 
 // @public (undocumented)
@@ -774,6 +774,9 @@ TData
 // @public (undocumented)
 type From<TData> = StoreObject | Reference | FragmentType<NoInfer_2<TData>> | string | null;
 
+// @public (undocumented)
+type FunctionSignature<T> = T extends (...args: infer A) => infer R ? (...args: A) => R : never;
+
 // @internal
 const getApolloCacheMemoryInternals: (() => {
     cache: {
@@ -832,6 +835,13 @@ interface GraphQLRequest<TVariables = Record<string, any>> {
     // (undocumented)
     variables?: TVariables;
 }
+
+// Warning: (ae-forgotten-export) The symbol "WrappableHooks" needs to be exported by the entry point index.d.ts
+//
+// @internal
+type HookWrappers = {
+    [K in keyof WrappableHooks]?: (originalHook: WrappableHooks[K]) => WrappableHooks[K];
+};
 
 // @public (undocumented)
 export interface IDocumentDefinition {
@@ -986,14 +996,6 @@ type LocalStateOptions = {
     resolvers?: Resolvers | Resolvers[];
     fragmentMatcher?: FragmentMatcher;
 };
-
-// @public (undocumented)
-interface LookupOptions {
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    variables?: OperationVariables;
-}
 
 // @public (undocumented)
 interface MaskFragmentOptions<TData> {
@@ -1383,14 +1385,6 @@ type Primitive = null | undefined | string | number | boolean | symbol | bigint;
 // @public (undocumented)
 const QUERY_REF_BRAND: unique symbol;
 
-// @public (undocumented)
-interface QueryData {
-    // (undocumented)
-    fetchData(): Promise<void>;
-    // (undocumented)
-    getOptions(): any;
-}
-
 // @public @deprecated (undocumented)
 export type QueryHookOptions<TData = unknown, TVariables extends OperationVariables = OperationVariables> = useQuery.Options<TData, TVariables>;
 
@@ -1716,28 +1710,6 @@ type RemoveIndexSignature<T> = {
 
 // @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
-
-// @public (undocumented)
-class RenderPromises {
-    // (undocumented)
-    addObservableQueryPromise<TData, TVariables extends OperationVariables>(obsQuery: ObservableQuery<TData, TVariables>): ReactTypes.ReactNode;
-    // Warning: (ae-forgotten-export) The symbol "QueryData" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    addQueryPromise(queryInstance: QueryData, finish?: () => ReactTypes.ReactNode): ReactTypes.ReactNode;
-    // (undocumented)
-    consumeAndAwaitPromises(): Promise<any[]>;
-    // Warning: (ae-forgotten-export) The symbol "LookupOptions" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    getSSRObservable<TData, TVariables extends OperationVariables>(props: LookupOptions): ObservableQuery<TData, TVariables> | null;
-    // (undocumented)
-    hasPromises(): boolean;
-    // (undocumented)
-    registerSSRObservable<TData, TVariables extends OperationVariables>(observable: ObservableQuery<any, TVariables>): void;
-    // (undocumented)
-    stop(): void;
-}
 
 // @public (undocumented)
 type RequestHandler = (operation: Operation, forward: NextLink) => Observable<FetchResult> | null;
@@ -2275,6 +2247,26 @@ export namespace useQuery {
     }
 }
 
+// @public (undocumented)
+export namespace useQuery {
+    var // (undocumented)
+    ssrDisabledResult: {
+        loading: boolean;
+        data: any;
+        error: undefined;
+        networkStatus: NetworkStatus;
+        partial: boolean;
+    };
+    var // (undocumented)
+    skipStandbyResult: {
+        loading: boolean;
+        data: any;
+        error: undefined;
+        networkStatus: NetworkStatus;
+        partial: boolean;
+    };
+}
+
 // @public
 export function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): useQueryRefHandlers.Result<TData, TVariables>;
 
@@ -2528,6 +2520,31 @@ interface WatchQueryOptions<TVariables extends OperationVariables = OperationVar
     skipPollAttempt?: () => boolean;
     variables?: TVariables;
 }
+
+// @public (undocumented)
+interface WrappableHooks {
+    // (undocumented)
+    createQueryPreloader: typeof createQueryPreloader;
+    // (undocumented)
+    useBackgroundQuery: typeof useBackgroundQuery;
+    // (undocumented)
+    useFragment: typeof useFragment;
+    // Warning: (ae-forgotten-export) The symbol "FunctionSignature" needs to be exported by the entry point index.d.ts
+    //
+    // (undocumented)
+    useQuery: FunctionSignature<typeof useQuery>;
+    // (undocumented)
+    useQueryRefHandlers: typeof useQueryRefHandlers;
+    // (undocumented)
+    useReadQuery: typeof useReadQuery;
+    // (undocumented)
+    useSuspenseFragment: typeof useSuspenseFragment;
+    // (undocumented)
+    useSuspenseQuery: typeof useSuspenseQuery;
+}
+
+// @public (undocumented)
+const wrapperSymbol: unique symbol;
 
 // Warnings were encountered during analysis:
 //

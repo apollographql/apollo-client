@@ -1,3 +1,5 @@
+import * as React from "react";
+
 import type { ApolloClient } from "@apollo/client/core";
 import type { ObservableQuery } from "@apollo/client/core";
 import type { createQueryPreloader } from "@apollo/client/react";
@@ -12,12 +14,17 @@ import type {
 } from "@apollo/client/react/hooks";
 
 import type { QueryManager } from "../../../core/QueryManager.js";
+// direct import to avoid circular dependency
+import { getApolloContext } from "../../context/ApolloContext.js";
 
-const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
+export const wrapperSymbol = Symbol.for("apollo.hook.wrappers");
+
+type FunctionSignature<T> =
+  T extends (...args: infer A) => infer R ? (...args: A) => R : never;
 
 interface WrappableHooks {
   createQueryPreloader: typeof createQueryPreloader;
-  useQuery: typeof useQuery;
+  useQuery: FunctionSignature<typeof useQuery>;
   useSuspenseQuery: typeof useSuspenseQuery;
   useSuspenseFragment: typeof useSuspenseFragment;
   useBackgroundQuery: typeof useBackgroundQuery;
@@ -81,15 +88,27 @@ export function wrapHook<Hook extends (...args: any[]) => any>(
   useHook: Hook,
   clientOrObsQuery: ObservableQuery<any> | ApolloClient
 ): Hook {
-  const queryManager = (
-    clientOrObsQuery as unknown as {
-      // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
-      // but they're both `private`, so we have to cast around for a bit here.
-      queryManager: QueryManagerWithWrappers;
+  const wrapperSources = [
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    React.useContext(getApolloContext()),
+    (
+      clientOrObsQuery as unknown as {
+        // both `ApolloClient` and `ObservableQuery` have a `queryManager` property
+        // but they're both `private`, so we have to cast around for a bit here.
+        queryManager: QueryManagerWithWrappers;
+      }
+    )["queryManager"],
+  ];
+
+  let wrapped = useHook;
+  for (const source of wrapperSources) {
+    const wrapper = source?.[wrapperSymbol]?.[hookName] as
+      | undefined
+      | ((wrap: Hook) => Hook);
+    if (wrapper) {
+      wrapped = wrapper(wrapped);
     }
-  )["queryManager"];
-  const wrappers = queryManager && queryManager[wrapperSymbol];
-  const wrapper: undefined | ((wrap: Hook) => Hook) =
-    wrappers && (wrappers[hookName] as any);
-  return wrapper ? wrapper(useHook) : useHook;
+  }
+
+  return wrapped;
 }

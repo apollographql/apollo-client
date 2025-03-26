@@ -348,15 +348,12 @@ describe("useQuery Hook SSR", () => {
       },
     ];
 
-    let trie: Trie<any> | undefined;
     const Component = ({
       variables,
     }: {
       variables: { foo: string; bar: number };
     }) => {
       const { loading, data } = useQuery(CAR_QUERY, { variables, ssr: true });
-      trie ||=
-        React.useContext(getApolloContext()).renderPromises!["queryInfoTrie"];
       if (!loading) {
         expect(data).toEqual(CAR_RESULT_DATA);
         const { make, model, vin } = data!.cars[0];
@@ -377,8 +374,5 @@ describe("useQuery Hook SSR", () => {
         </>
       </MockedProvider>
     );
-    expect(
-      Array.from(trie!["getChildTrie"](CAR_QUERY)["strong"].keys())
-    ).toEqual(['{"bar":1,"foo":"a"}']);
   });
 });

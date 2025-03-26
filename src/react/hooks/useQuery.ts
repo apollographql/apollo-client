@@ -389,7 +389,7 @@ function useObservableSubscriptionResult<
     ) ?
       // If SSR has been explicitly disabled, and this function has been called
       // on the server side, return the default loading state.
-      ssrDisabledResult
+      useQuery.ssrDisabledResult
     : options.skip || watchQueryOptions.fetchPolicy === "standby" ?
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is
@@ -401,7 +401,7 @@ function useObservableSubscriptionResult<
       // previously received data is all of a sudden removed. Unfortunately,
       // changing this is breaking, so we'll have to wait until Apollo Client 4.0
       // to address this.
-      skipStandbyResult
+      useQuery.skipStandbyResult
     : void 0;
 
   const previousData = resultData.previousData;
@@ -674,7 +674,7 @@ function toQueryResult<TData, TVariables extends OperationVariables>(
   return queryResult;
 }
 
-const ssrDisabledResult = maybeDeepFreeze({
+useQuery.ssrDisabledResult = maybeDeepFreeze({
   loading: true,
   data: void 0 as any,
   error: void 0,
@@ -682,7 +682,7 @@ const ssrDisabledResult = maybeDeepFreeze({
   partial: true,
 });
 
-const skipStandbyResult = maybeDeepFreeze({
+useQuery.skipStandbyResult = maybeDeepFreeze({
   loading: false,
   data: void 0 as any,
   error: void 0,

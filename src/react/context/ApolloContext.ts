@@ -5,9 +5,16 @@ import type { ApolloClient } from "@apollo/client/core";
 import type { RenderPromises } from "@apollo/client/react/ssr";
 import { invariant } from "@apollo/client/utilities/invariant";
 
+import type {
+  HookWrappers,
+  wrapperSymbol,
+} from "../hooks/internal/wrapHook.js";
+
 export interface ApolloContextValue {
   client?: ApolloClient;
+  // TODO remove
   renderPromises?: RenderPromises;
+  [wrapperSymbol]?: HookWrappers;
 }
 
 // To make sure Apollo Client doesn't create more than one React context

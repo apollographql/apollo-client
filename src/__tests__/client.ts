@@ -770,6 +770,27 @@ describe("client", () => {
     await expect(stream).toEmitStrictTyped(emittedValue);
   });
 
+  it("allows subscriptions to to terminate without emitting results", async () => {
+    const link = new ApolloLink(() => {
+      return new Observable((observer) => {
+        setTimeout(() => observer.complete(), 10);
+      });
+    });
+
+    const client = new ApolloClient({ link, cache: new InMemoryCache() });
+    const subscription = client.subscribe({
+      query: gql`
+        subscription {
+          hello
+        }
+      `,
+    });
+
+    const stream = new ObservableStream(subscription);
+
+    await expect(stream).toComplete();
+  });
+
   it.skip("should surface errors in observer.next as uncaught", async () => {
     const expectedError = new Error("this error should not reach the store");
     const listeners = process.listeners("uncaughtException");

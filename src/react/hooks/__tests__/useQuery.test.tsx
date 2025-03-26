@@ -7097,7 +7097,8 @@ describe("useQuery Hook", () => {
 
       using _disabledAct = disableActEnvironment();
       const { takeSnapshot, rerender } = await renderHookToSnapshotStream(
-        ({ fetchPolicy }) => useQuery(query, { fetchPolicy }),
+        ({ fetchPolicy }) =>
+          useQuery(query, { notifyOnNetworkStatusChange: true, fetchPolicy }),
         {
           wrapper: ({ children }) => (
             <MockedProvider mocks={mocks}>{children}</MockedProvider>

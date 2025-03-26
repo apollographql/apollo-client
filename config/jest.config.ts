@@ -26,6 +26,7 @@ const defaults = {
     ],
   },
   resolver: "<rootDir>/config/jest/resolver.ts",
+  prettierPath: null,
 };
 
 const ignoreTSFiles = ".ts$";

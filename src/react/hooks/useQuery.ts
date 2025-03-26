@@ -9,10 +9,6 @@
  * options
  * watchQueryOptions
  * makeWatchQueryOptions
- * isSSRAllowed
- * prioritizeCacheValues
- * renderPromises
- * isSyncSSR
  */
 /** */
 import { equal } from "@wry/equality";
@@ -40,9 +36,7 @@ import type {
 } from "@apollo/client/core";
 import { NetworkStatus } from "@apollo/client/core";
 import type { MaybeMasked, Unmasked } from "@apollo/client/masking";
-import { getApolloContext } from "@apollo/client/react/context";
 import { DocumentType, verifyDocumentType } from "@apollo/client/react/parser";
-import type { RenderPromises } from "@apollo/client/react/ssr";
 import type { NoInfer } from "@apollo/client/utilities";
 import {
   compact,
@@ -273,7 +267,6 @@ function useQuery_<TData, TVariables extends OperationVariables>(
 function useInternalState<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<any, any>,
-  renderPromises: RenderPromises | undefined,
   makeWatchQueryOptions: () => WatchQueryOptions<TVariables, TData>
 ) {
   function createInternalState(previous?: InternalState<TData, TVariables>) {
@@ -282,15 +275,9 @@ function useInternalState<TData, TVariables extends OperationVariables>(
     const internalState: InternalState<TData, TVariables> = {
       client,
       query,
-      observable:
-        // See if there is an existing observable that was used to fetch the same
-        // data and if so, use it instead since it will contain the proper queryId
-        // to fetch the result set. This is used during SSR.
-        (renderPromises &&
-          renderPromises.getSSRObservable(makeWatchQueryOptions())) ||
-        client.watchQuery(
-          getObsQueryOptions(void 0, client, makeWatchQueryOptions())
-        ),
+      observable: client.watchQuery(
+        getObsQueryOptions(void 0, client, makeWatchQueryOptions())
+      ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide
         // continuity of previousData even if/when the query or client changes.
@@ -325,22 +312,15 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
 ) {
   const client = useApolloClient(options.client);
 
-  const renderPromises = React.useContext(getApolloContext()).renderPromises;
-  const isSyncSSR = !!renderPromises;
-  const prioritizeCacheValues = client.prioritizeCacheValues;
-  const ssrAllowed = options.ssr !== false && !options.skip;
-
   const makeWatchQueryOptions = createMakeWatchQueryOptions(
     client,
     query,
-    options,
-    isSyncSSR
+    options
   );
 
   const { observable, resultData } = useInternalState(
     client,
     query,
-    renderPromises,
     makeWatchQueryOptions
   );
 
@@ -354,16 +334,12 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     watchQueryOptions
   );
 
-  useRegisterSSRObservable(observable, renderPromises, ssrAllowed);
-
   const result = useObservableSubscriptionResult<TData, TVariables>(
     resultData,
     observable,
     client,
     options,
-    watchQueryOptions,
-    prioritizeCacheValues,
-    isSyncSSR
+    watchQueryOptions
   );
 
   return result;
@@ -377,20 +353,16 @@ function useObservableSubscriptionResult<
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
-  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>,
-  prioritizeCacheValues: boolean,
-  isSyncSSR: boolean
+  watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>>
 ) {
+  const ssrDisabledOverride = useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => options.ssr === false
+  );
+
   const resultOverride =
-    (
-      (isSyncSSR || prioritizeCacheValues) &&
-      options.ssr === false &&
-      !options.skip
-    ) ?
-      // If SSR has been explicitly disabled, and this function has been called
-      // on the server side, return the default loading state.
-      useQuery.ssrDisabledResult
-    : options.skip || watchQueryOptions.fetchPolicy === "standby" ?
+    options.skip || watchQueryOptions.fetchPolicy === "standby" ?
       // When skipping a query (ie. we're not querying for data but still want to
       // render children), make sure the `data` is cleared out and `loading` is
       // set to `false` (since we aren't loading anything).
@@ -402,6 +374,7 @@ function useObservableSubscriptionResult<
       // changing this is breaking, so we'll have to wait until Apollo Client 4.0
       // to address this.
       useQuery.skipStandbyResult
+    : ssrDisabledOverride ? useQuery.ssrDisabledResult
     : void 0;
 
   const previousData = resultData.previousData;
@@ -415,14 +388,6 @@ function useObservableSubscriptionResult<
   return useSyncExternalStore(
     React.useCallback(
       (handleStoreChange) => {
-        // reference `prioritizeCacheValues` here to ensure that the rules of hooks
-        // keep it as a dependency of this effect, even though it's not used
-        prioritizeCacheValues;
-
-        if (isSyncSSR) {
-          return () => {};
-        }
-
         const subscription = observable
           // We use the asapScheduler here to prevent issues with trying to
           // update in the middle of a render. `reobserve` is kicked off in the
@@ -464,28 +429,13 @@ function useObservableSubscriptionResult<
         };
       },
 
-      [prioritizeCacheValues, isSyncSSR, observable, resultData, client]
+      [observable, resultData, client]
     ),
     () =>
       currentResultOverride || getCurrentResult(resultData, observable, client),
     () =>
       currentResultOverride || getCurrentResult(resultData, observable, client)
   );
-}
-
-function useRegisterSSRObservable(
-  observable: ObsQueryWithMeta<any, any>,
-  renderPromises: RenderPromises | undefined,
-  ssrAllowed: boolean
-) {
-  if (renderPromises && ssrAllowed) {
-    renderPromises.registerSSRObservable(observable);
-
-    if (observable.getCurrentResult().loading) {
-      // TODO: This is a legacy API which could probably be cleaned up
-      renderPromises.addObservableQueryPromise(observable);
-    }
-  }
 }
 
 // this hook is not compatible with any rules of React, and there's no good way to rewrite it.
@@ -540,13 +490,11 @@ function createMakeWatchQueryOptions<
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   {
     skip,
-    ssr,
     // The above options are useQuery-specific, so this ...otherOptions spread
     // makes otherOptions almost a WatchQueryOptions object, except for the
     // query property that we add below.
     ...otherOptions
-  }: useQuery.Options<TData, TVariables> = {},
-  isSyncSSR: boolean
+  }: useQuery.Options<TData, TVariables> = {}
 ) {
   return (
     observable?: ObservableQuery<TData, TVariables>
@@ -555,16 +503,6 @@ function createMakeWatchQueryOptions<
     // that did not exist until just now, so modifications are still allowed.
     const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
       Object.assign(otherOptions, { query });
-
-    if (
-      isSyncSSR &&
-      (watchQueryOptions.fetchPolicy === "network-only" ||
-        watchQueryOptions.fetchPolicy === "cache-and-network")
-    ) {
-      // this behavior was added to react-apollo without explanation in this PR
-      // https://github.com/apollographql/react-apollo/pull/1579
-      watchQueryOptions.fetchPolicy = "cache-first";
-    }
 
     if (!watchQueryOptions.variables) {
       watchQueryOptions.variables = {} as TVariables;

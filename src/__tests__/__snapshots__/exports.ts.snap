@@ -331,6 +331,7 @@ Array [
   "unwrapQueryRef",
   "updateWrappedQueryRef",
   "wrapQueryRef",
+  "wrapperSymbol",
 ]
 `;
 
@@ -345,7 +346,6 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
 Array [
-  "RenderPromises",
   "getDataFromTree",
   "getMarkupFromTree",
   "renderToStringWithData",

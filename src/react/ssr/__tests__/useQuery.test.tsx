@@ -1,11 +1,10 @@
 /** @jest-environment node */
-import type { Trie } from "@wry/trie";
 import { gql } from "graphql-tag";
 import React from "react";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
 import { renderToStringWithData } from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";

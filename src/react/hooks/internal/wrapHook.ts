@@ -89,8 +89,10 @@ export function wrapHook<Hook extends (...args: any[]) => any>(
   clientOrObsQuery: ObservableQuery<any> | ApolloClient
 ): Hook {
   const wrapperSources = [
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    React.useContext(getApolloContext()),
+    hookName.startsWith("use") ?
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      React.useContext(getApolloContext())
+    : undefined,
     (
       clientOrObsQuery as unknown as {
         // both `ApolloClient` and `ObservableQuery` have a `queryManager` property

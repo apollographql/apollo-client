@@ -2,7 +2,6 @@ import type * as ReactTypes from "react";
 import * as React from "react";
 
 import type { ApolloClient } from "@apollo/client/core";
-import type { RenderPromises } from "@apollo/client/react/ssr";
 import { invariant } from "@apollo/client/utilities/invariant";
 
 import type {
@@ -12,8 +11,6 @@ import type {
 
 export interface ApolloContextValue {
   client?: ApolloClient;
-  // TODO remove
-  renderPromises?: RenderPromises;
   [wrapperSymbol]?: HookWrappers;
 }
 

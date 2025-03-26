@@ -5,6 +5,7 @@ node --experimental-transform-types --no-warnings --conditions 'react-server' co
 ```
 from `src/__tests__/exports.ts`
 */
+// @ts-ignore
 import { registerHooks } from "node:module";
 
 registerHooks({

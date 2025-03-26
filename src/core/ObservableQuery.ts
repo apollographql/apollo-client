@@ -932,8 +932,6 @@ Did you mean to call refetch(variables) instead of refetch({ variables })?`,
    * Reevaluate the query, optionally against new options. New options will be
    * merged with the current options when given.
    */
-  // TODO: catch `EmptyError` and rethrow as network error if `complete`
-  // notification is emitted without a value.
   public reobserve(
     newOptions?: Partial<WatchQueryOptions<TVariables, TData>>
   ): Promise<QueryResult<MaybeMasked<TData>>> {

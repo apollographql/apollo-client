@@ -827,8 +827,6 @@ export class QueryManager {
     return observable;
   }
 
-  // TODO: catch `EmptyError` and rethrow as network error if `complete`
-  // notification is emitted without a value.
   public query<TData, TVars extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVars, TData>,
     queryId = this.generateQueryId()

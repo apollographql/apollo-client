@@ -8297,6 +8297,7 @@ describe("useQuery Hook", () => {
           useQuery(query, {
             variables: { gender },
             fetchPolicy: "network-only",
+            notifyOnNetworkStatusChange: true,
           }),
         { wrapper, initialProps: { gender: "all" } }
       );

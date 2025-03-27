@@ -3226,10 +3226,7 @@ describe("ApolloClient", () => {
           {
             request: { query, variables },
             result: { data: data2 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
+            maxUsageCount: Number.POSITIVE_INFINITY,
           },
         ]),
       });

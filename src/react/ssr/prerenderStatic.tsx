@@ -12,6 +12,7 @@ import type {
 import { getApolloContext } from "@apollo/client/react/context";
 import { wrapperSymbol } from "@apollo/client/react/internal";
 import { canonicalStringify } from "@apollo/client/utilities";
+import { invariant } from "@apollo/client/utilities/invariant";
 
 import { useSSRQuery } from "./useSSRQuery.js";
 
@@ -93,6 +94,20 @@ export declare namespace prerenderStatic {
           | ReturnType<RenderToStringPromise>
           | ReturnType<PrerenderToWebStream>
           | ReturnType<PrerenderToNodeStream>);
+    /**
+     * If this is set to `true`, the result will contain a `diagnostics` property that can help you e.g. detect `useQuery` waterfalls in your application.
+     * @default false
+     */
+    diagnostics?: boolean;
+
+    /**
+     * The maximum number of times the tree will be rerendered until no more network requests are made.
+     * This is useful to prevent infinite loops in case of a bug in your application.
+     * If you have a lot of waterfalls in your application, you might need to increase this number.
+     *
+     * @default 50
+     */
+    maxRerenders?: number;
   }
 
   export interface Result {
@@ -108,6 +123,21 @@ export declare namespace prerenderStatic {
      * contain `loading` states and need additional data fetches in the browser.
      */
     aborted: boolean;
+    /**
+     * If `diagnostics` was set to `true`, this will contain an object with diagnostics that can be used to
+     * detect ineffective rendering structures in your app.
+     */
+    diagnostics?: Diagnostics;
+  }
+
+  export interface Diagnostics {
+    /**
+     * The number of times the tree had to be rerendered until no more network requests
+     * were made.
+     * A high number here might indicate that you have a waterfall of `useQuery` calls
+     * in your application and shows potential for optimization, e.g. via fragment colocation.
+     */
+    renderCount: number;
   }
 
   export type RenderToString = (element: ReactTypes.ReactNode) => string;
@@ -128,6 +158,20 @@ export declare namespace prerenderStatic {
   }>;
 }
 
+/**
+ * This function will rerender your React tree until no more network requests need
+ * to be made.
+ * If you only use suspenseful hooks (and a suspense-ready `renderFunction`), this
+ * means that the tree will be rendered once.
+ * If you use non-suspenseful hooks like `useQuery`, this function will render all
+ * components, wait for all requests started by your rendered
+ * hooks to finish, and then render the tree again, until no more requests are made.
+ *
+ * After executing this function, you can use `client.extract()` to get a full set
+ * of the data that was fetched during these renders.
+ * You can then transport that data and hydrate your cache via `client.restore(extractedData)`
+ * before hydrating your React tree in the browser.
+ */
 export function prerenderStatic({
   tree,
   context = {},
@@ -137,12 +181,16 @@ export function prerenderStatic({
   renderFunction,
   signal,
   ignoreResults,
+  diagnostics,
+  maxRerenders = 50,
 }: prerenderStatic.Options): Promise<prerenderStatic.Result> {
   const availableObservableQueries = new Map<
     ObservableQueryKey,
     ObservableQuery
   >();
   let recentlyCreatedObservableQueries = new Set<ObservableQuery>();
+  let renderCount = 0;
+
   const internalContext: PrerenderStaticInternalContext = {
     getObservableQuery(query, variables) {
       return availableObservableQueries.get(
@@ -165,6 +213,16 @@ export function prerenderStatic({
   };
 
   async function process(): Promise<prerenderStatic.Result> {
+    renderCount++;
+    invariant(
+      renderCount <= maxRerenders,
+      `Exceeded maximum rerender count of %d.
+This either means you have very deep \`useQuery\` waterfalls in your application
+and need to increase the \`maxRerender\` option to \`prerenderStatic\`, or that
+you have an infinite render loop in your application.`,
+      maxRerenders
+    );
+
     // Always re-render from the rootElement, even though it might seem
     // better to render the children of the component responsible for the
     // promise, because it is not possible to reconstruct the full context
@@ -213,6 +271,16 @@ export function prerenderStatic({
   }
   return Promise.resolve()
     .then(process)
+    .then((result) =>
+      diagnostics ?
+        {
+          ...result,
+          diagnostics: {
+            renderCount,
+          },
+        }
+      : result
+    )
     .finally(() => {
       availableObservableQueries.clear();
       recentlyCreatedObservableQueries.clear();

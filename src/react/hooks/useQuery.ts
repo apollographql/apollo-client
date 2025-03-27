@@ -319,7 +319,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     // This Object.assign is safe because otherOptions is a fresh ...rest object
     // that did not exist until just now, so modifications are still allowed.
     Object.assign(otherOptions, { query }),
-    options
+    skip
   );
 
   const { observable, resultData } = useInternalState(
@@ -490,7 +490,7 @@ function useResubscribeIfNecessary<
 function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   watchQueryOptions: WatchQueryOptions<TVariables, TData>,
-  { skip }: useQuery.Options<TData, TVariables> = {}
+  skip: boolean | undefined
 ): WatchQueryOptions<TVariables, TData> {
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to

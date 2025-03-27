@@ -313,20 +313,13 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
 ) {
   const client = useApolloClient(options.client);
 
-  const makeWatchQueryOptions = createMakeWatchQueryOptions(
-    client,
-    query,
-    options
-  );
+  const watchQueryOptions = createMakeWatchQueryOptions(client, query, options);
 
   const { observable, resultData } = useInternalState(
     client,
     query,
-    makeWatchQueryOptions
+    watchQueryOptions
   );
-
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-    makeWatchQueryOptions;
 
   if (!watchQueryOptions.fetchPolicy) {
     watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;

@@ -325,8 +325,12 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     makeWatchQueryOptions()
   );
 
-  const watchQueryOptions: Readonly<WatchQueryOptions<TVariables, TData>> =
-    makeWatchQueryOptions(observable.options.initialFetchPolicy);
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
+    makeWatchQueryOptions();
+
+  if (!watchQueryOptions.fetchPolicy) {
+    watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;
+  }
 
   useResubscribeIfNecessary<TData, TVariables>(
     resultData, // might get mutated during render
@@ -519,8 +523,6 @@ function createMakeWatchQueryOptions<
         client.defaultOptions?.watchQuery?.fetchPolicy ||
         "cache-first";
       watchQueryOptions.fetchPolicy = "standby";
-    } else if (!watchQueryOptions.fetchPolicy) {
-      watchQueryOptions.fetchPolicy = initialFetchPolicy;
     }
 
     return watchQueryOptions;

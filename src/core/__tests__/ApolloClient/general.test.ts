@@ -3154,16 +3154,19 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: data1 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-        ]),
+        link: new MockLink(
+          [
+            {
+              request: { query, variables },
+              result: { data: data1 },
+            },
+            {
+              request: { query, variables },
+              result: { data: data2 },
+            },
+          ],
+          { showWarnings: false }
+        ),
       });
       const observable = client.watchQuery({
         query,

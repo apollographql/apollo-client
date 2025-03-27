@@ -2,6 +2,11 @@ import type * as ReactTypes from "react";
 
 import { prerenderStatic } from "./prerenderStatic.js";
 
+/**
+ * @deprecated This function uses the legacy `renderToStaticMarkup` API from React.
+ * Use `prerenderStatic` instead, which can be configured to run with more modern
+ * React APIs.
+ */
 export async function getDataFromTree(
   tree: ReactTypes.ReactNode,
   context: { [key: string]: any } = {}
@@ -23,6 +28,11 @@ type GetMarkupFromTreeOptions = {
     | prerenderStatic.RenderToStringPromise;
 };
 
+/**
+ * @deprecated This function is only compatible with legacy React prerendering APIs.
+ * Use `prerenderStatic` instead, which can be configured to run with more modern
+ * React APIs.
+ */
 export async function getMarkupFromTree({
   tree,
   context = {},

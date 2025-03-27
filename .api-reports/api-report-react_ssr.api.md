@@ -743,14 +743,14 @@ const getApolloClientMemoryInternals: (() => {
     };
 }) | undefined;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function getDataFromTree(tree: ReactTypes.ReactNode, context?: {
     [key: string]: any;
 }): Promise<string>;
 
 // Warning: (ae-forgotten-export) The symbol "GetMarkupFromTreeOptions" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function getMarkupFromTree({ tree, context, renderFunction, }: GetMarkupFromTreeOptions): Promise<string>;
 
 // @public (undocumented)
@@ -1523,7 +1523,7 @@ type RemoveIndexSignature<T> = {
 // @public (undocumented)
 type RemoveMaskedMarker<T> = Omit<T, "__masked">;
 
-// @public (undocumented)
+// @public @deprecated (undocumented)
 export function renderToStringWithData(component: ReactTypes.ReactElement<any>): Promise<string>;
 
 // @public (undocumented)

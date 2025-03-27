@@ -1296,7 +1296,7 @@ describe("ApolloClient", () => {
     });
   });
 
-  it("only modifies varaibles when refetching", async () => {
+  it("only modifies variables when refetching", async () => {
     const query = gql`
       {
         people_one(id: 1) {
@@ -2357,6 +2357,8 @@ describe("ApolloClient", () => {
       partial: false,
     });
     expect(cache.extract().ROOT_QUERY!.author).toEqual(data.author);
+
+    observable.stopPolling();
   });
 
   it("should not fire next on an observer if there is no change in the result", async () => {
@@ -2464,14 +2466,11 @@ describe("ApolloClient", () => {
         {
           request: { query: query1 },
           result: { data: data1 },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
           request: { query: query2 },
           result: { data: data2 },
-        },
-        {
-          request: { query: query1 },
-          result: { data: data1 },
         },
       ]),
     });
@@ -2548,6 +2547,7 @@ describe("ApolloClient", () => {
         {
           request: { query: query1 },
           result: { data: data1 },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
           request: { query: query2 },
@@ -2898,10 +2898,12 @@ describe("ApolloClient", () => {
         {
           request: { query: queryWithoutId },
           result: { data: dataWithoutId },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
           request: { query: queryWithId },
           result: { data: dataWithId },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
       ]),
     });
@@ -3152,16 +3154,19 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: data1 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-        ]),
+        link: new MockLink(
+          [
+            {
+              request: { query, variables },
+              result: { data: data1 },
+            },
+            {
+              request: { query, variables },
+              result: { data: data2 },
+            },
+          ],
+          { showWarnings: false }
+        ),
       });
       const observable = client.watchQuery({
         query,
@@ -3221,10 +3226,7 @@ describe("ApolloClient", () => {
           {
             request: { query, variables },
             result: { data: data2 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
+            maxUsageCount: Number.POSITIVE_INFINITY,
           },
         ]),
       });
@@ -3538,16 +3540,19 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: data1 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-        ]),
+        link: new MockLink(
+          [
+            {
+              request: { query, variables },
+              result: { data: data1 },
+            },
+            {
+              request: { query, variables },
+              result: { data: data2 },
+            },
+          ],
+          { showWarnings: false }
+        ),
       });
 
       const observable = client.watchQuery({
@@ -3656,16 +3661,19 @@ describe("ApolloClient", () => {
 
       const client = new ApolloClient({
         cache: new InMemoryCache(),
-        link: new MockLink([
-          {
-            request: { query, variables },
-            result: { data: data1 },
-          },
-          {
-            request: { query, variables },
-            result: { data: data2 },
-          },
-        ]),
+        link: new MockLink(
+          [
+            {
+              request: { query, variables },
+              result: { data: data1 },
+            },
+            {
+              request: { query, variables },
+              result: { data: data2 },
+            },
+          ],
+          { showWarnings: false }
+        ),
       });
 
       const observable = client.watchQuery({

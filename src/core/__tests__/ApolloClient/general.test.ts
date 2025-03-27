@@ -2466,14 +2466,11 @@ describe("ApolloClient", () => {
         {
           request: { query: query1 },
           result: { data: data1 },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
           request: { query: query2 },
           result: { data: data2 },
-        },
-        {
-          request: { query: query1 },
-          result: { data: data1 },
         },
       ]),
     });
@@ -2550,6 +2547,7 @@ describe("ApolloClient", () => {
         {
           request: { query: query1 },
           result: { data: data1 },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
           request: { query: query2 },
@@ -2900,10 +2898,12 @@ describe("ApolloClient", () => {
         {
           request: { query: queryWithoutId },
           result: { data: dataWithoutId },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
         {
           request: { query: queryWithId },
           result: { data: dataWithId },
+          maxUsageCount: Number.POSITIVE_INFINITY,
         },
       ]),
     });

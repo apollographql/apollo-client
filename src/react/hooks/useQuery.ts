@@ -322,6 +322,18 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     skip
   );
 
+  if (skip) {
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    watchQueryOptions.initialFetchPolicy =
+      watchQueryOptions.initialFetchPolicy ||
+      watchQueryOptions.fetchPolicy ||
+      client.defaultOptions?.watchQuery?.fetchPolicy ||
+      "cache-first";
+    watchQueryOptions.fetchPolicy = "standby";
+  }
+
   const { observable, resultData } = useInternalState(
     client,
     query,
@@ -492,18 +504,6 @@ function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
   watchQueryOptions: WatchQueryOptions<TVariables, TData>,
   skip: boolean | undefined
 ): WatchQueryOptions<TVariables, TData> {
-  if (skip) {
-    // When skipping, we set watchQueryOptions.fetchPolicy initially to
-    // "standby", but we also need/want to preserve the initial non-standby
-    // fetchPolicy that would have been used if not skipping.
-    watchQueryOptions.initialFetchPolicy =
-      watchQueryOptions.initialFetchPolicy ||
-      watchQueryOptions.fetchPolicy ||
-      client.defaultOptions?.watchQuery?.fetchPolicy ||
-      "cache-first";
-    watchQueryOptions.fetchPolicy = "standby";
-  }
-
   return watchQueryOptions;
 }
 

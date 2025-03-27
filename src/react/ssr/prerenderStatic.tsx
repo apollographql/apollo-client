@@ -15,31 +15,6 @@ import { canonicalStringify } from "@apollo/client/utilities";
 
 import { useSSRQuery } from "./useSSRQuery.js";
 
-type RenderToString = (element: ReactTypes.ReactNode) => string;
-type RenderToStringPromise = (
-  element: ReactTypes.ReactNode
-) => PromiseLike<string>;
-
-type PrerenderToWebStream = (reactNode: ReactTypes.ReactNode) => Promise<{
-  prelude: ReadableStream<Uint8Array>; // AsyncIterable<Uint8Array>;
-}>;
-
-type PrerenderToNodeStream = (reactNode: ReactTypes.ReactNode) => Promise<{
-  prelude: AsyncIterable<string | Buffer>;
-}>;
-
-type PrerenderStaticOptions = {
-  tree: ReactTypes.ReactNode;
-  context?: { client?: ApolloClient };
-  signal?: AbortSignal;
-  ignoreResults?: boolean;
-  renderFunction:
-    | RenderToString
-    | RenderToStringPromise
-    | PrerenderToWebStream
-    | PrerenderToNodeStream;
-};
-
 type ObservableQueryKey = `${string}|${string}`;
 function getObservableQueryKey(
   query: DocumentNode,
@@ -49,7 +24,7 @@ function getObservableQueryKey(
   const variablesKey = canonicalStringify(variables);
   return `${queryKey}|${variablesKey}`;
 }
-export interface GetMarkupFromTreeContext {
+export interface PrerenderStaticInternalContext {
   getObservableQuery(
     query: DocumentNode,
     variables?: Record<string, any>
@@ -61,6 +36,91 @@ export interface GetMarkupFromTreeContext {
   ) => void;
 }
 
+export declare namespace prerenderStatic {
+  export interface Options {
+    /**
+     * The React component tree to prerender
+     */
+    tree: ReactTypes.ReactNode;
+    /**
+     * If your app is not wapped in an `ApolloProvider`, you can pass a `client` instance in here.
+     */
+    context?: { client?: ApolloClient };
+    /**
+     * An `AbortSignal` that indicates you want to stop the re-render loop, even if not all data is fetched yet.
+     *
+     * Note that if you use an api like `prerender` or `prerenderToNodeStream` that supports `AbortSignal` as an option,
+     * you will still have to pass that `signal` option to that function by wrapping the `renderFunction`.
+     *
+     * @example
+     * ```ts
+     * const result = await prerenderStatic({
+     *   tree: <App/>,
+     *   signal,
+     *   renderFunction: (tree) => prerender(tree, { signal }),
+     * })
+     * ```
+     */
+    signal?: AbortSignal;
+    /**
+     * If this is set, this method will return `""` as the `result` property.
+     * Setting this can save CPU time that would otherwise be spent on converting
+     * `Uint8Array` or `Buffer` instances to strings for the result.
+     */
+    ignoreResults?: boolean;
+    /**
+     * The rendering function to use.
+     * These functions are currently supported:
+     * * `prerender` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerender)
+     *   * recommended if you use Deno or a modern edge runtime with Web Streams
+     * * `prerenderToNodeStream` from `react-dom/static` (https://react.dev/reference/react-dom/static/prerenderToNodeStream)
+     *   * recommended if you use Node.js
+     * * `renderToString` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToString)
+     *   * this API has only limited suspense support and might cause additional workload on the server as a result
+     * * `renderToStaticMarkup` from `react-dom/server` (https://react.dev/reference/react-dom/server/renderToStaticMarkup)
+     *   * slightly faster than `renderToString`, but the result cannot be hydrated
+     *   * this API has only limited suspense support and might cause additional workload on the server as a result
+     */
+    renderFunction:
+      | RenderToString
+      | RenderToStringPromise
+      | PrerenderToWebStream
+      | PrerenderToNodeStream;
+  }
+
+  export interface Result {
+    /**
+     * The result of the last render, or an empty string if `ignoreResults` was set to `true`.
+     */
+    result: string;
+    /**
+     * If the render was aborted early because the `AbortSignal` was cancelled,
+     * this will be `true`.
+     * If you used a hydratable render function (everything except `renderToStaticMarkup`),
+     * the result will still be able to hydrate in the browser, but it might still
+     * contain `loading` states and need additional data fetches in the browser.
+     */
+    aborted: boolean;
+  }
+
+  export type RenderToString = (element: ReactTypes.ReactNode) => string;
+  export type RenderToStringPromise = (
+    element: ReactTypes.ReactNode
+  ) => PromiseLike<string>;
+
+  export type PrerenderToWebStream = (
+    reactNode: ReactTypes.ReactNode
+  ) => Promise<{
+    prelude: ReadableStream<Uint8Array>; // AsyncIterable<Uint8Array>;
+  }>;
+
+  export type PrerenderToNodeStream = (
+    reactNode: ReactTypes.ReactNode
+  ) => Promise<{
+    prelude: AsyncIterable<string | Buffer>;
+  }>;
+}
+
 export function prerenderStatic({
   tree,
   context = {},
@@ -70,13 +130,13 @@ export function prerenderStatic({
   renderFunction,
   signal,
   ignoreResults,
-}: PrerenderStaticOptions): Promise<{ result: string; aborted: boolean }> {
+}: prerenderStatic.Options): Promise<prerenderStatic.Result> {
   const availableObservableQueries = new Map<
     ObservableQueryKey,
     ObservableQuery
   >();
   let recentlyCreatedObservableQueries = new Set<ObservableQuery>();
-  const internalContext: GetMarkupFromTreeContext = {
+  const internalContext: PrerenderStaticInternalContext = {
     getObservableQuery(query, variables) {
       return availableObservableQueries.get(
         getObservableQueryKey(query, variables)
@@ -97,7 +157,7 @@ export function prerenderStatic({
     },
   };
 
-  function process(): Promise<string> {
+  async function process(): Promise<prerenderStatic.Result> {
     // Always re-render from the rootElement, even though it might seem
     // better to render the children of the component responsible for the
     // promise, because it is not possible to reconstruct the full context
@@ -117,24 +177,28 @@ export function prerenderStatic({
         {tree}
       </ApolloContext.Provider>
     );
-    return Promise.resolve(renderFunction(element))
-      .then(decode)
-      .then((html) => {
-        if (recentlyCreatedObservableQueries.size == 0) {
-          return html;
-        }
-        return Promise.all(
-          Array.from(recentlyCreatedObservableQueries).map(
-            async (observable) => {
-              await firstValueFrom(
-                observable.pipe(filter((result) => result.loading === false))
-              );
+    const result = await consume(await renderFunction(element));
 
-              recentlyCreatedObservableQueries.delete(observable);
-            }
-          )
-        ).then(process);
-      });
+    if (recentlyCreatedObservableQueries.size == 0) {
+      return { result, aborted: false };
+    }
+    if (signal?.aborted) {
+      return { result, aborted: true };
+    }
+    await Promise.all(
+      Array.from(recentlyCreatedObservableQueries).map(async (observable) => {
+        await firstValueFrom(
+          observable.pipe(filter((result) => result.loading === false))
+        );
+
+        recentlyCreatedObservableQueries.delete(observable);
+      })
+    );
+
+    if (signal?.aborted) {
+      return { result, aborted: true };
+    }
+    return process();
   }
 
   if (signal?.aborted) {
@@ -142,16 +206,12 @@ export function prerenderStatic({
   }
   return Promise.resolve()
     .then(process)
-    .then((result) => ({
-      result: ignoreResults ? "" : result,
-      aborted: signal?.aborted ?? false,
-    }))
     .finally(() => {
       availableObservableQueries.clear();
       recentlyCreatedObservableQueries.clear();
     });
 
-  async function decode(
+  async function consume(
     value:
       | string
       | {

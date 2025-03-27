@@ -3,11 +3,7 @@ import { expectTypeOf } from "expect-type";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
-import {
-  getDataFromTree,
-  renderToStaticMarkup,
-  renderToString,
-} from "react-dom/server";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { InMemoryCache, InMemoryCache as Cache } from "@apollo/client/cache";
 import {
@@ -17,9 +13,8 @@ import {
 } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
+import { getDataFromTree, prerenderStatic } from "@apollo/client/react/ssr";
 import { mockSingleLink } from "@apollo/client/testing";
-
-import { prerenderStatic } from "../prerenderStatic.js";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {

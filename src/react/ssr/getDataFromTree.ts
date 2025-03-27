@@ -19,8 +19,8 @@ type GetMarkupFromTreeOptions = {
   tree: ReactTypes.ReactNode;
   context?: { [key: string]: any };
   renderFunction?:
-    | ((tree: ReactTypes.ReactNode) => string)
-    | ((tree: ReactTypes.ReactNode) => PromiseLike<string>);
+    | prerenderStatic.RenderToString
+    | prerenderStatic.RenderToStringPromise;
 };
 
 export async function getMarkupFromTree({

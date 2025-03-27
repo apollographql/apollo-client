@@ -7,7 +7,7 @@ import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
-import { getMarkupFromTree } from "@apollo/client/react/ssr";
+import { getMarkupFromTree, prerenderStatic } from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 
@@ -416,24 +416,37 @@ describe("useQuery Hook SSR", () => {
   it.each(
     reactMajor == "19" ?
       [
-        ["renderToStaticMarkup", renderToStaticMarkup],
-        ["renderToString", renderToString],
+        [
+          "renderToStaticMarkup",
+          renderToStaticMarkup satisfies prerenderStatic.RenderToString,
+        ],
+        [
+          "renderToString",
+          renderToString satisfies prerenderStatic.RenderToString,
+        ],
         [
           "prerender",
           (
             require("react-dom/static.edge") as typeof import("react-dom/static")
-          ).prerender,
+          ).prerender satisfies prerenderStatic.PrerenderToWebStream,
         ],
         [
           "prerenderToNodeStream",
           (
             require("react-dom/static.node") as typeof import("react-dom/static")
-          ).prerenderToNodeStream,
+          )
+            .prerenderToNodeStream satisfies prerenderStatic.PrerenderToNodeStream,
         ],
       ]
     : [
-        ["renderToStaticMarkup", renderToStaticMarkup],
-        ["renderToString", renderToString],
+        [
+          "renderToStaticMarkup",
+          renderToStaticMarkup satisfies prerenderStatic.RenderToString,
+        ],
+        [
+          "renderToString",
+          renderToString satisfies prerenderStatic.RenderToString,
+        ],
       ]
   )(
     `React ${reactMajor}, %s, should render waterfalls by rerendering the tree multiple times`,
@@ -511,7 +524,7 @@ describe("useQuery Hook SSR", () => {
           </>
         );
       }
-      const view = await getMarkupFromTree({
+      const view = await prerenderStatic({
         tree: (
           <ApolloProvider client={client}>
             <App />

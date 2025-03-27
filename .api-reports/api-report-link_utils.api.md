@@ -5,56 +5,16 @@
 ```ts
 
 import type { DocumentNode } from 'graphql';
+import type { GraphQLRequest } from '@apollo/client/link/core';
+import type { Operation } from '@apollo/client/link/core';
 
-// Warning: (ae-forgotten-export) The symbol "GraphQLRequest" needs to be exported by the entry point index.d.ts
-// Warning: (ae-forgotten-export) The symbol "Operation" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
 export function createOperation(starting: any, operation: GraphQLRequest): Operation;
-
-// @public (undocumented)
-interface DefaultContext extends Record<string, any> {
-}
 
 // @public (undocumented)
 export function filterOperationVariables(variables: Record<string, any>, query: DocumentNode): {
     [x: string]: any;
 };
-
-// @public (undocumented)
-interface GraphQLRequest<TVariables = Record<string, any>> {
-    // Warning: (ae-forgotten-export) The symbol "DefaultContext" needs to be exported by the entry point index.d.ts
-    //
-    // (undocumented)
-    context?: DefaultContext;
-    // (undocumented)
-    extensions?: Record<string, any>;
-    // (undocumented)
-    operationName?: string;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    variables?: TVariables;
-}
-
-// @public (undocumented)
-interface Operation {
-    // (undocumented)
-    extensions: Record<string, any>;
-    // (undocumented)
-    getContext: () => DefaultContext;
-    // (undocumented)
-    operationName: string;
-    // (undocumented)
-    query: DocumentNode;
-    // (undocumented)
-    setContext: {
-        (context: Partial<DefaultContext>): void;
-        (updateContext: (previousContext: DefaultContext) => Partial<DefaultContext>): void;
-    };
-    // (undocumented)
-    variables: Record<string, any>;
-}
 
 // @public (undocumented)
 export function transformOperation(operation: GraphQLRequest): GraphQLRequest;

@@ -12,6 +12,7 @@ import {
 
 import { buildDocEntryPoints, entryPoints } from "./entryPoints.ts";
 import { withPseudoNodeModules } from "./helpers.ts";
+import { join } from "node:path";
 
 const parsed = parseArgs({
   options: {
@@ -66,7 +67,7 @@ try {
       })
     );
 
-    await buildReport(entryPointFile, "docModel");
+    await buildReport("@apollo/client", entryPointFile, "docModel");
   }
 
   if (parsed.values.generate?.includes("apiReport")) {
@@ -78,6 +79,7 @@ try {
         "\n\nCreating API extractor report for " + mainEntryPointFilePath
       );
       await buildReport(
+        join("@apollo/client", entryPoint.key),
         mainEntryPointFilePath,
         "apiReport",
         `api-report${path ? "-" + path.replace(/\//g, "_") : ""}.api.md`
@@ -89,14 +91,20 @@ try {
 }
 
 async function buildReport(
+  bundledPackages: string | string[],
   mainEntryPointFilePath: string,
   mode: "apiReport" | "docModel",
   reportFileName = ""
 ) {
+  if (!Array.isArray(bundledPackages)) {
+    bundledPackages = [bundledPackages];
+  }
+  console.log({ bundledPackages });
   const configObject: IConfigFile = {
     ...(JSON.parse(JSON.stringify(baseConfig)) as IConfigFile),
     mainEntryPointFilePath,
   };
+  configObject.bundledPackages = bundledPackages;
 
   if (mode === "apiReport") {
     configObject.apiReport!.enabled = true;

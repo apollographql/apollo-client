@@ -1,0 +1,23 @@
+diff --git a/node_modules/@microsoft/api-extractor/lib/analyzer/AstSymbolTable.js b/node_modules/@microsoft/api-extractor/lib/analyzer/AstSymbolTable.js
+index 9372313..4bdeb78 100644
+--- a/node_modules/@microsoft/api-extractor/lib/analyzer/AstSymbolTable.js
++++ b/node_modules/@microsoft/api-extractor/lib/analyzer/AstSymbolTable.js
+@@ -526,11 +526,14 @@ class AstSymbolTable {
+                 this._astDeclarationsByDeclaration.set(declaration, astDeclaration);
+             }
+         }
+-        if (options.isExternal !== astSymbol.isExternal) {
+-            throw new node_core_library_1.InternalError(`Cannot assign isExternal=${options.isExternal} for` +
+-                ` the symbol ${astSymbol.localName} because it was previously registered` +
+-                ` with isExternal=${astSymbol.isExternal}`);
++        if (!options.isExternal || !astSymbol.isExternal) {
++            astSymbol.isExternal = false
+         }
++        // if (options.isExternal !== astSymbol.isExternal) {
++        //     throw new node_core_library_1.InternalError(`Cannot assign isExternal=${options.isExternal} for` +
++        //         ` the symbol ${astSymbol.localName} because it was previously registered` +
++        //         ` with isExternal=${astSymbol.isExternal}`);
++        // }
+         return astSymbol;
+     }
+     /**

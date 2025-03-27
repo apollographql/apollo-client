@@ -55,3 +55,6 @@ expect.addEqualityTesters([
 
 // not available in JSDOM 🙄
 global.structuredClone = (val) => JSON.parse(JSON.stringify(val));
+// @ts-ignore
+global.setImmediate ||= (fn) => setTimeout(fn, 0);
+global.ReadableStream ||= require("stream/web").ReadableStream;

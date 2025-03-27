@@ -5,19 +5,19 @@ import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
-import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
+import { ApolloProvider } from "@apollo/client/react/context";
 import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
 import { getMarkupFromTree, prerenderStatic } from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
 
+import { resetApolloContext } from "../../../testing/internal/resetApolloContext.js";
+
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like
   // > Detected multiple renderers concurrently rendering the same context provider. This is currently unsupported.
   // This avoids that.
-  const context = getApolloContext();
-  // @ts-ignore
-  context._currentRenderer = null;
+  resetApolloContext();
 });
 
 describe("useQuery Hook SSR", () => {

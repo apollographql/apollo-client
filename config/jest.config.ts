@@ -45,6 +45,7 @@ const react17TestFileIgnoreList = [
   "src/react/hooks/__tests__/useLoadableQuery.test.tsx",
   "src/react/hooks/__tests__/useQueryRefHandlers.test.tsx",
   "src/react/query-preloader/__tests__/createQueryPreloader.test.tsx",
+  "src/react/ssr/__tests__/prerenderStatic.test.tsx",
 ];
 
 const tsStandardConfig = {
@@ -64,7 +65,10 @@ const standardReact19Config = {
 const standardReact18Config = {
   ...defaults,
   displayName: "ReactDOM 18",
-  testPathIgnorePatterns: [ignoreTSFiles],
+  testPathIgnorePatterns: [
+    ignoreTSFiles,
+    "src/react/ssr/__tests__/prerenderStatic.test.tsx",
+  ],
   moduleNameMapper: {
     "^react$": "react-18",
     "^react-dom$": "react-dom-18",

@@ -2,4 +2,4 @@
 "@apollo/client": patch
 ---
 
-`cloneDeep`: use `structuredClone` in where possible
+`cloneDeep`: use `structuredClone` where possible

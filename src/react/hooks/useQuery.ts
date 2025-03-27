@@ -312,7 +312,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
-  const { skip, ...otherOptions } = options;
+  const { skip, ssr, ...otherOptions } = options;
 
   // This Object.assign is safe because otherOptions is a fresh ...rest object
   // that did not exist until just now, so modifications are still allowed.
@@ -351,7 +351,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
     resultData,
     observable,
     client,
-    options,
+    { skip, ssr },
     watchQueryOptions.fetchPolicy
   );
 
@@ -365,7 +365,10 @@ function useObservableSubscriptionResult<
   resultData: InternalResult<TData, TVariables>,
   observable: ObservableQuery<TData, TVariables>,
   client: ApolloClient,
-  options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+  options: Pick<
+    useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>,
+    "ssr" | "skip"
+  >,
   fetchPolicy: WatchQueryFetchPolicy | undefined
 ) {
   const ssrDisabledOverride = useSyncExternalStore(

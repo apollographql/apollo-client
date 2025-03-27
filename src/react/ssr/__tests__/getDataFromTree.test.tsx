@@ -1,11 +1,9 @@
 import "../../../testing/internal/messageChannelPolyfill.js";
-import { expectTypeOf } from "expect-type";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
-import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
-import { InMemoryCache, InMemoryCache as Cache } from "@apollo/client/cache";
+import { InMemoryCache as Cache } from "@apollo/client/cache";
 import {
   ApolloClient,
   CombinedGraphQLErrors,
@@ -13,7 +11,7 @@ import {
 } from "@apollo/client/core";
 import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
-import { getDataFromTree, prerenderStatic } from "@apollo/client/react/ssr";
+import { getDataFromTree } from "@apollo/client/react/ssr";
 import { mockSingleLink } from "@apollo/client/testing";
 
 describe("SSR", () => {
@@ -21,7 +19,7 @@ describe("SSR", () => {
     it("should support passing a root context", async () => {
       const client = new ApolloClient({
         name: "oyez",
-        cache: new InMemoryCache(),
+        cache: new Cache(),
       });
       const ApolloContext = getApolloContext();
 
@@ -37,10 +35,8 @@ describe("SSR", () => {
         );
       }
 
-      const { result: html } = await prerenderStatic({
-        tree: <App />,
-        context: { client },
-        renderFunction: renderToStaticMarkup,
+      const html = await getDataFromTree(<App />, {
+        client,
       });
 
       expect(html).toEqual("<div>oyez</div>");
@@ -143,36 +139,4 @@ describe("SSR", () => {
       );
     });
   });
-});
-
-it.skip("type tests", async () => {
-  expectTypeOf(
-    await prerenderStatic({
-      tree: <div />,
-      renderFunction: renderToStaticMarkup,
-    })
-  ).toEqualTypeOf<{ result: string; aborted: boolean }>();
-  expectTypeOf(
-    await prerenderStatic({
-      tree: <div />,
-      renderFunction: renderToString,
-    })
-  ).toEqualTypeOf<{ result: string; aborted: boolean }>();
-  if (React.version.startsWith("19")) {
-    const { prerender, prerenderToNodeStream } =
-      require("react-dom/static") as typeof import("react-dom/static");
-
-    expectTypeOf(
-      await prerenderStatic({
-        tree: <div />,
-        renderFunction: prerender,
-      })
-    ).toEqualTypeOf<{ result: string; aborted: boolean }>();
-    expectTypeOf(
-      await prerenderStatic({
-        tree: <div />,
-        renderFunction: prerenderToNodeStream,
-      })
-    ).toEqualTypeOf<{ result: string; aborted: boolean }>();
-  }
 });

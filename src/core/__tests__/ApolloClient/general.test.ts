@@ -5306,7 +5306,7 @@ describe("ApolloClient", () => {
         networkStatus: NetworkStatus.ready,
         partial: false,
       });
-      expect(console.warn).toHaveBeenLastCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         'Unknown query named "%s" requested in refetchQueries options.include array',
         "fakeQuery"
       );

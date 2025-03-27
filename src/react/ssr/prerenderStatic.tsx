@@ -43,7 +43,7 @@ export declare namespace prerenderStatic {
      */
     tree: ReactTypes.ReactNode;
     /**
-     * If your app is not wapped in an `ApolloProvider`, you can pass a `client` instance in here.
+     * If your app is not wrapped in an `ApolloProvider`, you can pass a `client` instance in here.
      */
     context?: { client?: ApolloClient };
     /**
@@ -228,7 +228,7 @@ export function prerenderStatic({
       throw new Error(
         "`getMarkupFromTree` was called with an incompatible render method.\n" +
           'It is compatible with `renderToStaticMarkup` and `renderToString`  from `"react-dom/server"`\n' +
-          'as well as `prerender` and `prerenderToNodeStrea` } from "react-dom/static"'
+          'as well as `prerender` and `prerenderToNodeStream` from "react-dom/static"'
       );
     }
     const prelude = value.prelude;

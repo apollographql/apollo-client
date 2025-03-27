@@ -37,7 +37,7 @@ export namespace prerenderStatic {
             client?: ApolloClient;
         };
         ignoreResults?: boolean;
-        renderFunction: RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream;
+        renderFunction: RenderToString | RenderToStringPromise | PrerenderToWebStream | PrerenderToNodeStream | ((reactNode: ReactTypes.ReactNode) => ReturnType<RenderToString> | ReturnType<RenderToStringPromise> | ReturnType<PrerenderToWebStream> | ReturnType<PrerenderToNodeStream>);
         signal?: AbortSignal;
         tree: ReactTypes.ReactNode;
     }

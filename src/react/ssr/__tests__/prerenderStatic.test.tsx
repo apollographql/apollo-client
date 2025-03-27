@@ -42,8 +42,8 @@ test.each([
       .prerenderToNodeStream satisfies prerenderStatic.PrerenderToNodeStream,
   ],
 ] as const)(
-  "real-life use case with %s and `useSuspenseQuery`",
-  async (_, prerenderFn) => {
+  "real-life kitchen sink use case with %s and `useSuspenseQuery`",
+  async (_, prerender) => {
     // reset things that might have been set by a previous run of this test with
     // a different runner
     (window as any).__APOLLO_CLIENT_INIT__ = undefined;
@@ -162,18 +162,21 @@ test.each([
 
     async function ssr() {
       const client = makeClient(ssrLink);
+      const signal = AbortSignal.timeout(2000);
 
       await prerenderStatic({
         tree: <App />,
-        renderFunction: prerenderFn,
+        renderFunction: (tree) => prerender(tree, { signal }),
         context: {
           client,
         },
+        ignoreResults: true,
+        signal,
       });
 
       const extracted = client.extract();
 
-      const { prelude } = await prerenderFn(
+      const { prelude } = await prerender(
         <ApolloProvider client={client}>
           <App />
         </ApolloProvider>,
@@ -205,17 +208,16 @@ test.each([
 
     // JS isn't executed if we just assign the html to the current JSDOM root,
     // so we create another JSDOM instance just to extract the `__APOLLO_CLIENT_INIT__`
-    // value
+    // value and the top-level elements innerHTML
     const jsdom = new JSDOM(responseText, { runScripts: "dangerously" });
     expect(jsdom.window.__APOLLO_CLIENT_INIT__).toMatchSnapshot();
-    (window as any).__APOLLO_CLIENT_INIT__ =
-      jsdom.window.__APOLLO_CLIENT_INIT__;
+    const __APOLLO_CLIENT_INIT__ = jsdom.window.__APOLLO_CLIENT_INIT__;
+    const innerHtml = jsdom.window.document.documentElement.innerHTML;
+    jsdom.window.close();
 
-    // set the HTML of the current JSDOM instance to the "streamed in HTML"
-    window.document.documentElement.innerHTML =
-      jsdom.window.document.documentElement.innerHTML;
-
-    // hydrate the app in the "browser" JSDOM
+    // hydrate the app in the "jest/browser" JSDOM
+    (window as any).__APOLLO_CLIENT_INIT__ = __APOLLO_CLIENT_INIT__;
+    window.document.documentElement.innerHTML = innerHtml;
     const reactClient = await import("react-dom/client");
     const root = reactClient.hydrateRoot(window.document, <App />, {
       onCaughtError: console.error,

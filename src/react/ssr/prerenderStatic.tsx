@@ -85,7 +85,14 @@ export declare namespace prerenderStatic {
       | RenderToString
       | RenderToStringPromise
       | PrerenderToWebStream
-      | PrerenderToNodeStream;
+      | PrerenderToNodeStream
+      | ((
+          reactNode: ReactTypes.ReactNode
+        ) =>
+          | ReturnType<RenderToString>
+          | ReturnType<RenderToStringPromise>
+          | ReturnType<PrerenderToWebStream>
+          | ReturnType<PrerenderToNodeStream>);
   }
 
   export interface Result {

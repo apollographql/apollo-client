@@ -30,6 +30,78 @@ beforeEach(() => {
   resetApolloContext();
 });
 
+function testSetup() {
+  const query1: TypedDocumentNode<{ hello: string }> = gql`
+    query {
+      hello
+    }
+  `;
+  const query2: TypedDocumentNode<{ whoami: { name: string } }> = gql`
+    query {
+      whoami {
+        name
+      }
+    }
+  `;
+  const query3: TypedDocumentNode<{ currentTime: string }> = gql`
+    query {
+      currentTime
+    }
+  `;
+
+  function Outlet() {
+    const { data } = useSuspenseQuery(query1);
+    return (
+      <div>
+        <p>Hello {data.hello}!</p>
+        <Parent />
+      </div>
+    );
+  }
+
+  function Parent() {
+    const { data } = useSuspenseQuery(query2);
+
+    return (
+      <>
+        <p>My name is {data?.whoami.name}!</p>
+        <Child />
+      </>
+    );
+  }
+  function Child() {
+    const { data } = useSuspenseQuery(query3);
+
+    return (
+      <>
+        <p>Current time is {data?.currentTime}!</p>
+      </>
+    );
+  }
+
+  const ssrLink = new MockLink([
+    {
+      request: { query: query1 },
+      result: { data: { hello: "world" } },
+      maxUsageCount: 1,
+    },
+    {
+      request: { query: query2 },
+      result: { data: { whoami: { name: "Apollo" } } },
+      maxUsageCount: 1,
+    },
+    {
+      request: { query: query3 },
+      result: { data: { currentTime: "2025-03-26T14:40:53.118Z" } },
+      maxUsageCount: 1,
+    },
+  ]);
+  return {
+    Outlet,
+    ssrLink,
+  };
+}
+
 test.each([
   [
     "prerender",
@@ -55,6 +127,7 @@ test.each([
       );
     });
 
+    const { Outlet, ssrLink } = testSetup();
     // from here on it's essentially what a userland app could look like
 
     function makeClient(link = throwingLink) {
@@ -93,72 +166,6 @@ test.each([
         </html>
       );
     }
-
-    const query1: TypedDocumentNode<{ hello: string }> = gql`
-      query {
-        hello
-      }
-    `;
-    const query2: TypedDocumentNode<{ whoami: { name: string } }> = gql`
-      query {
-        whoami {
-          name
-        }
-      }
-    `;
-    const query3: TypedDocumentNode<{ currentTime: string }> = gql`
-      query {
-        currentTime
-      }
-    `;
-
-    function Outlet() {
-      const { data } = useSuspenseQuery(query1);
-      return (
-        <div>
-          <p>Hello {data.hello}!</p>
-          <Parent />
-        </div>
-      );
-    }
-
-    function Parent() {
-      const { data } = useSuspenseQuery(query2);
-
-      return (
-        <>
-          <p>My name is {data?.whoami.name}!</p>
-          <Child />
-        </>
-      );
-    }
-    function Child() {
-      const { data } = useSuspenseQuery(query3);
-
-      return (
-        <>
-          <p>Current time is {data?.currentTime}!</p>
-        </>
-      );
-    }
-
-    const ssrLink = new MockLink([
-      {
-        request: { query: query1 },
-        result: { data: { hello: "world" } },
-        maxUsageCount: 1,
-      },
-      {
-        request: { query: query2 },
-        result: { data: { whoami: { name: "Apollo" } } },
-        maxUsageCount: 1,
-      },
-      {
-        request: { query: query3 },
-        result: { data: { currentTime: "2025-03-26T14:40:53.118Z" } },
-        maxUsageCount: 1,
-      },
-    ]);
 
     async function ssr() {
       const client = makeClient(ssrLink);
@@ -234,19 +241,38 @@ test.each([
   }
 );
 
+test.todo("`prerenderStatic` with `renderToString` and `renderToStaticMarkup`");
+test.todo("AbortSignal times out during render");
+test.todo("cancelled AbortSignal is passed into `prerenderStatic`");
+test.todo("usage with `useSuspenseQuery`: `diagnostics.renderCount` stays 1");
+test.todo("usage with `useQuery`: `diagnostics.renderCount` is 2");
+test.todo(
+  "usage with a waterfall of `useQuery`: `diagnostics.renderCount` is `n+1`"
+);
+test.todo("`maxRerenders` will throw an error if exceeded");
+test.todo("`ignoreResults` will result in an empty string to be returned");
+
 it.skip("type tests", async () => {
   expectTypeOf(
     await prerenderStatic({
       tree: <div />,
       renderFunction: renderToStaticMarkup,
     })
-  ).toEqualTypeOf<{ result: string; aborted: boolean }>();
+  ).toEqualTypeOf<{
+    result: string;
+    aborted: boolean;
+    diagnostics?: { renderCount: number };
+  }>();
   expectTypeOf(
     await prerenderStatic({
       tree: <div />,
       renderFunction: renderToString,
     })
-  ).toEqualTypeOf<{ result: string; aborted: boolean }>();
+  ).toEqualTypeOf<{
+    result: string;
+    aborted: boolean;
+    diagnostics?: { renderCount: number };
+  }>();
   if (React.version.startsWith("19")) {
     const { prerender, prerenderToNodeStream } =
       require("react-dom/static") as typeof import("react-dom/static");
@@ -256,12 +282,20 @@ it.skip("type tests", async () => {
         tree: <div />,
         renderFunction: prerender,
       })
-    ).toEqualTypeOf<{ result: string; aborted: boolean }>();
+    ).toEqualTypeOf<{
+      result: string;
+      aborted: boolean;
+      diagnostics?: { renderCount: number };
+    }>();
     expectTypeOf(
       await prerenderStatic({
         tree: <div />,
         renderFunction: prerenderToNodeStream,
       })
-    ).toEqualTypeOf<{ result: string; aborted: boolean }>();
+    ).toEqualTypeOf<{
+      result: string;
+      aborted: boolean;
+      diagnostics?: { renderCount: number };
+    }>();
   }
 });

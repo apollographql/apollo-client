@@ -322,11 +322,11 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const { observable, resultData } = useInternalState(
     client,
     query,
-    makeWatchQueryOptions()
+    makeWatchQueryOptions
   );
 
   const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-    makeWatchQueryOptions();
+    makeWatchQueryOptions;
 
   if (!watchQueryOptions.fetchPolicy) {
     watchQueryOptions.fetchPolicy = observable.options.initialFetchPolicy;
@@ -500,33 +500,31 @@ function createMakeWatchQueryOptions<
     // query property that we add below.
     ...otherOptions
   }: useQuery.Options<TData, TVariables> = {}
-) {
-  return (
-    initialFetchPolicy?: WatchQueryFetchPolicy
-  ): WatchQueryOptions<TVariables, TData> => {
-    // This Object.assign is safe because otherOptions is a fresh ...rest object
-    // that did not exist until just now, so modifications are still allowed.
-    const watchQueryOptions: WatchQueryOptions<TVariables, TData> =
-      Object.assign(otherOptions, { query });
+): WatchQueryOptions<TVariables, TData> {
+  // This Object.assign is safe because otherOptions is a fresh ...rest object
+  // that did not exist until just now, so modifications are still allowed.
+  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
+    otherOptions,
+    { query }
+  );
 
-    if (!watchQueryOptions.variables) {
-      watchQueryOptions.variables = {} as TVariables;
-    }
+  if (!watchQueryOptions.variables) {
+    watchQueryOptions.variables = {} as TVariables;
+  }
 
-    if (skip) {
-      // When skipping, we set watchQueryOptions.fetchPolicy initially to
-      // "standby", but we also need/want to preserve the initial non-standby
-      // fetchPolicy that would have been used if not skipping.
-      watchQueryOptions.initialFetchPolicy =
-        watchQueryOptions.initialFetchPolicy ||
-        watchQueryOptions.fetchPolicy ||
-        client.defaultOptions?.watchQuery?.fetchPolicy ||
-        "cache-first";
-      watchQueryOptions.fetchPolicy = "standby";
-    }
+  if (skip) {
+    // When skipping, we set watchQueryOptions.fetchPolicy initially to
+    // "standby", but we also need/want to preserve the initial non-standby
+    // fetchPolicy that would have been used if not skipping.
+    watchQueryOptions.initialFetchPolicy =
+      watchQueryOptions.initialFetchPolicy ||
+      watchQueryOptions.fetchPolicy ||
+      client.defaultOptions?.watchQuery?.fetchPolicy ||
+      "cache-first";
+    watchQueryOptions.fetchPolicy = "standby";
+  }
 
-    return watchQueryOptions;
-  };
+  return watchQueryOptions;
 }
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(

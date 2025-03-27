@@ -109,11 +109,9 @@ export function wrapHook<Hook extends (...args: any[]) => any>(
 
   let wrapped = useHook;
   for (const source of wrapperSources) {
-    const wrapper = source?.[wrapperSymbol]?.[hookName] as
-      | undefined
-      | ((wrap: Hook) => Hook);
+    const wrapper = source?.[wrapperSymbol]?.[hookName];
     if (wrapper) {
-      wrapped = wrapper(wrapped);
+      wrapped = wrapper(wrapped) as Hook;
     }
   }
 

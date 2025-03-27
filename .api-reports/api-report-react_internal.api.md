@@ -798,6 +798,9 @@ interface FulfilledPromise<TValue> extends Promise<TValue> {
     value: TValue;
 }
 
+// @public (undocumented)
+type FunctionSignature<T> = T extends (...args: infer A) => infer R ? (...args: A) => R : never;
+
 // @internal
 const getApolloCacheMemoryInternals: (() => {
     cache: {
@@ -2139,6 +2142,26 @@ namespace useQuery {
     }
 }
 
+// @public (undocumented)
+namespace useQuery {
+    var // (undocumented)
+    ssrDisabledResult: {
+        loading: boolean;
+        data: any;
+        error: undefined;
+        networkStatus: NetworkStatus;
+        partial: boolean;
+    };
+    var // (undocumented)
+    skipStandbyResult: {
+        loading: boolean;
+        data: any;
+        error: undefined;
+        networkStatus: NetworkStatus;
+        partial: boolean;
+    };
+}
+
 // @public
 function useQueryRefHandlers<TData = unknown, TVariables extends OperationVariables = OperationVariables>(queryRef: QueryRef<TData, TVariables>): useQueryRefHandlers.Result<TData, TVariables>;
 
@@ -2334,10 +2357,11 @@ interface WrappableHooks {
     //
     // (undocumented)
     useFragment: typeof useFragment;
+    // Warning: (ae-forgotten-export) The symbol "FunctionSignature" needs to be exported by the entry point index.d.ts
     // Warning: (ae-forgotten-export) The symbol "useQuery" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
-    useQuery: typeof useQuery;
+    useQuery: FunctionSignature<typeof useQuery>;
     // Warning: (ae-forgotten-export) The symbol "useQueryRefHandlers" needs to be exported by the entry point index.d.ts
     //
     // (undocumented)
@@ -2365,6 +2389,9 @@ interface WrappedQueryRef<TData = unknown, TVariables = unknown> extends QueryRe
     // (undocumented)
     toPromise?(): Promise<unknown>;
 }
+
+// @public (undocumented)
+export const wrapperSymbol: unique symbol;
 
 // @public (undocumented)
 export function wrapQueryRef<TData, TVariables extends OperationVariables>(internalQueryRef: InternalQueryReference<TData>): WrappedQueryRef<TData, TVariables>;

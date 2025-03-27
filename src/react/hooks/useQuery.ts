@@ -270,11 +270,11 @@ function useInternalState<TData, TVariables extends OperationVariables>(
   query: DocumentNode | TypedDocumentNode<any, any>,
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
-  const makeWatchQueryOptions = createMakeWatchQueryOptions(
+  const watchQueryOptions = createMakeWatchQueryOptions(
     client,
     query,
     options
-  );
+  )();
 
   function createInternalState(previous?: InternalState<TData, TVariables>) {
     verifyDocumentType(query, DocumentType.Query);
@@ -283,7 +283,7 @@ function useInternalState<TData, TVariables extends OperationVariables>(
       client,
       query,
       observable: client.watchQuery(
-        getObsQueryOptions(void 0, client, makeWatchQueryOptions())
+        getObsQueryOptions(void 0, client, watchQueryOptions)
       ),
       resultData: {
         // Reuse previousData from previous InternalState (if any) to provide

@@ -346,7 +346,9 @@ Array [
 
 exports[`exports of public entry points @apollo/client/react/ssr 1`] = `
 Array [
+  "getDataFromTree",
   "getMarkupFromTree",
+  "prerenderStatic",
   "renderToStringWithData",
 ]
 `;

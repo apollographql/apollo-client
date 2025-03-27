@@ -1,13 +1,13 @@
 import type * as ReactTypes from "react";
-import { renderToString } from "react-dom/server";
 
-import { getMarkupFromTree } from "./getDataFromTree.js";
+import { prerenderStatic } from "./prerenderStatic.js";
 
-export function renderToStringWithData(
+export async function renderToStringWithData(
   component: ReactTypes.ReactElement<any>
 ): Promise<string> {
-  return getMarkupFromTree({
+  const { result } = await prerenderStatic({
     tree: component,
-    renderFunction: renderToString,
+    renderFunction: (await import("react-dom/server")).renderToString,
   });
+  return result;
 }

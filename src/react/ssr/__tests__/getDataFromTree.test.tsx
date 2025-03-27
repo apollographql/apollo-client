@@ -3,7 +3,11 @@ import { expectTypeOf } from "expect-type";
 import { DocumentNode } from "graphql";
 import { gql } from "graphql-tag";
 import React from "react";
-import { renderToStaticMarkup, renderToString } from "react-dom/server";
+import {
+  getDataFromTree,
+  renderToStaticMarkup,
+  renderToString,
+} from "react-dom/server";
 
 import { InMemoryCache, InMemoryCache as Cache } from "@apollo/client/cache";
 import {
@@ -15,7 +19,7 @@ import { ApolloProvider, getApolloContext } from "@apollo/client/react/context";
 import { useQuery } from "@apollo/client/react/hooks";
 import { mockSingleLink } from "@apollo/client/testing";
 
-import { getMarkupFromTree } from "../getDataFromTree.js";
+import { prerenderStatic } from "../prerenderStatic.js";
 
 describe("SSR", () => {
   describe("`getDataFromTree`", () => {
@@ -38,7 +42,7 @@ describe("SSR", () => {
         );
       }
 
-      const html = await getMarkupFromTree({
+      const { result: html } = await prerenderStatic({
         tree: <App />,
         context: { client },
         renderFunction: renderToStaticMarkup,
@@ -88,10 +92,7 @@ describe("SSR", () => {
         </ApolloProvider>
       );
 
-      const markup = await getMarkupFromTree({
-        tree: app,
-        renderFunction: renderToStaticMarkup,
-      });
+      const markup = await getDataFromTree(app);
 
       expect(markup).toMatch(/James/);
     });
@@ -140,46 +141,43 @@ describe("SSR", () => {
         return null;
       }
 
-      await getMarkupFromTree({
-        tree: (
-          <ApolloProvider client={client}>
-            <App />
-          </ApolloProvider>
-        ),
-        renderFunction: renderToStaticMarkup,
-      });
+      await getDataFromTree(
+        <ApolloProvider client={client}>
+          <App />
+        </ApolloProvider>
+      );
     });
   });
 });
 
 it.skip("type tests", async () => {
   expectTypeOf(
-    await getMarkupFromTree({
+    await prerenderStatic({
       tree: <div />,
       renderFunction: renderToStaticMarkup,
     })
-  ).toBeString();
+  ).toEqualTypeOf<{ result: string; aborted: boolean }>();
   expectTypeOf(
-    await getMarkupFromTree({
+    await prerenderStatic({
       tree: <div />,
       renderFunction: renderToString,
     })
-  ).toBeString();
+  ).toEqualTypeOf<{ result: string; aborted: boolean }>();
   if (React.version.startsWith("19")) {
     const { prerender, prerenderToNodeStream } =
       require("react-dom/static") as typeof import("react-dom/static");
 
     expectTypeOf(
-      await getMarkupFromTree({
+      await prerenderStatic({
         tree: <div />,
         renderFunction: prerender,
       })
-    ).toBeString();
+    ).toEqualTypeOf<{ result: string; aborted: boolean }>();
     expectTypeOf(
-      await getMarkupFromTree({
+      await prerenderStatic({
         tree: <div />,
         renderFunction: prerenderToNodeStream,
       })
-    ).toBeString();
+    ).toEqualTypeOf<{ result: string; aborted: boolean }>();
   }
 });

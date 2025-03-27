@@ -3,7 +3,7 @@ import type { DocumentNode } from "graphql";
 import type { ObservableQuery } from "@apollo/client/core";
 import { useApolloClient, useQuery } from "@apollo/client/react";
 
-import type { GetMarkupFromTreeContext } from "./getDataFromTree.js";
+import type { GetMarkupFromTreeContext } from "./prerenderStatic.js";
 
 export const useSSRQuery = function (
   this: GetMarkupFromTreeContext,

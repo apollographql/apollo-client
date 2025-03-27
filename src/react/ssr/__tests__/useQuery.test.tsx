@@ -1,6 +1,7 @@
 /** @jest-environment node */
 import { gql } from "graphql-tag";
 import React from "react";
+import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient, TypedDocumentNode } from "@apollo/client/core";
@@ -9,8 +10,6 @@ import { useApolloClient, useQuery } from "@apollo/client/react/hooks";
 import { getMarkupFromTree } from "@apollo/client/react/ssr";
 import { MockedResponse, mockSingleLink } from "@apollo/client/testing";
 import { MockedProvider } from "@apollo/client/testing/react";
-
-import { renderToStaticMarkup, renderToString } from "react-dom/server";
 
 beforeEach(() => {
   // We are running tests with multiple different renderers, and that can result in a warning like

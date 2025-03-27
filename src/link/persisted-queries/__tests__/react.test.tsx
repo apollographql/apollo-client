@@ -14,12 +14,12 @@ import {
 } from "@apollo/client/link/persisted-queries";
 import { useQuery } from "@apollo/client/react";
 import { ApolloProvider } from "@apollo/client/react/context";
+import { getMarkupFromTree } from "@apollo/client/react/ssr";
 import { addTypenameToDocument } from "@apollo/client/utilities";
 
 import { InMemoryCache as Cache } from "../../../cache/inmemory/inMemoryCache.js";
 import { ApolloClient } from "../../../core/ApolloClient.js";
 import { createHttpLink } from "../../http/createHttpLink.js";
-import { getMarkupFromTree } from "@apollo/client/react/ssr";
 
 function sha256(data: string) {
   const hash = crypto.createHash("sha256");

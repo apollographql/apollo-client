@@ -16,7 +16,9 @@ import { canonicalStringify } from "@apollo/client/utilities";
 import { useSSRQuery } from "./useSSRQuery.js";
 
 type RenderToString = (element: ReactTypes.ReactNode) => string;
-type RenderToStringPromise = (element: ReactTypes.ReactNode) => Promise<string>;
+type RenderToStringPromise = (
+  element: ReactTypes.ReactNode
+) => PromiseLike<string>;
 
 type PrerenderToWebStream = (reactNode: ReactTypes.ReactNode) => Promise<{
   prelude: ReadableStream<Uint8Array>; // AsyncIterable<Uint8Array>;
@@ -26,9 +28,11 @@ type PrerenderToNodeStream = (reactNode: ReactTypes.ReactNode) => Promise<{
   prelude: AsyncIterable<string | Buffer>;
 }>;
 
-type GetMarkupFromTreeOptions = {
+type PrerenderStaticOptions = {
   tree: ReactTypes.ReactNode;
   context?: { client?: ApolloClient };
+  signal?: AbortSignal;
+  ignoreResults?: boolean;
   renderFunction:
     | RenderToString
     | RenderToStringPromise
@@ -57,14 +61,16 @@ export interface GetMarkupFromTreeContext {
   ) => void;
 }
 
-export function getMarkupFromTree({
+export function prerenderStatic({
   tree,
   context = {},
   // The rendering function is configurable! We use renderToStaticMarkup as
   // the default, because it's a little less expensive than renderToString,
   // and legacy usage of getDataFromTree ignores the return value anyway.
   renderFunction,
-}: GetMarkupFromTreeOptions): Promise<string> {
+  signal,
+  ignoreResults,
+}: PrerenderStaticOptions): Promise<{ result: string; aborted: boolean }> {
   const availableObservableQueries = new Map<
     ObservableQueryKey,
     ObservableQuery
@@ -131,50 +137,63 @@ export function getMarkupFromTree({
       });
   }
 
+  if (signal?.aborted) {
+    throw new Error("The operation was aborted before it could be attempted.");
+  }
   return Promise.resolve()
     .then(process)
+    .then((result) => ({
+      result: ignoreResults ? "" : result,
+      aborted: signal?.aborted ?? false,
+    }))
     .finally(() => {
       availableObservableQueries.clear();
       recentlyCreatedObservableQueries.clear();
     });
-}
 
-async function decode(
-  value:
-    | string
-    | {
-        prelude: ReadableStream<Uint8Array>;
-      }
-    | {
-        prelude: AsyncIterable<string | Buffer>;
-      }
-): Promise<string> {
-  if (typeof value === "string") {
-    return value;
-  }
-  if (!value.prelude) {
-    throw new Error(
-      "`getMarkupFromTree` was called with an incompatible render method.\n" +
-        'It is compatible with `renderToStaticMarkup` and `renderToString`  from `"react-dom/server"`\n' +
-        'as well as `prerender` and `prerenderToNodeStrea` } from "react-dom/static"'
-    );
-  }
-  const prelude = value.prelude;
-  let result = "";
-  if ("getReader" in prelude) {
-    const reader = prelude.getReader();
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
-      result += Buffer.from(value).toString("utf8");
+  async function decode(
+    value:
+      | string
+      | {
+          prelude: ReadableStream<Uint8Array>;
+        }
+      | {
+          prelude: AsyncIterable<string | Buffer>;
+        }
+  ): Promise<string> {
+    if (typeof value === "string") {
+      return value;
     }
-  } else {
-    for await (const chunk of prelude) {
-      result +=
-        typeof chunk === "string" ? chunk : Buffer.from(chunk).toString("utf8");
+    if (!value.prelude) {
+      throw new Error(
+        "`getMarkupFromTree` was called with an incompatible render method.\n" +
+          'It is compatible with `renderToStaticMarkup` and `renderToString`  from `"react-dom/server"`\n' +
+          'as well as `prerender` and `prerenderToNodeStrea` } from "react-dom/static"'
+      );
     }
+    const prelude = value.prelude;
+    let result = "";
+    if ("getReader" in prelude) {
+      const reader = prelude.getReader();
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          break;
+        }
+        if (!ignoreResults) {
+          result += Buffer.from(value).toString("utf8");
+        }
+      }
+    } else {
+      for await (const chunk of prelude) {
+        if (!ignoreResults) {
+          result +=
+            typeof chunk === "string" ? chunk : (
+              Buffer.from(chunk).toString("utf8")
+            );
+        }
+      }
+    }
+    return result;
   }
-  return result;
 }

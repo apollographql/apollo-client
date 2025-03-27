@@ -190,6 +190,7 @@ test.each([
               json: true,
             }
           )}`,
+          signal,
         }
       );
       return new Response(prelude as any, {

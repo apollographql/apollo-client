@@ -312,8 +312,7 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
-
-  const watchQueryOptions = createMakeWatchQueryOptions(client, query, options);
+  const watchQueryOptions = getWatchQueryOptions(client, query, options);
 
   const { observable, resultData } = useInternalState(
     client,
@@ -480,10 +479,7 @@ function useResubscribeIfNecessary<
  * This is two-step curried because we want to reuse the `make` function,
  * but the `observable` might differ between calls to `make`.
  */
-function createMakeWatchQueryOptions<
-  TData,
-  TVariables extends OperationVariables,
->(
+function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   query: DocumentNode | TypedDocumentNode<TData, TVariables>,
   {

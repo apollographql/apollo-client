@@ -314,13 +314,9 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   const client = useApolloClient(options.client);
   const { skip, ...otherOptions } = options;
 
-  const watchQueryOptions = getWatchQueryOptions(
-    client,
-    // This Object.assign is safe because otherOptions is a fresh ...rest object
-    // that did not exist until just now, so modifications are still allowed.
-    Object.assign(otherOptions, { query }),
-    skip
-  );
+  // This Object.assign is safe because otherOptions is a fresh ...rest object
+  // that did not exist until just now, so modifications are still allowed.
+  const watchQueryOptions = Object.assign(otherOptions, { query });
 
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
@@ -492,19 +488,6 @@ function useResubscribeIfNecessary<
     resultData.current = void 0;
   }
   observable[lastWatchOptions] = watchQueryOptions;
-}
-
-/*
- * A function to massage options before passing them to ObservableQuery.
- * This is two-step curried because we want to reuse the `make` function,
- * but the `observable` might differ between calls to `make`.
- */
-function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
-  client: ApolloClient,
-  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
-  skip: boolean | undefined
-): WatchQueryOptions<TVariables, TData> {
-  return watchQueryOptions;
 }
 
 function getObsQueryOptions<TData, TVariables extends OperationVariables>(

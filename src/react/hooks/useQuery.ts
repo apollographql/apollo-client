@@ -490,13 +490,7 @@ function useResubscribeIfNecessary<
 function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
   watchQueryOptions: WatchQueryOptions<TVariables, TData>,
-  {
-    skip,
-    // The above options are useQuery-specific, so this ...otherOptions spread
-    // makes otherOptions almost a WatchQueryOptions object, except for the
-    // query property that we add below.
-    ...otherOptions
-  }: useQuery.Options<TData, TVariables> = {}
+  { skip }: useQuery.Options<TData, TVariables> = {}
 ): WatchQueryOptions<TVariables, TData> {
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to

@@ -2357,6 +2357,8 @@ describe("ApolloClient", () => {
       partial: false,
     });
     expect(cache.extract().ROOT_QUERY!.author).toEqual(data.author);
+
+    observable.stopPolling();
   });
 
   it("should not fire next on an observer if there is no change in the result", async () => {

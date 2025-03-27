@@ -312,7 +312,15 @@ function useQueryInternals<TData, TVariables extends OperationVariables>(
   options: useQuery.Options<NoInfer<TData>, NoInfer<TVariables>>
 ) {
   const client = useApolloClient(options.client);
-  const watchQueryOptions = getWatchQueryOptions(client, query, options);
+  const { skip, ...otherOptions } = options;
+
+  const watchQueryOptions = getWatchQueryOptions(
+    client,
+    // This Object.assign is safe because otherOptions is a fresh ...rest object
+    // that did not exist until just now, so modifications are still allowed.
+    Object.assign(otherOptions, { query }),
+    options
+  );
 
   const { observable, resultData } = useInternalState(
     client,
@@ -481,7 +489,7 @@ function useResubscribeIfNecessary<
  */
 function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
   client: ApolloClient,
-  query: DocumentNode | TypedDocumentNode<TData, TVariables>,
+  watchQueryOptions: WatchQueryOptions<TVariables, TData>,
   {
     skip,
     // The above options are useQuery-specific, so this ...otherOptions spread
@@ -490,13 +498,6 @@ function getWatchQueryOptions<TData, TVariables extends OperationVariables>(
     ...otherOptions
   }: useQuery.Options<TData, TVariables> = {}
 ): WatchQueryOptions<TVariables, TData> {
-  // This Object.assign is safe because otherOptions is a fresh ...rest object
-  // that did not exist until just now, so modifications are still allowed.
-  const watchQueryOptions: WatchQueryOptions<TVariables, TData> = Object.assign(
-    otherOptions,
-    { query }
-  );
-
   if (skip) {
     // When skipping, we set watchQueryOptions.fetchPolicy initially to
     // "standby", but we also need/want to preserve the initial non-standby

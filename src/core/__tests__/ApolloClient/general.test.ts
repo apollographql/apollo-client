@@ -1296,7 +1296,7 @@ describe("ApolloClient", () => {
     });
   });
 
-  it("only modifies varaibles when refetching", async () => {
+  it("only modifies variables when refetching", async () => {
     const query = gql`
       {
         people_one(id: 1) {
